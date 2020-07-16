@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=exo-open http://localhost:411/
+Name=Hackbox System Monitor
+Comment=Open Hackbox System Monitor to view system graphs
+Categories=System;
+GenericName=System Log Graphs
+Icon=utilities-system-monitor-symbolic
+StartupNotify=true

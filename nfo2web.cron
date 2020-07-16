@@ -1,0 +1,2 @@
+# Update the hackbox-system-monitor interface hourly
+@hourly root	hackbox-system-monitor

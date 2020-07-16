@@ -1,0 +1,5 @@
+Installed-Size.txt
+*.deb
+test/
+Test/
+TEST/
