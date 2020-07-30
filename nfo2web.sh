@@ -48,6 +48,7 @@ processEpisode(){
 	episode="$1"
 	showPagePath="$2"
 	webDirectory="$3"
+	echo "[INFO]: checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
 		echo "################################################################################"
@@ -122,9 +123,11 @@ processEpisode(){
 			mediaType="video"
 			mimeType="video"
 		fi
-		echo "videoPath = $videoPath"
+		echo "[INFO]: mediaType = $mediaType"
+		echo "[INFO]: mimeType = $mimeType"
+		echo "[INFO]: videoPath = $videoPath"
 		episodeVideoPath="${episode//.nfo/$sufix}"
-		echo "episodeVideoPath = $videoPath"
+		echo "[INFO]: episodeVideoPath = $videoPath"
 		# link the video from the libary to the generated website
 		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix"
 		# remove .nfo extension and create thumbnail path
@@ -138,19 +141,23 @@ processEpisode(){
 		else
 			# no thumbnail has been linked or downloaded
 			if [ -f "$thumbnail.png" ];then
+				echo "[INFO]: found PNG thumbnail..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.png" "$thumbnailPath.png"
 			elif [ -f "$thumbnail.jpg" ];then
+				echo "[INFO]: found JPG thumbnail..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
 			else
 				if echo "$nfoInfo" | grep "thumb";then
-					echo "Try to download found thumbnail..."
+					thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
+					echo "[INFO]: Try to download found thumbnail..."
+					echo "[INFO]: Thumbnail found at $thumbnailLink"
 					thumbnailExt=".png"
 					# download the thumbnail
-					curl "$(ripXmlTag "$nfoInfo" "thumb")" > "$thumbnailPath$thumbnailExt"
+					curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
 				fi
 			fi
 		fi
@@ -161,6 +168,7 @@ processEpisode(){
 			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
 			#yt_id=${videoPath//^.*\?video_id\=/}
 			yt_id=${videoPath//*video_id=}
+			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			{
 				# embed the youtube player
@@ -315,35 +323,45 @@ main(){
 			# check if the libary directory exists
 			echo "Check if directory exists at $libary"
 			if [ -e "$libary" ];then
+				echo "[INFO]: libary exists at '$libary'"
 				# read each tvshow directory from the libary
 				for show in $libary/*;do
-					echo "show = '$show'"
+					echo "[INFO]: show path = '$show'"
 					################################################################################
 					# process page metadata
 					################################################################################
-					#show=$(echo "$show" | sed "s/.*\///g")
-					#echo "show filtered = '$show'"
-					# if the show directory exists
-					##if [ -d "$libary/$show" ];then
+					# if the show directory contains a nfo file defining the show
+					#if [ -f "$show/tvshow.nfo" ];then
 					# load update the tvshow.nfo file and get the metadata required for
 					showMeta=$(cat "$show/tvshow.nfo")
 					showTitle=$(ripXmlTag "$showMeta" "title")
+					echo "[INFO]: showTitle = $showTitle"
 					showTitle=$(cleanText "$showTitle")
+					echo "[INFO]: showTitle after cleanText() = $showTitle"
 					# create directory
+					echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
 					mkdir -p "$webDirectory/$showTitle/"
-					posterPath="poster.png"
 					# link the poster
 					if [ -f "$show/poster.png" ];then
+						echo "[INFO]: Found $show/poster.png"
 						ln -s "$show/poster.png" "$webDirectory/$showTitle/poster.png"
-						fanartPath="fanart.png"
+						posterPath="poster.png"
+					else
+						echo "[WARNING]: could not find $show/poster.png"
 					fi
 					# link the fanart
-					if [ -f "$show/poster.png" ];then
+					if [ -f "$show/fanart.png" ];then
+						echo "[INFO]: Found $show/fanart.png"
 						ln -s "$show/fanart.png" "$webDirectory/$showTitle/fanart.png"
+						fanartPath="fanart.png"
+					else
+						echo "[WARNING]: could not find $show/fanart.png"
 					fi
 					# building the webpage for the show
 					showPagePath="$webDirectory/$showTitle/index.html"
-					mkdir -p "$(echo "$showPagePath" | grep -o ".*\/")"
+					echo "[INFO]: Creating directory at = '$webDirectory/$showTitle/'"
+					mkdir -p "$webDirectory/$showTitle/"
+					echo "[INFO]: Creating showPagePath = $showPagePath"
 					touch "$showPagePath"
 					################################################################################
 					# begin building the html of the page
@@ -364,7 +382,9 @@ main(){
 					} >> "$showPagePath"
 					# generate the episodes based on .nfo files
 					for season in "$show"/*;do
+						echo "[INFO]: checking for season folder at '$season'"
 						if [ -d "$season" ];then
+							echo "[INFO]: found season folder at '$season'"
 							# generate the season name from the path
 							seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
 							{
@@ -396,7 +416,7 @@ main(){
 					# add show page to the home page index
 					{
 						echo "<a class='indexSeries' href='$showTitle/'>"
-						echo "	<img src='$showTitle/$posterPath'>"
+						echo "	<img src='$showTitle/poster.png'>"
 						echo "	<div>"
 						echo "		$showTitle"
 						echo "	</div>"
