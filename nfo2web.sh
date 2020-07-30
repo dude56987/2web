@@ -44,6 +44,187 @@ cleanText(){
 	echo "$1" | sed "s/[[:punct:]]//g"
 }
 ########################################################################
+processEpisode(){
+	episode="$1"
+	showPagePath="$2"
+	webDirectory="$3"
+	# check the episode file path exists before anything is done
+	if [ -f "$episode" ];then
+		echo "################################################################################"
+		echo "Processing Episode $episode"
+		echo "################################################################################"
+		# for each episode build a page for the episode
+		nfoInfo=$(cat "$episode")
+		# rip the episode title
+		episodeShowTitle=$(ripXmlTag "$nfoInfo" "showTitle")
+		episodeShowTitle=$(cleanText "$episodeShowTitle")
+		episodeTitle=$(ripXmlTag "$nfoInfo" "title")
+		episodeTitle=$(cleanText "$episodeTitle")
+		episodeSeason=$(ripXmlTag "$nfoInfo" "season")
+		# create the episode page path
+		#episodePagePath=$(echo "$episode" | sed "s/\.nfo$/.html/g")
+		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.html"
+		mkdir -p "$webDirectory/$episodeShowTitle/$episodeSeason/"
+		# start rendering the html
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			echo "<h1>$episodeShowTitle</h1>"
+			echo "<h2>$episodeTitle</h2>"
+		} > "$episodePagePath"
+		# link the episode nfo file
+		ln -s "$episode" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.nfo"
+		# find the videofile refrenced by the nfo file
+		if [ -f "${episode//.nfo/.mkv}" ];then
+			videoPath="${episode//.nfo/.mkv}"
+			sufix=".mkv"
+		elif [ -f "${episode//.nfo/.mp4}" ];then
+			videoPath="${episode//.nfo/.mp4}"
+			sufix=".mp4"
+		elif [ -f "${episode//.nfo/.mp3}" ];then
+			videoPath="${episode//.nfo/.mp3}"
+			sufix=".mp3"
+		elif [ -f "${episode//.nfo/.ogv}" ];then
+			videoPath="${episode//.nfo/.ogv}"
+			sufix=".ogv"
+		elif [ -f "${episode//.nfo/.ogg}" ];then
+			videoPath="${episode//.nfo/.ogg}"
+			sufix=".ogg"
+		elif [ -f "${episode//.nfo/.strm}" ];then
+			videoPath="${episode//.nfo/.strm}"
+			videoPath=$(cat "$videoPath")
+			sufix=".strm"
+		fi
+		# set the video type based on the found video path
+		if echo "$videoPath" | grep ".mp3";then
+			mediaType="audio"
+			mimeType="audio/mp3"
+		elif echo "$videoPath" | grep ".ogg";then
+			mediaType="audio"
+			mimeType="audio/ogg"
+		elif echo "$videoPath" | grep ".ogv";then
+			mediaType="video"
+			mimeType="video/ogv"
+		elif echo "$videoPath" | grep ".mp4";then
+			mediaType="video"
+			mimeType="video/mp4"
+		elif echo "$videoPath" | grep ".mkv";then
+			mediaType="video"
+			mimeType="video/mkv"
+		else
+			# if no correct video type was found use video only tag
+			# this is a failover for .strm files
+			mediaType="video"
+			mimeType="video"
+		fi
+		echo "videoPath = $videoPath"
+		episodeVideoPath="${episode//.nfo/$sufix}"
+		echo "episodeVideoPath = $videoPath"
+		# link the video from the libary to the generated website
+		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix"
+		# remove .nfo extension and create thumbnail path
+		thumbnail="${episode//.nfo}-thumb"
+		thumbnailPath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle-thumb"
+		# check for a local thumbnail
+		if [ -f "$thumbnailPath.jpg" ];then
+			echo "Thumbnail already linked..."
+		elif [ -f "$thumbnailPath.jpg" ];then
+			echo "Thumbnail already linked..."
+		else
+			# no thumbnail has been linked or downloaded
+			if [ -f "$thumbnail.png" ];then
+				thumbnailExt=".png"
+				# link thumbnail into output directory
+				ln -s "$thumbnail.png" "$thumbnailPath.png"
+			elif [ -f "$thumbnail.jpg" ];then
+				thumbnailExt=".jpg"
+				# link thumbnail into output directory
+				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
+			else
+				if echo "$nfoInfo" | grep "thumb";then
+					echo "Try to download found thumbnail..."
+					thumbnailExt=".png"
+					# download the thumbnail
+					curl "$(ripXmlTag "$nfoInfo" "thumb")" > "$thumbnailPath$thumbnailExt"
+				fi
+			fi
+		fi
+		#TODO: here is where strm files need checked for Plugin: eg. youtube strm files
+		if echo "$videoPath" | grep --ignore-case "plugin://";then
+			# change the video path into a video id to make it embedable
+			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
+			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
+			#yt_id=${videoPath//^.*\?video_id\=/}
+			yt_id=${videoPath//*video_id=}
+			ytLink="https://youtube.com/watch?v=$yt_id"
+			{
+				# embed the youtube player
+				echo "<iframe width='560' height='315'"
+				echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
+				echo "frameborder='0'"
+				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+				echo "allowfullscreen>"
+				echo "</iframe>"
+				echo "<hr>"
+				# create a hard link
+				echo "<ul>"
+				echo "	<li>"
+				echo "		<a href='$ytLink'>"
+				echo "			$ytLink"
+				echo "		</a>"
+				echo "	</li>"
+				echo "	<li>"
+				# create link to .strm file
+				echo "		<a href='$episodeTitle$sufix'>"
+				echo "			$episodeTitle$sufix"
+				echo "		</a>"
+				echo "	</li>"
+				echo "</ul>"
+			} >> "$episodePagePath"
+			#echo "$videoPath" tr -d 'plugin://plugin.video.youtube/play/?video_id='
+		else
+			{
+				# build the html5 media player for local and remotly accessable media
+				echo "<$mediaType poster='$episodeTitle-thumb$thumbnailExt' controls>"
+				echo "<source src='$videoPath' type='$mimeType'>"
+				echo "</$mediaType>"
+				echo "<hr>"
+				# create a hard link
+				echo "<a href='$episodeTitle$sufix'>"
+				echo "$episodeTitle$sufix"
+				echo "</a>"
+			} >> "$episodePagePath"
+		fi
+		{
+			echo "</body>"
+			echo "</html>"
+		} >> "$episodePagePath"
+		################################################################################
+		# add the episode to the show page
+		################################################################################
+		{
+			#tempStyle="$episodeSeason/$episodeTitle-thumb$thumbnailExt"
+			#tempStyle="background-image: url(\"$tempStyle\")"
+			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeason/$episodeTitle.html'>"
+			echo "<a class='showPageEpisode' href='$episodeSeason/$episodeTitle.html'>"
+			#echo "	<div>"
+			echo "	<img src='$episodeSeason/$episodeTitle-thumb$thumbnailExt'>"
+			#echo "	</div>"
+			echo "	<h3 class='title'>"
+			echo "		$episodeTitle"
+			echo "	</h3>"
+			echo "</a>"
+		} >> "$showPagePath"
+	else
+		echo "[WARNING]: The file '$episode' could not be found!"
+	fi
+}
+########################################################################
 main(){
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
@@ -121,6 +302,9 @@ main(){
 		{
 			echo "<html>"
 			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
 			echo "</head>"
 			echo "<body>"
 		} > $homePagePath
@@ -130,10 +314,13 @@ main(){
 		for libary in $libaries;do
 			# check if the libary directory exists
 			echo "Check if directory exists at $libary"
-			if [ -e $libary ];then
+			if [ -e "$libary" ];then
 				# read each tvshow directory from the libary
 				for show in $libary/*;do
 					echo "show = '$show'"
+					################################################################################
+					# process page metadata
+					################################################################################
 					#show=$(echo "$show" | sed "s/.*\///g")
 					#echo "show filtered = '$show'"
 					# if the show directory exists
@@ -141,180 +328,103 @@ main(){
 					# load update the tvshow.nfo file and get the metadata required for
 					showMeta=$(cat "$show/tvshow.nfo")
 					showTitle=$(ripXmlTag "$showMeta" "title")
-					posterPath="$show/poster.png"
-					fanartPath="$show/fanart.png"
+					showTitle=$(cleanText "$showTitle")
+					# create directory
+					mkdir -p "$webDirectory/$showTitle/"
+					posterPath="poster.png"
+					# link the poster
+					if [ -f "$show/poster.png" ];then
+						ln -s "$show/poster.png" "$webDirectory/$showTitle/poster.png"
+						fanartPath="fanart.png"
+					fi
+					# link the fanart
+					if [ -f "$show/poster.png" ];then
+						ln -s "$show/fanart.png" "$webDirectory/$showTitle/fanart.png"
+					fi
 					# building the webpage for the show
 					showPagePath="$webDirectory/$showTitle/index.html"
-					mkdir -p $(echo "$showPagePath" | grep -o ".*\/")
-					touch $showPagePath
+					mkdir -p "$(echo "$showPagePath" | grep -o ".*\/")"
+					touch "$showPagePath"
+					################################################################################
+					# begin building the html of the page
+					################################################################################
 					# build top of show webpage containing all of the shows meta info
-					echo "<head>" >> $showPagePath
-					echo "</head>" >> $showPagePath
-					echo "<body>" >> $showPagePath
-					echo "<h1>$showTitle</h1>" >> $showPagePath
-					echo "<ul>" >> $showPagePath
+					{
+						tempStyle="html {background-image: url(\"$fanartPath\");background-size: 100%;}"
+						echo "<html style='$tempStyle'>"
+						echo "<head>"
+						echo "<style>"
+						echo "$tempStyle"
+						cat /usr/share/nfo2web/style.css
+						echo "</style>"
+						echo "</head>"
+						echo "<body>"
+						echo "<h1>$showTitle</h1>"
+						echo "<div class='episodeList'>"
+					} >> "$showPagePath"
 					# generate the episodes based on .nfo files
-					for season in $show/*;do
-						# if the folder is a directory that means a season has been found
-						echo "<div>" >> $showPagePath
-						# read each episode in the series
-						for episode in $season/*.nfo;do
-							if [ -f "$episode" ];then
-								echo "################################################################################"
-								echo "Processing Episode $episode"
-								echo "################################################################################"
-								# for each episode build a page for the episode
-								nfoInfo=$(cat "$episode")
-								# rip the episode title
-								showTitle=$(ripXmlTag "$nfoInfo" "showTitle")
-								episodeTitle=$(ripXmlTag "$nfoInfo" "title")
-								episodeSeason=$(ripXmlTag "$nfoInfo" "season")
-								# create the episode page path
-								#episodePagePath=$(echo "$episode" | sed "s/\.nfo$/.html/g")
-								episodePagePath="$webDirectory/$showTitle/$episodeSeason/$episodeTitle.html"
-								mkdir -p "$webDirectory/$showTitle/$episodeSeason/"
-								# start rendering the html
-								{
-									echo "<html>"
-									echo "<body>"
-									echo "<h1>$showTitle</h1>"
-									echo "<h2>$episodeTitle</h2>"
-								} > "$episodePagePath"
-								# link the episode nfo file
-								ln -s "$episode" "$webDirectory/$showTitle/$episodeSeason/$episodeTitle.nfo"
-								# find the videofile refrenced by the nfo file
-								if [ -f "${episode//.nfo/.mkv}" ];then
-									videoPath="${episode//.nfo/.mkv}"
-									sufix=".mkv"
-								elif [ -f "${episode//.nfo/.mp4}" ];then
-									videoPath="${episode//.nfo/.mp4}"
-									sufix=".mp4"
-								elif [ -f "${episode//.nfo/.mp3}" ];then
-									videoPath="${episode//.nfo/.mp3}"
-									sufix=".mp3"
-								elif [ -f "${episode//.nfo/.ogv}" ];then
-									videoPath="${episode//.nfo/.ogv}"
-									sufix=".ogv"
-								elif [ -f "${episode//.nfo/.ogg}" ];then
-									videoPath="${episode//.nfo/.ogg}"
-									sufix=".ogg"
-								elif [ -f "${episode//.nfo/.strm}" ];then
-									videoPath="${episode//.nfo/.strm}"
-									videoPath=$(cat "$videoPath")
-									sufix=".strm"
-								fi
-								# set the video type based on the found video path
-								if echo "$videoPath" | grep ".mp3";then
-									mediaType="audio"
-									mimeType="audio/mp3"
-								elif echo "$videoPath" | grep ".ogg";then
-									mediaType="audio"
-									mimeType="audio/ogg"
-								elif echo "$videoPath" | grep ".ogv";then
-									mediaType="video"
-									mimeType="video/ogv"
-								elif echo "$videoPath" | grep ".mp4";then
-									mediaType="video"
-									mimeType="video/mp4"
-								elif echo "$videoPath" | grep ".mkv";then
-									mediaType="video"
-									mimeType="video/mkv"
-								else
-									# if no correct video type was found use video only tag
-									# this is a failover for .strm files
-									mediaType="video"
-									mimeType="video"
-								fi
-								echo "videoPath = $videoPath"
-								episodeVideoPath="${episode//.nfo/$sufix}"
-								echo "episodeVideoPath = $videoPath"
-								# link the video from the libary to the generated website
-								ln -s "$episodeVideoPath" "$webDirectory/$showTitle/$episodeSeason/$episodeTitle$sufix"
-								thumbnail="$episode-thumb.jpg"
-								thumbnailPath="$webDirectory/$showTitle/$episodeSeason/$episodeTitle-thumb.png"
-								# check for a local thumbnail
-								if [ -f $thumbnail ];then
-									# link thumbnail into output directory
-									ln -s "$thumbnail" "$thumbnailPath"
-								else
-									if echo $nfoInfo | grep "thumb";then
-										# download the thumbnail
-										curl "$(ripXmlTag "$nfoInfo" "thumb")" > "$thumbnailPath"
-									fi
-								fi
-								#TODO: here is where strm files need checked for Plugin: eg. youtube strm files
-								if echo "$videoPath" | grep --ignore-case "plugin://";then
-									# change the video path into a video id to make it embedable
-									#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
-									yt_id=$(echo "$videoPath" | tr -d "plugin://plugin.video.youtube/play/?video_id=")
-									{
-										# embed the youtube player
-										echo "<iframe width='560' height='315'"
-										echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-										echo "frameborder='0'"
-										echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-										echo "allowfullscreen>"
-										echo "</iframe>"
-									} >> "$episodePagePath"
-									#echo "$videoPath" tr -d 'plugin://plugin.video.youtube/play/?video_id='
-								else
-									{
-										# build the html5 media player for local and remotly accessable media
-										echo "<$mediaType poster='$episodeTitle-thumb.png' controls>"
-										echo "<source src='$videoPath' type='$mimeType'>"
-										echo "</$mediaType>"
-									} >> "$episodePagePath"
-								fi
-								# create a hard link
-								{
-									echo "<a href='$episodeTitle$sufix'>"
-									echo "$episodeTitle$sufix"
-									echo "</a>"
-									echo "</body>"
-									echo "</html>"
-								} >> "$episodePagePath"
-								################################################################################
-								# add the episode to the show page
-								################################################################################
-								echo "<li>" >> "$showPagePath"
-								echo "<a href='$episodeSeason/$episodeTitle.html'>" >> "$showPagePath"
-								echo "$episodeTitle" >> "$showPagePath"
-								echo "</a>" >> "$showPagePath"
-								echo "</li>" >> "$showPagePath"
-							else
-								echo "[WARNING]: The file '$episode' could not be found!"
-							fi
-						done
-						echo "</ul>" >> $showPagePath
-						echo "</div>" >> "$showPagePath"
+					for season in "$show"/*;do
+						if [ -d "$season" ];then
+							# generate the season name from the path
+							seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
+							{
+								echo "<div class='seasonHeader'>"
+								echo "	<h2>"
+								echo "		$seasonName"
+								echo "	</h2>"
+								echo "</div>"
+								echo "<hr>"
+								echo "<div class='seasonContainer'>"
+							} >> "$showPagePath"
+							# if the folder is a directory that means a season has been found
+							# read each episode in the series
+							for episode in "$season"/*.nfo;do
+								processEpisode "$episode" "$showPagePath" "$webDirectory"
+							done
+							{
+								echo "</div>"
+							} >> "$showPagePath"
+						else
+							echo "Season folder $season does not exist"
+						fi
 					done
-					echo "</body>" >> "$showPagePath"
-					echo "</html>" >> "$showPagePath"
+					{
+						echo "</div>"
+						echo "</body>"
+						echo "</html>"
+					} >> "$showPagePath"
 					# add show page to the home page index
-					echo "<a href='$showTitle/'>" >> "$homePagePath"
-					echo "$showTitle" >> "$homePagePath"
-					echo "</a>" >> "$homePagePath"
+					{
+						echo "<a class='indexSeries' href='$showTitle/'>"
+						echo "	<img src='$showTitle/$posterPath'>"
+						echo "	<div>"
+						echo "		$showTitle"
+						echo "	</div>"
+						echo "</a>"
+					} >> "$homePagePath"
 				done
 			fi
 		done
-		echo "</body>" >> "$homePagePath"
-		echo "</html>" >> "$homePagePath"
+		{
+			echo "</body>"
+			echo "</html>"
+		} >> "$homePagePath"
 		# read the tvshow.nfo files for each show
-			################################################################################
-			# Create the show link on index.html
-			# - read poster.png as show button
-			################################################################################
-			# Create the series page
-			# - While generating the series page, you must generate the episode page in its
-			#   entirity, then proceed with generating the next episode link in the seasons
-			#   page
-			################################################################################
-			# - Create show metadata at the top of the page
-			# - set fanart.png as a static unscrolling background on the show page
-			# load all nfo files in show into a list
-				# find /pathToLibary/ -type f
-				# read show title and remove tags with sed
-			# feed nfo files into generator to extract seasons and episode .nfo data
+		################################################################################
+		# Create the show link on index.html
+		# - read poster.png as show button
+		################################################################################
+		# Create the series page
+		# - While generating the series page, you must generate the episode page in its
+		#   entirity, then proceed with generating the next episode link in the seasons
+		#   page
+		################################################################################
+		# - Create show metadata at the top of the page
+		# - set fanart.png as a static unscrolling background on the show page
+		# load all nfo files in show into a list
+		# find /pathToLibary/ -type f
+		# read show title and remove tags with sed
+		# feed nfo files into generator to extract seasons and episode .nfo data
 		################################################################################
 	else
 		# if no arguments are given run the update then help commands.

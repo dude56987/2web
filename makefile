@@ -47,6 +47,8 @@ build-deb:
 	touch debian/var/cache/nfo2web/web/.placeholder
 	# copy update script to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web
+	# copy over default stylesheet
+	cp style.css debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
