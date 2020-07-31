@@ -22,6 +22,11 @@ export PS4='+ ${LINENO}	|	'
 # set tab size to 4 to make output more readable
 tabs 4
 ########################################################################
+cleanText(){
+	# remove punctuation from text, remove leading whitespace, and double spaces
+	echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+}
+########################################################################
 ripXmlTag(){
 	data=$1
 	tag=$2
@@ -35,19 +40,16 @@ ripXmlTag(){
 	output="${output//<$theTag>}"
 	output="${output//<\/$theTag>}"
 	# remove special characters that will gunk up the works
+	output=$(cleanText "$output")
 	echo "$output"
 	return 0
 }
 ########################################################################
-cleanText(){
-	# remove punctuation from text
-	echo "$1" | sed "s/[[:punct:]]//g"
-}
-########################################################################
 processEpisode(){
 	episode="$1"
-	showPagePath="$2"
-	webDirectory="$3"
+	showTitle="$2"
+	showPagePath="$3"
+	webDirectory="$4"
 	echo "[INFO]: checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
@@ -57,14 +59,21 @@ processEpisode(){
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
-		episodeShowTitle=$(ripXmlTag "$nfoInfo" "showTitle")
+		episodeShowTitle=$showTitle
+		#episodeShowTitle=$(ripXmlTag "$nfoInfo" "showTitle")
+		echo "[INFO]: Episode show title = '$episodeShowTitle'"
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
+		echo "[INFO]: Episode show title after clean = '$episodeShowTitle'"
 		episodeTitle=$(ripXmlTag "$nfoInfo" "title")
+		echo "[INFO]: Episode title = '$episodeShowTitle'"
 		episodeTitle=$(cleanText "$episodeTitle")
+		echo "[INFO]: Episode title after clean = '$episodeShowTitle'"
 		episodeSeason=$(ripXmlTag "$nfoInfo" "season")
+		echo "[INFO]: Episode season = '$episodeSeason'"
 		# create the episode page path
-		#episodePagePath=$(echo "$episode" | sed "s/\.nfo$/.html/g")
 		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.html"
+		echo "[INFO]: Episode page path = '$episodePagePath'"
+		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeason/'"
 		mkdir -p "$webDirectory/$episodeShowTitle/$episodeSeason/"
 		# start rendering the html
 		{
@@ -79,6 +88,7 @@ processEpisode(){
 			echo "<h2>$episodeTitle</h2>"
 		} > "$episodePagePath"
 		# link the episode nfo file
+		echo "[INFO]: linking $episode to $webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.nfo"
 		ln -s "$episode" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
@@ -116,7 +126,7 @@ processEpisode(){
 			mimeType="video/mp4"
 		elif echo "$videoPath" | grep ".mkv";then
 			mediaType="video"
-			mimeType="video/mkv"
+			mimeType="video/x-matroska"
 		else
 			# if no correct video type was found use video only tag
 			# this is a failover for .strm files
@@ -129,15 +139,20 @@ processEpisode(){
 		episodeVideoPath="${episode//.nfo/$sufix}"
 		echo "[INFO]: episodeVideoPath = $videoPath"
 		# link the video from the libary to the generated website
+		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix'"
 		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix"
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
+		echo "[INFO]: thumbnail template = $thumbnail"
+		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
+		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
 		thumbnailPath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle-thumb"
+		echo "[INFO]: new thumbnail path = $thumbnailPath"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
-			echo "Thumbnail already linked..."
+			echo "[INFO]: Thumbnail already linked..."
 		elif [ -f "$thumbnailPath.jpg" ];then
-			echo "Thumbnail already linked..."
+			echo "[INFO]: Thumbnail already linked..."
 		else
 			# no thumbnail has been linked or downloaded
 			if [ -f "$thumbnail.png" ];then
@@ -195,11 +210,23 @@ processEpisode(){
 				echo "</ul>"
 			} >> "$episodePagePath"
 			#echo "$videoPath" tr -d 'plugin://plugin.video.youtube/play/?video_id='
-		else
+		elif echo "$videoPath" | grep "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
 				echo "<$mediaType poster='$episodeTitle-thumb$thumbnailExt' controls>"
 				echo "<source src='$videoPath' type='$mimeType'>"
+				echo "</$mediaType>"
+				echo "<hr>"
+				# create a hard link
+				echo "<a href='$episodeTitle$sufix'>"
+				echo "$episodeTitle$sufix"
+				echo "</a>"
+			} >> "$episodePagePath"
+		else
+			{
+				# build the html5 media player for local and remotly accessable media
+				echo "<$mediaType poster='$episodeTitle-thumb$thumbnailExt' controls>"
+				echo "<source src='$episodeTitle$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<hr>"
 				# create a hard link
@@ -331,97 +358,109 @@ main(){
 					# process page metadata
 					################################################################################
 					# if the show directory contains a nfo file defining the show
-					#if [ -f "$show/tvshow.nfo" ];then
-					# load update the tvshow.nfo file and get the metadata required for
-					showMeta=$(cat "$show/tvshow.nfo")
-					showTitle=$(ripXmlTag "$showMeta" "title")
-					echo "[INFO]: showTitle = $showTitle"
-					showTitle=$(cleanText "$showTitle")
-					echo "[INFO]: showTitle after cleanText() = $showTitle"
-					# create directory
-					echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
-					mkdir -p "$webDirectory/$showTitle/"
-					# link the poster
-					if [ -f "$show/poster.png" ];then
-						echo "[INFO]: Found $show/poster.png"
-						ln -s "$show/poster.png" "$webDirectory/$showTitle/poster.png"
-						posterPath="poster.png"
-					else
-						echo "[WARNING]: could not find $show/poster.png"
-					fi
-					# link the fanart
-					if [ -f "$show/fanart.png" ];then
-						echo "[INFO]: Found $show/fanart.png"
-						ln -s "$show/fanart.png" "$webDirectory/$showTitle/fanart.png"
-						fanartPath="fanart.png"
-					else
-						echo "[WARNING]: could not find $show/fanart.png"
-					fi
-					# building the webpage for the show
-					showPagePath="$webDirectory/$showTitle/index.html"
-					echo "[INFO]: Creating directory at = '$webDirectory/$showTitle/'"
-					mkdir -p "$webDirectory/$showTitle/"
-					echo "[INFO]: Creating showPagePath = $showPagePath"
-					touch "$showPagePath"
-					################################################################################
-					# begin building the html of the page
-					################################################################################
-					# build top of show webpage containing all of the shows meta info
-					{
-						tempStyle="html {background-image: url(\"$fanartPath\");background-size: 100%;}"
-						echo "<html style='$tempStyle'>"
-						echo "<head>"
-						echo "<style>"
-						echo "$tempStyle"
-						cat /usr/share/nfo2web/style.css
-						echo "</style>"
-						echo "</head>"
-						echo "<body>"
-						echo "<h1>$showTitle</h1>"
-						echo "<div class='episodeList'>"
-					} >> "$showPagePath"
-					# generate the episodes based on .nfo files
-					for season in "$show"/*;do
-						echo "[INFO]: checking for season folder at '$season'"
-						if [ -d "$season" ];then
-							echo "[INFO]: found season folder at '$season'"
-							# generate the season name from the path
-							seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
-							{
-								echo "<div class='seasonHeader'>"
-								echo "	<h2>"
-								echo "		$seasonName"
-								echo "	</h2>"
-								echo "</div>"
-								echo "<hr>"
-								echo "<div class='seasonContainer'>"
-							} >> "$showPagePath"
-							# if the folder is a directory that means a season has been found
-							# read each episode in the series
-							for episode in "$season"/*.nfo;do
-								processEpisode "$episode" "$showPagePath" "$webDirectory"
-							done
-							{
-								echo "</div>"
-							} >> "$showPagePath"
+					echo "[INFO]: searching for metadata at $show/tvshow.nfo"
+					if [ -f "$show/tvshow.nfo" ];then
+						echo "[INFO]: found metadata at $show/tvshow.nfo"
+						# load update the tvshow.nfo file and get the metadata required for
+						showMeta=$(cat "$show/tvshow.nfo")
+						showTitle=$(ripXmlTag "$showMeta" "title")
+						echo "[INFO]: showTitle = $showTitle"
+						showTitle=$(cleanText "$showTitle")
+						echo "[INFO]: showTitle after cleanText() = $showTitle"
+						# create directory
+						echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
+						mkdir -p "$webDirectory/$showTitle/"
+						# link the poster
+						if [ -f "$show/poster.png" ];then
+							posterPath="poster.png"
+							echo "[INFO]: Found $show/$posterPath"
+							ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
+						elif [ -f "$show/poster.jpg" ];then
+							posterPath="poster.jpg"
+							echo "[INFO]: Found $show/$posterPath"
+							ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
 						else
-							echo "Season folder $season does not exist"
+							echo "[WARNING]: could not find $show/poster.[png/jpg]"
 						fi
-					done
-					{
-						echo "</div>"
-						echo "</body>"
-						echo "</html>"
-					} >> "$showPagePath"
-					# add show page to the home page index
-					{
-						echo "<a class='indexSeries' href='$showTitle/'>"
-						echo "	<img src='$showTitle/poster.png'>"
-						echo "	<div>"
-						echo "		$showTitle"
-						echo "	</div>"
-						echo "</a>"
-					} >> "$homePagePath"
+						# link the fanart
+						if [ -f "$show/fanart.png" ];then
+							echo "[INFO]: Found $show/fanart.png"
+							fanartPath="fanart.png"
+							echo "[INFO]: Found $show/$fanartPath"
+							ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
+						elif [ -f "$show/fanart.jpg" ];then
+							fanartPath="fanart.jpg"
+							echo "[INFO]: Found $show/$fanartPath"
+							ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
+						else
+							echo "[WARNING]: could not find $show/fanart.[png/jpg]"
+						fi
+						# building the webpage for the show
+						showPagePath="$webDirectory/$showTitle/index.html"
+						echo "[INFO]: Creating directory at = '$webDirectory/$showTitle/'"
+						mkdir -p "$webDirectory/$showTitle/"
+						echo "[INFO]: Creating showPagePath = $showPagePath"
+						touch "$showPagePath"
+						################################################################################
+						# begin building the html of the page
+						################################################################################
+						# build top of show webpage containing all of the shows meta info
+						{
+							tempStyle="html {background-image: url(\"$fanartPath\");background-size: 100%;}"
+							echo "<html style='$tempStyle'>"
+							echo "<head>"
+							echo "<style>"
+							echo "$tempStyle"
+							cat /usr/share/nfo2web/style.css
+							echo "</style>"
+							echo "</head>"
+							echo "<body>"
+							echo "<h1>$showTitle</h1>"
+							echo "<div class='episodeList'>"
+						} >> "$showPagePath"
+						# generate the episodes based on .nfo files
+						for season in "$show"/*;do
+							echo "[INFO]: checking for season folder at '$season'"
+							if [ -d "$season" ];then
+								echo "[INFO]: found season folder at '$season'"
+								# generate the season name from the path
+								seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
+								{
+									echo "<div class='seasonHeader'>"
+									echo "	<h2>"
+									echo "		$seasonName"
+									echo "	</h2>"
+									echo "</div>"
+									echo "<hr>"
+									echo "<div class='seasonContainer'>"
+								} >> "$showPagePath"
+								# if the folder is a directory that means a season has been found
+								# read each episode in the series
+								for episode in "$season"/*.nfo;do
+									processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
+								done
+								{
+									echo "</div>"
+								} >> "$showPagePath"
+							else
+								echo "Season folder $season does not exist"
+							fi
+						done
+						{
+							echo "</div>"
+							echo "</body>"
+							echo "</html>"
+						} >> "$showPagePath"
+						# add show page to the home page index
+						{
+							echo "<a class='indexSeries' href='$showTitle/'>"
+							echo "	<img src='$showTitle/$posterPath'>"
+							echo "	<div>"
+							echo "		$showTitle"
+							echo "	</div>"
+							echo "</a>"
+						} >> "$homePagePath"
+					fi
 				done
 			fi
 		done
