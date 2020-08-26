@@ -27,27 +27,70 @@ cleanText(){
 	echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
 }
 ########################################################################
+function validString(){
+	stringToCheck="$1"
+	if ! echo "$@" | grep -q "\-q";then
+		echo "[INFO]: Checking string '$stringToCheck'"
+	fi
+	# convert string letters to all uppercase and look for returned NULL string
+	# jq returns these strings instead of failing outright
+	if echo "${stringToCheck^^}" | grep "NULL";then
+		# this means the function is a null string returned by jq
+		if ! echo "$@" | grep -q "\-q";then
+			echo "[WARNING]:string is a NULL value"
+		fi
+		return 2
+	elif [ 1 -ge $(expr length "$stringToCheck") ];then
+		# this means the string is only one character
+		if ! echo "$@" | grep -q "\-q";then
+			echo "[WARNING]:String length is less than one"
+		fi
+		return 1
+	else
+		# all checks have been passed the string is correct
+		if ! echo "$@" | grep -q "\-q";then
+			echo "[INFO]: String passed all checks and is correct"
+		fi
+		return 0
+	fi
+}
+########################################################################
 ripXmlTag(){
 	data=$1
 	tag=$2
-	# ignore the case of the tag and rip the case used
-	theTag=$(echo "$data" | grep --ignore-case --only-matching "<$tag>")
-	theTag="${theTag//<}"
-	theTag="${theTag//>}"
-	# rip the tag from the data
-	#echo "$data" | grep -i "<$theTag>" | sed "s/<$theTag>//g" | sed "s/<\/$theTag>//g"
-	output=$(echo "$data" | grep "<$theTag>")
-	output="${output//<$theTag>}"
-	output="${output//<\/$theTag>}"
-	# remove special characters that will gunk up the works
-	output=$(cleanText "$output")
-	echo "$output"
-	return 0
+	# remove complex xml tags, they make parsing more difficult
+	data=$(echo "$data" | grep -v "/>")
+	# check for valid string
+	if validString "$tag" -q;then
+		# ignore the case of the tag and rip the case used
+		theTag=$(echo "$data" | grep --ignore-case --only-matching "<$tag>")
+		theTag="${theTag//<}"
+		theTag="${theTag//>}"
+		# rip the tag from the data
+		#echo "$data" | grep -i "<$theTag>" | sed "s/<$theTag>//g" | sed "s/<\/$theTag>//g"
+		output=$(echo "$data" | grep "<$theTag>")
+		output="${output//<$theTag>}"
+		output="${output//<\/$theTag>}"
+		# remove special characters that will gunk up the works
+		#output=$(cleanText "$output")
+		echo "$output"
+		return 0
+	else
+		echo "[DEBUG]: Tag must be at least one character in length!"
+		echo "[ERROR]: Program FAILURE has occured!"
+		return 1
+	fi
+}
+########################################################################
+cleanXml(){
+	data=$1
+	tag=$2
+	cleanText "$(ripXmlTag "$data" "$tag")"
 }
 ########################################################################
 processEpisode(){
 	episode="$1"
-	showTitle="$2"
+	episodeShowTitle="$2"
 	showPagePath="$3"
 	webDirectory="$4"
 	echo "[INFO]: checking if episode path exists $episode"
@@ -59,17 +102,15 @@ processEpisode(){
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
-		episodeShowTitle=$showTitle
-		#episodeShowTitle=$(ripXmlTag "$nfoInfo" "showTitle")
 		echo "[INFO]: Episode show title = '$episodeShowTitle'"
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
 		echo "[INFO]: Episode show title after clean = '$episodeShowTitle'"
-		episodeTitle=$(ripXmlTag "$nfoInfo" "title")
+		episodeTitle=$(cleanXml "$nfoInfo" "title")
 		echo "[INFO]: Episode title = '$episodeShowTitle'"
-		episodeTitle=$(cleanText "$episodeTitle")
-		echo "[INFO]: Episode title after clean = '$episodeShowTitle'"
-		episodeSeason=$(ripXmlTag "$nfoInfo" "season")
+		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		echo "[INFO]: Episode season = '$episodeSeason'"
+		#episodeSeason=$(cleanText "$nfoInfo" "season")
+		echo "[INFO]: Episode season after clean = '$episodeSeason'"
 		# create the episode page path
 		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.html"
 		echo "[INFO]: Episode page path = '$episodePagePath'"
@@ -185,6 +226,7 @@ processEpisode(){
 			yt_id=${videoPath//*video_id=}
 			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
+
 			{
 				# embed the youtube player
 				echo "<iframe width='560' height='315'"
@@ -222,6 +264,37 @@ processEpisode(){
 				echo "$episodeTitle$sufix"
 				echo "</a>"
 			} >> "$episodePagePath"
+			{
+				echo "<head>"
+				echo "	<link href='https://vjs.zencdn.net/7.8.4/video-js.css' rel='stylesheet' />"
+				echo "	<!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->"
+				echo "	<script src='https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js'></script>"
+				echo "	<script src='https://cdn.jsdelivr.net/npm/videojs-flash@2/dist/videojs-flash.min.js'></script>";
+				echo "</head>"
+				echo "<body>"
+				echo "	<script>window.HELP_IMPROVE_VIDEOJS = false;</script>"
+				echo "	<video"
+				echo "		id='my-video'"
+				echo "		class='video-js'"
+				echo "		controls"
+				echo "		preload='auto'"
+				echo "		width='640'"
+				echo "		height='264'"
+				echo "		poster='$episodeTitle-thumb$thumbnailExt'"
+				echo "		data-setup='{}'"
+				echo "	>"
+				echo "		<source src='$episodeTitle$sufix' type='$mimeType' />"
+				echo "		<p class='vjs-no-js'>"
+				echo "			To view this video please enable JavaScript, and consider upgrading to a"
+				echo "			web browser that"
+				echo "			<a href='https://videojs.com/html5-video-support/' target='_blank'>"
+				echo "				supports HTML5 video</a>"
+				echo "			"
+				echo "		</p>"
+				echo "	</video>"
+				echo "	<script src='https://vjs.zencdn.net/7.8.4/video.js'></script>"
+				echo "</body>"
+			} >> "$episodePagePath"
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
@@ -233,6 +306,35 @@ processEpisode(){
 				echo "<a href='$episodeTitle$sufix'>"
 				echo "$episodeTitle$sufix"
 				echo "</a>"
+			} >> "$episodePagePath"
+			{
+			echo "<head>"
+			echo "	<link href='https://vjs.zencdn.net/7.8.4/video-js.css' rel='stylesheet' />"
+			echo "	<!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->"
+			echo "	<script src='https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js'></script>"
+			echo "</head>"
+			echo "<body>"
+			echo "	<video"
+			echo "		id='my-video'"
+			echo "		class='video-js'"
+			echo "		controls"
+			echo "		preload='auto'"
+			echo "		width='640'"
+			echo "		height='264'"
+			echo "		poster='$episodeTitle-thumb$thumbnailExt'"
+			echo "		data-setup='{}'"
+			echo "	>"
+			echo "		<source src='$episodeTitle$sufix' type='$mimeType' />"
+			echo "		<p class='vjs-no-js'>"
+			echo "			To view this video please enable JavaScript, and consider upgrading to a"
+			echo "			web browser that"
+			echo "			<a href='https://videojs.com/html5-video-support/' target='_blank'>"
+			echo "				supports HTML5 video</a>"
+			echo "			"
+			echo "		</p>"
+			echo "	</video>"
+			echo "	<script src='https://vjs.zencdn.net/7.8.4/video.js'></script>"
+			echo "</body>"
 			} >> "$episodePagePath"
 		fi
 		{
@@ -287,6 +389,11 @@ main(){
 		echo "update"
 		echo "  This will update the webpages and refresh the database."
 		echo "########################################################################"
+	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+		echo "[INFO]: Reseting web cache..."
+		rm -rv /var/cache/nfo2web/web/*
+		echo "[SUCCESS]: Web cache is now empty."
+		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		################################################################################
 		# Create website containing info and links to one or more .nfo directories
@@ -352,7 +459,7 @@ main(){
 			if [ -e "$libary" ];then
 				echo "[INFO]: libary exists at '$libary'"
 				# read each tvshow directory from the libary
-				for show in $libary/*;do
+				for show in "$libary"/*;do
 					echo "[INFO]: show path = '$show'"
 					################################################################################
 					# process page metadata
