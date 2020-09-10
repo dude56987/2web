@@ -39,11 +39,13 @@ build-deb:
 	mkdir -p debian/usr/share/nfo2web;
 	mkdir -p debian/var/cache/nfo2web/web;
 	mkdir -p debian/etc;
+	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# make placeholder
+	touch debian/etc/nfo2web/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
 	# copy update script to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web

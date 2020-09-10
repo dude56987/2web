@@ -143,6 +143,9 @@ h2 {
 	height: 150px;
 }
 /*******************************/
+table, th, td{
+	border: 1px solid black;
+}
 .player audio{
 	width: auto;
 	height: 100%;
