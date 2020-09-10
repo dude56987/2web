@@ -143,6 +143,10 @@ h2 {
 	height: 150px;
 }
 /*******************************/
+.player audio{
+	width: auto;
+	height: 100%;
+}
 .player video{
 	width: auto;
 	height: 100%;

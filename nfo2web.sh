@@ -109,13 +109,20 @@ processEpisode(){
 		echo "[INFO]: Episode title = '$episodeShowTitle'"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		echo "[INFO]: Episode season = '$episodeSeason'"
-		#episodeSeason=$(cleanText "$nfoInfo" "season")
-		echo "[INFO]: Episode season after clean = '$episodeSeason'"
+		episodeSeasonPath="Season $episodeSeason"
+		echo "[INFO]: Episode season path = '$episodeSeasonPath'"
+		episodeNumber=$(cleanXml "$nfoInfo" "episode")
+		echo "[INFO]: Episode number = '$episodeNumber'"
 		# create the episode page path
-		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.html"
+		# each episode file title must be made so that it can be read more easily by kodi
+		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
+		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.html"
 		echo "[INFO]: Episode page path = '$episodePagePath'"
-		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeason/'"
-		mkdir -p "$webDirectory/$episodeShowTitle/$episodeSeason/"
+		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
+		mkdir -p "$webDirectory/$episodeShowTitle/$episodeSeasonPath/"
+		chown -R www-data:www-data "$webDirectory/$episodeShowTitle/$episodeSeasonPath/"
+		mkdir -p "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/"
+		chown -R www-data:www-data "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/"
 		# start rendering the html
 		{
 			echo "<html>"
@@ -129,8 +136,9 @@ processEpisode(){
 			echo "<h2>$episodeTitle</h2>"
 		} > "$episodePagePath"
 		# link the episode nfo file
-		echo "[INFO]: linking $episode to $webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.nfo"
-		ln -s "$episode" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle.nfo"
+		echo "[INFO]: linking $episode to $webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
 			videoPath="${episode//.nfo/.mkv}"
@@ -180,19 +188,21 @@ processEpisode(){
 		episodeVideoPath="${episode//.nfo/$sufix}"
 		echo "[INFO]: episodeVideoPath = $videoPath"
 		# link the video from the libary to the generated website
-		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix'"
-		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle$sufix"
+		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
+		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+		ln -s "$episodeVideoPath" "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
 		echo "[INFO]: thumbnail template = $thumbnail"
 		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
 		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
-		thumbnailPath="$webDirectory/$episodeShowTitle/$episodeSeason/$episodeTitle-thumb"
+		thumbnailPath="$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+		thumbnailPathKodi="$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		echo "[INFO]: new thumbnail path = $thumbnailPath"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
 			echo "[INFO]: Thumbnail already linked..."
-		elif [ -f "$thumbnailPath.jpg" ];then
+		elif [ -f "$thumbnailPath.png" ];then
 			echo "[INFO]: Thumbnail already linked..."
 		else
 			# no thumbnail has been linked or downloaded
@@ -201,11 +211,13 @@ processEpisode(){
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.png" "$thumbnailPath.png"
+				ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
 			elif [ -f "$thumbnail.jpg" ];then
 				echo "[INFO]: found JPG thumbnail..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
+				ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
 			else
 				if echo "$nfoInfo" | grep "thumb";then
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
@@ -217,7 +229,7 @@ processEpisode(){
 				fi
 			fi
 		fi
-		#TODO: here is where strm files need checked for Plugin: eg. youtube strm files
+		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
 			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
@@ -245,8 +257,8 @@ processEpisode(){
 				echo "	</li>"
 				echo "	<li>"
 				# create link to .strm file
-				echo "		<a href='$episodeTitle$sufix'>"
-				echo "			$episodeTitle$sufix"
+				echo "		<a href='$episodePath$sufix'>"
+				echo "			$episodePath$sufix"
 				echo "		</a>"
 				echo "	</li>"
 				echo "</ul>"
@@ -255,86 +267,31 @@ processEpisode(){
 		elif echo "$videoPath" | grep "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType poster='$episodeTitle-thumb$thumbnailExt' controls>"
+				echo "<$mediaType poster='$episodePath-thumb$thumbnailExt' controls>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<hr>"
 				# create a hard link
-				echo "<a href='$episodeTitle$sufix'>"
-				echo "$episodeTitle$sufix"
+				if [ "$sufix" = ".strm" ];then
+					echo "<a href='$videoPath'>"
+					echo "$videoPath"
+					echo "</a><br>"
+				fi
+				echo "<a href='$episodePath$sufix'>"
+				echo "$episodePath$sufix"
 				echo "</a>"
-			} >> "$episodePagePath"
-			{
-				echo "<head>"
-				echo "	<link href='https://vjs.zencdn.net/7.8.4/video-js.css' rel='stylesheet' />"
-				echo "	<!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->"
-				echo "	<script src='https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js'></script>"
-				echo "	<script src='https://cdn.jsdelivr.net/npm/videojs-flash@2/dist/videojs-flash.min.js'></script>";
-				echo "</head>"
-				echo "<body>"
-				echo "	<script>window.HELP_IMPROVE_VIDEOJS = false;</script>"
-				echo "	<video"
-				echo "		id='my-video'"
-				echo "		class='video-js'"
-				echo "		controls"
-				echo "		preload='auto'"
-				echo "		width='640'"
-				echo "		height='264'"
-				echo "		poster='$episodeTitle-thumb$thumbnailExt'"
-				echo "		data-setup='{}'"
-				echo "	>"
-				echo "		<source src='$episodeTitle$sufix' type='$mimeType' />"
-				echo "		<p class='vjs-no-js'>"
-				echo "			To view this video please enable JavaScript, and consider upgrading to a"
-				echo "			web browser that"
-				echo "			<a href='https://videojs.com/html5-video-support/' target='_blank'>"
-				echo "				supports HTML5 video</a>"
-				echo "			"
-				echo "		</p>"
-				echo "	</video>"
-				echo "	<script src='https://vjs.zencdn.net/7.8.4/video.js'></script>"
-				echo "</body>"
 			} >> "$episodePagePath"
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType poster='$episodeTitle-thumb$thumbnailExt' controls>"
-				echo "<source src='$episodeTitle$sufix' type='$mimeType'>"
+				echo "<$mediaType poster='$episodePath-thumb$thumbnailExt' controls>"
+				echo "<source src='$episodePath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<hr>"
 				# create a hard link
-				echo "<a href='$episodeTitle$sufix'>"
-				echo "$episodeTitle$sufix"
+				echo "<a href='$episodePath$sufix'>"
+				echo "$episodePath$sufix"
 				echo "</a>"
-			} >> "$episodePagePath"
-			{
-			echo "<head>"
-			echo "	<link href='https://vjs.zencdn.net/7.8.4/video-js.css' rel='stylesheet' />"
-			echo "	<!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->"
-			echo "	<script src='https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js'></script>"
-			echo "</head>"
-			echo "<body>"
-			echo "	<video"
-			echo "		id='my-video'"
-			echo "		class='video-js'"
-			echo "		controls"
-			echo "		preload='auto'"
-			echo "		width='640'"
-			echo "		height='264'"
-			echo "		poster='$episodeTitle-thumb$thumbnailExt'"
-			echo "		data-setup='{}'"
-			echo "	>"
-			echo "		<source src='$episodeTitle$sufix' type='$mimeType' />"
-			echo "		<p class='vjs-no-js'>"
-			echo "			To view this video please enable JavaScript, and consider upgrading to a"
-			echo "			web browser that"
-			echo "			<a href='https://videojs.com/html5-video-support/' target='_blank'>"
-			echo "				supports HTML5 video</a>"
-			echo "			"
-			echo "		</p>"
-			echo "	</video>"
-			echo "	<script src='https://vjs.zencdn.net/7.8.4/video.js'></script>"
-			echo "</body>"
 			} >> "$episodePagePath"
 		fi
 		{
@@ -345,15 +302,15 @@ processEpisode(){
 		# add the episode to the show page
 		################################################################################
 		{
-			#tempStyle="$episodeSeason/$episodeTitle-thumb$thumbnailExt"
+			#tempStyle="$episodeSeasonPath/$episodePath-thumb$thumbnailExt"
 			#tempStyle="background-image: url(\"$tempStyle\")"
-			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeason/$episodeTitle.html'>"
-			echo "<a class='showPageEpisode' href='$episodeSeason/$episodeTitle.html'>"
+			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeasonPath/$episodePath.html'>"
+			echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
 			#echo "	<div>"
-			echo "	<img src='$episodeSeason/$episodeTitle-thumb$thumbnailExt'>"
+			echo "	<img src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
 			#echo "	</div>"
 			echo "	<h3 class='title'>"
-			echo "		$episodeTitle"
+			echo "		$episodePath"
 			echo "	</h3>"
 			echo "</a>"
 		} >> "$showPagePath"
@@ -434,10 +391,14 @@ main(){
 			webDirectory=$(cat /etc/nfo2web/web.cfg)
 		else
 			mkdir -p /var/cache/nfo2web/web/
+			chown -R www-data:www-data "/var/cache/nfo2web/web/"
 			echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
 			webDirectory="/var/cache/nfo2web/web"
 		fi
-		mkdir -p $webDirectory
+		mkdir -p "$webDirectory"
+		chown -R www-data:www-data "$webDirectory"
+		mkdir -p "$webDirectory/kodi/"
+		chown -R www-data:www-data "$webDirectory/kodi/"
 		# create the homepage path
 		homePagePath="$webDirectory/index.html"
 		touch $homePagePath
@@ -449,11 +410,24 @@ main(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
+			# build the header
+			echo "<div class='header'>"
+			echo "<a class='headerButton' href='..'>"
+			echo "HOME"
+			echo "</a>"
+			echo "<a class='headerButton' href='kodi'>"
+			echo "KODI"
+			echo "</a>"
+			echo "<a class='headerButton' href='settings.php'>"
+			echo "SETTINGS"
+			echo "</a>"
+			echo "</div>"
 		} > $homePagePath
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
 		# read each libary from the libary config, single path per line
-		for libary in $libaries;do
+		#for libary in $libaries;do
+		echo "$libaries" | while read libary;do
 			# check if the libary directory exists
 			echo "Check if directory exists at $libary"
 			if [ -e "$libary" ];then
@@ -477,15 +451,27 @@ main(){
 						# create directory
 						echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
 						mkdir -p "$webDirectory/$showTitle/"
+						chown -R www-data:www-data "$webDirectory/$showTitle"
+						# check and remove duplicate thubnails for this show, failed thumbnails on the
+						# same show generally fail in the same way
+						fdupes --recurse --delete --immediate "$webDirectory/$showTitle/"
+						# create the kodi directory for the show
+						mkdir -p "$webDirectory/kodi/$showTitle/"
+						chown -R www-data:www-data "$webDirectory/kodi/$showTitle"
+						# linking tvshow.nfo data
+						ln -s "$show/tvshow.nfo" "$webDirectory/$showTitle/tvshow.nfo"
+						ln -s "$show/tvshow.nfo" "$webDirectory/kodi/$showTitle/tvshow.nfo"
 						# link the poster
 						if [ -f "$show/poster.png" ];then
 							posterPath="poster.png"
 							echo "[INFO]: Found $show/$posterPath"
 							ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
+							ln -s "$show/$posterPath" "$webDirectory/kodi/$showTitle/$posterPath"
 						elif [ -f "$show/poster.jpg" ];then
 							posterPath="poster.jpg"
 							echo "[INFO]: Found $show/$posterPath"
 							ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
+							ln -s "$show/$posterPath" "$webDirectory/kodi/$showTitle/$posterPath"
 						else
 							echo "[WARNING]: could not find $show/poster.[png/jpg]"
 						fi
@@ -495,10 +481,12 @@ main(){
 							fanartPath="fanart.png"
 							echo "[INFO]: Found $show/$fanartPath"
 							ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
+							ln -s "$show/$fanartPath" "$webDirectory/kodi/$showTitle/$fanartPath"
 						elif [ -f "$show/fanart.jpg" ];then
 							fanartPath="fanart.jpg"
 							echo "[INFO]: Found $show/$fanartPath"
 							ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
+							ln -s "$show/$fanartPath" "$webDirectory/kodi/$showTitle/$fanartPath"
 						else
 							echo "[WARNING]: could not find $show/fanart.[png/jpg]"
 						fi
