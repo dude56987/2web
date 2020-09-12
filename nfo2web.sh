@@ -24,7 +24,11 @@ tabs 4
 ########################################################################
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
-	echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+	if [ -f /usr/bin/inline-detox ];then
+		echo "$1" | inline-detox
+	else
+		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+	fi
 }
 ########################################################################
 function debugCheck(){
@@ -139,11 +143,13 @@ processMovie(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 			echo "<h1>$movieTitle</h1>"
 		} > "$moviePagePath"
 		# link the movie nfo file
-		echo "[INFO]: linking $moviePath to $webDirectory/$movieWebPath/$movieWebPath.nfo"
+		echo "[INFO]: linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
 		ln -s "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
+		echo "[INFO]: linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		ln -s "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
@@ -206,8 +212,9 @@ processMovie(){
 		movieVideoPath="${moviePath//.nfo/$sufix}"
 		echo "[INFO]: movieVideoPath = $videoPath"
 		# link the video from the libary to the generated website
-		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/$movieWebPath/$movieWebPath$sufix'"
+		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/movies/$movieWebPath/$movieWebPath$sufix'"
 		ln -s "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
+		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix'"
 		ln -s "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${moviePath//.nfo}-poster"
@@ -366,13 +373,13 @@ processEpisode(){
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
-		episodePagePath="$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.html"
+		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.html"
 		echo "[INFO]: Episode page path = '$episodePagePath'"
 		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
-		mkdir -p "$webDirectory/$episodeShowTitle/$episodeSeasonPath/"
-		chown -R www-data:www-data "$webDirectory/$episodeShowTitle/$episodeSeasonPath/"
-		mkdir -p "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/"
-		chown -R www-data:www-data "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/"
+		mkdir -p "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
+		chown -R www-data:www-data "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
+		mkdir -p "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
+		chown -R www-data:www-data "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		# start rendering the html
 		{
 			echo "<html>"
@@ -382,13 +389,14 @@ processEpisode(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "<h1>$episodeShowTitle</h1>"
 			echo "<h2>$episodeTitle</h2>"
 		} > "$episodePagePath"
 		# link the episode nfo file
-		echo "[INFO]: linking $episode to $webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		echo "[INFO]: linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
 			videoPath="${episode//.nfo/.mkv}"
@@ -450,16 +458,16 @@ processEpisode(){
 		episodeVideoPath="${episode//.nfo/$sufix}"
 		echo "[INFO]: episodeVideoPath = $videoPath"
 		# link the video from the libary to the generated website
-		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
-		ln -s "$episodeVideoPath" "$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-		ln -s "$episodeVideoPath" "$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
+		ln -s "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+		ln -s "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
 		echo "[INFO]: thumbnail template = $thumbnail"
 		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
 		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
-		thumbnailPath="$webDirectory/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
-		thumbnailPathKodi="$webDirectory/kodi/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		echo "[INFO]: new thumbnail path = $thumbnailPath"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
@@ -589,28 +597,28 @@ processShow(){
 	webDirectory=$4
 	# create directory
 	echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
-	mkdir -p "$webDirectory/$showTitle/"
-	chown -R www-data:www-data "$webDirectory/$showTitle"
+	mkdir -p "$webDirectory/shows/$showTitle/"
+	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
 	# check and remove duplicate thubnails for this show, failed thumbnails on the
 	# same show generally fail in the same way
 	fdupes --recurse --delete --immediate "$webDirectory/$showTitle/"
 	# create the kodi directory for the show
-	mkdir -p "$webDirectory/kodi/$showTitle/"
-	chown -R www-data:www-data "$webDirectory/kodi/$showTitle"
+	mkdir -p "$webDirectory/kodi/shows/$showTitle/"
+	chown -R www-data:www-data "$webDirectory/kodi/shows/$showTitle"
 	# linking tvshow.nfo data
-	ln -s "$show/tvshow.nfo" "$webDirectory/$showTitle/tvshow.nfo"
-	ln -s "$show/tvshow.nfo" "$webDirectory/kodi/$showTitle/tvshow.nfo"
+	ln -s "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
+	ln -s "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
 	# link the poster
 	if [ -f "$show/poster.png" ];then
 		posterPath="poster.png"
 		echo "[INFO]: Found $show/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/kodi/$showTitle/$posterPath"
+		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 	elif [ -f "$show/poster.jpg" ];then
 		posterPath="poster.jpg"
 		echo "[INFO]: Found $show/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/$showTitle/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/kodi/$showTitle/$posterPath"
+		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 	else
 		echo "[WARNING]: could not find $show/poster.[png/jpg]"
 	fi
@@ -619,20 +627,20 @@ processShow(){
 		echo "[INFO]: Found $show/fanart.png"
 		fanartPath="fanart.png"
 		echo "[INFO]: Found $show/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/kodi/$showTitle/$fanartPath"
+		ln -s "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		ln -s "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	elif [ -f "$show/fanart.jpg" ];then
 		fanartPath="fanart.jpg"
 		echo "[INFO]: Found $show/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/$showTitle/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/kodi/$showTitle/$fanartPath"
+		ln -s "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		ln -s "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	else
 		echo "[WARNING]: could not find $show/fanart.[png/jpg]"
 	fi
 	# building the webpage for the show
-	showPagePath="$webDirectory/$showTitle/index.html"
-	echo "[INFO]: Creating directory at = '$webDirectory/$showTitle/'"
-	mkdir -p "$webDirectory/$showTitle/"
+	showPagePath="$webDirectory/shows/$showTitle/index.html"
+	echo "[INFO]: Creating directory at = '$webDirectory/shows/$showTitle/'"
+	mkdir -p "$webDirectory/shows/$showTitle/"
 	echo "[INFO]: Creating showPagePath = $showPagePath"
 	touch "$showPagePath"
 	################################################################################
@@ -685,8 +693,7 @@ processShow(){
 		echo "</body>"
 		echo "</html>"
 	} >> "$showPagePath"
-	# create the homepage path
-	homePagePath="$webDirectory/index.html"
+	showIndexPath="$webDirectory/shows/index.html"
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='$showTitle/'>"
@@ -695,7 +702,7 @@ processShow(){
 		echo "		$showTitle"
 		echo "	</div>"
 		echo "</a>"
-	} >> "$homePagePath"
+	} >> "$showIndexPath"
 }
 ########################################################################
 main(){
@@ -775,44 +782,52 @@ main(){
 			echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
 			webDirectory="/var/cache/nfo2web/web"
 		fi
+		# make sure the directories exist and have correct permissions
 		mkdir -p "$webDirectory"
 		chown -R www-data:www-data "$webDirectory"
+		mkdir -p "$webDirectory/shows/"
+		chown -R www-data:www-data "$webDirectory/shows/"
+		mkdir -p "$webDirectory/movies/"
+		chown -R www-data:www-data "$webDirectory/movies/"
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
+		# check the libary sum against the existing one
+		libarySum=$(ls -R "$(cat /etc/nfo2web/libaries.cfg)" | md5sum | cut -d' ' -f1)
+		# compare libaries to see if updates are needed
+		if [ -f "$webDirectory/state.cfg" ];then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/state.cfg")
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				echo "[INFO]: State is unchanged, no update is needed."
+				exit
+			fi
+		fi
+		# check if system is active
+		if [ -f "/tmp/nfo2web.active" ];then
+			# system is already running exit
+			echo "[INFO]: nfo2web is already processing data in another process."
+			echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
+			exit
+		else
+			# set the active flag
+			touch /tmp/nfo2web.active
+			# create a trap to remove nfo2web
+			trap "rm -v /tmp/nfo2web.active" EXIT
+		fi
 		# create the homepage path
 		homePagePath="$webDirectory/index.html"
 		logPagePath="$webDirectory/log.html"
-		touch $logPagePath
+		headerPagePath="$webDirectory/header.html"
+		showIndexPath="$webDirectory/shows/index.html"
+		movieIndexPath="$webDirectory/movies/index.html"
+		touch "$showIndexPath"
+		touch "$movieIndexPath"
+		touch "$headerPagePath"
+		touch "$logPagePath"
+		touch "$homePagePath"
 		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			echo "<table>"
-		} > "$logPagePath"
-		touch "$webDirectory/movies/index.html"
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			echo "<table>"
-		} > "$webDirectory/movies/index.html"
-		touch $homePagePath
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
 			# build the header
 			echo "<div class='header'>"
 			echo "<a class='headerButton' href='..'>"
@@ -834,7 +849,48 @@ main(){
 			echo "SETTINGS"
 			echo "</a>"
 			echo "</div>"
-		} > $homePagePath
+		} > "$headerPagePath"
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			echo "<table>"
+			cat "$headerPagePath"
+		} > "$logPagePath"
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		} > "$movieIndexPath"
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		} > "$showIndexPath"
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath"
+		} > "$homePagePath"
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
 		# read each libary from the libary config, single path per line
@@ -861,7 +917,27 @@ main(){
 						showTitle=$(cleanText "$showTitle")
 						echo "[INFO]: showTitle after cleanText() = $showTitle"
 						if echo "$showMeta" | grep "<tvshow>";then
-							processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+							# make sure show has episodes
+							if ls "$show"/*/*.nfo;then
+								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+							else
+								echo "[ERROR]: Show has no episodes!"
+								{
+									# add error to log
+									echo "<tr>"
+									echo "<td>"
+									echo "ERROR"
+									echo "</td>"
+									echo "<td>"
+									echo "Show has no episodes"
+									echo "</td>"
+									echo "<td>"
+									echo "$show"
+									echo "</td>"
+									echo "</tr>"
+								} >> "$logPagePath"
+
+							fi
 						else
 							echo "[ERROR]: Show nfo file is invalid!"
 							{
@@ -894,11 +970,19 @@ main(){
 		{
 			echo "</body>"
 			echo "</html>"
-		} >> "$homePagePath"
+		} >> "$showIndexPath"
 		{
 			echo "</body>"
 			echo "</html>"
-		} >> "$webDirectory/movies/index.html"
+		} >> "$movieIndexPath"
+		{
+			echo "</body>"
+			echo "</html>"
+		} >> "$homePagePath"
+		# write the md5sum state of the libary for change checking
+		echo "$libarySum" > "$webDirectory/state.cfg"
+		# remove active state file
+		rm -v /tmp/nfo2web.active
 		# read the tvshow.nfo files for each show
 		################################################################################
 		# Create the show link on index.html
