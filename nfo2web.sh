@@ -25,7 +25,7 @@ tabs 4
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	if [ -f /usr/bin/inline-detox ];then
-		echo "$1" | inline-detox
+		echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g" | tr -d '#'
 	else
 		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
 	fi
@@ -221,39 +221,61 @@ processMovie(){
 		echo "[INFO]: thumbnail template = $thumbnail"
 		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
 		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
+		# creating alternate thumbnail paths
+		movieDir=$(echo "$thumbnail" | rev | cut -d'/' -f'2-' | rev )
+		echo "[INFO]: thumbnail path 3 = '$movieDir/poster.jpg'"
+		echo "[INFO]: thumbnail path 4 = '$movieDir/poster.png'"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
-		echo "[INFO]: new thumbnail path = $thumbnailPath"
+		echo "[INFO]: new thumbnail path = '$thumbnailPath'"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
 			echo "[INFO]: Thumbnail already linked..."
 		elif [ -f "$thumbnailPath.png" ];then
 			echo "[INFO]: Thumbnail already linked..."
 		else
+			echo "[INFO]: No thumbnail exists, looking for thumb file..."
 			# no thumbnail has been linked or downloaded
 			if [ -f "$thumbnail.png" ];then
-				echo "[INFO]: found PNG thumbnail..."
+				echo "[INFO]: found PNG thumbnail '$thumbnail.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.png" "$thumbnailPath.png"
 				ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
 			elif [ -f "$thumbnail.jpg" ];then
-				echo "[INFO]: found JPG thumbnail..."
+				echo "[INFO]: found JPG thumbnail '$thumbnail.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
 				ln -s "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+			elif [ -f "$movieDir/poster.jpg" ];then
+				echo "[INFO]: found JPG thumbnail '$movieDir/poster.jpg'..."
+				thumbnailExt=".jpg"
+				# link thumbnail into output directory
+				ln -s "$movieDir/poster.jpg" "$thumbnailPath.jpg"
+				ln -s "$movieDir/poster.jpg" "$thumbnailPathKodi.jpg"
+			elif [ -f "$movieDir/poster.png" ];then
+				echo "[INFO]: found PNG thumbnail '$movieDir/poster.png'..."
+				thumbnailExt=".png"
+				# link thumbnail into output directory
+				ln -s "$movieDir/poster.png" "$thumbnailPath.png"
+				ln -s "$movieDir/poster.png" "$thumbnailPathKodi.png"
 			else
 				if echo "$nfoInfo" | grep "fanart";then
+					# pull the double nested xml info for the movie thumb
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
 					thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
-					echo "[INFO]: Try to download found thumbnail..."
-					echo "[INFO]: Thumbnail found at $thumbnailLink"
-					thumbnailExt=".png"
-					# download the thumbnail
-					curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-					# link the downloaded thumbnail
-					ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+					if validString "$thumbnailLink";then
+						echo "[INFO]: Try to download found thumbnail..."
+						echo "[INFO]: Thumbnail found at '$thumbnailLink'"
+						thumbnailExt=".png"
+						# download the thumbnail
+						curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
+						# link the downloaded thumbnail
+						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+					else
+						echo "[ERROR]: Failed to find thumbnail inside nfo file!"
+					fi
 				fi
 			fi
 		fi
@@ -366,9 +388,21 @@ processEpisode(){
 		echo "[INFO]: Episode title = '$episodeShowTitle'"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		echo "[INFO]: Episode season = '$episodeSeason'"
+		if [ "$episodeSeason" -lt 10 ];then
+			if ! echo "$episodeSeason"| grep "^0";then
+				# add a zero to make it format correctly
+				episodeSeason="0$episodeSeason"
+			fi
+		fi
 		episodeSeasonPath="Season $episodeSeason"
 		echo "[INFO]: Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
+		if [ "$episodeNumber" -lt 10 ];then
+			if ! echo "$episodeNumber"| grep "^0";then
+				# add a zero to make it format correctly
+				episodeNumber="0$episodeNumber"
+			fi
+		fi
 		echo "[INFO]: Episode number = '$episodeNumber'"
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
@@ -471,8 +505,10 @@ processEpisode(){
 		echo "[INFO]: new thumbnail path = $thumbnailPath"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
+			thumbnailExt=".jpg"
 			echo "[INFO]: Thumbnail already linked..."
 		elif [ -f "$thumbnailPath.png" ];then
+			thumbnailExt=".png"
 			echo "[INFO]: Thumbnail already linked..."
 		else
 			# no thumbnail has been linked or downloaded
@@ -646,6 +682,7 @@ processShow(){
 	################################################################################
 	# begin building the html of the page
 	################################################################################
+	headerPagePath="$webDirectory/header.html"
 	# build top of show webpage containing all of the shows meta info
 	{
 		tempStyle="html {background-image: url(\"$fanartPath\");background-size: 100%;}"
@@ -657,9 +694,10 @@ processShow(){
 		echo "</style>"
 		echo "</head>"
 		echo "<body>"
+	cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 		echo "<h1>$showTitle</h1>"
 		echo "<div class='episodeList'>"
-	} >> "$showPagePath"
+	} > "$showPagePath"
 	# generate the episodes based on .nfo files
 	for season in "$show"/*;do
 		echo "[INFO]: checking for season folder at '$season'"
@@ -782,28 +820,6 @@ main(){
 			echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
 			webDirectory="/var/cache/nfo2web/web"
 		fi
-		# make sure the directories exist and have correct permissions
-		mkdir -p "$webDirectory"
-		chown -R www-data:www-data "$webDirectory"
-		mkdir -p "$webDirectory/shows/"
-		chown -R www-data:www-data "$webDirectory/shows/"
-		mkdir -p "$webDirectory/movies/"
-		chown -R www-data:www-data "$webDirectory/movies/"
-		mkdir -p "$webDirectory/kodi/"
-		chown -R www-data:www-data "$webDirectory/kodi/"
-		# check the libary sum against the existing one
-		libarySum=$(ls -R "$(cat /etc/nfo2web/libaries.cfg)" | md5sum | cut -d' ' -f1)
-		# compare libaries to see if updates are needed
-		if [ -f "$webDirectory/state.cfg" ];then
-			# a existing state was found
-			currentSum=$(cat "$webDirectory/state.cfg")
-			# if the current state is the same as the state of the last update
-			if [ "$libarySum" == "$currentSum" ];then
-				# this means they are the same so no update needs run
-				echo "[INFO]: State is unchanged, no update is needed."
-				exit
-			fi
-		fi
 		# check if system is active
 		if [ -f "/tmp/nfo2web.active" ];then
 			# system is already running exit
@@ -815,6 +831,29 @@ main(){
 			touch /tmp/nfo2web.active
 			# create a trap to remove nfo2web
 			trap "rm -v /tmp/nfo2web.active" EXIT
+		fi
+		# make sure the directories exist and have correct permissions
+		mkdir -p "$webDirectory"
+		chown -R www-data:www-data "$webDirectory"
+		mkdir -p "$webDirectory/shows/"
+		chown -R www-data:www-data "$webDirectory/shows/"
+		mkdir -p "$webDirectory/movies/"
+		chown -R www-data:www-data "$webDirectory/movies/"
+		mkdir -p "$webDirectory/kodi/"
+		chown -R www-data:www-data "$webDirectory/kodi/"
+		# check the libary sum against the existing one
+		tempLibList=$(cat /etc/nfo2web/libaries.cfg)
+		libarySum=$(ls -lR $tempLibList | md5sum | cut -d' ' -f1)
+		# compare libaries to see if updates are needed
+		if [ -f "$webDirectory/state.cfg" ];then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/state.cfg")
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				echo "[INFO]: State is unchanged, no update is needed."
+				exit
+			fi
 		fi
 		# create the homepage path
 		homePagePath="$webDirectory/index.html"
@@ -858,8 +897,8 @@ main(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
-			echo "<table>"
 			cat "$headerPagePath"
+			echo "<table>"
 		} > "$logPagePath"
 		{
 			echo "<html>"
@@ -907,15 +946,15 @@ main(){
 					# process page metadata
 					################################################################################
 					# if the show directory contains a nfo file defining the show
-					echo "[INFO]: searching for metadata at $show/tvshow.nfo"
+					echo "[INFO]: searching for metadata at '$show/tvshow.nfo'"
 					if [ -f "$show/tvshow.nfo" ];then
-						echo "[INFO]: found metadata at $show/tvshow.nfo"
+						echo "[INFO]: found metadata at '$show/tvshow.nfo'"
 						# load update the tvshow.nfo file and get the metadata required for
 						showMeta=$(cat "$show/tvshow.nfo")
 						showTitle=$(ripXmlTag "$showMeta" "title")
-						echo "[INFO]: showTitle = $showTitle"
+						echo "[INFO]: showTitle = '$showTitle'"
 						showTitle=$(cleanText "$showTitle")
-						echo "[INFO]: showTitle after cleanText() = $showTitle"
+						echo "[INFO]: showTitle after cleanText() = '$showTitle'"
 						if echo "$showMeta" | grep "<tvshow>";then
 							# make sure show has episodes
 							if ls "$show"/*/*.nfo;then

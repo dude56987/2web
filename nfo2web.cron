@@ -1,2 +1,5 @@
-# Update the hackbox-system-monitor interface hourly
-@hourly root	hackbox-system-monitor
+# cleanup interupted updates on reboot
+@reboot root	/bin/rm /tmp/nfo2web.active  >> /var/log/nfo2web.log
+# Update nfo2web
+@reboot root	/usr/bin/nfo2web update > /var/log/nfo2web.log
+@hourly root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log

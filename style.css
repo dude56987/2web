@@ -45,6 +45,7 @@ h2 {
 	display: inline-block;
 	margin: auto;
 	width: 100%;
+	margin: 30px;
 }
 #settingsButton{
 	float: right;
@@ -144,15 +145,19 @@ h2 {
 }
 /*******************************/
 table, th, td{
-	border: 1px solid black;
+	border: 1px solid white;
+	color: white;
+	margin-left: auto;
+	margin-right: auto;
 }
 .player audio{
-	width: auto;
-	height: 100%;
+	height: 400px;
 }
 .player video{
-	width: auto;
-	height: 100%;
+	height: 400px;
+}
+video, audio{
+	height: 400px;
 }
 .player{
 	object-fit: cover;
