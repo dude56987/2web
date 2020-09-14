@@ -111,6 +111,9 @@ cleanXml(){
 processMovie(){
 	moviePath=$1
 	webDirectory=$2
+	# figure out the movie directory
+	#movieDir=$(echo "$moviePath" | rev | cut -d'/' -f'2-' | rev )
+	movieDir=$moviePath
 	# find the movie nfo in the movie path
 	moviePath=$(find "$moviePath"/*.nfo)
 	echo "################################################################################"
@@ -134,23 +137,6 @@ processMovie(){
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
 		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
-		# start rendering the html
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
-			echo "<h1>$movieTitle</h1>"
-		} > "$moviePagePath"
-		# link the movie nfo file
-		echo "[INFO]: linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		ln -s "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		echo "[INFO]: linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
-		ln -s "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
 			videoPath="${moviePath//.nfo/.mkv}"
@@ -177,6 +163,10 @@ processMovie(){
 			videoPath="${moviePath//.nfo/.strm}"
 			videoPath=$(cat "$videoPath")
 			sufix=".strm"
+		else
+			echo "[ERROR]: could not find video file"
+			addToLog "ERROR" "No video file in directory" "$movieDir" "$logPagePath"
+			return
 		fi
 		# set the video type based on the found video path
 		if echo "$videoPath" | grep ".mp3";then
@@ -206,6 +196,25 @@ processMovie(){
 			mediaType="video"
 			mimeType="video"
 		fi
+		# start rendering the html
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
+			echo "<h1>$movieTitle</h1>"
+		} > "$moviePagePath"
+		# link the movie nfo file
+		echo "[INFO]: linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
+		ln -s "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
+		echo "[INFO]: linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
+		ln -s "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
+		# show gathered info
 		echo "[INFO]: mediaType = $mediaType"
 		echo "[INFO]: mimeType = $mimeType"
 		echo "[INFO]: videoPath = $videoPath"
@@ -222,17 +231,22 @@ processMovie(){
 		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
 		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
 		# creating alternate thumbnail paths
-		movieDir=$(echo "$thumbnail" | rev | cut -d'/' -f'2-' | rev )
 		echo "[INFO]: thumbnail path 3 = '$movieDir/poster.jpg'"
 		echo "[INFO]: thumbnail path 4 = '$movieDir/poster.png'"
+		#
+		thumbnailShort="${moviePath//.nfo}"
+		echo "[INFO]: thumbnail path 5 = '$thumbnailShort.png'"
+		echo "[INFO]: thumbnail path 6 = '$thumbnailShort.jpg'"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
 		echo "[INFO]: new thumbnail path = '$thumbnailPath'"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
 			echo "[INFO]: Thumbnail already linked..."
+			thumbnailExt=".jpg"
 		elif [ -f "$thumbnailPath.png" ];then
 			echo "[INFO]: Thumbnail already linked..."
+			thumbnailExt=".png"
 		else
 			echo "[INFO]: No thumbnail exists, looking for thumb file..."
 			# no thumbnail has been linked or downloaded
@@ -260,6 +274,18 @@ processMovie(){
 				# link thumbnail into output directory
 				ln -s "$movieDir/poster.png" "$thumbnailPath.png"
 				ln -s "$movieDir/poster.png" "$thumbnailPathKodi.png"
+			elif [ -f "$thumbnailShort.png" ];then
+				echo "[INFO]: found PNG thumbnail '$thumbnailShort.png'..."
+				thumbnailExt=".png"
+				# link thumbnail into output directory
+				ln -s "$thumbnailShort.png" "$thumbnailPath.png"
+				ln -s "$thumbnailShort.png" "$thumbnailPathKodi.png"
+			elif [ -f "$thumbnailShort.jpg" ];then
+				echo "[INFO]: found JPG thumbnail '$thumbnailShort.jpg'..."
+				thumbnailExt=".jpg"
+				# link thumbnail into output directory
+				ln -s "$thumbnailShort.jpg" "$thumbnailPath.jpg"
+				ln -s "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
 			else
 				if echo "$nfoInfo" | grep "fanart";then
 					# pull the double nested xml info for the movie thumb
@@ -372,6 +398,8 @@ processEpisode(){
 	episodeShowTitle="$2"
 	showPagePath="$3"
 	webDirectory="$4"
+	# create log path
+	logPagePath="$webDirectory/log.html"
 	echo "[INFO]: checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
@@ -414,23 +442,6 @@ processEpisode(){
 		chown -R www-data:www-data "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
 		mkdir -p "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
-		# start rendering the html
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
-			echo "<h1>$episodeShowTitle</h1>"
-			echo "<h2>$episodeTitle</h2>"
-		} > "$episodePagePath"
-		# link the episode nfo file
-		echo "[INFO]: linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
 			videoPath="${episode//.nfo/.mkv}"
@@ -457,6 +468,12 @@ processEpisode(){
 			videoPath="${episode//.nfo/.strm}"
 			videoPath=$(cat "$videoPath")
 			sufix=".strm"
+		else
+			# no video file could be found this should be logged
+			echo "[ERROR]: could not find video file"
+			addToLog "ERROR" "No video file" "$episode" "$logPagePath"
+			# exit the function  cancel building the episode
+			return
 		fi
 		# set the video type based on the found video path
 		if echo "$videoPath" | grep ".mp3";then
@@ -486,6 +503,24 @@ processEpisode(){
 			mediaType="video"
 			mimeType="video"
 		fi
+		# start rendering the html
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
+			echo "<h1>$episodeShowTitle</h1>"
+			echo "<h2>$episodeTitle</h2>"
+		} > "$episodePagePath"
+		# link the episode nfo file
+		echo "[INFO]: linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		ln -s "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		# show info gathered
 		echo "[INFO]: mediaType = $mediaType"
 		echo "[INFO]: mimeType = $mimeType"
 		echo "[INFO]: videoPath = $videoPath"
@@ -742,6 +777,43 @@ processShow(){
 		echo "</a>"
 	} >> "$showIndexPath"
 }
+addToLog(){
+	errorType=$1
+	errorDescription=$2
+	errorDetails=$3
+	logPagePath=$4
+	{
+		# add error to log
+		echo "<tr>"
+		echo "<td>"
+		echo "$errorType"
+		echo "</td>"
+		echo "<td>"
+		echo "$errorDescription"
+		echo "</td>"
+		echo "<td>"
+		echo "$errorDetails"
+		echo "</td>"
+		echo "</tr>"
+	} >> "$logPagePath"
+}
+########################################################################
+getLibSum(){
+	# check the libary sum against the existing one
+	totalList=""
+	while read -r line;do
+		# read each line and load the file
+		#tempList=$(ls -lR $line)
+		tempList=$(ls -R "$line")
+		totalList="$totalList\n$tempList"
+	done < /etc/nfo2web/libaries.cfg
+	# convert lists into md5sum
+	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
+	#echo "$(echo "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+	#libarySum=$(ls -lR $tempLibList | md5sum | cut -d' ' -f1)
+}
 ########################################################################
 main(){
 	debugCheck
@@ -811,6 +883,7 @@ main(){
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
 			libaries="/var/cache/nfo2web/libary"
 		fi
+
 		# the webdirectory is a cache where the generated website is stored
 		if [ -f /etc/nfo2web/web.cfg ];then
 			webDirectory=$(cat /etc/nfo2web/web.cfg)
@@ -841,23 +914,28 @@ main(){
 		chown -R www-data:www-data "$webDirectory/movies/"
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
-		# check the libary sum against the existing one
-		tempLibList=$(cat /etc/nfo2web/libaries.cfg)
-		libarySum=$(ls -lR $tempLibList | md5sum | cut -d' ' -f1)
 		# compare libaries to see if updates are needed
 		if [ -f "$webDirectory/state.cfg" ];then
 			# a existing state was found
 			currentSum=$(cat "$webDirectory/state.cfg")
+			libarySum=$(getLibSum)
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
 				# this means they are the same so no update needs run
 				echo "[INFO]: State is unchanged, no update is needed."
+				echo "[DEBUG]: $currentSum == $libarySum"
 				exit
+			else
+				echo "[INFO]: States are diffrent, updating..."
+				echo "[DEBUG]: $currentSum != $libarySum"
 			fi
+		else
+			echo "[INFO]: No state exists, updating..."
 		fi
+		# create the log path
+		logPagePath="$webDirectory/log.html"
 		# create the homepage path
 		homePagePath="$webDirectory/index.html"
-		logPagePath="$webDirectory/log.html"
 		headerPagePath="$webDirectory/header.html"
 		showIndexPath="$webDirectory/shows/index.html"
 		movieIndexPath="$webDirectory/movies/index.html"
@@ -929,6 +1007,9 @@ main(){
 			echo "</head>"
 			echo "<body>"
 			cat "$headerPagePath"
+			echo "<div>"
+			echo "Last updated on $(date)"
+			echo "</div>"
 		} > "$homePagePath"
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
@@ -961,38 +1042,11 @@ main(){
 								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 							else
 								echo "[ERROR]: Show has no episodes!"
-								{
-									# add error to log
-									echo "<tr>"
-									echo "<td>"
-									echo "ERROR"
-									echo "</td>"
-									echo "<td>"
-									echo "Show has no episodes"
-									echo "</td>"
-									echo "<td>"
-									echo "$show"
-									echo "</td>"
-									echo "</tr>"
-								} >> "$logPagePath"
-
+								addToLog "ERROR" "Show has no episodes" "$show" "$logPagePath"
 							fi
 						else
 							echo "[ERROR]: Show nfo file is invalid!"
-							{
-								# add error to log
-								echo "<tr>"
-								echo "<td>"
-								echo "ERROR"
-								echo "</td>"
-								echo "<td>"
-								echo "Show NFO Invalid"
-								echo "</td>"
-								echo "<td>"
-								echo "$show/tvshow.nfo"
-								echo "</td>"
-								echo "</tr>"
-							} >> "$logPagePath"
+							addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
 						fi
 					elif grep "<movie>" "$show"/*.nfo;then
 						# this is a move directory not a show
@@ -1019,7 +1073,8 @@ main(){
 			echo "</html>"
 		} >> "$homePagePath"
 		# write the md5sum state of the libary for change checking
-		echo "$libarySum" > "$webDirectory/state.cfg"
+		#echo "$libarySum" > "$webDirectory/state.cfg"
+		getLibSum > "$webDirectory/state.cfg"
 		# remove active state file
 		rm -v /tmp/nfo2web.active
 		# read the tvshow.nfo files for each show
