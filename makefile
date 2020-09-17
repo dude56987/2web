@@ -27,6 +27,10 @@ uninstall-broken:
 	sudo dpkg --remove --force-remove-reinstreq nfo2web
 installed-size:
 	du -sx --exclude DEBIAN ./debian/
+debugOn:
+	sudo mv /etc/nfo2web/debug.disabled /etc/nfo2web/debug.enabled
+debugOff:
+	sudo mv /etc/nfo2web/debug.enabled /etc/nfo2web/debug.disabled
 build:
 	sudo make build-deb;
 build-deb:

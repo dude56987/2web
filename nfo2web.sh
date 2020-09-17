@@ -22,6 +22,11 @@ export PS4='+ ${LINENO}	|	'
 # set tab size to 4 to make output more readable
 tabs 4
 ########################################################################
+STOP(){
+	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
+	read -r #DEBUG DELETE ME
+}
+########################################################################
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	if [ -f /usr/bin/inline-detox ];then
@@ -116,9 +121,12 @@ processMovie(){
 	movieDir=$moviePath
 	# find the movie nfo in the movie path
 	moviePath=$(find "$moviePath"/*.nfo)
+	# create log path
+	logPagePath="$webDirectory/log.html"
 	echo "################################################################################"
 	echo "Processing movie $moviePath"
 	echo "################################################################################"
+	# if moviepath exists
 	if [ -f "$moviePath" ];then
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
@@ -131,12 +139,34 @@ processMovie(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
 		echo "[INFO]: movie web path = '$movieWebPath'"
+		# build the movie page path
 		moviePagePath="$webDirectory/movies/$movieWebPath/index.html"
 		echo "[INFO]: movie page path = '$moviePagePath'"
 		mkdir -p "$webDirectory/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
 		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
+		# check movie state as soon as posible processing
+		if [ -f "$webDirectory/movies/$movieWebPath/state.cfg" ];then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state.cfg")
+			libarySum=$(getDirSum "$movieDir")
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
+				echo "[DEBUG]: $currentSum == $libarySum"
+				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
+				return
+			else
+				echo "[INFO]: States are diffrent, updating $movieTitle..."
+				echo "[DEBUG]: $currentSum != $libarySum"
+				addToLog "INFO" "Updating movie" "$movieTitle" "$logPagePath"
+			fi
+		else
+			echo "[INFO]: No movie state exists for $movieTitle, updating..."
+			addToLog "INFO" "Adding new movie " "$movieTitle" "$logPagePath"
+		fi
 		# find the videofile refrenced by the nfo file
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
 			videoPath="${moviePath//.nfo/.mkv}"
@@ -237,6 +267,9 @@ processMovie(){
 		thumbnailShort="${moviePath//.nfo}"
 		echo "[INFO]: thumbnail path 5 = '$thumbnailShort.png'"
 		echo "[INFO]: thumbnail path 6 = '$thumbnailShort.jpg'"
+		thumbnailShort2="${moviePath//.nfo}-thumb"
+		echo "[INFO]: thumbnail path 7 = '$thumbnailShort2.png'"
+		echo "[INFO]: thumbnail path 8 = '$thumbnailShort2.jpg'"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
 		echo "[INFO]: new thumbnail path = '$thumbnailPath'"
@@ -286,6 +319,18 @@ processMovie(){
 				# link thumbnail into output directory
 				ln -s "$thumbnailShort.jpg" "$thumbnailPath.jpg"
 				ln -s "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
+			elif [ -f "$thumbnailShort2.png" ];then
+				echo "[INFO]: found PNG thumbnail '$thumbnailShort2.png'..."
+				thumbnailExt=".png"
+				# link thumbnail into output directory
+				ln -s "$thumbnailShort2.png" "$thumbnailPath.png"
+				ln -s "$thumbnailShort2.png" "$thumbnailPathKodi.png"
+			elif [ -f "$thumbnailShort2.jpg" ];then
+				echo "[INFO]: found JPG thumbnail '$thumbnailShort2.jpg'..."
+				thumbnailExt=".jpg"
+				# link thumbnail into output directory
+				ln -s "$thumbnailShort2.jpg" "$thumbnailPath.jpg"
+				ln -s "$thumbnailShort2.jpg" "$thumbnailPathKodi.jpg"
 			else
 				if echo "$nfoInfo" | grep "fanart";then
 					# pull the double nested xml info for the movie thumb
@@ -299,9 +344,46 @@ processMovie(){
 						curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
 						# link the downloaded thumbnail
 						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
-					else
-						echo "[ERROR]: Failed to find thumbnail inside nfo file!"
 					fi
+				fi
+				touch "$thumbnailPath.png"
+				# check if the thumb download failed
+				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				echo "[DEBUG]: file size $tempFileSize"
+				if [ "$tempFileSize" -lt 15000 ];then
+					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
+					# try to generate a thumbnail from video file
+					echo "[INFO]: Attempting to create thumbnail from video source..."
+					#tempFileSize=0
+					tempTimeCode=1
+					# - force the filesize to be large enough to be a complex descriptive thumbnail
+					# - filesize of images is directly related to visual complexity
+					while [ $tempFileSize -lt 15000 ];do
+						# - place -ss in front of -i for speed boost in seeking to correct frame of source
+						# - tempTimeCode is in seconds
+						# - '-y' to force overwriting the empty file
+						ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
+						ln -s "$thumbnailPath.png" "$thumbnailPathKodi.png"
+						# resize the image before checking the filesize
+						convert "$thumbnailPath.png" -resize 400x200\! "$thumbnailPath.png"
+						# get the size of the file, after it has been created
+						tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+						# - increment the timecode to get from the video to find a thumbnail that is not
+						#   a blank screen
+						tempTimeCode=$(($tempTimeCode + 1))
+						# if there is no file large enough after 60 attempts, the first 60 seconds of video
+						if [ $tempTimeCode -gt 60 ];then
+							# break the loop
+							tempFileSize=16000
+							rm "$thumbnailPath.png"
+						elif [ $tempFileSize -eq 0 ];then
+							# break the loop, no thumbnail could be generated at all
+							# - Blank white or black space takes up more than 0 bytes
+							# - A webpage generated thumbnail will be created as a alternative
+							rm "$thumbnailPath.png"
+							tempFileSize=16000
+						fi
+					done
 				fi
 			fi
 		fi
@@ -376,21 +458,18 @@ processMovie(){
 		# add the movie to the movie index page
 		################################################################################
 		{
-			#tempStyle="$episodeSeasonPath/$episodePath-thumb$thumbnailExt"
-			#tempStyle="background-image: url(\"$tempStyle\")"
-			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeasonPath/$episodePath.html'>"
 			echo "<a class='showPageEpisode' href='$movieWebPath'>"
-			#echo "	<div>"
-			echo "	<img src='$movieWebPath/$movieWebPath-poster$thumbnailExt'>"
-			#echo "	</div>"
+			echo "	<img loading='lazy' src='$movieWebPath/$movieWebPath-poster$thumbnailExt'>"
 			echo "	<h3 class='title'>"
 			echo "		$movieTitle"
 			echo "	</h3>"
 			echo "</a>"
-		} >> "$webDirectory/movies/index.html"
+		} > "$webDirectory/movies/$movieWebPath/movies.index"
 	else
 			echo "[WARNING]: The file '$moviePath' could not be found!"
 	fi
+	touch "$webDirectory/movies/$movieWebPath/state.cfg"
+	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state.cfg"
 }
 ########################################################################
 processEpisode(){
@@ -399,7 +478,9 @@ processEpisode(){
 	showPagePath="$3"
 	webDirectory="$4"
 	# create log path
+	#logPagePath="$webDirectory/log.html"
 	logPagePath="$webDirectory/log.html"
+	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
 	echo "[INFO]: checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
@@ -471,7 +552,7 @@ processEpisode(){
 		else
 			# no video file could be found this should be logged
 			echo "[ERROR]: could not find video file"
-			addToLog "ERROR" "No video file" "$episode" "$logPagePath"
+			addToLog "ERROR" "No video file" "$episode" "$showLogPath"
 			# exit the function  cancel building the episode
 			return
 		fi
@@ -568,6 +649,46 @@ processEpisode(){
 					# download the thumbnail
 					curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
 				fi
+				touch "$thumbnailPath.png"
+				# check if the thumb download failed
+				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				echo "[DEBUG]: file size $tempFileSize"
+				if [ "$tempFileSize" -lt 15000 ];then
+					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
+					# try to generate a thumbnail from video file
+					echo "[INFO]: Attempting to create thumbnail from video source..."
+					#tempFileSize=0
+					tempTimeCode=1
+					# - force the filesize to be large enough to be a complex descriptive thumbnail
+					# - filesize of images is directly related to visual complexity
+					while [ $tempFileSize -lt 15000 ];do
+						# - place -ss in front of -i for speed boost in seeking to correct frame of source
+						# - tempTimeCode is in seconds
+						# - '-y' to force overwriting the empty file
+						ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 "$thumbnailPath.png"
+						ln -s "$thumbnailPath.png" "$thumbnailPathKodi.png"
+						# resize the image before checking the filesize
+						convert "$thumbnailPath.png" -resize 400x200\! "$thumbnailPath.png"
+						# get the size of the file, after it has been created
+						tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+						# - increment the timecode to get from the video to find a thumbnail that is not
+						#   a blank screen
+						tempTimeCode=$(($tempTimeCode + 1))
+						# if there is no file large enough after 60 attempts, the first 60 seconds of video
+						if [ $tempTimeCode -gt 60 ];then
+							# break the loop
+							tempFileSize=16000
+							rm "$thumbnailPath.png"
+						elif [ $tempFileSize -eq 0 ];then
+							# break the loop, no thumbnail could be generated at all
+							# - Blank white or black space takes up more than 0 bytes
+							# - A webpage generated thumbnail will be created as a alternative
+							rm "$thumbnailPath.png"
+							tempFileSize=16000
+						fi
+					done
+				fi
+
 			fi
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
@@ -648,7 +769,7 @@ processEpisode(){
 			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeasonPath/$episodePath.html'>"
 			echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
 			#echo "	<div>"
-			echo "	<img src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
+			echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
 			#echo "	</div>"
 			echo "	<h3 class='title'>"
 			echo "		$episodePath"
@@ -666,13 +787,39 @@ processShow(){
 	showMeta=$2
 	showTitle=$3
 	webDirectory=$4
+	logPagePath="$webDirectory/log.html"
+	showLogPath="$webDirectory/shows/$showTitle/log.index"
 	# create directory
 	echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
+	# blank the log for new log
+	# check show state before processing
+	if [ -f "$webDirectory/shows/$showTitle/state.cfg" ];then
+		# a existing state was found
+		currentSum=$(cat "$webDirectory/shows/$showTitle/state.cfg")
+		libarySum=$(getDirSum "$show")
+		# if the current state is the same as the state of the last update
+		if [ "$libarySum" == "$currentSum" ];then
+			# this means they are the same so no update needs run
+			echo "[INFO]: State is unchanged for $showTitle, no update is needed."
+			echo "[DEBUG]: $currentSum == $libarySum"
+			addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
+			return
+		else
+			echo "[INFO]: States are diffrent, updating $showTitle..."
+			echo "[DEBUG]: $currentSum != $libarySum"
+			# clear the log for the new log
+			echo "" > "$showLogPath"
+			addToLog "INFO" "Updating show" "$showTitle" "$logPagePath"
+		fi
+	else
+		echo "[INFO]: No show state exists for $showTitle, updating..."
+		addToLog "INFO" "Creating new show" "$showTitle" "$logPagePath"
+	fi
 	# check and remove duplicate thubnails for this show, failed thumbnails on the
 	# same show generally fail in the same way
-	fdupes --recurse --delete --immediate "$webDirectory/$showTitle/"
+	fdupes --recurse --delete --immediate "$webDirectory/shows/$showTitle/"
 	# create the kodi directory for the show
 	mkdir -p "$webDirectory/kodi/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/kodi/shows/$showTitle"
@@ -729,7 +876,7 @@ processShow(){
 		echo "</style>"
 		echo "</head>"
 		echo "<body>"
-	cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+		cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 		echo "<h1>$showTitle</h1>"
 		echo "<div class='episodeList'>"
 	} > "$showPagePath"
@@ -766,17 +913,23 @@ processShow(){
 		echo "</body>"
 		echo "</html>"
 	} >> "$showPagePath"
-	showIndexPath="$webDirectory/shows/index.html"
+	# create show index information
+	#showIndexPath="$webDirectory/shows/index.html"
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='$showTitle/'>"
-		echo "	<img src='$showTitle/$posterPath'>"
+		echo "	<img loading='lazy' src='$showTitle/$posterPath'>"
 		echo "	<div>"
 		echo "		$showTitle"
 		echo "	</div>"
 		echo "</a>"
-	} >> "$showIndexPath"
+	#} >> "$showIndexPath"
+	} > "$webDirectory/shows/$showTitle/shows.index"
+	# update the libary sum
+	touch "$webDirectory/shows/$showTitle/state.cfg"
+	getDirSum "$show" > "$webDirectory/shows/$showTitle/state.cfg"
 }
+########################################################################
 addToLog(){
 	errorType=$1
 	errorDescription=$2
@@ -784,7 +937,7 @@ addToLog(){
 	logPagePath=$4
 	{
 		# add error to log
-		echo "<tr>"
+		echo "<tr class='$errorType'>"
 		echo "<td>"
 		echo "$errorType"
 		echo "</td>"
@@ -799,20 +952,120 @@ addToLog(){
 }
 ########################################################################
 getLibSum(){
-	# check the libary sum against the existing one
+	# find all state md5sums for shows and create a collective sum
 	totalList=""
 	while read -r line;do
 		# read each line and load the file
 		#tempList=$(ls -lR $line)
 		tempList=$(ls -R "$line")
-		totalList="$totalList\n$tempList"
+		#tempList=$(cat "$line"/*/*.cfg)
+		# add value to list
+		totalList="$totalList$tempList"
 	done < /etc/nfo2web/libaries.cfg
 	# convert lists into md5sum
 	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
-	#echo "$(echo "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
 	echo "$tempLibList"
-	#libarySum=$(ls -lR $tempLibList | md5sum | cut -d' ' -f1)
+}
+########################################################################
+buildHomePage(){
+	webDirectory=$1
+	headerPagePath=$2
+	echo "[INFO]: Building home page..."
+	{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath"
+			echo "<div>"
+			echo "Last updated on $(date)"
+			echo "</div>"
+	} > "$webDirectory/index.html"
+	################################################################################
+	# update random shows list
+	randomShows=$(ls -1 "$webDirectory"/shows/*/shows.index| shuf -n 5)
+	echo "[INFO]: Random Shows list = $randomShows"
+	{
+		echo "<hr>"
+		echo "<h1>Random Shows</h1>"
+		echo "<div>"
+	} >>  "$webDirectory/index.html"
+	echo "$randomShows" | while read -r line;do
+		{
+			# fix index links to work for homepage
+			cat "$line" | sed "s/src='/src='shows\//g" | sed "s/href='/href='shows\//g"
+		}	>>  "$webDirectory/index.html"
+		echo "READING FILE $line = $(cat "$line")"
+	done
+	echo "</div>" >>  "$webDirectory/index.html"
+	################################################################################
+	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index| tail -n 5)
+	echo "[INFO]: Updated Shows list = $updatedShows"
+	{
+		echo "<hr>"
+		echo "<h1>Updated Shows</h1>"
+		echo "<div>"
+	} >>  "$webDirectory/index.html"
+	echo "$updatedShows" | while read -r line;do
+		{
+			# fix index links to work for homepage
+			cat "$line" | sed "s/src='/src='shows\//g" | sed "s/href='/href='shows\//g"
+		}	>>  "$webDirectory/index.html"
+		echo "READING FILE $line = $(cat "$line")"
+	done
+	echo "</div>" >>  "$webDirectory/index.html"
+	################################################################################
+	randomMovies=$(ls -1 "$webDirectory"/movies/*/movies.index| shuf -n 5)
+	echo "[INFO]: Random Movies list = $randomMovies"
+	{
+		echo "<hr>"
+		echo "<h1>Random Movies</h1>"
+		echo "<div>"
+	} >>  "$webDirectory/index.html"
+	echo "$randomMovies" | while read -r line;do
+		{
+			# fix index links to work for homepage
+			cat "$line" | sed "s/src='/src='movies\//g" | sed "s/href='/href='movies\//g"
+		}	>>  "$webDirectory/index.html"
+		echo "READING FILE $line = $(cat "$line")"
+	done
+	echo "</div>" >>  "$webDirectory/index.html"
+	################################################################################
+	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index| tail -n 5)
+	echo "[INFO]: Updated Movies list = $updatedMovies"
+	{
+		echo "<hr>"
+		echo "<h1>Updated Movies</h1>"
+		echo "<div>"
+	} >>  "$webDirectory/index.html"
+	echo "$updatedMovies" | while read -r line;do
+		{
+			# fix index links to work for homepage
+			cat "$line" | sed "s/src='/src='movies\//g" | sed "s/href='/href='movies\//g"
+		}	>>  "$webDirectory/index.html"
+		echo "READING FILE $line = $(cat "$line")"
+	done
+	echo "</div>" >>  "$webDirectory/index.html"
+	########################################################################
+	{
+		echo "</body>"
+		echo "</html>"
+	} >>  "$webDirectory/index.html"
+	#STOP
+}
+########################################################################
+getDirSum(){
+	line=$1
+	# check the libary sum against the existing one
+	totalList=$(ls -R "$line")
+	# convert lists into md5sum
+	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
 }
 ########################################################################
 main(){
@@ -915,23 +1168,23 @@ main(){
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
 		# compare libaries to see if updates are needed
-		if [ -f "$webDirectory/state.cfg" ];then
-			# a existing state was found
-			currentSum=$(cat "$webDirectory/state.cfg")
-			libarySum=$(getLibSum)
-			# if the current state is the same as the state of the last update
-			if [ "$libarySum" == "$currentSum" ];then
-				# this means they are the same so no update needs run
-				echo "[INFO]: State is unchanged, no update is needed."
-				echo "[DEBUG]: $currentSum == $libarySum"
-				exit
-			else
-				echo "[INFO]: States are diffrent, updating..."
-				echo "[DEBUG]: $currentSum != $libarySum"
-			fi
-		else
-			echo "[INFO]: No state exists, updating..."
-		fi
+		#if [ -f "$webDirectory/state.cfg" ];then
+		#	# a existing state was found
+		#	currentSum=$(cat "$webDirectory/state.cfg")
+		#	libarySum=$(getLibSum)
+		#	# if the current state is the same as the state of the last update
+		#	if [ "$libarySum" == "$currentSum" ];then
+		#		# this means they are the same so no update needs run
+		#		echo "[INFO]: State is unchanged, no update is needed."
+		#		echo "[DEBUG]: $currentSum == $libarySum"
+		#		exit
+		#	else
+		#		echo "[INFO]: States are diffrent, updating..."
+		#		echo "[DEBUG]: $currentSum != $libarySum"
+		#	fi
+		#else
+		#	echo "[INFO]: No state exists, updating..."
+		#fi
 		# create the log path
 		logPagePath="$webDirectory/log.html"
 		# create the homepage path
@@ -978,39 +1231,7 @@ main(){
 			cat "$headerPagePath"
 			echo "<table>"
 		} > "$logPagePath"
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		} > "$movieIndexPath"
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		} > "$showIndexPath"
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath"
-			echo "<div>"
-			echo "Last updated on $(date)"
-			echo "</div>"
-		} > "$homePagePath"
+		buildHomePage "$webDirectory" "$headerPagePath"
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
 		# read each libary from the libary config, single path per line
@@ -1040,6 +1261,25 @@ main(){
 							# make sure show has episodes
 							if ls "$show"/*/*.nfo;then
 								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+								# write log info from show to the log, this must be done here to keep ordering
+								# of the log and to make log show even when the state of the show is unchanged
+								echo "[INFO]: Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
+								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.html"
+								# update the show index
+								{
+									echo "<html>"
+									echo "<head>"
+									echo "<style>"
+									cat /usr/share/nfo2web/style.css
+									echo "</style>"
+									echo "</head>"
+									echo "<body>"
+									cat "$headerPagePath" | sed "s/href='/href='..\//g"
+									# load all existing shows into the index
+									cat "$webDirectory"/shows/*/shows.index
+									echo "</body>"
+									echo "</html>"
+								} > "$showIndexPath"
 							else
 								echo "[ERROR]: Show has no episodes!"
 								addToLog "ERROR" "Show has no episodes" "$show" "$logPagePath"
@@ -1051,27 +1291,65 @@ main(){
 					elif grep "<movie>" "$show"/*.nfo;then
 						# this is a move directory not a show
 						processMovie "$show" "$webDirectory"
+						# update the movie index webpage
+						{
+							echo "<html>"
+							echo "<head>"
+							echo "<style>"
+							cat /usr/share/nfo2web/style.css
+							echo "</style>"
+							echo "</head>"
+							echo "<body>"
+							cat "$headerPagePath" | sed "s/href='/href='..\//g"
+							# load the movie index parts
+							cat "$webDirectory"/movies/*/movies.index
+							echo "</body>"
+							echo "</html>"
+						} > "$movieIndexPath"
 					fi
+				# rebuild the homepage after processing each libary item
+				buildHomePage "$webDirectory" "$headerPagePath"
 				done
 			fi
 		done
 		{
+			# add the video file errors encountered during episode processing
+			# these must be stored because of state checking
+			#cat "$webDirectory"/shows/*/log.index
+			addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 			echo "</table>"
 			echo "</body>"
 			echo "</html>"
 		} >> "$logPagePath"
 		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+			# load the movie index parts
+			cat "$webDirectory"/movies/*/movies.index
 			echo "</body>"
 			echo "</html>"
-		} >> "$showIndexPath"
+		} > "$movieIndexPath"
 		{
+			# write the show index page after everything has been generated
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+			# load all existing shows into the index
+			cat "$webDirectory"/shows/*/shows.index
 			echo "</body>"
 			echo "</html>"
-		} >> "$movieIndexPath"
-		{
-			echo "</body>"
-			echo "</html>"
-		} >> "$homePagePath"
+		} > "$showIndexPath"
 		# write the md5sum state of the libary for change checking
 		#echo "$libarySum" > "$webDirectory/state.cfg"
 		getLibSum > "$webDirectory/state.cfg"

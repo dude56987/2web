@@ -7,6 +7,12 @@ h1 {
 	color: white;
 	-webkit-text-stroke: 2px black;
 }
+.ERROR{
+	background-color: darkred;
+}
+.INFO{
+	background-color: darkBlue;
+}
 .seasonHeader {
 	background-color: rgba(100,100,100,0.25);
 }
