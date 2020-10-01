@@ -809,9 +809,6 @@ processEpisode(){
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
-			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
-			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
-			#yt_id=${videoPath//^.*\?video_id\=/}
 			yt_id=${videoPath//*video_id=}
 			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
@@ -875,19 +872,25 @@ processEpisode(){
 		################################################################################
 		# add the episode to the show page
 		################################################################################
-		{
-			#tempStyle="$episodeSeasonPath/$episodePath-thumb$thumbnailExt"
-			#tempStyle="background-image: url(\"$tempStyle\")"
-			#echo "<a class='showPageEpisode' style='$tempStyle' href='$episodeSeasonPath/$episodePath.html'>"
-			echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
-			#echo "	<div>"
-			echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
-			#echo "	</div>"
-			echo "	<h3 class='title'>"
-			echo "		$episodeTitle"
-			echo "	</h3>"
-			echo "</a>"
-		} >> "$showPagePath"
+		if [ $episodeNumber -eq 1 ];then
+			{
+				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
+				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
+				echo "	<h3 class='title'>"
+				echo "		$episodeTitle"
+				echo "	</h3>"
+				echo "</a>"
+			} > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		else
+			{
+				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
+				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
+				echo "	<h3 class='title'>"
+				echo "		$episodeTitle"
+				echo "	</h3>"
+				echo "</a>"
+			} >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		fi
 	else
 		echo "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1011,20 +1014,22 @@ processShow(){
 			echo "[INFO]: found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
-			{
-				echo "<div class='seasonHeader'>"
-				echo "	<h2>"
-				echo "		$seasonName"
-				echo "	</h2>"
-				echo "</div>"
-				echo "<div class='seasonContainer'>"
-			} >> "$showPagePath"
 			# if the folder is a directory that means a season has been found
 			# read each episode in the series
 			for episode in "$season"/*.nfo;do
 				processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
 			done
+			# after processing each season rebuild the index show page
 			{
+				echo "<div class='seasonContainer'>"
+				echo "<div class='seasonHeader'>"
+				echo "	<h2>"
+				echo "		$seasonName"
+				echo "	</h2>"
+				echo "</div>"
+				echo "<hr>"
+				# read all season indexes
+				cat "$webDirectory/shows/$showTitle"/*/season.index
 				echo "</div>"
 			} >> "$showPagePath"
 		else
