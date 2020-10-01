@@ -84,21 +84,29 @@ ripXmlTag(){
 	data=$1
 	tag=$2
 	# remove complex xml tags, they make parsing more difficult
-	data=$(echo "$data" | grep -v "/>")
-	# check for valid string
+	#data=$(echo "$data" | grep -v "/>")
+	data=$(echo "$data" | grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>")
+	#data=$(grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>" < "$data")
+	#data=$("$data" | grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>")
+	# convert null line endings
+	# remove all new lines so grep can read multi line entries
+	#data=$(echo "$data" | tr -d '\n')
+	#data=$(echo "$data" | sed -z "s/\n/<br>/g")
+	data="${data//<$tag>}"
+	data="${data//<\/$tag>}"
+	# if multuple lines of tag info are given format them for html
+	#if [ "$(echo "$data" | wc -l)" -gt 1 ];then
+	#	lineEnding="<br>"
+	#else
+	#	lineEnding=""
+	#fi
 	if validString "$tag" -q;then
-		# ignore the case of the tag and rip the case used
-		theTag=$(echo "$data" | grep --ignore-case --only-matching "<$tag>")
-		theTag="${theTag//<}"
-		theTag="${theTag//>}"
-		# rip the tag from the data
-		#echo "$data" | grep -i "<$theTag>" | sed "s/<$theTag>//g" | sed "s/<\/$theTag>//g"
-		output=$(echo "$data" | grep "<$theTag>")
-		output="${output//<$theTag>}"
-		output="${output//<\/$theTag>}"
-		# remove special characters that will gunk up the works
-		#output=$(cleanText "$output")
-		echo "$output"
+		# loop though info
+		echo -e "$data" | while read -r line;do
+			# read lines until you reach the end tag line
+			#echo "$line$lineEnding"
+			echo "$line"
+		done
 		return 0
 	else
 		echo "[DEBUG]: Tag must be at least one character in length!"
@@ -135,6 +143,19 @@ processMovie(){
 		echo "[INFO]: movie title = '$movieTitle'"
 		movieYear=$(cleanXml "$nfoInfo" "year")
 		echo "[INFO]: movie year = '$movieYear'"
+		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
+		moviePlot=$(ripXmlTag "$nfoInfo" "plot")
+		echo "[INFO]: movie plot = '$moviePlot'"
+		moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
+		moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
+		#moviePlot=$(echo "$moviePlot" | recode ..HTML)
+		#echo "[INFO]: movie plot = '$moviePlot'"
+		#moviePlot=$(echo "$moviePlot" | markdown )
+		#echo "[INFO]: movie plot = '$moviePlot'"
+		moviePlot=$(echo "$moviePlot" | txt2html --extract )
+		echo "[INFO]: movie plot = '$moviePlot'"
+		#moviePlot=$(echo "$moviePlot"| txt2html --link-only --extract -p 10 )
+		#echo "[INFO]: movie plot = '$moviePlot'"
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
@@ -146,10 +167,12 @@ processMovie(){
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
 		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
+		# create the path sum for reconizing the libary path
+		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
 		# check movie state as soon as posible processing
-		if [ -f "$webDirectory/movies/$movieWebPath/state.cfg" ];then
+		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
 			# a existing state was found
-			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state.cfg")
+			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
 			libarySum=$(getDirSum "$movieDir")
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
@@ -186,9 +209,15 @@ processMovie(){
 		elif [ -f "${moviePath//.nfo/.mpeg}" ];then
 			videoPath="${moviePath//.nfo/.mpeg}"
 			sufix=".mpeg"
+		elif [ -f "${moviePath//.nfo/.mpg}" ];then
+			videoPath="${moviePath//.nfo/.mpg}"
+			sufix=".mpg"
 		elif [ -f "${moviePath//.nfo/.avi}" ];then
 			videoPath="${moviePath//.nfo/.avi}"
 			sufix=".avi"
+		elif [ -f "${moviePath//.nfo/.m4v}" ];then
+			videoPath="${moviePath//.nfo/.m4v}"
+			sufix=".m4v"
 		elif [ -f "${moviePath//.nfo/.strm}" ];then
 			videoPath="${moviePath//.nfo/.strm}"
 			videoPath=$(cat "$videoPath")
@@ -211,12 +240,18 @@ processMovie(){
 		elif echo "$videoPath" | grep ".mp4";then
 			mediaType="video"
 			mimeType="video/mp4"
+		elif echo "$videoPath" | grep ".m4v";then
+			mediaType="video"
+			mimeType="video/m4v"
 		elif echo "$videoPath" | grep ".avi";then
 			mediaType="video"
 			mimeType="video/avi"
 		elif echo "$videoPath" | grep ".mpeg";then
 			mediaType="video"
 			mimeType="video/mpeg"
+		elif echo "$videoPath" | grep ".mpg";then
+			mediaType="video"
+			mimeType="video/mpg"
 		elif echo "$videoPath" | grep ".mkv";then
 			mediaType="video"
 			mimeType="video/x-matroska"
@@ -226,19 +261,6 @@ processMovie(){
 			mediaType="video"
 			mimeType="video"
 		fi
-		# start rendering the html
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<style>"
-			cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
-			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
-			echo "<h1>$movieTitle</h1>"
-		} > "$moviePagePath"
 		# link the movie nfo file
 		echo "[INFO]: linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
 		ln -s "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
@@ -273,6 +295,56 @@ processMovie(){
 		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
 		echo "[INFO]: new thumbnail path = '$thumbnailPath'"
+		# link all images to the kodi path
+		if ls "$movieDir" | grep "\.jpg" ;then
+			echo "[INFO]: Found media '$movieDir/*.jpg' !"
+			ln -s "$movieDir"/*.jpg "$webDirectory/kodi/movies/$movieWebPath/"
+			ln -s "$movieDir"/*.jpg "$webDirectory/movies/$movieWebPath/"
+		elif ls "$movieDir" | grep "\.png" ;then
+			echo "[INFO]: Found media '$movieDir/*.png' !"
+			ln -s "$movieDir"/*.png "$webDirectory/kodi/movies/$movieWebPath/"
+			ln -s "$movieDir"/*.png "$webDirectory/movies/$movieWebPath/"
+		else
+			echo "[ERROR]: No media files could be found!"
+			addToLog "ERROR" "No media files could be found!" "$movieDir" "$logPagePath"
+		fi
+		# link the fanart
+		if [ -f "$movieDir/fanart.png" ];then
+			echo "[INFO]: Found $movieDir/fanart.png"
+			fanartPath="fanart.png"
+			echo "[INFO]: Found fanart at '$movieDir/$fanartPath'"
+			ln -s "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
+			ln -s "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+		elif [ -f "$show/fanart.jpg" ];then
+			fanartPath="fanart.jpg"
+			echo "[INFO]: Found fanart at '$movieDir/$fanartPath'"
+			ln -s "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
+			ln -s "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+		else
+			echo "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
+		fi
+		# find the fanart for the episode background
+		if [ -f "$movieDir/fanart.png" ];then
+			tempStyle="html {background-image: url('fanart.png');background-size: 100%;}"
+		elif [ -f "$movieDir/fanart.jpg" ];then
+			tempStyle="html {background-image: url('fanart.jpg');background-size: 100%;}"
+		fi
+		# start rendering the html
+		{
+			echo "<html>"
+			echo "<head>"
+			echo "<style>"
+			echo "$tempStyle"
+			cat /usr/share/nfo2web/style.css
+			echo "</style>"
+			echo "</head>"
+			echo "<body>"
+			#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
+			echo "<div class='titleCard'>"
+			echo "<h1>$movieTitle</h1>"
+			echo "</div>"
+		} > "$moviePagePath"
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
 			echo "[INFO]: Thumbnail already linked..."
@@ -337,20 +409,25 @@ processMovie(){
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
 					thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
 					if validString "$thumbnailLink";then
-						echo "[INFO]: Try to download found thumbnail..."
+						echo "[INFO]: Try to download movie thumbnail..."
 						echo "[INFO]: Thumbnail found at '$thumbnailLink'"
+						addToLog "INFO" "Downloading Thumbnail" "$thumbnailLink" "$logPagePath"
 						thumbnailExt=".png"
 						# download the thumbnail
-						curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
+						#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
+						curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
 						# link the downloaded thumbnail
 						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+					else
+						echo "[DEBUG]: Thumbnail link is invalid '$thumbnailLink'"
 					fi
 				fi
-				touch "$thumbnailPath.png"
+				touch "$thumbnailPath$thumbnailExt"
 				# check if the thumb download failed
-				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
 				echo "[DEBUG]: file size $tempFileSize"
-				if [ "$tempFileSize" -lt 15000 ];then
+				if [ "$tempFileSize" -eq 0 ];then
+					addToLog "INFO" "Generating Thumbnail" "$thumbnailLink" "$logPagePath"
 					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
 					# try to generate a thumbnail from video file
 					echo "[INFO]: Attempting to create thumbnail from video source..."
@@ -404,21 +481,13 @@ processMovie(){
 				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
 				echo "allowfullscreen>"
 				echo "</iframe>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
-				echo "<ul>"
-				echo "	<li>"
-				echo "		<a href='$ytLink'>"
-				echo "			$ytLink"
-				echo "		</a>"
-				echo "	</li>"
-				echo "	<li>"
-				# create link to .strm file
-				echo "		<a href='$movieWebPath$sufix'>"
-				echo "			$movieWebPath$sufix"
-				echo "		</a>"
-				echo "	</li>"
-				echo "</ul>"
+				echo "	<a class='button hardLink' href='$ytLink'>"
+				echo "		Hard Link"
+				echo "	</a>"
+				echo "	$moviePlot"
+				echo "</div>"
 			} >> "$moviePagePath"
 		elif echo "$videoPath" | grep "http";then
 			{
@@ -426,16 +495,19 @@ processMovie(){
 				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
-					echo "<a href='$videoPath'>"
-					echo "$videoPath"
+					echo "<a class='button hardLink' href='$videoPath'>"
+					echo "Hard Link"
 					echo "</a><br>"
+				else
+					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
+					echo "Hard Link"
+					echo "</a>"
 				fi
-				echo "<a href='$movieWebPath$sufix'>"
-				echo "$movieWebPath$sufix"
-				echo "</a>"
+				echo "$moviePlot"
+				echo "</div>"
 			} >> "$moviePagePath"
 		else
 			{
@@ -443,11 +515,13 @@ processMovie(){
 				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls>"
 				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
-				echo "<a href='$movieWebPath$sufix'>"
-				echo "$movieWebPath$sufix"
+				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
+				echo "Hard Link"
 				echo "</a>"
+				echo "$moviePlot"
+				echo "</div>"
 			} >> "$moviePagePath"
 		fi
 		{
@@ -458,18 +532,18 @@ processMovie(){
 		# add the movie to the movie index page
 		################################################################################
 		{
-			echo "<a class='showPageEpisode' href='$movieWebPath'>"
+			echo "<a class='indexSeries' href='$movieWebPath'>"
 			echo "	<img loading='lazy' src='$movieWebPath/$movieWebPath-poster$thumbnailExt'>"
-			echo "	<h3 class='title'>"
+			echo "	<div class='title'>"
 			echo "		$movieTitle"
-			echo "	</h3>"
+			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
 	else
 			echo "[WARNING]: The file '$moviePath' could not be found!"
 	fi
-	touch "$webDirectory/movies/$movieWebPath/state.cfg"
-	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state.cfg"
+	touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
+	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 }
 ########################################################################
 processEpisode(){
@@ -495,6 +569,20 @@ processEpisode(){
 		echo "[INFO]: Episode show title after clean = '$episodeShowTitle'"
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
 		echo "[INFO]: Episode title = '$episodeShowTitle'"
+		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
+		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..html | txt2html --eight_bit_clean --extract -p 10 )
+		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..html | txt2html -ec --eight_bit_clean --extract -p 10 )
+		episodePlot=$(ripXmlTag "$nfoInfo" "plot")
+		echo "[INFO]: episode plot = '$episodePlot'"
+		episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
+		episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
+		#episodePlot=$(echo "$episodePlot" | recode ..HTML )
+		echo "[INFO]: episode plot = '$episodePlot'"
+		#episodePlot=$(echo "$episodePlot" | markdown )
+		#echo "[INFO]: episode plot = '$episodePlot'"
+		episodePlot=$(echo "$episodePlot" | txt2html --extract )
+		echo "[INFO]: episode plot = '$episodePlot'"
+		#episodePlot=$(echo "$episodePlot"| txt2html --link-only --extract -p 10 )
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		echo "[INFO]: Episode season = '$episodeSeason'"
 		if [ "$episodeSeason" -lt 10 ];then
@@ -542,9 +630,15 @@ processEpisode(){
 		elif [ -f "${episode//.nfo/.mpeg}" ];then
 			videoPath="${episode//.nfo/.mpeg}"
 			sufix=".mpeg"
+		elif [ -f "${episode//.nfo/.mpg}" ];then
+			videoPath="${episode//.nfo/.mpg}"
+			sufix=".mpg"
 		elif [ -f "${episode//.nfo/.avi}" ];then
 			videoPath="${episode//.nfo/.avi}"
 			sufix=".avi"
+		elif [ -f "${episode//.nfo/.m4v}" ];then
+			videoPath="${episode//.nfo/.m4v}"
+			sufix=".m4v"
 		elif [ -f "${episode//.nfo/.strm}" ];then
 			videoPath="${episode//.nfo/.strm}"
 			videoPath=$(cat "$videoPath")
@@ -569,9 +663,15 @@ processEpisode(){
 		elif echo "$videoPath" | grep ".mp4";then
 			mediaType="video"
 			mimeType="video/mp4"
+		elif echo "$videoPath" | grep ".m4v";then
+			mediaType="video"
+			mimeType="video/m4v"
 		elif echo "$videoPath" | grep ".mpeg";then
 			mediaType="video"
 			mimeType="video/mpeg"
+		elif echo "$videoPath" | grep ".mpg";then
+			mediaType="video"
+			mimeType="video/mpg"
 		elif echo "$videoPath" | grep ".avi";then
 			mediaType="video"
 			mimeType="video/avi"
@@ -584,18 +684,29 @@ processEpisode(){
 			mediaType="video"
 			mimeType="video"
 		fi
+		# find the fanart for the episode background
+		if [ -f "$webDirectory/shows/$episodeShowTitle/fanart.png" ];then
+			tempStyle="html {background-image: url('../fanart.png');background-size: 100%;}"
+		elif [ -f "$webDirectory/shows/$episodeShowTitle/fanart.jpg" ];then
+			tempStyle="html {background-image: url('../fanart.jpg');background-size: 100%;}"
+		fi
 		# start rendering the html
 		{
 			echo "<html>"
 			echo "<head>"
 			echo "<style>"
+			#add the fanart
+			echo "$tempStyle"
+			#add the stylesheet
 			cat /usr/share/nfo2web/style.css
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
+			echo "<div class='titleCard'>"
 			echo "<h1>$episodeShowTitle</h1>"
 			echo "<h2>$episodeTitle</h2>"
+			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
 		echo "[INFO]: linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
@@ -643,17 +754,21 @@ processEpisode(){
 			else
 				if echo "$nfoInfo" | grep "thumb";then
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
-					echo "[INFO]: Try to download found thumbnail..."
+					echo "[INFO]: Try to download episode thumbnail..."
 					echo "[INFO]: Thumbnail found at $thumbnailLink"
+					addToLog "INFO" "Downloading Thumbnail" "$thumbnailLink" "$showLogPath"
 					thumbnailExt=".png"
 					# download the thumbnail
-					curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
+					#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
+					curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+					# link the downloaded thumbnail
+					ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 				fi
-				touch "$thumbnailPath.png"
+				touch "$thumbnailPath$thumbnailExt"
 				# check if the thumb download failed
-				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
 				echo "[DEBUG]: file size $tempFileSize"
-				if [ "$tempFileSize" -lt 15000 ];then
+				if [ "$tempFileSize" -eq 0 ];then
 					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
 					# try to generate a thumbnail from video file
 					echo "[INFO]: Attempting to create thumbnail from video source..."
@@ -709,21 +824,13 @@ processEpisode(){
 				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
 				echo "allowfullscreen>"
 				echo "</iframe>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
-				echo "<ul>"
-				echo "	<li>"
-				echo "		<a href='$ytLink'>"
-				echo "			$ytLink"
-				echo "		</a>"
-				echo "	</li>"
-				echo "	<li>"
-				# create link to .strm file
-				echo "		<a href='$episodePath$sufix'>"
-				echo "			$episodePath$sufix"
-				echo "		</a>"
-				echo "	</li>"
-				echo "</ul>"
+				echo "<a class='button hardLink' href='$ytLink'>"
+				echo "	Hard Link"
+				echo "</a>"
+				echo "$episodePlot"
+				echo "</div>"
 			} >> "$episodePagePath"
 			#echo "$videoPath" tr -d 'plugin://plugin.video.youtube/play/?video_id='
 		elif echo "$videoPath" | grep "http";then
@@ -732,16 +839,19 @@ processEpisode(){
 				echo "<$mediaType poster='$episodePath-thumb$thumbnailExt' controls>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
-					echo "<a href='$videoPath'>"
-					echo "$videoPath"
+					echo "<a class='button hardLink' href='$videoPath'>"
+					echo "Hard Link"
 					echo "</a><br>"
+				else
+					echo "<a class='button hardLink' href='$episodePath$sufix'>"
+					echo "Hard Link"
+					echo "</a>"
 				fi
-				echo "<a href='$episodePath$sufix'>"
-				echo "$episodePath$sufix"
-				echo "</a>"
+				echo "$episodePlot"
+				echo "</div>"
 			} >> "$episodePagePath"
 		else
 			{
@@ -749,11 +859,13 @@ processEpisode(){
 				echo "<$mediaType poster='$episodePath-thumb$thumbnailExt' controls>"
 				echo "<source src='$episodePath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
-				echo "<hr>"
+				echo "<div class='descriptionCard'>"
 				# create a hard link
-				echo "<a href='$episodePath$sufix'>"
-				echo "$episodePath$sufix"
+				echo "<a class='button hardLink' href='$episodePath$sufix'>"
+				echo "Hard Link"
 				echo "</a>"
+				echo "$episodePlot"
+				echo "</div>"
 			} >> "$episodePagePath"
 		fi
 		{
@@ -772,7 +884,7 @@ processEpisode(){
 			echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
 			#echo "	</div>"
 			echo "	<h3 class='title'>"
-			echo "		$episodePath"
+			echo "		$episodeTitle"
 			echo "	</h3>"
 			echo "</a>"
 		} >> "$showPagePath"
@@ -793,11 +905,12 @@ processShow(){
 	echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
-	# blank the log for new log
+	# create the path sum for reconizing the libary path
+	pathSum=$(echo "$show" | md5sum | cut -d' ' -f1)
 	# check show state before processing
-	if [ -f "$webDirectory/shows/$showTitle/state.cfg" ];then
+	if [ -f "$webDirectory/shows/$showTitle/state_$pathSum.cfg" ];then
 		# a existing state was found
-		currentSum=$(cat "$webDirectory/shows/$showTitle/state.cfg")
+		currentSum=$(cat "$webDirectory/shows/$showTitle/state_$pathSum.cfg")
 		libarySum=$(getDirSum "$show")
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
@@ -826,6 +939,15 @@ processShow(){
 	# linking tvshow.nfo data
 	ln -s "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
 	ln -s "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
+	# link all images to the kodi path
+	if ls "$show" | grep "\.jpg" ;then
+		ln -s "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
+		ln -s "$show"/*.jpg "$webDirectory/shows/$showTitle/"
+	fi
+	if ls "$show" | grep "\.png" ;then
+		ln -s "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
+		ln -s "$show"/*.png "$webDirectory/shows/$showTitle/"
+	fi
 	# link the poster
 	if [ -f "$show/poster.png" ];then
 		posterPath="poster.png"
@@ -877,7 +999,9 @@ processShow(){
 		echo "</head>"
 		echo "<body>"
 		cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+		echo "<div class='titleCard'>"
 		echo "<h1>$showTitle</h1>"
+		echo "</div>"
 		echo "<div class='episodeList'>"
 	} > "$showPagePath"
 	# generate the episodes based on .nfo files
@@ -893,7 +1017,6 @@ processShow(){
 				echo "		$seasonName"
 				echo "	</h2>"
 				echo "</div>"
-				echo "<hr>"
 				echo "<div class='seasonContainer'>"
 			} >> "$showPagePath"
 			# if the folder is a directory that means a season has been found
@@ -926,8 +1049,8 @@ processShow(){
 	#} >> "$showIndexPath"
 	} > "$webDirectory/shows/$showTitle/shows.index"
 	# update the libary sum
-	touch "$webDirectory/shows/$showTitle/state.cfg"
-	getDirSum "$show" > "$webDirectory/shows/$showTitle/state.cfg"
+	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
+	getDirSum "$show" > "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
 }
 ########################################################################
 addToLog(){
@@ -972,10 +1095,12 @@ buildHomePage(){
 	webDirectory=$1
 	headerPagePath=$2
 	echo "[INFO]: Building home page..."
+	tempStyle="html {background-image: url(\"background.png\");background-size: 100%;}"
 	{
 			echo "<html>"
 			echo "<head>"
 			echo "<style>"
+			echo "$tempStyle"
 			cat /usr/share/nfo2web/style.css
 			echo "</style>"
 			echo "</head>"
@@ -990,9 +1115,9 @@ buildHomePage(){
 	randomShows=$(ls -1 "$webDirectory"/shows/*/shows.index| shuf -n 5)
 	echo "[INFO]: Random Shows list = $randomShows"
 	{
-		echo "<hr>"
+		echo "<div class='titleCard'>"
 		echo "<h1>Random Shows</h1>"
-		echo "<div>"
+		echo "<hr>"
 	} >>  "$webDirectory/index.html"
 	echo "$randomShows" | while read -r line;do
 		{
@@ -1006,9 +1131,9 @@ buildHomePage(){
 	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index| tail -n 5)
 	echo "[INFO]: Updated Shows list = $updatedShows"
 	{
-		echo "<hr>"
+		echo "<div class='titleCard'>"
 		echo "<h1>Updated Shows</h1>"
-		echo "<div>"
+		echo "<hr>"
 	} >>  "$webDirectory/index.html"
 	echo "$updatedShows" | while read -r line;do
 		{
@@ -1022,9 +1147,9 @@ buildHomePage(){
 	randomMovies=$(ls -1 "$webDirectory"/movies/*/movies.index| shuf -n 5)
 	echo "[INFO]: Random Movies list = $randomMovies"
 	{
-		echo "<hr>"
+		echo "<div class='titleCard'>"
 		echo "<h1>Random Movies</h1>"
-		echo "<div>"
+		echo "<hr>"
 	} >>  "$webDirectory/index.html"
 	echo "$randomMovies" | while read -r line;do
 		{
@@ -1038,9 +1163,9 @@ buildHomePage(){
 	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index| tail -n 5)
 	echo "[INFO]: Updated Movies list = $updatedMovies"
 	{
-		echo "<hr>"
+		echo "<div class='titleCard'>"
 		echo "<h1>Updated Movies</h1>"
-		echo "<div>"
+		echo "<hr>"
 	} >>  "$webDirectory/index.html"
 	echo "$updatedMovies" | while read -r line;do
 		{
@@ -1200,22 +1325,22 @@ main(){
 		{
 			# build the header
 			echo "<div class='header'>"
-			echo "<a class='headerButton' href='..'>"
+			echo "<a class='button' href='..'>"
 			echo "HOME"
 			echo "</a>"
-			echo "<a class='headerButton' href='kodi'>"
+			echo "<a class='button' href='kodi'>"
 			echo "KODI"
 			echo "</a>"
-			echo "<a class='headerButton' href='movies'>"
+			echo "<a class='button' href='movies'>"
 			echo "MOVIES"
 			echo "</a>"
-			echo "<a class='headerButton' href='shows'>"
+			echo "<a class='button' href='shows'>"
 			echo "SHOWS"
 			echo "</a>"
-			echo "<a class='headerButton' href='log.html'>"
+			echo "<a class='button' href='log.html'>"
 			echo "LOG"
 			echo "</a>"
-			echo "<a class='headerButton' href='settings.php'>"
+			echo "<a class='button' href='settings.php'>"
 			echo "SETTINGS"
 			echo "</a>"
 			echo "</div>"
@@ -1231,6 +1356,7 @@ main(){
 			cat "$headerPagePath"
 			echo "<table>"
 		} > "$logPagePath"
+		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
 		buildHomePage "$webDirectory" "$headerPagePath"
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
@@ -1311,6 +1437,54 @@ main(){
 				buildHomePage "$webDirectory" "$headerPagePath"
 				done
 			fi
+			#images=""
+			#if find "$webDirectory/movies/" -name "poster.png";then
+			#	echo "[INFO]: Found movie posters in PNG format"
+			#	images="$images $(find "$webDirectory/movies/" -name "poster.png" -printf '"%p" ')"
+			#	echo "[DEBUG]: images 1 = $images"
+			#fi
+			#if find "$webDirectory/shows/" -name "poster.png";then
+			#	echo "[INFO]: Found show posters in PNG format"
+			#	images="$images $(find "$webDirectory/shows/" -name "poster.png" -printf '"%p" ')"
+			#	echo "[DEBUG]: images 2 = $images"
+			#fi
+			#if find "$webDirectory/shows/" -name "poster.jpg";then
+			#	echo "[INFO]: Found show posters in JPG format"
+			#	images="$images $(find "$webDirectory/shows/" -name "poster.jpg" -printf '"%p" ')"
+			#	echo "[DEBUG]: images 3 = $images"
+			#fi
+			#if find "$webDirectory/movies/" -name "poster.jpg";then
+			#	echo "[INFO]: Found movie posters in JPG format"
+			#	images="$images $(find "$webDirectory/movies/" -name "poster.jpg" -printf '"%p" ')"
+			#	echo "[DEBUG]: images 4 = $images"
+			#fi
+			# shuffle the list of images
+			#images=$(echo "$images" | shuf)
+			#tempFiles=""
+			#for imageFile in $images;do
+			#	tempFiles="$tempFiles -texture '$imageFile'"
+			#done
+			#echo "[DEBUG]: images 5 = $images"
+			#tempFiles=$(echo "$images" | sed "s/\"\ /\" -texture /g")
+			# build poster list
+			#images=$(find "$webDirectory/" -name "poster.[jpg|png]" -printf "%p " | shuf)
+			#echo "[DEBUG]: images 5 = $images"
+			# create the homepage background after processing each libary location
+			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid \
+			#montage -geometry +0+0 -alpha on -blur 100.5 -background none \
+			#	"$webDirectory"/shows/*/poster.png \
+			#	"$webDirectory"/shows/*/poster.jpg \
+			#	"$webDirectory"/movies/*/poster.png \
+			#	"$webDirectory"/movies/*/poster.jpg \
+			#	"$webDirectory/background.png"
+			# ------------------------------------------------------------------ #
+			#	"$webDirectory"/shows/*/*/*.png \
+			#	"$webDirectory"/shows/*/*/*.jpg \
+			#	$(find "$webDirectory/movies/" -name "poster.jpg" -printf '"%p" ') \
+			#	$(find "$webDirectory/shows/" -name "poster.jpg" -printf '"%p" ') \
+			#	"$webDirectory/background.png"
+			#echo "[DEBUG]: montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles '$webDirectory/background.png'"
+			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles "$webDirectory/background.png"
 		done
 		{
 			# add the video file errors encountered during episode processing
@@ -1352,7 +1526,7 @@ main(){
 		} > "$showIndexPath"
 		# write the md5sum state of the libary for change checking
 		#echo "$libarySum" > "$webDirectory/state.cfg"
-		getLibSum > "$webDirectory/state.cfg"
+		#getLibSum > "$webDirectory/state.cfg"
 		# remove active state file
 		rm -v /tmp/nfo2web.active
 		# read the tvshow.nfo files for each show
