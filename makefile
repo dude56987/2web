@@ -18,7 +18,7 @@
 show:
 	echo 'Run "make install" as root to install program!'
 test: install
-	sudo time -v nfo2web update
+	sudo nfo2web reset && sudo time -v nfo2web update
 install: build
 	sudo gdebi -n nfo2web_UNSTABLE.deb
 uninstall:
@@ -55,6 +55,11 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	# copy over default stylesheet
 	cp style.css debian/usr/share/nfo2web/
+	# copy over javascript libary
+	cp nfo2web.js debian/usr/share/nfo2web/
+	# copy over php scripts
+	cp randomFanart.php debian/usr/share/nfo2web/
+	cp randomPoster.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root

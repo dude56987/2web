@@ -1,4 +1,4 @@
 # restart apache to unload the site
 apache2ctl restart
 # clean out the website cache
-rm -rv /var/cache/nfo2web || echo 'Cache is already empty...'
+#rm -rv /var/cache/nfo2web || echo 'Cache is already empty...'
