@@ -14,15 +14,3 @@ function toggleVisibleClass( visibleClass ){
 	}
 	return true
 }
-function toggleWarnings(){
-	toggleVisibleClass("WARNING")
-	return true
-}
-function toggleErrors(){
-	toggleVisibleClass("ERROR")
-	return true
-}
-function toggleInfos(){
-	toggleVisibleClass("INFO")
-	return true
-}

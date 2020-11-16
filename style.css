@@ -1,6 +1,16 @@
+:root{
+	--solidBackground: darkgray;
+	--glassBackground: rgba(100,100,100,0.85);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: rgba(256,256,256,0.9);
+	--highlightBorder: lightgray;
+}
 html{
 	background-size: 100vw;
-	background-color: darkgray;
+	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 	text-align: center;
@@ -37,8 +47,14 @@ h1 {
 .WARNING{
 	background-color: orange;
 }
+.NEW{
+	background-color: darkgreen;
+}
+.UPDATE{
+	background-color: cyan;
+}
 .INFO{
-	background-color: darkBlue;
+	background-color: darkslategray;
 }
 /*
 .seasonHeader {
@@ -49,7 +65,10 @@ h1 {
 .seasonContainer{
 	box-shadow: 0px 0px 1em black;
 	text-align: center;
+	/*
 	background-color: rgba(100,100,100,0.85);
+	*/
+	background-color: var(--glassBackground);
 }
 .episodeList{
 	margin-left: auto;
@@ -57,43 +76,49 @@ h1 {
 }
 h2 {
 	text-align: center;
+	/*
 	color: white;
+	*/
+	color: var(--textColor);
 	-webkit-text-stroke: 0.04em black;
-}
-.channelLink {
-	margin-bottom: 3px;
-	text-decoration: none;
-	display: flex;
-	width: 100%;
-	font-size: 30px;
-	text-align: center;
-	background-color: gray;
-	color: black;
-	border-size: 4px;
-}
-.channelLink:hover {
-	background-color: green;
-	color: white;
 }
 .header{
 	text-decoration: none;
 	text-align: center;
+	/*
 	color: white;
+	*/
+	color: var(--textColor);
 	display: inline-block;
 	width: 95vw;
 	margin: 2vw;
 }
+.seriesBackground{
+	background: var(--backgroundFanart);
+	background-size: 100vw 100vh;
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
 .randomFanart{
 	background: url("randomFanart.php");
 	background-size: 100vw 100vh;
+	/*
 	background-color: darkgray;
+	*/
+	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
 /* if the screen is smaller than 800px or in portrait mode*/
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.seriesBackground{
+		background: var(--backgroundPoster);
+		background-size: 100vw 100vh;
+		background-repeat: repeat;
+		background-attachment: fixed;
+	}
 	.header .button{
-		width: 80vw !important;
+		width: auto !important;
 		display: block !important;
 		text-align: center !important;
 		margin-left: auto;
@@ -107,7 +132,6 @@ h2 {
 	.randomFanart{
 		background: url("randomPoster.php") !important;
 		background-size: 100vw 100vh !important;
-		background-color: darkgray !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
@@ -115,12 +139,20 @@ h2 {
 		font-size: 1em !important;
 	}
 	.hardLink{
-		width: 80vw !important;
+		width: auto !important;
 		display: block !important;
 		text-align: center !important;
 		margin-left: auto !important;
 		margin-right: auto !important;
 		float: none !important;
+	}
+	.aired{
+		width: auto !important;
+		margin: auto !important;
+		float: none !important;
+	}
+	#topButton{
+		font-size: 2em; /* Increase font size */
 	}
 }
 @media only screen and (max-width: 400px), (orientation: portrait){
@@ -130,7 +162,10 @@ h2 {
 }
 #nfoMediaPlayer, video, audio{
 	margin: 15px;
+	/*
 	box-shadow: 0px 0px 1.5em white;
+	*/
+	box-shadow: 0px 0px 1.5em var(--borderColor);
 	height: 400px;
 	min-width: 800px;
 	background-color: black;
@@ -155,21 +190,27 @@ h2 {
 }
 .button{
 	box-shadow: 0px 0px 1em black;
-	margin: 0.3em;
+	margin: 0.5em;
 	padding: 0.5em;
 	border-style: solid;
+	/*
 	border-color: white;
-	border-width: 0.2em;
 	background-color: gray;
-	text-decoration: none;
 	color: white;
+	*/
+	border-color: var(--borderColor);
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	border-width: 0.2em;
+	text-decoration: none;
 	text-align: center;
 }
 .button:hover{
 	box-shadow: 0px 0px 0px black;
-	color: black;
-	background-color: white;
-	border-color: black;
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
 }
 .indexBody{
 	text-align: center;
@@ -181,8 +222,22 @@ h2 {
 	white-space: nowrap;
 	overflow-x: auto;
 }
+.aired{
+	float: left;
+	/*
+	color: white;
+	*/
+	color: var(--textColor);
+	border: 0.5em dotted;
+	padding: 1em;
+	margin-right: 1em;
+	text-align: center;
+}
 .titleCard{
+	/*
 	background-color: rgba(100,100,100,0.85);
+	*/
+	background-color: var(--glassBackground);
 	box-shadow: 0px 0px 1em black;
 	margin: 1em;
 }
@@ -201,14 +256,19 @@ h2 {
 	font-size: 1em;
 	vertical-align: bottom;
 	text-decoration: none;
-	color: white;
 	text-align: center;
-	margin: 10px;
+	margin: 0.5em;
 	display: inline-block;
+	/*
+	color: white;
 	background-color: gray;
+	border: 4px solid white;
+	*/
+	color: var(--textColor);
+	background-color: var(--glassBackground);
+	border: 0.2em solid var(--borderColor);
 	width: 8em;
 	height: 12em;
-	border: 4px solid white;
 	box-shadow: 0px 0px 1em black;
 	/*
 	width: 200px;
@@ -217,13 +277,23 @@ h2 {
 }
 .indexSeries:hover{
 	box-shadow: 0px 0px 0px black;
+	/*
 	background-color: white;
 	color: black;
+	*/
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
+}
+.indexSeries:hover img{
+	opacity: 0.9;
 }
 .hardLink{
 	float: right;
 }
 .indexSeries img{
+	background-color: white;
 	width: 100%;
 	height: 75%;
 	/*
@@ -244,9 +314,9 @@ a{
 	text-decoration: underline;
 }
 a:hover{
-	color: black;
 	text-decoration: none;
-	background-color: white;
+	color: var(--highlightText);
+	background-color: var(--hightlightBackground);
 }
 p, dl{
 	padding: 10px;
@@ -264,7 +334,7 @@ p, dl{
 	text-align: center;
 	margin: 5px;
 	display: inline-block;
-	background-color: gray;
+	background-color: var(--glassBackground);
 	width: 8em;
 	height: 8em;
 	/*
@@ -293,13 +363,20 @@ p, dl{
 }
 .showPageEpisode:hover{
 	box-shadow: 0px 0px 0px black;
-	background-color: white;
-	color: black;
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
 }
 .showPageEpisode img{
 	width: 100%;
 	height: 50%;
+	background-color: white;
 }
+.showPageEpisode:hover img{
+	opacity: 0.9;
+}
+
 /*
 .showPageEpisode div{
 	text-align: center;
@@ -325,6 +402,7 @@ table, th, td{
 	box-shadow: 0px 0px 1em black;
 	color: white;
 	background-color: rgba(100,100,100,0.85);
+	min-height: 8em;
 }
 #player{
 	box-shadow: 0px 0px 1em black;

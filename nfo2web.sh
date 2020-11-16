@@ -188,11 +188,11 @@ processMovie(){
 			else
 				echo "[INFO]: States are diffrent, updating $movieTitle..."
 				echo "[DEBUG]: $currentSum != $libarySum"
-				addToLog "INFO" "Updating movie" "$movieTitle" "$logPagePath"
+				addToLog "UPDATE" "Updating movie" "$movieTitle" "$logPagePath"
 			fi
 		else
 			echo "[INFO]: No movie state exists for $movieTitle, updating..."
-			addToLog "INFO" "Adding new movie " "$movieTitle" "$logPagePath"
+			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
 		fi
 		################################################################################
 		# using the path of the found nfo file, check for a file extension
@@ -573,6 +573,8 @@ processMovie(){
 			} >> "$moviePagePath"
 		fi
 		{
+			# add footer
+			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
 			echo "</body>"
 			echo "</html>"
 		} >> "$moviePagePath"
@@ -752,6 +754,8 @@ processEpisode(){
 		#episodePlot=$(echo "$episodePlot"| txt2html --link-only --extract -p 10 )
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		echo "[INFO]: Episode season = '$episodeSeason'"
+		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
+		echo "[INFO]: Episode air date = '$episodeAired'"
 		if [ "$episodeSeason" -lt 10 ];then
 			if ! echo "$episodeSeason"| grep "^0";then
 				# add a zero to make it format correctly
@@ -855,20 +859,31 @@ processEpisode(){
 		fi
 		# find the fanart for the episode background
 		if [ -f "$webDirectory/shows/$episodeShowTitle/fanart.png" ];then
-			tempStyle="html{ background-image: url('../fanart.png') }"
+			#tempStyle="html{ background-image: url('../fanart.png') }"
+			tempStyle="--backgroundFanart: url(\"../fanart.png\");"
+			#tempStyle="root:{ --backgroundFanart: url('../fanart.png');"
 		elif [ -f "$webDirectory/shows/$episodeShowTitle/fanart.jpg" ];then
-			tempStyle="html{ background-image: url('../fanart.jpg') }"
+			#tempStyle="root:{ --backgroundFanart: url('../fanart.jpg');"
+			tempStyle="--backgroundFanart: url(\"../fanart.jpg\");"
+			#tempStyle="html{ background-image: url('../fanart.jpg') }"
+		fi
+		if [ -f "$webDirectory/shows/$episodeShowTitle/poster.png" ];then
+			#tempStyle="$tempStyle --backgroundPoster: url('../poster.png')}"
+			tempStyle="$tempStyle --backgroundPoster: url(\"../poster.png\")"
+		elif [ -f "$webDirectory/shows/$episodeShowTitle/poster.jpg" ];then
+			#tempStyle="$tempStyle --backgroundPoster: url('../poster.jpg')}"
+			tempStyle="$tempStyle --backgroundPoster: url(\"../poster.jpg\")"
 		fi
 		# start rendering the html
 		{
-			echo "<html id='top'>"
+			# the style variable must be set inline, not in head, this may be a bug in firefox
+			echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
+			#echo "<html id='top' class='seriesBackground' >"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='style.css' />"
 			echo "<style>"
 			#add the fanart
-			echo "$tempStyle"
-			#add the stylesheet
-			#cat /usr/share/nfo2web/style.css
+			#echo "$tempStyle"
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
@@ -923,6 +938,9 @@ processEpisode(){
 				echo "<a class='button hardLink' href='$ytLink'>"
 				echo "	Hard Link"
 				echo "</a>"
+				echo "<div class='aired'>"
+				echo "$episodeAired"
+				echo "</div>"
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
@@ -944,6 +962,9 @@ processEpisode(){
 					echo "Hard Link"
 					echo "</a>"
 				fi
+				echo "<div class='aired'>"
+				echo "$episodeAired"
+				echo "</div>"
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
@@ -958,11 +979,16 @@ processEpisode(){
 				echo "<a class='button hardLink' href='$episodePath$sufix'>"
 				echo "Hard Link"
 				echo "</a>"
+				echo "<div class='aired'>"
+				echo "$episodeAired"
+				echo "</div>"
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
 		fi
 		{
+			# add footer
+			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "</body>"
 			echo "</html>"
 		} >> "$episodePagePath"
@@ -1030,11 +1056,11 @@ processShow(){
 			echo "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
-			addToLog "INFO" "Updating show" "$showTitle" "$logPagePath"
+			addToLog "UPDATE" "Updating show" "$showTitle" "$logPagePath"
 		fi
 	else
 		echo "[INFO]: No show state exists for $showTitle, updating..."
-		addToLog "INFO" "Creating new show" "$showTitle" "$logPagePath"
+		addToLog "NEW" "Creating new show" "$showTitle" "$logPagePath"
 	fi
 	if grep "<episodedetails>" "$show"/*.nfo;then
 		# search all nfo files in the show directory if any are episodes
@@ -1110,15 +1136,29 @@ processShow(){
 			done
 			################################################################################
 			headerPagePath="$webDirectory/header.html"
+
+			# find the fanart for the episode background
+			if [ -f "$webDirectory/shows/$showTitle/fanart.png" ];then
+				tempStyle="--backgroundFanart: url(\"fanart.png\");"
+			elif [ -f "$webDirectory/shows/$showTitle/fanart.jpg" ];then
+				tempStyle="--backgroundFanart: url(\"fanart.jpg\");"
+			fi
+			if [ -f "$webDirectory/shows/$showTitle/poster.png" ];then
+				tempStyle="$tempStyle --backgroundPoster: url(\"poster.png\")"
+			elif [ -f "$webDirectory/shows/$showTitle/poster.jpg" ];then
+				tempStyle="$tempStyle --backgroundPoster: url(\"poster.jpg\")"
+			fi
+			#tempStyle="html{ background-image: url(\"$fanartPath\") }"
 			# build top of show webpage containing all of the shows meta info
 			{
-				tempStyle="html{ background-image: url(\"$fanartPath\") }"
-				echo "<html id='top' style='$tempStyle'>"
+				#echo "<html id='top' style='$tempStyle'>"
+				echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
 				echo "<head>"
-				echo "<style>"
-				echo "$tempStyle"
-				cat /usr/share/nfo2web/style.css
-				echo "</style>"
+				echo "<link rel='stylesheet' href='style.css' />"
+				#echo "<style>"
+				#echo "$tempStyle"
+				#cat /usr/share/nfo2web/style.css
+				#echo "</style>"
 				echo "</head>"
 				echo "<body>"
 				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
@@ -1148,6 +1188,8 @@ processShow(){
 			done
 			{
 				echo "</div>"
+				# add footer
+				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 				echo "</body>"
@@ -1230,7 +1272,7 @@ buildUpdatedShows(){
 	numberOfShows=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index| tail -n "$numberOfShows")
+	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows")
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Shows</h1>"
 	echo "<hr>"
@@ -1274,7 +1316,7 @@ buildUpdatedMovies(){
 	numberOfMovies=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index| tail -n "$numberOfMovies")
+	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies")
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Movies</h1>"
 	echo "<hr>"
@@ -1340,6 +1382,8 @@ buildHomePage(){
 	buildRandomMovies "$webDirectory" 15 "movies\/" >> "$webDirectory/index.html"
 	########################################################################
 	{
+		# add footer
+		cat "$headerPagePath"
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		echo "</body>"
@@ -1397,10 +1441,20 @@ main(){
 		echo "  This will update the webpages and refresh the database."
 		echo "reset"
 		echo "  This will reset the state of the cache so everything will be updated."
+		echo "nuke"
+		echo "  This will delete the cached website."
 		echo "########################################################################"
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		echo "[INFO]: Reseting web cache states..."
 		rm -rv /var/cache/nfo2web/web/*/*/state_*.cfg
+		echo "[INFO]: Reseting web log for individual shows/movies..."
+		rm -rv /var/cache/nfo2web/web/*/*/log.index
+		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
+		echo "[SUCCESS]: Site will remain the same until updated."
+		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		echo "[INFO]: Reseting web cache to blank..."
+		rm -rv /var/cache/nfo2web/web/*
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
@@ -1527,6 +1581,9 @@ main(){
 			echo "<a class='button' href='shows'>"
 			echo "SHOWS"
 			echo "</a>"
+			echo "<a class='button' href='live'>"
+			echo "Live"
+			echo "</a>"
 			echo "<a class='button' href='log.html'>"
 			echo "LOG"
 			echo "</a>"
@@ -1550,9 +1607,20 @@ main(){
 			echo "<body>"
 			cat "$headerPagePath"
 			# add the javascript sorter
-			echo "<input type='button' class='button' value='Warnings' onclick='toggleWarnings()'>"
-			echo "<input type='button' class='button' value='Errors' onclick='toggleErrors()'>"
-			echo "<input type='button' class='button' value='Info' onclick='toggleInfos()'>"
+			#echo "<input type='button' class='button' value='Info' onclick='toggleInfos()'>"
+			#echo "<input type='button' class='button' value='Warnings' onclick='toggleWarnings()'>"
+			#echo "<input type='button' class='button' value='Errors' onclick='toggleErrors()'>"
+
+			echo -n "<input type='button' class='button' value='Info'"
+			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
+			echo -n "<input type='button' class='button' value='Error'"
+			echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
+			echo -n "<input type='button' class='button' value='Warning'"
+			echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
+			echo -n "<input type='button' class='button' value='Update'"
+			echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
+			echo -n "<input type='button' class='button' value='New'"
+			echo    " onclick='toggleVisibleClass(\"NEW\")'>"
 			# start the table
 			echo "<table>"
 		} > "$logPagePath"
@@ -1607,6 +1675,10 @@ main(){
 									buildUpdatedShows "$webDirectory" 15 ""
 									# load all existing shows into the index
 									cat "$webDirectory"/shows/*/shows.index
+									# add the random list to the footer
+									buildRandomShows "$webDirectory" 15 ""
+									# add footer
+									cat "$headerPagePath" | sed "s/href='/href='..\//g"
 									# create top jump button
 									echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 									echo "</body>"
@@ -1638,6 +1710,10 @@ main(){
 							buildUpdatedMovies "$webDirectory" 15 ""
 							# load the movie index parts
 							cat "$webDirectory"/movies/*/movies.index
+							# add the random list to the footer
+							buildRandomMovies "$webDirectory" 15 ""
+							# add footer
+							cat "$headerPagePath" | sed "s/href='/href='..\//g"
 							# create top jump button
 							echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 							echo "</body>"
@@ -1732,6 +1808,8 @@ main(){
 			# add the end to the log, add the jump to top button and finish out the html
 			addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 			echo "</table>"
+			# add footer
+			cat "$headerPagePath"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 			echo "</body>"
@@ -1751,6 +1829,10 @@ main(){
 			buildUpdatedMovies "$webDirectory" 15 ""
 			# load the movie index parts
 			cat "$webDirectory"/movies/*/movies.index
+			# add the random list to the footer
+			buildRandomMovies "$webDirectory" 15 ""
+			# add footer
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 			echo "</body>"
@@ -1770,6 +1852,10 @@ main(){
 			buildUpdatedShows "$webDirectory" 15  ""
 			# load all existing shows into the index
 			cat "$webDirectory"/shows/*/shows.index
+			# add the random list to the footer
+			buildRandomShows "$webDirectory" 15 ""
+			# add footer
+			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 			echo "</body>"
