@@ -20,6 +20,31 @@ html{
 	padding: 0px;
 	word-wrap: break-word;
 }
+
+
+.channelLink {
+	margin-bottom: 3px;
+	text-decoration: none;
+	display: flex;
+	width: 100%;
+	/*
+	font-size: 30px;
+	text-align: center;
+	*/
+	text-align: left;
+	font-size: 200%;
+	word-wrap: break-word;
+	background-color: gray;
+	color: black;
+	border-size: 4px;
+}
+.channelLink:hover {
+	background-color: green;
+	color: white;
+}
+.indexLink{
+	display: inline-block;
+}
 body{
 	margin: 0px;
 }

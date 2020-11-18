@@ -15,5 +15,7 @@
 #0 */2 * * * root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
 # update every 4 hours, DEFAULT
 0 */4 * * * root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
+0 */8 * * * root	sleep 60 && /usr/bin/iptv2web update > /var/log/nfo2web.log
+0 */12 * * * root	sleep 60 && /usr/bin/iptv2web webgen > /var/log/nfo2web.log
 # update daily
 #@daily root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log

@@ -19,6 +19,7 @@ show:
 	echo 'Run "make install" as root to install program!'
 test: install
 	sudo nfo2web reset && sudo time -v nfo2web update
+	sudo time -v iptv2web
 install: build
 	sudo gdebi -n nfo2web_UNSTABLE.deb
 uninstall:
@@ -51,8 +52,9 @@ build-deb:
 	# make placeholder
 	touch debian/etc/nfo2web/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
-	# copy update script to /usr/bin
+	# copy update scripts to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web
+	cp iptv2web.sh debian/usr/bin/iptv2web
 	# copy over default stylesheet
 	cp style.css debian/usr/share/nfo2web/
 	# copy over javascript libary
@@ -60,11 +62,12 @@ build-deb:
 	# copy over php scripts
 	cp randomFanart.php debian/usr/share/nfo2web/
 	cp randomPoster.php debian/usr/share/nfo2web/
+	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
-	chmod u+rwx debian/usr/bin/nfo2web
-	chmod go-rwx debian/usr/bin/nfo2web
+	chmod u+rwx debian/usr/bin/*
+	chmod go-rwx debian/usr/bin/*
 	# copy over the cron job
 	cp nfo2web.cron debian/etc/cron.d/nfo2web-update
 	# copy over apache configs
