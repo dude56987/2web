@@ -67,7 +67,7 @@ examineIconLink(){
 	title=$3
 	###################################################################
 	iconLength=$(echo "$iconLink" | wc -c)
-	sum=$(echo "$link" | md5sum | cut -d' ' -f1)
+	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 	echo "Icon Sum=$sum"
 	localIconPath="$(webRoot)/live/$sum.png"
 	if [ "$iconLength" -gt 3 ];then
@@ -79,6 +79,16 @@ examineIconLink(){
 			# resize the icon to standard size
 			convert "$localIconPath" -resize 400x200\! "$localIconPath"
 		fi
+	fi
+	# remove image if fake was created
+	killFakeImage "$localIconPath"
+	# try to download the icon with youtube-dl
+	if ! [ -f "$localIconPath" ];then
+		tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
+		# if the file does not exist in the cache download it
+		curl "$tempIconLink" > "$localIconPath"
+		# resize the icon to standard size
+		convert "$localIconPath" -resize 400x200\! "$localIconPath"
 	fi
 	# remove image if fake was created
 	killFakeImage "$localIconPath"
@@ -141,7 +151,7 @@ function process_M3U(){
 			echo "Found Link = $link"
 			iconLink=$(getIconLink "$lineCaught")
 			echo "Icon Link = $iconLink"
-			iconSum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "Icon MD5 = $iconLink"
 			# try to download or create the thumbnail
 			examineIconLink "$iconLink" "$link" "$title"
@@ -241,8 +251,8 @@ function processLink(){
 				echo "[DEBUG]: FileName = $fileName"
 				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD"
 				examineIconLink "$thumbnailLink" "$hostPath" "$fileName"
-				sum=$(echo "$hostPath" | md5sum | cut -d' ' -f1)
-				sumHD=$(echo "$hostPathHD" | md5sum | cut -d' ' -f1)
+				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
+				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
 				echo "[DEBUG]: SUM = $sum"
 				webIconPath="http://$(hostname).local:121/$sum.png"
 				webIconPathHD="http://$(hostname).local:121/$sumHD.png"
@@ -284,9 +294,9 @@ fullUpdate(){
 	# enable debug
 	echo "Loading up sources..."
 	# check for defined sources
-	if [ -f /etc/iptv4everyone/sources.cfg ];then
+	if [ -f /etc/iptv2web/sources.cfg ];then
 		# load the config file
-		linkList="$(loadWithoutComments /etc/iptv4everyone/sources.cfg)"
+		linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
 	else
 		# if no config exists create the default config
 		{
@@ -306,28 +316,30 @@ fullUpdate(){
 		echo "##################################################"
 		# write the new config from the path variable
 		echo "https://iptv-org.github.io/iptv/index.m3u"
-		} > /etc/iptv4everyone/sources.cfg
+		} > /etc/iptv2web/sources.cfg
 	fi
 	################################################################################
 
 	webDirectory=$(webRoot)
 	channelsPath="$webDirectory/live/channels.m3u"
+	# link the channels to the kodi directory
+	ln -s "$channelsPath" "$webDirectory/kodi/channels.m3u"
 	# for each link in the sources
 	echo "Processing sources..."
 	echo "Link List = $linkList"
 	echo "#EXTM3U" > $channelsPath
 	# add user created custom local configs first
-	ls -t1 /etc/iptv4everyone/sources.d/*.m3u
+	ls -t1 /etc/iptv2web/sources.d/*.m3u
 	if [ $? -eq 0 ];then
-		for configFile in /etc/iptv4everyone/sources.d/*.m3u;do
+		for configFile in /etc/iptv2web/sources.d/*.m3u;do
 			# add file to main m3u, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
 			#cat "$configFile" | grep -v "#EXTM3U" >> $channelsPath
 		done
 	fi
-	ls -t1 /etc/iptv4everyone/sources.d/*.m3u8
+	ls -t1 /etc/iptv2web/sources.d/*.m3u8
 	if [ $? -eq 0 ];then
-		for configFile in /etc/iptv4everyone/sources.d/*.m3u8;do
+		for configFile in /etc/iptv2web/sources.d/*.m3u8;do
 			# add file to main m3u8, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
 			#cat "$configFile" | grep -v "#EXTM3U" >> $channelsPath
@@ -338,10 +350,10 @@ fullUpdate(){
 		processLink "$link" "$channelsPath"
 	done
 	# add external sources last
-	ls -t1 /etc/iptv4everyone/sources.d/*.cfg
+	ls -t1 /etc/iptv2web/sources.d/*.cfg
 	if [ $? -eq 0 ];then
-		for configFile in $(ls -t1 /etc/iptv4everyone/sources.d/*.cfg | tac);do
-			for link in $(loadWithoutComments $configFile);do
+		for configFile in $(ls -t1 /etc/iptv2web/sources.d/*.cfg | tac);do
+			for link in $(loadWithoutComments "$configFile");do
 				processLink "$link" "$channelsPath"
 			done
 		done
@@ -376,17 +388,18 @@ function buildPage(){
 		yt_id=${yt_id//\"}
 		ytLink="https://youtube.com/watch?v=$yt_id"
 		# embed the youtube player
-		echo "<iframe "
-		echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-		echo "frameborder='0'"
-		echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-		echo "allowfullscreen>"
+		echo "<iframe class='livePlayer'"
+		echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
+		echo " frameborder='0'"
+		echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+		echo " allowfullscreen>"
+		#echo ">"
 		echo "</iframe>"
 	else
 		# build the page but dont write it, this function is intended to be
 		# piped into a file
 		echo -e "$tabs<script src='hls.js'></script>"
-		echo -e "$tabs<video id='video' poster='$poster' controls></video>"
+		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' controls></video>"
 		echo -e "$tabs<script>"
 		echo -e "$tabs	if(Hls.isSupported()) {"
 		echo -e "$tabs		var video = document.getElementById('video');"
@@ -445,7 +458,7 @@ webGen(){
 			title=$(echo "$lineCaught" | cut -d',' -f2)
 			link=$line
 			#iconLink=$(getIconLink "$lineCaught")
-			iconSum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			iconLink="$iconSum.png"
 			echo "[INFO]: Found Title = $title"
 			echo "[INFO]: Found Link = $link"
@@ -486,7 +499,7 @@ webGen(){
 			# pull the link on this line and store it
 			title=$(echo "$lineCaught" | cut -d',' -f2)
 			link=$line
-			iconSum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
 			echo "[INFO]: Found Title = $title"
@@ -495,18 +508,17 @@ webGen(){
 			echo "[INFO]: Icon MD5 = $iconLink"
 			{
 				# build the page
-				echo "<html>"
+				echo "<html class='liveBackground'>"
 				echo "<head>"
 				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
 				echo "</head>"
 				echo "<body>"
 				# place the header
 				cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
+				echo "<a href='channels.m3u' id='channelsDownloadLink'"
+				echo " class='button'>channels.m3u</a>"
 				echo "<div>"
-				echo "	<div class='player'>"
-				#echo "	<h1>$title</h1>"
 				buildPage "$title" "$link" "$iconLink" "\t\t\t"
-				echo "	</div>"
 				echo "	<div class='channelList'>"
 				# create the line that will be replaced by the link list to all the channels
 				for channelLine in $(cat "$webDirectory/live/channelList.html");do
@@ -515,13 +527,13 @@ webGen(){
 				echo "	</div>"
 				echo "</div>"
 				echo "<br>"
-				echo "<div>"
+				echo "<div class='descriptionCard'>"
 				echo "	<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
 				echo "		$title"
 				echo "	</a>"
-				echo "</div>"
-				echo "<div>"
-				echo "	Hard Link : <a href='$link'>$link</a>"
+				echo "	<div>"
+				echo "		Hard Link : <a href='$link'>$link</a>"
+				echo "	</div>"
 				echo "</div>"
 				echo "</body>"
 				echo "</html>"
@@ -543,13 +555,20 @@ webGen(){
 	# build the index page
 	################################################################################
 	{
-		echo -e "<html>"
+		echo -e "<html class='liveBackground'>"
 		echo -e "<head>"
 		echo -e "\t<link rel='stylesheet' type='text/css' href='style.css'>"
+		echo "<script>"
+		cat /usr/share/nfo2web/nfo2web.js
+		echo "</script>"
 		echo -e "</head>"
 		echo -e "<body>"
 		# place the header
-		cat "$webDirectory/header.html"
+		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
+		echo "<a href='channels.m3u' id='channelsDownloadLink'"
+		echo " class='button'>channels.m3u</a>"
+		echo " <input id='searchBox' type='text'"
+		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 		echo -e "<div class='indexBody'>"
 	} > "$webDirectory/live/index.html"
 	channelNumber=1
@@ -561,7 +580,7 @@ webGen(){
 			# pull the link on this line and store it
 			title=$(echo "$lineCaught" | cut -d',' -f2)
 			link=$line
-			iconSum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
 			iconLength=$(echo "$iconLink" | wc -c)
@@ -571,10 +590,8 @@ webGen(){
 			echo "[INFO]: Icon MD5 = $iconSum"
 			{
 				# build icon to link to the channel
-				echo -e "<a class='indexLink' href='channel_$channelNumber.html#$channelNumber'>"
-				echo -e "\t<div>"
-				echo -e "\t\t<img class='indexIcon' src='$iconLink'>"
-				echo -e "\t</div>"
+				echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
+				echo -e "\t<img class='indexIcon' src='$iconLink'>"
 				echo -e "\t<div class='indexTitle'>"
 				echo -e "\t\t$title"
 				echo -e "\t</div>"
@@ -595,6 +612,8 @@ webGen(){
 	done
 	{
 		echo -e "</div>"
+		# add the footer
+		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
 		echo -e "</body>"
 		echo -e "</html>"
 	} >> "$webDirectory/live/index.html"
@@ -605,20 +624,11 @@ webGen(){
 ################################################################################
 resetCache(){
 	webDirectory=$(webRoot)
-	echo -n "Would you like to reset the iptv4everyone cache?[y/n]:"
-	read doIt
-	if echo "$doIt" | grep -q "y" ;then
-		echo "The paths to be removed are"
-		echo " - $webDirectory/live/*.html"
-		echo " - $webDirectory/live/*.png"
-		echo -n "Would you still like to remove all files and reset the cache?[y/n]:"
-		read doIt
-		if echo "$doIt" | grep -q "y" ;then
-			# remove images and webpages generated by the program
-			rm -v "$webDirectory/live/*.html"
-			rm -v "$webDirectory/live/*.png"
-		fi
-	fi
+	echo "The paths to be removed are"
+	echo " - $webDirectory/live/*.html"
+	echo " - $webDirectory/live/*.png"
+	rm -v "$webDirectory/live/*.html"
+	rm -v "$webDirectory/live/*.png"
 }
 ################################################################################
 checkCron(){
@@ -681,9 +691,21 @@ main(){
 		echo "This is the iptv4everyone administration and update program."
 		echo "To return to this menu use 'iptv4everyone help'"
 		echo "Other commands are listed below."
-		echo "update"
 		echo ""
-		echo "  This will update the webpages and refresh the database."
+		echo "update"
+		echo "  This will update the m3u file used to make the website."
+		echo ""
+		echo "cron"
+		echo "  Run the cron check script."
+		echo ""
+		echo "reset"
+		echo "  Reset the cache."
+		echo ""
+		echo "webgen"
+		echo "	Build the website from the m3u generated."
+		echo ""
+		echo "libary"
+		echo "	Download the latest version of the hls.js libary for use."
 		echo "########################################################################"
 	else
 		main --update

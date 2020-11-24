@@ -7,6 +7,7 @@
 	--highlightText: black;
 	--highlightBackground: rgba(256,256,256,0.9);
 	--highlightBorder: lightgray;
+	--staticBackground: repeating-radial-gradient(black, white 0.001%, black 0.001%);
 }
 html{
 	background-size: 100vw;
@@ -20,10 +21,8 @@ html{
 	padding: 0px;
 	word-wrap: break-word;
 }
-
-
 .channelLink {
-	margin-bottom: 3px;
+	margin-bottom: 0.05em;
 	text-decoration: none;
 	display: flex;
 	width: 100%;
@@ -32,10 +31,10 @@ html{
 	text-align: center;
 	*/
 	text-align: left;
-	font-size: 200%;
+	font-size: 1.5em;
 	word-wrap: break-word;
-	background-color: gray;
-	color: black;
+	background-color: var(--glassBackground);
+	color: var(--textColor);
 	border-size: 4px;
 }
 .channelLink:hover {
@@ -43,7 +42,25 @@ html{
 	color: white;
 }
 .indexLink{
+	color: var(--textColor);
 	display: inline-block;
+	padding: 0px !important;
+	width: 15em;
+	margin: 2em;
+	vertical-align: top !important;
+}
+.indexIcon{
+	background-image: var(--staticBackground);
+	width: inherit;
+}
+#channelsDownloadLink{
+	padding: 1em;
+	/*
+	width: 15em;
+	*/
+	display: block;
+	width: auto;
+	margin: 1em;
 }
 body{
 	margin: 0px;
@@ -134,8 +151,27 @@ h2 {
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
+.liveBackground{
+	background-image: url("../randomFanart.php");
+}
 /* if the screen is smaller than 800px or in portrait mode*/
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.settingsEntry{
+		width: 90vw !important;
+	}
+	.inputCard{
+		width: 90vw !important;
+		float: none !important;
+	}
+	.liveBackground{
+		background-image: url("../randomPoster.php");
+	}
+	.channelList{
+		width: 80vw !important;
+	}
+	.livePlayer{
+		width: 100%;
+	}
 	.seriesBackground{
 		background: var(--backgroundPoster);
 		background-size: 100vw 100vh;
@@ -151,7 +187,7 @@ h2 {
 	}
 	#nfoMediaPlayer, video, audio{
 		margin: 0px !important;
-		width: 100vw !important;
+		width: 100% !important;
 		min-width: 0px !important;
 	}
 	.randomFanart{
@@ -334,6 +370,9 @@ h2 {
 	overflow-y: hidden;
 	overflow-x: hidden;
 }
+.indexSeries img{
+	background-image: var(--staticBackground);
+}
 a{
 	color: white;
 	text-decoration: underline;
@@ -370,6 +409,9 @@ p, dl{
 	vertical-align: top;
 	overflow-y: hidden;
 	overflow-x: hidden;
+}
+.showPageEpisode img{
+	background-image: var(--staticBackground);
 }
 .showPageEpisode h3{
 	font-size: 0.5em;
@@ -422,12 +464,26 @@ table, th, td{
 .player video{
 	height: 400px;
 }
+.livePlayer{
+	width: 50%;
+	min-width: 0px;
+	margin: 0px;
+	height: 20em;
+}
 .descriptionCard{
 	text-align: left;
 	box-shadow: 0px 0px 1em black;
 	color: white;
-	background-color: rgba(100,100,100,0.85);
+	background-color: var(--glassBackground);
 	min-height: 8em;
+}
+.settingListCard{
+	text-align: left;
+	box-shadow: 0px 0px 1em black;
+	color: white;
+	background-color: var(--glassBackground);
+	min-height: 8em;
+	text-align: center;
 }
 #player{
 	box-shadow: 0px 0px 1em black;
@@ -438,10 +494,79 @@ table, th, td{
 	text-align: center;
 }
 .channelList{
-	height: 530px;
+	height: 20em;
 	overflow-y: scroll;
+	width: 40%;
+	display: inline-block;
+	vertical-align: inherit;
 }
 .channelIcon{
 	width: 50px;
 	height: 50px;
+}
+.buttonContainer{
+	float: right;
+}
+.settingsEntry h2{
+	display: inline;
+	float: left;
+}
+.settingsEntry form{
+	display: inline;
+}
+.settingsEntry img{
+	width: 64px;
+	height: 64px;
+	float: left;
+}
+.settingsEntry{
+	margin: 1em;
+	/*
+	margin-top: 0.5vh;
+	margin-bottom: 0.5vh;
+	margin-left: auto;
+	margin-right: auto;
+	*/
+	overflow: auto;
+	background-color: white;
+	word-wrap: break-word;
+	display: inline-block;
+	width: 45vw;
+	color: black;
+	float: none;
+	min-height: 5em;
+	text-align: center;
+	vertical-align: top;
+	word-break: break-all;
+}
+#searchBox{
+	width: 80vw;
+	font-size: 2em;
+	border-style: solid;
+	border-color: var(--borderColor);
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	border-width: 0.2em;
+	text-align: center;
+}
+.inputCard{
+	text-align: center;
+	box-shadow: 0px 0px 1em black;
+	color: white;
+	background-color: var(--glassBackground);
+	width: 45vw;
+	display: inline-block;
+	margin: 1em;
+	float: none;
+	min-height: 10em;
+	vertical-align: top;
+}
+pre{
+	text-align: left;
+}
+.settingsTable{
+	width: 100%;
+}
+.settingsTableData{
+	width: 30%;
 }

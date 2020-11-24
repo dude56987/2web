@@ -1272,7 +1272,7 @@ buildUpdatedShows(){
 	numberOfShows=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows")
+	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows" | tac)
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Shows</h1>"
 	echo "<hr>"
@@ -1316,7 +1316,7 @@ buildUpdatedMovies(){
 	numberOfMovies=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies")
+	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies" | tac )
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Movies</h1>"
 	echo "<hr>"
@@ -1524,6 +1524,8 @@ main(){
 		chown -R www-data:www-data "$webDirectory/movies/"
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
+		# link the settings script
+		ln -s "/usr/share/nfo2web/settings.php" "$webDirectory/settings.php"
 		# link the randomFanart.php script
 		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
@@ -1667,10 +1669,16 @@ main(){
 									#echo "<style>"
 									#cat /usr/share/nfo2web/style.css
 									#echo "</style>"
+									echo "<script>"
+									cat /usr/share/nfo2web/nfo2web.js
+									echo "</script>"
 									echo "</head>"
 									echo "<body>"
 									updateInProgress
 									cat "$headerPagePath" | sed "s/href='/href='..\//g"
+									# add the search box
+									echo " <input id='searchBox' type='text'"
+									echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 									# add the most recently updated series
 									buildUpdatedShows "$webDirectory" 15 ""
 									# load all existing shows into the index
@@ -1703,10 +1711,16 @@ main(){
 							#echo "<style>"
 							#cat /usr/share/nfo2web/style.css
 							#echo "</style>"
+							echo "<script>"
+							cat /usr/share/nfo2web/nfo2web.js
+							echo "</script>"
 							echo "</head>"
 							echo "<body>"
 							updateInProgress
 							cat "$headerPagePath" | sed "s/href='/href='..\//g"
+							# add the search box
+							echo " <input id='searchBox' type='text'"
+							echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 							buildUpdatedMovies "$webDirectory" 15 ""
 							# load the movie index parts
 							cat "$webDirectory"/movies/*/movies.index
@@ -1823,9 +1837,15 @@ main(){
 			#echo "<style>"
 			#cat /usr/share/nfo2web/style.css
 			#echo "</style>"
+			echo "<script>"
+			cat /usr/share/nfo2web/nfo2web.js
+			echo "</script>"
 			echo "</head>"
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+			# add the search box
+			echo " <input id='searchBox' type='text'"
+			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 			buildUpdatedMovies "$webDirectory" 15 ""
 			# load the movie index parts
 			cat "$webDirectory"/movies/*/movies.index
@@ -1846,9 +1866,15 @@ main(){
 			#echo "<style>"
 			#cat /usr/share/nfo2web/style.css
 			#echo "</style>"
+			echo "<script>"
+			cat /usr/share/nfo2web/nfo2web.js
+			echo "</script>"
 			echo "</head>"
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
+			# add the search box
+			echo " <input id='searchBox' type='text'"
+			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 			buildUpdatedShows "$webDirectory" 15  ""
 			# load all existing shows into the index
 			cat "$webDirectory"/shows/*/shows.index

@@ -18,8 +18,11 @@
 show:
 	echo 'Run "make install" as root to install program!'
 test: install
-	sudo nfo2web reset && sudo time -v nfo2web update
-	sudo time -v iptv2web
+	sudo time -v nfo2web reset
+	sudo time -v nfo2web update
+	sudo time -v iptv2web reset
+	sudo time -v iptv2web update
+	sudo time -v iptv2web webgen
 install: build
 	sudo gdebi -n nfo2web_UNSTABLE.deb
 uninstall:
@@ -45,13 +48,23 @@ build-deb:
 	mkdir -p debian/var/cache/nfo2web/web;
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/nfo2web/;
+	mkdir -p debian/etc/nfo2web/sources.d/;
+	mkdir -p debian/etc/iptv2web/;
+	mkdir -p debian/etc/iptv2web/sources.d/;
+	mkdir -p debian/etc/iptv2web/blockedLinks.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# make placeholder
+	touch debian/etc/iptv2web/.placeholder
+	touch debian/etc/iptv2web/sources.d/.placeholder
+	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
 	touch debian/etc/nfo2web/.placeholder
+	touch debian/etc/nfo2web/sources.d/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
+	# fix ownership
+	chown -R www-data:www-data debian/etc/iptv2web/*.d/
 	# copy update scripts to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
@@ -63,6 +76,7 @@ build-deb:
 	cp randomFanart.php debian/usr/share/nfo2web/
 	cp randomPoster.php debian/usr/share/nfo2web/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
+	cp settings.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
