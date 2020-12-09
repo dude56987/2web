@@ -77,7 +77,7 @@ examineIconLink(){
 			# if the file does not exist in the cache download it
 			curl "$iconLink" > "$localIconPath"
 			# resize the icon to standard size
-			convert "$localIconPath" -resize 400x200\! "$localIconPath"
+			convert "$localIconPath" -resize 400x400\! "$localIconPath"
 		fi
 	fi
 	# remove image if fake was created
@@ -88,30 +88,37 @@ examineIconLink(){
 		# if the file does not exist in the cache download it
 		curl "$tempIconLink" > "$localIconPath"
 		# resize the icon to standard size
-		convert "$localIconPath" -resize 400x200\! "$localIconPath"
+		convert "$localIconPath" -resize 400x400\! "$localIconPath"
 	fi
 	# remove image if fake was created
 	killFakeImage "$localIconPath"
 	if ! [ -f "$localIconPath" ];then
 		# resolve the link using streamlink to create a thumbnail
 		#resolvedLink=$(streamlink --stream-url "$link" best)
+		# check if the link is a twitch link, they preload ads in the first 15 seconds
+		# so take the thumbnail from after this 15 seconds
+		if echo "$link" | grep "twitch.tv";then
+			tempTimeout=20
+		else
+			tempTimeout=0
+		fi
 		# build a thumbnail from the video source
 		#timeout 30 ffmpeg -y -i "$resolvedLink" -ss 1 -frames:v 1 "$localIconPath"
 		# this must be contained in a single line or the delay causes it to be blocked
 		#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
-		ffmpeg -y -i "$(streamPass --stream-url $link best)" -ss 0 -frames:v 1 "$localIconPath"
+		timeout 30 ffmpeg -y -i "$(streamPass --stream-url $link best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
 		# resize the icon to standard size
-		convert "$localIconPath" -resize 400x200\! "$localIconPath"
+		convert "$localIconPath" -resize 400x400\! "$localIconPath"
 		# add text over retrieved thumbnail
-		convert "$localIconPath" -adaptive-resize 400x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x200 -gravity center caption:"$title" -composite "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
 	fi
 	killFakeImage "$localIconPath"
 	if ! [ -f "$localIconPath" ];then
 		# generate a image for the page since none exists
 		swirlAmount=$(echo "$title" | wc -c)
-		convert -size 400x200 +seed "$title" plasma: -swirl "$swirlAmount" "$localIconPath"
+		convert -size 400x400 +seed "$title" plasma: -swirl "$swirlAmount" "$localIconPath"
 		# add text over generated image
-		convert "$localIconPath" -adaptive-resize 400x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x200 -gravity center caption:"$title" -composite "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
 	fi
 }
 ################################################################################
@@ -149,6 +156,12 @@ function process_M3U(){
 			echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
 			echo "Found Link = $link"
+			# check if this link is a radio link
+			radio="false"
+			if echo $lineCaught | grep -E "radio=[\",']true";then
+				# if the line is a radio entry
+				radio="true"
+			fi
 			iconLink=$(getIconLink "$lineCaught")
 			echo "Icon Link = $iconLink"
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
@@ -156,15 +169,17 @@ function process_M3U(){
 			# try to download or create the thumbnail
 			examineIconLink "$iconLink" "$link" "$title"
 			# Write the new version of the lines to the outputFile
-			#hostPath='http://'$(hostname)'.local:121/iptv-resolver.php?url="'$link'"'
-			webIconPath="http://$(hostname).local:121/$iconSum.png"
+			#hostPath='http://'$(hostname)'.local:444/iptv-resolver.php?url="'$link'"'
+			webIconPath="http://$(hostname).local:444/live/$iconSum.png"
 			{
-				echo "#EXTINF:-1 tvg-logo=\"$webIconPath\",$title"
+				echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\",$title"
 				echo "$link"
 			} >> "$outputFile"
 			################################################################################
 			# increment the channel number
 			channelNumber=$(($channelNumber + 1))
+			# invoke webgen to update webpage after adding new live link
+			webgen
 		fi
 		# if the line is a info line
 		if echo "$line" | grep -q "#EXTINF";then
@@ -218,8 +233,8 @@ function processLink(){
 			if streamPass --can-handle-url "$link";then
 				echo "[INFO]: Link can be processed by streamlink..."
 				# determine the local hostname, use it to build the resolver path
-				hostPath='http://'$(hostname)'.local:121/iptv-resolver.php?url="'$link'"'
-				hostPathHD='http://'$(hostname)'.local:121/iptv-resolver.php?HD="true"&url="'$link'"'
+				hostPath='http://'$(hostname)'.local:444/live/iptv-resolver.php?url="'$link'"'
+				hostPathHD='http://'$(hostname)'.local:444/live/iptv-resolver.php?HD="true"&url="'$link'"'
 				#hostPath='iptv-resolver.php?url="'$link'"'
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
@@ -254,14 +269,21 @@ function processLink(){
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
 				echo "[DEBUG]: SUM = $sum"
-				webIconPath="http://$(hostname).local:121/$sum.png"
-				webIconPathHD="http://$(hostname).local:121/$sumHD.png"
+				webIconPath="http://$(hostname).local:444/live/$sum.png"
+				webIconPathHD="http://$(hostname).local:444/live/$sumHD.png"
 				#webIconPath="$sum.png"
+				# check if this link is a radio link
+				radio="false"
+				# if the line is a radio entry
+				if echo $lineCaught | grep -E "radio=[\",']true";then
+					# if the line is a radio entry
+					radio="true"
+				fi
 				echo "[DEBUG]: WebIconPath = $webIconPath"
 				{
-					echo "#EXTINF:-1 tvg-logo=\"$webIconPath\",$fileName HD"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\",$fileName HD"
 					echo "$hostPathHD"
-					echo "#EXTINF:-1 tvg-logo=\"$webIconPathHD\",$fileName"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\",$fileName"
 					echo "$hostPath"
 				} >> "$channelsPath"
 			else
@@ -270,6 +292,8 @@ function processLink(){
 			fi
 		fi
 	fi
+	# invoke webgen to update webpage after adding new live links
+	webgen
 	return 0
 }
 ################################################################################
@@ -372,7 +396,7 @@ function buildPage(){
 	poster=$3
 	tabs=$4
 	################################################################################
-	localLinkSig="http://$(hostname).local:121/"
+	localLinkSig="http://$(hostname).local:444/live/"
 	################################################################################
 	# check for .local domain indicating a local link
 	if echo "$link" | grep -q --ignore-case ".local";then
@@ -399,7 +423,7 @@ function buildPage(){
 		# build the page but dont write it, this function is intended to be
 		# piped into a file
 		echo -e "$tabs<script src='hls.js'></script>"
-		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' controls></video>"
+		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' controls autoplay></video>"
 		echo -e "$tabs<script>"
 		echo -e "$tabs	if(Hls.isSupported()) {"
 		echo -e "$tabs		var video = document.getElementById('video');"
@@ -420,6 +444,48 @@ function buildPage(){
 		echo -e "$tabs		});"
 		echo -e "$tabs	}"
 		echo -e "$tabs</script>"
+	fi
+}
+################################################################################
+function buildRadioPage(){
+	title=$1
+	link=$2
+	poster=$3
+	tabs=$4
+	################################################################################
+	localLinkSig="http://$(hostname).local:444/live/"
+	################################################################################
+	# check for .local domain indicating a local link
+	if echo "$link" | grep -q --ignore-case ".local";then
+		# cleanup the local string from the link as absolute paths will break resolution
+		link=${link//$localLinkSig}
+		# remove leading and trailing parathensis added from link
+		link=${link//^\"}
+		link=${link//\"$}
+	fi
+	if echo "$link" | grep -q --ignore-case "youtube.com";then
+		# embed youtube livestream links into the webpage
+		yt_id=${link//*watch?v=}
+		yt_id=${yt_id//\"}
+		ytLink="https://youtube.com/watch?v=$yt_id"
+		# embed the youtube player
+		echo "<iframe class='livePlayer'"
+		echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
+		echo " frameborder='0'"
+		echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+		echo " allowfullscreen>"
+		#echo ">"
+		echo "</iframe>"
+	else
+		# build the page but dont write it, this function is intended to be
+		# piped into a file
+		#echo -e "$tabs<div class='livePlayer'>"
+		# make the background for the audio player the poster of the audio stream
+		customStyle="background-image: url(\"$poster\");"
+		echo -e "$tabs<audio class='livePlayer' style='$customStyle' poster='$poster' controls autoplay>"
+		echo -e "$tabs<source src='$link' type='audio/mpeg'>"
+		echo -e "$tabs</audio>"
+		#echo -e "$tabs</div>"
 	fi
 }
 ################################################################################
@@ -467,15 +533,31 @@ webGen(){
 			#examineIconLink "$iconLink" "$link" "$title"
 			################################################################################
 			# add links to channel list
-			{
-				echo -e "<div id='$channelNumber'>"
-				echo -e "\t<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
-				echo -e "\t\t<img class='channelIcon' src='$iconLink'>"
-				#echo -e "\t\t$channelNumber $title"
-				echo -e "\t\t$title"
-				echo -e "\t</a>"
-				echo -e "</div>"
-			} >> "$webDirectory/live/channelList.html"
+			if echo $lineCaught | grep -Eq "radio=[\",']true";then
+				# if the link is a radio station
+				{
+					echo -e "<div id='$channelNumber'>"
+					echo -e "\t<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconLink'>"
+					#echo -e "\t\t$channelNumber $title"
+					echo -e "\t\t$title"
+					echo -e "\t<div class='radioIcon'>"
+					echo -e "\t&#9835;"
+					echo -e "\t</div>"
+					echo -e "\t</a>"
+					echo -e "</div>"
+				} >> "$webDirectory/live/channelList.html"
+			else
+				{
+					echo -e "<div id='$channelNumber'>"
+					echo -e "\t<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconLink'>"
+					#echo -e "\t\t$channelNumber $title"
+					echo -e "\t\t$title"
+					echo -e "\t</a>"
+					echo -e "</div>"
+				} >> "$webDirectory/live/channelList.html"
+			fi
 			channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
@@ -508,7 +590,7 @@ webGen(){
 			echo "[INFO]: Icon MD5 = $iconLink"
 			{
 				# build the page
-				echo "<html class='liveBackground'>"
+				echo "<html id='top' class='liveBackground'>"
 				echo "<head>"
 				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
 				echo "</head>"
@@ -518,7 +600,11 @@ webGen(){
 				echo "<a href='channels.m3u' id='channelsDownloadLink'"
 				echo " class='button'>channels.m3u</a>"
 				echo "<div>"
-				buildPage "$title" "$link" "$iconLink" "\t\t\t"
+				if echo $lineCaught | grep -Eq "radio=[\",']true";then
+					buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
+				else
+					buildPage "$title" "$link" "$iconLink" "\t\t\t"
+				fi
 				echo "	<div class='channelList'>"
 				# create the line that will be replaced by the link list to all the channels
 				for channelLine in $(cat "$webDirectory/live/channelList.html");do
@@ -535,6 +621,8 @@ webGen(){
 				echo "		Hard Link : <a href='$link'>$link</a>"
 				echo "	</div>"
 				echo "</div>"
+				# create top jump button
+				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 				echo "</body>"
 				echo "</html>"
 			} > "$webDirectory/live/channel_$channelNumber.html"
@@ -555,7 +643,7 @@ webGen(){
 	# build the index page
 	################################################################################
 	{
-		echo -e "<html class='liveBackground'>"
+		echo -e "<html id='top' class='liveBackground'>"
 		echo -e "<head>"
 		echo -e "\t<link rel='stylesheet' type='text/css' href='style.css'>"
 		echo "<script>"
@@ -564,7 +652,7 @@ webGen(){
 		echo -e "</head>"
 		echo -e "<body>"
 		# place the header
-		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
+		sed "s/href='/href='..\//g" < "$webDirectory/header.html"
 		echo "<a href='channels.m3u' id='channelsDownloadLink'"
 		echo " class='button'>channels.m3u</a>"
 		echo " <input id='searchBox' type='text'"
@@ -588,15 +676,30 @@ webGen(){
 			echo "[INFO]: Found Link = $link"
 			echo "[INFO]: Icon Link = $iconLink"
 			echo "[INFO]: Icon MD5 = $iconSum"
-			{
-				# build icon to link to the channel
-				echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
-				echo -e "\t<img class='indexIcon' src='$iconLink'>"
-				echo -e "\t<div class='indexTitle'>"
-				echo -e "\t\t$title"
-				echo -e "\t</div>"
-				echo -e "</a>"
-			} >> "$webDirectory/live/index.html"
+			if echo $lineCaught | grep -Eq "radio=[\",']true";then
+				{
+					# build icon to link to the channel
+					echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
+					echo -e "\t<div class='indexTitle'>"
+					echo -e "\t\t$title"
+					echo -e "\t<div class='radioIcon'>"
+					echo -e "\t&#9835;"
+					echo -e "\t</div>"
+					echo -e "\t</div>"
+					echo -e "</a>"
+				} >> "$webDirectory/live/index.html"
+			else
+				{
+					# build icon to link to the channel
+					echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
+					echo -e "\t<div class='indexTitle'>"
+					echo -e "\t\t$title"
+					echo -e "\t</div>"
+					echo -e "</a>"
+				} >> "$webDirectory/live/index.html"
+			fi
 			################################################################################
 			# increment the channel number
 			channelNumber=$(($channelNumber + 1))
@@ -615,6 +718,8 @@ webGen(){
 		# add the footer
 		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
 		echo -e "</body>"
+		# create top jump button
+		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		echo -e "</html>"
 	} >> "$webDirectory/live/index.html"
 	IFS=$IFS_BACKUP
@@ -627,8 +732,8 @@ resetCache(){
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.html"
 	echo " - $webDirectory/live/*.png"
-	rm -v "$webDirectory/live/*.html"
-	rm -v "$webDirectory/live/*.png"
+	rm -v "$webDirectory"/live/*.html
+	rm -v "$webDirectory"/live/*.png
 }
 ################################################################################
 checkCron(){
@@ -666,6 +771,10 @@ main(){
 		resetCache
 	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
 		checkCron
+	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade streamlink and youtube-dl pip packages
+		pip3 install --upgrade streamlink
+		pip3 install --upgrade youtube-dl
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# download the latest version of the javascript video player libary
 		curl https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"

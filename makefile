@@ -17,10 +17,19 @@
 ########################################################################
 show:
 	echo 'Run "make install" as root to install program!'
-test: install
-	sudo time -v nfo2web reset
+test-live: install
+	sudo time -v iptv2web reset || echo "no reset needed..."
+	sudo time -v iptv2web webgen
+	sudo time -v iptv2web update
+	sudo time -v iptv2web webgen
+test-ondemand: install
+	sudo time -v nfo2web reset || echo "no reset needed..."
 	sudo time -v nfo2web update
-	sudo time -v iptv2web reset
+test: install
+	sudo time -v nfo2web reset || echo "no reset needed..."
+	sudo time -v nfo2web update
+	sudo time -v iptv2web reset || echo "no reset needed..."
+	sudo time -v iptv2web webgen
 	sudo time -v iptv2web update
 	sudo time -v iptv2web webgen
 install: build

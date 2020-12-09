@@ -17,11 +17,66 @@ echo "<form class='buttonForm' method='get'>\n";
 echo "	<button class='button' type='submit' name='update' value='true'>UPDATE</button>\n";
 echo "</form>\n";
 echo "</div>";
+
+################################################################################
+# create the theme color picker
+################################################################################
+echo "<div class='inputCard'>";
+echo "<form class='buttonForm' method='get'>\n";
+echo "<ul>";
+echo "<li>";
+echo "	<input type='color' name='themeColor'>Background Color</input>\n";
+echo "</li>";
+echo "<li>";
+echo "	<input type='color' name='textColor'>Text Color</input>\n";
+echo "</li>";
+echo "<li>";
+echo "	<input type='color' name='borderColor'>Border Color</input>\n";
+echo "</li>";
+echo "<li>";
+echo "	<input type='color' name='highlightColor'>Highlight Color</input>\n";
+echo "</li>";
+echo "</ul>";
+echo "</form>\n";
+echo "</div>";
 ################################################################################
 # try to process the link to be added
 if (array_key_exists("update",$_GET)){
 	echo "Scheduling system update!<br>\n";
 	touch("/var/www/iptv2web/update.cfg");
+}else if (array_key_exists("addCustomRadioLink",$_GET)){
+	# this will add a custom m3u file with a single entry
+	$link=$_GET['addCustomRadioLink'];
+	if (array_key_exists("addCustomRadioTitle",$_GET)){
+		# add custom title
+		$linkTitle=$_GET['addCustomRadioTitle'];
+		if (array_key_exists("addCustomRadioIcon",$_GET)){
+			# add the icon link
+			$linkIcon=$_GET['addCustomRadioIcon'];
+			################################################################################
+			# all fields are filled out
+			################################################################################
+			# create sum of link
+			$sumOfLink=md5($link);
+			# read the link and create a custom config
+			$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".m3u";
+			# create the custom link content
+			$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
+			echo "Checking for Config file ".$configPath."<br>\n";
+			# write the link to a file at the configPath if the path does not already exist
+			if ( ! file_exists($configPath)){
+				echo "Adding link ".$link."<br>\n";
+				# write the config file
+				file_put_contents($configPath,$content);
+			}else{
+				echo "[ERROR]: Custom Radio link creation failed '".$link."'<br>\n";
+			}
+		}else{
+			echo "[ERROR]: Custom Radio Icon not found<br>";
+		}
+	}else{
+		echo "[ERROR]: Custom Radio Title not found<br>";
+	}
 }else if (array_key_exists("addCustomLink",$_GET)){
 	# this will add a custom m3u file with a single entry
 	$link=$_GET['addCustomLink'];
@@ -269,6 +324,16 @@ echo "<h2>Add Custom Link</h2>\n";
 echo "<input width='60%' type='text' name='addCustomLink' placeholder='Link'>\n";
 echo "<input width='60%' type='text' name='addCustomTitle' placeholder='Title'>\n";
 echo "<input width='60%' type='text' name='addCustomIcon' placeholder='Icon Link'>\n";
+echo "<input class='button' type='submit'>\n";
+echo "</form>\n";
+echo "</div>";
+
+echo "<div class='inputCard'>";
+echo "<form method='get'>\n";
+echo "<h2>Add Radio Station</h2>\n";
+echo "<input width='60%' type='text' name='addCustomRadioLink' placeholder='Link'>\n";
+echo "<input width='60%' type='text' name='addCustomRadioTitle' placeholder='Title'>\n";
+echo "<input width='60%' type='text' name='addCustomRadioIcon' placeholder='Icon Link'>\n";
 echo "<input class='button' type='submit'>\n";
 echo "</form>\n";
 echo "</div>";

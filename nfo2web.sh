@@ -1068,7 +1068,7 @@ processShow(){
 	fi
 	# check and remove duplicate thubnails for this show, failed thumbnails on the
 	# same show generally fail in the same way
-	fdupes --recurse --delete --immediate "$webDirectory/shows/$showTitle/"
+	#fdupes --recurse --delete --immediate "$webDirectory/shows/$showTitle/"
 	# create the kodi directory for the show
 	mkdir -p "$webDirectory/kodi/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/kodi/shows/$showTitle"
@@ -1159,12 +1159,19 @@ processShow(){
 				#echo "$tempStyle"
 				#cat /usr/share/nfo2web/style.css
 				#echo "</style>"
+				echo "<script>"
+				cat /usr/share/nfo2web/nfo2web.js
+				echo "</script>"
 				echo "</head>"
 				echo "<body>"
 				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 				echo "<div class='titleCard'>"
 				echo "<h1>$showTitle</h1>"
 				echo "</div>"
+				# add the search box
+				echo " <input id='searchBox' type='text'"
+				echo " onkeyup='filter(\"showPageEpisode\")' placeholder='Search...' >"
+				# add the most recently updated series
 				echo "<div class='episodeList'>"
 			} > "$showPagePath"
 			################################################################################
@@ -1375,11 +1382,11 @@ buildHomePage(){
 			echo "</div>"
 	} > "$webDirectory/index.html"
 	################################################################################
-	buildUpdatedShows "$webDirectory" 15 "shows\/" >> "$webDirectory/index.html"
-	buildUpdatedMovies "$webDirectory" 15 "movies\/" >> "$webDirectory/index.html"
+	buildUpdatedShows "$webDirectory" 25 "shows\/" >> "$webDirectory/index.html"
+	buildUpdatedMovies "$webDirectory" 25 "movies\/" >> "$webDirectory/index.html"
 	################################################################################
-	buildRandomShows "$webDirectory" 15 "shows\/" >> "$webDirectory/index.html"
-	buildRandomMovies "$webDirectory" 15 "movies\/" >> "$webDirectory/index.html"
+	buildRandomShows "$webDirectory" 25 "shows\/" >> "$webDirectory/index.html"
+	buildRandomMovies "$webDirectory" 25 "movies\/" >> "$webDirectory/index.html"
 	########################################################################
 	{
 		# add footer
@@ -1680,11 +1687,11 @@ main(){
 									echo " <input id='searchBox' type='text'"
 									echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 									# add the most recently updated series
-									buildUpdatedShows "$webDirectory" 15 ""
+									buildUpdatedShows "$webDirectory" 25 ""
 									# load all existing shows into the index
 									cat "$webDirectory"/shows/*/shows.index
 									# add the random list to the footer
-									buildRandomShows "$webDirectory" 15 ""
+									buildRandomShows "$webDirectory" 25 ""
 									# add footer
 									cat "$headerPagePath" | sed "s/href='/href='..\//g"
 									# create top jump button
@@ -1721,11 +1728,11 @@ main(){
 							# add the search box
 							echo " <input id='searchBox' type='text'"
 							echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-							buildUpdatedMovies "$webDirectory" 15 ""
+							buildUpdatedMovies "$webDirectory" 25 ""
 							# load the movie index parts
 							cat "$webDirectory"/movies/*/movies.index
 							# add the random list to the footer
-							buildRandomMovies "$webDirectory" 15 ""
+							buildRandomMovies "$webDirectory" 25 ""
 							# add footer
 							cat "$headerPagePath" | sed "s/href='/href='..\//g"
 							# create top jump button
@@ -1846,11 +1853,11 @@ main(){
 			# add the search box
 			echo " <input id='searchBox' type='text'"
 			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-			buildUpdatedMovies "$webDirectory" 15 ""
+			buildUpdatedMovies "$webDirectory" 25 ""
 			# load the movie index parts
 			cat "$webDirectory"/movies/*/movies.index
 			# add the random list to the footer
-			buildRandomMovies "$webDirectory" 15 ""
+			buildRandomMovies "$webDirectory" 25 ""
 			# add footer
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button
@@ -1875,11 +1882,11 @@ main(){
 			# add the search box
 			echo " <input id='searchBox' type='text'"
 			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-			buildUpdatedShows "$webDirectory" 15  ""
+			buildUpdatedShows "$webDirectory" 25  ""
 			# load all existing shows into the index
 			cat "$webDirectory"/shows/*/shows.index
 			# add the random list to the footer
-			buildRandomShows "$webDirectory" 15 ""
+			buildRandomShows "$webDirectory" 25 ""
 			# add footer
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button

@@ -49,9 +49,17 @@ html{
 	margin: 2em;
 	vertical-align: top !important;
 }
+.radioIcon{
+	font-weight: bold;
+	text-shadow: 2px 2px black;
+	margin-left: auto;
+	font-size: 1.5em;
+	float: right;
+}
 .indexIcon{
 	background-image: var(--staticBackground);
-	width: inherit;
+	width: 15em;
+	height: 10em;
 }
 #channelsDownloadLink{
 	padding: 1em;
@@ -76,6 +84,7 @@ h1 {
 	-webkit-text-stroke: 0.01em black;
 }
 #topButton{
+	font-weight: bold;
   position: fixed; /* Fixed/sticky position */
   bottom: 0px; /* Place the button at the bottom of the page */
   right: 0px; /* Place the button 30px from the right */
@@ -93,7 +102,7 @@ h1 {
 	background-color: darkgreen;
 }
 .UPDATE{
-	background-color: cyan;
+	background-color: darkslateblue;
 }
 .INFO{
 	background-color: darkslategray;
@@ -186,6 +195,7 @@ h2 {
 		margin-right: auto;
 	}
 	#nfoMediaPlayer, video, audio{
+		background-size: 100% 100%;
 		margin: 0px !important;
 		width: 100% !important;
 		min-width: 0px !important;
@@ -222,6 +232,7 @@ h2 {
 	}
 }
 #nfoMediaPlayer, video, audio{
+	background-size: 100% 100%;
 	margin: 15px;
 	/*
 	box-shadow: 0px 0px 1.5em white;

@@ -1,21 +1,14 @@
 # cleanup interrupted updates on reboot
-@reboot root	/bin/rm /tmp/nfo2web.active  >> /var/log/nfo2web.log
-# Update nfo2web on every reboot
-@reboot root	/usr/bin/nfo2web update > /var/log/nfo2web.log
+@reboot root /bin/rm /tmp/nfo2web.active >> /var/log/nfo2web.log
+@reboot root /bin/rm /tmp/iptv2web.active >> /var/log/iptv2web.log
 ################################################################################
-# - By default the program updates every hour, you can comment out the hourly
-#   job and run updates less often by uncommenting one of the below lines.
 # - The log only keeps the last run by default, you can change > to >> to
 #   keep a running log. However it will take up a lot of disk space and is not
 #   recommended, except for debugging.
 ################################################################################
-# update every hour
-#@hourly root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
-# update every 2 hours
-#0 */2 * * * root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
-# update every 4 hours, DEFAULT
-0 */4 * * * root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
-0 */12 * * * root	sleep 60 && /usr/bin/iptv2web update > /var/log/iptv2web_update.log
-0 */2 * * * root	sleep 60 && /usr/bin/iptv2web webgen > /var/log/iptv2web_webgen.log
-# update daily
-#@daily root	sleep 60 && /usr/bin/nfo2web update > /var/log/nfo2web.log
+# update every 4 hours
+0 */4 * * * root /usr/bin/nfo2web update > /var/log/nfo2web.log
+0 */12 * * * root /usr/bin/iptv2web update > /var/log/iptv2web_update.log
+0 */2 * * * root /usr/bin/iptv2web webgen > /var/log/iptv2web_webgen.log
+# once a week check for updates to fast moving metadata extraction packages
+@daily root /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
