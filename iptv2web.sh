@@ -542,7 +542,8 @@ webGen(){
 					#echo -e "\t\t$channelNumber $title"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
-					echo -e "\t&#9835;"
+					#echo -e "\t&#9835;"
+					echo -e "\t&#128251;"
 					echo -e "\t</div>"
 					echo -e "\t</a>"
 					echo -e "</div>"
@@ -554,6 +555,9 @@ webGen(){
 					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconLink'>"
 					#echo -e "\t\t$channelNumber $title"
 					echo -e "\t\t$title"
+					echo -e "\t<div class='radioIcon'>"
+					echo -e "\t&#128250;"
+					echo -e "\t</div>"
 					echo -e "\t</a>"
 					echo -e "</div>"
 				} >> "$webDirectory/live/channelList.html"
@@ -655,8 +659,19 @@ webGen(){
 		sed "s/href='/href='..\//g" < "$webDirectory/header.html"
 		echo "<a href='channels.m3u' id='channelsDownloadLink'"
 		echo " class='button'>channels.m3u</a>"
+
+		echo -n "<input type='button' class='button' value='&#128250;'"
+		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
+
 		echo " <input id='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
+
+		echo -n "<input type='button' class='button' value='&#9746;'"
+		echo    " onclick='filterByClass(\"indexLink\",\"\")'>"
+
+		echo -n "<input type='button' class='button' value='&#128251;'"
+		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
+
 		echo -e "<div class='indexBody'>"
 	} > "$webDirectory/live/index.html"
 	channelNumber=1
@@ -679,12 +694,12 @@ webGen(){
 			if echo $lineCaught | grep -Eq "radio=[\",']true";then
 				{
 					# build icon to link to the channel
-					echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "<a class='indexLink button radio' href='channel_$channelNumber.html#$channelNumber'>"
 					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
 					echo -e "\t<div class='indexTitle'>"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
-					echo -e "\t&#9835;"
+					echo -e "\t&#128251;"
 					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
@@ -692,10 +707,14 @@ webGen(){
 			else
 				{
 					# build icon to link to the channel
-					echo -e "<a class='indexLink button' href='channel_$channelNumber.html#$channelNumber'>"
+					echo -e "<a class='indexLink button tv' href='channel_$channelNumber.html#$channelNumber'>"
 					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
 					echo -e "\t<div class='indexTitle'>"
 					echo -e "\t\t$title"
+					echo -e "\t<div class='radioIcon'>"
+					#echo -e "\t&#128250;"
+					echo -e "\t&#128250;"
+					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
 				} >> "$webDirectory/live/index.html"

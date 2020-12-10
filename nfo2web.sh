@@ -1378,7 +1378,17 @@ buildHomePage(){
 			fi
 			cat "$headerPagePath"
 			echo "<div class='date titleCard'>"
-			echo "Last updated on $(date)"
+			echo "	<div>"
+			echo "		Last updated on $(date)"
+			echo "	</div>"
+			echo "	<div>"
+			# figure out the stats
+			totalEpisodes=$(ls -1 "$webDirectory"/shows/*/*/*.nfo | wc -l)
+			totalShows=$(ls -1 "$webDirectory"/shows/*/tvshow.nfo | wc -l)
+			totalMovies=$(ls -1 "$webDirectory"/movies/*/*.nfo | wc -l)
+			totalChannels=$(ls -1 "$webDirectory"/live/channel_*.html | wc -l)
+			echo "		Episodes:$totalEpisodes Shows:$totalShows Movies:$totalMovies Channels:$totalChannels"
+			echo "	</div>"
 			echo "</div>"
 	} > "$webDirectory/index.html"
 	################################################################################
