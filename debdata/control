@@ -5,6 +5,6 @@ Maintainer: Carl J Smith <BM-NBHLt5EUFVEbRCmrbVrfCyaB2c8d24U9>
 Installed-Size: 96
 Priority: optional
 Architecture: all
-Depends: apache2(>=2.4), detox, ffmpeg, imagemagick, txt2html, mediainfo, php, python3-pip
+Depends: apache2(>=2.4), detox, ffmpeg, imagemagick, txt2html, mediainfo, php, python3-pip, fonts-opendyslexic
 Description: Generate a website from a list of .nfo libary directories
  Generate a website from a list of .nfo libary directories.

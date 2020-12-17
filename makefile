@@ -19,7 +19,6 @@ show:
 	echo 'Run "make install" as root to install program!'
 test-live: install
 	sudo time -v iptv2web reset || echo "no reset needed..."
-	sudo time -v iptv2web webgen
 	sudo time -v iptv2web update
 	sudo time -v iptv2web webgen
 test-ondemand: install
@@ -60,6 +59,7 @@ build-deb:
 	mkdir -p debian/etc/nfo2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/;
 	mkdir -p debian/etc/iptv2web/sources.d/;
+	mkdir -p debian/etc/iptv2web/radioSources.d/;
 	mkdir -p debian/etc/iptv2web/blockedLinks.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
@@ -68,6 +68,7 @@ build-deb:
 	# make placeholder
 	touch debian/etc/iptv2web/.placeholder
 	touch debian/etc/iptv2web/sources.d/.placeholder
+	touch debian/etc/iptv2web/radioSources.d/.placeholder
 	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
 	touch debian/etc/nfo2web/.placeholder
 	touch debian/etc/nfo2web/sources.d/.placeholder

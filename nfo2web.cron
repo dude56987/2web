@@ -9,6 +9,5 @@
 # update every 4 hours
 0 */4 * * * root /usr/bin/nfo2web update > /var/log/nfo2web.log
 0 */12 * * * root /usr/bin/iptv2web update > /var/log/iptv2web_update.log
-0 */2 * * * root /usr/bin/iptv2web webgen > /var/log/iptv2web_webgen.log
 # once a week check for updates to fast moving metadata extraction packages
 @daily root /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log

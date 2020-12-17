@@ -77,7 +77,7 @@ examineIconLink(){
 			# if the file does not exist in the cache download it
 			curl "$iconLink" > "$localIconPath"
 			# resize the icon to standard size
-			convert "$localIconPath" -resize 400x400\! "$localIconPath"
+			convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
 		fi
 	fi
 	# remove image if fake was created
@@ -88,7 +88,7 @@ examineIconLink(){
 		# if the file does not exist in the cache download it
 		curl "$tempIconLink" > "$localIconPath"
 		# resize the icon to standard size
-		convert "$localIconPath" -resize 400x400\! "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
 	fi
 	# remove image if fake was created
 	killFakeImage "$localIconPath"
@@ -108,9 +108,9 @@ examineIconLink(){
 		#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
 		timeout 30 ffmpeg -y -i "$(streamPass --stream-url $link best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
 		# resize the icon to standard size
-		convert "$localIconPath" -resize 400x400\! "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
 		# add text over retrieved thumbnail
-		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
 	fi
 	killFakeImage "$localIconPath"
 	if ! [ -f "$localIconPath" ];then
@@ -118,7 +118,22 @@ examineIconLink(){
 		swirlAmount=$(echo "$title" | wc -c)
 		convert -size 400x400 +seed "$title" plasma: -swirl "$swirlAmount" "$localIconPath"
 		# add text over generated image
-		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+		linkColor=$(echo "$link" | md5sum | cut --bytes='1-6')
+		# convert to grayscale
+		convert "$localIconPath" -colorSpace "gray" "$localIconPath"
+		# colorize the image based on the link md5
+		convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
+	fi
+}
+################################################################################
+function webGenCheck(){
+	totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
+ 	channelCount=$(( $(cat /var/cache/nfo2web/web/live/channels.m3u | wc -l) / 2))
+	# update website every 8 channel updates
+	if [ $(( $channelCount % 8 )) -eq 0 ];then
+		# re generate the webpage
+		webGen
 	fi
 }
 ################################################################################
@@ -141,6 +156,11 @@ function process_M3U(){
 	# open m3u files
 	channels=$1
 	outputFile=$2
+	radioFile=$3
+	if [[ "$radioFile" == "" ]];then
+		echo "[INFO]: radio not set, turn radio to false"
+		radioFile="false"
+	fi
 	################################################################################
 	# convert m3u files by downloading icons and redirecting to downloaded local icons
 	channelNumber=1
@@ -156,9 +176,13 @@ function process_M3U(){
 			echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
 			echo "Found Link = $link"
-			# check if this link is a radio link
 			radio="false"
-			if echo $lineCaught | grep -E "radio=[\",']true";then
+			if [[ "$radioFile" == "true" ]];then
+				echo "[INFO]: Radio file is being scanned"
+				# this is a radio file process all entries as radio entries
+				radio="true"
+			elif echo "$lineCaught" | grep -E "radio=[\",']true";then
+				echo "[INFO]: Radio line found mark radio tag true"
 				# if the line is a radio entry
 				radio="true"
 			fi
@@ -179,7 +203,7 @@ function process_M3U(){
 			# increment the channel number
 			channelNumber=$(($channelNumber + 1))
 			# invoke webgen to update webpage after adding new live link
-			webgen
+			webGenCheck
 		fi
 		# if the line is a info line
 		if echo "$line" | grep -q "#EXTINF";then
@@ -203,6 +227,12 @@ function process_M3U_file(){
 function processLink(){
 	link=$1
 	channelsPath=$2
+	radioFile=$3
+	# if radio is not set it will be false
+	if [[ "$radioFile" == "" ]];then
+		echo "[INFO]: radio not set, turn radio to false"
+		radioFile="false"
+	fi
 	################################################################################
 	echo "Processing Link '$link'"
 	echo "Channels Path '$channelsPath'"
@@ -226,7 +256,7 @@ function processLink(){
 			echo "[INFO]: Link is a m3u playlist..."
 			# if it is a playlist file add it to the list by download
 			downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
-			process_M3U "$downloadedM3U" "$channelsPath"
+			process_M3U "$downloadedM3U" "$channelsPath" "$radioFile"
 		else
 			echo "[INFO]: Link is Unknown..."
 			# if it is a known stream site use streamlink
@@ -273,10 +303,12 @@ function processLink(){
 				webIconPathHD="http://$(hostname).local:444/live/$sumHD.png"
 				#webIconPath="$sum.png"
 				# check if this link is a radio link
-				radio="false"
-				# if the line is a radio entry
 				if echo $lineCaught | grep -E "radio=[\",']true";then
 					# if the line is a radio entry
+					echo "[INFO]: Radio line found mark radio tag true"
+					radio="true"
+				elif [[ "$radioFile" == "true" ]];then
+					echo "[INFO]: Radio file is being scanned"
 					radio="true"
 				fi
 				echo "[DEBUG]: WebIconPath = $webIconPath"
@@ -293,7 +325,6 @@ function processLink(){
 		fi
 	fi
 	# invoke webgen to update webpage after adding new live links
-	webgen
 	return 0
 }
 ################################################################################
@@ -318,10 +349,7 @@ fullUpdate(){
 	# enable debug
 	echo "Loading up sources..."
 	# check for defined sources
-	if [ -f /etc/iptv2web/sources.cfg ];then
-		# load the config file
-		linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
-	else
+	if ! [ -f /etc/iptv2web/sources.cfg ];then
 		# if no config exists create the default config
 		{
 		echo "##################################################"
@@ -342,6 +370,32 @@ fullUpdate(){
 		echo "https://iptv-org.github.io/iptv/index.m3u"
 		} > /etc/iptv2web/sources.cfg
 	fi
+	# load the link list
+	linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
+	# build the radio sources cfg file if it does not exist
+	if ! [ -f /etc/iptv2web/radioSources.cfg ];then
+		# if no config exists create the default config
+		{
+		echo "##################################################"
+		echo "#Example Config"
+		echo "##################################################"
+		echo "# - You can use local filesystem .m3u/m3u8 sources"
+		echo "#  ex."
+		echo "# - You can use sources from remote http servers"
+		echo "#  ex."
+		echo "#    https://iptv-org.github.io/iptv/index.m3u"
+		echo "# - You can also use streaming sites"
+		echo "#  ex."
+		echo "#    https://twitch.tv/username"
+		echo "#  ex."
+		echo "#    https://www.youtube.com/watch?v=F109TZt3nRc"
+		echo "##################################################"
+		# write the new config from the path variable
+		echo "https://www.radio.pervii.com/top_radio_top_40.m3u"
+		} > /etc/iptv2web/radioSources.cfg
+	fi
+	# load the radio link list
+	radioLinkList="$(loadWithoutComments /etc/iptv2web/radioSources.cfg)"
 	################################################################################
 
 	webDirectory=$(webRoot)
@@ -352,13 +406,16 @@ fullUpdate(){
 	echo "Processing sources..."
 	echo "Link List = $linkList"
 	echo "#EXTM3U" > $channelsPath
+	################################################################################
+	# read video sources
+	################################################################################
 	# add user created custom local configs first
 	ls -t1 /etc/iptv2web/sources.d/*.m3u
 	if [ $? -eq 0 ];then
 		for configFile in /etc/iptv2web/sources.d/*.m3u;do
 			# add file to main m3u, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
-			#cat "$configFile" | grep -v "#EXTM3U" >> $channelsPath
+			webGenCheck
 		done
 	fi
 	ls -t1 /etc/iptv2web/sources.d/*.m3u8
@@ -366,12 +423,13 @@ fullUpdate(){
 		for configFile in /etc/iptv2web/sources.d/*.m3u8;do
 			# add file to main m3u8, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
-			#cat "$configFile" | grep -v "#EXTM3U" >> $channelsPath
+			webGenCheck
 		done
 	fi
 	# read main config m3u sources and merge them
 	for link in $linkList;do
 		processLink "$link" "$channelsPath"
+		webGenCheck
 	done
 	# add external sources last
 	ls -t1 /etc/iptv2web/sources.d/*.cfg
@@ -379,9 +437,31 @@ fullUpdate(){
 		for configFile in $(ls -t1 /etc/iptv2web/sources.d/*.cfg | tac);do
 			for link in $(loadWithoutComments "$configFile");do
 				processLink "$link" "$channelsPath"
+				webGenCheck
 			done
 		done
 	fi
+	################################################################################
+	# process radio sources
+	################################################################################
+	# read main radio config
+	for link in $radioLinkList;do
+		# process radio link
+		processLink "$link" "$channelsPath" "true"
+		webGenCheck
+	done
+	# check for radio sources
+	ls -t1 /etc/iptv2web/radioSources.d/*.cfg
+	if [ $? -eq 0 ];then
+		for configFile in $(ls -t1 /etc/iptv2web/radioSources.d/*.cfg | tac);do
+			for link in $(loadWithoutComments "$configFile");do
+				# process radio link
+				processLink "$link" "$channelsPath" "true"
+				webGenCheck
+			done
+		done
+	fi
+	webGen
 }
 ################################################################################
 ################################################################################
@@ -663,7 +743,7 @@ webGen(){
 		echo -n "<input type='button' class='button' value='&#128250;'"
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
 
-		echo " <input id='searchBox' type='text'"
+		echo " <input id='searchBox' class='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 
 		echo -n "<input type='button' class='button' value='&#9746;'"
@@ -785,6 +865,20 @@ main(){
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		webGen
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		################################################################################
+		# check if system is active
+		if [ -f "/tmp/iptv2web.active" ];then
+			# system is already running exit
+			echo "[INFO]: iptv2web is already processing data in another process."
+			echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/iptv2web.active'."
+			exit
+		else
+			# set the active flag
+			touch /tmp/iptv2web.active
+			# create a trap to remove nfo2web
+			trap "rm -v /tmp/iptv2web.active" EXIT
+		fi
+		# run full update
 		fullUpdate
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache

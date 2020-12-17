@@ -486,7 +486,7 @@ processMovie(){
 						# store the image inside a variable
 						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
 						# resize the image before checking the filesize
-						convert "$thumbnailPath.png" -resize 400x200\! "$thumbnailPath.png"
+						convert "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
 						# get the size of the file, after it has been created
 						tempFileSize=$(wc --bytes < "$thumbnailPath.png")
 						# - increment the timecode to get from the video to find a thumbnail that is not
@@ -685,7 +685,7 @@ checkForThumbnail(){
 					# store the image inside a variable
 					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
 					# resize the image before checking the filesize
-					convert "$thumbnailPath.jpg" -resize 400x200\! "$thumbnailPath.jpg"
+					convert "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
 					tempFileSize=$(echo "$image" | wc --bytes)
 					# get the size of the file, after it has been created
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
@@ -1056,7 +1056,8 @@ processShow(){
 			echo "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
-			addToLog "UPDATE" "Updating show" "$showTitle" "$logPagePath"
+			updateInfo="$showTitle<br>$currentSum != $libarySum<br>$(ls "$show")"
+			addToLog "UPDATE" "Updating show" "$updateInfo" "$logPagePath"
 		fi
 	else
 		echo "[INFO]: No show state exists for $showTitle, updating..."
@@ -1169,7 +1170,7 @@ processShow(){
 				echo "<h1>$showTitle</h1>"
 				echo "</div>"
 				# add the search box
-				echo " <input id='searchBox' type='text'"
+				echo " <input id='searchBox' class='searchBox' type='text'"
 				echo " onkeyup='filter(\"showPageEpisode\")' placeholder='Search...' >"
 				# add the most recently updated series
 				echo "<div class='episodeList'>"
@@ -1232,24 +1233,24 @@ addToLog(){
 	logPagePath=$4
 	{
 		# add error to log
-		echo "<tr class='$errorType'>"
-		echo "<td>"
-		echo "$errorType"
-		echo "</td>"
-		echo "<td>"
-		echo "$errorDescription"
-		echo "</td>"
-		echo "<td>"
+		echo -e "<tr class='$errorType'>"
+		echo -e "<td>"
+		echo -e "$errorType"
+		echo -e "</td>"
+		echo -e "<td>"
+		echo -e "$errorDescription"
+		echo -e "</td>"
+		echo -e "<td>"
 		# convert the error details into html
-		echo "$errorDetails" | txt2html --extract
-		echo "</td>"
-		echo "<td>"
+		echo -e "$errorDetails" | txt2html --extract
+		echo -e "</td>"
+		echo -e "<td>"
 		date "+%D"
-		echo "</td>"
-		echo "<td>"
+		echo -e "</td>"
+		echo -e "<td>"
 		date "+%R:%S"
-		echo "</td>"
-		echo "</tr>"
+		echo -e "</td>"
+		echo -e "</tr>"
 	} >> "$logPagePath"
 }
 ########################################################################
@@ -1279,7 +1280,7 @@ buildUpdatedShows(){
 	numberOfShows=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedShows=$(ls -1tr "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows" | tac)
+	updatedShows=$(ls -1t "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows" | tac)
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Shows</h1>"
 	echo "<hr>"
@@ -1323,7 +1324,7 @@ buildUpdatedMovies(){
 	numberOfMovies=$2
 	sourcePrefix=$3
 	################################################################################
-	updatedMovies=$(ls -1tr "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies" | tac )
+	updatedMovies=$(ls -1t "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies" | tac )
 	echo "<div class='titleCard'>"
 	echo "<h1>Updated Movies</h1>"
 	echo "<hr>"
@@ -1383,10 +1384,10 @@ buildHomePage(){
 			echo "	</div>"
 			echo "	<div>"
 			# figure out the stats
-			totalEpisodes=$(ls -1 "$webDirectory"/shows/*/*/*.nfo | wc -l)
-			totalShows=$(ls -1 "$webDirectory"/shows/*/tvshow.nfo | wc -l)
-			totalMovies=$(ls -1 "$webDirectory"/movies/*/*.nfo | wc -l)
-			totalChannels=$(ls -1 "$webDirectory"/live/channel_*.html | wc -l)
+			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
+			totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
+			totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
+			totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
 			echo "		Episodes:$totalEpisodes Shows:$totalShows Movies:$totalMovies Channels:$totalChannels"
 			echo "	</div>"
 			echo "</div>"
@@ -1412,9 +1413,9 @@ buildHomePage(){
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
-	totalList=$(ls -R "$line")
+	totalList=$(find "$line")
 	# convert lists into md5sum
-	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
 	echo "$tempLibList"
 }
@@ -1694,7 +1695,7 @@ main(){
 									updateInProgress
 									cat "$headerPagePath" | sed "s/href='/href='..\//g"
 									# add the search box
-									echo " <input id='searchBox' type='text'"
+									echo " <input id='searchBox' class='searchBox' type='text'"
 									echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 									# add the most recently updated series
 									buildUpdatedShows "$webDirectory" 25 ""
@@ -1736,7 +1737,7 @@ main(){
 							updateInProgress
 							cat "$headerPagePath" | sed "s/href='/href='..\//g"
 							# add the search box
-							echo " <input id='searchBox' type='text'"
+							echo " <input id='searchBox' class='searchBox' type='text'"
 							echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 							buildUpdatedMovies "$webDirectory" 25 ""
 							# load the movie index parts
@@ -1861,7 +1862,7 @@ main(){
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# add the search box
-			echo " <input id='searchBox' type='text'"
+			echo " <input id='searchBox' class='searchBox' type='text'"
 			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 			buildUpdatedMovies "$webDirectory" 25 ""
 			# load the movie index parts
@@ -1890,7 +1891,7 @@ main(){
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# add the search box
-			echo " <input id='searchBox' type='text'"
+			echo " <input id='searchBox' class='searchBox' type='text'"
 			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
 			buildUpdatedShows "$webDirectory" 25  ""
 			# load all existing shows into the index

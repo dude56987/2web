@@ -550,7 +550,7 @@ table, th, td{
 	vertical-align: top;
 	word-break: break-all;
 }
-#searchBox{
+.searchBox{
 	width: 80vw;
 	font-size: 2em;
 	border-style: solid;
