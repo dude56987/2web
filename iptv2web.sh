@@ -133,7 +133,7 @@ function webGenCheck(){
 	# update website every 8 channel updates
 	if [ $(( $channelCount % 8 )) -eq 0 ];then
 		# re generate the webpage
-		webGen
+		webGen --in-progress
 	fi
 }
 ################################################################################
@@ -150,6 +150,16 @@ function getIconLink(){
 	fi
 	# return the link to be piped
 	echo "$tempIconLink"
+}
+################################################################################
+updateInProgress(){
+	echo -e "<div class='progressIndicator'>"
+	echo -e "\t<span class='progressText'>Update In Progress...</span>"
+	echo -e "\t<script>"
+	echo -e "\t\t// reload the webpage every 1 minute, time is in milliseconds"
+	echo -e "\t\tsetTimeout(function() { window.location=window.location;},((1000*60)*1));"
+	echo -e "\t</script>"
+	echo -e "</div>"
 }
 ################################################################################
 function process_M3U(){
@@ -655,6 +665,7 @@ webGen(){
 	done
 	################################################################################
 	# build each channel page
+	# - channel pages ignore --in-progress to prevent refresh during playback
 	################################################################################
 	channelNumber=1
 	for line in $channels;do
@@ -707,6 +718,8 @@ webGen(){
 				echo "</div>"
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+				# add space for jump button when scrolled all the way down
+				echo "<hr class='topButtonSpace'>"
 				echo "</body>"
 				echo "</html>"
 			} > "$webDirectory/live/channel_$channelNumber.html"
@@ -735,22 +748,29 @@ webGen(){
 		echo "</script>"
 		echo -e "</head>"
 		echo -e "<body>"
+
+		if echo "$@" | grep -Eq "\-\-in\-progress";then
+			updateInProgress
+		fi
+
 		# place the header
 		sed "s/href='/href='..\//g" < "$webDirectory/header.html"
 		echo "<a href='channels.m3u' id='channelsDownloadLink'"
 		echo " class='button'>channels.m3u</a>"
-
-		echo -n "<input type='button' class='button' value='&#128250;'"
+		echo "<div class='filterButtonBox'>"
+		echo -n "<input type='button' class='button liveFilter' value='&#128250; TV'"
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
+
+		echo -n "<input type='button' class='button liveFilter' value='&infin; All'"
+		echo    " onclick='filterByClass(\"indexLink\",\"\")'>"
+
+		echo -n "<input type='button' class='button liveFilter' value='&#128251; Radio'"
+		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
+
+		echo "</div>"
 
 		echo " <input id='searchBox' class='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
-
-		echo -n "<input type='button' class='button' value='&#9746;'"
-		echo    " onclick='filterByClass(\"indexLink\",\"\")'>"
-
-		echo -n "<input type='button' class='button' value='&#128251;'"
-		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
 
 		echo -e "<div class='indexBody'>"
 	} > "$webDirectory/live/index.html"
@@ -816,9 +836,11 @@ webGen(){
 		echo -e "</div>"
 		# add the footer
 		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
-		echo -e "</body>"
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+		# add space for jump button when scrolled all the way down
+		echo "<hr class='topButtonSpace'>"
+		echo -e "</body>"
 		echo -e "</html>"
 	} >> "$webDirectory/live/index.html"
 	IFS=$IFS_BACKUP

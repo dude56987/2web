@@ -189,10 +189,12 @@ processMovie(){
 				echo "[INFO]: States are diffrent, updating $movieTitle..."
 				echo "[DEBUG]: $currentSum != $libarySum"
 				addToLog "UPDATE" "Updating movie" "$movieTitle" "$logPagePath"
+				touch "$webDirectory/movies/$movieWebPath/"
 			fi
 		else
 			echo "[INFO]: No movie state exists for $movieTitle, updating..."
 			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
+			touch "$webDirectory/movies/$movieWebPath/"
 		fi
 		################################################################################
 		# using the path of the found nfo file, check for a file extension
@@ -1058,10 +1060,14 @@ processShow(){
 			echo "" > "$showLogPath"
 			updateInfo="$showTitle<br>$currentSum != $libarySum<br>$(ls "$show")"
 			addToLog "UPDATE" "Updating show" "$updateInfo" "$logPagePath"
+			# update the show directory modification date when the state has been changed
+			touch "$webDirectory/shows/$showTitle/"
 		fi
 	else
 		echo "[INFO]: No show state exists for $showTitle, updating..."
 		addToLog "NEW" "Creating new show" "$showTitle" "$logPagePath"
+		# update the show directory modification date when the state has been changed
+		touch "$webDirectory/shows/$showTitle/"
 	fi
 	if grep "<episodedetails>" "$show"/*.nfo;then
 		# search all nfo files in the show directory if any are episodes
@@ -1200,6 +1206,7 @@ processShow(){
 				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+				echo "<hr class='topButtonSpace'>"
 				echo "</body>"
 				echo "</html>"
 			} >> "$showPagePath"
@@ -1383,11 +1390,20 @@ buildHomePage(){
 			echo "		Last updated on $(date)"
 			echo "	</div>"
 			echo "	<div>"
-			# figure out the stats
-			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
-			totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
-			totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
-			totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
+			if echo "$@" | grep -Eq "\-\-in\-progress";then
+				# do not generate stats if website is in process of being updated
+				# stats generation is IO intense, so it only needs ran ONCE at the end
+				totalEpisodes="???"
+				totalShows="???"
+				totalMovies="???"
+				totalChannels="???"
+			else
+				# figure out the stats
+				totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
+				totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
+				totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
+				totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
+			fi
 			echo "		Episodes:$totalEpisodes Shows:$totalShows Movies:$totalMovies Channels:$totalChannels"
 			echo "	</div>"
 			echo "</div>"
@@ -1404,6 +1420,7 @@ buildHomePage(){
 		cat "$headerPagePath"
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+		echo "<hr class='topButtonSpace'>"
 		echo "</body>"
 		echo "</html>"
 	} >>  "$webDirectory/index.html"
@@ -1414,6 +1431,15 @@ getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line")
+	# convert lists into md5sum
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+}
+getDirSumByTime(){
+	line=$1
+	# get the sum of the directory modification time
+	totalList=$(stat --format="%Y" "$line")
 	# convert lists into md5sum
 	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
@@ -1707,6 +1733,7 @@ main(){
 									cat "$headerPagePath" | sed "s/href='/href='..\//g"
 									# create top jump button
 									echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+									echo "<hr class='topButtonSpace'>"
 									echo "</body>"
 									echo "</html>"
 								} > "$showIndexPath"
@@ -1748,6 +1775,7 @@ main(){
 							cat "$headerPagePath" | sed "s/href='/href='..\//g"
 							# create top jump button
 							echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+							echo "<hr class='topButtonSpace'>"
 							echo "</body>"
 							echo "</html>"
 						} > "$movieIndexPath"
@@ -1844,6 +1872,7 @@ main(){
 			cat "$headerPagePath"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+			echo "<hr class='topButtonSpace'>"
 			echo "</body>"
 			echo "</html>"
 		} >> "$logPagePath"
@@ -1873,6 +1902,7 @@ main(){
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+			echo "<hr class='topButtonSpace'>"
 			echo "</body>"
 			echo "</html>"
 		} > "$movieIndexPath"
@@ -1902,6 +1932,7 @@ main(){
 			cat "$headerPagePath" | sed "s/href='/href='..\//g"
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+			echo "<hr class='topButtonSpace'>"
 			echo "</body>"
 			echo "</html>"
 		} > "$showIndexPath"

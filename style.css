@@ -163,8 +163,30 @@ h2 {
 .liveBackground{
 	background-image: url("../randomFanart.php");
 }
+.liveFilter{
+	font-size: 1em;
+	margin-right: auto;
+	margin-left: auto;
+	width: 20vw;
+}
+.topButtonSpace{
+	font-size: 0px;
+	display: none;
+}
 /* if the screen is smaller than 800px or in portrait mode*/
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.indexLink{
+		width: 40vw;
+	}
+	.indexLink img{
+		width: 40vw;
+	}
+	.liveFilter{
+		width:80vw;
+	}
+	.searchBox{
+		width: auto;
+	}
 	.settingsEntry{
 		width: 90vw !important;
 	}
@@ -224,8 +246,18 @@ h2 {
 	}
 	#topButton{
 		font-size: 2em; /* Increase font size */
+		width: 100vw;
+		margin: 0px;
+		border-right: none;
+		border-left: none;
+	}
+	.topButtonSpace{
+		font-size: 3em;
+		display: block !important;
+		border-style: none;
 	}
 }
+
 @media only screen and (max-width: 400px), (orientation: portrait){
 	html{
 		font-size: 42px;
