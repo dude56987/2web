@@ -20,10 +20,16 @@ show:
 test-live: install
 	sudo time -v iptv2web reset || echo "no reset needed..."
 	sudo time -v iptv2web update
-	sudo time -v iptv2web webgen
+test-update-live: install
+	sudo time -v iptv2web update
 test-ondemand: install
 	sudo time -v nfo2web reset || echo "no reset needed..."
 	sudo time -v nfo2web update
+test-update-ondemand: install
+	sudo time -v nfo2web update
+test-update: install
+	sudo time -v nfo2web update
+	sudo time -v iptv2web update
 test: install
 	sudo time -v nfo2web reset || echo "no reset needed..."
 	sudo time -v nfo2web update
@@ -53,8 +59,13 @@ build-deb:
 	mkdir -p debian/usr/bin;
 	mkdir -p debian/usr/share/applications;
 	mkdir -p debian/usr/share/nfo2web;
+	mkdir -p debian/usr/share/iptv2web;
+	mkdir -p debian/usr/share/mms;
+	mkdir -p debian/usr/share/mms/templates;
+	mkdir -p debian/usr/share/mms/settings;
 	mkdir -p debian/var/cache/nfo2web/web;
 	mkdir -p debian/etc;
+	mkdir -p debian/etc/mms;
 	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/nfo2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/;
@@ -65,6 +76,8 @@ build-deb:
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
+	# copy templates over
+	cp -rv templates/. debian/usr/share/mms/templates/
 	# make placeholder
 	touch debian/etc/iptv2web/.placeholder
 	touch debian/etc/iptv2web/sources.d/.placeholder
@@ -73,6 +86,7 @@ build-deb:
 	touch debian/etc/nfo2web/.placeholder
 	touch debian/etc/nfo2web/sources.d/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
+	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/iptv2web/*.d/
 	# copy update scripts to /usr/bin
@@ -86,7 +100,8 @@ build-deb:
 	cp randomFanart.php debian/usr/share/nfo2web/
 	cp randomPoster.php debian/usr/share/nfo2web/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
-	cp settings.php debian/usr/share/nfo2web/
+	# copy over the settings pages
+	cp settings/*.php debian/usr/share/mms/settings/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root

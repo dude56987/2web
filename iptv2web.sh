@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-#set -x
+set -x
 #export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 export PS4='+ ${LINENO}	|	'
 # set tab size to 4 to make output more readable
@@ -29,13 +29,19 @@ function loadWithoutComments(){
 	return 0
 }
 ################################################################################
+cleanText(){
+	# remove punctuation from text, remove leading whitespace, and double spaces
+	#echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g"
+	echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+}
+################################################################################
 function killFakeImage(){
 	localIconPath=$1
 	# if the file exists
 	if [ -f "$localIconPath" ];then
 		# check it is not a empty file
 		if file "$localIconPath" | grep "empty";then
-			# remote the empty file
+			# remove the empty file
 			rm -v "$localIconPath"
 		elif file "$localIconPath" | grep "text";then
 			# remove remote downloaded http redirect, 404, etc.
@@ -65,75 +71,107 @@ examineIconLink(){
 	iconLink=$1
 	link=$2
 	title=$3
+	radio=$4
 	###################################################################
 	iconLength=$(echo "$iconLink" | wc -c)
 	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 	echo "Icon Sum=$sum"
 	localIconPath="$(webRoot)/live/$sum.png"
-	if [ "$iconLength" -gt 3 ];then
-		# build a md5sum from the icon link
-		#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
+
+	# if the file exists and is not older than 10 days
+	if cacheCheck "$localIconPath" "100";then
+
+		if [ "$iconLength" -gt 3 ];then
+			# build a md5sum from the icon link
+			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
+			if ! [ -f "$localIconPath" ];then
+				# if the file does not exist in the cache download it
+				timeout 120 curl "$iconLink" > "$localIconPath"
+				# resize the icon to standard size
+				timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+			fi
+		fi
+		# remove image if fake was created
+		killFakeImage "$localIconPath"
+		# try to download the icon with youtube-dl
 		if ! [ -f "$localIconPath" ];then
+			tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
 			# if the file does not exist in the cache download it
-			curl "$iconLink" > "$localIconPath"
+			timeout 120 curl "$tempIconLink" > "$localIconPath"
 			# resize the icon to standard size
-			convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
 		fi
-	fi
-	# remove image if fake was created
-	killFakeImage "$localIconPath"
-	# try to download the icon with youtube-dl
-	if ! [ -f "$localIconPath" ];then
-		tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
-		# if the file does not exist in the cache download it
-		curl "$tempIconLink" > "$localIconPath"
-		# resize the icon to standard size
-		convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
-	fi
-	# remove image if fake was created
-	killFakeImage "$localIconPath"
-	if ! [ -f "$localIconPath" ];then
-		# resolve the link using streamlink to create a thumbnail
-		#resolvedLink=$(streamlink --stream-url "$link" best)
-		# check if the link is a twitch link, they preload ads in the first 15 seconds
-		# so take the thumbnail from after this 15 seconds
-		if echo "$link" | grep "twitch.tv";then
-			tempTimeout=20
-		else
-			tempTimeout=0
+		# remove image if fake was created
+		killFakeImage "$localIconPath"
+		if ! [ -f "$localIconPath" ];then
+			# resolve the link using streamlink to create a thumbnail
+			#resolvedLink=$(streamlink --stream-url "$link" best)
+			# check if the link is a twitch link, they preload ads in the first 15 seconds
+			# so take the thumbnail from after this 15 seconds
+			if echo "$link" | grep "twitch.tv";then
+				tempTimeout=20
+			else
+				tempTimeout=0
+			fi
+			# build a thumbnail from the video source
+			#timeout 30 ffmpeg -y -i "$resolvedLink" -ss 1 -frames:v 1 "$localIconPath"
+			# this must be contained in a single line or the delay causes it to be blocked
+			#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
+			if ! echo "$radio" | grep "true";then
+				if streamPass --can-handle-url "$link";then
+					# resolve with streamlink and then screenshot
+					timeout 30 ffmpeg -y -i "$(streamPass --stream-url "$link" best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
+				else
+					# raw stream screenshot
+					timeout 30 ffmpeg -y -i "$link" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
+				fi
+			fi
+			# resize the icon to standard size
+			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+			# add text over retrieved thumbnail
+			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
 		fi
-		# build a thumbnail from the video source
-		#timeout 30 ffmpeg -y -i "$resolvedLink" -ss 1 -frames:v 1 "$localIconPath"
-		# this must be contained in a single line or the delay causes it to be blocked
-		#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
-		timeout 30 ffmpeg -y -i "$(streamPass --stream-url $link best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
-		# resize the icon to standard size
-		convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
-		# add text over retrieved thumbnail
-		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
-	fi
-	killFakeImage "$localIconPath"
-	if ! [ -f "$localIconPath" ];then
-		# generate a image for the page since none exists
-		swirlAmount=$(echo "$title" | wc -c)
-		convert -size 400x400 +seed "$title" plasma: -swirl "$swirlAmount" "$localIconPath"
-		# add text over generated image
-		convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
-		linkColor=$(echo "$link" | md5sum | cut --bytes='1-6')
-		# convert to grayscale
-		convert "$localIconPath" -colorSpace "gray" "$localIconPath"
-		# colorize the image based on the link md5
-		convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
+		killFakeImage "$localIconPath"
+		if ! [ -f "$localIconPath" ];then
+			# generate a image for the page since none exists
+			swirlAmount=$(echo "$title" | wc -c)
+			timeout 600 convert -size 400x400 +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
+			# add text over generated image
+			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+			linkColor=$(echo "$link" | md5sum | cut --bytes='1-6')
+			# convert to grayscale
+			timeout 600 convert "$localIconPath" -colorSpace "gray" "$localIconPath"
+			# colorize the image based on the link md5
+			timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
+		fi
 	fi
 }
 ################################################################################
 function webGenCheck(){
-	totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
- 	channelCount=$(( $(cat /var/cache/nfo2web/web/live/channels.m3u | wc -l) / 2))
+	# read either from argument or filesystem
+	if echo "$@" | grep "\-\-filecheck";then
+		#totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
+		channelCount=$(( $(cat /var/cache/nfo2web/web/kodi/channels.m3u | wc -l) / 2))
+	else
+		channelCount=$1
+	fi
+
 	# update website every 8 channel updates
 	if [ $(( $channelCount % 8 )) -eq 0 ];then
 		# re generate the webpage
 		webGen --in-progress
+	fi
+}
+################################################################################
+function channelCheck(){
+	webDirectory=$1
+
+	channelsPath="$webDirectory/live/channels.index"
+	channelsOutputPath="$webDirectory/live/channels.m3u"
+
+	if [ $(cat "$channelsPath" | wc --bytes) -gt $(cat "$channelsOutputPath" | wc --bytes) ];then
+		# if the temp file is larger copy it to the active webserver path
+		cp "$channelsPath" "$channelsOutputPath"
 	fi
 }
 ################################################################################
@@ -183,6 +221,7 @@ function process_M3U(){
 		if [ "$caughtLength" -gt 1 ];then
 			# pull the link on this line and store it
 			title=$(echo "$lineCaught" | rev | cut -d',' -f1 | rev)
+			title=$(cleanText "$title")
 			echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
 			echo "Found Link = $link"
@@ -201,7 +240,7 @@ function process_M3U(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "Icon MD5 = $iconLink"
 			# try to download or create the thumbnail
-			examineIconLink "$iconLink" "$link" "$title"
+			examineIconLink "$iconLink" "$link" "$title" "$radio"
 			# Write the new version of the lines to the outputFile
 			#hostPath='http://'$(hostname)'.local:444/iptv-resolver.php?url="'$link'"'
 			webIconPath="http://$(hostname).local:444/live/$iconSum.png"
@@ -213,7 +252,7 @@ function process_M3U(){
 			# increment the channel number
 			channelNumber=$(($channelNumber + 1))
 			# invoke webgen to update webpage after adding new live link
-			webGenCheck
+			#webGenCheck --filecheck
 		fi
 		# if the line is a info line
 		if echo "$line" | grep -q "#EXTINF";then
@@ -224,6 +263,30 @@ function process_M3U(){
 			lineCaught=""
 		fi
 	done
+}
+################################################################################
+function cacheCheck(){
+
+	filePath="$1"
+	cacheDays="$2"
+
+	# return true if cached needs updated
+	if [ -f "$filePath" ];then
+		# the file exists
+		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
+			# the file is more than "$2" days old, it needs updated
+			echo "[INFO]: File is to old, update the file $1"
+			return 0
+		else
+			# the file exists and is not old enough in cache to be updated
+			echo "[INFO]: File in cache, do not update $1"
+			return 1
+		fi
+	else
+		# the file does not exist, it needs created
+		echo "[INFO]: File does not exist, it must be created $1"
+		return 0
+	fi
 }
 ################################################################################
 function process_M3U_file(){
@@ -250,22 +313,32 @@ function processLink(){
 	if echo "$link" | grep -E "^#";then
 		# this link is a comment
 		return 0
-	fi
-	# if the link is a local address
-	if [ -f "$link" ];then
+	elif [ -f "$link" ];then
+		# if the link is a local address
 		echo "[INFO]: Link is a local address. Adding local file..."
 		# add local files
 		grep -v "#EXTM3U" "$link" >> "$channelsPath"
 		return 0
-	fi
-	# if the link is a web address
-	if echo "$link" | grep -E "^http";then
+	elif echo "$link" | grep -E "^http";then
+		# if the link is a web address
 		echo "[INFO]: Link is a web url..."
 		# if the link is a link to a playlist download the playlist
 		if echo "$link" | grep -E "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
 			echo "[INFO]: Link is a m3u playlist..."
+
+			# generate a md5 from the url for the cache
+			linkSum=$(echo "$link" | md5sum | cut -d' ' -f1)
+
+			if cacheCheck "$webDirectory/cache/$linkSum.index" "10";then
+				# create the cache directory if it does not exist
+				mkdir -p "$webDirectory/cache/"
+				# if no cached file exists
+				# if downloaded file is older than 10 days update it
+				timeout 120 curl "$link" > "$webDirectory/cache/$linkSum.index"
+			fi
 			# if it is a playlist file add it to the list by download
-			downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
+			#downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
+			downloadedM3U=$(cat "$webDirectory/cache/$linkSum.index")
 			process_M3U "$downloadedM3U" "$channelsPath" "$radioFile"
 		else
 			echo "[INFO]: Link is Unknown..."
@@ -304,8 +377,8 @@ function processLink(){
 					echo "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
 				echo "[DEBUG]: FileName = $fileName"
-				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD"
-				examineIconLink "$thumbnailLink" "$hostPath" "$fileName"
+				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
+				examineIconLink "$thumbnailLink" "$hostPath" "$fileName" "$radio"
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
 				echo "[DEBUG]: SUM = $sum"
@@ -360,48 +433,18 @@ fullUpdate(){
 	echo "Loading up sources..."
 	# check for defined sources
 	if ! [ -f /etc/iptv2web/sources.cfg ];then
-		# if no config exists create the default config
+		# if no config exists create the default config from the template
 		{
-		echo "##################################################"
-		echo "#Example Config"
-		echo "##################################################"
-		echo "# - You can use local filesystem .m3u/m3u8 sources"
-		echo "#  ex."
-		echo "# - You can use sources from remote http servers"
-		echo "#  ex."
-		echo "#    https://iptv-org.github.io/iptv/index.m3u"
-		echo "# - You can also use streaming sites"
-		echo "#  ex."
-		echo "#    https://twitch.tv/username"
-		echo "#  ex."
-		echo "#    https://www.youtube.com/watch?v=F109TZt3nRc"
-		echo "##################################################"
-		# write the new config from the path variable
-		echo "https://iptv-org.github.io/iptv/index.m3u"
+			cat /usr/share/mms/templates/live_sources.cfg
 		} > /etc/iptv2web/sources.cfg
 	fi
 	# load the link list
 	linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
 	# build the radio sources cfg file if it does not exist
 	if ! [ -f /etc/iptv2web/radioSources.cfg ];then
-		# if no config exists create the default config
+		# if no config exists create the default config from the template
 		{
-		echo "##################################################"
-		echo "#Example Config"
-		echo "##################################################"
-		echo "# - You can use local filesystem .m3u/m3u8 sources"
-		echo "#  ex."
-		echo "# - You can use sources from remote http servers"
-		echo "#  ex."
-		echo "#    https://iptv-org.github.io/iptv/index.m3u"
-		echo "# - You can also use streaming sites"
-		echo "#  ex."
-		echo "#    https://twitch.tv/username"
-		echo "#  ex."
-		echo "#    https://www.youtube.com/watch?v=F109TZt3nRc"
-		echo "##################################################"
-		# write the new config from the path variable
-		echo "https://www.radio.pervii.com/top_radio_top_40.m3u"
+			cat /usr/share/mms/templates/live_radioSources.cfg
 		} > /etc/iptv2web/radioSources.cfg
 	fi
 	# load the radio link list
@@ -409,7 +452,9 @@ fullUpdate(){
 	################################################################################
 
 	webDirectory=$(webRoot)
-	channelsPath="$webDirectory/live/channels.m3u"
+	mkdir -p "$webDirectory/live/"
+	channelsPath="$webDirectory/live/channels.index"
+	channelsOutputPath="$webDirectory/live/channels.m3u"
 	# link the channels to the kodi directory
 	ln -s "$channelsPath" "$webDirectory/kodi/channels.m3u"
 	# for each link in the sources
@@ -419,13 +464,16 @@ fullUpdate(){
 	################################################################################
 	# read video sources
 	################################################################################
+	processedSources=0
 	# add user created custom local configs first
 	ls -t1 /etc/iptv2web/sources.d/*.m3u
 	if [ $? -eq 0 ];then
 		for configFile in /etc/iptv2web/sources.d/*.m3u;do
 			# add file to main m3u, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
-			webGenCheck
+			processedSources=$(($processedSources + 1))
+			#webGenCheck "$processedSources"
+			#channelCheck "$webDirectory"
 		done
 	fi
 	ls -t1 /etc/iptv2web/sources.d/*.m3u8
@@ -433,13 +481,17 @@ fullUpdate(){
 		for configFile in /etc/iptv2web/sources.d/*.m3u8;do
 			# add file to main m3u8, exclude description line
 			process_M3U_file "$configFile" "$channelsPath"
-			webGenCheck
+			processedSources=$(($processedSources + 1))
+			#webGenCheck "$processedSources"
+			#channelCheck "$webDirectory"
 		done
 	fi
 	# read main config m3u sources and merge them
 	for link in $linkList;do
 		processLink "$link" "$channelsPath"
-		webGenCheck
+		processedSources=$(($processedSources + 1))
+		#webGenCheck "$processedSources"
+		#channelCheck "$webDirectory"
 	done
 	# add external sources last
 	ls -t1 /etc/iptv2web/sources.d/*.cfg
@@ -447,7 +499,9 @@ fullUpdate(){
 		for configFile in $(ls -t1 /etc/iptv2web/sources.d/*.cfg | tac);do
 			for link in $(loadWithoutComments "$configFile");do
 				processLink "$link" "$channelsPath"
-				webGenCheck
+				processedSources=$(($processedSources + 1))
+				#webGenCheck "$processedSources"
+				#channelCheck "$webDirectory"
 			done
 		done
 	fi
@@ -458,7 +512,9 @@ fullUpdate(){
 	for link in $radioLinkList;do
 		# process radio link
 		processLink "$link" "$channelsPath" "true"
-		webGenCheck
+		processedSources=$(($processedSources + 1))
+		#webGenCheck "$processedSources"
+		#channelCheck "$webDirectory"
 	done
 	# check for radio sources
 	ls -t1 /etc/iptv2web/radioSources.d/*.cfg
@@ -467,10 +523,15 @@ fullUpdate(){
 			for link in $(loadWithoutComments "$configFile");do
 				# process radio link
 				processLink "$link" "$channelsPath" "true"
-				webGenCheck
+				processedSources=$(($processedSources + 1))
+				#webGenCheck "$processedSources"
+				#channelCheck "$webDirectory"
 			done
 		done
 	fi
+	# after processing all configs copy the temp channels path over
+	cp -v "$channelsPath" "$channelsOutputPath"
+	# generate the finished website
 	webGen
 }
 ################################################################################
@@ -503,6 +564,12 @@ function buildPage(){
 		ytLink="https://youtube.com/watch?v=$yt_id"
 		# embed the youtube player
 		echo "<iframe class='livePlayer'"
+		# if title indicates it is a hd youtube channel embed, set hd to default
+		if echo "$title" | grep -Eq " HD$";then
+			echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1&hd=1'"
+		else
+			echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
+		fi
 		echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
 		echo " frameborder='0'"
 		echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
@@ -579,6 +646,11 @@ function buildRadioPage(){
 	fi
 }
 ################################################################################
+append(){
+	# add two variables together and output to stdout
+	echo "$1$2"
+}
+################################################################################
 ################################################################################
 webGen(){
 	webDirectory=$(webRoot)
@@ -601,7 +673,17 @@ webGen(){
 	lineCaught=""
 	IFS_BACKUP=$IFS
 	IFS=$'\n'
-	echo "" > "$webDirectory/live/channelList.html"
+
+	# create temp files to be copied after update to output paths
+	channelListPath="$webDirectory/live/channelList.index"
+	indexPath="$webDirectory/live/index.index"
+
+	# create output paths
+	channelOutputPath="$webDirectory/live/channelList.html"
+	indexOutputPath="$webDirectory/live/index.html"
+
+	touch "$channelListPath"
+	echo "" > "$channelListPath"
 	################################################################################
 	# build the channel list
 	################################################################################
@@ -637,7 +719,7 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</a>"
 					echo -e "</div>"
-				} >> "$webDirectory/live/channelList.html"
+				} >> "$channelListPath"
 			else
 				{
 					echo -e "<div id='$channelNumber'>"
@@ -650,7 +732,7 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</a>"
 					echo -e "</div>"
-				} >> "$webDirectory/live/channelList.html"
+				} >> "$channelListPath"
 			fi
 			channelNumber=$(($channelNumber + 1))
 		fi
@@ -702,7 +784,7 @@ webGen(){
 				fi
 				echo "	<div class='channelList'>"
 				# create the line that will be replaced by the link list to all the channels
-				for channelLine in $(cat "$webDirectory/live/channelList.html");do
+				for channelLine in $(cat "$channelListPath");do
 					echo -e "\t\t$channelLine"
 				done
 				echo "	</div>"
@@ -712,9 +794,9 @@ webGen(){
 				echo "	<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
 				echo "		$title"
 				echo "	</a>"
-				echo "	<div>"
-				echo "		Hard Link : <a href='$link'>$link</a>"
-				echo "	</div>"
+				echo "	<a class='button hardLink' href='$link'>"
+				echo "		Hard Link"
+				echo "	</a>"
 				echo "</div>"
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
@@ -773,7 +855,7 @@ webGen(){
 		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 
 		echo -e "<div class='indexBody'>"
-	} > "$webDirectory/live/index.html"
+	} > "$indexPath"
 	channelNumber=1
 	for line in $channels;do
 		echo "[INFO]: building channel index entry for line = $line"
@@ -803,7 +885,7 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
-				} >> "$webDirectory/live/index.html"
+				} >> "$indexPath"
 			else
 				{
 					# build icon to link to the channel
@@ -817,7 +899,7 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
-				} >> "$webDirectory/live/index.html"
+				} >> "$indexPath"
 			fi
 			################################################################################
 			# increment the channel number
@@ -842,7 +924,11 @@ webGen(){
 		echo "<hr class='topButtonSpace'>"
 		echo -e "</body>"
 		echo -e "</html>"
-	} >> "$webDirectory/live/index.html"
+	} >> "$indexPath"
+
+	# copy over the new versions of the generated webpages
+	cp -v "$indexPath" "$indexOutputPath"
+	cp -v "$channelListPath" "$channelOutputPath"
 	IFS=$IFS_BACKUP
 }
 ################################################################################

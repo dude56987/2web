@@ -188,7 +188,8 @@ processMovie(){
 			else
 				echo "[INFO]: States are diffrent, updating $movieTitle..."
 				echo "[DEBUG]: $currentSum != $libarySum"
-				addToLog "UPDATE" "Updating movie" "$movieTitle" "$logPagePath"
+				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
+				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 				touch "$webDirectory/movies/$movieWebPath/"
 			fi
 		else
@@ -919,7 +920,7 @@ processEpisode(){
 		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		# check for the thumbnail and link it
 		checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
-		thumbnailExt=getThumbnailExt "$thumbnailPath"
+		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
@@ -1058,8 +1059,8 @@ processShow(){
 			echo "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
-			updateInfo="$showTitle<br>$currentSum != $libarySum<br>$(ls "$show")"
-			addToLog "UPDATE" "Updating show" "$updateInfo" "$logPagePath"
+			updateInfo="$showTitle\n$currentSum != $libarySum\n$(ls "$show")"
+			addToLog "UPDATE" "Updating Show" "$updateInfo" "$logPagePath"
 			# update the show directory modification date when the state has been changed
 			touch "$webDirectory/shows/$showTitle/"
 		fi
@@ -1279,13 +1280,12 @@ getLibSum(){
 }
 ################################################################################
 buildUpdatedShows(){
-	# buildUpdatedShows $webDirectory $numberOfShows $sourcePrefix
+	# buildUpdatedShows $webDirectory $numberOfShows
 	################################################################################
 	# Build a list of updated shows
 	################################################################################
 	webDirectory=$1
 	numberOfShows=$2
-	sourcePrefix=$3
 	################################################################################
 	updatedShows=$(ls -1t "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows" | tac)
 	echo "<div class='titleCard'>"
@@ -1294,7 +1294,7 @@ buildUpdatedShows(){
 	echo "<div class='listCard'>"
 	echo "$updatedShows" | while read -r line;do
 		# fix index links to work for homepage
-		cat "$line" | sed "s/src='/src='$sourcePrefix/g" | sed "s/href='/href='$sourcePrefix/g"
+		cat "$line"
 	done
 	echo "</div>"
 	echo "</div>"
@@ -1316,7 +1316,7 @@ buildRandomShows(){
 	echo "<div class='listCard'>"
 	echo "$randomShows" | while read -r line;do
 		# fix index links to work for homepage
-		cat "$line" | sed "s/src='/src='$sourcePrefix/g" | sed "s/href='/href='$sourcePrefix/g"
+		cat "$line"
 	done
 	echo "</div>"
 	echo "</div>"
@@ -1338,7 +1338,7 @@ buildUpdatedMovies(){
 	echo "<div class='listCard'>"
 	echo "$updatedMovies" | while read -r line;do
 		# fix index links to work for homepage
-		cat "$line" | sed "s/src='/src='$sourcePrefix/g" | sed "s/href='/href='$sourcePrefix/g"
+		cat "$line"
 	done
 	echo "</div>"
 	echo "</div>"
@@ -1360,16 +1360,64 @@ buildRandomMovies(){
 	echo "<div class='listCard'>"
 	echo "$randomMovies" | while read -r line;do
 		# fix index links to work for homepage
-		cat "$line" | sed "s/src='/src='$sourcePrefix/g" | sed "s/href='/href='$sourcePrefix/g"
+		cat "$line"
 	done
 	echo "</div>"
 	echo "</div>"
 }
 ########################################################################
 buildHomePage(){
+
 	webDirectory=$1
 	headerPagePath=$2
+
 	echo "[INFO]: Building home page..."
+	# do not generate stats if website is in process of being updated
+	# stats generation is IO intense, so it only needs ran ONCE at the end
+	# if the stats.index cache is more than 1 day old update it
+	if cacheCheck "$webDirectory/stats.index" "10";then
+		# figure out the stats
+		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
+		totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
+		totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
+		if [ -f "$webDirectory/kodi/channels.m3u" ];then
+			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
+			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
+		fi
+		webSize=$(du -sh "$webDirectory" | cut -f1)
+		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
+		#write a new stats index file
+		{
+			if [ "$totalShows" -gt 0 ];then
+				echo "<span>"
+				echo "	Episodes:$totalEpisodes"
+				echo "</span>"
+				echo "<span>"
+				echo "	Shows:$totalShows"
+				echo "</span>"
+			fi
+			if [ "$totalMovies" -gt 0 ];then
+				echo "<span>"
+				echo "	Movies:$totalMovies"
+				echo "</span>"
+			fi
+			if [ -f "$webDirectory/kodi/channels.m3u" ];then
+				echo "<span>"
+				echo "	Channels:$totalChannels"
+				echo "</span>"
+				echo "<span>"
+				echo "	Radio:$totalRadio"
+				echo "</span>"
+			fi
+			echo "<span>"
+			echo "	Web:$webSize "
+			echo "</span>"
+			echo "<span>"
+			echo "	Media:$mediaSize"
+			echo "</span>"
+		} > "$webDirectory/stats.index"
+	fi
+	# build homepage code
 	tempStyle="html{ background-image: url(\"background.png\") }"
 	{
 			echo "<html id='top' class='randomFanart'>"
@@ -1390,31 +1438,45 @@ buildHomePage(){
 			echo "		Last updated on $(date)"
 			echo "	</div>"
 			echo "	<div>"
-			if echo "$@" | grep -Eq "\-\-in\-progress";then
-				# do not generate stats if website is in process of being updated
-				# stats generation is IO intense, so it only needs ran ONCE at the end
-				totalEpisodes="???"
-				totalShows="???"
-				totalMovies="???"
-				totalChannels="???"
-			else
-				# figure out the stats
-				totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
-				totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
-				totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
-				totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
-			fi
-			echo "		Episodes:$totalEpisodes Shows:$totalShows Movies:$totalMovies Channels:$totalChannels"
+
+			# load from cache previously generated stats to display
+			cat "$webDirectory/stats.index"
 			echo "	</div>"
 			echo "</div>"
 	} > "$webDirectory/index.html"
 	################################################################################
-	buildUpdatedShows "$webDirectory" 25 "shows\/" >> "$webDirectory/index.html"
-	buildUpdatedMovies "$webDirectory" 25 "movies\/" >> "$webDirectory/index.html"
+	# if time is older than one day for .index files
+	if cacheCheck "$webDirectory/updatedShows.index" "1";then
+		buildUpdatedShows "$webDirectory" 50 > "$webDirectory/updatedShows.index"
+	fi
+	if cacheCheck "$webDirectory/updatedMovies.index" "1";then
+		buildUpdatedMovies "$webDirectory" 50 > "$webDirectory/updatedMovies.index"
+	fi
+	if cacheCheck "$webDirectory/randomShows.index" "10";then
+		buildRandomShows "$webDirectory" 50 > "$webDirectory/randomShows.index"
+	fi
+	if cacheCheck "$webDirectory/randomMovies.index" "10";then
+		buildRandomMovies "$webDirectory" 50 > "$webDirectory/randomMovies.index"
+	fi
+	{
+		sourcePrefix="shows\/"
+		cat "$webDirectory/updatedShows.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+		sourcePrefix="movies\/"
+		cat "$webDirectory/updatedMovies.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+		sourcePrefix="shows\/"
+		cat "$webDirectory/randomShows.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+		sourcePrefix="movies\/"
+		cat "$webDirectory/randomMovies.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+	} >> "$webDirectory/index.html"
 	################################################################################
-	buildRandomShows "$webDirectory" 25 "shows\/" >> "$webDirectory/index.html"
-	buildRandomMovies "$webDirectory" 25 "movies\/" >> "$webDirectory/index.html"
-	########################################################################
 	{
 		# add footer
 		cat "$headerPagePath"
@@ -1424,18 +1486,70 @@ buildHomePage(){
 		echo "</body>"
 		echo "</html>"
 	} >>  "$webDirectory/index.html"
-	#STOP
 }
 ########################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
-	totalList=$(find "$line")
+	totalList=$(find "$line" | sort)
 	# convert lists into md5sum
 	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
 	echo "$tempLibList"
 }
+########################################################################
+function buildShowIndex(){
+	webDirectory="$1"
+	headerPagePath="$2"
+	showIndexPath="$webDirectory/shows/index.html"
+	# update the show index
+	{
+		echo "<html id='top' class='randomFanart'>"
+		echo "<head>"
+		echo "<link rel='stylesheet' href='style.css' />"
+		#echo "<style>"
+		#cat /usr/share/nfo2web/style.css
+		#echo "</style>"
+		echo "<script>"
+		cat /usr/share/nfo2web/nfo2web.js
+		echo "</script>"
+		echo "</head>"
+		echo "<body>"
+		#updateInProgress
+		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		# add the search box
+		echo " <input id='searchBox' class='searchBox' type='text'"
+		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
+
+		# add the most recently updated series
+		#cat "$webDirectory/updatedShows.index"
+		sourcePrefix="shows\/"
+		cat "$webDirectory/updatedShows.index"
+			#sed "s/src='/src='$sourcePrefix/g" | \
+			#sed "s/href='/href='$sourcePrefix/g"
+
+		#buildUpdatedShows "$webDirectory" 25 ""
+
+		# load all existing shows into the index
+		cat "$webDirectory"/shows/*/shows.index
+
+		# add the random list to the footer
+		#buildRandomShows "$webDirectory" 25 ""
+		#cat "$webDirectory/randomShows.index"
+		cat "$webDirectory/randomShows.index"
+			#sed "s/src='/src='$sourcePrefix/g" | \
+			#sed "s/href='/href='$sourcePrefix/g"
+
+		# add footer
+		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		# create top jump button
+		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+		echo "<hr class='topButtonSpace'>"
+		echo "</body>"
+		echo "</html>"
+	} > "$showIndexPath"
+}
+########################################################################
 getDirSumByTime(){
 	line=$1
 	# get the sum of the directory modification time
@@ -1454,6 +1568,130 @@ updateInProgress(){
 	echo -e "\t\tsetTimeout(function() { window.location=window.location;},((1000*60)*1));"
 	echo -e "\t</script>"
 	echo -e "</div>"
+}
+#########################################################################
+scanForRandomBackgrounds(){
+	webDirectory="$1"
+	backgroundUpdateDelay="7"
+	#########################################################################
+	# create fanart list
+	#########################################################################
+	# if the fanart list is older than $backgroundUpdateDelay in days
+	if cacheCheck "$webDirectory/fanart.cfg" "$backgroundUpdateDelay";then
+		# move into the web directory so paths from below searches are relative
+		cd $webDirectory
+		find -L "shows/" -type f -name "fanart.png" > "$webDirectory/fanart.cfg"
+		find -L "shows/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
+		find -L "movies/" -type f -name "fanart.png" >> "$webDirectory/fanart.cfg"
+		find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
+	fi
+	if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
+		# create shows only fanart.cfg
+		cd "$webDirectory/shows/"
+		find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
+		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
+	fi
+	if cacheCheck "$webDirectory/movies/fanart.cfg" "$backgroundUpdateDelay";then
+		# create movies only fanart.cfg
+		cd "$webDirectory/movies/"
+		find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
+		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
+	fi
+	if cacheCheck "$webDirectory/poster.cfg" "$backgroundUpdateDelay";then
+		# move into the web directory so paths from below searches are relative
+		cd $webDirectory
+		find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
+		find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
+		find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+	fi
+	if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
+		# create shows only poster.cfg
+		cd "$webDirectory/shows/"
+		find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
+		find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
+	fi
+	if cacheCheck "$webDirectory/movies/poster.cfg" "$backgroundUpdateDelay";then
+		# create movies only poster.cfg
+		cd "$webDirectory/movies/"
+		find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
+		find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+	fi
+}
+########################################################################
+function buildMovieIndex(){
+
+	webDirectory=$1
+	headerPagePath=$2
+
+	# update the movie index webpage
+	{
+		echo "<html id='top' class='randomFanart'>"
+		echo "<head>"
+		echo "<link rel='stylesheet' href='style.css' />"
+		#echo "<style>"
+		#cat /usr/share/nfo2web/style.css
+		#echo "</style>"
+		echo "<script>"
+		cat /usr/share/nfo2web/nfo2web.js
+		echo "</script>"
+		echo "</head>"
+		echo "<body>"
+		#updateInProgress
+		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		# add the search box
+		echo " <input id='searchBox' class='searchBox' type='text'"
+		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
+
+		#buildUpdatedMovies "$webDirectory" 25 ""
+		#cat "$webDirectory/updatedMovies.index"
+		sourcePrefix="movies\/"
+		cat "$webDirectory/updatedMovies.index"
+			#sed "s/src='/src='$sourcePrefix/g" | \
+			#sed "s/href='/href='$sourcePrefix/g"
+
+		# load the movie index parts
+		cat "$webDirectory"/movies/*/movies.index
+
+		# add the random list to the footer
+		#buildRandomMovies "$webDirectory" 25 ""
+		#cat "$webDirectory/randomMovies.index"
+		cat "$webDirectory/randomMovies.index"
+			#sed "s/src='/src='$sourcePrefix/g" | \
+			#sed "s/href='/href='$sourcePrefix/g"
+
+		# add footer
+		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		# create top jump button
+		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+		echo "<hr class='topButtonSpace'>"
+		echo "</body>"
+		echo "</html>"
+	} > "$movieIndexPath"
+}
+########################################################################
+function cacheCheck(){
+
+	filePath="$1"
+	cacheDays="$2"
+
+	# return true if cached needs updated
+	if [ -f "$filePath" ];then
+		# the file exists
+		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
+			# the file is more than "$2" days old, it needs updated
+			echo "[INFO]: File is to old, update the file $1"
+			return 0
+		else
+			# the file exists and is not old enough in cache to be updated
+			echo "[INFO]: File in cache, do not update $1"
+			return 1
+		fi
+	else
+		# the file does not exist, it needs created
+		echo "[INFO]: File does not exist, it must be created $1"
+		return 0
+	fi
 }
 ########################################################################
 main(){
@@ -1556,7 +1794,7 @@ main(){
 		else
 			# set the active flag
 			touch /tmp/nfo2web.active
-			# create a trap to remove nfo2web
+			# create a trap to remove nfo2web lockfile
 			trap "rm -v /tmp/nfo2web.active" EXIT
 		fi
 		# make sure the directories exist and have correct permissions, also link stylesheets
@@ -1568,8 +1806,11 @@ main(){
 		chown -R www-data:www-data "$webDirectory/movies/"
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
-		# link the settings script
-		ln -s "/usr/share/nfo2web/settings.php" "$webDirectory/settings.php"
+		# link the settings scripts
+		ln -s "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
+		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
+		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
+		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		# link the randomFanart.php script
 		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
@@ -1621,19 +1862,25 @@ main(){
 			echo "<a class='button' href='kodi'>"
 			echo "KODI"
 			echo "</a>"
-			echo "<a class='button' href='movies'>"
-			echo "MOVIES"
-			echo "</a>"
-			echo "<a class='button' href='shows'>"
-			echo "SHOWS"
-			echo "</a>"
-			echo "<a class='button' href='live'>"
-			echo "Live"
-			echo "</a>"
+			#if grep -q "Movies" "$webDirectory/stats.index";then
+				echo "<a class='button' href='movies'>"
+				echo "MOVIES"
+				echo "</a>"
+			#fi
+			#if grep -q "Shows" "$webDirectory/stats.index";then
+				echo "<a class='button' href='shows'>"
+				echo "SHOWS"
+				echo "</a>"
+			#fi
+			#if [ -f "$webDirectory/kodi/channels.m3u" ];then
+				echo "<a class='button' href='live'>"
+				echo "Live"
+				echo "</a>"
+			#fi
 			echo "<a class='button' href='log.html'>"
 			echo "LOG"
 			echo "</a>"
-			echo "<a class='button' href='settings.php'>"
+			echo "<a class='button' href='system.php'>"
 			echo "SETTINGS"
 			echo "</a>"
 			echo "</div>"
@@ -1653,10 +1900,6 @@ main(){
 			echo "<body>"
 			cat "$headerPagePath"
 			# add the javascript sorter
-			#echo "<input type='button' class='button' value='Info' onclick='toggleInfos()'>"
-			#echo "<input type='button' class='button' value='Warnings' onclick='toggleWarnings()'>"
-			#echo "<input type='button' class='button' value='Errors' onclick='toggleErrors()'>"
-
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
 			echo -n "<input type='button' class='button' value='Error'"
@@ -1671,7 +1914,7 @@ main(){
 			echo "<table>"
 		} > "$logPagePath"
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-		buildHomePage "$webDirectory" "$headerPagePath" --in-progress
+		#buildHomePage "$webDirectory" "$headerPagePath" --in-progress
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
 		# read each libary from the libary config, single path per line
@@ -1705,38 +1948,7 @@ main(){
 								# of the log and to make log show even when the state of the show is unchanged
 								echo "[INFO]: Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
 								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.html"
-								# update the show index
-								{
-									echo "<html id='top' class='randomFanart'>"
-									echo "<head>"
-									echo "<link rel='stylesheet' href='style.css' />"
-									#echo "<style>"
-									#cat /usr/share/nfo2web/style.css
-									#echo "</style>"
-									echo "<script>"
-									cat /usr/share/nfo2web/nfo2web.js
-									echo "</script>"
-									echo "</head>"
-									echo "<body>"
-									updateInProgress
-									cat "$headerPagePath" | sed "s/href='/href='..\//g"
-									# add the search box
-									echo " <input id='searchBox' class='searchBox' type='text'"
-									echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-									# add the most recently updated series
-									buildUpdatedShows "$webDirectory" 25 ""
-									# load all existing shows into the index
-									cat "$webDirectory"/shows/*/shows.index
-									# add the random list to the footer
-									buildRandomShows "$webDirectory" 25 ""
-									# add footer
-									cat "$headerPagePath" | sed "s/href='/href='..\//g"
-									# create top jump button
-									echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-									echo "<hr class='topButtonSpace'>"
-									echo "</body>"
-									echo "</html>"
-								} > "$showIndexPath"
+
 							else
 								echo "[ERROR]: Show has no episodes!"
 								addToLog "WARNING" "Show has no episodes" "$show" "$logPagePath"
@@ -1748,41 +1960,11 @@ main(){
 					elif grep "<movie>" "$show"/*.nfo;then
 						# this is a move directory not a show
 						processMovie "$show" "$webDirectory"
-						# update the movie index webpage
-						{
-							echo "<html id='top' class='randomFanart'>"
-							echo "<head>"
-							echo "<link rel='stylesheet' href='style.css' />"
-							#echo "<style>"
-							#cat /usr/share/nfo2web/style.css
-							#echo "</style>"
-							echo "<script>"
-							cat /usr/share/nfo2web/nfo2web.js
-							echo "</script>"
-							echo "</head>"
-							echo "<body>"
-							updateInProgress
-							cat "$headerPagePath" | sed "s/href='/href='..\//g"
-							# add the search box
-							echo " <input id='searchBox' class='searchBox' type='text'"
-							echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-							buildUpdatedMovies "$webDirectory" 25 ""
-							# load the movie index parts
-							cat "$webDirectory"/movies/*/movies.index
-							# add the random list to the footer
-							buildRandomMovies "$webDirectory" 25 ""
-							# add footer
-							cat "$headerPagePath" | sed "s/href='/href='..\//g"
-							# create top jump button
-							echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-							echo "<hr class='topButtonSpace'>"
-							echo "</body>"
-							echo "</html>"
-						} > "$movieIndexPath"
+						#buildMovieIndex
 					fi
 				done
 				# rebuild the homepage after processing each existing libary item
-				buildHomePage "$webDirectory" "$headerPagePath" --in-progress
+				#buildHomePage "$webDirectory" "$headerPagePath" --in-progress
 			fi
 			#images=""
 			#if find "$webDirectory/movies/" -name "poster.png";then
@@ -1832,37 +2014,8 @@ main(){
 			#	"$webDirectory/background.png"
 			#echo "[DEBUG]: montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles '$webDirectory/background.png'"
 			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles "$webDirectory/background.png"
-			#########################################################################
-			# create fanart list
-			#########################################################################
-			# move into the web directory so paths from below searches are relative
-			cd $webDirectory
-			find -L "shows/" -type f -name "fanart.png" > "$webDirectory/fanart.cfg"
-			find -L "shows/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
-			find -L "movies/" -type f -name "fanart.png" >> "$webDirectory/fanart.cfg"
-			find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
-			# create shows only fanart.cfg
-			cd "$webDirectory/shows/"
-			find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
-			find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
-			# create movies only fanart.cfg
-			cd "$webDirectory/movies/"
-			find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
-			find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
-			# move into the web directory so paths from below searches are relative
-			cd $webDirectory
-			find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
-			find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-			find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
-			find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-			# create shows only poster.cfg
-			cd "$webDirectory/shows/"
-			find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
-			find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
-			# create movies only poster.cfg
-			cd "$webDirectory/movies/"
-			find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
-			find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+
+			scanForRandomBackgrounds "$webDirectory"
 		done
 		{
 			# add the end to the log, add the jump to top button and finish out the html
@@ -1877,67 +2030,12 @@ main(){
 			echo "</html>"
 		} >> "$logPagePath"
 		# create the final index pages, these should not have the progress indicator
-		{
-			echo "<html id='top' class='randomFanart'>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
-			#echo "<style>"
-			#cat /usr/share/nfo2web/style.css
-			#echo "</style>"
-			echo "<script>"
-			cat /usr/share/nfo2web/nfo2web.js
-			echo "</script>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-			# add the search box
-			echo " <input id='searchBox' class='searchBox' type='text'"
-			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-			buildUpdatedMovies "$webDirectory" 25 ""
-			# load the movie index parts
-			cat "$webDirectory"/movies/*/movies.index
-			# add the random list to the footer
-			buildRandomMovies "$webDirectory" 25 ""
-			# add footer
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-			# create top jump button
-			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-			echo "<hr class='topButtonSpace'>"
-			echo "</body>"
-			echo "</html>"
-		} > "$movieIndexPath"
-		{
-			# write the show index page after everything has been generated
-			echo "<html id='top' class='randomFanart'>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
-			#echo "<style>"
-			#cat /usr/share/nfo2web/style.css
-			#echo "</style>"
-			echo "<script>"
-			cat /usr/share/nfo2web/nfo2web.js
-			echo "</script>"
-			echo "</head>"
-			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-			# add the search box
-			echo " <input id='searchBox' class='searchBox' type='text'"
-			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-			buildUpdatedShows "$webDirectory" 25  ""
-			# load all existing shows into the index
-			cat "$webDirectory"/shows/*/shows.index
-			# add the random list to the footer
-			buildRandomShows "$webDirectory" 25 ""
-			# add footer
-			cat "$headerPagePath" | sed "s/href='/href='..\//g"
-			# create top jump button
-			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-			echo "<hr class='topButtonSpace'>"
-			echo "</body>"
-			echo "</html>"
-		} > "$showIndexPath"
 		# build the final version of the homepage without the progress indicator
 		buildHomePage "$webDirectory" "$headerPagePath"
+		# build the movie index
+		buildMovieIndex "$webDirectory" "$headerPagePath"
+		# build the show index
+		buildShowIndex "$webDirectory" "$headerPagePath"
 		# write the md5sum state of the libary for change checking
 		#echo "$libarySum" > "$webDirectory/state.cfg"
 		#getLibSum > "$webDirectory/state.cfg"

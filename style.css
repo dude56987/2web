@@ -84,12 +84,12 @@ h1 {
 	-webkit-text-stroke: 0.01em black;
 }
 #topButton{
+	font-size: 2em;
 	font-weight: bold;
   position: fixed; /* Fixed/sticky position */
   bottom: 0px; /* Place the button at the bottom of the page */
   right: 0px; /* Place the button 30px from the right */
   z-index: 99; /* Make sure it does not overlap */
-  font-size: 2vw; /* Increase font size */
 	padding: 0px;
 }
 .ERROR{
@@ -252,7 +252,7 @@ h2 {
 		border-left: none;
 	}
 	.topButtonSpace{
-		font-size: 3em;
+		font-size: 5em;
 		display: block !important;
 		border-style: none;
 	}

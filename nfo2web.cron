@@ -11,3 +11,4 @@
 0 */12 * * * root /usr/bin/iptv2web update > /var/log/iptv2web_update.log
 # once a day check for updates to fast moving metadata extraction packages
 @daily root /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
+@monthly root /usr/bin/iptv2web libary > /var/log/iptv2web_libary.log
