@@ -18,7 +18,7 @@
 ########################################################################
 set -x
 #export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-export PS4='+ ${LINENO}	|	'
+export PS4='${LINENO} +	|	'
 # set tab size to 4 to make output more readable
 tabs 4
 ################################################################################
@@ -190,6 +190,22 @@ function getIconLink(){
 	echo "$tempIconLink"
 }
 ################################################################################
+function getTVG(){
+	lineCaught="$1"
+	tvgInfo="$2"
+	# pipe the output of this function to get the iconLink, blank for no link
+	if echo "$lineCaught" | grep -q "$tvgInfo=\"";then
+		# store the icon if it is set
+		tempIconLink=$(echo "$lineCaught" | grep --only-matching "$tvgInfo=\".*\"" | cut -d'"' -f2)
+	elif echo "$lineCaught" | grep -q "$tvgInfo='";then
+		tempIconLink=$(echo "$lineCaught" | grep --only-matching "$tvgInfo='.*'" | cut -d"'" -f2)
+	else
+		tempIconLink=""
+	fi
+	# return the link to be piped
+	echo "$tempIconLink"
+}
+################################################################################
 updateInProgress(){
 	echo -e "<div class='progressIndicator'>"
 	echo -e "\t<span class='progressText'>Update In Progress...</span>"
@@ -203,7 +219,7 @@ updateInProgress(){
 function process_M3U(){
 	# open m3u files
 	channels=$1
-	outputFile=$2
+	webDirectory=$2
 	radioFile=$3
 	if [[ "$radioFile" == "" ]];then
 		echo "[INFO]: radio not set, turn radio to false"
@@ -211,7 +227,7 @@ function process_M3U(){
 	fi
 	################################################################################
 	# convert m3u files by downloading icons and redirecting to downloaded local icons
-	channelNumber=1
+	#channelNumber=1
 	lineCaught=""
 	IFS_BACKUP=$IFS
 	IFS=$'\n'
@@ -239,18 +255,27 @@ function process_M3U(){
 			echo "Icon Link = $iconLink"
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "Icon MD5 = $iconLink"
+			# check for group title
+			groupTitle=$(getTVG "$lineCaught" "group-title")
 			# try to download or create the thumbnail
 			examineIconLink "$iconLink" "$link" "$title" "$radio"
 			# Write the new version of the lines to the outputFile
 			#hostPath='http://'$(hostname)'.local:444/iptv-resolver.php?url="'$link'"'
 			webIconPath="http://$(hostname).local:444/live/$iconSum.png"
 			{
-				echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\",$title"
+				#echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$iconLink\",$title"
+				echo "$lineCaught"
 				echo "$link"
-			} >> "$outputFile"
+			} >> "$webDirectory/live/channels_raw.index"
+			{
+				echo -n "#EXTINF:-1 radio=\"$radio\" "
+				echo -n "tvg-logo=\"$webIconPath\" "
+				echo    "group-title=\"$groupTitle\",$title"
+				echo "$link"
+			} >> "$webDirectory/live/channels.index"
 			################################################################################
 			# increment the channel number
-			channelNumber=$(($channelNumber + 1))
+			#channelNumber=$(($channelNumber + 1))
 			# invoke webgen to update webpage after adding new live link
 			#webGenCheck --filecheck
 		fi
@@ -292,8 +317,8 @@ function cacheCheck(){
 function process_M3U_file(){
 	# open m3u files
 	channels=$(grep -v "#EXTM3U" "$1")
-	outputFile=$2
-	process_M3U "$channels" "$outputFile"
+	webDirectory=$2
+	process_M3U "$channels" "$webDirectory"
 }
 
 ################################################################################
@@ -339,7 +364,7 @@ function processLink(){
 			# if it is a playlist file add it to the list by download
 			#downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
 			downloadedM3U=$(cat "$webDirectory/cache/$linkSum.index")
-			process_M3U "$downloadedM3U" "$channelsPath" "$radioFile"
+			process_M3U "$downloadedM3U" "$webDirectory" "$radioFile"
 		else
 			echo "[INFO]: Link is Unknown..."
 			# if it is a known stream site use streamlink
@@ -396,9 +421,9 @@ function processLink(){
 				fi
 				echo "[DEBUG]: WebIconPath = $webIconPath"
 				{
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\",$fileName HD"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"iptv2web\",$fileName HD"
 					echo "$hostPathHD"
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\",$fileName"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"iptv2web\",$fileName"
 					echo "$hostPath"
 				} >> "$channelsPath"
 			else
@@ -455,6 +480,8 @@ fullUpdate(){
 	mkdir -p "$webDirectory/live/"
 	channelsPath="$webDirectory/live/channels.index"
 	channelsOutputPath="$webDirectory/live/channels.m3u"
+	channelsRawPath="$webDirectory/live/channels_raw.index"
+	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
 	# link the channels to the kodi directory
 	ln -s "$channelsPath" "$webDirectory/kodi/channels.m3u"
 	# for each link in the sources
@@ -470,7 +497,7 @@ fullUpdate(){
 	if [ $? -eq 0 ];then
 		for configFile in /etc/iptv2web/sources.d/*.m3u;do
 			# add file to main m3u, exclude description line
-			process_M3U_file "$configFile" "$channelsPath"
+			process_M3U_file "$configFile" "$webDirectory"
 			processedSources=$(($processedSources + 1))
 			#webGenCheck "$processedSources"
 			#channelCheck "$webDirectory"
@@ -480,7 +507,7 @@ fullUpdate(){
 	if [ $? -eq 0 ];then
 		for configFile in /etc/iptv2web/sources.d/*.m3u8;do
 			# add file to main m3u8, exclude description line
-			process_M3U_file "$configFile" "$channelsPath"
+			process_M3U_file "$configFile" "$webDirectory"
 			processedSources=$(($processedSources + 1))
 			#webGenCheck "$processedSources"
 			#channelCheck "$webDirectory"
@@ -531,15 +558,10 @@ fullUpdate(){
 	fi
 	# after processing all configs copy the temp channels path over
 	cp -v "$channelsPath" "$channelsOutputPath"
+	cp -v "$channelsRawPath" "$channelsRawOutputPath"
 	# generate the finished website
 	webGen
 }
-################################################################################
-################################################################################
-################################################################################
-
-################################################################################
-#set -x #debug
 ################################################################################
 function buildPage(){
 	title=$1
@@ -687,7 +709,7 @@ webGen(){
 	################################################################################
 	# build the channel list
 	################################################################################
-	channelNumber=1
+	#channelNumber=1
 	for line in $channels;do
 		echo "[INFO]: building channel list for line = $line"
 		# if a info line was detected on the last line
@@ -698,6 +720,7 @@ webGen(){
 			#iconLink=$(getIconLink "$lineCaught")
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			iconLink="$iconSum.png"
+			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "[INFO]: Found Title = $title"
 			echo "[INFO]: Found Link = $link"
 			echo "[INFO]: Icon Link = $iconLink"
@@ -734,7 +757,7 @@ webGen(){
 					echo -e "</div>"
 				} >> "$channelListPath"
 			fi
-			channelNumber=$(($channelNumber + 1))
+			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then
@@ -749,7 +772,7 @@ webGen(){
 	# build each channel page
 	# - channel pages ignore --in-progress to prevent refresh during playback
 	################################################################################
-	channelNumber=1
+	#channelNumber=1
 	for line in $channels;do
 		echo "[INFO]: building channel page for line = $line"
 		# if a info line was detected on the last line
@@ -757,10 +780,11 @@ webGen(){
 		if [ "$caughtLength" -gt 1 ];then
 			# pull the link on this line and store it
 			title=$(echo "$lineCaught" | cut -d',' -f2)
-			link=$line
+			link=$(echo -n "$line")
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
+			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "[INFO]: Found Title = $title"
 			echo "[INFO]: Found Link = $link"
 			echo "[INFO]: Icon Link = $iconLink"
@@ -774,9 +798,9 @@ webGen(){
 				echo "<body>"
 				# place the header
 				cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
-				echo "<a href='channels.m3u' id='channelsDownloadLink'"
-				echo " class='button'>channels.m3u</a>"
-				echo "<div>"
+				#echo "<a href='channels.m3u' id='channelsDownloadLink'"
+				#echo " class='button'>channels.m3u</a>"
+				#echo "<div>"
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
 					buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
 				else
@@ -807,7 +831,7 @@ webGen(){
 			} > "$webDirectory/live/channel_$channelNumber.html"
 			################################################################################
 			# increment the channel number
-			channelNumber=$(($channelNumber + 1))
+			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then
@@ -837,8 +861,8 @@ webGen(){
 
 		# place the header
 		sed "s/href='/href='..\//g" < "$webDirectory/header.html"
-		echo "<a href='channels.m3u' id='channelsDownloadLink'"
-		echo " class='button'>channels.m3u</a>"
+		#echo "<a href='channels.m3u' id='channelsDownloadLink'"
+		#echo " class='button'>channels.m3u</a>"
 		echo "<div class='filterButtonBox'>"
 		echo -n "<input type='button' class='button liveFilter' value='&#128250; TV'"
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
@@ -856,7 +880,7 @@ webGen(){
 
 		echo -e "<div class='indexBody'>"
 	} > "$indexPath"
-	channelNumber=1
+	#channelNumber=1
 	for line in $channels;do
 		echo "[INFO]: building channel index entry for line = $line"
 		# if a info line was detected on the last line
@@ -869,6 +893,7 @@ webGen(){
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
 			iconLength=$(echo "$iconLink" | wc -c)
+			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			echo "[INFO]: Found Title = $title"
 			echo "[INFO]: Found Link = $link"
 			echo "[INFO]: Icon Link = $iconLink"
@@ -885,7 +910,8 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
-				} >> "$indexPath"
+					# store data in index files in order to allow stats to be created
+				} > "$webDirectory/live/channel_$channelNumber.index"
 			else
 				{
 					# build icon to link to the channel
@@ -899,11 +925,13 @@ webGen(){
 					echo -e "\t</div>"
 					echo -e "\t</div>"
 					echo -e "</a>"
-				} >> "$indexPath"
+				} > "$webDirectory/live/channel_$channelNumber.index"
 			fi
+			# write the data to the index path
+			cat "$webDirectory/live/channel_$channelNumber.index" >> "$indexPath"
 			################################################################################
 			# increment the channel number
-			channelNumber=$(($channelNumber + 1))
+			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then

@@ -102,6 +102,7 @@ build-deb:
 	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/mms/settings/
+	cp link.php debian/usr/share/mms/link.php
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/
 	# make the script executable only by root

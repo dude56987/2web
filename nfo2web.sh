@@ -138,6 +138,33 @@ processMovie(){
 	echo "################################################################################"
 	# if moviepath exists
 	if [ -f "$moviePath" ];then
+		# create the path sum for reconizing the libary path
+		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
+		# check movie state as soon as posible processing
+		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
+			libarySum=$(getDirSum "$movieDir")
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
+				echo "[DEBUG]: $currentSum == $libarySum"
+				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
+				return
+			else
+				echo "[INFO]: States are diffrent, updating $movieTitle..."
+				echo "[DEBUG]: $currentSum != $libarySum"
+				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
+				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+				touch "$webDirectory/movies/$movieWebPath/"
+			fi
+		else
+			echo "[INFO]: No movie state exists for $movieTitle, updating..."
+			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
+			touch "$webDirectory/movies/$movieWebPath/"
+		fi
+		################################################################################
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
 		# rip the movie title
@@ -171,32 +198,7 @@ processMovie(){
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
 		# link stylesheets
 		ln -s "$webDirectory/style.css" "$webDirectory/movies/$movieWebPath/style.css"
-		# create the path sum for reconizing the libary path
-		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
-		# check movie state as soon as posible processing
-		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
-			# a existing state was found
-			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
-			libarySum=$(getDirSum "$movieDir")
-			# if the current state is the same as the state of the last update
-			if [ "$libarySum" == "$currentSum" ];then
-				# this means they are the same so no update needs run
-				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
-				echo "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
-				return
-			else
-				echo "[INFO]: States are diffrent, updating $movieTitle..."
-				echo "[DEBUG]: $currentSum != $libarySum"
-				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
-				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
-				touch "$webDirectory/movies/$movieWebPath/"
-			fi
-		else
-			echo "[INFO]: No movie state exists for $movieTitle, updating..."
-			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
-			touch "$webDirectory/movies/$movieWebPath/"
-		fi
+		################################################################################
 		################################################################################
 		# using the path of the found nfo file, check for a file extension
 		#  that is not nfo
@@ -892,8 +894,7 @@ processEpisode(){
 			echo "<body>"
 			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "<div class='titleCard'>"
-			echo "<h1>$episodeShowTitle</h1>"
-			echo "<h2>$episodeTitle</h2>"
+			echo "<h1>$episodeShowTitle ${episodeSeason}x${episodeNumber}</h1>"
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
@@ -937,6 +938,7 @@ processEpisode(){
 				echo "allowfullscreen>"
 				echo "</iframe>"
 				echo "<div class='descriptionCard'>"
+				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				echo "<a class='button hardLink' href='$ytLink'>"
 				echo "	Hard Link"
@@ -955,6 +957,7 @@ processEpisode(){
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
+				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
 					echo "<a class='button hardLink' href='$videoPath'>"
@@ -978,6 +981,7 @@ processEpisode(){
 				echo "<source src='$episodePath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
+				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				echo "<a class='button hardLink' href='$episodePath$sufix'>"
 				echo "Hard Link"
@@ -1004,6 +1008,7 @@ processEpisode(){
 				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
 				#echo "  <marquee direction='up' scrolldelay='100'>"
 				echo "	<h3 class='title'>"
+				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
 				echo "		$episodeTitle"
 				echo "	</h3>"
 				#echo "  </marquee>"
@@ -1015,6 +1020,7 @@ processEpisode(){
 				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
 				#echo "  <marquee direction='up' scrolldelay='100'>"
 				echo "	<h3 class='title'>"
+				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
 				echo "		$episodeTitle"
 				echo "	</h3>"
 				#echo "  </marquee>"
@@ -1288,16 +1294,17 @@ buildUpdatedShows(){
 	numberOfShows=$2
 	################################################################################
 	updatedShows=$(ls -1t "$webDirectory"/shows/*/shows.index | tac | tail -n "$numberOfShows" | tac)
-	echo "<div class='titleCard'>"
-	echo "<h1>Updated Shows</h1>"
-	echo "<hr>"
-	echo "<div class='listCard'>"
-	echo "$updatedShows" | while read -r line;do
-		# fix index links to work for homepage
-		cat "$line"
-	done
-	echo "</div>"
-	echo "</div>"
+	if [ $(echo -n "$updatedShows" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Updated Shows</h1>"
+		echo "<div class='listCard'>"
+		echo "$updatedShows" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
 }
 ################################################################################
 buildRandomShows(){
@@ -1310,16 +1317,39 @@ buildRandomShows(){
 	sourcePrefix=$3
 	################################################################################
 	randomShows=$(ls -1 "$webDirectory"/shows/*/shows.index| shuf -n "$numberOfShows")
-	echo "<div class='titleCard'>"
-	echo "<h1>Random Shows</h1>"
-	echo "<hr>"
-	echo "<div class='listCard'>"
-	echo "$randomShows" | while read -r line;do
-		# fix index links to work for homepage
-		cat "$line"
-	done
-	echo "</div>"
-	echo "</div>"
+	if [ $(echo -n "$randomShows" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Random Shows</h1>"
+		echo "<div class='listCard'>"
+		echo "$randomShows" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
+}
+################################################################################
+buildRandomChannels(){
+	################################################################################
+	# Build a list of randomly generated channels
+	################################################################################
+	webDirectory=$1
+	numberOfShows=$2
+	sourcePrefix=$3
+	################################################################################
+	randomChannels=$(ls -1 "$webDirectory"/live/channel_*.index | shuf -n "$numberOfShows")
+	if [ $(echo -n "$randomChannels" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Random Channels</h1>"
+		echo "<div class='listCard'>"
+		echo "$randomChannels" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
 }
 ########################################################################
 buildUpdatedMovies(){
@@ -1332,16 +1362,17 @@ buildUpdatedMovies(){
 	sourcePrefix=$3
 	################################################################################
 	updatedMovies=$(ls -1t "$webDirectory"/movies/*/movies.index | tac | tail -n "$numberOfMovies" | tac )
-	echo "<div class='titleCard'>"
-	echo "<h1>Updated Movies</h1>"
-	echo "<hr>"
-	echo "<div class='listCard'>"
-	echo "$updatedMovies" | while read -r line;do
-		# fix index links to work for homepage
-		cat "$line"
-	done
-	echo "</div>"
-	echo "</div>"
+	if [ $(echo -n "$updatedMovies" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Updated Movies</h1>"
+		echo "<div class='listCard'>"
+		echo "$updatedMovies" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
 }
 ########################################################################
 buildRandomMovies(){
@@ -1354,16 +1385,17 @@ buildRandomMovies(){
 	sourcePrefix=$3
 	################################################################################
 	randomMovies=$(ls -1 "$webDirectory"/movies/*/movies.index| shuf -n "$numberOfMovies")
-	echo "<div class='titleCard'>"
-	echo "<h1>Random Movies</h1>"
-	echo "<hr>"
-	echo "<div class='listCard'>"
-	echo "$randomMovies" | while read -r line;do
-		# fix index links to work for homepage
-		cat "$line"
-	done
-	echo "</div>"
-	echo "</div>"
+	if [ $(echo -n "$randomMovies" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Random Movies</h1>"
+		echo "<div class='listCard'>"
+		echo "$randomMovies" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
 }
 ########################################################################
 buildHomePage(){
@@ -1458,6 +1490,9 @@ buildHomePage(){
 	if cacheCheck "$webDirectory/randomMovies.index" "10";then
 		buildRandomMovies "$webDirectory" 50 > "$webDirectory/randomMovies.index"
 	fi
+	if cacheCheck "$webDirectory/randomChannels.index" "10";then
+		buildRandomChannels "$webDirectory" 50 > "$webDirectory/randomChannels.index"
+	fi
 	{
 		sourcePrefix="shows\/"
 		cat "$webDirectory/updatedShows.index" | \
@@ -1473,6 +1508,10 @@ buildHomePage(){
 			sed "s/href='/href='$sourcePrefix/g"
 		sourcePrefix="movies\/"
 		cat "$webDirectory/randomMovies.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+		sourcePrefix="live\/"
+		cat "$webDirectory/randomChannels.index" | \
 			sed "s/src='/src='$sourcePrefix/g" | \
 			sed "s/href='/href='$sourcePrefix/g"
 	} >> "$webDirectory/index.html"
@@ -1811,6 +1850,7 @@ main(){
 		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
+		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		# link the randomFanart.php script
 		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
@@ -1859,8 +1899,8 @@ main(){
 			echo "<a class='button' href='..'>"
 			echo "HOME"
 			echo "</a>"
-			echo "<a class='button' href='kodi'>"
-			echo "KODI"
+			echo "<a class='button' href='link.php'>"
+			echo "LINK"
 			echo "</a>"
 			#if grep -q "Movies" "$webDirectory/stats.index";then
 				echo "<a class='button' href='movies'>"
