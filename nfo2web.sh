@@ -140,30 +140,7 @@ processMovie(){
 	if [ -f "$moviePath" ];then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
-		# check movie state as soon as posible processing
-		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
-			# a existing state was found
-			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
-			libarySum=$(getDirSum "$movieDir")
-			# if the current state is the same as the state of the last update
-			if [ "$libarySum" == "$currentSum" ];then
-				# this means they are the same so no update needs run
-				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
-				echo "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
-				return
-			else
-				echo "[INFO]: States are diffrent, updating $movieTitle..."
-				echo "[DEBUG]: $currentSum != $libarySum"
-				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
-				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
-				touch "$webDirectory/movies/$movieWebPath/"
-			fi
-		else
-			echo "[INFO]: No movie state exists for $movieTitle, updating..."
-			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
-			touch "$webDirectory/movies/$movieWebPath/"
-		fi
+
 		################################################################################
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
@@ -189,7 +166,36 @@ processMovie(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
 		echo "[INFO]: movie web path = '$movieWebPath'"
-		# build the movie page path
+		################################################################################
+		# check the state now that the movie web path has been determined
+		################################################################################
+		# check movie state as soon as posible processing
+		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
+			libarySum=$(getDirSum "$movieDir")
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
+				echo "[DEBUG]: $currentSum == $libarySum"
+				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
+				return
+			else
+				echo "[INFO]: States are diffrent, updating $movieTitle..."
+				echo "[DEBUG]: $currentSum != $libarySum"
+				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
+				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+				touch "$webDirectory/movies/$movieWebPath/"
+			fi
+		else
+			echo "[INFO]: No movie state exists for $movieTitle, updating..."
+			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
+			touch "$webDirectory/movies/$movieWebPath/"
+		fi
+		################################################################################
+		# After checking state build the movie page path, and build directories/links
+		################################################################################
 		moviePagePath="$webDirectory/movies/$movieWebPath/index.html"
 		echo "[INFO]: movie page path = '$moviePagePath'"
 		mkdir -p "$webDirectory/movies/$movieWebPath/"
@@ -334,6 +340,14 @@ processMovie(){
 		else
 			echo "[ERROR]: No media files could be found!"
 			addToLog "ERROR" "No media files could be found!" "$movieDir" "$logPagePath"
+		fi
+		# copy over subtitles
+		if ls "$movieDir" | grep "\.srt" ;then
+			ln -s "$movieDir"/*.srt "$webDirectory/kodi/movies/$movieWebPath/"
+		elif ls "$movieDir" | grep "\.sub" ;then
+			ln -s "$movieDir"/*.sub "$webDirectory/kodi/movies/$movieWebPath/"
+		elif ls "$movieDir" | grep "\.idx" ;then
+			ln -s "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
 		fi
 		# link the fanart
 		if [ -f "$movieDir/fanart.png" ];then
@@ -1065,7 +1079,7 @@ processShow(){
 			echo "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
-			updateInfo="$showTitle\n$currentSum != $libarySum\n$(ls "$show")"
+			updateInfo="$showTitle\n$currentSum != $libarySum"
 			addToLog "UPDATE" "Updating Show" "$updateInfo" "$logPagePath"
 			# update the show directory modification date when the state has been changed
 			touch "$webDirectory/shows/$showTitle/"
@@ -1859,8 +1873,15 @@ main(){
 		ln -s "/usr/share/nfo2web/randomPoster.php" "$webDirectory/randomPoster.php"
 		ln -s "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
 		ln -s "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
-		# link stylesheets
-		ln -s "/usr/share/nfo2web/style.css" "$webDirectory/style.css"
+		# link the stylesheet based on the chosen theme
+		if [ ! -f /etc/mms/theme.cfg ];then
+			echo "default.css" > "/etc/mms/theme.cfg"
+		fi
+		# load the chosen theme
+		theme=$(cat "/etc/mms/theme.cfg")
+		# link the theme and overwrite if another theme is chosen
+		ln -sf "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
+		# link stylesheet
 		ln -s "$webDirectory/style.css" "$webDirectory/movies/style.css"
 		ln -s "$webDirectory/style.css" "$webDirectory/shows/style.css"
 		# compare libaries to see if updates are needed

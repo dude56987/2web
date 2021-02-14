@@ -61,15 +61,18 @@ build-deb:
 	mkdir -p debian/usr/share/nfo2web;
 	mkdir -p debian/usr/share/iptv2web;
 	mkdir -p debian/usr/share/mms;
+	mkdir -p debian/usr/share/mms/themes;
 	mkdir -p debian/usr/share/mms/templates;
 	mkdir -p debian/usr/share/mms/settings;
 	mkdir -p debian/var/cache/nfo2web/web;
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/mms;
+	mkdir -p debian/etc/mms/themes;
 	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/nfo2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/;
 	mkdir -p debian/etc/iptv2web/sources.d/;
+	mkdir -p debian/etc/iptv2web/blockedGroups.d/;
 	mkdir -p debian/etc/iptv2web/radioSources.d/;
 	mkdir -p debian/etc/iptv2web/blockedLinks.d/;
 	mkdir -p debian/etc/cron.d/;
@@ -81,6 +84,7 @@ build-deb:
 	# make placeholder
 	touch debian/etc/iptv2web/.placeholder
 	touch debian/etc/iptv2web/sources.d/.placeholder
+	touch debian/etc/iptv2web/blockedGroups.d/.placeholder
 	touch debian/etc/iptv2web/radioSources.d/.placeholder
 	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
 	touch debian/etc/nfo2web/.placeholder
@@ -93,7 +97,7 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	# copy over default stylesheet
-	cp style.css debian/usr/share/nfo2web/
+	cp themes/*.css debian/usr/share/mms/themes/
 	# copy over javascript libary
 	cp nfo2web.js debian/usr/share/nfo2web/
 	# copy over php scripts

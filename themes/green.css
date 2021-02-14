@@ -1,0 +1,662 @@
+:root{
+	--solidBackground: darkgray;
+	--glassBackground: rgba(0,100,0,0.85);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: rgba(256,256,256,0.9);
+	--highlightBorder: lightgray;
+	--staticBackground: repeating-radial-gradient(black, white 0.001%, black 0.001%);
+}
+html{
+	background-size: 100vw;
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+	text-align: center;
+	/* cut the gap on the right of the page */
+	/* overflow-x: hidden; */
+	margin: 0px;
+	padding: 0px;
+	word-wrap: break-word;
+	color: white;
+}
+.channelLink {
+	margin-bottom: 0.05em;
+	text-decoration: none;
+	display: flex;
+	width: 100%;
+	/*
+	font-size: 30px;
+	text-align: center;
+	*/
+	text-align: left;
+	font-size: 1.5em;
+	word-wrap: break-word;
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	border-size: 4px;
+}
+.channelLink:hover {
+	background-color: green;
+	color: white;
+}
+.indexLink{
+	color: var(--textColor);
+	display: inline-block;
+	padding: 0px !important;
+	width: 10em;
+	margin: 2em;
+	vertical-align: top !important;
+}
+.listCard .indexLink{
+	width: 5em;
+}
+.listCard .indexLink .indexIcon{
+	width: 5em;
+	height: 5em;
+}
+.listCard .indexLink .indexTitle{
+	display: none;
+}
+.radioIcon{
+	font-weight: bold;
+	text-shadow: 2px 2px black;
+	margin-left: auto;
+	font-size: 0.9em;
+	float: right;
+}
+.indexIcon{
+	background-image: var(--staticBackground);
+	width: 10em;
+	height: 10em;
+}
+#channelsDownloadLink{
+	padding: 1em;
+	/*
+	width: 15em;
+	*/
+	display: block;
+	width: auto;
+	margin: 1em;
+}
+body{
+	margin: 0px;
+}
+h1 {
+	text-align: center;
+	color: white;
+	-webkit-text-stroke: 0.04em black;
+}
+.date{
+	color: white;
+	font-size: 1em;
+	-webkit-text-stroke: 0.01em black;
+}
+#topButton{
+	font-size: 2em;
+	font-weight: bold;
+  position: fixed; /* Fixed/sticky position */
+  bottom: 0px; /* Place the button at the bottom of the page */
+  right: 0px; /* Place the button 30px from the right */
+  z-index: 99; /* Make sure it does not overlap */
+	padding: 0px;
+}
+.ERROR{
+	background-color: darkred;
+}
+.WARNING{
+	background-color: orange;
+}
+.NEW{
+	background-color: darkgreen;
+}
+.UPDATE{
+	background-color: darkslateblue;
+}
+.INFO{
+	background-color: darkslategray;
+}
+/*
+.seasonHeader {
+	box-shadow: 0px 0px 10px black;
+	background-color: rgba(100,100,100,0.10);
+}
+*/
+.seasonContainer{
+	box-shadow: 0px 0px 1em black;
+	text-align: center;
+	/*
+	background-color: rgba(100,100,100,0.85);
+	*/
+	background-color: var(--glassBackground);
+}
+.episodeList{
+	margin-left: auto;
+	margin-right: auto;
+}
+h2 {
+	text-align: center;
+	/*
+	color: white;
+	*/
+	color: var(--textColor);
+	-webkit-text-stroke: 0.04em black;
+}
+.header{
+	text-decoration: none;
+	text-align: center;
+	/*
+	color: white;
+	*/
+	color: var(--textColor);
+	display: inline-block;
+	width: 95vw;
+	margin: 2vw;
+}
+ol{
+	background-color: var(--glassBackground);
+}
+.seriesBackground{
+	background: var(--backgroundFanart);
+	background-size: 100vw 100vh;
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.randomFanart{
+	background: url("randomFanart.php");
+	background-size: 100vw 100vh;
+	/*
+	background-color: darkgray;
+	*/
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.liveBackground{
+	background-image: url("../randomFanart.php");
+}
+.liveFilter{
+	font-size: 1em;
+	margin-right: auto;
+	margin-left: auto;
+	width: 20vw;
+}
+.topButtonSpace{
+	font-size: 0px;
+	display: none;
+}
+.titleCard p{
+	text-align: left !important;
+}
+/* if the screen is smaller than 800px or in portrait mode*/
+@media only screen and (max-width: 800px), (orientation: portrait){
+	.indexLink{
+		width: 40vw;
+	}
+	.indexLink img{
+		width: 40vw;
+	}
+	.liveFilter{
+		width:80vw;
+	}
+	.searchBox{
+		width: auto;
+	}
+	.settingsEntry{
+		width: 90vw !important;
+	}
+	.inputCard{
+		width: 90vw !important;
+		float: none !important;
+	}
+	.liveBackground{
+		background-image: url("../randomPoster.php");
+	}
+	.channelList{
+		width: 80vw !important;
+	}
+	.livePlayer{
+		width: 100%;
+	}
+	.seriesBackground{
+		background: var(--backgroundPoster);
+		background-size: 100vw 100vh;
+		background-repeat: repeat;
+		background-attachment: fixed;
+	}
+	.header .button{
+		width: auto !important;
+		display: block !important;
+		text-align: center !important;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	#nfoMediaPlayer, video, audio{
+		background-size: 100% 100%;
+		margin: 0px !important;
+		width: 100% !important;
+		min-width: 0px !important;
+	}
+	.randomFanart{
+		background: url("randomPoster.php") !important;
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
+	}
+	.progressIndicator{
+		font-size: 1em !important;
+	}
+	.hardLink{
+		width: auto !important;
+		display: block !important;
+		text-align: center !important;
+		margin-left: auto !important;
+		margin-right: auto !important;
+		float: none !important;
+	}
+	.aired{
+		width: auto !important;
+		margin: auto !important;
+		float: none !important;
+	}
+	#topButton{
+		font-size: 2em; /* Increase font size */
+		width: 100vw;
+		margin: 0px;
+		border-right: none;
+		border-left: none;
+	}
+	.topButtonSpace{
+		font-size: 5em;
+		display: block !important;
+		border-style: none;
+	}
+}
+
+@media only screen and (max-width: 400px), (orientation: portrait){
+	html{
+		font-size: 42px;
+	}
+}
+
+#nfoMediaPlayer, video, audio{
+	background-size: 100% 100%;
+	margin: 15px;
+	/*
+	box-shadow: 0px 0px 1.5em white;
+	*/
+	box-shadow: 0px 0px 1.5em var(--borderColor);
+	height: 400px;
+	min-width: 800px;
+	background-color: black;
+}
+.progressIndicator{
+	width: 100vw;
+	margin: 0px;
+	text-align: center;
+	background-color: darkgreen;
+	color: white;
+	position: fixed;
+	top: 0px;
+	z-index: 99;
+	font-size: 0.01em;
+	padding: 0px !important;
+}
+#settingsButton{
+	float: right;
+}
+#homeButton{
+	float: left;
+}
+.button{
+	box-shadow: 0px 0px 1em black;
+	margin: 0.5em;
+	padding: 0.5em;
+	border-style: solid;
+	/*
+	border-color: white;
+	background-color: gray;
+	color: white;
+	*/
+	border-color: var(--borderColor);
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	border-width: 0.2em;
+	text-decoration: none;
+	text-align: center;
+}
+.button:hover{
+	box-shadow: 0px 0px 0px black;
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
+}
+.indexBody{
+	text-align: center;
+}
+/************************************/
+/* SERIES icons for main index page */
+/************************************/
+.listCard{
+	white-space: nowrap;
+	overflow-x: auto;
+}
+.aired{
+	float: left;
+	/*
+	color: white;
+	*/
+	color: var(--textColor);
+	border: 0.5em dotted;
+	padding: 1em;
+	margin-right: 1em;
+	text-align: center;
+}
+.titleCard h1{
+	background-color: var(--glassBackground);
+}
+.titleCard h2{
+	background-color: var(--glassBackground);
+}
+.titleCard h3{
+	background-color: var(--glassBackground);
+}
+.titleCard{
+	/*
+	background-color: rgba(100,100,100,0.85);
+	*/
+	background-color: var(--glassBackground);
+	box-shadow: 0px 0px 1em black;
+	margin: 1em;
+}
+.listCard .indexSeries{
+	min-height: 0em !important;
+	width: 4em !important;
+	height: 6em !important;
+}
+.listCard .indexSeries div{
+	display: none;
+}
+.listCard .indexSeries img{
+	width: 100%;
+	height: 100%;
+}
+.indexSeries{
+	font-size: 1em;
+	vertical-align: top;
+	text-decoration: none;
+	text-align: center;
+	margin: 0.5em;
+	margin-top: 1em;
+	display: inline-block;
+	/*
+	color: white;
+	background-color: gray;
+	border: 4px solid white;
+	*/
+	color: var(--textColor);
+	background-color: var(--glassBackground);
+	border: 0.2em solid var(--borderColor);
+	width: 8em;
+	min-height: 12em;
+	box-shadow: 0px 0px 1em black;
+	/*
+	width: 200px;
+	height: 350px;
+	*/
+}
+.indexSeries:hover{
+	box-shadow: 0px 0px 0px black;
+	/*
+	background-color: white;
+	color: black;
+	*/
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
+}
+.indexSeries:hover img{
+	opacity: 0.9;
+}
+.hardLink{
+	float: right;
+}
+.indexSeries img{
+	background-color: white;
+	width: 100%;
+	height: 10em;
+	/*
+	width: 10vw;
+	width: 200px;
+	height: 300px;
+	*/
+}
+.indexSeries div{
+	text-align: center;
+	width: auto;
+	height: auto;
+	overflow-y: hidden;
+	overflow-x: hidden;
+}
+.indexSeries img{
+	background-image: var(--staticBackground);
+}
+a{
+	color: white;
+	text-decoration: underline;
+}
+a:hover{
+	text-decoration: none;
+	color: var(--highlightText);
+	background-color: var(--hightlightBackground);
+}
+p, dl{
+	padding: 10px;
+}
+ul{
+	text-align: left;
+}
+ol{
+	text-align: left;
+}
+.sXXeXX{
+	display: inline-block;
+}
+/*******************************/
+/* EPISODE icons for show page */
+/*******************************/
+.showPageEpisode{
+	font-size: 1em;
+	border: 4px solid white;
+	box-shadow: 0px 0px 1em black;
+	text-align: center;
+	text-decoration: none;
+	color: white;
+	text-align: center;
+	margin: 5px;
+	display: inline-block;
+	background-color: var(--glassBackground);
+	width: 8em;
+	/*
+	height: 8em;
+	height: 10vw;
+	height: 300px;
+	*/
+	background-size: 100vw 100vw;
+	vertical-align: top;
+	overflow-y: hidden;
+	overflow-x: hidden;
+}
+.showIndexNumbers{
+	border-bottom: 2px solid white;
+	margin-bottom: 6px;
+	margin-left: 6px;
+	margin-right: 6px;
+}
+.showPageEpisode h3{
+	font-size: 0.5em;
+	/*
+	width: 200px;
+	height: 250px;
+	*/
+	text-align: center;
+	word-wrap: break-word;
+	display: inline-block;
+	/*
+	align-items: flex-end;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	*/
+}
+.showPageEpisode:hover{
+	box-shadow: 0px 0px 0px black;
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
+}
+.showPageEpisode img{
+	width: 100%;
+	/*
+	height: 50%;
+	*/
+	background-color: white;
+	background-image: var(--staticBackground);
+}
+.showPageEpisode:hover img{
+	opacity: 0.9;
+}
+
+/*
+.showPageEpisode div{
+	text-align: center;
+	width: 200px;
+	height: 150px;
+}
+/*******************************/
+table, th, td{
+	border: 1px solid white;
+	color: white;
+	border-spacing: 0px;
+	margin-left: auto;
+	margin-right: auto;
+}
+.player audio{
+	height: 400px;
+}
+.player video{
+	height: 400px;
+}
+.livePlayer{
+	width: 50%;
+	min-width: 0px;
+	margin: 0px;
+	height: 20em;
+}
+.descriptionCard{
+	text-align: left;
+	box-shadow: 0px 0px 1em black;
+	color: white;
+	background-color: var(--glassBackground);
+	min-height: 8em;
+}
+.descriptionCard h2{
+	background-color: var(--glassBackground);
+}
+.settingListCard{
+	text-align: left;
+	box-shadow: 0px 0px 1em black;
+	color: white;
+	background-color: var(--glassBackground);
+	min-height: 8em;
+	text-align: center;
+}
+#player{
+	box-shadow: 0px 0px 1em black;
+	object-fit: cover;
+	float: left;
+	background-color: lightgray;
+	height: 530px;
+	text-align: center;
+}
+.channelList{
+	height: 20em;
+	overflow-y: scroll;
+	width: 40%;
+	display: inline-block;
+	vertical-align: inherit;
+}
+.channelIcon{
+	width: 50px;
+	height: 50px;
+}
+.buttonContainer{
+	float: right;
+}
+.settingsEntry h2{
+	display: inline;
+	float: left;
+}
+.settingsEntry form{
+	display: inline;
+}
+.settingsEntry img{
+	width: 64px;
+	height: 64px;
+	float: left;
+}
+.settingsEntry{
+	margin: 1em;
+	/*
+	margin-top: 0.5vh;
+	margin-bottom: 0.5vh;
+	margin-left: auto;
+	margin-right: auto;
+	*/
+	overflow: auto;
+	background-color: white;
+	word-wrap: break-word;
+	display: inline-block;
+	width: 45vw;
+	color: black;
+	float: none;
+	min-height: 5em;
+	text-align: center;
+	vertical-align: top;
+	word-break: break-all;
+}
+.searchBox{
+	width: 80vw;
+	font-size: 2em;
+	border-style: solid;
+	border-color: var(--borderColor);
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	border-width: 0.2em;
+	text-align: center;
+}
+.inputCard{
+	text-align: center;
+	box-shadow: 0px 0px 1em black;
+	color: white;
+	background-color: var(--glassBackground);
+	width: 45vw;
+	display: inline-block;
+	margin: 1em;
+	float: none;
+	min-height: 10em;
+	vertical-align: top;
+}
+pre{
+	text-align: left;
+}
+.settingsTable{
+	width: 100%;
+}
+.settingsTableData{
+	width: 30%;
+}

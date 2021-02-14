@@ -1,6 +1,6 @@
 :root{
 	--solidBackground: darkgray;
-	--glassBackground: rgba(100,100,100,0.85);
+	--glassBackground: rgba(100,0,0,0.85);
 	--borderColor: white;
 	--textColor: white;
 	--shadowColor: black;
@@ -373,6 +373,7 @@ ol{
 	margin: 1em;
 }
 .listCard .indexSeries{
+	min-height: 0em !important;
 	width: 4em !important;
 	height: 6em !important;
 }
@@ -385,10 +386,11 @@ ol{
 }
 .indexSeries{
 	font-size: 1em;
-	vertical-align: bottom;
+	vertical-align: top;
 	text-decoration: none;
 	text-align: center;
 	margin: 0.5em;
+	margin-top: 1em;
 	display: inline-block;
 	/*
 	color: white;
@@ -399,7 +401,7 @@ ol{
 	background-color: var(--glassBackground);
 	border: 0.2em solid var(--borderColor);
 	width: 8em;
-	height: 12em;
+	min-height: 12em;
 	box-shadow: 0px 0px 1em black;
 	/*
 	width: 200px;
@@ -426,7 +428,7 @@ ol{
 .indexSeries img{
 	background-color: white;
 	width: 100%;
-	height: 75%;
+	height: 10em;
 	/*
 	width: 10vw;
 	width: 200px;

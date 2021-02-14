@@ -12,9 +12,8 @@ ini_set('display_errors', 1);
 include("header.html");
 ?>
 
-<h2>Settings</h2>
-<hr>
-<div class='header'>
+<div class='titleCard'>
+	<h1>Settings</h1>
 	<a class='button' href='system.php'>SYSTEM</a>
 	<a class='button' href='tv.php'>TV</a>
 	<a class='button' href='radio.php'>RADIO</a>
