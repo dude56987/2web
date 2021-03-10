@@ -540,28 +540,32 @@ fullUpdate(){
 	################################################################################
 	processedSources=0
 	# add user created custom local configs first
+	echo "[INFO]: Adding m3u sources from /etc/iptv2web/sources.d/"
 	ls -t1 /etc/iptv2web/sources.d/*.m3u
 	if [ $? -eq 0 ];then
-		cat /etc/iptv2web/sources.d/*.m3u | while read configFile;do
+		find /etc/iptv2web/sources.d/*.m3u -name "*.m3u" -type f | while read configFile;do
 			# add file to main m3u, exclude description line
 			process_M3U_file "$configFile" "$webDirectory"
 			processedSources=$(($processedSources + 1))
 		done
 	fi
+	echo "[INFO]: Adding m3u8 sources from /etc/iptv2web/sources.d/"
 	ls -t1 /etc/iptv2web/sources.d/*.m3u8
 	if [ $? -eq 0 ];then
-		cat /etc/iptv2web/sources.d/*.m3u8 | while read configFile;do
+		find /etc/iptv2web/sources.d/ -name "*.m3u8" -type f | while read configFile;do
 			# add file to main m3u8, exclude description line
 			process_M3U_file "$configFile" "$webDirectory"
 			processedSources=$(($processedSources + 1))
 		done
 	fi
+	echo "[INFO]: Adding /etc/iptv2web/sources.cfg"
 	# read main config m3u sources and merge them
 	echo "$linkList" | while read link;do
 		processLink "$link" "$channelsPath"
 		processedSources=$(($processedSources + 1))
 	done
 	# add external sources last
+	echo "[INFO]: Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
 	ls -t1 /etc/iptv2web/sources.d/*.cfg
 	if [ $? -eq 0 ];then
 		# load the config file list
@@ -670,55 +674,61 @@ function buildGroupPages(){
 	################################################################################
 	#ls -1 "$webDirectory/live/groups/" | while read group;do
 	headerData=$(cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g")
+	#
+	#groupsIndex=
 	find "$webDirectory/live/groups/" -type d | while read groupPath;do
-		echo "[INFO]: Building group pages for (groupPath = '$groupPath')"
-		# link assets
-		ln -s "$webDirectory/style.css" "$groupPath"
-		ln -s "$webDirectory/randomFanart.php" "$groupPath"
-		cat "$webDirectory/fanart.cfg" | sed "s/^/..\/..\//g" > "$groupPath/fanart.cfg"
-		ln -s "$webDirectory/randomPoster.php" "$groupPath"
-		cat "$webDirectory/poster.cfg" | sed "s/^/..\/..\//g" > "$groupPath/poster.cfg"
-		# blank the index file
-		#echo "" > "$groupPath/index.index"
-		{
-			echo "<html id='top' class='liveBackground'>"
-			echo "<head>"
-			echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
-			echo "	<script>"
-			cat /usr/share/nfo2web/nfo2web.js
-			echo "	</script>"
-			echo "</head>"
-			echo "<body>"
-			echo "$headerData"
+		if ! [ "$groupPath" == "$webDirectory/live/groups/" ];then
+			echo "[INFO]: Building group pages for (groupPath = '$groupPath')"
+			# link assets
+			ln -s "$webDirectory/style.css" "$groupPath"
+			ln -s "$webDirectory/randomFanart.php" "$groupPath"
+			cat "$webDirectory/fanart.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/fanart.cfg"
+			ln -s "$webDirectory/randomPoster.php" "$groupPath"
+			cat "$webDirectory/poster.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/poster.cfg"
+			# blank the index file
+			#echo "" > "$groupPath/index.index"
+			{
+				echo "<html id='top' class='liveBackground'>"
+				echo "<head>"
+				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
+				echo "	<script>"
+				cat /usr/share/nfo2web/nfo2web.js
+				echo "	</script>"
+				echo "</head>"
+				echo "<body>"
+				echo "$headerData"
 
-			echo " <input id='searchBox' class='searchBox' type='text'"
-			echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
-			echo "<hr>"
-		} > "$groupPath/index.index"
-		# build the groups
-		ls "$groupPath/"
-		find -L "$groupPath" -type f | while read groupIndex;do
-			# if the .index file is found
-			if echo "$groupIndex" | grep -Eq ".index";then
-				# if not index.index
-				if ! echo "$groupIndex" | grep -Eq "index.index";then
-					if ! echo "$groupIndex" | grep -Eq "index.html";then
-						groupTitle=$(echo "$groupPath" | rev | cut -d'/' -f1 | rev)
-						echo "[INFO]: (groupTitle = $groupTitle )"
-						echo "[INFO]: Adding (groupindex = $groupIndex ) to (group = $groupPath )"
-						{
-							cat "$groupIndex" | sed "s/href='/href='..\/..\//g" | sed "s/src='/src='..\/..\//g"
-						} >> "$groupPath/index.index"
+				echo " <input id='searchBox' class='searchBox' type='text'"
+				echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
+				echo "<hr>"
+			} > "$groupPath/index.index"
+			# build the group index that lists all the groups
+			#find -L "$groupPath" -type f | while read groupIndex;do
+			# build the groups
+			groupList=$(find -maxdepth 1 -type d "$groupPath")
+			find -L "$groupPath" -type f | while read groupIndex;do
+				# the .index file is found
+				if echo "$groupIndex" | grep -Eq ".index";then
+					# not index.index
+					if ! echo "$groupIndex" | grep -Eq "index.index";then
+						if ! echo "$groupIndex" | grep -Eq "index.html";then
+							groupTitle=$(echo "$groupPath" | rev | cut -d'/' -f1 | rev)
+							echo "[INFO]: (groupTitle = $groupTitle )"
+							echo "[INFO]: Adding (groupindex = $groupIndex ) to (group = $groupPath )"
+							{
+								cat "$groupIndex" | sed "s/href='/href='..\/..\//g" | sed "s/src='/src='..\/..\//g"
+							} >> "$groupPath/index.index"
+						fi
 					fi
 				fi
-			fi
-		done
-		{
-			echo "$headerData"
-			echo "</body>"
-			echo "</html>"
-		} >> "$groupPath/index.index"
-		cp -v "$groupPath/index.index" "$groupPath/index.html"
+			done
+			{
+				echo "$headerData"
+				echo "</body>"
+				echo "</html>"
+			} >> "$groupPath/index.index"
+			cp -v "$groupPath/index.index" "$groupPath/index.html"
+		fi
 	done
 	echo "[INFO]: Finished building all group pages."
 }
