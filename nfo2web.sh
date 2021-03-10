@@ -186,12 +186,10 @@ processMovie(){
 				echo "[DEBUG]: $currentSum != $libarySum"
 				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
-				touch "$webDirectory/movies/$movieWebPath/"
 			fi
 		else
 			echo "[INFO]: No movie state exists for $movieTitle, updating..."
 			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
-			touch "$webDirectory/movies/$movieWebPath/"
 		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
@@ -227,6 +225,9 @@ processMovie(){
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
 			videoPath="${moviePath//.nfo/.mkv}"
 			sufix=".mkv"
+		elif [ -f "${moviePath//.nfo/.iso}" ];then
+			videoPath="${moviePath//.nfo/.iso}"
+			sufix=".iso"
 		elif [ -f "${moviePath//.nfo/.mp4}" ];then
 			videoPath="${moviePath//.nfo/.mp4}"
 			sufix=".mp4"
@@ -611,6 +612,7 @@ processMovie(){
 	else
 			echo "[WARNING]: The file '$moviePath' could not be found!"
 	fi
+	touch "$webDirectory/movies/$movieWebPath/"
 	touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 }
@@ -1060,11 +1062,11 @@ processShow(){
 	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
 	# link stylesheet
 	ln -s "$webDirectory/style.css" "$webDirectory/shows/$showTitle/style.css"
-	# create the path sum for reconizing the libary path
-	pathSum=$(echo "$show" | md5sum | cut -d' ' -f1)
 	# check show state before processing
 	if [ -f "$webDirectory/shows/$showTitle/state_$pathSum.cfg" ];then
 		# a existing state was found
+		# create the path sum for reconizing the libary path
+		pathSum=$(echo "$show" | md5sum | cut -d' ' -f1)
 		currentSum=$(cat "$webDirectory/shows/$showTitle/state_$pathSum.cfg")
 		libarySum=$(getDirSum "$show")
 		# if the current state is the same as the state of the last update
@@ -1876,6 +1878,7 @@ main(){
 		# link the stylesheet based on the chosen theme
 		if [ ! -f /etc/mms/theme.cfg ];then
 			echo "default.css" > "/etc/mms/theme.cfg"
+			chown www-data:www-data "/etc/mms/theme.cfg"
 		fi
 		# load the chosen theme
 		theme=$(cat "/etc/mms/theme.cfg")

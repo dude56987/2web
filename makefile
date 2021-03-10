@@ -93,6 +93,7 @@ build-deb:
 	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/iptv2web/*.d/
+	chown -R www-data:www-data debian/etc/mms/
 	# copy update scripts to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web

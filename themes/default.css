@@ -9,6 +9,10 @@
 	--highlightBorder: lightgray;
 	--staticBackground: repeating-radial-gradient(black, white 0.001%, black 0.001%);
 }
+hr{
+	visiblity: hidden;
+	border-width: 0px;
+}
 html{
 	background-size: 100vw;
 	background-color: var(--solidBackground);
@@ -39,8 +43,8 @@ html{
 	border-size: 4px;
 }
 .channelLink:hover {
-	background-color: green;
-	color: white;
+	background-color: var(--highlightBackground);
+	color: var(--highlightText);
 }
 .indexLink{
 	color: var(--textColor);
@@ -521,9 +525,7 @@ ol{
 }
 .showPageEpisode img{
 	width: 100%;
-	/*
-	height: 50%;
-	*/
+	height: 4em;
 	background-color: white;
 	background-image: var(--staticBackground);
 }

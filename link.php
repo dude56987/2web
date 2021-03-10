@@ -49,7 +49,7 @@ For when you need more that the web player can handle. This help section defines
 	</p>
 	<p>
 	On android you can hold the button and "use open with external app" from the popup
-	menu to play the link with VLC.
+	menu to play the link with <a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
 	</p>
 	<p>
 	Some content can still not be played with web player technology so if anything refuses
@@ -68,8 +68,11 @@ For when you need more that the web player can handle. This help section defines
 
 	<h3 id="android_live">Android Live</h3>
 	<p>
-	There are lots of apps that would allow you to use iptv on android. Simplest is VLC.
-	Open the Link below to with VLC to view all live channels as a playlist.
+	There are lots of apps that would allow you to use iptv on android. Simplest is
+	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
+	Open the Link below to with
+	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
+	to view all live channels as a playlist.
 	</p>
 	<?PHP
 	echo '<a class="button" href="/kodi/channels.m3u">Link</a>';
@@ -83,7 +86,9 @@ For when you need more that the web player can handle. This help section defines
 	echo'<a class="button" href="http://'.gethostname().'.local:444/kodi/channels_raw.m3u">RAW Link</a>';
 ?>
 	<p>
-	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with VLC in android locally it will play the feeds directly from the network to you phone.
+	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
+	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
+	in android locally it will play the feeds directly from the network to you phone.
 	</p>
 
 	<h3 id="android_ondemand">Android On-Demand</h3>
@@ -189,6 +194,7 @@ For when you need more that the web player can handle. This help section defines
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
 			<li><a href="#desktop_hard_links">Hard links</a></li>
 			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
+			<li><a href="#desktop_install_VLC">Install Kodi</a></li>
 		</ul>
 	</div>
 
@@ -205,10 +211,14 @@ For when you need more that the web player can handle. This help section defines
 	<p>
 		You could install kodi on your desktop computer and link it to the media collection on this server.
 	</p>
+	<h3 id="desktop_install_VLC">Install VLC</h3>
 	<div>
-		<a class='button' href='https://kodi.tv/download'>
-			Download and install kodi
+		<a class='button' href='https://www.videolan.org/vlc/'>
+			Install VLC for your desktop computer.
 		</a>
+		<p>
+			If you need a desktop player that will play any of the "Hard Link" buttons on the website. You can install VLC for almost any computing device (windows/mac/Linux/android/ios/BSD/chromeos).
+		</p>
 	</div>
 </div>
 <?PHP

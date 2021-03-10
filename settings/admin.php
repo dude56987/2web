@@ -13,6 +13,9 @@ include('header.html');
 <div>
 
 <?php
+# enable error reporting
+ini_set("display_errors", 1);
+error_reporting(E_ALL);
 
 # try to process the link to be added
 if (array_key_exists("update",$_POST)){
@@ -193,6 +196,10 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+}else if(array_key_exists("theme",$_POST)){
+	$theme=$_POST["theme"];
+	echo "Changing theme to ".$theme."<br>\n";
+	file_put_contents("/etc/mms/theme.cfg",$theme);
 }
 ?>
 
@@ -203,6 +210,7 @@ if (array_key_exists("update",$_POST)){
 <br>
 
 <a class='button' href='index.html'>Return to Media</a>
+<a class='button' href='system.php'>System Settings</a>
 <a class='button' href='tv.php'>TV Settings</a>
 <a class='button' href='radio.php'>RADIO Settings</a>
 
