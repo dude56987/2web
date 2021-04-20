@@ -306,11 +306,14 @@ processMovie(){
 		echo "[INFO]: videoPath = $videoPath"
 		movieVideoPath="${moviePath//.nfo/$sufix}"
 		echo "[INFO]: movieVideoPath = $videoPath"
+
 		# link the video from the libary to the generated website
 		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/movies/$movieWebPath/$movieWebPath$sufix'"
 		ln -s "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
+
 		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix'"
 		ln -s "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
+
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${moviePath//.nfo}-poster"
 		echo "[INFO]: thumbnail template = $thumbnail"
@@ -923,11 +926,28 @@ processEpisode(){
 		echo "[INFO]: videoPath = $videoPath"
 		episodeVideoPath="${episode//.nfo/$sufix}"
 		echo "[INFO]: episodeVideoPath = $videoPath"
-		# link the video from the libary to the generated website
-		echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
-		ln -s "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-		ln -s "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
+		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
+		if echo "$sufix" | grep --ignore-case "strm";then
+			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+
+			# change the video path into a video id to make it embedable
+			yt_id=${videoPath//*video_id=}
+			echo "[INFO]: yt-id = $yt_id"
+			ytLink="https://youtube.com/watch?v=$yt_id"
+
+			# generate a link to the local caching resolver
+			#resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&link=true"
+			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
+
+			echo "[INFO]: building resolver url for plugin link..."
+			echo "$resolverUrl" > "$tempPath"
+		else
+			# link the video from the libary to the generated website
+			echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
+			ln -s "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			ln -s "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+		fi
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
 		echo "[INFO]: thumbnail template = $thumbnail"
@@ -1867,6 +1887,7 @@ main(){
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
+		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		# link the randomFanart.php script
 		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
