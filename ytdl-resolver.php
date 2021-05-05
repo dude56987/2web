@@ -1,54 +1,196 @@
 <?PHP
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
-# check if the cache is over full
-//$cleanCommand = '/usr/bin/nohup /usr/bin/sem --retries 10 --no-notice --ungroup --jobs 3 --id downloadQueue ';
-//$cleanCommand = 'find RESOLVER-CACHE/ -type f -mtime +7 -delete';
-//$cleanOutput = shell_exec($cleanCommand);
+################################################################################
 ################################################################################
 # force debugging
 #$_GET['debug']='true';
+ini_set('display_errors',1);
+ini_set('display_startup_errors',1);
+error_reporting(E_ALL);
 ################################################################################
-if (array_key_exists("debug",$_GET)){
-	echo "[DEBUG]: cleanCommand = ".$cleanCommand."<br>";
-	echo "[DEBUG]: cleanOutput = ".$cleanOutput."<br>";
-	echo '<hr>';
-	echo '/usr/local/bin/youtube-dl -j '.$_GET['url']."<br>\n";
+function debug($message){
+	if (array_key_exists("debug",$_GET)){
+		echo "[DEBUG]: ".$message;
+		ob_flush();
+		flush();
+		return true;
+	}else{
+		return false;
+	}
+}
+################################################################################
+function cacheUrl($sum,$videoLink){
+	################################################################################
+	// if the cache flag has been set to true then download the file and play it from the cache
+	debug("Build the command<br>");
+	//$command = '/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
+	//$command = '/usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
+	$command = 'echo "';
+	// add the download to the cache with the processing queue
+	if (file_exists("/usr/local/bin/youtube-dl")){
+		debug("PIP version of youtube-dl found<br>");
+		$command = $command."/usr/local/bin/youtube-dl";
+		//$command = $command." '/usr/local/bin/youtube-dl";
+		//$command = "/usr/local/bin/youtube-dl";
+	} else {
+		$command = $command."youtube-dl";
+		//$command = $command." 'youtube-dl";
+		//$command = "youtube-dl";
+	}
+	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
+	//$command = $command." --continue --embed-subs --no-mtime --no-part ";
+	$command = $command." --continue --write-info-json --all-subs";
+	$command = $command."	--sub-format srt --embed-subs --no-mtime ";
+	# TODO: add .srt subtitle dowloads
+	if (array_key_exists("res",$_GET)){
+		if($_GET["res"] == "HD"){
+			$command = $command." -f best --recode-video mp4 ";
+		} else if ($_GET["res"] == "SD") {
+			$command = $command." -f worst --recode-video mp4 ";
+		}
+	} else {
+		# default option in youtube-dl is SD
+		$command = $command." -f worst --recode-video mp4 ";
+	}
+	# complete the command with the paths
+	$command = $command."-o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
+	//$command = $command." | at -q b now";
+	//$command = $command." && ln -sf '".$sum.".mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
+	$command = $command." && ln -sf 'BASEBUMP-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
+	# allow setting of batch processing of cached links
+	if (array_key_exists("batch",$_GET)){
+		if ($_GET["batch"] == "true") {
+			$command = $command."| /usr/bin/at -q b now";
+		}else{
+			$command = $command."| /usr/bin/at now";
+		}
+	}else{
+		$command = $command."| /usr/bin/at now";
+	}
+	# add end quote to sem command
+	//$command = $command.'"';
+	# launch the command to start downloading to the cache
+	//debug("Launch the command '".$command."'<br>");
+	# ignore aborting the connection this should run until it finishes
+	//ignore_user_abort(true);
+	# launch the parallel process
+	//popen($command);
+	# fork the process with "at" scheduler command
+	runShellCommand($command);
+	if ($_GET["batch"] == "true") {
+		# exit connection after adding batch process to queue
+		exit;
+	}
+}
+################################################################################
+function runExternalProc($command){
+	$client= new GearmanClient();
+	$client->addServer();
+	$client->addFunction();
+}
+################################################################################
+function runShellCommand($command){
+	if (array_key_exists("debug",$_GET)){
+		//echo 'Running command %echo "'.$command.'" | at now<br>';
+		echo 'Running command %'.$command.'<br>';
+	}
+	################################################################################
+	//exec($command);
+	//$output=shell_exec('echo "'.$command.'" | at now >> RESOLVER-CACHE/resolver.log');
+	$output=shell_exec($command);
+	debug("OUTPUT=".$output."<br>");
+}
+################################################################################
+function buildBump($sum){
+	$sum="BASEBUMP";
+	################################################################################
+	if ( ! file_exists("RESOLVER-CACHE/baseBump.png")){
+		# build the base bump image if it does not exist yet, this is the longest part of the process, so cache it
+		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --retries 0 --jobs 1 --id thumbQueue ';
+		//$command = "";
+		$command = $command."/usr/bin/convert -size 400x200 plasma:green-black \"RESOLVER-CACHE/baseBump.png\"";
+		################################################################################
+		runShellCommand($command);
+	}
+	################################################################################
+	if ( ! file_exists("RESOLVER-CACHE/".$sum.".png")){
+		# create the bump as a thumbnail of the downloading video
+		$sourceUrl="RESOLVER-CACHE/".$sum.".mp4.part";
+		# create thumbnail from downloading video
+		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
+		//$command = "";
+		if (file_exists("RESOLVER-CACHE/".$sum.".mp4")){
+			$command = $command."/usr/bin/ffmpeg -y -ss 1 -i 'RESOLVER-CACHE/".$sum.".mp4 -vframes 1 RESOLVER-CACHE/".$sum.".png";
+		}else{
+			$command = $command."/usr/bin/ffmpeg -y -ss 1 -i 'RESOLVER-CACHE/".$sum.".mp4.part -vframes 1 RESOLVER-CACHE/".$sum.".png";
+		}
+		//debug("[DEBUG]: running command '".$command."'<br>");
+		shell_exec($command);
+	}
+	if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.png")){
+		################################################################################
+		# compose the webpage over the unique pattern  and overwrite the webpage.png
+		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
+		//$command = "";
+		$command = $command."/usr/bin/composite -dissolve 70 -gravity center 'RESOLVER-CACHE/".$sum.".png' 'RESOLVER-CACHE/baseBump.png' -alpha Set 'RESOLVER-CACHE/".$sum."-bump.png'";
+		runShellCommand($command);
+	}
+	################################################################################
+	# build the loading image if it does not exist yet
+	if ( ! file_exists("RESOLVER-CACHE/".$sum.".png")){
+		# convert thumbnail into video bump
+		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
+		//$command = "";
+		$command = $command."/usr/bin/convert 'RESOLVER-CACHE/baseBump.png' -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 300x100 -gravity center caption:'Loading...' -composite 'RESOLVER-CACHE/".$sum.".png'";
+		runShellCommand($command);
+	}
+	if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
+		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
+		//$command = "";
+		$command = $command."/usr/bin/ffmpeg -loop 1 -i RESOLVER-CACHE/".$sum."-bump.png -r 1 -t 10 RESOLVER-CACHE/".$sum."-bump.mp4";
+		runShellCommand($command);
+	}
+}
+################################################################################
+function redirect($url){
+	if (array_key_exists("debug",$_GET)){
+		echo "<hr>";
+		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
+		echo '<div>';
+		echo '<video controls>';
+		echo '<source src="'.$url.'" type="video/mp4">';
+		echo '</video>';
+		echo '</div>';
+		echo "<hr>";
+		ob_flush();
+		flush();
+		exit();
+	}else{
+		header('Location: '.$url);
+		exit();
+	}
 }
 ################################################################################
 if (array_key_exists("url",$_GET)){
 	$videoLink = $_GET['url'];
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: URL is ".$videoLink."<br>";
-	}
+	debug("URL is ".$videoLink."<br>");
 	# remove parenthesis from video link if they exist
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: Cleaning link ".$videoLink."<br>";
-	}
+	debug("Cleaning link ".$videoLink."<br>");
 	while(strpos($videoLink,'"')){
-		if (array_key_exists("debug",$_GET)){
-			echo "[DEBUG]: Cleaning link ".$videoLink."<br>";
-		}
+		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
 		$videoLink = preg_replace('"','',$videoLink);
 	}
 	while(strpos($videoLink,"'")){
-		if (array_key_exists("debug",$_GET)){
-			echo "[DEBUG]: Cleaning link ".$videoLink."<br>";
-		}
+		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
 		$videoLink = preg_replace("'","",$videoLink);
 	}
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: Cleaning link ".$videoLink."<br>";
-	}
-	$videoLink = '"'.$videoLink.'"';
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: Cleaning link ".$videoLink."<br>";
-	}
+	debug("Cleaning link ".$videoLink."<br>");
+	//$videoLink = '"'.$videoLink.'"';
+	debug("Cleaning link ".$videoLink."<br>");
 	# create the md5sum of the file
 	$sum = md5($videoLink);
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: MD5SUM is ".$sum."<br>";
-	}
+	debug("[DEBUG]: MD5SUM is ".$sum."<br>");
 	# newgrounds will resolve properly with only the link, so resolve but do not cache
 	if (strpos($videoLink,"newgrounds.com")){
 		# if the link value is already set do NOT override the setting
@@ -57,26 +199,14 @@ if (array_key_exists("url",$_GET)){
 			$_GET['link']=true;
 		}
 	}
+	if (strpos($videoLink,"libsyn.com")){
+		if (!array_key_exists("link",$_GET)){
+			$_GET['link']=true;
+		}
+	}
 	// check for the cache flag
 	if (array_key_exists("link",$_GET)){
-		if (array_key_exists("debug",$_GET)){
-			echo "[DEBUG]: linking to video ".$videoLink."<br>";
-		}
-		################################################################################
-		# build a unique port to the stream, limit the streams to a numberA
-		################################################################################
-		# run the http server streaming server
-		$command = '/usr/bin/nohup /usr/bin/sem --retries 1 --jobs 1 --id streamQueue ';
-		$command = $command.'/usr/bin/timeout 40000 ';
-		$command = $command.'/usr/local/bin/streamlink --player-external-http --player-external-http-port 4444 '.$videoLink.' worst';
-		if (array_key_exists("debug",$_GET)){
-			echo "[DEBUG]: launching streaming server with command ".$command."<br>";
-		}
-		# launch the stream server
-		$output = shell_exec($command);
-		# redirect to streamlink stream server restream
-		header('Location: http://'.hostname().'.local:4444');
-		exit();
+		debug("[DEBUG]: linking to video ".$videoLink."<br>");
 		################################################################################
 		# Get a direct link to the video bypassing the cache.
 		# This works on most sites, except youtube.
@@ -85,7 +215,7 @@ if (array_key_exists("url",$_GET)){
 		if ($output == null){
 			// the url was not able to resolve
 			//echo "The URL '".$_GET['url']."' was unable to resolve...";
-			echo "The URL was unable to resolve...<br>";
+			debug("The URL was unable to resolve...<br>");
 		}else{
 			// output is the resolved url
 			$url = $output;
@@ -96,180 +226,71 @@ if (array_key_exists("url",$_GET)){
 				echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
 				exit();
 			}else{
-				header('Location: '.$url);
-				exit();
+				redirect($url);
 			}
 		}
 	}else{
 		################################################################################
 		# By default use the cache for video playback, this works on everything
 		################################################################################
-		echo "[DEBUG]: Creating resolver cache<br>";
+		debug("Creating resolver cache<br>");
 		if ( ! file_exists("RESOLVER-CACHE/")){
 			mkdir("RESOLVER-CACHE/");
 		}
 		// craft the url to the cache link
 		$url = "RESOLVER-CACHE/".$sum.".mp4";
-		echo "[DEBUG]: Checking path ".$url."<br>";
+		debug("Checking path ".$url."<br>");
 		################################################################################
 		if (file_exists($url)){
-			if(file_exists("RESOLVER-CACHE/".$sum.".part")){
-				# this means the file is still downloading wait
-				sleep(1);
-				header('Location: http://'.gethostname().'.local:444/ytdl-resolver.php?url='.$videoLink);
-				exit();
-			}
-			# add the webserver address to the local url
-			# use mdns .local name resolution
-			$url = "http://".gethostname().".local:444/".$url;
-			echo "[DEBUG]: previous file download exists<br>";
-			if (array_key_exists("debug",$_GET)){
-				echo "<hr>";
-				echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-				echo '<div>';
-				echo '<video>';
-				echo '<source src="'.$url.'">';
-				echo '</video>';
-				echo '</div>';
-				exit();
-			}else{
-				header('Location: '.$url);
-				exit();
-			}
-		################################################################################
+			# touch the file to update the mtime and delay cache removal
+			touch($url);
+			redirect($url);
 		} else {
-			echo "[DEBUG]: No file exists in the cache<br>";
-			echo "[DEBUG]: cache is set<br>";
-			// if the cache flag has been set to true then download the file and play it from the cache
-			// build the command
-			$command = '/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 2 --id downloadQueue ';
-			// add the download to the cache with the processing queue
-			if (file_exists("/usr/local/bin/youtube-dl")){
-				echo "[DEBUG]: PIP version of youtube-dl found<br>";
-				$command = $command." '/usr/local/bin/youtube-dl";
-			} else {
-				$command = $command." 'youtube-dl";
-			}
-			if (array_key_exists("res",$_GET)){
-				if($_GET["res"] == "HD"){
-					$command = $command." -f best --recode-video mp4 ";
-				} else if ($_GET["res"] == "SD") {
-					$command = $command." -f worst --recode-video mp4 ";
+			debug("No file exists in the cache<br>");
+			debug("cache is set<br>");
+			if( ! file_exists("RESOLVER-CACHE/".$sum.".mp4.part")){
+				# build the m3u file before caching the video it is part of the buffering process
+				if(! file_exists("RESOLVER-CACHE/".$sum.".m3u")){
+					# link to the default bump to the bump that will be removed when download is finished
+					symlink("BASEBUMP-bump.mp4",("RESOLVER-CACHE/".$sum."-bump.mp4"));
+					# build a m3u playlist that plays the bump and then the video
+					$playlist=fopen("RESOLVER-CACHE/".$sum.".m3u", "w");
+					# write the fileData
+					for ($index=0;$index < 30;$index+=1){
+						# write 20 lines of the bump
+						fwrite($playlist,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
+					}
+					fwrite($playlist,"RESOLVER-CACHE/".$sum.".mp4\n");
+					fclose($playlist);
 				}
-			} else {
-				# default option in youtube-dl is SD
-				$command = $command." -f worst --recode-video mp4 ";
+				# if no part file exists the caching command has not yet started add it to the queue
+				cacheUrl($sum,$videoLink);
+				//buildBump($sum);
+				# sleep one second after forking the process
+				sleep(2);
 			}
-			# complete the command with the paths
-			$command = $command.'-o "RESOLVER-CACHE/'.$sum.'.mp4" -c '.$videoLink."'";
-			# launch the command to start downloading to the cache
-			shell_exec($command);
-			#####################################################
-			# delay resolution untill file is finished downloading
-			$tempSum=md5();
-			$syncSeconds=0;
-			while($syncSeconds < 200){
-				sleep(1);
-				# if the file has not changed in the last second
-				if(md5("RESOLVER-CACHE/".$sum.".mp4") == $tempSum){
-					$syncSeconds += 1;
-				}else{
-					$syncSeconds = 0;
-				}
-			}
-			#####################################################
-			header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
-			exit();
-			#####################################################
-			# use ffmpeg to stream playback of the downloading file from the cache
-			# THIS IS ONLY NESSASSARY because kodi will not play video from apache
-			# correctly when the file is not complete downloading but will play correctly
-			# when streamed though ffmpeg
-			#####################################################
-			# build a command to stream the downloading video over udp with ffmpeg
-			$command = '/usr/bin/nohup /usr/bin/sem --retries 1 --jobs 1 --id streamQueue ';
-			$command = $command.'/usr/bin/ffmpeg -i RESOLVER-CACHE/'.$sum.'.mp4';
-			$command = $command.' -tune zerolatency -r 30 -preset ultrafast';
-			$command = $command.' -vcodec hevc -f hevc "udp://'.hostname().'.local:444/stream"';
-			shell_exec($command);
-			# redirect to the generated stream
-			header('Location: udp://'.gethostname().'.local:444/stream');
-			exit();
-			#####################################################
-			header('Location: http://'.gethostname().'.local:444/ytdl-resolver.php?link=true&url='.$videoLink);
-			exit();
-			#####################################################
-			// sleep 10 seconds after starting download
-			//sleep(5);
-			// wait for a file to be available to stream then redirect to it
-			# read as writing method
-			#####################################################
-			$filelength=0;
-			$activeChunk=0;
-			header('Content-Type: video/mp4');
-			$matchedTimes=0;
-			$failWait=0;
-			$tempFileSize=filesize('RESOLVER-CACHE/'.$sum.'.mp4');
-			#####################################################
-			# load the fileData
-			#####################################################
-			$handle=fopen(('RESOLVER-CACHE/'.$sum.'.mp4'),'rb');
-			$fileData=array();
-			while (!feof($handle)){
-				# append the fileData array with the next chunk
-				$fileData[]=fread($handle,64);
-			}
-			fclose($handle);
-			#####################################################
-			# start the read loop
-			#####################################################
+			//}else{
+			//	# resolve to the bump if the .part file exists
+			//	header('Location: RESOLVER-CACHE/BASEBUMP-bump.mp4');
+			//	exit();
+			//}
+			# wait for either the bump or the file to be downloaded and redirect
 			while(true){
-				#####################################################
-				# read the active chunk
-				#####################################################
-				echo $fileData[($activeChunk-1)];
-				# flush the buffer after writing
-				ob_flush();
-				flush();
-				#####################################################
-				# move the read head one move ahead
-				#####################################################
-				$activeChunk += 1;
-				$tempFileSize=filesize('RESOLVER-CACHE/'.$sum.'.mp4');
-				# if the read head is past the length of the file data
-				if ($tempFileSize > $fileSize){
-					#####################################################
-					# update the file data since the read head has nothing left
-					#####################################################
-					# read the file and append the output if the file changes
-					$handle=fopen(('RESOLVER-CACHE/'.$sum.'.mp4'),'rb');
-					$fileData=array();
-					while (!feof($handle)){
-						# append the fileData array with the next chunk
-						$fileData[]=fread($handle,64);
-					}
-					fclose($handle);
-					#####################################################
-					# check the number of chunks read from the file
-					#####################################################
-					$tempFileSize=filesize('RESOLVER-CACHE/'.$sum.'.mp4');
-
-					if ($failWait > 100){
-						#####################################################
-						# if the file parity does not change for 100 seconds exit
-						#####################################################
-						exit();
-					}else{
-						#####################################################
-						# sleep a second and increment failwait
-						#####################################################
-						sleep(1);
-						$failWait += 1;
-						# reset the chunk
-						#$activeChunk -= 1;
-					}
-				}else{
-					$failWait=0;
+				sleep(2);
+				if(file_exists("RESOLVER-CACHE/".$sum.".mp4")){
+					//redirect('http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
+					redirect('RESOLVER-CACHE/'.$sum.'.mp4');
+					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
+					//exit();
+				//}else if(file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
+				}else if(file_exists("RESOLVER-CACHE/BASEBUMP-bump.mp4")){
+					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'-bump.mp4');
+					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/BASEBUMP-bump.mp4');
+					//header('Location: RESOLVER-CACHE/BASEBUMP-bump.mp4');
+					//exit();
+					# redirect to the playlist
+					redirect('RESOLVER-CACHE/'.$sum.'.m3u');
+					//redirect('RESOLVER-CACHE/BASEBUMP-bump.mp4');
 				}
 			}
 		}

@@ -96,6 +96,7 @@ build-deb:
 	chown -R www-data:www-data debian/etc/mms/
 	# copy update scripts to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web
+	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	# copy over default stylesheet
 	cp themes/*.css debian/usr/share/mms/themes/
@@ -110,6 +111,7 @@ build-deb:
 	cp link.php debian/usr/share/mms/link.php
 	# copy the resolvers
 	cp ytdl-resolver.php debian/usr/share/mms/
+	cp stream.php debian/usr/share/mms/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/

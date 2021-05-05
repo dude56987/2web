@@ -65,7 +65,7 @@ function validString(){
 			echo "[WARNING]:string is a NULL value"
 		fi
 		return 2
-	elif [ 1 -ge $(expr length "$stringToCheck") ];then
+	elif [ 1 -ge "$(expr length "$stringToCheck")" ];then
 		# this means the string is only one character
 		if ! echo "$@" | grep -q "\-q";then
 			echo "[WARNING]:String length is less than one"
@@ -179,7 +179,7 @@ processMovie(){
 				# this means they are the same so no update needs run
 				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
 				echo "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$movieTitle" "$logPagePath"
+				addToLog "INFO" "Movie unchanged" "$movieTitle, $currentSum" "$logPagePath"
 				return
 			else
 				echo "[INFO]: States are diffrent, updating $movieTitle..."
@@ -613,8 +613,9 @@ processMovie(){
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
 	else
-			echo "[WARNING]: The file '$moviePath' could not be found!"
+		echo "[WARNING]: The file '$moviePath' could not be found!"
 	fi
+	# update the path sum after successfull
 	touch "$webDirectory/movies/$movieWebPath/"
 	touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
@@ -800,6 +801,12 @@ processEpisode(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.html"
+		# check the episode has not already been processed
+		if [ -f "$episodePagePath" ];then
+			# if this episode has already been processed by the system then skip processeing it with this function
+			# - this also prevents caching below done for new cacheable videos
+			return
+		fi
 		echo "[INFO]: Episode page path = '$episodePagePath'"
 		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
 		mkdir -p "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
@@ -937,9 +944,30 @@ processEpisode(){
 			ytLink="https://youtube.com/watch?v=$yt_id"
 
 			# generate a link to the local caching resolver
-			#resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&link=true"
-			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
-
+			# - cache new links in batch processing mode
+			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?&url=\"$ytLink\""
+			# split up airdate data to check if caching should be done
+			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
+			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
+			echo "[DEBUG]:  Checking if file was released in the last month"
+			echo "[DEBUG]:  aired year $airedYear == current year $(date +"%Y")"
+			echo "[DEBUG]:  aired month $airedMonth == current month $(date +"%m")"
+			# if the airdate was this year
+			if [ $airedYear -eq "$(date +"%Y")" ];then
+				# if the airdate was this month
+				if [ $airedMonth -eq "$(date +"%m")" ];then
+					# cache the video if it is from this month
+					# - only newly created videos get this far into the process to be cached
+					echo "[DEBUG]:  Caching file..."
+					curl "$resolverUrl&batch=true" > /dev/null
+				fi
+			fi
+			#if [ "$episodeAired" == "$(date +"%Y-%m-%d")" ];then
+			#	echo "[INFO]: airdate $episodeAired == todays date $(date +'%Y-%m-%d') ]"
+			#	# if the episode aired today cache the episode
+			#	# - timeout will stop the download after 0.1 seconds
+			#	timeout 0.1 curl "$resolverUrl" > /dev/null
+			#fi
 			echo "[INFO]: building resolver url for plugin link..."
 			echo "$resolverUrl" > "$tempPath"
 		else
@@ -964,7 +992,6 @@ processEpisode(){
 			yt_id=${videoPath//*video_id=}
 			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
-
 			{
 				# embed the youtube player
 				echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
@@ -973,6 +1000,14 @@ processEpisode(){
 				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
 				echo "allowfullscreen>"
 				echo "</iframe>"
+			} >> "$episodePagePath"
+			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
+			#{
+			#	echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls>"
+			#	echo "<source src='$fullRedirect' type='video/mp4'>"
+			#	echo "</video>"
+			#} >> "$episodePagePath"
+			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
@@ -1076,6 +1111,8 @@ processShow(){
 	webDirectory=$4
 	logPagePath="$webDirectory/log.html"
 	showLogPath="$webDirectory/shows/$showTitle/log.index"
+	# create the path sum for reconizing the libary path
+	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
 	# create directory
 	echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
@@ -1085,8 +1122,6 @@ processShow(){
 	# check show state before processing
 	if [ -f "$webDirectory/shows/$showTitle/state_$pathSum.cfg" ];then
 		# a existing state was found
-		# create the path sum for reconizing the libary path
-		pathSum=$(echo "$show" | md5sum | cut -d' ' -f1)
 		currentSum=$(cat "$webDirectory/shows/$showTitle/state_$pathSum.cfg")
 		libarySum=$(getDirSum "$show")
 		# if the current state is the same as the state of the last update
@@ -1454,6 +1489,7 @@ buildHomePage(){
 		fi
 		webSize=$(du -sh "$webDirectory" | cut -f1)
 		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
+		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		#write a new stats index file
 		{
 			if [ "$totalShows" -gt 0 ];then
@@ -1482,6 +1518,9 @@ buildHomePage(){
 			echo "</span>"
 			echo "<span>"
 			echo "	Media:$mediaSize"
+			echo "</span>"
+			echo "<span>"
+			echo "	Free:$freeSpace"
 			echo "</span>"
 		} > "$webDirectory/stats.index"
 	fi
@@ -1888,6 +1927,64 @@ main(){
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+		################################################################################
+		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
+			# build the cache directory if none exists
+			mkdir -p "$webDirectory/RESOLVER-CACHE/"
+			# set permissions
+			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		fi
+		# generate the bump for the resolver cache if a file can not be downloaded
+		if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4" ];then
+			# build the base bump image if it does not exist yet, this is the longest part of the process, so cache it
+			convert -size 800x600 plasma:cyan-white "$webDirectory/RESOLVER-CACHE/baseBump.png"
+			# build frames of animation
+			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[=---]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[-=--]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[--=-]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[---=]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
+			# use links for last frames of the loop
+			ln -s  "BASEBUMP_03.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
+			ln -s  "BASEBUMP_02.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
+			# combine animation together
+			ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 4 -t 30 "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
+			chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		else
+			# update the modified time so the bump video generated will not be cleaned with the cache
+			touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.png"
+			# set permissions in case user set file has been used
+			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
+		fi
+		if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4" ];then
+			#
+			convert -size 800x600 plasma:green-lightgreen "$webDirectory/RESOLVER-CACHE/baseSkip.png"
+			#
+			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[====]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_01.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[----]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_02.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[====]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_03.png"
+			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[----]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_04.png"
+			# combine
+			ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_%02d.png" -r 4 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
+			#ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP.png" -r 1 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
+			# set permissions on all generated files
+			chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		else
+			# update the modified time so the bump video generated will not be cleaned with the cache
+			touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.png"
+			# set permissions in case user set file has been used
+			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
+		fi
+		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
+		if [ -f "/etc/at.deny" ];then
+			# the file exists check for the www-data line
+			if grep -q "www-data" "/etc/at.deny";then
+				# remove www-data from the deny file for scheduler
+				data=$(grep --invert-match "www-data" "/etc/at.deny")
+				echo "$data" > "/etc/at.deny"
+			fi
+		fi
+		# install the php streaming script
+		ln -s "/usr/share/mms/stream.php" "$webDirectory/stream.php"
 		# link the randomFanart.php script
 		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
@@ -1897,7 +1994,7 @@ main(){
 		ln -s "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
 		ln -s "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
 		# link the stylesheet based on the chosen theme
-		if [ ! -f /etc/mms/theme.cfg ];then
+		if ! [ -f /etc/mms/theme.cfg ];then
 			echo "default.css" > "/etc/mms/theme.cfg"
 			chown www-data:www-data "/etc/mms/theme.cfg"
 		fi
@@ -2099,12 +2196,11 @@ main(){
 			#	"$webDirectory/background.png"
 			#echo "[DEBUG]: montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles '$webDirectory/background.png'"
 			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles "$webDirectory/background.png"
-
 			scanForRandomBackgrounds "$webDirectory"
 		done
+		# add the end to the log, add the jump to top button and finish out the html
+		addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 		{
-			# add the end to the log, add the jump to top button and finish out the html
-			addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 			echo "</table>"
 			# add footer
 			cat "$headerPagePath"

@@ -1,3 +1,2 @@
 # restart apache to load up the site
 apache2ctl restart
-touch /etc/iptv2web/blockedLinks.cfg
