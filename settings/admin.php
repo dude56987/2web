@@ -114,6 +114,19 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+}else if (array_key_exists("addLibary",$_POST)){
+	$link=$_POST['addLibary'];
+	echo "Running addLibary on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/nfo2web/libaries.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the libary path to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding link ".$link."<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
 	echo "Running moveToBottom on link ".$link."<br>\n";
@@ -145,6 +158,17 @@ if (array_key_exists("update",$_POST)){
 	echo "Running removeLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing link ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+}else if(array_key_exists("removeLibary",$_POST)){
+	$link=$_POST['removeLibary'];
+	echo "Running removeLibary on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/nfo2web/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing link ".$link."<br>\n";

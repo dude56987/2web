@@ -18,6 +18,8 @@ include("header.html");
 	<a class='button' href='system.php'>SYSTEM</a>
 	<a class='button' href='tv.php'>TV</a>
 	<a class='button' href='radio.php'>RADIO</a>
+	<a class='button' href='nfo.php'>NFO</a>
+	<a class='button' href='comics.php'>COMICS</a>
 </div>
 
 <div class='inputCard'>

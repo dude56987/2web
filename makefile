@@ -69,7 +69,7 @@ build-deb:
 	mkdir -p debian/etc/mms;
 	mkdir -p debian/etc/mms/themes;
 	mkdir -p debian/etc/nfo2web/;
-	mkdir -p debian/etc/nfo2web/sources.d/;
+	mkdir -p debian/etc/nfo2web/libaries.d/;
 	mkdir -p debian/etc/iptv2web/;
 	mkdir -p debian/etc/iptv2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/blockedGroups.d/;
@@ -88,11 +88,13 @@ build-deb:
 	touch debian/etc/iptv2web/radioSources.d/.placeholder
 	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
 	touch debian/etc/nfo2web/.placeholder
-	touch debian/etc/nfo2web/sources.d/.placeholder
+	touch debian/etc/nfo2web/libaries.d/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
 	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/iptv2web/*.d/
+	chown -R www-data:www-data debian/etc/nfo2web/*.d/
+	#chown -R www-data:www-data debian/etc/mms/*.d/
 	chown -R www-data:www-data debian/etc/mms/
 	# copy update scripts to /usr/bin
 	cp nfo2web.sh debian/usr/bin/nfo2web

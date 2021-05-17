@@ -1884,12 +1884,13 @@ main(){
 		# load the libary directory
 		if [ -f /etc/nfo2web/libaries.cfg ];then
 			libaries=$(cat /etc/nfo2web/libaries.cfg)
+			libaries=$(echo "$libaries $(cat /etc/nfo2web/libaries.d/*.cfg)")
 		else
 			mkdir -p /var/cache/nfo2web/libary/
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
 			libaries="/var/cache/nfo2web/libary"
+			libaries=$(echo "$libaries $(cat /etc/nfo2web/libaries.d/*.cfg)")
 		fi
-
 		# the webdirectory is a cache where the generated website is stored
 		if [ -f /etc/nfo2web/web.cfg ];then
 			webDirectory=$(cat /etc/nfo2web/web.cfg)
@@ -1924,6 +1925,8 @@ main(){
 		ln -s "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
 		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
+		ln -s "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
+		ln -s "/usr/share/mms/settings/comic.php" "$webDirectory/comic.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
