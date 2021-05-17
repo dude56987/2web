@@ -1926,7 +1926,8 @@ main(){
 		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
 		ln -s "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
-		ln -s "/usr/share/mms/settings/comic.php" "$webDirectory/comic.php"
+		ln -s "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
+		ln -s "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
@@ -1937,46 +1938,210 @@ main(){
 			# set permissions
 			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
 		fi
+		# build bumps from youtube videos
+		# - this should load a /etc/mms/bumps.cfg file
+		if ! [ -f "/etc/mms/bumps.cfg" ];then
+			{
+				echo "# this is a comment"
+				echo "# - To add more bumps to randomly choose from"
+				echo "#   add links to videos in this file"
+				echo "# gold particles"
+				echo "https://www.youtube.com/watch?v=aNVviTECNM0"
+				echo "# spiral of color bubbles"
+				echo "https://www.youtube.com/watch?v=vyMUhgMeJ8A"
+				echo "# spiral of color ridges"
+				echo "https://www.youtube.com/watch?v=97jRHEj0HZw"
+				echo "# blue lavalamp river "
+				echo "https://www.youtube.com/watch?v=XR-e5I0QkcY"
+				echo "# fall down the hypno hole"
+				echo "https://www.youtube.com/watch?v=oTXoUgjpHFs"
+				echo "# dark ambient swirl"
+				echo "https://www.youtube.com/watch?v=lwbjQUY_xd0"
+			} >> "/etc/mms/bumps.cfg"
+		fi
+		bumpConfig=$(grep -v "^#" /etc/mms/bumps.cfg)
+		# - each non # entry in the file should be a web link to a loop video that
+		#   can have the first 30 seconds cut off for the bump
+		# - the resolver will pick random bumps from the $webdirectory/bumps/ directory
+		# - users can add bump and skip files directly by naming them anything
+		#   with -bump.mp4 as the last part of the filename "*-bump.mp4"
+		# - bump and skip files generated from remote web links will be listed
+		#   by the md5sum of the web link e.g. ":LIU435435LDKJD4389DLKJDFJ-bump.mp4"
+		if ! [ -d "$webDirectory/bumps/" ];then
+			mkdir -p "$webDirectory/bumps/"
+		fi
+		echo "$bumpConfig" | while read bumpLink;do
+			# create sum for link
+			bumpLinkSum=$(echo "$bumpLink" | md5sum | cut -d' ' -f1)
+			# read each link in the link config and check if it has been downloaded
+			if ! [ -f "$webDirectory/bumps/$bumpLinkSum-bump.mp4" ];then
+				# download the file as the base for the bump
+				/usr/local/bin/youtube-dl "$bumpLink" --format "worst" --recode-video mp4 -o "$webDirectory/bumps/$bumpLinkSum-BASE.mp4"
+				# the bump has not been created from the base, cut the video with ffmpeg
+				ffmpeg -i "$webDirectory/bumps/$bumpLinkSum-BASE.mp4" -to 30 -codec copy "$webDirectory/bumps/$bumpLinkSum-bump.mp4"
+				# set permissions in case user set file has been used
+				chown www-data:www-data "$webDirectory/bumps/$bumpLinkSum-bump.mp4"
+				ffmpeg -i "$webDirectory/bumps/$bumpLinkSum-BASE.mp4" -to 1 -codec copy "$webDirectory/bumps/$bumpLinkSum-skip.mp4"
+				chown www-data:www-data "$webDirectory/bumps/$bumpLinkSum-skip.mp4"
+				# remove the base bump since it is no longer nessassary
+				rm -v "$webDirectory/bumps/$bumpLinkSum-BASE.mp4"
+			fi
+		done
 		# generate the bump for the resolver cache if a file can not be downloaded
-		if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4" ];then
+		#if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4" ];then
 			# build the base bump image if it does not exist yet, this is the longest part of the process, so cache it
-			convert -size 800x600 plasma:cyan-white "$webDirectory/RESOLVER-CACHE/baseBump.png"
+			#convert -size 800x600 plasma:cyan-white "$webDirectory/RESOLVER-CACHE/baseBump.png"
 			# build frames of animation
-			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[=---]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[-=--]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[--=-]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[---=]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
+			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[=   ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
+			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[ =  ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
+			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[  = ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
+			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[   =]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
 			# use links for last frames of the loop
-			ln -s  "BASEBUMP_03.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
-			ln -s  "BASEBUMP_02.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
-			# combine animation together
-			ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 4 -t 30 "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
-			chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-		else
-			# update the modified time so the bump video generated will not be cleaned with the cache
-			touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.png"
-			# set permissions in case user set file has been used
-			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
-		fi
-		if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4" ];then
-			#
-			convert -size 800x600 plasma:green-lightgreen "$webDirectory/RESOLVER-CACHE/baseSkip.png"
-			#
-			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[====]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_01.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[----]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_02.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[====]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_03.png"
-			convert "$webDirectory/RESOLVER-CACHE/baseSkip.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'100%\n[----]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_04.png"
-			# combine
-			ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_%02d.png" -r 4 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
-			#ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP.png" -r 1 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
-			# set permissions on all generated files
-			chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-		else
-			# update the modified time so the bump video generated will not be cleaned with the cache
-			touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.png"
-			# set permissions in case user set file has been used
-			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
-		fi
+			#ln -s  "BASEBUMP_03.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
+			#ln -s  "BASEBUMP_02.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
+		#	#-composite -draw 'circle 100,100 200,800'\
+		#	# frame 1
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF1F"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
+		#	# frame 2
+		#	#-gravity center caption:"▀"\
+		#	#-composite -draw 'circle 100,100 400,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF2E"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
+		#	# frame 3
+		#	#-gravity center caption:"▝"\
+		#	#-composite -draw 'circle 100,100 600,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF3D"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
+		#	# frame 4
+		#	#-gravity center caption:"▐"\
+		#	#-composite -draw 'circle 100,100 800,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF4C"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
+		#	# frame 5
+		#	#-gravity center caption:"▗"\
+		#	#-composite -draw 'circle 100,100 1000,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF4C"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
+		#	# frame 6
+		#	#-gravity center caption:"▃"\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF3D"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
+		#	# frame 7
+		#	#-gravity center caption:"▖"\
+		#	#-composite -draw 'circle 100,100 1400,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF2E"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_07.png"
+		#	# frame 8
+		#	#-gravity center caption:"▌"\
+		#	#-composite -draw 'circle 100,100 1600,800'\
+		#	convert -size 1920x1080 plasma:white-cyan\
+		#		-size 1920x1080 radial-gradient:"#00FF1F"-"rgba(0,0,0,0)" -composite\
+		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
+		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
+		#		-gravity center caption:"Loading..." -composite\
+		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_07.png"
+		#	# combine animation together
+		#	#ffmpeg -y -loop 1 -f image2 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 28 -t 30 -vcodec theora -b:v 128k "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.ogv"
+		#	ffmpeg -y -loop 1 -f image2 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 28 -t 30 -c:v libx264 -preset slow -profile:v high -crf 18 -coder 1 -pix_fmt yuv420p -movflags +faststart -g 30 -bf 2 -c:a aac -b:a 384k -profile:a aac_low "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
+		#	#ffmpeg -i input -c:v libx264 -preset slow -profile:v high -crf 18 -coder 1 -pix_fmt yuv420p -movflags +faststart -g 30 -bf 2 -c:a aac -b:a 384k -profile:a aac_low output
+		#	chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		#else
+		#	# update the modified time so the bump video generated will not be cleaned with the cache
+		#	touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.png"
+		#	# set permissions in case user set file has been used
+		#	chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
+		#fi
+		#if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4" ];then
+		#	#convert -size 800x600 plasma:green-lightgreen "$webDirectory/RESOLVER-CACHE/baseSkip.png"
+		#	# frame 1
+		#	#-gravity center caption:"▘"\
+		#	convert -size 800x600 radial-gradient:"#00FF1F"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_01.png"
+		#	# frame 2
+		#	#-gravity center caption:"▀"\
+		#	convert -size 800x600 radial-gradient:"#00FF2E"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_02.png"
+		#	# frame 3
+		#	#-gravity center caption:"▝"\
+		#	convert -size 800x600 radial-gradient:"#00FF3D"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_03.png"
+		#	# frame 4
+		#	#-gravity center caption:"▐"\
+		#	convert -size 800x600 radial-gradient:"#00FF4C"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_04.png"
+		#	# frame 5
+		#	#-gravity center caption:"▗"\
+		#	convert -size 800x600 radial-gradient:"#00FF4C"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_05.png"
+		#	# frame 6
+		#	#-gravity center caption:"▃"\
+		#	convert -size 800x600 radial-gradient:"#00FF3D"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_06.png"
+		#	# frame 7
+		#	#-gravity center caption:"▖"\
+		#	convert -size 800x600 radial-gradient:"#00FF2E"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_07.png"
+		#	# frame 8
+		#	#-gravity center caption:"▌"\
+		#	convert -size 800x600 radial-gradient:"#00FF1F"-"#000000" -background none\
+		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
+		#		-gravity center caption:""\
+		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_08.png"
+		#	# combine
+		#	ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_%02d.png" -r 8 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
+		#	# set permissions on all generated files
+		#	chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		#else
+		#	# update the modified time so the bump video generated will not be cleaned with the cache
+		#	touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.png"
+		#	# set permissions in case user set file has been used
+		#	chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
+		#fi
+
+
 		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
 		if [ -f "/etc/at.deny" ];then
 			# the file exists check for the www-data line
@@ -2047,21 +2212,26 @@ main(){
 			echo "<a class='button' href='link.php'>"
 			echo "LINK"
 			echo "</a>"
-			#if grep -q "Movies" "$webDirectory/stats.index";then
+			if grep -q "Movies" "$webDirectory/stats.index";then
 				echo "<a class='button' href='movies'>"
 				echo "MOVIES"
 				echo "</a>"
-			#fi
-			#if grep -q "Shows" "$webDirectory/stats.index";then
+			fi
+			if grep -q "Shows" "$webDirectory/stats.index";then
 				echo "<a class='button' href='shows'>"
 				echo "SHOWS"
 				echo "</a>"
-			#fi
-			#if [ -f "$webDirectory/kodi/channels.m3u" ];then
+			fi
+			if [ -f "$webDirectory/kodi/channels.m3u" ];then
 				echo "<a class='button' href='live'>"
 				echo "Live"
 				echo "</a>"
-			#fi
+			fi
+			if [ -d "$webDirectory/comics/" ];then
+				echo "<a class='button' href='comics'>"
+				echo "COMICS"
+				echo "</a>"
+			fi
 			echo "<a class='button' href='log.html'>"
 			echo "LOG"
 			echo "</a>"

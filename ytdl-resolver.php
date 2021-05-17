@@ -56,8 +56,10 @@ function cacheUrl($sum,$videoLink){
 	# complete the command with the paths
 	$command = $command."-o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
 	//$command = $command." | at -q b now";
+	# link to bump sum end
 	//$command = $command." && ln -sf '".$sum.".mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
-	$command = $command." && ln -sf 'BASEBUMP-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
+	//$command = $command." && ln -sf 'BASEBUMP-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
+	$command = $command." && ln -sf '../RESOLVER-CACHE/".$sum."-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
@@ -76,6 +78,8 @@ function cacheUrl($sum,$videoLink){
 	//ignore_user_abort(true);
 	# launch the parallel process
 	//popen($command);
+	# write to the log the download start time
+	runShellCommand("date > RESOLVER-CACHE/".$sum.".log");
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
 	if ($_GET["batch"] == "true") {
@@ -251,13 +255,25 @@ if (array_key_exists("url",$_GET)){
 			if( ! file_exists("RESOLVER-CACHE/".$sum.".mp4.part")){
 				# build the m3u file before caching the video it is part of the buffering process
 				if(! file_exists("RESOLVER-CACHE/".$sum.".m3u")){
+					# build a list of available bumps
+					# iterate though the bumps directory and pick a video file randomly
+					$tempFiles = glob("bumps/*-bump.mp4");
+					$bumpFile= $tempFiles[array_rand($tempFiles)];
+					$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
+					debug("BumpFile : ".$bumpFile);
+					debug("SkipFile : ".$skipFile);
+					# link the bump file
+					symlink("../$bumpFile",("RESOLVER-CACHE/".$sum."-bump.mp4"));
+					# link the skip file
+					symlink("../$skipFile",("RESOLVER-CACHE/".$sum."-skip.mp4"));
 					# link to the default bump to the bump that will be removed when download is finished
-					symlink("BASEBUMP-bump.mp4",("RESOLVER-CACHE/".$sum."-bump.mp4"));
+					//symlink("BASEBUMP-bump.mp4",("RESOLVER-CACHE/".$sum."-bump.mp4"));
 					# build a m3u playlist that plays the bump and then the video
 					$playlist=fopen("RESOLVER-CACHE/".$sum.".m3u", "w");
 					# write the fileData
 					for ($index=0;$index < 30;$index+=1){
 						# write 20 lines of the bump
+						#fwrite($playlist,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
 						fwrite($playlist,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
 					}
 					fwrite($playlist,"RESOLVER-CACHE/".$sum.".mp4\n");
