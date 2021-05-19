@@ -17,6 +17,8 @@
 ########################################################################
 show:
 	echo 'Run "make install" as root to install program!'
+test-comics: install
+	sudo comic2web webgen
 test-live: install
 	sudo time -v iptv2web reset || echo "no reset needed..."
 	sudo time -v iptv2web update
@@ -70,6 +72,9 @@ build-deb:
 	mkdir -p debian/etc/mms/themes;
 	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/nfo2web/libaries.d/;
+	mkdir -p debian/etc/comic2web/;
+	mkdir -p debian/etc/comic2web/libaries.d/;
+	mkdir -p debian/etc/comic2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/;
 	mkdir -p debian/etc/iptv2web/sources.d/;
 	mkdir -p debian/etc/iptv2web/blockedGroups.d/;
@@ -89,6 +94,9 @@ build-deb:
 	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
 	touch debian/etc/nfo2web/.placeholder
 	touch debian/etc/nfo2web/libaries.d/.placeholder
+	touch debian/etc/comic2web/.placeholder
+	touch debian/etc/comic2web/libaries.d/.placeholder
+	touch debian/etc/comic2web/sources.d/.placeholder
 	touch debian/var/cache/nfo2web/web/.placeholder
 	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
@@ -100,6 +108,7 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web
+	cp comic2web.sh debian/usr/bin/comic2web
 	# copy over default stylesheet
 	cp themes/*.css debian/usr/share/mms/themes/
 	# copy over javascript libary

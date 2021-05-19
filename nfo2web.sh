@@ -2212,26 +2212,26 @@ main(){
 			echo "<a class='button' href='link.php'>"
 			echo "LINK"
 			echo "</a>"
-			if grep -q "Movies" "$webDirectory/stats.index";then
+			#if grep -q "Movies" "$webDirectory/stats.index";then
 				echo "<a class='button' href='movies'>"
 				echo "MOVIES"
 				echo "</a>"
-			fi
-			if grep -q "Shows" "$webDirectory/stats.index";then
+			#fi
+			#if grep -q "Shows" "$webDirectory/stats.index";then
 				echo "<a class='button' href='shows'>"
 				echo "SHOWS"
 				echo "</a>"
-			fi
-			if [ -f "$webDirectory/kodi/channels.m3u" ];then
+			#fi
+			#if [ -f "$webDirectory/kodi/channels.m3u" ];then
 				echo "<a class='button' href='live'>"
 				echo "Live"
 				echo "</a>"
-			fi
-			if [ -d "$webDirectory/comics/" ];then
+			#fi
+			#if [ -d "$webDirectory/comics/" ];then
 				echo "<a class='button' href='comics'>"
 				echo "COMICS"
 				echo "</a>"
-			fi
+			#fi
 			echo "<a class='button' href='log.html'>"
 			echo "LOG"
 			echo "</a>"

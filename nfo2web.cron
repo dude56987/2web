@@ -18,6 +18,12 @@
 #@weekly root /usr/bin/iptv2web update > /var/log/iptv2web_update.log
 @weekly root /usr/bin/niceload /usr/bin/iptv2web update
 ################################################################################
+# update the comic books
+@monthly root /usr/bin/niceload /usr/bin/comic2web update
+################################################################################
+# update the comic website pages
+@daily root /usr/bin/niceload /usr/bin/comic2web webgen
+################################################################################
 # once a day check for updates to fast moving metadata extraction packages
 #@daily root /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
 @daily root /usr/bin/niceload /usr/bin/iptv2web upgrade

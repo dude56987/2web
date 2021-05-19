@@ -18,21 +18,22 @@ include("header.html");
 	<a class='button' href='radio.php'>RADIO</a>
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
+	<a class='button' href='cache.php'>CACHE</a>
 </div>
 <?php
 
 echo "<div class='settingListCard'>\n";
 echo "<h2>Current Link Config</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/comics2web/sources.cfg");
+echo file_get_contents("/etc/comic2web/sources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
-$sourceFiles = scandir("/etc/comics2web/sources.d/");
+$sourceFiles = scandir("/etc/comic2web/sources.d/");
 //print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/comics2web/sources.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/comic2web/sources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);
