@@ -101,6 +101,12 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+}else if (array_key_exists("cacheQuality",$_POST)){
+	$cacheQuality=$_POST['cacheQuality'];
+	# change the default cache quality
+	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
+	# write the config file
+	file_put_contents("cacheQuality.cfg",$cacheQuality);
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	echo "Running addLink on link ".$link."<br>\n";

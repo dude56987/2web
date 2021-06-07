@@ -11,12 +11,25 @@ error_reporting(E_ALL);
 ################################################################################
 function debug($message){
 	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: ".$message;
+		echo "[DEBUG]: ".$message."<br>";
 		ob_flush();
 		flush();
 		return true;
 	}else{
 		return false;
+	}
+}
+################################################################################
+function getQualityConfig(){
+	if (file_exists("cacheQuality.cfg")){
+		debug("Loading the cacheQuality.cfg file...");
+		# load the cache quality config
+		# - this will be passed as a quality option to youtube-dl
+		$cacheQualityConfig = file_get_contents("cacheQuality.cfg");
+		return $cacheQualityConfig;
+	}else{
+		debug("No cacheQuality.cfg file could be found...");
+		return "worst";
 	}
 }
 ################################################################################
@@ -26,6 +39,7 @@ function cacheUrl($sum,$videoLink){
 	debug("Build the command<br>");
 	//$command = '/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
 	//$command = '/usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
+	//$command = 'echo "/usr/bin/niceload --net ';
 	$command = 'echo "';
 	// add the download to the cache with the processing queue
 	if (file_exists("/usr/local/bin/youtube-dl")){
@@ -38,10 +52,13 @@ function cacheUrl($sum,$videoLink){
 		//$command = $command." 'youtube-dl";
 		//$command = "youtube-dl";
 	}
+	$quality = getQualityConfig();
+	debug("The web interface set quality is '".$quality."'");
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
 	//$command = $command." --continue --embed-subs --no-mtime --no-part ";
 	$command = $command." --continue --write-info-json --all-subs";
 	$command = $command."	--sub-format srt --embed-subs --no-mtime ";
+	//$command = $command."	--hls-use-mpegts ";
 	# TODO: add .srt subtitle dowloads
 	if (array_key_exists("res",$_GET)){
 		if($_GET["res"] == "HD"){
@@ -50,8 +67,8 @@ function cacheUrl($sum,$videoLink){
 			$command = $command." -f worst --recode-video mp4 ";
 		}
 	} else {
-		# default option in youtube-dl is SD
-		$command = $command." -f worst --recode-video mp4 ";
+		# by default use the option set in the web interface it it exists
+		$command = $command." -f ".$quality." --recode-video mp4 ";
 	}
 	# complete the command with the paths
 	$command = $command."-o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
@@ -59,7 +76,7 @@ function cacheUrl($sum,$videoLink){
 	# link to bump sum end
 	//$command = $command." && ln -sf '".$sum.".mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
 	//$command = $command." && ln -sf 'BASEBUMP-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
-	$command = $command." && ln -sf '../RESOLVER-CACHE/".$sum."-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
+	$command = $command." && ln -sf '".$sum."-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
@@ -82,9 +99,11 @@ function cacheUrl($sum,$videoLink){
 	runShellCommand("date > RESOLVER-CACHE/".$sum.".log");
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
-	if ($_GET["batch"] == "true") {
-		# exit connection after adding batch process to queue
-		exit;
+	if (array_key_exists("batch",$_GET)){
+		if ($_GET["batch"] == "true") {
+			# exit connection after adding batch process to queue
+			exit;
+		}
 	}
 }
 ################################################################################
@@ -129,17 +148,17 @@ function buildBump($sum){
 		}else{
 			$command = $command."/usr/bin/ffmpeg -y -ss 1 -i 'RESOLVER-CACHE/".$sum.".mp4.part -vframes 1 RESOLVER-CACHE/".$sum.".png";
 		}
-		//debug("[DEBUG]: running command '".$command."'<br>");
+		debug("Running command '".$command."'<br>");
 		shell_exec($command);
 	}
-	if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.png")){
-		################################################################################
-		# compose the webpage over the unique pattern  and overwrite the webpage.png
-		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
-		//$command = "";
-		$command = $command."/usr/bin/composite -dissolve 70 -gravity center 'RESOLVER-CACHE/".$sum.".png' 'RESOLVER-CACHE/baseBump.png' -alpha Set 'RESOLVER-CACHE/".$sum."-bump.png'";
-		runShellCommand($command);
-	}
+	#if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.png")){
+	#	################################################################################
+	#	# compose the webpage over the unique pattern  and overwrite the webpage.png
+	#	$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
+	#	//$command = "";
+	#	$command = $command."/usr/bin/composite -dissolve 70 -gravity center 'RESOLVER-CACHE/".$sum.".png' 'RESOLVER-CACHE/baseBump.png' -alpha Set 'RESOLVER-CACHE/".$sum."-bump.png'";
+	#	runShellCommand($command);
+	#}
 	################################################################################
 	# build the loading image if it does not exist yet
 	if ( ! file_exists("RESOLVER-CACHE/".$sum.".png")){
@@ -299,7 +318,7 @@ if (array_key_exists("url",$_GET)){
 					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
 					//exit();
 				//}else if(file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
-				}else if(file_exists("RESOLVER-CACHE/BASEBUMP-bump.mp4")){
+				}else if(file_exists("RESOLVER-CACHE/$sum-bump.mp4")){
 					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'-bump.mp4');
 					//header('Location: http://'.gethostname().'.local:444/RESOLVER-CACHE/BASEBUMP-bump.mp4');
 					//header('Location: RESOLVER-CACHE/BASEBUMP-bump.mp4');

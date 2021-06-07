@@ -31,7 +31,14 @@ include("header.html");
 			Change the quality of video for future cached videos.
 		</p>
 		<select name='cacheQuality'>
-			<option value='worst' selected>worst</option>
+			<?php
+				// add the cache quality as a option
+				if(file_exists("cacheQuality.cfg")){
+					$cacheQuality = file_get_contents('cacheQuality.cfg');
+					echo "<option selected value='".$cacheQuality."'>$cacheQuality</option>";
+				}
+			?>
+			<option value='worst'>worst</option>
 			<option value='best' >best</option>
 			<option value='1080p,720p,360p,240p' >1080p,720p,360p,240p</option>
 			<option value='240p,360p,720p,1080p' >240p,360p,720p,1080p</option>
