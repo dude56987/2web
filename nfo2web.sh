@@ -1468,6 +1468,29 @@ buildRandomMovies(){
 		echo "</div>"
 	fi
 }
+################################################################################
+buildRandomComics(){
+	# buildRandomMovies $webDirectory $numberOfMovies $sourcePrefix
+	################################################################################
+	# Build a list of updated movies
+	################################################################################
+	webDirectory=$1
+	numberOfMovies=$2
+	sourcePrefix=$3
+	################################################################################
+	randomMovies=$(ls -1 "$webDirectory"/comics/*/index.index | shuf -n "$numberOfMovies")
+	if [ $(echo -n "$randomMovies" | wc -l) -gt 0 ];then
+		echo "<div class='titleCard'>"
+		echo "<h1>Random Comics</h1>"
+		echo "<div class='listCard'>"
+		echo "$randomMovies" | while read -r line;do
+			# fix index links to work for homepage
+			cat "$line"
+		done
+		echo "</div>"
+		echo "</div>"
+	fi
+}
 ########################################################################
 buildHomePage(){
 
@@ -1568,6 +1591,10 @@ buildHomePage(){
 	if cacheCheck "$webDirectory/randomChannels.index" "10";then
 		buildRandomChannels "$webDirectory" 50 > "$webDirectory/randomChannels.index"
 	fi
+	if cacheCheck "$webDirectory/randomComics.index" "10";then
+		buildRandomComics "$webDirectory" 50 > "$webDirectory/randomComics.index"
+	fi
+
 	{
 		sourcePrefix="shows\/"
 		cat "$webDirectory/updatedShows.index" | \
@@ -1583,6 +1610,10 @@ buildHomePage(){
 			sed "s/href='/href='$sourcePrefix/g"
 		sourcePrefix="movies\/"
 		cat "$webDirectory/randomMovies.index" | \
+			sed "s/src='/src='$sourcePrefix/g" | \
+			sed "s/href='/href='$sourcePrefix/g"
+		sourcePrefix="comics\/"
+		cat "$webDirectory/randomComics.index" | \
 			sed "s/src='/src='$sourcePrefix/g" | \
 			sed "s/href='/href='$sourcePrefix/g"
 		sourcePrefix="live\/"
@@ -1884,12 +1915,12 @@ main(){
 		# load the libary directory
 		if [ -f /etc/nfo2web/libaries.cfg ];then
 			libaries=$(cat /etc/nfo2web/libaries.cfg)
-			libaries=$(echo "$libaries $(cat /etc/nfo2web/libaries.d/*.cfg)")
+			libaries=$(echo -e "$libaries\n$(cat /etc/nfo2web/libaries.d/*.cfg)")
 		else
 			mkdir -p /var/cache/nfo2web/libary/
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
 			libaries="/var/cache/nfo2web/libary"
-			libaries=$(echo "$libaries $(cat /etc/nfo2web/libaries.d/*.cfg)")
+			libaries=$(echo -e "$libaries\n$(cat /etc/nfo2web/libaries.d/*.cfg)")
 		fi
 		# the webdirectory is a cache where the generated website is stored
 		if [ -f /etc/nfo2web/web.cfg ];then
@@ -2276,9 +2307,11 @@ main(){
 		#for libary in $libaries;do
 		echo "$libaries" | while read libary;do
 			# check if the libary directory exists
+			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
 			echo "Check if directory exists at $libary"
 			if [ -e "$libary" ];then
-				echo "[INFO]: libary exists at '$libary'"
+				addToLog "INFO" "Starting library scan" "$libary" "$logPagePath"
+				echo "[INFO]: library exists at '$libary'"
 				# read each tvshow directory from the libary
 				for show in "$libary"/*;do
 					echo "[INFO]: show path = '$show'"
