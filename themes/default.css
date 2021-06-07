@@ -359,15 +359,37 @@ ol{
 .comicThumb{
 	width: 20vw;
 }
-.comicPane{
+.comicWidePane{
 	/*This means the picture is a landscape*/
 	/*background-size: 100vw 100vh !important;*/
 	background-size: 100% 100% !important;
 	margin: 0px !important;
-	width: 100vw;
-	height: 100vh;
+	width: 100vw !important;
+	/*height: 100vh;*/
+	height: 100vh !important;
 }
-.comicWidePane{
+.comicThumbWidePane{
+	/*This means the picture is a landscape*/
+	/*background-size: 100vw 100vh !important;*/
+	background-size: 100% 100% !important;
+	margin: 0px !important;
+	width: 100vw !important;
+	/*height: 100vh;*/
+	height: 100vh !important;
+}
+
+.comicThumbPane{
+	background-size: 100% 100% !important;
+	/*This means the picture is a portrat*/
+	margin-left: 0px !important;
+	margin-right: 0px !important;
+	margin-top: 0px !important;
+	margin-bottom: 0px !important;
+	width: 60vw !important;
+	height: 100vh !important;
+	height: -webkit-fill-available !important;
+}
+.comicPane{
 	background-size: 100% 100% !important;
 	/*This means the picture is a portrat*/
 	margin-left: 20vw !important;
@@ -375,26 +397,66 @@ ol{
 	margin-top: 0px !important;
 	margin-bottom: 0px !important;
 	width: 60vw !important;
-	height: 100vh;
+	height: 100vh !important;
+	height: -webkit-fill-available !important;
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
+	/***********************************************/
 	/*This means the web browser is in portrat mode*/
-	.comicWidePane{
-		/*This means the picture is a portrat*/
-		background-size: 100% 100% !important;
-		margin: 0px !important;
-		width: 100vw !important;
-		height: 100vh;
-	}
+	/***********************************************/
 	.comicPane{
-		/*This means the picture is a landscape*/
+		/*This means the picture is a portrat picture*/
+		font-size: 0.5em;
 		background-size: 100% 100% !important;
+		/*Remove left and right margins on screen*/
 		margin-left: 0px !important;
 		margin-right: 0px !important;
+		margin: 0px !important;
+		width: 100vw !important;
+		width: -webkit-fill-available !important;
+		height: 100vh !important;
+		height: -webkit-fill-available !important;
+	}
+	.comicThumbPane{
+		/*This means the picture is a portrat picture*/
+		font-size: 0.5em;
+		background-size: 100% 100% !important;
+		/*Remove left and right margins on screen*/
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+		margin: 0px !important;
+		width: 100vw !important;
+		width: -webkit-fill-available !important;
+		height: 100vh !important;
+		height: -webkit-fill-available !important;
+	}
+	.comicWidePane{
+		/*This means the picture is a landscape picture*/
+		font-size: 0.5em;
+		background-size: 100% 100% !important;
+		/*Remove left and right margins on screen*/
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+		/*Add top and bottom margins on screen*/
 		margin-top: 20vh !important;
 		margin-bottom: 20vh !important;
 		width: 100vw !important;
-		height: 60vh;
+		width: -webkit-fill-available !important;
+		height: 60vh !important;
+	}
+	.comicThumbWidePane{
+		/*This means the picture is a landscape picture*/
+		font-size: 0.5em;
+		background-size: 100% 100% !important;
+		/*Remove left and right margins on screen*/
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+		/*Add top and bottom margins on screen*/
+		margin-top: 0px !important;
+		margin-bottom: 0px !important;
+		width: 100vw !important;
+		width: -webkit-fill-available !important;
+		height: 60vh !important;
 	}
 
 }
@@ -406,6 +468,9 @@ ol{
 .comicIndexButton{
 }
 .comicPageButton{
+	min-height: 50vh;
+	height: -webkit-fill-available;
+	height: -moz-fill;
 	font-size: 2em;
 	box-shadow: 0px 0px 1em black;
 	margin: 0em;
