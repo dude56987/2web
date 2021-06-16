@@ -16,13 +16,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-set -x
+#set -x
 #export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 export PS4='${LINENO} +	|	'
 # set tab size to 4 to make output more readable
 tabs 4
 ################################################################################
+function INFO(){
+	width=$(tput cols)
+	# cut the line to make it fit on one line using ncurses tput command
+	buffer="                                                                                "
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
+	# print the line
+	printf "$output\r"
+}
 ################################################################################
+function ERROR(){
+	output=$1
+	printf "[ERROR]: $output\n"
+}
 ################################################################################
 function loadWithoutComments(){
 	grep -Ev "^#" "$1"
@@ -32,7 +47,7 @@ function loadWithoutComments(){
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	#echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g"
-	echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+	echo -n "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
 }
 ################################################################################
 function killFakeImage(){
@@ -59,9 +74,9 @@ function streamPass(){
 		/usr/bin/streamlink "$@"
 	else
 		# could not find streamlink installed on the server
-		echo "[ERROR]: For the URL to resolve you must install streamlink on this server."
-		echo "[ERROR]: You may need to contact your local system administrator."
-		echo "[INFO]: As a administrator use 'pip3 install streamlink' to install the latest version."
+		ERROR "For the URL to resolve you must install streamlink on this server."
+		ERROR "You may need to contact your local system administrator."
+		ERROR "As a administrator use 'pip3 install streamlink' to install the latest version."
 		exit
 	fi
 }
@@ -73,9 +88,9 @@ examineIconLink(){
 	title=$3
 	radio=$4
 	###################################################################
-	iconLength=$(echo "$iconLink" | wc -c)
+	iconLength=$(echo -n "$iconLink" | wc -c)
 	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-	echo "Icon Sum=$sum"
+	INFO "Icon Sum=$sum"
 	localIconPath="$(webRoot)/live/$sum.png"
 
 	# if the file exists and is not older than 10 days
@@ -108,7 +123,7 @@ examineIconLink(){
 			#resolvedLink=$(streamlink --stream-url "$link" best)
 			# check if the link is a twitch link, they preload ads in the first 15 seconds
 			# so take the thumbnail from after this 15 seconds
-			if echo "$link" | grep "twitch.tv";then
+			if echo -n "$link" | grep -q "twitch.tv";then
 				tempTimeout=20
 			else
 				tempTimeout=0
@@ -117,7 +132,7 @@ examineIconLink(){
 			#timeout 30 ffmpeg -y -i "$resolvedLink" -ss 1 -frames:v 1 "$localIconPath"
 			# this must be contained in a single line or the delay causes it to be blocked
 			#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
-			if ! echo "$radio" | grep "true";then
+			if ! echo -n "$radio" | grep -q "true";then
 				if streamPass --can-handle-url "$link";then
 					# resolve with streamlink and then screenshot
 					timeout 30 ffmpeg -y -i "$(streamPass --stream-url "$link" best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
@@ -134,7 +149,7 @@ examineIconLink(){
 		killFakeImage "$localIconPath"
 		if ! [ -f "$localIconPath" ];then
 			# generate a image for the page since none exists
-			swirlAmount=$(echo "$title" | wc -c)
+			swirlAmount=$(echo -n "$title" | wc -c)
 			timeout 600 convert -size 400x400 +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
 			# add text over generated image
 			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
@@ -149,7 +164,7 @@ examineIconLink(){
 ################################################################################
 function webGenCheck(){
 	# read either from argument or filesystem
-	if echo "$@" | grep "\-\-filecheck";then
+	if echo -n "$@" | grep "\-\-filecheck";then
 		#totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
 		channelCount=$(( $(cat /var/cache/nfo2web/web/kodi/channels.m3u | wc -l) / 2))
 	else
@@ -178,16 +193,16 @@ function channelCheck(){
 function getIconLink(){
 	lineCaught=$1
 	# pipe the output of this function to get the iconLink, blank for no link
-	if echo "$lineCaught" | grep -q 'tvg-logo="';then
+	if echo -n "$lineCaught" | grep -q 'tvg-logo="';then
 		# store the icon if it is set
-		tempIconLink=$(echo "$lineCaught" | grep --only-matching 'tvg-logo=".*"' | cut -d'"' -f2)
-	elif echo "$lineCaught" | grep -q "tvg-logo='";then
-		tempIconLink=$(echo "$lineCaught" | grep --only-matching "tvg-logo='.*'" | cut -d"'" -f2)
+		tempIconLink=$(echo -n "$lineCaught" | grep --only-matching 'tvg-logo=".*"' | cut -d'"' -f2)
+	elif echo -n "$lineCaught" | grep -q "tvg-logo='";then
+		tempIconLink=$(echo -n "$lineCaught" | grep --only-matching "tvg-logo='.*'" | cut -d"'" -f2)
 	else
 		tempIconLink=""
 	fi
 	# return the link to be piped
-	echo "$tempIconLink"
+	echo -n "$tempIconLink"
 }
 ################################################################################
 function getTVG(){
@@ -222,7 +237,7 @@ function process_M3U(){
 	webDirectory=$2
 	radioFile=$3
 	if [[ "$radioFile" == "" ]];then
-		echo "[INFO]: radio not set, turn radio to false"
+		INFO "radio not set, turn radio to false"
 		radioFile="false"
 	fi
 	################################################################################
@@ -240,30 +255,30 @@ function process_M3U(){
 	blockedGroups=$(cat /etc/iptv2web/blockedGroups.cfg)
 	blockedGroups="$blockedGroups $(cat /etc/iptv2web/blockedGroups.d/*.cfg)"
 	#for line in $channels;do
-	echo "$channels" | while read line;do
+	echo -n "$channels" | while read line;do
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
 		if [ "$caughtLength" -gt 1 ];then
 			# pull the link on this line and store it
-			title=$(echo "$lineCaught" | rev | cut -d',' -f1 | rev)
+			title=$(echo -n "$lineCaught" | rev | cut -d',' -f1 | rev)
 			title=$(cleanText "$title")
 			echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
-			echo "Found Link = $link"
+			INFO "Found Link = $link"
 			radio="false"
 			if [[ "$radioFile" == "true" ]];then
-				echo "[INFO]: Radio file is being scanned"
+				INFO "Radio file is being scanned"
 				# this is a radio file process all entries as radio entries
 				radio="true"
-			elif echo "$lineCaught" | grep -E "radio=[\",']true";then
-				echo "[INFO]: Radio line found mark radio tag true"
+			elif echo "$lineCaught" | grep -Eq "radio=[\",']true";then
+				INFO "Radio line found mark radio tag true"
 				# if the line is a radio entry
 				radio="true"
 			fi
 			iconLink=$(getIconLink "$lineCaught")
-			echo "Icon Link = $iconLink"
+			INFO "Icon Link = $iconLink"
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			echo "Icon MD5 = $iconSum"
+			INFO "Icon MD5 = $iconSum"
 			# check for group title
 			groupTitle=$(getTVG "$lineCaught" "group-title")
 			#IFS=$IFS_NORMAL
@@ -271,9 +286,9 @@ function process_M3U(){
 			# during the building of the m3u file split out blocked items
 			for group in $groupTitle;do
 				# check each channel group to see if the group is in the blocked groups
-				if echo "$blockedGroups" | grep --ignore-case "$group";then
+				if echo -n "$blockedGroups" | grep -q --ignore-case "$group";then
 					# this channel should be blocked from being added to the list
-					echo "[INFO]: The channel $title has been blocked, it contained blocked group $group"
+					INFO "The channel $title has been blocked, it contained blocked group $group"
 					mkdir -p "$webDirectory/live/blocked/"
 					{
 						echo "<div class='blockedLink'>"
@@ -291,20 +306,22 @@ function process_M3U(){
 					addChannel=false
 				else
 					# if the channel is not blocked, add the .index file for the group
-					echo "[INFO]: The channel $title was added in group $group"
+					INFO "The channel $title was added in group $group"
 					mkdir -p "$webDirectory/live/groups/$group/"
-					# link index files in group directories
-					ln -s "$webDirectory/live/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
+					if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
+						# link index files in group directories
+						ln -s "$webDirectory/live/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
+					fi
 					addChannel=true
 				fi
 			done
 			# if the channel was not blocked
 			if $addChannel;then
-				echo "[INFO]: Building channel $title thumbnail..."
+				INFO "Building channel $title thumbnail..."
 				# try to download or create the thumbnail
 				examineIconLink "$iconLink" "$link" "$title" "$radio"
 
-				echo "[INFO]: Writing channel $title info to disk..."
+				INFO "Writing channel $title info to disk..."
 				# Write the new version of the lines to the outputFile
 				webIconPath="http://$(hostname).local:444/live/$iconSum.png"
 				# write the raw channel file
@@ -327,8 +344,8 @@ function process_M3U(){
 			#webGenCheck --filecheck
 		fi
 		# if the line is a info line
-		if echo "$line" | grep -q "#EXTINF";then
-			echo "Found info line '$line'"
+		if echo -n "$line" | grep -q "#EXTINF";then
+			INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
 			# reset the line caught variable
@@ -347,16 +364,16 @@ function cacheCheck(){
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
-			echo "[INFO]: File is to old, update the file $1"
+			INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			echo "[INFO]: File in cache, do not update $1"
+			INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		echo "[INFO]: File does not exist, it must be created $1"
+		INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -375,28 +392,28 @@ function processLink(){
 	radioFile=$3
 	# if radio is not set it will be false
 	if [[ "$radioFile" == "" ]];then
-		echo "[INFO]: radio not set, turn radio to false"
+		INFO "radio not set, turn radio to false"
 		radioFile="false"
 	fi
 	################################################################################
-	echo "Processing Link '$link'"
-	echo "Channels Path '$channelsPath'"
+	INFO "Processing Link '$link'"
+	INFO "Channels Path '$channelsPath'"
 	# check if link is a comment
-	if echo "$link" | grep -E "^#";then
+	if echo -n "$link" | grep -Eq "^#";then
 		# this link is a comment
 		return 0
 	elif [ -f "$link" ];then
 		# if the link is a local address
-		echo "[INFO]: Link is a local address. Adding local file..."
+		INFO "Link is a local address. Adding local file..."
 		# add local files
 		grep -v "#EXTM3U" "$link" >> "$channelsPath"
 		return 0
-	elif echo "$link" | grep -E "^http";then
+	elif echo -n "$link" | grep -Eq "^http";then
 		# if the link is a web address
-		echo "[INFO]: Link is a web url..."
+		INFO "Link is a web url..."
 		# if the link is a link to a playlist download the playlist
-		if echo "$link" | grep -E "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
-			echo "[INFO]: Link is a m3u playlist..."
+		if echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
+			INFO "Link is a m3u playlist..."
 
 			# generate a md5 from the url for the cache
 			linkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
@@ -413,10 +430,10 @@ function processLink(){
 			downloadedM3U=$(cat "$webDirectory/cache/$linkSum.index")
 			process_M3U "$downloadedM3U" "$webDirectory" "$radioFile"
 		else
-			echo "[INFO]: Link is Unknown..."
+			INFO "Link is Unknown..."
 			# if it is a known stream site use streamlink
 			if streamPass --can-handle-url "$link";then
-				echo "[INFO]: Link can be processed by streamlink..."
+				INFO "Link can be processed by streamlink..."
 				# determine the local hostname, use it to build the resolver path
 				hostPath='http://'$(hostname)'.local:444/live/iptv-resolver.php?url="'$link'"'
 				hostPathHD='http://'$(hostname)'.local:444/live/iptv-resolver.php?HD="true"&url="'$link'"'
@@ -424,49 +441,49 @@ function processLink(){
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
 				if which youtube-dl && which jq;then
-					echo "[INFO]: Attempting to get link metadata with youtube-dl ..."
+					INFO "Attempting to get link metadata with youtube-dl ..."
 					tempMeta=$(youtube-dl -j "$link")
-					if echo "$link" | grep "youtube.com";then
-						if echo "$tempMeta" | grep "fulltitle";then
+					if echo -n "$link" | grep -q "youtube.com";then
+						if echo -n "$tempMeta" | grep -q "fulltitle";then
 							fileName=$(echo "$tempMeta" | jq ".fulltitle" | tr -d '"')
-							echo "[INFO]: link title = $fileName"
+							INFO "link title = $fileName"
 						fi
-						if echo "$tempMeta" | grep "thumbnail";then
+						if echo -n "$tempMeta" | grep -q "thumbnail";then
 							thumbnailLink=$(echo "$tempMeta" | jq ".thumbnail" | tr -d '"')
-							echo "[INFO]: thumbnailLink = $thumbnailLink"
+							INFO "thumbnailLink = $thumbnailLink"
 						fi
 					else
-						fileName=$(echo "$tempMeta" | jq ".display_id"| tr -d '"')
-						echo "[INFO]: link title  from display_id = $fileName"
+						fileName=$(echo -n "$tempMeta" | jq ".display_id"| tr -d '"')
+						INFO "link title  from display_id = $fileName"
 					fi
 				fi
-				echo "[DEBUG]: checking filename length '$fileName'"
-				tempFileName=$(echo "$fileName" | wc -c )
+				ERROR "[DEBUG]: checking filename length '$fileName'"
+				tempFileName=$(echo -n "$fileName" | wc -c )
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					#fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
-					echo "[DEBUG]: filename too short ripping end of url '$fileName'"
+					ERROR "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
-				echo "[DEBUG]: FileName = $fileName"
+				ERROR "[DEBUG]: FileName = $fileName"
 				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
 				examineIconLink "$thumbnailLink" "$hostPath" "$fileName" "$radio"
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
-				echo "[DEBUG]: SUM = $sum"
+				ERROR "[DEBUG]: SUM = $sum"
 				webIconPath="http://$(hostname).local:444/live/$sum.png"
 				webIconPathHD="http://$(hostname).local:444/live/$sumHD.png"
 				#webIconPath="$sum.png"
 				# check if this link is a radio link
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
 					# if the line is a radio entry
-					echo "[INFO]: Radio line found mark radio tag true"
+					ERROR "Radio line found mark radio tag true"
 					radio="true"
 				elif [[ "$radioFile" == "true" ]];then
-					echo "[INFO]: Radio file is being scanned"
+					ERROR "Radio file is being scanned"
 					radio="true"
 				fi
-				echo "[DEBUG]: WebIconPath = $webIconPath"
+				ERROR "[DEBUG]: WebIconPath = $webIconPath"
 				{
 					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"iptv2web\",$fileName HD"
 					echo "$hostPathHD"
@@ -474,7 +491,7 @@ function processLink(){
 					echo "$hostPath"
 				} >> "$channelsPath"
 			else
-				echo "[ERROR]: Custom url creation failed for '$link'"
+				ERROR "Custom url creation failed for '$link'"
 				return 1
 			fi
 		fi
@@ -502,7 +519,7 @@ fullUpdate(){
 	# scan sources config file and fetch each source
 	################################################################################
 	# enable debug
-	echo "Loading up sources..."
+	INFO "Loading up sources..."
 	# check for defined sources
 	if ! [ -f /etc/iptv2web/sources.cfg ];then
 		# if no config exists create the default config from the template
@@ -532,15 +549,15 @@ fullUpdate(){
 	# link the channels to the kodi directory
 	ln -s "$channelsPath" "$webDirectory/kodi/channels.m3u"
 	# for each link in the sources
-	echo "Processing sources..."
-	echo "Link List = $linkList"
+	INFO "Processing sources..."
+	INFO "Link List = $linkList"
 	echo "#EXTM3U" > $channelsPath
 	################################################################################
 	# read video sources
 	################################################################################
 	processedSources=0
 	# add user created custom local configs first
-	echo "[INFO]: Adding m3u sources from /etc/iptv2web/sources.d/"
+	INFO "Adding m3u sources from /etc/iptv2web/sources.d/"
 	ls -t1 /etc/iptv2web/sources.d/*.m3u
 	if [ $? -eq 0 ];then
 		find /etc/iptv2web/sources.d/*.m3u -name "*.m3u" -type f | while read configFile;do
@@ -549,7 +566,7 @@ fullUpdate(){
 			processedSources=$(($processedSources + 1))
 		done
 	fi
-	echo "[INFO]: Adding m3u8 sources from /etc/iptv2web/sources.d/"
+	INFO "Adding m3u8 sources from /etc/iptv2web/sources.d/"
 	ls -t1 /etc/iptv2web/sources.d/*.m3u8
 	if [ $? -eq 0 ];then
 		find /etc/iptv2web/sources.d/ -name "*.m3u8" -type f | while read configFile;do
@@ -558,14 +575,14 @@ fullUpdate(){
 			processedSources=$(($processedSources + 1))
 		done
 	fi
-	echo "[INFO]: Adding /etc/iptv2web/sources.cfg"
+	INFO "Adding /etc/iptv2web/sources.cfg"
 	# read main config m3u sources and merge them
-	echo "$linkList" | while read link;do
+	echo -n "$linkList" | while read link;do
 		processLink "$link" "$channelsPath"
 		processedSources=$(($processedSources + 1))
 	done
 	# add external sources last
-	echo "[INFO]: Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
+	INFO "Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
 	ls -t1 /etc/iptv2web/sources.d/*.cfg
 	if [ $? -eq 0 ];then
 		# load the config file list
@@ -581,7 +598,7 @@ fullUpdate(){
 	# process radio sources
 	################################################################################
 	# read main radio config
-	echo "$radioLinkList" | while read link;do
+	echo -n "$radioLinkList" | while read link;do
 		# process radio link
 		processLink "$link" "$channelsPath" "true"
 		processedSources=$(($processedSources + 1))
@@ -615,14 +632,14 @@ function buildPage(){
 	localLinkSig="http://$(hostname).local:444/live/"
 	################################################################################
 	# check for .local domain indicating a local link
-	if echo "$link" | grep -q --ignore-case ".local";then
+	if echo -n "$link" | grep -q --ignore-case ".local";then
 		# cleanup the local string from the link as absolute paths will break resolution
 		link=${link//$localLinkSig}
 		# remove leading and trailing parathensis added from link
 		link=${link//^\"}
 		link=${link//\"$}
 	fi
-	if echo "$link" | grep -q --ignore-case "youtube.com";then
+	if echo -n "$link" | grep -q --ignore-case "youtube.com";then
 		# embed youtube livestream links into the webpage
 		yt_id=${link//*watch?v=}
 		yt_id=${yt_id//\"}
@@ -678,7 +695,7 @@ function buildGroupPages(){
 	#groupsIndex=
 	find "$webDirectory/live/groups/" -type d | while read groupPath;do
 		if ! [ "$groupPath" == "$webDirectory/live/groups/" ];then
-			echo "[INFO]: Building group pages for (groupPath = '$groupPath')"
+			INFO "Building group pages for (groupPath = '$groupPath')"
 			# link assets
 			ln -s "$webDirectory/style.css" "$groupPath"
 			ln -s "$webDirectory/randomFanart.php" "$groupPath"
@@ -713,8 +730,8 @@ function buildGroupPages(){
 					if ! echo "$groupIndex" | grep -Eq "index.index";then
 						if ! echo "$groupIndex" | grep -Eq "index.html";then
 							groupTitle=$(echo "$groupPath" | rev | cut -d'/' -f1 | rev)
-							echo "[INFO]: (groupTitle = $groupTitle )"
-							echo "[INFO]: Adding (groupindex = $groupIndex ) to (group = $groupPath )"
+							INFO "(groupTitle = $groupTitle )"
+							INFO "Adding (groupindex = $groupIndex ) to (group = $groupPath )"
 							{
 								cat "$groupIndex" | sed "s/href='/href='..\/..\//g" | sed "s/src='/src='..\/..\//g"
 							} >> "$groupPath/index.index"
@@ -730,7 +747,7 @@ function buildGroupPages(){
 			cp -v "$groupPath/index.index" "$groupPath/index.html"
 		fi
 	done
-	echo "[INFO]: Finished building all group pages."
+	INFO "Finished building all group pages."
 }
 ################################################################################
 function buildRadioPage(){
@@ -769,10 +786,10 @@ else
 	# make the background for the audio player the poster of the audio stream
 	customStyle="background-image: url(\"$poster\");"
 	echo -e "$tabs<audio class='livePlayer' style='$customStyle' poster='$poster' controls autoplay>"
-		echo -e "$tabs<source src='$link' type='audio/mpeg'>"
-		echo -e "$tabs</audio>"
-		#echo -e "$tabs</div>"
-	fi
+	echo -e "$tabs<source src='$link' type='audio/mpeg'>"
+	echo -e "$tabs</audio>"
+	#echo -e "$tabs</div>"
+fi
 }
 ################################################################################
 append(){
@@ -780,6 +797,11 @@ append(){
 	echo "$1$2"
 }
 ################################################################################
+popPath(){
+	# pop the path name from the end of a absolute path
+	# e.g. popPath "/path/to/your/file/test.jpg"
+	echo "$1" | rev | cut -d'/' -f1 | rev
+}
 ################################################################################
 webGen(){
 	webDirectory=$(webRoot)
@@ -816,12 +838,12 @@ webGen(){
 	echo "" > "$channelListPath"
 	################################################################################
 	# build the channel list
-	echo "[INFO]: Building channel link list."
+	INFO "Building channel link list."
 	################################################################################
 	#channelNumber=1
 	#for line in $channels;do
 	echo "$channels" | while read line;do
-		echo "[INFO]: building channel list for line = $line"
+		INFO "building channel list for line = $line"
 		# if a info line was detected on the last line
 		if [ 1 -lt $(echo "$lineCaught" | wc -c) ];then
 			# pull the link on this line and store it
@@ -831,10 +853,10 @@ webGen(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			iconLink="$iconSum.png"
 			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			echo "[INFO]: Found Title = $title"
-			echo "[INFO]: Found Link = $link"
-			echo "[INFO]: Icon Link = $iconLink"
-			echo "[INFO]: Icon MD5 = $iconSum"
+			INFO "Found Title = $title"
+			INFO "Found Link = $link"
+			INFO "Icon Link = $iconLink"
+			INFO "Icon MD5 = $iconSum"
 			#examineIconLink "$iconLink" "$link" "$title"
 			################################################################################
 			# add links to channel list
@@ -871,8 +893,8 @@ webGen(){
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then
-			echo "[INFO]: Found info line '$line'"
-			lineCaught=$line
+			INFO "Found info line '$line'"
+			lineCaught="$line"
 		else
 			# reset the line caught variable
 			lineCaught=""
@@ -886,8 +908,8 @@ webGen(){
 	#for line in $channels;do
 	echo "$channels" | while read line;do
 		# if a info line was detected on the last line
-		echo "[INFO]: building channel page for line = $line"
-		echo "[INFO]: Line Caught = $line"
+		INFO "building channel page for line = $line"
+		INFO "Line Caught = $line"
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
 		if [ "$caughtLength" -gt 1 ];then
@@ -900,10 +922,10 @@ webGen(){
 			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			# check for group title
 			groupTitle=$(getTVG "$lineCaught" "group-title")
-			echo "[INFO]: Found Title = $title"
-			echo "[INFO]: Found Link = $link"
-			echo "[INFO]: Icon Link = $iconLink"
-			echo "[INFO]: Icon MD5 = $iconLink"
+			INFO "Found Title = $title"
+			INFO "Found Link = $link"
+			INFO "Icon Link = $iconLink"
+			INFO "Icon MD5 = $iconLink"
 			{
 				# build the page
 				echo "<html id='top' class='liveBackground'>"
@@ -957,7 +979,7 @@ webGen(){
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then
-			echo "[INFO]: Found info line '$line'"
+			INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
 			# reset the line caught variable
@@ -996,7 +1018,12 @@ webGen(){
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
 
 		echo "</div>"
-
+		echo "<hr>"
+		find "$webDirectory/live/groups/" -mindepth 1 -maxdepth 1 -type d | sort | while read groupsName;do
+			groupLink=$(popPath "$groupsName")
+			echo "<a class='button' href='groups/$groupLink'>$groupLink</a>"
+		done
+		echo "<hr>"
 		echo " <input id='searchBox' class='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 		echo "<hr>"
@@ -1005,7 +1032,7 @@ webGen(){
 	#channelNumber=1
 	#for line in $channels;do
 	echo "$channels" | while read line;do
-		echo "[INFO]: building channel index entry for line = $line"
+		INFO "building channel index entry for line = $line"
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
 		if [ "$caughtLength" -gt 1 ];then
@@ -1017,10 +1044,10 @@ webGen(){
 			iconLink="$iconSum.png"
 			iconLength=$(echo "$iconLink" | wc -c)
 			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			echo "[INFO]: Found Title = $title"
-			echo "[INFO]: Found Link = $link"
-			echo "[INFO]: Icon Link = $iconLink"
-			echo "[INFO]: Icon MD5 = $iconSum"
+			INFO "Found Title = $title \r"
+			INFO "Found Link = $link \r"
+			INFO "Icon Link = $iconLink \r"
+			INFO "Icon MD5 = $iconSum \r"
 			if echo $lineCaught | grep -Eq "radio=[\",']true";then
 				{
 					# build icon to link to the channel
@@ -1058,7 +1085,7 @@ webGen(){
 		fi
 		# if the line is a info line
 		if echo "$line" | grep "#EXTINF";then
-			echo "[INFO]: Found info line '$line'"
+			INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
 			# reset the line caught variable
@@ -1131,8 +1158,8 @@ main(){
 		# check if system is active
 		if [ -f "/tmp/iptv2web.active" ];then
 			# system is already running exit
-			echo "[INFO]: iptv2web is already processing data in another process."
-			echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/iptv2web.active'."
+			ERROR "iptv2web is already processing data in another process."
+			ERROR "IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/iptv2web.active'."
 			exit
 		else
 			# set the active flag

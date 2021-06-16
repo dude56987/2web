@@ -40,6 +40,8 @@ include("header.html");
 			?>
 			<option value='worst'>worst</option>
 			<option value='best' >best</option>
+			<option value='360p,240p' >360p,240p</option>
+			<option value='720p,360p,240p' >720p,360p,240p</option>
 			<option value='1080p,720p,360p,240p' >1080p,720p,360p,240p</option>
 			<option value='240p,360p,720p,1080p' >240p,360p,720p,1080p</option>
 			<option value='4000p,1080p,720p,360p,240p' >4K</option>

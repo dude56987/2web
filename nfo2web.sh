@@ -27,6 +27,18 @@ STOP(){
 	read -r #DEBUG DELETE ME
 }
 ########################################################################
+function INFO(){
+	width=$(tput cols)
+	# cut the line to make it fit on one line using ncurses tput command
+	buffer="                                                                                "
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
+	# print the line
+	printf "$output\r"
+}
+########################################################################
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	if [ -f /usr/bin/inline-detox ];then
@@ -1825,16 +1837,16 @@ function cacheCheck(){
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
-			echo "[INFO]: File is to old, update the file $1"
+			INFO "[INFO]: File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			echo "[INFO]: File in cache, do not update $1"
+			INFO "[INFO]: File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		echo "[INFO]: File does not exist, it must be created $1"
+		INFO "[INFO]: File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -2255,7 +2267,7 @@ main(){
 			#fi
 			#if [ -f "$webDirectory/kodi/channels.m3u" ];then
 				echo "<a class='button' href='live'>"
-				echo "Live"
+				echo "LIVE"
 				echo "</a>"
 			#fi
 			#if [ -d "$webDirectory/comics/" ];then
