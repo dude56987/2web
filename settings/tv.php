@@ -19,6 +19,7 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
+	<a class='button' href='log.html'>LOG</a>
 </div>
 <?php
 // no url was given at all

@@ -109,8 +109,22 @@ build-deb:
 	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
-	# copy over default stylesheet
-	cp themes/*.css debian/usr/share/mms/themes/
+	# build the default themes
+	# - default (gray)
+	cat themes/default.css > debian/usr/share/mms/themes/default.css
+	cat themes/base.css >> debian/usr/share/mms/themes/default.css
+	# - blue
+	cat themes/blue.css > debian/usr/share/mms/themes/blue.css
+	cat themes/base.css >> debian/usr/share/mms/themes/blue.css
+	# - red
+	cat themes/red.css > debian/usr/share/mms/themes/red.css
+	cat themes/base.css >> debian/usr/share/mms/themes/red.css
+	# - green
+	cat themes/green.css > debian/usr/share/mms/themes/green.css
+	cat themes/base.css >> debian/usr/share/mms/themes/green.css
+	# user created themes, themes are constructed from above using base theme
+	# user themes can be any self contained .css file
+	#cp themes/*.css debian/usr/share/mms/themes/
 	# copy over javascript libary
 	cp nfo2web.js debian/usr/share/nfo2web/
 	# copy over php scripts
@@ -123,6 +137,7 @@ build-deb:
 	# copy the resolvers
 	cp ytdl-resolver.php debian/usr/share/mms/
 	cp stream.php debian/usr/share/mms/
+	cp 404.php debian/usr/share/mms/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/

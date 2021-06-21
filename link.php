@@ -19,20 +19,23 @@ include("header.html")
 		</ul>
 		<li><a href="#kodi">Kodi</a></li>
 		<ul>
+			<li><a href="#kodi_TLDR">TLDR</a></li>
 			<li><a href="#kodi_live">Live Channels</a></li>
 			<li><a href="#kodi_ondemand">On-Demand Libary</a></li>
+			<li><a href="#kodi_comics">Comics Libary</a></li>
 		</ul>
 		<li><a href="#desktop">Desktop</a></li>
 		<ul>
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
 			<li><a href="#desktop_hard_links">Hard links</a></li>
 			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
+			<li><a href="#desktop_install_VLC">Install VLC</a></li>
 		</ul>
 	</ul>
 </div>
 
 <p>
-For when you need more that the web player can handle. This help section defines how to set up syncing of on-demand movies/shows and live channels/radio to kodi media centers. This also discusses how to use hard link buttons on media.
+For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics to kodi media centers. This also discusses how to use hard link buttons on media.
 </p>
 
 </div>
@@ -44,16 +47,14 @@ For when you need more that the web player can handle. This help section defines
 	</p>
 	<span class='button'>Hard Link</span>
 	<p>
-	button. This links
-  directly to the content. This is the simplest most compatible way to view any content.
+	button. This links directly to the source content on the server. Clicking this link on most any platform will open a appropriate player. This is the simplest way to view any content that the webplayer can't handle in your browser.
 	</p>
 	<p>
 	On android you can hold the button and "use open with external app" from the popup
-	menu to play the link with <a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
+	menu to play the link with your video player. <a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a> is a good one.
 	</p>
 	<p>
-	Some content can still not be played with web player technology so if anything refuses
-  to play this generally gets around it.
+	Some content can still not be played with current web browsers by default, so if anything refuses to play this generally gets around it.
 	</p>
 </div>
 <div class='titleCard linkInfo'>
@@ -75,7 +76,7 @@ For when you need more that the web player can handle. This help section defines
 	to view all live channels as a playlist.
 	</p>
 	<?PHP
-	echo '<a class="button" href="/kodi/channels.m3u">Link</a>';
+	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
 
 	echo '<p>The hard link is http://'.gethostname().'.local:444/kodi/channels.m3u</p>';
 	?>
@@ -83,12 +84,12 @@ For when you need more that the web player can handle. This help section defines
 	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
 	</p>
 	<?PHP
-	echo'<a class="button" href="http://'.gethostname().'.local:444/kodi/channels_raw.m3u">RAW Link</a>';
+	echo'<a class="button" href="http://'.gethostname().'.local:444/kodi/channels_raw.m3u">channels_raw.m3u</a>';
 ?>
 	<p>
 	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
 	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
-	in android locally it will play the feeds directly from the network to you phone.
+	in android locally it will play the feeds directly from the internet to you phone. Even if this server is unreachable by your phone as long as you are connected to the internet you can play the channels_raw.m3u file.
 	</p>
 
 	<h3 id="android_ondemand">Android On-Demand</h3>
@@ -114,11 +115,19 @@ For when you need more that the web player can handle. This help section defines
 
 	<div class="inputCard">
 		<ul>
+			<li><a href="#kodi_TLDR">TLDR</a></li>
 			<li><a href="#kodi_live">Live Channels</a></li>
 			<li><a href="#kodi_ondemand">On-Demand Libary</a></li>
+			<li><a href="#kodi_comics">Comics Libary</a></li>
 		</ul>
 	</div>
-
+	<h3 id="kodi_TLDR" >TLDR</h3>
+	<p>
+		<?PHP
+		echo "The http://".gethostname().".local:444/kodi/ directory contains";
+		echo " http directories that can be used to link content into kodi.";
+		?>
+	</p>
 	<h3 id="kodi_live">Kodi Live</h3>
 	<p>
 		To copy the live libary to be used on kodi you must have the iptv simple Client installed
@@ -128,7 +137,7 @@ For when you need more that the web player can handle. This help section defines
 		To install the client in kodi from the home menu go to
 	</p>
 	<ol class='inputCard'>
-	<li>home</li>
+	<li>in kodi go to home</li>
 	<li>settings</li>
 	<li>addons</li>
 	<li>install from repository</li>
@@ -158,9 +167,9 @@ For when you need more that the web player can handle. This help section defines
 	</div>
 	<h3 id="kodi_ondemand">Kodi On-Demand</h3>
 		To add the OnDemand content of this server to a kodi libary you would go to
-
+		<h4>Step-By-Step<h4>
 		<ol class='inputCard'>
-			<li>home</li>
+			<li>in kodi go to home</li>
 			<li>settings</li>
 			<li>media</li>
 			<li>videos</li>
@@ -185,6 +194,35 @@ For when you need more that the web player can handle. This help section defines
 			<li>Set "Scan recursively" to "False"</li>
 			<li>Repeat the process of adding the shows repository as well but set "scan recursively" to "True"</li>
 		</ol>
+
+		<h3 id="kodi_comics" >Kodi Comics</h3>
+		<p>
+			Kodi can be linked to this servers comic collection by using the kodi pictures interface.
+		</p>
+		<h4>Step-By-Step<h4>
+		<ol class='inputCard'>
+			<li>in kodi go to home</li>
+			<li>settings</li>
+			<li>media</li>
+			<li>pictures</li>
+			<li>Add pictures</li>
+			<li>Browse</li>
+			<li>Add network location</li>
+			<li>Change "Protocol" to "Web server directory"</li>
+			<li>Change "Server address" to "
+			<?PHP
+				$channelLink="http://".gethostname().".local";
+				echo '<a href="'.$channelLink.'">'.$channelLink.'</a>';
+			?>
+			"</li>
+			<li>Change "Remote Path" to "kodi"</li>
+			<li>Change "port" to "444"</li>
+			<li>Enter the path that has been added above to the list</li>
+			<li>Go to comics</li>
+			<li>Select OK</li>
+			<li>Select OK again</li>
+			<li>Your done, you can now access comics on this server from kodi's pictures interface.</li>
+		</ol>
 </div>
 <div class='titleCard linkInfo'>
 	<h2 id="desktop">Desktop</h2>
@@ -194,7 +232,7 @@ For when you need more that the web player can handle. This help section defines
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
 			<li><a href="#desktop_hard_links">Hard links</a></li>
 			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
-			<li><a href="#desktop_install_VLC">Install Kodi</a></li>
+			<li><a href="#desktop_install_VLC">Install VLC</a></li>
 		</ul>
 	</div>
 
@@ -217,7 +255,7 @@ For when you need more that the web player can handle. This help section defines
 			Install VLC for your desktop computer.
 		</a>
 		<p>
-			If you need a desktop player that will play any of the "Hard Link" buttons on the website. You can install VLC for almost any computing device (windows/mac/Linux/android/ios/BSD/chromeos).
+			If you need a desktop player that will play any of the "Hard Link" buttons on the website.
 		</p>
 	</div>
 </div>

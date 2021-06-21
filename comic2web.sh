@@ -27,16 +27,16 @@ function cacheCheck(){
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
-			ERROR "File is to old, update the file $1"
+			INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			ERROR "File in cache, do not update $1"
+			INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		ERROR "File does not exist, it must be created $1"
+		INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -61,6 +61,7 @@ function INFO(){
 	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
 	# print the line
 	printf "$output\r"
+	#printf "$output\n"
 }
 ################################################################################
 function ERROR(){
@@ -218,7 +219,7 @@ pickPath(){
 }
 ################################################################################
 prefixNumber(){
-	set -x
+	#set -x
 	pageNumber=$(( 10#$1 ))
 	# set the page number prefix to make file sorting work
 	# - this makes 1 occur before 10 by adding zeros ahead of the number
@@ -232,7 +233,7 @@ prefixNumber(){
 	fi
 	# output the number with a prefix on it
 	echo $pageNumber
-	set +x
+	#set +x
 }
 ################################################################################
 scanPages(){
@@ -267,9 +268,9 @@ scanPages(){
 		if echo "$pageType" | grep -q "chapter";then
 			# is a chapter based comic
 			tempComicName="$(pickPath "$imagePath" 3)"
-			if cacheCheck "$webDirectory/comics/$tempComicName/0001/0001.html" 10;then
-				#tempComicChapter="$(pickPath "$imagePath" 2)"
-				tempComicChapter=$pageChapter
+			#tempComicChapter="$(pickPath "$imagePath" 2)"
+			tempComicChapter=$pageChapter
+			if cacheCheck "$webDirectory/comics/$tempComicName/$tempComicChapter/index.html" 10;then
 				mkdir -p "$webDirectory/comics/$tempComicName/$tempComicChapter"
 				# render if the page is older than 10 days
 				# get the total chapters
@@ -304,7 +305,7 @@ scanPages(){
 		else
 			# is a single chapter comic
 			tempComicName="$(pickPath "$imagePath" 2)"
-			if cacheCheck "$webDirectory/comics/$tempComicName/0001.html" 10;then
+			if cacheCheck "$webDirectory/comics/$tempComicName/index.html" 10;then
 				mkdir -p "$webDirectory/comics/$tempComicName/"
 				# link the image file to the web directory
 				#echo "[INFO]: Linking single chapter comic $tempComicName"
@@ -347,7 +348,10 @@ renderPage(){
 	pageName=$(popPath "$page")
 	if [ $isChapter = true ];then
 		# multi chapter comic
-		#pageChapterName=$(pickPath "$page" 2)
+		if test -f "$webDirectory/comics/$pageComicName/$pageChapterName/chapterTitle.cfg";then
+			pageChapterPathName=$(pickPath "$page" 2)
+			echo "$pageChapterPathName" > "$webDirectory/comics/$pageComicName/$pageChapterName/chapterTitle.cfg"
+		fi
 		pageComicName=$(pickPath "$page" 3)
 		# link the image file into the web directory
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg";then
@@ -452,7 +456,7 @@ renderPage(){
 	# check next and previous pages to make sure they can be linked to
 	# write the webpage for the individual image
 	{
-		echo "<html>"
+		echo "<html class='comicPageBackground'>"
 		echo "<head>"
 	} > "$pagePath"
 	if [ $isChapter = true ];then
@@ -521,11 +525,7 @@ renderPage(){
 		echo "	<a class='comicHomeButton comicPageButton center' href='../../..'>"
 		echo "		HOME"
 		echo "	</a>"
-		if [ $isChapter = true ];then
-			echo "	<a class='comicIndexButton comicPageButton center' href='../'>"
-		else
-			echo "	<a class='comicIndexButton comicPageButton center' href='../'>"
-		fi
+		echo "	<a class='comicIndexButton comicPageButton center' href='index.html'>"
 		echo "		BACK"
 		echo "	</a>"
 		#echo "<div class='comicFooter'>"
@@ -592,11 +592,31 @@ renderPage(){
 			find "$webDirectory/comics/$pageComicName/" -mindepth 1 -maxdepth 1 -type d | sort | while read chapterPath;do
 				# multi chapter comic
 				tempChapterName="$(popPath "$chapterPath")"
+				tempNextChapterName=$(( 10#$tempChapterName + 1 ))
+				tempPreviousChapterName=$(( 10#$tempChapterName - 1 ))
+				# reformat next and previous chapters
+				tempNextChapterName=$(prefixNumber "$tempNextChapterName")
+				tempPreviousChapterName=$(prefixNumber "$tempPreviousChapterName")
+				# check for existince of next and previous chapters
+				if [ $(( 10#$tempChapterName + 1 )) -gt $totalChapters ];then
+					# no next chapter exists link to the index
+					tempNextChapterName="index.html"
+				else
+					tempNextChapterName="$tempNextChapterName/"
+				fi
+				if [ $(( 10#$tempChapterName - 1 )) -le 0 ];then
+					# no previous chapter exists link to the index
+					tempPreviousChapterName="index.html"
+				else
+					tempPreviousChapterName="$tempPreviousChapterName/"
+				fi
 				# build the comic chapter link in the main comic index
 				{
 					echo "<a href='./$tempChapterName/' class='indexSeries' >"
 					echo "<img loading='lazy' src='./$tempChapterName/thumb.png' />"
-					echo "<div>Chapter $tempChapterName</div>"
+					echo "<div>Chapter "
+					cat "$webDirectory/comics/$pageComicName/$tempChapterName/chapterTitle.cfg"
+					echo "</div>"
 					echo "</a>"
 				} >> "$webDirectory/comics/$pageComicName/index.html"
 				# build the index for the chapter displaying all the images
@@ -608,10 +628,12 @@ renderPage(){
 					echo "<body>"
 					cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g"
 					echo "<div class='titleCard'>"
-					echo "<a class='button' href='..'>"
-					echo "$pageComicName"
-					echo "</a>"
-					echo "<h1>Chapter $((10#$tempChapterName))/$totalChapters</h2>"
+					echo "<a class='left button' href='../$tempPreviousChapterName'>Back</a>"
+					echo "<a class='right button' href='../$tempNextChapterName'>Next</a>"
+					echo "<div>"
+					echo "	<a class='button comicTitleButton' href='..'>$pageComicName</a>"
+					echo "	<h2>Chapter $(( 10#$tempChapterName ))/$totalChapters</h2>"
+					echo "</div>"
 					echo "</div>"
 				} > "$webDirectory/comics/$pageComicName/$tempChapterName/index.html"
 

@@ -1974,6 +1974,7 @@ main(){
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+		ln -s "/usr/share/mms/404.php" "$webDirectory/404.php"
 		################################################################################
 		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
 			# build the cache directory if none exists
@@ -2249,35 +2250,38 @@ main(){
 		{
 			# build the header
 			echo "<div id='header' class='header'>"
+			echo "<hr class='menuButton'/>"
+			echo "<hr class='menuButton'/>"
+			echo "<hr class='menuButton'/>"
 			echo "<a class='button' href='..'>"
 			echo "HOME"
 			echo "</a>"
 			echo "<a class='button' href='link.php'>"
 			echo "LINK"
 			echo "</a>"
-			#if grep -q "Movies" "$webDirectory/stats.index";then
+			if [ -d "$webDirectory/kodi/movies/" ];then
 				echo "<a class='button' href='movies'>"
 				echo "MOVIES"
 				echo "</a>"
-			#fi
-			#if grep -q "Shows" "$webDirectory/stats.index";then
+			fi
+			if [ -d "$webDirectory/kodi/shows/" ];then
 				echo "<a class='button' href='shows'>"
 				echo "SHOWS"
 				echo "</a>"
-			#fi
-			#if [ -f "$webDirectory/kodi/channels.m3u" ];then
+			fi
+			if [ -f "$webDirectory/kodi/channels.m3u" ];then
 				echo "<a class='button' href='live'>"
 				echo "LIVE"
 				echo "</a>"
-			#fi
-			#if [ -d "$webDirectory/comics/" ];then
+			fi
+			if [ -d "$webDirectory/comics/" ];then
 				echo "<a class='button' href='comics'>"
 				echo "COMICS"
 				echo "</a>"
-			#fi
-			echo "<a class='button' href='log.html'>"
-			echo "LOG"
-			echo "</a>"
+			fi
+			#echo "<a class='button' href='log.html'>"
+			#echo "LOG"
+			#echo "</a>"
 			echo "<a class='button' href='system.php'>"
 			echo "SETTINGS"
 			echo "</a>"
@@ -2297,6 +2301,16 @@ main(){
 			echo "</head>"
 			echo "<body>"
 			cat "$headerPagePath"
+			echo "<div class='titleCard'>"
+			echo "	<h1>Settings</h1>"
+			echo "	<a class='button' href='system.php'>SYSTEM</a>"
+			echo "	<a class='button' href='tv.php'>TV</a>"
+			echo "	<a class='button' href='radio.php'>RADIO</a>"
+			echo "	<a class='button' href='nfo.php'>NFO</a>"
+			echo "	<a class='button' href='comics.php'>COMICS</a>"
+			echo "	<a class='button' href='cache.php'>CACHE</a>"
+			echo "	<a class='button' href='log.html'>LOG</a>"
+			echo "</div>"
 			# add the javascript sorter
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"

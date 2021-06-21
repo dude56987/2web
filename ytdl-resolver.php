@@ -40,6 +40,7 @@ function cacheUrl($sum,$videoLink){
 	//$command = '/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
 	//$command = '/usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
 	//$command = 'echo "/usr/bin/niceload --net ';
+	//$command = 'echo "';
 	$command = 'echo "';
 	// add the download to the cache with the processing queue
 	if (file_exists("/usr/local/bin/youtube-dl")){
@@ -57,21 +58,27 @@ function cacheUrl($sum,$videoLink){
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
 	//$command = $command." --continue --embed-subs --no-mtime --no-part ";
 	$command = $command." --continue --write-info-json --all-subs";
-	$command = $command."	--sub-format srt --embed-subs --no-mtime ";
+	$command = $command." --sub-format srt --embed-subs --no-mtime";
+	$command = $command." --write-thumbnail";
+	// max download file size should be 6 gigs, this is a insane file size for a youtube video
+	// if a way of detecting livestreams is found this is unnessary
+	$command = $command." --max-filesize '6g'";
+	$command = $command." --retries 'infinite'";
+	$command = $command." --fragment-retries 'infinite'";
 	//$command = $command."	--hls-use-mpegts ";
 	# TODO: add .srt subtitle dowloads
 	if (array_key_exists("res",$_GET)){
 		if($_GET["res"] == "HD"){
-			$command = $command." -f best --recode-video mp4 ";
+			$command = $command." -f best --recode-video mp4";
 		} else if ($_GET["res"] == "SD") {
-			$command = $command." -f worst --recode-video mp4 ";
+			$command = $command." -f worst --recode-video mp4";
 		}
 	} else {
 		# by default use the option set in the web interface it it exists
-		$command = $command." -f ".$quality." --recode-video mp4 ";
+		$command = $command." -f '".$quality."' --recode-video mp4";
 	}
 	# complete the command with the paths
-	$command = $command."-o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
+	$command = $command." -o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
 	//$command = $command." | at -q b now";
 	# link to bump sum end
 	//$command = $command." && ln -sf '".$sum.".mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\" ";
@@ -80,13 +87,20 @@ function cacheUrl($sum,$videoLink){
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
-			$command = $command."| /usr/bin/at -q b now";
+			$command = $command." | /usr/bin/at -q b now";
 		}else{
-			$command = $command."| /usr/bin/at now";
+			$command = $command." | /usr/bin/at now";
 		}
 	}else{
-		$command = $command."| /usr/bin/at now";
+		$command = $command." | /usr/bin/at now";
 	}
+	# the wait queue is 15 minutes max so after 15 minutes remove the bump links and the
+	# .m3u playlists generated from the download process
+	runShellCommand("echo 'rm RESOLVER-CACHE/$sum-bump.mp4' | /usr/bin/at -q b 'now + 15 minutes'");
+	runShellCommand("echo 'rm RESOLVER-CACHE/$sum-skip.mp4' | /usr/bin/at -q b 'now + 15 minutes'");
+	runShellCommand("echo 'rm RESOLVER-CACHE/$sum.m3u' | /usr/bin/at -q b 'now + 15 minutes'");
+	# if the file is still downloading after an hour remove the .part file so it can be re cached something has went really wrong if this has a file to remove
+	runShellCommand("echo 'rm RESOLVER-CACHE/$sum.part' | /usr/bin/at -q b 'now + 30 minutes'");
 	# add end quote to sem command
 	//$command = $command.'"';
 	# launch the command to start downloading to the cache
@@ -96,7 +110,8 @@ function cacheUrl($sum,$videoLink){
 	# launch the parallel process
 	//popen($command);
 	# write to the log the download start time
-	runShellCommand("date > RESOLVER-CACHE/".$sum.".log");
+	runShellCommand("date > RESOLVER-CACHE/".$sum."_date.log");
+	runShellCommand("echo \"".$command."\" > RESOLVER-CACHE/".$sum."_command.log");
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
 	if (array_key_exists("batch",$_GET)){
@@ -332,6 +347,12 @@ if (array_key_exists("url",$_GET)){
 	}
 }else{
 	// no url was given at all
+	echo "<html>";
+	echo "<head>";
+	echo "<link rel='stylesheet' href='style.css'>";
+	echo "</head>";
+	echo "<body>";
+	include("header.html");
 	echo "No url was specified to the resolver!<br>";
 	echo "Please give a valid URL to a video to be resolved.<br>";
 	echo "<form method='get'>";
@@ -362,5 +383,37 @@ if (array_key_exists("url",$_GET)){
 	echo '		http://'.gethostname().':444/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo "</ul>";
+	echo "<div class='seriesBackground'>";
+	echo "<h2>Random Cached Videos</h2>";
+	$sourceFiles = explode("\n",shell_exec("ls -t1 RESOLVER-CACHE/*.mp4"));
+	// reverse the time sort
+	//$sourceFiles = array_reverse($sourceFiles);
+	# build the video index
+	foreach($sourceFiles as $sourceFile){
+		#echo "	<div>File Exists $sourceFile</div>";
+		if (file_exists($sourceFile)){
+			#echo "	<div>Is File $sourceFile</div>";
+			if (is_file($sourceFile)){
+				if ( ! strpos($sourceFile,"-bump")){
+					if ( ! strpos($sourceFile,"-skip")){
+						echo "<a class='showPageEpisode' href='".$sourceFile."'>";
+						if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
+							echo "<img loading='lazy' src='".str_replace(".mp4",".jpg",$sourceFile)."' />";
+						}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
+							echo "<img loading='lazy' src='".str_replace(".mp4",".webp",$sourceFile)."' />";
+						}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
+							echo "<img loading='lazy' src='".str_replace(".mp4",".png",$sourceFile)."' />";
+						}
+						echo "	<h3>".$sourceFile."</h3>";
+						echo "</a>";
+					}
+				}
+			}
+		}
+	}
+	echo "</div>";
+	include("header.html");
+	echo "</body>";
+	echo "</html>";
 }
 ?>

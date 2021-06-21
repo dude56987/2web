@@ -21,6 +21,7 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
+	<a class='button' href='log.html'>LOG</a>
 </div>
 
 <!-- create the theme picker based on installed themes -->
@@ -73,6 +74,9 @@ include("header.html");
 		<button class='button' type='submit'>Change Cache Time</button>
 	</form>
 </div>
+<?PHP
+include("ytdl-resolver.php");
+?>
 
 </body>
 </html>

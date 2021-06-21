@@ -915,7 +915,7 @@ webGen(){
 		if [ "$caughtLength" -gt 1 ];then
 			# pull the link on this line and store it
 			title=$(echo "$lineCaught" | cut -d',' -f2)
-			link=$(echo -n "$line")
+			link=$(echo -n "$line" | grep ".")
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
@@ -1021,7 +1021,7 @@ webGen(){
 		echo "<hr>"
 		find "$webDirectory/live/groups/" -mindepth 1 -maxdepth 1 -type d | sort | while read groupsName;do
 			groupLink=$(popPath "$groupsName")
-			echo "<a class='button' href='groups/$groupLink'>$groupLink</a>"
+			echo "<a class='button tag' href='groups/$groupLink'>$groupLink</a>"
 		done
 		echo "<hr>"
 		echo " <input id='searchBox' class='searchBox' type='text'"
