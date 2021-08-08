@@ -9,7 +9,7 @@
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
-include("header.html");
+include("header.php");
 ?>
 <div class='titleCard'>
 	<h1>Settings</h1>
@@ -19,59 +19,13 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.html'>LOG</a>
+	<a class='button' href='log.php'>LOG</a>
 </div>
 <?php
 // no url was given at all
-echo "<div class='settingListCard'>";
-echo "<h2>Blocked links Config</h2>\n";
-echo "<pre>\n";
-echo file_get_contents("/etc/iptv2web/blockedLinks.cfg");
-echo "</pre>\n";
-echo "</div>";
-
-
-echo "<div class='settingListCard'>";
-echo "<h2>Blocked links</h2>\n";
-$sourceFiles = scandir("/etc/iptv2web/blockedLinks.d/");
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	$sourceFile = "/etc/iptv2web/blockedLinks.d/".$sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>";
-	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>";
-		if (is_file($sourceFile)){
-			if (strpos($sourceFile,".cfg")){
-				$link=file_get_contents($sourceFile);
-				echo "<form action='admin.php' class='removeLink' method='post'>\n";
-				echo "<input class='button' type='text' name='unblockLink' value='".$link."' readonly>\n";
-				echo "<input class='button' type='submit' value='UNBLOCK'>\n";
-				echo "</form>\n";
-			}
-		}
-	}
-}
-echo "</div>";
-
-echo "<div class='inputCard'>\n";
-echo "<form action='admin.php' method='post'>\n";
-echo "<h2>Block Link</h2>\n";
-echo "<input width='60%' class='inputText' type='text' name='blockLink' placeholder='Link'>\n";
-echo "<input class='button' type='submit'>\n";
-echo "</form>\n";
-echo "</div>";
-
-echo "<div class='inputCard'>\n";
-echo "<form action='admin.php' method='post'>\n";
-echo "<h2>Unblock Link</h2>\n";
-echo "<input width='60%' class='inputText' type='text' name='unblockLink' placeholder='Link'>\n";
-echo "<input class='button' type='submit'>\n";
-echo "</form>\n";
-echo "</div>";
-
 
 echo "<div class='settingListCard'>\n";
-echo "<h2>Current Link Config</h2>\n";
+echo "<h2>Server Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/iptv2web/sources.cfg");
 echo "</pre>\n";
@@ -149,6 +103,106 @@ foreach($sourceFiles as $sourceFile){
 <input class='button' type='submit'>
 </form>
 </div>
+
+<?PHP
+echo "<div class='settingListCard'>";
+echo "<h2>Server Blocked links Config</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/iptv2web/blockedLinks.cfg");
+echo "</pre>\n";
+echo "</div>";
+
+
+echo "<div class='settingListCard'>";
+echo "<h2>Blocked links</h2>\n";
+$sourceFiles = scandir("/etc/iptv2web/blockedLinks.d/");
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	$sourceFile = "/etc/iptv2web/blockedLinks.d/".$sourceFile;
+	//echo "[DEBUG]: found file ".$sourceFile."<br>";
+	if (file_exists($sourceFile)){
+		//echo "[DEBUG]: file exists ".$sourceFile."<br>";
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				$link=file_get_contents($sourceFile);
+				echo "<form action='admin.php' class='removeLink' method='post'>\n";
+				echo "<input class='button' type='text' name='unblockLink' value='".$link."' readonly>\n";
+				echo "<input class='button' type='submit' value='UNBLOCK'>\n";
+				echo "</form>\n";
+			}
+		}
+	}
+}
+echo "</div>";
+?>
+
+<div class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Block Link</h2>
+<input width='60%' class='inputText' type='text' name='blockLink' placeholder='Link'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+<div class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Unblock Link</h2>
+<input width='60%' class='inputText' type='text' name='unblockLink' placeholder='Link'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+
+<?PHP
+echo "<div class='settingListCard'>";
+echo "<h2>Server Blocked Groups</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/iptv2web/blockedGroups.cfg");
+echo "</pre>\n";
+echo "</div>";
+
+
+echo "<div class='settingListCard'>";
+echo "<h2>Blocked Groups</h2>\n";
+$sourceFiles = scandir("/etc/iptv2web/blockedGroups.d/");
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	$sourceFile = "/etc/iptv2web/blockedGroups.d/".$sourceFile;
+	//echo "[DEBUG]: found file ".$sourceFile."<br>";
+	if (file_exists($sourceFile)){
+		//echo "[DEBUG]: file exists ".$sourceFile."<br>";
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				$link=file_get_contents($sourceFile);
+				echo "<form action='admin.php' class='removeLink' method='post'>\n";
+				echo "<input class='button' type='text' name='unblockGroup' value='".$link."' readonly>\n";
+				echo "<input class='button' type='submit' value='UNBLOCK'>\n";
+				echo "</form>\n";
+			}
+		}
+	}
+}
+echo "</div>";
+?>
+
+
+<div class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Block Group</h2>
+<input width='60%' class='inputText' type='text' name='blockGroup' placeholder='GroupName...'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+<div class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Unblock Group</h2>
+<input width='60%' class='inputText' type='text' name='unblockGroup' placeholder='GroupName...'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+
 
 </body>
 </html>

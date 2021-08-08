@@ -5,13 +5,21 @@
 <body>
 
 <?php
-include('header.html');
+include('header.php');
 ?>
 
+<div class='titleCard'>
+	<h1>Settings</h1>
+	<a class='button' href='system.php'>SYSTEM</a>
+	<a class='button' href='tv.php'>TV</a>
+	<a class='button' href='radio.php'>RADIO</a>
+	<a class='button' href='nfo.php'>NFO</a>
+	<a class='button' href='comics.php'>COMICS</a>
+	<a class='button' href='cache.php'>CACHE</a>
+	<a class='button' href='log.php'>LOG</a>
+</div>
+
 <div class='settingListCard'>
-
-<div>
-
 <?php
 # enable error reporting
 ini_set("display_errors", 1);
@@ -107,6 +115,12 @@ if (array_key_exists("update",$_POST)){
 	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
 	# write the config file
 	file_put_contents("cacheQuality.cfg",$cacheQuality);
+}else if (array_key_exists("cacheMode",$_POST)){
+	$cacheMode=$_POST['cacheMode'];
+	# change the default cache quality
+	echo "Changing cache mode to '".$cacheMode."'<br>\n";
+	# write the config file
+	file_put_contents("cacheMode.cfg",$cacheMode);
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	echo "Running addLink on link ".$link."<br>\n";
@@ -226,6 +240,28 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+}else if(array_key_exists("blockGroup",$_POST)){
+	$link=$_POST['blockGroup'];
+	echo "Running blockGroup on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/iptv2web/blockedGroups.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if ( ! file_exists($configPath)){
+		echo "Blocking link ".$link."<br>\n";
+		# create the blocked link file
+		file_put_contents($configPath,$link);
+	}
+}else if(array_key_exists("unblockGroup",$_POST)){
+	$link=$_POST['unblockGroup'];
+	echo "Running unblockGroup on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/iptv2web/blockedGroups.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Unblocking link ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	echo "Changing theme to ".$theme."<br>\n";
@@ -235,19 +271,8 @@ if (array_key_exists("update",$_POST)){
 
 </div>
 
-<br>
-<br>
-<br>
-
-<a class='button' href='index.html'>Return to Media</a>
-<a class='button' href='system.php'>System Settings</a>
-<a class='button' href='tv.php'>TV Settings</a>
-<a class='button' href='radio.php'>RADIO Settings</a>
-
-</div>
-
 <?php
-include('header.html');
+include('header.php');
 ?>
 
 </body>

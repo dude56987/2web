@@ -4,7 +4,7 @@
 </head>
 <body>
 <?PHP
-include("header.html")
+include("header.php")
 ?>
 <div class='titleCard linkInfo'>
 <h1>Linking</h1>
@@ -260,7 +260,7 @@ For when you need more than the web interface can handle. This help section defi
 	</div>
 </div>
 <?PHP
-include("header.html")
+include("header.php")
 ?>
 </body>
 </html>

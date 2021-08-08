@@ -10,7 +10,7 @@
 ################################################################################
 ini_set('display_errors', 1);
 ################################################################################
-include("header.html");
+include("header.php");
 ?>
 
 <div class='titleCard'>
@@ -21,7 +21,7 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.html'>LOG</a>
+	<a class='button' href='log.php'>LOG</a>
 </div>
 
 <!-- create the theme picker based on installed themes -->
@@ -74,6 +74,29 @@ include("header.html");
 		<button class='button' type='submit'>Change Cache Time</button>
 	</form>
 </div>
+
+<!-- create the theme picker based on installed themes -->
+<div class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Cache Mode</h2>
+		<p>
+			Change the download mode. Default mode re-streams the video file as a cached HLS stream. Compatibility mode is to allow lower CPU resources on a server to not disable caching videos.
+		</p>
+		<select name='cacheMode'>
+			<?php
+				// add the cache Mode as a option
+				if(file_exists("cacheMode.cfg")){
+					$cacheMode= file_get_contents('cacheMode.cfg');
+					echo "<option selected value='".$cacheMode."'>$cacheMode</option>";
+				}
+			?>
+			<option value='default'>default</option>
+			<option value='compat'>compatibility</option>
+		</select>
+		<button class='button' type='submit'>Change Cache Mode</button>
+	</form>
+</div>
+
 <?PHP
 include("ytdl-resolver.php");
 ?>

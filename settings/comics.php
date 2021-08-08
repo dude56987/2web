@@ -9,7 +9,7 @@
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
-include("header.html");
+include("header.php");
 ?>
 <div class='titleCard'>
 	<h1>Settings</h1>
@@ -19,12 +19,12 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.html'>LOG</a>
+	<a class='button' href='log.php'>LOG</a>
 </div>
 <?php
 
 echo "<div class='settingListCard'>\n";
-echo "<h2>Current Link Config</h2>\n";
+echo "<h2>Server Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/comic2web/sources.cfg");
 echo "</pre>\n";

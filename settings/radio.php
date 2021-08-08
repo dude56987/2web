@@ -6,7 +6,7 @@
 <?php
 
 ini_set('display_errors', 1);
-include("header.html");
+include("header.php");
 ?>
 
 <div class='titleCard'>
@@ -17,12 +17,12 @@ include("header.html");
 	<a class='button' href='nfo.php'>NFO</a>
 	<a class='button' href='comics.php'>COMICS</a>
 	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.html'>LOG</a>
+	<a class='button' href='log.php'>LOG</a>
 </div>
 
 <?php
 echo "<div class='settingListCard'>\n";
-echo "<h2>Current Radio Link Config</h2>\n";
+echo "<h2>Server Radio Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/iptv2web/radioSources.cfg");
 echo "</pre>\n";
