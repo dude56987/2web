@@ -24,12 +24,13 @@ tabs 4
 ################################################################################
 function INFO(){
 	width=$(tput cols)
+	cleanedText=$(cleanText "$1")
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
+	output="$(echo -n "[INFO]: $cleanedText$buffer" | cut -b"1-$(( $width - 1 ))")"
 	# print the line
 	printf "$output\r"
 }
@@ -53,12 +54,12 @@ cleanText(){
 function killFakeImage(){
 	localIconPath=$1
 	# if the file exists
-	if [ -f "$localIconPath" ];then
+	if test -f "$localIconPath";then
 		# check it is not a empty file
-		if file "$localIconPath" | grep "empty";then
+		if file "$localIconPath" | grep -q "empty";then
 			# remove the empty file
 			rm -v "$localIconPath"
-		elif file "$localIconPath" | grep "text";then
+		elif file "$localIconPath" | grep -q "text";then
 			# remove remote downloaded http redirect, 404, etc.
 			rm -v "$localIconPath"
 		fi
@@ -68,9 +69,9 @@ function killFakeImage(){
 ################################################################################
 function streamPass(){
 	# pass streamlink arguments to correct streamlink path
-	if [ -f "/usr/local/bin/streamlink" ];then
+	if test -f "/usr/local/bin/streamlink";then
 		/usr/local/bin/streamlink "$@"
-	elif [ -f "/usr/bin/streamlink" ];then
+	elif test -f "/usr/bin/streamlink";then
 		/usr/bin/streamlink "$@"
 	else
 		# could not find streamlink installed on the server
@@ -92,33 +93,36 @@ examineIconLink(){
 	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 	INFO "Icon Sum=$sum"
 	localIconPath="$(webRoot)/live/$sum.png"
+	localIconThumbPath="$(webRoot)/live/$sum-thumb.png"
+	localIconThumbMiniPath="$(webRoot)/live/$sum-thumb-mini.png"
 
 	# if the file exists and is not older than 10 days
-	if cacheCheck "$localIconPath" "100";then
+	if cacheCheck "$localIconPath" "10";then
 
 		if [ "$iconLength" -gt 3 ];then
 			# build a md5sum from the icon link
 			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
-			if ! [ -f "$localIconPath" ];then
+			if ! test -f "$localIconPath";then
+				#timeout 600 curl "$iconLink" | convert - -adaptive-resize 128x200\! "$localIconPath"
 				# if the file does not exist in the cache download it
 				timeout 120 curl "$iconLink" > "$localIconPath"
 				# resize the icon to standard size
-				timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+				timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			fi
 		fi
 		# remove image if fake was created
 		killFakeImage "$localIconPath"
 		# try to download the icon with youtube-dl
-		if ! [ -f "$localIconPath" ];then
+		if ! test -f "$localIconPath";then
 			tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
 			# if the file does not exist in the cache download it
 			timeout 120 curl "$tempIconLink" > "$localIconPath"
 			# resize the icon to standard size
-			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 		fi
 		# remove image if fake was created
 		killFakeImage "$localIconPath"
-		if ! [ -f "$localIconPath" ];then
+		if ! test -f "$localIconPath";then
 			# resolve the link using streamlink to create a thumbnail
 			#resolvedLink=$(streamlink --stream-url "$link" best)
 			# check if the link is a twitch link, they preload ads in the first 15 seconds
@@ -142,30 +146,32 @@ examineIconLink(){
 				fi
 			fi
 			# resize the icon to standard size
-			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			# add text over retrieved thumbnail
-			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 		fi
 		killFakeImage "$localIconPath"
-		if ! [ -f "$localIconPath" ];then
+		if ! test -f "$localIconPath";then
 			# generate a image for the page since none exists
 			swirlAmount=$(echo -n "$title" | wc -c)
-			timeout 600 convert -size 400x400 +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
+			timeout 600 convert -size 200x200 +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
 			# add text over generated image
-			timeout 600 convert "$localIconPath" -adaptive-resize 400x400\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 400x400 -gravity center caption:"$title" -composite "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 			linkColor=$(echo -n "$link" | md5sum | cut --bytes='1-6')
 			# convert to grayscale
 			timeout 600 convert "$localIconPath" -colorSpace "gray" "$localIconPath"
 			# colorize the image based on the link md5
 			timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
 		fi
+		# create the icon thumbnail for the web interface
+		timeout 600 convert "$localIconPath" -adaptive-resize 128x128\! "$localIconThumbPath"
+		timeout 600 convert "$localIconPath" -adaptive-resize 32x32\! "$localIconThumbMiniPath"
 	fi
 }
 ################################################################################
 function webGenCheck(){
 	# read either from argument or filesystem
-	if echo -n "$@" | grep "\-\-filecheck";then
-		#totalChannels=$(find "$webDirectory"/live/ -name "channel_*.html" | wc -l)
+	if echo -n "$@" | grep -q "\-\-filecheck";then
 		channelCount=$(( $(cat /var/cache/nfo2web/web/kodi/channels.m3u | wc -l) / 2))
 	else
 		channelCount=$1
@@ -209,16 +215,16 @@ function getTVG(){
 	lineCaught="$1"
 	tvgInfo="$2"
 	# pipe the output of this function to get the iconLink, blank for no link
-	if echo "$lineCaught" | grep -q "$tvgInfo=\"";then
+	if echo -n "$lineCaught" | grep -q "$tvgInfo=\"";then
 		# store the icon if it is set
 		tempIconLink=$(echo "$lineCaught" | grep --only-matching "$tvgInfo=\".*\"" | cut -d'"' -f2)
-	elif echo "$lineCaught" | grep -q "$tvgInfo='";then
+	elif echo -n "$lineCaught" | grep -q "$tvgInfo='";then
 		tempIconLink=$(echo "$lineCaught" | grep --only-matching "$tvgInfo='.*'" | cut -d"'" -f2)
 	else
 		tempIconLink=""
 	fi
 	# return the link to be piped
-	echo "$tempIconLink"
+	echo -n "$tempIconLink"
 }
 ################################################################################
 updateInProgress(){
@@ -247,13 +253,13 @@ function process_M3U(){
 	#IFS_BACKUP=$IFS
 	#IFS=$'\n'
 	# check for blocked channel config
-	if ! [ -f /etc/iptv2web/blockedGroups.cfg ];then
+	if ! test -f "/etc/iptv2web/blockedGroups.cfg";then
 		# each line in this file is a string that if found will be blocked
 		echo "news" > /etc/iptv2web/blockedGroups.cfg
 	fi
 	# load up the blocked channel groups
 	blockedGroups=$(cat /etc/iptv2web/blockedGroups.cfg)
-	blockedGroups="$blockedGroups $(cat /etc/iptv2web/blockedGroups.d/*.cfg)"
+	blockedGroups=$(printf "$blockedGroups\n$(cat /etc/iptv2web/blockedGroups.d/*.cfg)")
 	#for line in $channels;do
 	echo -n "$channels" | while read line;do
 		# if a info line was detected on the last line
@@ -262,7 +268,7 @@ function process_M3U(){
 			# pull the link on this line and store it
 			title=$(echo -n "$lineCaught" | rev | cut -d',' -f1 | rev)
 			title=$(cleanText "$title")
-			echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
+			#echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
 			INFO "Found Link = $link"
 			radio="false"
@@ -360,7 +366,7 @@ function cacheCheck(){
 	cacheDays="$2"
 
 	# return true if cached needs updated
-	if [ -f "$filePath" ];then
+	if test -f "$filePath";then
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
@@ -402,7 +408,7 @@ function processLink(){
 	if echo -n "$link" | grep -Eq "^#";then
 		# this link is a comment
 		return 0
-	elif [ -f "$link" ];then
+	elif test -f "$link";then
 		# if the link is a local address
 		INFO "Link is a local address. Adding local file..."
 		# add local files
@@ -502,7 +508,7 @@ function processLink(){
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/nfo2web/web.cfg ];then
+	if test -f /etc/nfo2web/web.cfg;then
 		webDirectory=$(cat /etc/nfo2web/web.cfg)
 	else
 		mkdir -p /var/cache/nfo2web/web/
@@ -521,7 +527,7 @@ fullUpdate(){
 	# enable debug
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! [ -f /etc/iptv2web/sources.cfg ];then
+	if ! test -f "/etc/iptv2web/sources.cfg";then
 		# if no config exists create the default config from the template
 		{
 			cat /usr/share/mms/templates/live_sources.cfg
@@ -530,7 +536,7 @@ fullUpdate(){
 	# load the link list
 	linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
 	# build the radio sources cfg file if it does not exist
-	if ! [ -f /etc/iptv2web/radioSources.cfg ];then
+	if ! test -f "/etc/iptv2web/radioSources.cfg";then
 		# if no config exists create the default config from the template
 		{
 			cat /usr/share/mms/templates/live_radioSources.cfg
@@ -547,7 +553,7 @@ fullUpdate(){
 	channelsRawPath="$webDirectory/live/channels_raw.index"
 	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
 	# link the channels to the kodi directory
-	ln -s "$channelsPath" "$webDirectory/kodi/channels.m3u"
+	ln -s "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
 	# for each link in the sources
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
@@ -690,7 +696,7 @@ function buildGroupPages(){
 	webDirectory=$1
 	################################################################################
 	#ls -1 "$webDirectory/live/groups/" | while read group;do
-	headerData=$(cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g")
+	#headerData=$(cat "$webDirectory/header.php" | sed "s/href='/href='..\/..\/..\//g")
 	#
 	#groupsIndex=
 	find "$webDirectory/live/groups/" -type d | while read groupPath;do
@@ -707,14 +713,17 @@ function buildGroupPages(){
 			{
 				echo "<html id='top' class='liveBackground'>"
 				echo "<head>"
+				echo "<title></title>"
 				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
 				echo "	<script>"
 				cat /usr/share/nfo2web/nfo2web.js
 				echo "	</script>"
 				echo "</head>"
 				echo "<body>"
-				echo "$headerData"
-
+				echo "<?PHP";
+				echo "include('../../../header.php')";
+				echo "?>";
+				#echo "$headerData"
 				echo " <input id='searchBox' class='searchBox' type='text'"
 				echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 				echo "<hr>"
@@ -728,7 +737,7 @@ function buildGroupPages(){
 				if echo "$groupIndex" | grep -Eq ".index";then
 					# not index.index
 					if ! echo "$groupIndex" | grep -Eq "index.index";then
-						if ! echo "$groupIndex" | grep -Eq "index.html";then
+						if ! echo "$groupIndex" | grep -Eq "index.php";then
 							groupTitle=$(echo "$groupPath" | rev | cut -d'/' -f1 | rev)
 							INFO "(groupTitle = $groupTitle )"
 							INFO "Adding (groupindex = $groupIndex ) to (group = $groupPath )"
@@ -740,11 +749,14 @@ function buildGroupPages(){
 				fi
 			done
 			{
-				echo "$headerData"
+				echo "<?PHP";
+				echo "include('../../../header.php')";
+				echo "?>";
+				#echo "$headerData"
 				echo "</body>"
 				echo "</html>"
 			} >> "$groupPath/index.index"
-			cp -v "$groupPath/index.index" "$groupPath/index.html"
+			cp -v "$groupPath/index.index" "$groupPath/index.php"
 		fi
 	done
 	INFO "Finished building all group pages."
@@ -807,7 +819,7 @@ webGen(){
 	webDirectory=$(webRoot)
 	channelsPath="$webDirectory/live/channels.m3u"
 	################################################################################
-	if ! [ -f "$webDirectory/live/hls.js" ];then
+	if ! test -f "$webDirectory/live/hls.js";then
 		# update the hls javascript libary, if no version has been downloaded
 		main libary
 	fi
@@ -831,11 +843,11 @@ webGen(){
 	indexPath="$webDirectory/live/index.index"
 
 	# create output paths
-	channelOutputPath="$webDirectory/live/channelList.html"
-	indexOutputPath="$webDirectory/live/index.html"
+	channelOutputPath="$webDirectory/live/channelList.php"
+	indexOutputPath="$webDirectory/live/index.php"
 
 	touch "$channelListPath"
-	echo "" > "$channelListPath"
+	echo -n "" > "$channelListPath"
 	################################################################################
 	# build the channel list
 	INFO "Building channel link list."
@@ -852,6 +864,8 @@ webGen(){
 			#iconLink=$(getIconLink "$lineCaught")
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			iconLink="$iconSum.png"
+			iconThumbLink="$iconSum-thumb.png"
+			iconThumbMiniLink="$iconSum-thumb-mini.png"
 			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			INFO "Found Title = $title"
 			INFO "Found Link = $link"
@@ -864,8 +878,8 @@ webGen(){
 				# if the link is a radio station
 				{
 					echo -e "<div id='$channelNumber'>"
-					echo -e "\t<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
-					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconLink'>"
+					echo -e "\t<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
+					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconThumbMiniLink'>"
 					#echo -e "\t\t$channelNumber $title"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
@@ -878,8 +892,8 @@ webGen(){
 			else
 				{
 					echo -e "<div id='$channelNumber'>"
-					echo -e "\t<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
-					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconLink'>"
+					echo -e "\t<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
+					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconThumbMiniLink'>"
 					#echo -e "\t\t$channelNumber $title"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
@@ -934,7 +948,9 @@ webGen(){
 				echo "</head>"
 				echo "<body>"
 				# place the header
-				cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
+				echo "<?PHP";
+				echo "include('../header.php')";
+				echo "?>";
 				#echo "<a href='channels.m3u' id='channelsDownloadLink'"
 				#echo " class='button'>channels.m3u</a>"
 				#echo "<div>"
@@ -946,14 +962,17 @@ webGen(){
 				echo "	<div class='channelList'>"
 				# create the line that will be replaced by the link list to all the channels
 				#for channelLine in $(cat "$channelListPath");do
-				cat "$channelListPath" | while read channelLine;do
-					echo -e "\t\t$channelLine"
-				done
+				#cat "$channelListPath" | while read channelLine;do
+				#	echo -e "\t\t$channelLine"
+				#done
+				echo "<?PHP";
+				echo "include('channelList.php')";
+				echo "?>";
 				echo "	</div>"
 				echo "</div>"
 				echo "<br>"
 				echo "<div class='descriptionCard'>"
-				echo "	<a class='channelLink' href='channel_$channelNumber.html#$channelNumber'>"
+				echo "	<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
 				echo "		$title"
 				echo "	</a>"
 				echo "	<a class='button hardLink' href='$link'>"
@@ -962,23 +981,28 @@ webGen(){
 				#IFS=$IFS_NORMAL
 				#echo "$groupTitle" | while read -r group;do
 				for group in $groupTitle;do
-					echo "	<a class='button groupButton' href='groups/$group/'>$group</a>"
+					echo "	<a class='button groupButton tag' href='groups/$group/'>$group</a>"
 				done
 				#IFS=$IFS_LINEONLY
 				echo "</div>"
+				# add footer
+				echo "<?PHP";
+				echo "include('../randomChannels.index');";
+				echo "include('../header.php');";
+				echo "?>";
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 				# add space for jump button when scrolled all the way down
 				echo "<hr class='topButtonSpace'>"
 				echo "</body>"
 				echo "</html>"
-			} > "$webDirectory/live/channel_$channelNumber.html"
+			} > "$webDirectory/live/channel_$channelNumber.php"
 			################################################################################
 			# increment the channel number
 			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
-		if echo "$line" | grep "#EXTINF";then
+		if echo "$line" | grep -q "#EXTINF";then
 			INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
@@ -1004,9 +1028,21 @@ webGen(){
 		fi
 
 		# place the header
-		sed "s/href='/href='..\//g" < "$webDirectory/header.html"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
+		echo "<hr>"
+		echo " <input id='searchBox' class='searchBox' type='text'"
+		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 		#echo "<a href='channels.m3u' id='channelsDownloadLink'"
 		#echo " class='button'>channels.m3u</a>"
+		echo "<hr>"
+		echo "<div class='titleCard'>"
+		find "$webDirectory/live/groups/" -mindepth 1 -maxdepth 1 -type d | sort | while read groupsName;do
+			groupLink=$(popPath "$groupsName")
+			echo "<a class='button tag' href='groups/$groupLink'>$groupLink</a>"
+		done
+		echo "</div>"
 		echo "<div class='filterButtonBox'>"
 		echo -n "<input type='button' class='button liveFilter' value='&#128250; TV'"
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
@@ -1018,14 +1054,6 @@ webGen(){
 		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
 
 		echo "</div>"
-		echo "<hr>"
-		find "$webDirectory/live/groups/" -mindepth 1 -maxdepth 1 -type d | sort | while read groupsName;do
-			groupLink=$(popPath "$groupsName")
-			echo "<a class='button tag' href='groups/$groupLink'>$groupLink</a>"
-		done
-		echo "<hr>"
-		echo " <input id='searchBox' class='searchBox' type='text'"
-		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 		echo "<hr>"
 		echo -e "<div class='indexBody'>"
 	} > "$indexPath"
@@ -1042,6 +1070,8 @@ webGen(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			#iconLink=$(getIconLink "$lineCaught")
 			iconLink="$iconSum.png"
+			iconThumbLink="$iconSum-thumb.png"
+			iconThumbMiniLink="$iconSum-thumb-mini.png"
 			iconLength=$(echo "$iconLink" | wc -c)
 			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			INFO "Found Title = $title \r"
@@ -1051,8 +1081,8 @@ webGen(){
 			if echo $lineCaught | grep -Eq "radio=[\",']true";then
 				{
 					# build icon to link to the channel
-					echo -e "<a class='indexLink button radio' href='channel_$channelNumber.html#$channelNumber'>"
-					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
+					echo -e "<a class='indexLink button radio' href='channel_$channelNumber.php#$channelNumber'>"
+					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconThumbLink'>"
 					echo -e "\t<div class='indexTitle'>"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
@@ -1065,8 +1095,8 @@ webGen(){
 			else
 				{
 					# build icon to link to the channel
-					echo -e "<a class='indexLink button tv' href='channel_$channelNumber.html#$channelNumber'>"
-					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconLink'>"
+					echo -e "<a class='indexLink button tv' href='channel_$channelNumber.php#$channelNumber'>"
+					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconThumbLink'>"
 					echo -e "\t<div class='indexTitle'>"
 					echo -e "\t\t$title"
 					echo -e "\t<div class='radioIcon'>"
@@ -1084,7 +1114,7 @@ webGen(){
 			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
-		if echo "$line" | grep "#EXTINF";then
+		if echo "$line" | grep -q "#EXTINF";then
 			INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
@@ -1095,7 +1125,9 @@ webGen(){
 	{
 		echo -e "</div>"
 		# add the footer
-		cat "$webDirectory/header.html" | sed "s/href='/href='..\//g"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		# add space for jump button when scrolled all the way down
@@ -1119,8 +1151,12 @@ resetCache(){
 	webDirectory=$(webRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.html"
+	echo " - $webDirectory/live/*.php"
+	echo " - $webDirectory/live/*.index"
 	echo " - $webDirectory/live/*.png"
 	rm -v "$webDirectory"/live/*.html
+	rm -v "$webDirectory"/live/*.php
+	rm -v "$webDirectory"/live/*.index
 	rm -v "$webDirectory"/live/*.png
 }
 ################################################################################
@@ -1134,7 +1170,7 @@ checkCron(){
 		exit
 	fi
 	#############################################################
-	if [ -f "$webDirectory/live/update.cfg" ];then
+	if test -f "$webDirectory/live/update.cfg";then
 		echo "[START]: Update started on $(date)"
 		echo "[UPDATE]: Combine all iptv configs..."
 		main update
@@ -1156,7 +1192,7 @@ main(){
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		################################################################################
 		# check if system is active
-		if [ -f "/tmp/iptv2web.active" ];then
+		if test -f "/tmp/iptv2web.active";then
 			# system is already running exit
 			ERROR "iptv2web is already processing data in another process."
 			ERROR "IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/iptv2web.active'."

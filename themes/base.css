@@ -8,6 +8,36 @@ hr{
 	visiblity: hidden;
 	border-width: 0px;
 }
+.listCard::-webkit-scrollbar{
+	width: 0.8em;
+	background: var(--solidBackground);
+}
+.listCard::-webkit-scrollbar-thumb{
+	width: 0.8em;
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1em black;
+	border: 1px var(--textColor) solid;
+}
+html::-webkit-scrollbar{
+	width: 0.8em;
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar-thumb{
+	width: 0.8em;
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1em black;
+	border: 1px var(--textColor) solid;
+}
+.channelList::-webkit-scrollbar{
+	width: 0.8em;
+	background: var(--solidBackground);
+}
+.channelList::-webkit-scrollbar-thumb{
+	width: 0.8em;
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1em black;
+	border: 1px var(--textColor) solid;
+}
 html{
 	background-size: 100vw;
 	background-color: var(--solidBackground);
@@ -86,6 +116,7 @@ html{
 	margin: 1em;
 }
 body{
+	background: linear-gradient(to top, var(--glassBackground),transparent);
 	margin: 0px;
 }
 h1 {
@@ -162,11 +193,12 @@ ol li{
 	width: 95vw;
 	margin: 2vw;
 }
-/*
 .comicPageBackground{
+	/*
 	background-image: var(--staticBackground);
+	*/
+	filter: blurr(5px);
 }
-*/
 .menuButton{
 	border: 0.01em solid var(--borderColor);
 	display: none !important;
@@ -388,6 +420,14 @@ ol{
 	border-width: 0.2em;
 	text-decoration: none;
 	text-align: center;
+}
+.titlecard .button{
+	white-space: nowrap;
+	line-height: 3em;
+}
+.header .button{
+	white-space: nowrap;
+	line-height: 3em;
 }
 .button:hover{
 	box-shadow: 0px 0px 0px black;

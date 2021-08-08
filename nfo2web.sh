@@ -27,7 +27,7 @@ STOP(){
 	read -r #DEBUG DELETE ME
 }
 ########################################################################
-function INFO(){
+INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -144,7 +144,7 @@ processMovie(){
 	# find the movie nfo in the movie path
 	moviePath=$(find "$moviePath"/*.nfo)
 	# create log path
-	logPagePath="$webDirectory/log.html"
+	logPagePath="$webDirectory/log.php"
 	echo "################################################################################"
 	echo "Processing movie $moviePath"
 	echo "################################################################################"
@@ -166,7 +166,7 @@ processMovie(){
 		echo "[INFO]: movie plot = '$moviePlot'"
 		moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
 		moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
-		#moviePlot=$(echo "$moviePlot" | recode ..HTML)
+		#moviePlot=$(echo "$moviePlot" | recode ..php)
 		#echo "[INFO]: movie plot = '$moviePlot'"
 		#moviePlot=$(echo "$moviePlot" | markdown )
 		#echo "[INFO]: movie plot = '$moviePlot'"
@@ -206,7 +206,7 @@ processMovie(){
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
 		################################################################################
-		moviePagePath="$webDirectory/movies/$movieWebPath/index.html"
+		moviePagePath="$webDirectory/movies/$movieWebPath/index.php"
 		echo "[INFO]: movie page path = '$moviePagePath'"
 		mkdir -p "$webDirectory/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
@@ -398,7 +398,10 @@ processMovie(){
 			echo "</head>"
 			echo "<body>"
 			#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
-			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
+			echo "<?PHP";
+			echo "include('../../header.php')";
+			echo "?>";
+			#sed "s/href='/href='..\/..\//g" < "$headerPagePath"
 			echo "<div class='titleCard'>"
 			echo "<h1>$movieTitle</h1>"
 			echo "</div>"
@@ -424,48 +427,72 @@ processMovie(){
 				# link thumbnail into output directory
 				ln -s "$thumbnail.png" "$thumbnailPath.png"
 				ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailPath.png" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$thumbnail.jpg" ];then
 				echo "[INFO]: found JPG thumbnail '$thumbnail.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
 				ln -s "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$movieDir/poster.jpg" ];then
 				echo "[INFO]: found JPG thumbnail '$movieDir/poster.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$movieDir/poster.jpg" "$thumbnailPath.jpg"
 				ln -s "$movieDir/poster.jpg" "$thumbnailPathKodi.jpg"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$movieDir/poster.png" ];then
 				echo "[INFO]: found PNG thumbnail '$movieDir/poster.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$movieDir/poster.png" "$thumbnailPath.png"
 				ln -s "$movieDir/poster.png" "$thumbnailPathKodi.png"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$movieDir/poster.png" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$thumbnailShort.png" ];then
 				echo "[INFO]: found PNG thumbnail '$thumbnailShort.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$thumbnailShort.png" "$thumbnailPath.png"
 				ln -s "$thumbnailShort.png" "$thumbnailPathKodi.png"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailShort.png" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$thumbnailShort.jpg" ];then
 				echo "[INFO]: found JPG thumbnail '$thumbnailShort.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				ln -s "$thumbnailShort.jpg" "$thumbnailPath.jpg"
 				ln -s "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailShort.jpg" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$thumbnailShort2.png" ];then
 				echo "[INFO]: found PNG thumbnail '$thumbnailShort2.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				ln -s "$thumbnailShort2.png" "$thumbnailPath.png"
 				ln -s "$thumbnailShort2.png" "$thumbnailPathKodi.png"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailShort2.png" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			elif [ -f "$thumbnailShort2.jpg" ];then
 				echo "[INFO]: found JPG thumbnail '$thumbnailShort2.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
-				ln -s "$thumbnailShort2$thumbnailExt" "$thumbnailPath$thumbnailExt"
-				ln -s "$thumbnailShort2$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+				ln -s "$thumbnailShort2.jpg" "$thumbnailPath.jpg"
+				ln -s "$thumbnailShort2.jpg" "$thumbnailPathKodi.jpg"
+				if ! test -f "$thumbnailPath-web.png";then
+					convert "$thumbnailShort2.jpg" -resize "200x100" "$thumbnailPath-web.png"
+				fi
 			else
 				if echo "$nfoInfo" | grep "fanart";then
 					# pull the double nested xml info for the movie thumb
@@ -481,7 +508,9 @@ processMovie(){
 						thumbnailExt=".png"
 						# download the thumbnail
 						#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-						curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+						if ! test -f "$thumbnailPath$thumbnailExt";then
+							curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+						fi
 						# link the downloaded thumbnail
 						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 					else
@@ -575,7 +604,7 @@ processMovie(){
 		elif echo "$videoPath" | grep "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls>"
+				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls preload>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -595,7 +624,7 @@ processMovie(){
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls>"
+				echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls preload>"
 				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -609,7 +638,10 @@ processMovie(){
 		fi
 		{
 			# add footer
-			sed "s/href='/href='..\/..\//g" < "$headerPagePath"
+			#sed "s/href='/href='..\/..\//g" < "$headerPagePath"
+			echo "<?PHP";
+			echo "include('../../header.php')";
+			echo "?>";
 			echo "</body>"
 			echo "</html>"
 		} >> "$moviePagePath"
@@ -618,7 +650,7 @@ processMovie(){
 		################################################################################
 		{
 			echo "<a class='indexSeries' href='$movieWebPath'>"
-			echo "	<img loading='lazy' src='$movieWebPath/$movieWebPath-poster$thumbnailExt'>"
+			echo "	<img loading='lazy' src='$movieWebPath/$movieWebPath-poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "	</div>"
@@ -685,7 +717,9 @@ checkForThumbnail(){
 				thumbnailExt=".png"
 				# download the thumbnail
 				#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-				curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+				if ! test -f "$thumbnailPath$thumbnailExt";then
+					curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+				fi
 				# link the downloaded thumbnail
 				ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 			fi
@@ -758,8 +792,8 @@ processEpisode(){
 	showPagePath="$3"
 	webDirectory="$4"
 	# create log path
-	#logPagePath="$webDirectory/log.html"
-	logPagePath="$webDirectory/log.html"
+	#logPagePath="$webDirectory/log.php"
+	logPagePath="$webDirectory/log.php"
 	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
 	echo "[INFO]: checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
@@ -776,13 +810,13 @@ processEpisode(){
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
 		echo "[INFO]: Episode title = '$episodeShowTitle'"
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
-		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..html | txt2html --eight_bit_clean --extract -p 10 )
-		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..html | txt2html -ec --eight_bit_clean --extract -p 10 )
+		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html --eight_bit_clean --extract -p 10 )
+		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html -ec --eight_bit_clean --extract -p 10 )
 		episodePlot=$(ripXmlTag "$nfoInfo" "plot")
 		echo "[INFO]: episode plot = '$episodePlot'"
 		episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
 		episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
-		#episodePlot=$(echo "$episodePlot" | recode ..HTML )
+		#episodePlot=$(echo "$episodePlot" | recode ..php )
 		echo "[INFO]: episode plot = '$episodePlot'"
 		#episodePlot=$(echo "$episodePlot" | markdown )
 		#echo "[INFO]: episode plot = '$episodePlot'"
@@ -812,7 +846,7 @@ processEpisode(){
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
-		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.html"
+		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
 		# check the episode has not already been processed
 		if [ -f "$episodePagePath" ];then
 			# if this episode has already been processed by the system then skip processeing it with this function
@@ -930,7 +964,10 @@ processEpisode(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
-			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
+			#cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
+			echo "<?PHP";
+			echo "include('../../../header.php')";
+			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "<h1>$episodeShowTitle ${episodeSeason}x${episodeNumber}</h1>"
 			echo "</div>"
@@ -957,7 +994,7 @@ processEpisode(){
 
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
-			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?&url=\"$ytLink\""
+			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
 			# split up airdate data to check if caching should be done
 			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
@@ -965,15 +1002,15 @@ processEpisode(){
 			echo "[DEBUG]:  aired year $airedYear == current year $(date +"%Y")"
 			echo "[DEBUG]:  aired month $airedMonth == current month $(date +"%m")"
 			# if the airdate was this year
-			if [ $airedYear -eq "$(date +"%Y")" ];then
+			#if [ $airedYear -eq "$(date +"%Y")" ];then
 				# if the airdate was this month
-				if [ $airedMonth -eq "$(date +"%m")" ];then
+			#	if [ $airedMonth -eq "$(date +"%m")" ];then
 					# cache the video if it is from this month
 					# - only newly created videos get this far into the process to be cached
-					echo "[DEBUG]:  Caching file..."
-					curl "$resolverUrl&batch=true" > /dev/null
-				fi
-			fi
+			#		echo "[DEBUG]:  Caching file..."
+			#		curl "$resolverUrl&batch=true" > /dev/null
+			#	fi
+			#fi
 			#if [ "$episodeAired" == "$(date +"%Y-%m-%d")" ];then
 			#	echo "[INFO]: airdate $episodeAired == todays date $(date +'%Y-%m-%d') ]"
 			#	# if the episode aired today cache the episode
@@ -997,28 +1034,34 @@ processEpisode(){
 		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		# check for the thumbnail and link it
 		checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
+		# get the extension
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
+		# convert the found episode thumbnail into a web thumb
+		echo "[INFO]: building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
+		if ! test -f "$thumbnailPath-web.png";then
+			convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
+		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
 			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
-			{
-				# embed the youtube player
-				echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
-				echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-				echo "frameborder='0'"
-				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-				echo "allowfullscreen>"
-				echo "</iframe>"
-			} >> "$episodePagePath"
-			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
 			#{
-			#	echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls>"
-			#	echo "<source src='$fullRedirect' type='video/mp4'>"
-			#	echo "</video>"
+			#	# embed the youtube player
+			#	echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
+			#	echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
+			#	echo "frameborder='0'"
+			#	echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+			#	echo "allowfullscreen>"
+			#	echo "</iframe>"
 			#} >> "$episodePagePath"
+			fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
+			{
+				echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+				echo "<source src='$fullRedirect' type='video/mp4'>"
+				echo "</video>"
+			} >> "$episodePagePath"
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1036,7 +1079,7 @@ processEpisode(){
 		elif echo "$videoPath" | grep "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls>"
+				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -1060,7 +1103,7 @@ processEpisode(){
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls>"
+				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
 				echo "<source src='$episodePath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -1078,7 +1121,10 @@ processEpisode(){
 		fi
 		{
 			# add footer
-			cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
+			echo "<?PHP";
+			echo "include('../../../header.php')";
+			echo "?>";
+			#cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "</body>"
 			echo "</html>"
 		} >> "$episodePagePath"
@@ -1087,8 +1133,8 @@ processEpisode(){
 		################################################################################
 		if [ $episodeNumber -eq 1 ];then
 			{
-				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
-				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
+				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.php'>"
+				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb-web.png'>"
 				#echo "  <marquee direction='up' scrolldelay='100'>"
 				echo "	<h3 class='title'>"
 				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
@@ -1099,8 +1145,8 @@ processEpisode(){
 			} > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		else
 			{
-				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.html'>"
-				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb$thumbnailExt'>"
+				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.php'>"
+				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb-web.png'>"
 				#echo "  <marquee direction='up' scrolldelay='100'>"
 				echo "	<h3 class='title'>"
 				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
@@ -1121,7 +1167,7 @@ processShow(){
 	showMeta=$2
 	showTitle=$3
 	webDirectory=$4
-	logPagePath="$webDirectory/log.html"
+	logPagePath="$webDirectory/log.php"
 	showLogPath="$webDirectory/shows/$showTitle/log.index"
 	# create the path sum for reconizing the libary path
 	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
@@ -1187,11 +1233,19 @@ processShow(){
 		echo "[INFO]: Found $show/$posterPath"
 		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
 		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		# create the web thumbnails
+		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		fi
 	elif [ -f "$show/poster.jpg" ];then
 		posterPath="poster.jpg"
 		echo "[INFO]: Found $show/$posterPath"
 		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
 		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		# create the web thumbnails
+		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		fi
 	else
 		echo "[WARNING]: could not find $show/poster.[png/jpg]"
 	fi
@@ -1211,7 +1265,7 @@ processShow(){
 		echo "[WARNING]: could not find $show/fanart.[png/jpg]"
 	fi
 	# building the webpage for the show
-	showPagePath="$webDirectory/shows/$showTitle/index.html"
+	showPagePath="$webDirectory/shows/$showTitle/index.php"
 	echo "[INFO]: Creating directory at = '$webDirectory/shows/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
 	echo "[INFO]: Creating showPagePath = $showPagePath"
@@ -1232,7 +1286,7 @@ processShow(){
 				processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
 			done
 			################################################################################
-			headerPagePath="$webDirectory/header.html"
+			headerPagePath="$webDirectory/header.php"
 
 			# find the fanart for the episode background
 			if [ -f "$webDirectory/shows/$showTitle/fanart.png" ];then
@@ -1261,7 +1315,10 @@ processShow(){
 				echo "</script>"
 				echo "</head>"
 				echo "<body>"
-				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+				echo "<?PHP";
+				echo "include('../../header.php')";
+				echo "?>";
+				#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 				echo "<div class='titleCard'>"
 				echo "<h1>$showTitle</h1>"
 				echo "</div>"
@@ -1292,8 +1349,12 @@ processShow(){
 			done
 			{
 				echo "</div>"
+				echo "<?PHP";
+				echo "include('../../header.php')";
+				echo "?>";
 				# add footer
-				cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+				#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
+
 				# create top jump button
 				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 				echo "<hr class='topButtonSpace'>"
@@ -1305,11 +1366,11 @@ processShow(){
 		fi
 	done
 	# create show index information
-	#showIndexPath="$webDirectory/shows/index.html"
+	#showIndexPath="$webDirectory/shows/index.php"
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='$showTitle/'>"
-		echo "	<img loading='lazy' src='$showTitle/$posterPath'>"
+		echo "	<img loading='lazy' src='$showTitle/poster-web.png'>"
 		#echo "  <marquee direction='up' scrolldelay='100'>"
 		echo "	<div>"
 		echo "		$showTitle"
@@ -1515,6 +1576,7 @@ buildHomePage(){
 	# if the stats.index cache is more than 1 day old update it
 	if cacheCheck "$webDirectory/stats.index" "10";then
 		# figure out the stats
+		totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name "index.php" | wc -l)
 		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
 		totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
 		totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
@@ -1522,8 +1584,11 @@ buildHomePage(){
 			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
 			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
 		fi
-		webSize=$(du -sh "$webDirectory" | cut -f1)
+		# count website size in total ignoring symlinks
+		webSize=$(du -shP "$webDirectory" | cut -f1)
+		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
 		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
+		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		#write a new stats index file
 		{
@@ -1540,13 +1605,22 @@ buildHomePage(){
 				echo "	Movies:$totalMovies"
 				echo "</span>"
 			fi
+			if [ "$totalComics" -gt 0 ];then
+				echo "<span>"
+				echo "	Comics:$totalComics"
+				echo "</span>"
+			fi
 			if [ -f "$webDirectory/kodi/channels.m3u" ];then
-				echo "<span>"
-				echo "	Channels:$totalChannels"
-				echo "</span>"
-				echo "<span>"
-				echo "	Radio:$totalRadio"
-				echo "</span>"
+				if [ "$totalChannels" -gt 0 ];then
+					echo "<span>"
+					echo "	Channels:$totalChannels"
+					echo "</span>"
+				fi
+				if [ "$totalRadio" -gt 0 ];then
+					echo "<span>"
+					echo "	Radio:$totalRadio"
+					echo "</span>"
+				fi
 			fi
 			echo "<span>"
 			echo "	Web:$webSize "
@@ -1574,7 +1648,10 @@ buildHomePage(){
 			if echo "$@" | grep -Eq "\-\-in\-progress";then
 				updateInProgress
 			fi
-			cat "$headerPagePath"
+			echo "<?PHP";
+			echo "include('header.php')";
+			echo "?>";
+			#cat "$headerPagePath"
 			echo "<div class='date titleCard'>"
 			echo "	<div>"
 			echo "		Last updated on $(date)"
@@ -1585,7 +1662,7 @@ buildHomePage(){
 			cat "$webDirectory/stats.index"
 			echo "	</div>"
 			echo "</div>"
-	} > "$webDirectory/index.html"
+	} > "$webDirectory/index.php"
 	################################################################################
 	# if time is older than one day for .index files
 	if cacheCheck "$webDirectory/updatedShows.index" "1";then
@@ -1632,17 +1709,20 @@ buildHomePage(){
 		cat "$webDirectory/randomChannels.index" | \
 			sed "s/src='/src='$sourcePrefix/g" | \
 			sed "s/href='/href='$sourcePrefix/g"
-	} >> "$webDirectory/index.html"
+	} >> "$webDirectory/index.php"
 	################################################################################
 	{
 		# add footer
-		cat "$headerPagePath"
+		echo "<?PHP";
+		echo "include('header.php')";
+		echo "?>";
+		#cat "$headerPagePath"
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		echo "<hr class='topButtonSpace'>"
 		echo "</body>"
 		echo "</html>"
-	} >>  "$webDirectory/index.html"
+	} >>  "$webDirectory/index.php"
 }
 ########################################################################
 getDirSum(){
@@ -1658,7 +1738,7 @@ getDirSum(){
 function buildShowIndex(){
 	webDirectory="$1"
 	headerPagePath="$2"
-	showIndexPath="$webDirectory/shows/index.html"
+	showIndexPath="$webDirectory/shows/index.php"
 	# update the show index
 	{
 		echo "<html id='top' class='randomFanart'>"
@@ -1673,11 +1753,13 @@ function buildShowIndex(){
 		echo "</head>"
 		echo "<body>"
 		#updateInProgress
-		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
+		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
 		# add the search box
 		echo " <input id='searchBox' class='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-
 		# add the most recently updated series
 		#cat "$webDirectory/updatedShows.index"
 		sourcePrefix="shows\/"
@@ -1698,7 +1780,10 @@ function buildShowIndex(){
 			#sed "s/href='/href='$sourcePrefix/g"
 
 		# add footer
-		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
+		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		echo "<hr class='topButtonSpace'>"
@@ -1795,7 +1880,11 @@ function buildMovieIndex(){
 		echo "</head>"
 		echo "<body>"
 		#updateInProgress
-		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
+
 		# add the search box
 		echo " <input id='searchBox' class='searchBox' type='text'"
 		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
@@ -1818,7 +1907,10 @@ function buildMovieIndex(){
 			#sed "s/href='/href='$sourcePrefix/g"
 
 		# add footer
-		cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
+		echo "<?PHP";
+		echo "include('../header.php')";
+		echo "?>";
 		# create top jump button
 		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 		echo "<hr class='topButtonSpace'>"
@@ -1849,6 +1941,20 @@ function cacheCheck(){
 		INFO "[INFO]: File does not exist, it must be created $1"
 		return 0
 	fi
+}
+########################################################################
+webRoot(){
+	# the webdirectory is a cache where the generated website is stored
+	if [ -f /etc/nfo2web/web.cfg ];then
+		webDirectory=$(cat /etc/nfo2web/web.cfg)
+	else
+		#mkdir -p /var/cache/nfo2web/web/
+		chown -R www-data:www-data "/var/cache/nfo2web/web/"
+		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
+		webDirectory="/var/cache/nfo2web/web"
+	fi
+	#mkdir -p "$webDirectory"
+	echo "$webDirectory"
 }
 ########################################################################
 main(){
@@ -1885,15 +1991,15 @@ main(){
 		echo "########################################################################"
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		echo "[INFO]: Reseting web cache states..."
-		rm -rv /var/cache/nfo2web/web/*/*/state_*.cfg
+		rm -rv $(webRoot)/*/*/state_*.cfg
 		echo "[INFO]: Reseting web log for individual shows/movies..."
-		rm -rv /var/cache/nfo2web/web/*/*/log.index
+		rm -rv $(webRoot)/*/*/log.index
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		echo "[INFO]: Reseting web cache to blank..."
-		rm -rv /var/cache/nfo2web/web/*
+		rm -rv $(webRoot)/*
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
@@ -1904,14 +2010,14 @@ main(){
 		################################################################################
 		# GENERATED SITE EXAMPLE
 		################################################################################
-		# - index.html : contains links to health.html,recent.html,and each showTitle.html
+		# - index.php : contains links to health.php,recent.php,and each showTitle.php
 		#   missing data. Links to each show can be found here.
-		#  - health.html : Page contains a list of found issues with nfo libary
+		#  - health.php : Page contains a list of found issues with nfo libary
 		#   + Use duplicate checker script to generate this page
-		#  - recent.html : Contains links to all episodes added in the past 14 days
+		#  - recent.php : Contains links to all episodes added in the past 14 days
 		#   + Use 'find /pathToLibary/ -type f -mtime -14' to find files less than 14
 		#     days old
-		#  - showTitle/index.html : Each show gets its own show page that contains links to
+		#  - showTitle/index.php : Each show gets its own show page that contains links to
 		#    all available episodes. Sorted Into seasons.
 		#   + seasons are on the show page, not seprate
 		#_NOTES_________________________________________________________________________
@@ -2236,12 +2342,12 @@ main(){
 		#	echo "[INFO]: No state exists, updating..."
 		#fi
 		# create the log path
-		logPagePath="$webDirectory/log.html"
+		logPagePath="$webDirectory/log.php"
 		# create the homepage path
-		homePagePath="$webDirectory/index.html"
-		headerPagePath="$webDirectory/header.html"
-		showIndexPath="$webDirectory/shows/index.html"
-		movieIndexPath="$webDirectory/movies/index.html"
+		homePagePath="$webDirectory/index.php"
+		headerPagePath="$webDirectory/header.php"
+		showIndexPath="$webDirectory/shows/index.php"
+		movieIndexPath="$webDirectory/movies/index.php"
 		touch "$showIndexPath"
 		touch "$movieIndexPath"
 		touch "$headerPagePath"
@@ -2253,37 +2359,37 @@ main(){
 			echo "<hr class='menuButton'/>"
 			echo "<hr class='menuButton'/>"
 			echo "<hr class='menuButton'/>"
-			echo "<a class='button' href='..'>"
-			echo "HOME"
+			echo "<a class='button' href='../../../../'>"
+			echo "&#127968;HOME"
 			echo "</a>"
-			echo "<a class='button' href='link.php'>"
-			echo "LINK"
+			echo "<a class='button' href='../../../../link.php'>"
+			echo "&#128279;LINK"
 			echo "</a>"
 			if [ -d "$webDirectory/kodi/movies/" ];then
-				echo "<a class='button' href='movies'>"
-				echo "MOVIES"
+				echo "<a class='button' href='../../../../movies'>"
+				echo "&#127916;MOVIES"
 				echo "</a>"
 			fi
 			if [ -d "$webDirectory/kodi/shows/" ];then
-				echo "<a class='button' href='shows'>"
-				echo "SHOWS"
+				echo "<a class='button' href='../../../../shows'>"
+				echo "&#128250;SHOWS"
 				echo "</a>"
 			fi
-			if [ -f "$webDirectory/kodi/channels.m3u" ];then
-				echo "<a class='button' href='live'>"
-				echo "LIVE"
+			if [ -f "$webDirectory/live/channels.m3u" ];then
+				echo "<a class='button' href='../../../../live'>"
+				echo "&#128225;LIVE"
 				echo "</a>"
 			fi
 			if [ -d "$webDirectory/comics/" ];then
-				echo "<a class='button' href='comics'>"
-				echo "COMICS"
+				echo "<a class='button' href='../../../../comics'>"
+				echo "&#128214;COMICS"
 				echo "</a>"
 			fi
-			#echo "<a class='button' href='log.html'>"
+			#echo "<a class='button' href='log.php'>"
 			#echo "LOG"
 			#echo "</a>"
-			echo "<a class='button' href='system.php'>"
-			echo "SETTINGS"
+			echo "<a class='button' href='../../../../system.php'>"
+			echo "&#128421;SETTINGS"
 			echo "</a>"
 			echo "</div>"
 		} > "$headerPagePath"
@@ -2300,7 +2406,10 @@ main(){
 			echo "</script>"
 			echo "</head>"
 			echo "<body>"
-			cat "$headerPagePath"
+			#cat "$headerPagePath"
+			echo "<?PHP";
+			echo "include('header.php')";
+			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "	<h1>Settings</h1>"
 			echo "	<a class='button' href='system.php'>SYSTEM</a>"
@@ -2309,7 +2418,7 @@ main(){
 			echo "	<a class='button' href='nfo.php'>NFO</a>"
 			echo "	<a class='button' href='comics.php'>COMICS</a>"
 			echo "	<a class='button' href='cache.php'>CACHE</a>"
-			echo "	<a class='button' href='log.html'>LOG</a>"
+			echo "	<a class='button' href='log.php'>LOG</a>"
 			echo "</div>"
 			# add the javascript sorter
 			echo -n "<input type='button' class='button' value='Info'"
@@ -2361,7 +2470,7 @@ main(){
 								# write log info from show to the log, this must be done here to keep ordering
 								# of the log and to make log show even when the state of the show is unchanged
 								echo "[INFO]: Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.html"
+								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
 
 							else
 								echo "[ERROR]: Show has no episodes!"
@@ -2435,7 +2544,10 @@ main(){
 		{
 			echo "</table>"
 			# add footer
-			cat "$headerPagePath"
+			#cat "$headerPagePath"
+			echo "<?PHP";
+			echo "include('header.php')";
+			echo "?>";
 			# create top jump button
 			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 			echo "<hr class='topButtonSpace'>"
@@ -2456,7 +2568,7 @@ main(){
 		rm -v /tmp/nfo2web.active
 		# read the tvshow.nfo files for each show
 		################################################################################
-		# Create the show link on index.html
+		# Create the show link on index.php
 		# - read poster.png as show button
 		################################################################################
 		# Create the series page
