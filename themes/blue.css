@@ -7,5 +7,5 @@
 	--highlightText: black;
 	--highlightBackground: rgba(256,256,256,0.9);
 	--highlightBorder: lightgray;
-	--staticBackground: repeating-radial-gradient(black, blue 0.001%, black 0.001%);
+	--staticBackground: repeating-radial-gradient(black, var(--solidBackground) 0.001%, black 0.001%);
 }

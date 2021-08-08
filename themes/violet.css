@@ -1,6 +1,6 @@
 :root{
-	--solidBackground: darkred;
-	--glassBackground: rgba(100,0,0,0.85);
+	--solidBackground: #37003b;
+	--glassBackground: rgba(112,0,115,0.85);
 	--borderColor: white;
 	--textColor: white;
 	--shadowColor: black;

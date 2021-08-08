@@ -113,15 +113,59 @@ build-deb:
 	# - default (gray)
 	cat themes/default.css > debian/usr/share/mms/themes/default.css
 	cat themes/base.css >> debian/usr/share/mms/themes/default.css
+	# - default-soft (gray)
+	cat themes/default.css > debian/usr/share/mms/themes/default-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/default-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/default-soft.css
 	# - blue
 	cat themes/blue.css > debian/usr/share/mms/themes/blue.css
 	cat themes/base.css >> debian/usr/share/mms/themes/blue.css
+	# - blue-soft
+	cat themes/blue.css > debian/usr/share/mms/themes/blue-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/blue-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/blue-soft.css
 	# - red
 	cat themes/red.css > debian/usr/share/mms/themes/red.css
 	cat themes/base.css >> debian/usr/share/mms/themes/red.css
+	# - red-soft
+	cat themes/red.css > debian/usr/share/mms/themes/red-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/red-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/red-soft.css
 	# - green
 	cat themes/green.css > debian/usr/share/mms/themes/green.css
 	cat themes/base.css >> debian/usr/share/mms/themes/green.css
+	# - green-soft
+	cat themes/green.css > debian/usr/share/mms/themes/green-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/green-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/green-soft.css
+	# - violet
+	cat themes/violet.css > debian/usr/share/mms/themes/violet.css
+	cat themes/base.css >> debian/usr/share/mms/themes/violet.css
+	# - violet-soft
+	cat themes/violet.css > debian/usr/share/mms/themes/violet-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/violet-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/violet-soft.css
+	# - orange
+	cat themes/orange.css > debian/usr/share/mms/themes/orange.css
+	cat themes/base.css >> debian/usr/share/mms/themes/orange.css
+	# - orange-soft
+	cat themes/orange.css > debian/usr/share/mms/themes/orange-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/orange-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/orange-soft.css
+	# - brown
+	cat themes/brown.css > debian/usr/share/mms/themes/brown.css
+	cat themes/base.css >> debian/usr/share/mms/themes/brown.css
+	# - brown-soft ;P
+	cat themes/brown.css > debian/usr/share/mms/themes/brown-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/brown-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/brown-soft.css
+	# - rainbow
+	cat themes/rainbow.css > debian/usr/share/mms/themes/rainbow.css
+	cat themes/base.css >> debian/usr/share/mms/themes/rainbow.css
+	# - rainbow-soft
+	cat themes/rainbow.css > debian/usr/share/mms/themes/rainbow-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/rainbow-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/rainbow-soft.css
 	# user created themes, themes are constructed from above using base theme
 	# user themes can be any self contained .css file
 	#cp themes/*.css debian/usr/share/mms/themes/

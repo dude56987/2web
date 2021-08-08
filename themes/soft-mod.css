@@ -1,0 +1,35 @@
+.button{
+	border-radius: 0.3em;
+}
+input{
+	border-radius: 0.3em;
+}
+.indexSeries{
+	border-radius: 0.3em;
+}
+.titleCard{
+	border-radius: 0.3em;
+}
+.inputCard{
+	border-radius: 0.3em;
+}
+.seasonContainer{
+	border-radius: 0.3em;
+}
+.titleCard h1,h2,h3{
+	border-radius: 0.3em;
+}
+.showPageEpisode{
+	border-radius: 0.3em;
+}
+.channelList{
+	border-radius: 0.3em;
+}
+video{
+	border-radius: 0.3em;
+}
+@media all and (display-mode: fullscreen){
+	video{
+		border-radius: 0em;
+	}
+}

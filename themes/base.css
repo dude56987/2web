@@ -1,3 +1,6 @@
+select{
+	font-size: 1em;
+}
 .tag{
 	line-height: 3em;
 }
@@ -42,7 +45,7 @@ html{
 	color: var(--textColor);
 	display: inline-block;
 	padding: 0px !important;
-	width: 10em;
+	width: 5em;
 	margin: 2em;
 	vertical-align: top !important;
 }
@@ -65,8 +68,13 @@ html{
 }
 .indexIcon{
 	background-image: var(--staticBackground);
-	width: 10em;
-	height: 10em;
+	width: 5em;
+	height: 5em;
+}
+@media (hover: none){
+	.indexIcon{
+		background-image: none;
+	}
 }
 #channelsDownloadLink{
 	padding: 1em;
@@ -160,6 +168,7 @@ ol li{
 }
 */
 .menuButton{
+	border: 0.01em solid var(--borderColor);
 	display: none !important;
 }
 /*
@@ -178,7 +187,10 @@ ol li{
 		background-color: var(--glassBackground);
 		height: 0.5em;
 		margin: 0px;
-		margin-top:0.5em;
+		/*
+		margin-top:0.2em;
+		*/
+		margin-bottom:0.5em;
 	}
 	.header a{
 		box-shadow: none;
@@ -188,8 +200,8 @@ ol li{
 		/*
 		padding-top: 1em;
 		padding-bottom: 1em;
-		*/
 		transition: 1s;
+		*/
 	}
 	.header{
 		height: 3em;
@@ -244,10 +256,10 @@ ol{
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
 	.indexLink{
-		width: 40vw;
+		width: 20vw;
 	}
 	.indexLink img{
-		width: 40vw;
+		width: 20vw;
 	}
 	.liveFilter{
 		width:80vw;
@@ -870,6 +882,7 @@ table, th, td{
 }
 pre{
 	text-align: left;
+	overflow: scroll;
 }
 .settingsTable{
 	width: 100%;

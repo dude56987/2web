@@ -1,0 +1,72 @@
+:root{
+	--solidBackground: repeating-linear-gradient(to bottom,
+		rgba(255,0,0,0.85),
+		rgba(181,165,0,0.85) 1em,
+		rgba(0,0,255,0.85) 4em,
+		rgba(255,0,255,0.85) 6em,
+		rgba(0,255,0,0.85) 8em,
+		rgba(0,255,255,0.85) 10em,
+		rgba(112,0,115,0.85) 12em,
+		rgba(255,0,0,0.85) 15em
+	);
+	/* red orange yellow green blue indigo violet */
+	--glassBackground: repeating-linear-gradient(90deg,
+		rgba(255,0,0,0.85),
+		rgba(181,165,0,0.85) 1em,
+		rgba(0,0,255,0.85) 4em,
+		rgba(255,0,255,0.85) 6em,
+		rgba(0,255,0,0.85) 8em,
+		rgba(0,255,255,0.85) 10em,
+		rgba(112,0,115,0.85) 12em,
+		rgba(255,0,0,0.85) 15em
+	);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: rgba(256,256,256,0.9);
+	--highlightBorder: lightgray;
+	--staticBackground: repeating-radial-gradient(black, white 0.001%, black 0.001%);
+}
+body{
+	/* outline all text in black so it is readable on the rainbow gradient.*/
+	/* -webkit-text-stroke: 0.04em black; */
+	text-shadow: 0.1em 0.1em black;
+	background-image: var(--solidBackground);
+}
+.titleCard{
+	background-image: var(--glassBackground);
+}
+.button{
+	background-image: var(--glassBackground);
+}
+.button{
+	background-image: var(--glassBackground);
+}
+.menuButton{
+	background-image: var(--glassBackground);
+}
+.searchBox{
+	background-image: var(--glassBackground);
+}
+.showPageEpisode{
+	background-image: var(--solidBackground);
+}
+.descriptionCard{
+	background-image: var(--glassBackground);
+}
+.settingListCard{
+	background-image: var(--glassBackground);
+}
+.inputCard{
+	background-image: var(--glassBackground);
+}
+.indexSeries{
+	background-image: var(--glassBackground);
+}
+.seasonContainer{
+	background-image: var(--glassBackground);
+}
+h1,h2{
+	background-image: var(--glassBackground);
+}
