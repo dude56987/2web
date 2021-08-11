@@ -46,6 +46,19 @@ function getCacheMode(){
 	}
 }
 ################################################################################
+function getUpgradeQualityConfig(){
+	if (file_exists("cacheUpgradeQuality.cfg")){
+		debug("Loading the cacheUpgradeQuality.cfg file...");
+		# load the cache upgrade quality config
+		# - this will be passed as a upgrade quality option to youtube-dl
+		$cacheUpgradeQualityConfig = file_get_contents("cacheUpgradeQuality.cfg");
+		return $cacheUpgradeQualityConfig;
+	}else{
+		debug("No cacheUpgradeQuality.cfg file could be found...");
+		return "worst";
+	}
+}
+################################################################################
 function cacheUrl($sum,$videoLink){
 	################################################################################
 	// if the cache flag has been set to true then download the file and play it from the cache
@@ -99,48 +112,50 @@ function cacheUrl($sum,$videoLink){
 			$command = $command." -f worst";
 		}
 	} else {
+		if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
+
+		}else{
+			if (file_exists("cacheUpgradeQuality.cfg")){
+				$upgradeQuality = getUpgradeQualityConfig();
+				# update the download command
+				$dlCommand = $command." -f '".$upgradeQuality."'";
+				$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
+			}else{
+				# the dl command should simply convert the downloaded m3u file with the m3u file
+				if ( (! file_exists("cacheResize.cfg")) AND (! file_exists("cacheFramerate.cfg")) ){
+					# if no upgrade quality is set and no hls rescaling or frame droping then convert the file to mp4
+					$dlCommand = "ffmpeg -i 'RESOLVER-CACHE/$sum.m3u' 'RESOLVER-CACHE/$sum.mp4'";
+				}else{
+					# if custom resizing is set then the download command should be the same as the input
+					$dlCommand = $command." -f '".$quality."'";
+					$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
+
+				}
+			}
+		}
 		# by default use the option set in the web interface it it exists
 		$command = $command." -f '".$quality."'";
 	}
-	if($cacheMode == "compat"){
-		# build the cache file in compatibility mode
-		# recode the video to mp4
-		$command = $command." --recode-video mp4";
-		$command = $command." -o 'RESOLVER-CACHE/".$sum.".mp4' -c '".$videoLink."'";
-		$command = $command." && ln -sf '".$sum."-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4'\"";
-		//$command = $command." && ln -sf '".$sum."-skip.mp4' 'RESOLVER-CACHE/".$sum."-bump.mp4';";
-		//$command = $command." cat '".$sum.".mp4' > 'RESOLVER-CACHE/".$sum."_master.m3u'\"";
+	if (file_exists("cacheFramerate.cfg")){
+		$cacheFramerate = " -r ".file_get_contents("cacheFramerate.cfg");
 	}else{
-		# default mode streams the file as a hls file, this can be to fucking much for some cpus
-		# build the cache file as a hls stream so it can be played while being downloaded
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -start_number 0 -hls_time 6 -hls_list_size 0 -g 60 -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -start_number 0 -hls_time 6 -hls_list_size 0 -g 60 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -start_number 0 -hls_time 6 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 1280x720 -r 24 -start_number 0 -hls_time 6 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 480x360 -r 24 -start_number 0 -hls_time 6 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 480x360 -r 24 -hls_segment_type fmp4 -hls_playlist_type vod -start_number 0 -hls_time 6 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 480x360 -r 24 -hls_segment_type fmp4 -hls_playlist_type vod -start_number 0 -hls_time 6 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 480x360 -r 24 -hls_playlist_type event -start_number 0 -hls_time 6 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -s 240x180 -r 12 -hls_playlist_type event -start_number 0 -hls_time 6 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -s 240x180 -r 12 -hls_segment_type fmp4 -hls_fmp4_init_filename ".$sum."_init.mp4 -hls_playlist_type event -start_number 0 -hls_time 6 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -s 240x180 -r 12 -hls_playlist_type event -start_number 0 -hls_time 6 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		# build the secondary download command
-		$dlCommand=$command." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
-		# finish building the command
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -s 240x180 -r 12 -hls_playlist_type event -start_number 0 -hls_time 6 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -s 240x180 -r 12 -start_number 0 -hls_time 6 -hls_list_size 0 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -filter_threads 4 -r 12 -start_number 0 -hls_time 6 -hls_list_size 0 -hls_flags +append_list -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -r 12 -s 240x180  -hls_playlist_type event -start_number 0 -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum.".m3u'";
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - -r 12 -s 240x180  -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
+		//$cacheFramerate = " -r 30";
+		$cacheFramerate = "";
+	}
+	if (file_exists("cacheResize.cfg")){
+		$cacheResize = " -s ".file_get_contents("cacheResize.cfg");
+	}else{
+		//$cacheResize = " -s 1920x1080";
+		$cacheResize = "";
+	}
+	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
+		$command = $command." -o - -c '".$videoLink."'";
+		$command = 'echo "'.$command.'"';
+	}else{
+		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
 		# after the download also transcode the
-		//$command = $command." && ffmpeg -i 'RESOLVER-CACHE/".$sum.".m3u' 'RESOLVER-CACHE/".$sum.".mp4'\"";
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
-			$command = 'echo "'.$dlCommand.'"';
-		}else{
-			$command = 'echo "'.$command." && ".$dlCommand.'"';
-		}
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -re - -s 480x360 -r 24 -hls_playlist_type event -start_number 0 -hls_time 6 -f hls 'RESOLVER-CACHE/".$sum.".m3u'\"";
+		$command = 'echo "'.$command." && ".$dlCommand.'"';
 	}
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
@@ -159,7 +174,10 @@ function cacheUrl($sum,$videoLink){
 	$tempTime = strtotime('now');
 	fwrite($logFile,date('d/m/y H:i:s',$tempTime)."\n");
 	fwrite($logFile,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
+	fwrite($logFile,"COMMAND:\n");
 	fwrite($logFile,$command."\n");
+	fwrite($logFile,"DL-COMMAND:\n");
+	fwrite($logFile,$dlCommand."\n");
 	fclose($logFile);
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
@@ -330,13 +348,7 @@ if (array_key_exists("url",$_GET)){
 			mkdir("RESOLVER-CACHE/");
 		}
 		// craft the url to the cache link
-		if($cacheMode == "compat"){
-			//$url = "RESOLVER-CACHE/".$sum.".mp4";
-			$url = "RESOLVER-CACHE/".$sum.".mp4";
-		}else{
-			$url = "RESOLVER-CACHE/".$sum.".mp4";
-			//$url = "RESOLVER-CACHE/".$sum."_master.m3u";
-		}
+		$url = "RESOLVER-CACHE/".$sum.".mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
 		#check for the first x segments of the hls playback, ~30 seconds

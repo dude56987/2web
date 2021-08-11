@@ -115,12 +115,42 @@ if (array_key_exists("update",$_POST)){
 	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
 	# write the config file
 	file_put_contents("cacheQuality.cfg",$cacheQuality);
+}else if (array_key_exists("cacheUpgradeQuality",$_POST)){
+	$cacheUpgradeQuality=$_POST['cacheUpgradeQuality'];
+	# change the default cache quality
+	echo "Changing cache upgrade quality to '".$cacheUpgradeQuality."'<br>\n";
+	# write the config file
+	if ($cacheUpgradeQuality == 'no_upgrade'){
+		unlink("cacheUpgradeQuality.cfg");
+	}else{
+		file_put_contents("cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
+	}
 }else if (array_key_exists("cacheMode",$_POST)){
 	$cacheMode=$_POST['cacheMode'];
 	# change the default cache quality
 	echo "Changing cache mode to '".$cacheMode."'<br>\n";
 	# write the config file
 	file_put_contents("cacheMode.cfg",$cacheMode);
+}else if (array_key_exists("cacheFramerate",$_POST)){
+	$cacheFramerate=$_POST['cacheFramerate'];
+	# change the default cache quality
+	echo "Changing cache mode to '".$cacheFramerate."'<br>\n";
+	# write the config file
+	if ($cacheFramerate == ''){
+		unlink("cacheFramerate.cfg");
+	}else{
+		file_put_contents("cacheFramerate.cfg",$cacheFramerate);
+	}
+}else if (array_key_exists("cacheResize",$_POST)){
+	$cacheResize=$_POST['cacheResize'];
+	# change the default cache quality
+	echo "Changing cache mode to '".$cacheResize."'<br>\n";
+	# write the config file
+	if ($cacheResize == ''){
+		unlink("cacheResize.cfg");
+	}else{
+		file_put_contents("cacheResize.cfg",$cacheResize);
+	}
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	echo "Running addLink on link ".$link."<br>\n";
