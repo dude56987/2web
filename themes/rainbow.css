@@ -1,24 +1,24 @@
 :root{
 	--solidBackground: repeating-linear-gradient(to bottom,
 		rgba(255,0,0,0.85),
-		rgba(181,165,0,0.85) 1em,
-		rgba(0,0,255,0.85) 4em,
-		rgba(255,0,255,0.85) 6em,
-		rgba(0,255,0,0.85) 8em,
-		rgba(0,255,255,0.85) 10em,
-		rgba(112,0,115,0.85) 12em,
-		rgba(255,0,0,0.85) 15em
+		rgba(181,165,0,0.85) 14%,
+		rgba(0,0,255,0.85) 28%,
+		rgba(255,0,255,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		rgba(0,255,255,0.85) 70%,
+		rgba(112,0,115,0.85) 84%,
+		rgba(255,0,0,0.85) 98%
 	);
 	/* red orange yellow green blue indigo violet */
 	--glassBackground: repeating-linear-gradient(90deg,
 		rgba(255,0,0,0.85),
-		rgba(181,165,0,0.85) 1em,
-		rgba(0,0,255,0.85) 4em,
-		rgba(255,0,255,0.85) 6em,
-		rgba(0,255,0,0.85) 8em,
-		rgba(0,255,255,0.85) 10em,
-		rgba(112,0,115,0.85) 12em,
-		rgba(255,0,0,0.85) 15em
+		rgba(181,165,0,0.85) 14%,
+		rgba(0,0,255,0.85) 28%,
+		rgba(255,0,255,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		rgba(0,255,255,0.85) 70%,
+		rgba(112,0,115,0.85) 84%,
+		rgba(255,0,0,0.85) 98%
 	);
 	--borderColor: white;
 	--textColor: white;
@@ -69,4 +69,44 @@ body{
 }
 h1,h2{
 	background-image: var(--glassBackground);
+}
+
+.listCard::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+.channelList::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.channelList::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+
+
+
+.listCard::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.listCard::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+}
+.channelList::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.channelList::-webkit-scrollbar-thumb:vertical{
+	background: var(--soildBackground);
 }

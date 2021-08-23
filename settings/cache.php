@@ -11,18 +11,8 @@
 ini_set('display_errors', 1);
 ################################################################################
 include("header.php");
+include("settingsHeader.php");
 ?>
-
-<div class='titleCard'>
-	<h1>Settings</h1>
-	<a class='button' href='system.php'>SYSTEM</a>
-	<a class='button' href='tv.php'>TV</a>
-	<a class='button' href='radio.php'>RADIO</a>
-	<a class='button' href='nfo.php'>NFO</a>
-	<a class='button' href='comics.php'>COMICS</a>
-	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.php'>LOG</a>
-</div>
 
 <!-- create the theme picker based on installed themes -->
 <div class='inputCard'>
@@ -82,52 +72,6 @@ include("header.php");
 		<button class='button' type='submit'>Change Quality</button>
 	</form>
 </div>
-
-<!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache Time</h2>
-		<p>
-			Change the number of days that the cache will retain videos.
-		</p>
-		<select name='cacheDelay'>
-			<option value='1'>1 Days</option>
-			<option value='3'>3 Days</option>
-			<option value='7' selected>7 Days</option>
-			<option value='14'>14 Days</option>
-			<option value='30'>30 Days</option>
-			<option value='90'>90 Days</option>
-			<option value='120'>120 Days</option>
-			<option value='365'>365 Days</option>
-			<option value='forever'>forever</option>
-		</select>
-		<button class='button' type='submit'>Change Cache Time</button>
-	</form>
-</div>
-
-<!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache Mode</h2>
-		<p>
-			Change the download mode. Default mode re-streams the video file as a cached HLS stream. Compatibility mode is to allow lower CPU resources on a server to not disable caching videos.
-		</p>
-		<select name='cacheMode'>
-			<?php
-				// add the cache Mode as a option
-				if(file_exists("cacheMode.cfg")){
-					$cacheMode= file_get_contents('cacheMode.cfg');
-					echo "<option selected value='".$cacheMode."'>$cacheMode</option>";
-				}
-			?>
-			<option value='default'>default</option>
-			<option value='compat'>compatibility</option>
-		</select>
-		<button class='button' type='submit'>Change Cache Mode</button>
-	</form>
-</div>
-
-<!-- create the theme picker based on installed themes -->
 <div class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>HLS Size</h2>
@@ -178,6 +122,28 @@ include("header.php");
 			<option value='120'>120 FPS</option>
 		</select>
 		<button class='button' type='submit'>Change Cache Mode</button>
+	</form>
+</div>
+
+<!-- create the theme picker based on installed themes -->
+<div class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Cache Time</h2>
+		<p>
+			Change the number of days that the cache will retain videos.
+		</p>
+		<select name='cacheDelay'>
+			<option value='1'>1 Days</option>
+			<option value='3'>3 Days</option>
+			<option value='7' selected>7 Days</option>
+			<option value='14'>14 Days</option>
+			<option value='30'>30 Days</option>
+			<option value='90'>90 Days</option>
+			<option value='120'>120 Days</option>
+			<option value='365'>365 Days</option>
+			<option value='forever'>forever</option>
+		</select>
+		<button class='button' type='submit'>Change Cache Time</button>
 	</form>
 </div>
 

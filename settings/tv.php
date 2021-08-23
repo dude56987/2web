@@ -10,19 +10,7 @@
 ################################################################################
 ini_set('display_errors', 1);
 include("header.php");
-?>
-<div class='titleCard'>
-	<h1>Settings</h1>
-	<a class='button' href='system.php'>SYSTEM</a>
-	<a class='button' href='tv.php'>TV</a>
-	<a class='button' href='radio.php'>RADIO</a>
-	<a class='button' href='nfo.php'>NFO</a>
-	<a class='button' href='comics.php'>COMICS</a>
-	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.php'>LOG</a>
-</div>
-<?php
-// no url was given at all
+include("settingsHeader.php");
 
 echo "<div class='settingListCard'>\n";
 echo "<h2>Server Link Config</h2>\n";
@@ -174,10 +162,16 @@ foreach($sourceFiles as $sourceFile){
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				$link=file_get_contents($sourceFile);
-				echo "<form action='admin.php' class='removeLink' method='post'>\n";
-				echo "<input class='button' type='text' name='unblockGroup' value='".$link."' readonly>\n";
-				echo "<input class='button' type='submit' value='UNBLOCK'>\n";
-				echo "</form>\n";
+				echo "<div class='settingsEntry'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "		<h3>\n";
+				echo "			$link";
+				echo "		</h3>\n";
+				echo "		<div class='buttonContainer'>\n";
+				echo "			<button class='button' type='submit' name='unblockGroup' value='".$link."'>UNBLOCK</button>\n";
+				echo "		</div>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
 			}
 		}
 	}

@@ -2078,6 +2078,7 @@ main(){
 		ln -s "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
 		ln -s "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
+		ln -s "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		ln -s "/usr/share/mms/404.php" "$webDirectory/404.php"
@@ -2432,6 +2433,7 @@ main(){
 			echo -n "<input type='button' class='button' value='New'"
 			echo    " onclick='toggleVisibleClass(\"NEW\")'>"
 			# start the table
+			echo "<div class='settingsTable'>"
 			echo "<table>"
 		} > "$logPagePath"
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
@@ -2543,6 +2545,7 @@ main(){
 		addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 		{
 			echo "</table>"
+			echo "</div>"
 			# add footer
 			#cat "$headerPagePath"
 			echo "<?PHP";

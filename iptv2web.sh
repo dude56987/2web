@@ -334,11 +334,12 @@ function process_M3U(){
 				{
 					echo "$lineCaught"
 					echo "$link"
-				} >> "$webDirectory/live/channels_raw.index"
+				} >> "$channelsRawPath"
 				# write to the default channel file
 				{
 					echo -n "#EXTINF:-1 radio=\"$radio\" "
 					echo -n "tvg-logo=\"$webIconPath\" "
+					echo -n "tvg-name=\"$title\" "
 					echo    "group-title=\"$groupTitle\",$title"
 					echo "$link"
 				} >> "$webDirectory/live/channels.index"
@@ -554,10 +555,12 @@ fullUpdate(){
 	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
 	# link the channels to the kodi directory
 	ln -s "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
+	ln -s "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
 	# for each link in the sources
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
 	echo "#EXTM3U" > $channelsPath
+	echo "#EXTM3U" > $channelsRawPath
 	################################################################################
 	# read video sources
 	################################################################################

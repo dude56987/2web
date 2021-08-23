@@ -152,7 +152,8 @@ function cacheUrl($sum,$videoLink){
 		$command = $command." -o - -c '".$videoLink."'";
 		$command = 'echo "'.$command.'"';
 	}else{
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
+		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
+		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
 		$command = 'echo "'.$command." && ".$dlCommand.'"';
@@ -364,45 +365,45 @@ if (array_key_exists("url",$_GET)){
 			# add the file header
 			//header("Content-Type: application/mpegurl");
 			//header("Content-Disposition: attachment; filename=" . ($sum."_master.m3u"));
-			//print "#EXTM3U\r\n";
-			fwrite($playlist,"#EXTM3U\r\n");
+			//print "#EXTM3U\n";
+			fwrite($playlist,"#EXTM3U\n");
 			# write the fileData
 			# if running in compatibility mode build the symlinks
-			if($cacheMode == "compat"){
-				#if( ! file_exists("RESOLVER-CACHE/".$sum.".ts")){
-				# build the m3u file before caching the video it is part of the buffering process
-				# build a list of available bumps
-				# iterate though the bumps directory and pick a video file randomly
-				$tempFiles = glob("bumps/*-bump.mp4");
-				$bumpFile= $tempFiles[array_rand($tempFiles)];
-				$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
-				debug("BumpFile : ".$bumpFile);
-				debug("SkipFile : ".$skipFile);
-				# link the bump file
-				if( ! file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
-					symlink("../$bumpFile",("RESOLVER-CACHE/".$sum."-bump.mp4"));
-				}
-				# link the skip file
-				if( ! file_exists("RESOLVER-CACHE/".$sum."-skip.mp4")){
-					symlink("../$skipFile",("RESOLVER-CACHE/".$sum."-skip.mp4"));
-				}
-				# write the bumps to the buffer file to allow managed delay for download and playback
-				for ($index=1;$index <= 30;$index+=1){
-					# write 20 lines of the bump
-					fwrite($playlist,"#EXTINF:,Loading... $index/30\n");
-					fwrite($playlist,$sum."-bump.mp4\n");
-					//fwrite($playlist,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
-					fwrite($playlist,$sum."-bump.mp4\r\n");
-					//print "#EXTINF:,Loading... $index/30\r\n";
-					//print "RESOLVER-CACHE/".$sum."-bump.mp4\r\n";
-				}
+			#if( ! file_exists("RESOLVER-CACHE/".$sum.".ts")){
+			# build the m3u file before caching the video it is part of the buffering process
+			# build a list of available bumps
+			# iterate though the bumps directory and pick a video file randomly
+			$tempFiles = glob("bumps/*-bump.mp4");
+			$bumpFile= $tempFiles[array_rand($tempFiles)];
+			$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
+			debug("BumpFile : ".$bumpFile);
+			debug("SkipFile : ".$skipFile);
+			# figure out the absolute server path
+			$serverPath='http://'.gethostname().'.local:444/';
+			# link the bump file
+			if( ! file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
+				symlink("../$bumpFile",("RESOLVER-CACHE/".$sum."-bump.mp4"));
+			}
+			# link the skip file
+			if( ! file_exists("RESOLVER-CACHE/".$sum."-skip.mp4")){
+				symlink("../$skipFile",("RESOLVER-CACHE/".$sum."-skip.mp4"));
+			}
+			# write the bumps to the buffer file to allow managed delay for download and playback
+			for ($index=1;$index <= 30;$index+=1){
+				# write 20 lines of the bump
+				fwrite($playlist,"#EXTINF:1,Loading... $index/30\n");
+				//fwrite($playlist,$sum."-bump.mp4\n");
+				//fwrite($playlist,"RESOLVER-CACHE/".$sum."-bump.mp4\n");
+				fwrite($playlist,$serverPath."RESOLVER-CACHE/".$sum."-bump.mp4\n");
+				//print "#EXTINF:,Loading... $index/30\n";
+				//print "RESOLVER-CACHE/".$sum."-bump.mp4\n";
 			}
 			//fwrite($playlist,"#EXTINF:-1,\n");
 			//fwrite($playlist,"RESOLVER-CACHE/".$sum.".mp4\n");
-			fwrite($playlist,"#EXTINF:,\n");
-			fwrite($playlist,$sum.".mp4\r\n");
-			//print "#EXTINF:,\r\n";
-			//print "RESOLVER-CACHE/".$sum.".mp4\r\n";
+			fwrite($playlist,"#EXTINF:1,\n");
+			fwrite($playlist,$serverPath."RESOLVER-CACHE/".$sum.".m3u\n");
+			//print "#EXTINF:,\n";
+			//print "RESOLVER-CACHE/".$sum.".mp4\n";
 			fclose($playlist);
 			# cache the url if no log has been created, otherwise jump to the redirect
 			if(! file_exists("RESOLVER-CACHE/".$sum."_data.log")){
@@ -412,30 +413,20 @@ if (array_key_exists("url",$_GET)){
 			# should be able to exit here as it should have wrote the file to the
 			# server and sent the created file from RAM the the client, the
 			# download has also already been forked
-			if($cacheMode == "compat"){
-				sleep(2);
-				while(true){
-					# if 60 seconds of the video has been downloaded then launch the video
-					if(file_exists("RESOLVER-CACHE/".$sum."_master.m3u")){
-						exit();
-						# redirect to the playlist if the file is not finished downloading
-						redirect('RESOLVER-CACHE/'.$sum.'_master.m3u');
-					}
-					sleep(10);
+			sleep(1);
+			# wait for either the bump or the file to be downloaded and redirect
+			while(true){
+				# if 60 seconds of the video has been downloaded then launch the video
+				if(file_exists("RESOLVER-CACHE/".$sum.".mp4")){
+					redirect('RESOLVER-CACHE/'.$sum.'.mp4');
+				}else if(file_exists("RESOLVER-CACHE/".$sum.".m3u")){
+					//redirect('http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
+					redirect('RESOLVER-CACHE/'.$sum.'.m3u');
 				}
-			}else{
-				sleep(5);
-				# wait for either the bump or the file to be downloaded and redirect
-				while(true){
-					# if 60 seconds of the video has been downloaded then launch the video
-					if(file_exists("RESOLVER-CACHE/".$sum.".mp4")){
-						redirect('RESOLVER-CACHE/'.$sum.'.mp4');
-					}else if(file_exists("RESOLVER-CACHE/".$sum.".m3u")){
-						//redirect('http://'.gethostname().'.local:444/RESOLVER-CACHE/'.$sum.'.mp4');
-						redirect('RESOLVER-CACHE/'.$sum.'.m3u');
-					}
-					sleep(5);
-				}
+				//}else if(file_exists("RESOLVER-CACHE/".$sum."_master.m3u")){
+				//	redirect('RESOLVER-CACHE/'.$sum.'_master.m3u');
+				//}
+				sleep(1);
 			}
 		}
 	}
@@ -448,22 +439,26 @@ if (array_key_exists("url",$_GET)){
 	echo "<body>";
 	//include("header.html");
 	echo "<div class='settingListCard'>";
+	echo "<h2>Manual Video Cache Interface</h2>";
 	echo "No url was specified to the resolver!<br>";
 	echo "To Cache a video and play it from here you can use the below form.<br>";
 	echo "<form method='get'>";
-	echo "<input width='60%' type='text' name='url'>";
-	echo "<input width='10%' type='checkbox' name='debug'>";
-	echo "<input type='submit'>";
+	echo "	<input class='button' width='60%' type='text' name='url'>";
+	echo "	<input class='button' type='submit' value='Cache Url'>";
+	echo "	<div>";
+	echo "		<span>Enable Debug Output<span>";
+	echo "		<input class='button' width='10%' type='checkbox' name='debug'>";
+	echo "	</div>";
 	echo "</form>";
 	echo '</a>';
 	echo "</div>";
 	echo "<hr>";
 	echo "<div class='settingListCard'>";
-	echo "<h2>WEB API EXAMPLES</h2>";
-	echo "<p>";
-	echo "Replace the url api key with your video web link to be cached by youtube-dl.";
-	echo "Debug=true will generate a webpage containing debug data and video output";
-	echo "</p>";
+	echo "	<h2>WEB API EXAMPLES</h2>";
+	echo "	<p>";
+	echo "		Replace the url api key with your video web link to be cached by youtube-dl.";
+	echo "		Debug=true will generate a webpage containing debug data and video output";
+	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
 	echo '		http://'.gethostname().'.local:444/ytdl-resolver.php?url="http://videoUrl/videoid/"';

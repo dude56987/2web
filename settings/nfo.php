@@ -10,18 +10,7 @@
 ################################################################################
 ini_set('display_errors', 1);
 include("header.php");
-?>
-<div class='titleCard'>
-	<h1>Settings</h1>
-	<a class='button' href='system.php'>SYSTEM</a>
-	<a class='button' href='tv.php'>TV</a>
-	<a class='button' href='radio.php'>RADIO</a>
-	<a class='button' href='nfo.php'>NFO</a>
-	<a class='button' href='comics.php'>COMICS</a>
-	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.php'>LOG</a>
-</div>
-<?php
+include("settingsHeader.php");
 
 echo "<div class='settingListCard'>\n";
 echo "<h2>Server Libary Paths</h2>\n";

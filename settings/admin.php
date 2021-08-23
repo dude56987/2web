@@ -125,12 +125,6 @@ if (array_key_exists("update",$_POST)){
 	}else{
 		file_put_contents("cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
-}else if (array_key_exists("cacheMode",$_POST)){
-	$cacheMode=$_POST['cacheMode'];
-	# change the default cache quality
-	echo "Changing cache mode to '".$cacheMode."'<br>\n";
-	# write the config file
-	file_put_contents("cacheMode.cfg",$cacheMode);
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
 	# change the default cache quality

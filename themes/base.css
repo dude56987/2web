@@ -118,6 +118,7 @@ html{
 body{
 	background: linear-gradient(to top, var(--glassBackground),transparent);
 	margin: 0px;
+	min-height: 100vh;
 }
 h1 {
 	text-align: center;
@@ -397,6 +398,9 @@ ol{
 	z-index: 99;
 	font-size: 0.01em;
 	padding: 0px !important;
+}
+.settingsTab{
+	display: inline-block;
 }
 #settingsButton{
 	float: right;
@@ -814,6 +818,11 @@ table, th, td{
 	margin-left: auto;
 	margin-right: auto;
 }
+/*
+table{
+	width: 90vw;
+}
+*/
 .player audio{
 	height: 400px;
 }
@@ -924,9 +933,21 @@ pre{
 	text-align: left;
 	overflow: scroll;
 }
-.settingsTable{
+table{
 	width: 100%;
 }
-.settingsTableData{
-	width: 30%;
+tr{
+	width: 100%;
 }
+.settingsTable{
+	/*
+	overflow: scroll;
+	*/
+	width: 95vw;
+	margin-left: auto;
+	margin-right: auto;
+}
+.settingsTableData{
+	width: 100%;
+}
+
