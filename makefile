@@ -70,6 +70,9 @@ build-deb:
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/mms;
 	mkdir -p debian/etc/mms/themes;
+	mkdir -p debian/etc/ytdl2kodi/;
+	mkdir -p debian/etc/ytdl2kodi/sources.d/
+	mkdir -p debian/etc/ytdl2kodi/usernameSources.d/
 	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/nfo2web/libaries.d/;
 	mkdir -p debian/etc/comic2web/;
@@ -87,6 +90,8 @@ build-deb:
 	# copy templates over
 	cp -rv templates/. debian/usr/share/mms/templates/
 	# make placeholder
+	touch debian/etc/ytdl2kodi/sources.d/.placeholder
+	touch debian/etc/ytdl2kodi/usernameSources.d/.placeholder
 	touch debian/etc/iptv2web/.placeholder
 	touch debian/etc/iptv2web/sources.d/.placeholder
 	touch debian/etc/iptv2web/blockedGroups.d/.placeholder
@@ -100,8 +105,10 @@ build-deb:
 	touch debian/var/cache/nfo2web/web/.placeholder
 	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
+	chown -R www-data:www-data debian/etc/ytdl2kodi/*.d/
 	chown -R www-data:www-data debian/etc/iptv2web/*.d/
 	chown -R www-data:www-data debian/etc/nfo2web/*.d/
+	chown -R www-data:www-data debian/etc/comic2web/*.d/
 	#chown -R www-data:www-data debian/etc/mms/*.d/
 	chown -R www-data:www-data debian/etc/mms/
 	# copy update scripts to /usr/bin
@@ -109,6 +116,7 @@ build-deb:
 	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
+	cp ytdl2kodi.sh debian/usr/bin/ytdl2kodi
 	# build the default themes
 	# - default (gray)
 	cat themes/default.css > debian/usr/share/mms/themes/default.css

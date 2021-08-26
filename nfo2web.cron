@@ -35,3 +35,20 @@
 # clean resolver cache daily, remove cached files older than 7 days
 #@daily root /usr/bin/mmsCleanCache > /var/log/mmsCleanCache.log
 @daily root /usr/bin/mmsCleanCache
+################################################################################
+# Please choose only one of the below update schedules for ytdl2nfo
+################################################################################
+# run update every hour
+#@hourly root	/usr/bin/ytdl2nfo
+# run update every 4 hours
+* */4 * * *	root	/usr/bin/ytdl2nfo
+# run update every 6 hours
+#* */6 * * *	root	/usr/bin/ytdl2nfo
+# run update every 12 hours
+#* */12 * * *	root	/usr/bin/ytdl2nfo
+# run update every day once
+#@daily	root	/usr/bin/ytdl2nfo
+# run update every week once
+#@weekly root	/usr/bin/ytdl2nfo
+# run update every month once
+#@monthly root	/usr/bin/ytdl2nfo

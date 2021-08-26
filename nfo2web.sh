@@ -2076,8 +2076,10 @@ main(){
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
 		ln -s "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
 		ln -s "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
+		ln -s "/usr/share/mms/settings/comicsDL.php" "$webDirectory/comicsDL.php"
 		ln -s "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
 		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
+		ln -s "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
 		ln -s "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
@@ -2409,18 +2411,9 @@ main(){
 			echo "<body>"
 			#cat "$headerPagePath"
 			echo "<?PHP";
-			echo "include('header.php')";
+			echo "include('header.php');";
+			echo "include('settingsHeader.php');";
 			echo "?>";
-			echo "<div class='titleCard'>"
-			echo "	<h1>Settings</h1>"
-			echo "	<a class='button' href='system.php'>SYSTEM</a>"
-			echo "	<a class='button' href='tv.php'>TV</a>"
-			echo "	<a class='button' href='radio.php'>RADIO</a>"
-			echo "	<a class='button' href='nfo.php'>NFO</a>"
-			echo "	<a class='button' href='comics.php'>COMICS</a>"
-			echo "	<a class='button' href='cache.php'>CACHE</a>"
-			echo "	<a class='button' href='log.php'>LOG</a>"
-			echo "</div>"
 			# add the javascript sorter
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"

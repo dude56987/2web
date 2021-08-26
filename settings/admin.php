@@ -6,18 +6,8 @@
 
 <?php
 include('header.php');
+include('settingsHeader.php');
 ?>
-
-<div class='titleCard'>
-	<h1>Settings</h1>
-	<a class='button' href='system.php'>SYSTEM</a>
-	<a class='button' href='tv.php'>TV</a>
-	<a class='button' href='radio.php'>RADIO</a>
-	<a class='button' href='nfo.php'>NFO</a>
-	<a class='button' href='comics.php'>COMICS</a>
-	<a class='button' href='cache.php'>CACHE</a>
-	<a class='button' href='log.php'>LOG</a>
-</div>
 
 <div class='settingListCard'>
 <?php
@@ -157,6 +147,54 @@ if (array_key_exists("update",$_POST)){
 		echo "Adding link ".$link."<br>\n";
 		# write the config file
 		file_put_contents($configPath,$link);
+	}
+}else if (array_key_exists("ytdl_add_source",$_POST)){
+	$link=$_POST['ytdl_add_source'];
+	echo "Running ytdl_add_source on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/ytdl2kodi/sources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the link to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding ytdl source ".$link."<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+}else if(array_key_exists("ytdl_remove_source",$_POST)){
+	$link=$_POST['ytdl_remove_source'];
+	echo "Running ytdl_remove_source on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/ytdl2kodi/sources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing ytdl source ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+}else if (array_key_exists("ytdl_add_username_source",$_POST)){
+	$link=$_POST['ytdl_add_username_source'];
+	echo "Running ytdl_add_username_source on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/ytdl2kodi/usernameSources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the link to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding ytdl username source ".$link."<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+}else if(array_key_exists("ytdl_remove_username_source",$_POST)){
+	$link=$_POST['ytdl_remove_username_source'];
+	echo "Running ytdl_remove_username_source on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/ytdl2kodi/usernameSources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing ytdl username source ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
 	}
 }else if (array_key_exists("addLibary",$_POST)){
 	$link=$_POST['addLibary'];

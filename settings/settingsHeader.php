@@ -13,7 +13,7 @@
 	<div class='titleCard settingsTab'>
 		<h2>Comics</h2>
 		<a class='button' href='comics.php'>Libaries</a>
-		<a class='button' href='comicDL.php'>Downloads</a>
+		<a class='button' href='comicsDL.php'>Downloads</a>
 	</div>
 	<div class='titleCard settingsTab'>
 		<h2>General</h2>
