@@ -61,6 +61,7 @@ function INFO(){
 	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
 	# print the line
 	printf "$output\r"
+	#echo "$output"
 	#printf "$output\n"
 }
 ################################################################################
@@ -84,6 +85,31 @@ function downloadDir(){
 	fi
 	# write path to console
 	cat "/etc/comic2web/download.cfg"
+}
+################################################################################
+function libaryPaths(){
+	set -x
+	# add the download directory to the paths
+	echo "$(downloadDir)"
+	# check for server libary config
+	if [ ! -f /etc/comic2web/libaries.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "/var/cache/comic2web/"
+		} >> "/etc/comic2web/libaries.cfg"
+	fi
+	# write path to console
+	cat "/etc/comic2web/libaries.cfg"
+	# create a space just in case none exists
+	printf "\n"
+	# read the additional configs
+	find "/etc/comic2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+		cat "$libaryConfigPath"
+		# create a space just in case none exists
+		printf "\n"
+	done
+	set +x
 }
 ################################################################################
 function update(){
@@ -229,7 +255,7 @@ prefixNumber(){
 		pageNumber="000$pageNumber"
 	elif [ $pageNumber -lt 100 ];then
 		pageNumber="00$pageNumber"
-	elif [ $previousPage -lt 1000 ];then
+	elif [ $pageNumber -lt 1000 ];then
 		pageNumber="0$pageNumber"
 	fi
 	# output the number with a prefix on it
@@ -353,6 +379,8 @@ renderPage(){
 	pageName=$(popPath "$page")
 	if [ $isChapter = true ];then
 		pageComicName=$(pickPath "$page" 3)
+		# remove : as it breaks web paths
+		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 		# multi chapter comic
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/chapterTitle.cfg";then
 			pageChapterPathName=$(pickPath "$page" 2)
@@ -365,7 +393,7 @@ renderPage(){
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png";then
 			#set -x
-			convert "$imagePath" -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
+			convert "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
 			#set +x
 		fi
 		# get page width and height
@@ -378,11 +406,13 @@ renderPage(){
 		# single chapter comic
 		pageComicName=$(pickPath "$page" 2)
 		#pageComicName=$(cleanText "$pageComicName")
+		# remove : as it breaks web paths
+		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png";then
 			#set -x
-			convert "$imagePath" -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
+			convert "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
 			#set +x
 		fi
 		# link the image
@@ -443,16 +473,16 @@ renderPage(){
 			# create chapter specific thumbnails
 			if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png";then
 				# create a thumb for the comic
-				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
+				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
 			fi
 		fi
 		# if no thumbnail exists then
 		if ! test -f "$webDirectory/comics/$pageComicName/thumb.png";then
 			if [ $isChapter = true ];then
 				# create a thumb for the comic
-				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			else
-				convert "$webDirectory/comics/$pageComicName/0001.jpg" -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert "$webDirectory/comics/$pageComicName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			fi
 		fi
 	fi
@@ -463,7 +493,41 @@ renderPage(){
 		# single chapter comic
 		pagePath="$webDirectory/comics/$pageComicName/$pageNumber.html"
 	fi
-
+	if ! test -d "$webDirectory/kodi/comics_tank/$pageComicName/";then
+		# if no zip directory exists then create the zip directory
+		mkdir -p "$webDirectory/kodi/comics_tank/$pageComicName/"
+	fi
+	# write the downloadable .zip file
+	# zip requires the current working directory be changed
+	if [ $isChapter = true ];then
+		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
+		if ! test -f "$pageComicName-$pageChapterName-$pageNumber.jpg";then
+			ln -s "$imagePath" "$pageComicName-$pageChapterName-$pageNumber.jpg"
+		fi
+		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageChapterName-$pageNumber.jpg"
+		if [  $((10#$nextPage)) -gt $totalPages ];then
+			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
+				#set -x
+				# if this is the last page create the zip file
+				zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
+				#set +x
+			fi
+		fi
+		#zip -9 --symlinks "$webDirectory/comics/$pageComicName/$pageComicName.zip" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
+	else
+		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
+		if ! test -f "$imagePath" "$pageComicName-$pageNumber.jpg";then
+			ln -s "$imagePath" "$pageComicName-$pageNumber.jpg"
+		fi
+		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageNumber.jpg"
+		if [  $((10#$nextPage)) -gt $totalPages ];then
+			# if this is the last page create the zip file
+			#set -x
+			zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
+			#set +x
+		fi
+		#zip -9 --symlinks "$webDirectory/comics/$pageComicName/$pageComicName.zip" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
+	fi
 	# check next and previous pages to make sure they can be linked to
 	# write the webpage for the individual image
 	{
@@ -486,10 +550,13 @@ renderPage(){
 		echo "		const key = event.key;"
 		echo "		switch (key){"
 		echo "			case 'ArrowLeft':"
-		echo "				window.location.href='$previousPage.html';"
+		echo "				window.location.href='./$previousPage.html';"
 		echo "				break;"
 		echo "			case 'ArrowRight':"
-		echo "				window.location.href='$nextPage.html';"
+		echo "				window.location.href='./$nextPage.html';"
+		echo "				break;"
+		echo "			case 'ArrowUp':"
+		echo "				window.location.href='index.php';"
 		echo "				break;"
 		echo "			"
 		echo "		}"
@@ -588,8 +655,29 @@ renderPage(){
 			echo "<style>"
 			echo "html{ background-image: url(\"thumb.png\") }"
 			echo "</style>"
+			echo "<script>"
+			cat /usr/share/nfo2web/nfo2web.js
+			# add a listener to pass the key event into a function
+			echo "function setupKeys() {"
+			echo "	document.body.addEventListener('keydown', function(event){"
+			echo "		const key = event.key;"
+			echo "		switch (key){"
+			echo "			case 'ArrowRight':"
+			echo "				window.location.href='0001/';"
+			echo "				break;"
+			echo "			case 'ArrowUp':"
+			echo "				window.location.href='..';"
+			echo "				break;"
+			echo "			case 'ArrowDown':"
+			echo "				window.location.href='0001/';"
+			echo "				break;"
+			echo "			"
+			echo "		}"
+			echo "	});"
+			echo "}"
+			echo "</script>"
 			echo "</head>"
-			echo "<body>"
+			echo "<body onload='setupKeys();'>"
 			echo "<?PHP";
 			echo "include('../../header.php')";
 			echo "?>";
@@ -600,6 +688,7 @@ renderPage(){
 			echo "<hr>"
 			echo "<div class='titleCard'>"
 			echo "<h1>$pageComicName</h1>"
+			echo "<a class='button' href='$pageComicName.cbz'>Download</a>"
 			echo "</div>"
 		} > "$webDirectory/comics/$pageComicName/index.php"
 		#if echo "$pageType" | grep "chapter";then
@@ -648,12 +737,42 @@ renderPage(){
 				{
 					echo "<html>"
 					echo "<head>"
+					if [ $isChapter = true ];then
+						echo "<title>$pageComicName - Chapter $((10#$pageChapter))/$totalChapters</title>"
+					else
+						echo "<title>$pageComicName Oneshot</title>"
+					fi
+					echo "</title>"
 					echo "<style>"
 					echo "html{ background-image: url(\"thumb.png\") }"
 					echo "</style>"
 					echo "<link rel='stylesheet' href='../../style.css'>"
+					echo "<script>"
+					cat /usr/share/nfo2web/nfo2web.js
+					# add a listener to pass the key event into a function
+					echo "function setupKeys() {"
+					echo "	document.body.addEventListener('keydown', function(event){"
+					echo "		const key = event.key;"
+					echo "		switch (key){"
+					echo "			case 'ArrowUp':"
+					echo "				window.location.href='..';"
+					echo "				break;"
+					echo "			case 'ArrowLeft':"
+					echo "				window.location.href='../$tempPreviousChapterName';"
+					echo "				break;"
+					echo "			case 'ArrowRight':"
+					echo "				window.location.href='../$tempNextChapterName';"
+					echo "				break;"
+					echo "			case 'ArrowDown':"
+					echo "				window.location.href='0001.html';"
+					echo "				break;"
+					echo "			"
+					echo "		}"
+					echo "	});"
+					echo "}"
+					echo "</script>"
 					echo "</head>"
-					echo "<body>"
+					echo "<body onload='setupKeys();'>"
 					echo "<?PHP";
 					echo "include('../../../header.php')";
 					echo "?>";
@@ -672,6 +791,7 @@ renderPage(){
 					echo "</div>"
 					echo "</div>"
 					echo "</div>"
+					echo "<div class='settingListCard'>"
 				} > "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
 
 				# build the individual image index for this chapter
@@ -688,6 +808,7 @@ renderPage(){
 				done
 				# finish the chapter index
 				{
+					echo "</div>"
 					echo "<?PHP";
 					echo "include('../../../header.php')";
 					echo "?>";
@@ -734,7 +855,8 @@ webUpdate(){
 	#   + comicWebsite/comicName/image.png
 
 	webDirectory=$(webRoot)
-	downloadDirectory="$(downloadDir)"
+	#downloadDirectory="$(downloadDir)"
+	downloadDirectory="$(libaryPaths)"
 
 	# create the kodi directory
 	mkdir -p "$webDirectory/kodi/comics/"
@@ -747,99 +869,75 @@ webUpdate(){
 
 	totalComics=0
 
-	# read each comicWebsite directory from the download directory
-	find "$downloadDirectory" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
-		INFO "scanning comic website path '$comicWebsitePath'"
-		# build the website directory for the comic path
-		#mkdir -p "$webDirectory/comics/$(popPath $comicWebsitePath)"
-		# build the website tag index page
-		find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
-			INFO "link the comics to the kodi directory"
-			# link this comic to the kodi directory
-			ln -s "$comicNamePath" "$webDirectory/kodi/comics/"
-			INFO "scanning comic path '$comicNamePath'"
-			# add one to the total comics
-			totalComics=$(( $totalComics + 1 ))
-			# build the comic index page
-			if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
-				INFO "scanning single chapter comic '$comicNamePath'"
-				# if this directory contains .jpg or .png files then this is a single chapter comic
-				# - build the individual pages for the comic
-				scanPages "$comicNamePath" "$webDirectory" single
-			else
-				# if this is not a single chapter comic then read the subdirectories containing
-				#   each of the individual chapters
-				INFO "scanning multi chapter comic '$comicNamePath'"
-				# reset chapter number for count
-				chapterNumber=0
-				find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
-					chapterNumber=$(( 10#$chapterNumber + 1 ))
-					# add zeros to the chapter as a prefix for correct ordering
-					chapterNumber=$(prefixNumber $chapterNumber)
-					# check if the chapter should be updated before running through all pages
-					# for each chapter build the individual pages
-					scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
-				done
-			fi
+	INFO "Scanning libary config '$downloadDirectory'"
+	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
+		INFO "Scanning Libary Path... '$comicLibaryPath'"
+		# read each comicWebsite directory from the download directory
+		find "$comicLibaryPath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
+			INFO "scanning comic website path '$comicWebsitePath'"
+			# build the website directory for the comic path
+			#mkdir -p "$webDirectory/comics/$(popPath $comicWebsitePath)"
+			# build the website tag index page
+			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
+				INFO "link the comics to the kodi directory"
+				# link this comic to the kodi directory
+				ln -s "$comicNamePath" "$webDirectory/kodi/comics/"
+				INFO "scanning comic path '$comicNamePath'"
+				# add one to the total comics
+				totalComics=$(( $totalComics + 1 ))
+				# build the comic index page
+				if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
+					INFO "scanning single chapter comic '$comicNamePath'"
+					# if this directory contains .jpg or .png files then this is a single chapter comic
+					# - build the individual pages for the comic
+					scanPages "$comicNamePath" "$webDirectory" single
+				else
+					# if this is not a single chapter comic then read the subdirectories containing
+					#   each of the individual chapters
+					INFO "scanning multi chapter comic '$comicNamePath'"
+					# reset chapter number for count
+					chapterNumber=0
+					find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
+						chapterNumber=$(( 10#$chapterNumber + 1 ))
+						# add zeros to the chapter as a prefix for correct ordering
+						chapterNumber=$(prefixNumber $chapterNumber)
+						# check if the chapter should be updated before running through all pages
+						# for each chapter build the individual pages
+						scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
+					done
+				fi
+			done
+			# finish website tag index page
 		done
-		# finish website tag index page
 	done
 	INFO "Writing total Comics "
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
+	INFO "Checking for comic index page..."
 	# finish building main index page a-z
-	# start building the index page
-	{
-		echo "<html class='randomFanart'>"
-		echo "<head>"
-		echo "<link rel='stylesheet' href='style.css'>"
-		echo "<script>"
-		cat /usr/share/nfo2web/nfo2web.js
-		echo "</script>"
-		echo "</head>"
-		echo "<body>"
-		#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		# add the search box
-		echo " <input id='searchBox' class='searchBox' type='text'"
-		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-		echo "<hr>"
-	} > "$webDirectory/comics/index.php"
-
+	if ! test -h "$webDirectory/comics/index.php";then
+		# link the php homepage
+		ln -sf "/usr/share/mms/templates/comics.php" "$webDirectory/comics/index.php"
+	fi
+	if ! test -h "$webDirectory/randomComics.php";then
+		ln -sf "/usr/share/mms/templates/randomComics.php" "$webDirectory/randomComics.php"
+	fi
+	if ! test -h "$webDirectory/updatedComics.php";then
+		ln -sf "/usr/share/mms/templates/updatedComics.php" "$webDirectory/updatedComics.php"
+	fi
 	# build links to each comic in the index page
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 		# multi chapter comic
 		tempComicName="$(popPath "$comicNamePath")"
-		{
-			echo "<a href='./$tempComicName/' class='indexSeries' >"
-			echo "<img loading='lazy' src='./$tempComicName/thumb.png' />"
-			echo "<div>$tempComicName</div>"
-			echo "</a>"
-		} >> "$webDirectory/comics/index.php"
 		#	build the index file for this entry if one does not exist
-		if ! test -f "$webDirectory/comics/$tempComicName/index.index";then
+		if ! test -f "$comicNamePath/comic.index";then
 			{
-				echo "<a href='$tempComicName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='$tempComicName/thumb.png' />"
+				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 				echo "<div>$tempComicName</div>"
 				echo "</a>"
-			} > "$webDirectory/comics/$tempComicName/index.index"
+			} > "$comicNamePath/comic.index"
 		fi
 	done
-	{
-		# write the random comics index file if is exists to the bottom of the main comic index
-		if test -f "$webDirectory/randomComics.index";then
-			#cat "$webDirectory/randomComics.index" | sed "s/href='/href='..\/.\//g"
-			cat "$webDirectory/randomComics.index"
-		fi
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
-		echo "</body>"
-		echo "</html>"
-	} >> "$webDirectory/comics/index.php"
 }
 ################################################################################
 function resetCache(){
@@ -895,17 +993,14 @@ main(){
 		echo "update"
 		echo "  This will update the m3u file used to make the website."
 		echo ""
-		echo "cron"
-		echo "  Run the cron check script."
-		echo ""
 		echo "reset"
 		echo "  Reset the cache."
 		echo ""
 		echo "webgen"
 		echo "	Build the website from the m3u generated."
 		echo ""
-		echo "libary"
-		echo "	Download the latest version of the hls.js libary for use."
+		echo "upgrade"
+		echo "	Download the latest version of the gallery-dl using pip."
 		echo "########################################################################"
 	else
 		main --update

@@ -83,28 +83,23 @@ function cacheUrl($sum,$videoLink){
 	$quality = getQualityConfig();
 	$cacheMode = getCacheMode();
 	debug("The web interface set quality is '".$quality."'");
-	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
-	//$command = $command." --continue --embed-subs --no-mtime --no-part ";
-	$command = $command." --continue --write-info-json --all-subs";
-	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
-		$command = $command." --sub-format srt --embed-subs --no-mtime --no-part";
-	}else{
-		$command = $command." --sub-format srt --embed-subs --no-mtime";
-	}
-	$command = $command." --write-thumbnail";
 	// max download file size should be 6 gigs, this is a insane file size for a youtube video
 	// if a way of detecting livestreams is found this is unnessary
 	$command = $command." --max-filesize '6g'";
 	$command = $command." --retries 'infinite'";
-	//$command = $command." --postprocessor-args '--format \'mpegts\''";
-	//
-	//ffmpeg -i input.mp4 -profile:v baseline -level 3.0 -s 640x360 -start_number 0 -hls_time 10 -hls_list_size 0 -f hls index.m3u
-	//
-	//youtube-dl "https://www.youtube.com/watch?v=fMt5hif3wsw" -o - | ffmpeg -i - -c:v libx264 -c:a aac -b:a 160k -bsf:v h264_mp4toannexb -f mpegts -crf 32 testvideoStream.ts
-	//
+	$command = $command." --no-mtime";
 	$command = $command." --fragment-retries 'infinite'";
-	//$command = $command."	--hls-use-mpegts ";
-	# TODO: add .srt subtitle dowloads
+
+	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
+	$command = $command." --continue --write-info-json";
+	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
+		$dlCommand = $command." --all-subs --sub-format srt --embed-subs --no-part";
+		$dlCommand = $dlCommand." --write-thumbnail";
+	}else{
+		$dlCommand = $command." --all-subs --sub-format srt --embed-subs";
+		$dlCommand = $dlCommand." --write-thumbnail";
+	}
+	# check for manually set quality
 	if (array_key_exists("res",$_GET)){
 		if($_GET["res"] == "HD"){
 			$command = $command." -f best";
@@ -112,25 +107,23 @@ function cacheUrl($sum,$videoLink){
 			$command = $command." -f worst";
 		}
 	} else {
-		if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
-
+		# if no quality is set in url use server settings
+		if (file_exists("cacheUpgradeQuality.cfg")){
+			$upgradeQuality = getUpgradeQualityConfig();
+			# update the download command
+			$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
+			$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
 		}else{
-			if (file_exists("cacheUpgradeQuality.cfg")){
-				$upgradeQuality = getUpgradeQualityConfig();
-				# update the download command
-				$dlCommand = $command." -f '".$upgradeQuality."'";
-				$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
+			# if no server settings are configured use the default
+			# the dl command should simply convert the downloaded m3u file with the m3u file
+			if ( (! file_exists("cacheResize.cfg")) AND (! file_exists("cacheFramerate.cfg")) ){
+				# if no upgrade quality is set and no hls rescaling or frame dropping then convert the file to mp4 directly
+				$dlCommand = "ffmpeg -i 'RESOLVER-CACHE/$sum.m3u' 'RESOLVER-CACHE/$sum.mp4'";
 			}else{
-				# the dl command should simply convert the downloaded m3u file with the m3u file
-				if ( (! file_exists("cacheResize.cfg")) AND (! file_exists("cacheFramerate.cfg")) ){
-					# if no upgrade quality is set and no hls rescaling or frame droping then convert the file to mp4
-					$dlCommand = "ffmpeg -i 'RESOLVER-CACHE/$sum.m3u' 'RESOLVER-CACHE/$sum.mp4'";
-				}else{
-					# if custom resizing is set then the download command should be the same as the input
-					$dlCommand = $command." -f '".$quality."'";
-					$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
-
-				}
+				# if custom postprocessing is set then the download command should be the same as the input
+				# - This is because postprocessing can only decrease the quality, this is to upgrade from those decreases
+				$dlCommand = $dlCommand." -f '".$quality."'";
+				$dlCommand = $dlCommand." --recode-video mp4 -o 'RESOLVER-CACHE/$sum.mp4' -c '".$videoLink."'";
 			}
 		}
 		# by default use the option set in the web interface it it exists

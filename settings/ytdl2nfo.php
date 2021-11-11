@@ -138,5 +138,83 @@ foreach($sourceFiles as $sourceFile){
 </form>
 </div>
 
+<div class='inputCard'>
+<h2>Episode Processing Limit</h2>
+<ul>
+	<li>
+		The max number of episodes to process for a channel in a update.
+	</li>
+	<li>
+		This is to throttle downloading metadata from the site.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/episodeProcessingLimit.cfg");
+?>
+</div>
+
+<div class='inputCard'>
+<h2>Download Path</h2>
+<ul>
+	<li>
+		This is where nfo libary will be created for shows.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/downloadPath.cfg");
+?>
+</div>
+
+<div class='inputCard'>
+<h2>Channel Processing Limit</h2>
+<ul>
+	<li>
+		How many channels can be scanned during an update.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/channelProcessingLimit.cfg");
+?>
+</div>
+
+<div class='inputCard'>
+<h2>Channel Cache Update Delay</h2>
+<ul>
+	<li>
+		How long in hours the channel will wait before updating again.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/channelCacheUpdateDelay.cfg");
+?>
+</div>
+
+<div class='inputCard'>
+<h2>Video Fetch Time Limit</h2>
+<ul>
+	<li>
+		The max time in seconds to wait before the network times out when downloading metadata.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/videoFetchTimeLimit.cfg");
+?>
+</div>
+
+<div class='inputCard'>
+<h2>Sleep Time</h2>
+<ul>
+	<li>
+		The max sleep time in seconds to wait between metadata searches.
+	</li>
+	<li>
+		The true sleep time is randomized between this number and zero.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/ytdl2kodi/sleepTime.cfg");
+?>
+</div>
+
 </body>
 </html>

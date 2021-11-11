@@ -24,9 +24,14 @@ include("settingsHeader.php");
 <div class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Web Theme</h2>
-			<p>
-				Theme will change next time website updates.
-			</p>
+			<ul>
+				<li>
+					Custom themes can be installed in /usr/share/mms/themes/
+				</li>
+				<li>
+					Theme will change next time website updates.
+				</li>
+			</ul>
 			<select name='theme'>
 			<?PHP
 			# build theme list

@@ -4,6 +4,7 @@
 		<h2>Live</h2>
 		<a class='button' href='tv.php'>TV</a>
 		<a class='button' href='radio.php'>RADIO</a>
+		<a class='button' href='iptv_blocked.php'>BLOCKED</a>
 	</div>
 	<div class='titleCard settingsTab'>
 		<h2>Video On Demand</h2>

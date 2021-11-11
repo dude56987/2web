@@ -511,6 +511,8 @@ processMovie(){
 						if ! test -f "$thumbnailPath$thumbnailExt";then
 							curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
 						fi
+						# generate the web thumbnail
+						convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
 						# link the downloaded thumbnail
 						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 					else
@@ -649,8 +651,8 @@ processMovie(){
 		# add the movie to the movie index page
 		################################################################################
 		{
-			echo "<a class='indexSeries' href='$movieWebPath'>"
-			echo "	<img loading='lazy' src='$movieWebPath/$movieWebPath-poster-web.png'>"
+			echo "<a class='indexSeries' href='./$movieWebPath'>"
+			echo "	<img loading='lazy' src='./$movieWebPath/$movieWebPath-poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "	</div>"
@@ -847,6 +849,10 @@ processEpisode(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
+		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js";then
+			# link in missing hls libary from live subdirectory
+			ln -s "$webDirectory/live/hls.js" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js"
+		fi
 		# check the episode has not already been processed
 		if [ -f "$episodePagePath" ];then
 			# if this episode has already been processed by the system then skip processeing it with this function
@@ -1047,21 +1053,67 @@ processEpisode(){
 			yt_id=${videoPath//*video_id=}
 			echo "[INFO]: yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
-			#{
-			#	# embed the youtube player
-			#	echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
-			#	echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-			#	echo "frameborder='0'"
-			#	echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-			#	echo "allowfullscreen>"
-			#	echo "</iframe>"
-			#} >> "$episodePagePath"
-			fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
 			{
-				echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-				echo "<source src='$fullRedirect' type='video/mp4'>"
-				echo "</video>"
+				# embed the youtube player
+				echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
+				echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
+				echo "frameborder='0'"
+				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+				echo "allowfullscreen>"
+				echo "</iframe>"
 			} >> "$episodePagePath"
+			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
+			fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
+			{
+				echo -e "<script src='hls.js'></script>"
+				echo -e "<video id='video' class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls autoplay>"
+				#echo -e "<source src='$fullRedirect' type='video/mp4'>"
+				echo -e "<?PHP"
+				#echo -e "<source src='<?PHP md5(\"$ytLink\") ?>.mp4' type='video/mp4'>"
+				echo -e "echo '<source src=\"RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\">';"
+				echo -e "?>"
+				#echo -e "echo \"video.src = 'RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
+				echo -e "</video>"
+				echo -e "<script>"
+				echo -e "var video = document.getElementById('video');"
+				echo -e "var videoSrc = '$fullRedirect';"
+				echo
+				echo -e "	if (video.canPlayType('application/vnd.apple.mpegurl')) {"
+				echo -e "		video.src = videoSrc;"
+				echo
+				echo -e "		video.addEventListener('canplay',function() {"
+				echo -e "			video.play();"
+				echo -e "		});"
+				echo
+				echo -e "}else if(Hls.isSupported()) {"
+				echo
+				echo -e "		var hls = new Hls({"
+				echo -e "			debug: true;"
+				echo -e "		});"
+				echo
+				echo -e "		hls.loadSource(videoSrc);"
+				echo -e "		hls.attachMedia(video);"
+				echo
+				echo -e "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {"
+				echo -e "			video.muted = true;"
+				echo -e "			video.play();"
+				echo -e "		});"
+				echo
+				echo -e "}else{"
+				echo
+				echo -e "<?PHP"
+				echo -e "echo \"video.src = 'RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
+				echo -e "?>"
+				echo -e ""
+				echo -e "}"
+				echo -e "</script>"
+			#} >> "$episodePagePath"
+			} >> /dev/null
+			#{
+			#	echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+			#	echo "<source src='$fullRedirect' type='video/mp4'>"
+			#	echo "</video>"
+			#} >> "$episodePagePath"
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1369,8 +1421,8 @@ processShow(){
 	#showIndexPath="$webDirectory/shows/index.php"
 	# add show page to the show index
 	{
-		echo "<a class='indexSeries' href='$showTitle/'>"
-		echo "	<img loading='lazy' src='$showTitle/poster-web.png'>"
+		echo "<a class='indexSeries' href='./$showTitle/'>"
+		echo "	<img loading='lazy' src='./$showTitle/poster-web.png'>"
 		#echo "  <marquee direction='up' scrolldelay='100'>"
 		echo "	<div>"
 		echo "		$showTitle"
@@ -1592,77 +1644,58 @@ buildHomePage(){
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		#write a new stats index file
 		{
-			if [ "$totalShows" -gt 0 ];then
-				echo "<span>"
-				echo "	Episodes:$totalEpisodes"
-				echo "</span>"
-				echo "<span>"
-				echo "	Shows:$totalShows"
-				echo "</span>"
-			fi
-			if [ "$totalMovies" -gt 0 ];then
-				echo "<span>"
-				echo "	Movies:$totalMovies"
-				echo "</span>"
-			fi
-			if [ "$totalComics" -gt 0 ];then
-				echo "<span>"
-				echo "	Comics:$totalComics"
-				echo "</span>"
-			fi
-			if [ -f "$webDirectory/kodi/channels.m3u" ];then
-				if [ "$totalChannels" -gt 0 ];then
-					echo "<span>"
-					echo "	Channels:$totalChannels"
-					echo "</span>"
-				fi
-				if [ "$totalRadio" -gt 0 ];then
-					echo "<span>"
-					echo "	Radio:$totalRadio"
-					echo "</span>"
-				fi
-			fi
-			echo "<span>"
-			echo "	Web:$webSize "
-			echo "</span>"
-			echo "<span>"
-			echo "	Media:$mediaSize"
-			echo "</span>"
-			echo "<span>"
-			echo "	Free:$freeSpace"
-			echo "</span>"
-		} > "$webDirectory/stats.index"
-	fi
-	# build homepage code
-	tempStyle="html{ background-image: url(\"background.png\") }"
-	{
-			echo "<html id='top' class='randomFanart'>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
-			echo "<style>"
-			#echo "$tempStyle"
-			#cat /usr/share/nfo2web/style.css
-			echo "</style>"
-			echo "</head>"
-			echo "<body>"
-			if echo "$@" | grep -Eq "\-\-in\-progress";then
-				updateInProgress
-			fi
-			echo "<?PHP";
-			echo "include('header.php')";
-			echo "?>";
-			#cat "$headerPagePath"
 			echo "<div class='date titleCard'>"
 			echo "	<div>"
 			echo "		Last updated on $(date)"
 			echo "	</div>"
 			echo "	<div>"
-
-			# load from cache previously generated stats to display
-			cat "$webDirectory/stats.index"
+			if [ "$totalShows" -gt 0 ];then
+				echo "		<span>"
+				echo "			Episodes:$totalEpisodes"
+				echo "		</span>"
+				echo "		<span>"
+				echo "			Shows:$totalShows"
+				echo "		</span>"
+			fi
+			if [ "$totalMovies" -gt 0 ];then
+				echo "		<span>"
+				echo "			Movies:$totalMovies"
+				echo "		</span>"
+			fi
+			if [ "$totalComics" -gt 0 ];then
+				echo "		<span>"
+				echo "			Comics:$totalComics"
+				echo "		</span>"
+			fi
+			if [ -f "$webDirectory/kodi/channels.m3u" ];then
+				if [ "$totalChannels" -gt 0 ];then
+					echo "		<span>"
+					echo "			Channels:$totalChannels"
+					echo "		</span>"
+				fi
+				if [ "$totalRadio" -gt 0 ];then
+					echo "		<span>"
+					echo "			Radio:$totalRadio"
+					echo "		</span>"
+				fi
+			fi
+			echo "		<span>"
+			echo "			Web:$webSize "
+			echo "		</span>"
+			echo "		<span>"
+			echo "			Media:$mediaSize"
+			echo "		</span>"
+			echo "		<span>"
+			echo "			Free:$freeSpace"
+			echo "		</span>"
 			echo "	</div>"
 			echo "</div>"
-	} > "$webDirectory/index.php"
+		} > "$webDirectory/stats.index"
+	fi
+	# link homepage
+	if ! test -L "$webDirectory/index.php";then
+		ln -sf "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+	fi
 	################################################################################
 	# if time is older than one day for .index files
 	if cacheCheck "$webDirectory/updatedShows.index" "1";then
@@ -1683,46 +1716,6 @@ buildHomePage(){
 	if cacheCheck "$webDirectory/randomComics.index" "10";then
 		buildRandomComics "$webDirectory" 50 > "$webDirectory/randomComics.index"
 	fi
-
-	{
-		sourcePrefix="shows\/"
-		cat "$webDirectory/updatedShows.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-		sourcePrefix="movies\/"
-		cat "$webDirectory/updatedMovies.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-		sourcePrefix="shows\/"
-		cat "$webDirectory/randomShows.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-		sourcePrefix="movies\/"
-		cat "$webDirectory/randomMovies.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-		sourcePrefix="comics\/"
-		cat "$webDirectory/randomComics.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-		sourcePrefix="live\/"
-		cat "$webDirectory/randomChannels.index" | \
-			sed "s/src='/src='$sourcePrefix/g" | \
-			sed "s/href='/href='$sourcePrefix/g"
-	} >> "$webDirectory/index.php"
-	################################################################################
-	{
-		# add footer
-		echo "<?PHP";
-		echo "include('header.php')";
-		echo "?>";
-		#cat "$headerPagePath"
-		# create top jump button
-		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-		echo "<hr class='topButtonSpace'>"
-		echo "</body>"
-		echo "</html>"
-	} >>  "$webDirectory/index.php"
 }
 ########################################################################
 getDirSum(){
@@ -1739,57 +1732,10 @@ function buildShowIndex(){
 	webDirectory="$1"
 	headerPagePath="$2"
 	showIndexPath="$webDirectory/shows/index.php"
-	# update the show index
-	{
-		echo "<html id='top' class='randomFanart'>"
-		echo "<head>"
-		echo "<link rel='stylesheet' href='style.css' />"
-		#echo "<style>"
-		#cat /usr/share/nfo2web/style.css
-		#echo "</style>"
-		echo "<script>"
-		cat /usr/share/nfo2web/nfo2web.js
-		echo "</script>"
-		echo "</head>"
-		echo "<body>"
-		#updateInProgress
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		# add the search box
-		echo " <input id='searchBox' class='searchBox' type='text'"
-		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-		# add the most recently updated series
-		#cat "$webDirectory/updatedShows.index"
-		sourcePrefix="shows\/"
-		cat "$webDirectory/updatedShows.index"
-			#sed "s/src='/src='$sourcePrefix/g" | \
-			#sed "s/href='/href='$sourcePrefix/g"
-
-		#buildUpdatedShows "$webDirectory" 25 ""
-
-		# load all existing shows into the index
-		cat "$webDirectory"/shows/*/shows.index
-
-		# add the random list to the footer
-		#buildRandomShows "$webDirectory" 25 ""
-		#cat "$webDirectory/randomShows.index"
-		cat "$webDirectory/randomShows.index"
-			#sed "s/src='/src='$sourcePrefix/g" | \
-			#sed "s/href='/href='$sourcePrefix/g"
-
-		# add footer
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		# create top jump button
-		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-		echo "<hr class='topButtonSpace'>"
-		echo "</body>"
-		echo "</html>"
-	} > "$showIndexPath"
+	# if the shows index is not a php link or does not exist write it
+	if ! test -h "$showIndexPath";then
+		ln -sf "/usr/share/mms/templates/shows.php" "$showIndexPath"
+	fi
 }
 ########################################################################
 getDirSumByTime(){
@@ -1826,6 +1772,7 @@ scanForRandomBackgrounds(){
 		find -L "shows/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
 		find -L "movies/" -type f -name "fanart.png" >> "$webDirectory/fanart.cfg"
 		find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
+		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/fanart.cfg"
 	fi
 	if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
 		# create shows only fanart.cfg
@@ -1846,6 +1793,7 @@ scanForRandomBackgrounds(){
 		find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
 		find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
 		find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/poster.cfg"
 	fi
 	if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
 		# create shows only poster.cfg
@@ -1865,58 +1813,12 @@ function buildMovieIndex(){
 
 	webDirectory=$1
 	headerPagePath=$2
-
-	# update the movie index webpage
-	{
-		echo "<html id='top' class='randomFanart'>"
-		echo "<head>"
-		echo "<link rel='stylesheet' href='style.css' />"
-		#echo "<style>"
-		#cat /usr/share/nfo2web/style.css
-		#echo "</style>"
-		echo "<script>"
-		cat /usr/share/nfo2web/nfo2web.js
-		echo "</script>"
-		echo "</head>"
-		echo "<body>"
-		#updateInProgress
-		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-
-		# add the search box
-		echo " <input id='searchBox' class='searchBox' type='text'"
-		echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-
-		#buildUpdatedMovies "$webDirectory" 25 ""
-		#cat "$webDirectory/updatedMovies.index"
-		sourcePrefix="movies\/"
-		cat "$webDirectory/updatedMovies.index"
-			#sed "s/src='/src='$sourcePrefix/g" | \
-			#sed "s/href='/href='$sourcePrefix/g"
-
-		# load the movie index parts
-		cat "$webDirectory"/movies/*/movies.index
-
-		# add the random list to the footer
-		#buildRandomMovies "$webDirectory" 25 ""
-		#cat "$webDirectory/randomMovies.index"
-		cat "$webDirectory/randomMovies.index"
-			#sed "s/src='/src='$sourcePrefix/g" | \
-			#sed "s/href='/href='$sourcePrefix/g"
-
-		# add footer
-		#cat "$headerPagePath" | sed "s/href='/href='..\//g"
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		# create top jump button
-		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-		echo "<hr class='topButtonSpace'>"
-		echo "</body>"
-		echo "</html>"
-	} > "$movieIndexPath"
+	# movie path
+	movieIndexPath="$webDirectory/movies/index.php"
+	# if the shows index is not a php link or does not exist write it
+	if ! test -h "$movieIndexPath";then
+		ln -sf "/usr/share/mms/templates/movies.php" "$movieIndexPath"
+	fi
 }
 ########################################################################
 function cacheCheck(){
@@ -1950,11 +1852,34 @@ webRoot(){
 	else
 		#mkdir -p /var/cache/nfo2web/web/
 		chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
-		webDirectory="/var/cache/nfo2web/web"
+		echo "/var/cache/nfo2web/cache" > /etc/nfo2web/web.cfg
+		webDirectory="/var/cache/nfo2web/cache"
 	fi
 	#mkdir -p "$webDirectory"
 	echo "$webDirectory"
+}
+########################################################################
+function libaryPaths(){
+	# add the download directory to the paths
+	echo "$(downloadDir)"
+	# check for server libary config
+	if [ ! -f /etc/nfo2web/libaries.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "/var/cache/nfo2web/"
+		} >> "/etc/nfo2web/libaries.cfg"
+	fi
+	# write path to console
+	cat "/etc/nfo2web/libaries.cfg"
+	# create a space just in case none exists
+	printf "\n"
+	# read the additional configs
+	find "/etc/nfo2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+		cat "$libaryConfigPath"
+		# create a space just in case none exists
+		printf "\n"
+	done
 }
 ########################################################################
 main(){
@@ -2031,24 +1956,26 @@ main(){
 		# - Should create its own web directory
 		################################################################################
 		# load the libary directory
-		if [ -f /etc/nfo2web/libaries.cfg ];then
-			libaries=$(cat /etc/nfo2web/libaries.cfg)
-			libaries=$(echo -e "$libaries\n$(cat /etc/nfo2web/libaries.d/*.cfg)")
-		else
+		if ! test -f /etc/nfo2web/libaries.cfg ];then
 			mkdir -p /var/cache/nfo2web/libary/
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
-			libaries="/var/cache/nfo2web/libary"
-			libaries=$(echo -e "$libaries\n$(cat /etc/nfo2web/libaries.d/*.cfg)")
 		fi
+		libaries=$(libaryPaths)
 		# the webdirectory is a cache where the generated website is stored
-		if [ -f /etc/nfo2web/web.cfg ];then
-			webDirectory=$(cat /etc/nfo2web/web.cfg)
-		else
-			mkdir -p /var/cache/nfo2web/web/
-			chown -R www-data:www-data "/var/cache/nfo2web/web/"
-			echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
-			webDirectory="/var/cache/nfo2web/web"
-		fi
+		webDirectory="$(webRoot)"
+		set -x
+		# force overwrite symbolic link to web directory
+		# - link must be used to also use premade apache settings
+		ln -sfn "$webDirectory" "/var/cache/nfo2web/web"
+		set +x
+		#if [ -f /etc/nfo2web/web.cfg ];then
+		#	webDirectory=$(cat /etc/nfo2web/web.cfg)
+		#else
+		#	mkdir -p /var/cache/nfo2web/web/
+		#	chown -R www-data:www-data "/var/cache/nfo2web/web/"
+		#	echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
+		#	webDirectory="/var/cache/nfo2web/web"
+		#fi
 		# check if system is active
 		if [ -f "/tmp/nfo2web.active" ];then
 			# system is already running exit
@@ -2074,6 +2001,7 @@ main(){
 		ln -s "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
 		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
 		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
+		ln -s "/usr/share/mms/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
 		ln -s "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
 		ln -s "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
 		ln -s "/usr/share/mms/settings/comicsDL.php" "$webDirectory/comicsDL.php"
@@ -2084,6 +2012,7 @@ main(){
 		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
 		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		ln -s "/usr/share/mms/404.php" "$webDirectory/404.php"
+		ln -s "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		################################################################################
 		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
 			# build the cache directory if none exists
@@ -2124,6 +2053,7 @@ main(){
 			mkdir -p "$webDirectory/bumps/"
 		fi
 		echo "$bumpConfig" | while read bumpLink;do
+			break;#DEBUG
 			# create sum for link
 			bumpLinkSum=$(echo "$bumpLink" | md5sum | cut -d' ' -f1)
 			# read each link in the link config and check if it has been downloaded
@@ -2347,7 +2277,7 @@ main(){
 		# create the log path
 		logPagePath="$webDirectory/log.php"
 		# create the homepage path
-		homePagePath="$webDirectory/index.php"
+		#homePagePath="$webDirectory/index.php"
 		headerPagePath="$webDirectory/header.php"
 		showIndexPath="$webDirectory/shows/index.php"
 		movieIndexPath="$webDirectory/movies/index.php"
@@ -2355,47 +2285,11 @@ main(){
 		touch "$movieIndexPath"
 		touch "$headerPagePath"
 		touch "$logPagePath"
-		touch "$homePagePath"
-		{
-			# build the header
-			echo "<div id='header' class='header'>"
-			echo "<hr class='menuButton'/>"
-			echo "<hr class='menuButton'/>"
-			echo "<hr class='menuButton'/>"
-			echo "<a class='button' href='../../../../'>"
-			echo "&#127968;HOME"
-			echo "</a>"
-			echo "<a class='button' href='../../../../link.php'>"
-			echo "&#128279;LINK"
-			echo "</a>"
-			if [ -d "$webDirectory/kodi/movies/" ];then
-				echo "<a class='button' href='../../../../movies'>"
-				echo "&#127916;MOVIES"
-				echo "</a>"
-			fi
-			if [ -d "$webDirectory/kodi/shows/" ];then
-				echo "<a class='button' href='../../../../shows'>"
-				echo "&#128250;SHOWS"
-				echo "</a>"
-			fi
-			if [ -f "$webDirectory/live/channels.m3u" ];then
-				echo "<a class='button' href='../../../../live'>"
-				echo "&#128225;LIVE"
-				echo "</a>"
-			fi
-			if [ -d "$webDirectory/comics/" ];then
-				echo "<a class='button' href='../../../../comics'>"
-				echo "&#128214;COMICS"
-				echo "</a>"
-			fi
-			#echo "<a class='button' href='log.php'>"
-			#echo "LOG"
-			#echo "</a>"
-			echo "<a class='button' href='../../../../system.php'>"
-			echo "&#128421;SETTINGS"
-			echo "</a>"
-			echo "</div>"
-		} > "$headerPagePath"
+		#touch "$homePagePath"
+		# check for the header
+		if ! test -L "$webDirectory/header.php";then
+			ln -sf "/usr/share/mms/templates/header.php" "$webDirectory/header.php"
+		fi
 		# build log page
 		{
 			echo "<html id='top' class='randomFanart'>"

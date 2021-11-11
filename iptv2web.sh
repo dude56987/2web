@@ -25,6 +25,7 @@ tabs 4
 function INFO(){
 	width=$(tput cols)
 	cleanedText=$(cleanText "$1")
+	#cleanedText="$1"
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
 	# - add the buffer to the end of the line and cut to terminal width
@@ -33,6 +34,8 @@ function INFO(){
 	output="$(echo -n "[INFO]: $cleanedText$buffer" | cut -b"1-$(( $width - 1 ))")"
 	# print the line
 	printf "$output\r"
+	#printf "$output\n"
+	# DEBUG sleep
 }
 ################################################################################
 function ERROR(){
@@ -97,15 +100,14 @@ examineIconLink(){
 	localIconThumbMiniPath="$(webRoot)/live/$sum-thumb-mini.png"
 
 	# if the file exists and is not older than 10 days
-	if cacheCheck "$localIconPath" "10";then
-
+	if cacheCheck "$localIconPath" "20";then
 		if [ "$iconLength" -gt 3 ];then
 			# build a md5sum from the icon link
 			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
 			if ! test -f "$localIconPath";then
 				#timeout 600 curl "$iconLink" | convert - -adaptive-resize 128x200\! "$localIconPath"
 				# if the file does not exist in the cache download it
-				timeout 120 curl "$iconLink" > "$localIconPath"
+				timeout 120 curl --silent "$iconLink" > "$localIconPath"
 				# resize the icon to standard size
 				timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			fi
@@ -116,7 +118,7 @@ examineIconLink(){
 		if ! test -f "$localIconPath";then
 			tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
 			# if the file does not exist in the cache download it
-			timeout 120 curl "$tempIconLink" > "$localIconPath"
+			timeout 120 curl --silent "$tempIconLink" > "$localIconPath"
 			# resize the icon to standard size
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 		fi
@@ -139,10 +141,10 @@ examineIconLink(){
 			if ! echo -n "$radio" | grep -q "true";then
 				if streamPass --can-handle-url "$link";then
 					# resolve with streamlink and then screenshot
-					timeout 30 ffmpeg -y -i "$(streamPass --stream-url "$link" best)" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
+					timeout 5 ffmpeg -y -i "$(streamPass --stream-url "$link" best)" -frames:v 1 "$localIconPath"
 				else
 					# raw stream screenshot
-					timeout 30 ffmpeg -y -i "$link" -ss "$tempTimeout" -frames:v 1 "$localIconPath"
+					timeout 5 ffmpeg -y -i "$link" -frames:v 1 "$localIconPath"
 				fi
 			fi
 			# resize the icon to standard size
@@ -250,17 +252,18 @@ function process_M3U(){
 	# convert m3u files by downloading icons and redirecting to downloaded local icons
 	#channelNumber=1
 	lineCaught=""
-	#IFS_BACKUP=$IFS
-	#IFS=$'\n'
+
 	# check for blocked channel config
 	if ! test -f "/etc/iptv2web/blockedGroups.cfg";then
+		touch "/etc/iptv2web/blockedGroups.cfg"
 		# each line in this file is a string that if found will be blocked
-		echo "news" > /etc/iptv2web/blockedGroups.cfg
+		echo "news" > "/etc/iptv2web/blockedGroups.cfg"
 	fi
+
 	# load up the blocked channel groups
 	blockedGroups=$(cat /etc/iptv2web/blockedGroups.cfg)
 	blockedGroups=$(printf "$blockedGroups\n$(cat /etc/iptv2web/blockedGroups.d/*.cfg)")
-	#for line in $channels;do
+
 	echo -n "$channels" | while read line;do
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
@@ -308,7 +311,7 @@ function process_M3U(){
 						echo "		$link"
 						echo "	</div>"
 						echo "</div>"
-					}> "$webDirectory/live/blocked/$iconSum.index"
+					} > "$webDirectory/live/blocked/$iconSum.index"
 					addChannel=false
 				else
 					# if the channel is not blocked, add the .index file for the group
@@ -316,7 +319,7 @@ function process_M3U(){
 					mkdir -p "$webDirectory/live/groups/$group/"
 					if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
 						# link index files in group directories
-						ln -s "$webDirectory/live/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
+						linkFile "$webDirectory/live/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
 					fi
 					addChannel=true
 				fi
@@ -361,12 +364,18 @@ function process_M3U(){
 	done
 }
 ################################################################################
+linkFile(){
+	if ! test -L "$2";then
+		ln -s "$1" "$2"
+	fi
+}
+################################################################################
 function cacheCheck(){
+	# return true if cached file does not exist or is over cacheDays old and needs updated
 
 	filePath="$1"
 	cacheDays="$2"
 
-	# return true if cached needs updated
 	if test -f "$filePath";then
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
@@ -391,7 +400,6 @@ function process_M3U_file(){
 	webDirectory=$2
 	process_M3U "$channels" "$webDirectory"
 }
-
 ################################################################################
 function processLink(){
 	link=$1
@@ -430,8 +438,9 @@ function processLink(){
 				mkdir -p "$webDirectory/cache/"
 				# if no cached file exists
 				# if downloaded file is older than 10 days update it
-				timeout 120 curl "$link" > "$webDirectory/cache/$linkSum.index"
+				timeout 120 curl --silent "$link" > "$webDirectory/cache/$linkSum.index"
 			fi
+
 			# if it is a playlist file add it to the list by download
 			#downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
 			downloadedM3U=$(cat "$webDirectory/cache/$linkSum.index")
@@ -468,7 +477,6 @@ function processLink(){
 				tempFileName=$(echo -n "$fileName" | wc -c )
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
-					#fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
 					ERROR "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
@@ -521,6 +529,13 @@ webRoot(){
 	echo "$webDirectory"
 }
 ################################################################################
+webUpdateCheck(){
+	# if the update number is divisible by 400
+	if echo "$1 % 50" | bc ;then
+		webGen
+	fi
+}
+################################################################################
 fullUpdate(){
 	################################################################################
 	# scan sources config file and fetch each source
@@ -549,13 +564,19 @@ fullUpdate(){
 
 	webDirectory=$(webRoot)
 	mkdir -p "$webDirectory/live/"
+
+	# generate the placeholder website
+	webGen
+
 	channelsPath="$webDirectory/live/channels.index"
 	channelsOutputPath="$webDirectory/live/channels.m3u"
 	channelsRawPath="$webDirectory/live/channels_raw.index"
 	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
+
 	# link the channels to the kodi directory
-	ln -s "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
-	ln -s "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
+	linkFile  "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
+	linkFile "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
+
 	# for each link in the sources
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
@@ -564,45 +585,50 @@ fullUpdate(){
 	################################################################################
 	# read video sources
 	################################################################################
+	if test -f "$webDirectory/live/totalSources.index";then
+		totalSources=$(cat "$webDirectory/live/totalSources.index")
+	else
+		totalSources="?"
+	fi
+	################################################################################
 	processedSources=0
 	# add user created custom local configs first
 	INFO "Adding m3u sources from /etc/iptv2web/sources.d/"
-	ls -t1 /etc/iptv2web/sources.d/*.m3u
-	if [ $? -eq 0 ];then
-		find /etc/iptv2web/sources.d/*.m3u -name "*.m3u" -type f | while read configFile;do
-			# add file to main m3u, exclude description line
-			process_M3U_file "$configFile" "$webDirectory"
-			processedSources=$(($processedSources + 1))
-		done
-	fi
+	find /etc/iptv2web/sources.d/*.m3u -name "*.m3u" -type "f" | while read configFile;do
+		# add file to main m3u, exclude description line
+		process_M3U_file "$configFile" "$webDirectory"
+		processedSources=$(($processedSources + 1))
+		INFO "processing source $processedSources/$totalSources"
+		webUpdateCheck "$processedSources"
+	done
 	INFO "Adding m3u8 sources from /etc/iptv2web/sources.d/"
-	ls -t1 /etc/iptv2web/sources.d/*.m3u8
-	if [ $? -eq 0 ];then
-		find /etc/iptv2web/sources.d/ -name "*.m3u8" -type f | while read configFile;do
-			# add file to main m3u8, exclude description line
-			process_M3U_file "$configFile" "$webDirectory"
-			processedSources=$(($processedSources + 1))
-		done
-	fi
+	find /etc/iptv2web/sources.d/ -name "*.m3u8" -type "f" | while read configFile;do
+		# add file to main m3u8, exclude description line
+		process_M3U_file "$configFile" "$webDirectory"
+		processedSources=$(($processedSources + 1))
+		INFO "processing source $processedSources/$totalSources"
+		webUpdateCheck "$processedSources"
+	done
 	INFO "Adding /etc/iptv2web/sources.cfg"
 	# read main config m3u sources and merge them
-	echo -n "$linkList" | while read link;do
+	loadWithoutComments "/etc/iptv2web/sources.cfg" | while read link;do
 		processLink "$link" "$channelsPath"
 		processedSources=$(($processedSources + 1))
+		INFO "processing source $processedSources/$totalSources"
+		webUpdateCheck "$processedSources"
 	done
 	# add external sources last
 	INFO "Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
-	ls -t1 /etc/iptv2web/sources.d/*.cfg
-	if [ $? -eq 0 ];then
-		# load the config file list
-		ls -t1 /etc/iptv2web/sources.d/*.cfg | tac | while read configFile;do
-			# read each config file
-			loadWithoutComments "$configFile" | while read link;do
-				processLink "$link" "$channelsPath"
-				processedSources=$(($processedSources + 1))
-			done
+	# load the config file list
+	find /etc/iptv2web/sources.d/ -name "*.m3u" -type "f" | while read configFile;do
+		# read each config file
+		loadWithoutComments "$configFile" | while read link;do
+			processLink "$link" "$channelsPath"
+			processedSources=$(($processedSources + 1))
+			INFO "processing source $processedSources/$totalSources"
+			webUpdateCheck "$processedSources"
 		done
-	fi
+	done
 	################################################################################
 	# process radio sources
 	################################################################################
@@ -611,20 +637,20 @@ fullUpdate(){
 		# process radio link
 		processLink "$link" "$channelsPath" "true"
 		processedSources=$(($processedSources + 1))
+		INFO "processing source $processedSources/$totalSources"
+		webUpdateCheck "$processedSources"
 	done
 	# check for radio sources
-	ls -t1 /etc/iptv2web/radioSources.d/*.cfg
-	if [ $? -eq 0 ];then
-		#for configFile in $(ls -t1 /etc/iptv2web/radioSources.d/*.cfg | tac);do
-		ls -t1 /etc/iptv2web/radioSources.d/*.cfg | tac | while read configFile;do
-			#for link in $(loadWithoutComments "$configFile");do
-			loadWithoutComments "$configFile" | while read link;do
-				# process radio link
-				processLink "$link" "$channelsPath" "true"
-				processedSources=$(($processedSources + 1))
-			done
+	find /etc/iptv2web/radioSources.d/ -name "*.m3u" -type "f" | while read configFile;do
+		loadWithoutComments "$configFile" | while read link;do
+			# process radio link
+			processLink "$link" "$channelsPath" "true"
+			processedSources=$(($processedSources + 1))
+			INFO "processing source $processedSources/$totalSources"
+			webUpdateCheck "$processedSources"
 		done
-	fi
+	done
+	echo "$processedSources" > "$webDirectory/live/totalSources.index"
 	# after processing all configs copy the temp channels path over
 	cp -v "$channelsPath" "$channelsOutputPath"
 	cp -v "$channelsRawPath" "$channelsRawOutputPath"
@@ -665,7 +691,6 @@ function buildPage(){
 		echo " frameborder='0'"
 		echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
 		echo " allowfullscreen>"
-		#echo ">"
 		echo "</iframe>"
 	else
 		# build the page but dont write it, this function is intended to be
@@ -691,6 +716,8 @@ function buildPage(){
 		echo -e "$tabs			video.play();"
 		echo -e "$tabs		});"
 		echo -e "$tabs	}"
+		# start playback on page load
+		echo -e "$tabs hls.on(Hls.Events.MANIFEST_PARSED,playVideo);"
 		echo -e "$tabs</script>"
 	fi
 }
@@ -698,18 +725,14 @@ function buildPage(){
 function buildGroupPages(){
 	webDirectory=$1
 	################################################################################
-	#ls -1 "$webDirectory/live/groups/" | while read group;do
-	#headerData=$(cat "$webDirectory/header.php" | sed "s/href='/href='..\/..\/..\//g")
-	#
-	#groupsIndex=
-	find "$webDirectory/live/groups/" -type d | while read groupPath;do
+	find "$webDirectory/live/groups/" -type "d" | while read groupPath;do
 		if ! [ "$groupPath" == "$webDirectory/live/groups/" ];then
 			INFO "Building group pages for (groupPath = '$groupPath')"
 			# link assets
-			ln -s "$webDirectory/style.css" "$groupPath"
-			ln -s "$webDirectory/randomFanart.php" "$groupPath"
+			linkFile "$webDirectory/style.css" "$groupPath"
+			linkFile "$webDirectory/randomFanart.php" "$groupPath"
 			cat "$webDirectory/fanart.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/fanart.cfg"
-			ln -s "$webDirectory/randomPoster.php" "$groupPath"
+			linkFile "$webDirectory/randomPoster.php" "$groupPath"
 			cat "$webDirectory/poster.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/poster.cfg"
 			# blank the index file
 			#echo "" > "$groupPath/index.index"
@@ -732,9 +755,8 @@ function buildGroupPages(){
 				echo "<hr>"
 			} > "$groupPath/index.index"
 			# build the group index that lists all the groups
-			#find -L "$groupPath" -type f | while read groupIndex;do
 			# build the groups
-			groupList=$(find -maxdepth 1 -type d "$groupPath")
+			groupList=$(find -maxdepth 1 -type "d" "$groupPath")
 			find -L "$groupPath" -type f | while read groupIndex;do
 				# the .index file is found
 				if echo "$groupIndex" | grep -Eq ".index";then
@@ -745,7 +767,7 @@ function buildGroupPages(){
 							INFO "(groupTitle = $groupTitle )"
 							INFO "Adding (groupindex = $groupIndex ) to (group = $groupPath )"
 							{
-								cat "$groupIndex" | sed "s/href='/href='..\/..\//g" | sed "s/src='/src='..\/..\//g"
+								cat "$groupIndex"
 							} >> "$groupPath/index.index"
 						fi
 					fi
@@ -766,45 +788,42 @@ function buildGroupPages(){
 }
 ################################################################################
 function buildRadioPage(){
-title=$1
-link=$2
-poster=$3
-tabs=$4
-################################################################################
-localLinkSig="http://$(hostname).local:444/live/"
-################################################################################
-# check for .local domain indicating a local link
-if echo "$link" | grep -q --ignore-case ".local";then
-	# cleanup the local string from the link as absolute paths will break resolution
-	link=${link//$localLinkSig}
-	# remove leading and trailing parathensis added from link
-	link=${link//^\"}
-	link=${link//\"$}
-fi
-if echo "$link" | grep -q --ignore-case "youtube.com";then
-	# embed youtube livestream links into the webpage
-	yt_id=${link//*watch?v=}
-	yt_id=${yt_id//\"}
-	ytLink="https://youtube.com/watch?v=$yt_id"
-	# embed the youtube player
-	echo "<iframe class='livePlayer'"
-	echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
-	echo " frameborder='0'"
-	echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-	echo " allowfullscreen>"
-	#echo ">"
-	echo "</iframe>"
-else
-	# build the page but dont write it, this function is intended to be
-	# piped into a file
-	#echo -e "$tabs<div class='livePlayer'>"
-	# make the background for the audio player the poster of the audio stream
-	customStyle="background-image: url(\"$poster\");"
-	echo -e "$tabs<audio class='livePlayer' style='$customStyle' poster='$poster' controls autoplay>"
-	echo -e "$tabs<source src='$link' type='audio/mpeg'>"
-	echo -e "$tabs</audio>"
-	#echo -e "$tabs</div>"
-fi
+	title=$1
+	link=$2
+	poster=$3
+	tabs=$4
+	################################################################################
+	localLinkSig="http://$(hostname).local:444/live/"
+	################################################################################
+	# check for .local domain indicating a local link
+	if echo "$link" | grep -q --ignore-case ".local";then
+		# cleanup the local string from the link as absolute paths will break resolution
+		link=${link//$localLinkSig}
+		# remove leading and trailing parathensis added from link
+		link=${link//^\"}
+		link=${link//\"$}
+	fi
+	if echo "$link" | grep -q --ignore-case "youtube.com";then
+		# embed youtube livestream links into the webpage
+		yt_id=${link//*watch?v=}
+		yt_id=${yt_id//\"}
+		ytLink="https://youtube.com/watch?v=$yt_id"
+		# embed the youtube player
+		echo "<iframe class='livePlayer'"
+		echo " src='https://www.youtube-nocookie.com/embed/$yt_id?autoplay=1'"
+		echo " frameborder='0'"
+		echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
+		echo " allowfullscreen>"
+		echo "</iframe>"
+	else
+		# build the page but dont write it, this function is intended to be
+		# piped into a file
+		# make the background for the audio player the poster of the audio stream
+		customStyle="background-image: url(\"$poster\");"
+		echo -e "$tabs<audio class='livePlayer' style='$customStyle' poster='$poster' controls autoplay>"
+		echo -e "$tabs<source src='$link' type='audio/mpeg'>"
+		echo -e "$tabs</audio>"
+	fi
 }
 ################################################################################
 append(){
@@ -827,23 +846,32 @@ webGen(){
 		main libary
 	fi
 	################################################################################
+	# link the home php page
+	linkFile  "/usr/share/mms/templates/live.php" "$webDirectory/live/index.php"
+	# lists
+	linkFile  "/usr/share/mms/templates/randomChannels.php" "$webDirectory/randomChannels.php"
+	linkFile  "/usr/share/mms/templates/updatedChannels.php" "$webDirectory/updatedChannels.php"
 	# copy over the stylesheet
-	ln -s "$webDirectory/style.css" "$webDirectory/live/style.css"
+	linkFile "$webDirectory/style.css" "$webDirectory/live/style.css"
 	# copy over the resolver
-	ln -s "/usr/share/nfo2web/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
+	linkFile "/usr/share/nfo2web/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
+
+	# build the background lists for random background
+	cat "$webDirectory/fanart.cfg" | sed "s/^/..\//g" > "$webDirectory/live/fanart.cfg"
+	cat "$webDirectory/poster.cfg" | sed "s/^/..\//g" > "$webDirectory/live/poster.cfg"
+
+	linkFile "$webDirectory/randomFanart.php" "$webDirectory/live/randomFanart.php"
+	linkFile "$webDirectory/randomPoster.php" "$webDirectory/live/randomPoster.php"
+
 	################################################################################
 	#build the header
 	################################################################################
 	channels=$(cat "$channelsPath" | grep -v "#EXTM3U")
 	# split lines on line endings not spaces and line endings
 	lineCaught=""
-	#IFS_NORMAL=$IFS
-	#IFS_LINEONLY=$'\n'
-	#IFS=$IFS_LINEONLY
 
 	# create temp files to be copied after update to output paths
 	channelListPath="$webDirectory/live/channelList.index"
-	indexPath="$webDirectory/live/index.index"
 
 	# create output paths
 	channelOutputPath="$webDirectory/live/channelList.php"
@@ -855,74 +883,9 @@ webGen(){
 	# build the channel list
 	INFO "Building channel link list."
 	################################################################################
-	#channelNumber=1
-	#for line in $channels;do
-	echo "$channels" | while read line;do
-		INFO "building channel list for line = $line"
-		# if a info line was detected on the last line
-		if [ 1 -lt $(echo "$lineCaught" | wc -c) ];then
-			# pull the link on this line and store it
-			title=$(echo "$lineCaught" | cut -d',' -f2)
-			link=$line
-			#iconLink=$(getIconLink "$lineCaught")
-			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			iconLink="$iconSum.png"
-			iconThumbLink="$iconSum-thumb.png"
-			iconThumbMiniLink="$iconSum-thumb-mini.png"
-			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			INFO "Found Title = $title"
-			INFO "Found Link = $link"
-			INFO "Icon Link = $iconLink"
-			INFO "Icon MD5 = $iconSum"
-			#examineIconLink "$iconLink" "$link" "$title"
-			################################################################################
-			# add links to channel list
-			if echo $lineCaught | grep -Eq "radio=[\",']true";then
-				# if the link is a radio station
-				{
-					echo -e "<div id='$channelNumber'>"
-					echo -e "\t<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
-					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconThumbMiniLink'>"
-					#echo -e "\t\t$channelNumber $title"
-					echo -e "\t\t$title"
-					echo -e "\t<div class='radioIcon'>"
-					#echo -e "\t&#9835;"
-					echo -e "\t&#128251;"
-					echo -e "\t</div>"
-					echo -e "\t</a>"
-					echo -e "</div>"
-				} >> "$channelListPath"
-			else
-				{
-					echo -e "<div id='$channelNumber'>"
-					echo -e "\t<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
-					echo -e "\t\t<img loading='lazy' class='channelIcon' src='$iconThumbMiniLink'>"
-					#echo -e "\t\t$channelNumber $title"
-					echo -e "\t\t$title"
-					echo -e "\t<div class='radioIcon'>"
-					echo -e "\t&#128250;"
-					echo -e "\t</div>"
-					echo -e "\t</a>"
-					echo -e "</div>"
-				} >> "$channelListPath"
-			fi
-			#channelNumber=$(($channelNumber + 1))
-		fi
-		# if the line is a info line
-		if echo "$line" | grep "#EXTINF";then
-			INFO "Found info line '$line'"
-			lineCaught="$line"
-		else
-			# reset the line caught variable
-			lineCaught=""
-		fi
-	done
-	################################################################################
 	# build each channel page
 	# - channel pages ignore --in-progress to prevent refresh during playback
 	################################################################################
-	#channelNumber=1
-	#for line in $channels;do
 	echo "$channels" | while read line;do
 		# if a info line was detected on the last line
 		INFO "building channel page for line = $line"
@@ -930,191 +893,141 @@ webGen(){
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
 		if [ "$caughtLength" -gt 1 ];then
-			# pull the link on this line and store it
-			title=$(echo "$lineCaught" | cut -d',' -f2)
-			link=$(echo -n "$line" | grep ".")
-			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			#iconLink=$(getIconLink "$lineCaught")
-			iconLink="$iconSum.png"
-			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			# check for group title
-			groupTitle=$(getTVG "$lineCaught" "group-title")
-			INFO "Found Title = $title"
-			INFO "Found Link = $link"
-			INFO "Icon Link = $iconLink"
-			INFO "Icon MD5 = $iconLink"
-			{
-				# build the page
-				echo "<html id='top' class='liveBackground'>"
-				echo "<head>"
-				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
-				echo "</head>"
-				echo "<body>"
-				# place the header
-				echo "<?PHP";
-				echo "include('../header.php')";
-				echo "?>";
-				#echo "<a href='channels.m3u' id='channelsDownloadLink'"
-				#echo " class='button'>channels.m3u</a>"
-				#echo "<div>"
+			#if cacheCheck "$webDirectory/live/channel_$channelNumber.index" "10";then
+			#if ! test -f "$webDirectory/live/channel_$channelNumber.index";then
+			if true;then
+				# pull the link on this line and store it
+				title=$(echo "$lineCaught" | cut -d',' -f2)
+				link=$(echo -n "$line" | grep ".")
+				iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
+				iconLink="$iconSum.png"
+				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
+				# check for group title
+				groupTitle=$(getTVG "$lineCaught" "group-title")
+				INFO "Found Title = $title"
+				INFO "Found Link = $link"
+				INFO "Icon Link = $iconLink"
+				INFO "Icon MD5 = $iconLink"
+				################################################################################
+				# build individual channel webpage
+				################################################################################
+				{
+					# build the page
+					echo "<html id='top' class='liveBackground'>"
+					echo "<head>"
+					echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
+					echo " <title>$title</title>"
+					echo "</head>"
+					echo "<body>"
+					# place the header
+					echo "<?PHP";
+					echo "include('../header.php')";
+					echo "?>";
+					echo "<div class='listCard'>";
+					if echo "$lineCaught" | grep -Eq "radio=[\",']true";then
+						buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
+					else
+						buildPage "$title" "$link" "$iconLink" "\t\t\t"
+					fi
+					echo "	<div class='channelList'>"
+					# create the line that will be replaced by the link list to all the channels
+					echo "		<?PHP";
+					echo "			include('channelList.php')";
+					echo "		?>";
+					echo "	</div>"
+					echo "</div>"
+					echo "<div>";
+					echo "<br>"
+					echo "<div class='descriptionCard'>"
+					echo "	<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
+					echo "		$title"
+					echo "	</a>"
+					echo "	<a class='button hardLink' href='$link'>"
+					echo "		Hard Link"
+					echo "	</a>"
+					for group in $groupTitle;do
+						echo "	<a class='button groupButton tag' href='groups/$group/'>$group</a>"
+					done
+					echo "</div>"
+					# add footer
+					echo "<?PHP";
+					echo "include('../randomChannels.php');";
+					echo "include('../header.php');";
+					echo "?>";
+					# create top jump button
+					echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+					# add space for jump button when scrolled all the way down
+					echo "<hr class='topButtonSpace'>"
+					echo "</body>"
+					echo "</html>"
+				} > "$webDirectory/live/channel_$channelNumber.php"
+				################################################################################
+				# pull the link on this line and store it
+				################################################################################
+				iconThumbLink="$iconSum-thumb.png"
+				iconThumbMiniLink="$iconSum-thumb-mini.png"
+				iconLength=$(echo "$iconLink" | wc -c)
+				################################################################################
+				# build the .index files for the php index page to render correctly
+				################################################################################
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
-					buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
+					{
+						# build icon to link to the channel
+						echo -e "<a class='indexLink button radio' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
+						echo -e "\t<div class='indexTitle'>"
+						echo -e "\t\t$title"
+						echo -e "\t<div class='radioIcon'>"
+						echo -e "\t&#128251;"
+						echo -e "\t</div>"
+						echo -e "\t</div>"
+						echo -e "</a>"
+						# store data in index files in order to allow stats to be created
+					} > "$webDirectory/live/channel_$channelNumber.index"
 				else
-					buildPage "$title" "$link" "$iconLink" "\t\t\t"
+					{
+						# build icon to link to the channel
+						echo -e "<a class='indexLink button tv' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
+						echo -e "\t<div class='indexTitle'>"
+						echo -e "\t\t$title"
+						echo -e "\t<div class='radioIcon'>"
+						echo -e "\t&#128250;"
+						echo -e "\t</div>"
+						echo -e "\t</div>"
+						echo -e "</a>"
+					} > "$webDirectory/live/channel_$channelNumber.index"
 				fi
-				echo "	<div class='channelList'>"
-				# create the line that will be replaced by the link list to all the channels
-				#for channelLine in $(cat "$channelListPath");do
-				#cat "$channelListPath" | while read channelLine;do
-				#	echo -e "\t\t$channelLine"
-				#done
-				echo "<?PHP";
-				echo "include('channelList.php')";
-				echo "?>";
-				echo "	</div>"
-				echo "</div>"
-				echo "<br>"
-				echo "<div class='descriptionCard'>"
-				echo "	<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
-				echo "		$title"
-				echo "	</a>"
-				echo "	<a class='button hardLink' href='$link'>"
-				echo "		Hard Link"
-				echo "	</a>"
-				#IFS=$IFS_NORMAL
-				#echo "$groupTitle" | while read -r group;do
-				for group in $groupTitle;do
-					echo "	<a class='button groupButton tag' href='groups/$group/'>$group</a>"
-				done
-				#IFS=$IFS_LINEONLY
-				echo "</div>"
-				# add footer
-				echo "<?PHP";
-				echo "include('../randomChannels.index');";
-				echo "include('../header.php');";
-				echo "?>";
-				# create top jump button
-				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-				# add space for jump button when scrolled all the way down
-				echo "<hr class='topButtonSpace'>"
-				echo "</body>"
-				echo "</html>"
-			} > "$webDirectory/live/channel_$channelNumber.php"
-			################################################################################
-			# increment the channel number
-			#channelNumber=$(($channelNumber + 1))
-		fi
-		# if the line is a info line
-		if echo "$line" | grep -q "#EXTINF";then
-			INFO "Found info line '$line'"
-			lineCaught="$line"
-		else
-			# reset the line caught variable
-			lineCaught=""
-		fi
-	done
-	################################################################################
-	# build the index page
-	################################################################################
-	{
-		echo -e "<html id='top' class='liveBackground'>"
-		echo -e "<head>"
-		echo -e "\t<link rel='stylesheet' type='text/css' href='style.css'>"
-		echo "<script>"
-		cat /usr/share/nfo2web/nfo2web.js
-		echo "</script>"
-		echo -e "</head>"
-		echo -e "<body>"
-
-		if echo "$@" | grep -Eq "\-\-in\-progress";then
-			updateInProgress
-		fi
-
-		# place the header
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		echo "<hr>"
-		echo " <input id='searchBox' class='searchBox' type='text'"
-		echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
-		#echo "<a href='channels.m3u' id='channelsDownloadLink'"
-		#echo " class='button'>channels.m3u</a>"
-		echo "<hr>"
-		echo "<div class='titleCard'>"
-		find "$webDirectory/live/groups/" -mindepth 1 -maxdepth 1 -type d | sort | while read groupsName;do
-			groupLink=$(popPath "$groupsName")
-			echo "<a class='button tag' href='groups/$groupLink'>$groupLink</a>"
-		done
-		echo "</div>"
-		echo "<div class='filterButtonBox'>"
-		echo -n "<input type='button' class='button liveFilter' value='&#128250; TV'"
-		echo    " onclick='filterByClass(\"indexLink\",\"&#128250;\")'>"
-
-		echo -n "<input type='button' class='button liveFilter' value='&infin; All'"
-		echo    " onclick='filterByClass(\"indexLink\",\"\")'>"
-
-		echo -n "<input type='button' class='button liveFilter' value='&#128251; Radio'"
-		echo    " onclick='filterByClass(\"indexLink\",\"&#128251;\")'>"
-
-		echo "</div>"
-		echo "<hr>"
-		echo -e "<div class='indexBody'>"
-	} > "$indexPath"
-	#channelNumber=1
-	#for line in $channels;do
-	echo "$channels" | while read line;do
-		INFO "building channel index entry for line = $line"
-		# if a info line was detected on the last line
-		caughtLength=$(echo "$lineCaught" | wc -c)
-		if [ "$caughtLength" -gt 1 ];then
-			# pull the link on this line and store it
-			title=$(echo "$lineCaught" | cut -d',' -f2)
-			link=$line
-			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			#iconLink=$(getIconLink "$lineCaught")
-			iconLink="$iconSum.png"
-			iconThumbLink="$iconSum-thumb.png"
-			iconThumbMiniLink="$iconSum-thumb-mini.png"
-			iconLength=$(echo "$iconLink" | wc -c)
-			channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			INFO "Found Title = $title \r"
-			INFO "Found Link = $link \r"
-			INFO "Icon Link = $iconLink \r"
-			INFO "Icon MD5 = $iconSum \r"
-			if echo $lineCaught | grep -Eq "radio=[\",']true";then
-				{
-					# build icon to link to the channel
-					echo -e "<a class='indexLink button radio' href='channel_$channelNumber.php#$channelNumber'>"
-					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconThumbLink'>"
-					echo -e "\t<div class='indexTitle'>"
-					echo -e "\t\t$title"
-					echo -e "\t<div class='radioIcon'>"
-					echo -e "\t&#128251;"
-					echo -e "\t</div>"
-					echo -e "\t</div>"
-					echo -e "</a>"
-					# store data in index files in order to allow stats to be created
-				} > "$webDirectory/live/channel_$channelNumber.index"
-			else
-				{
-					# build icon to link to the channel
-					echo -e "<a class='indexLink button tv' href='channel_$channelNumber.php#$channelNumber'>"
-					echo -e "\t<img loading='lazy' class='indexIcon' src='$iconThumbLink'>"
-					echo -e "\t<div class='indexTitle'>"
-					echo -e "\t\t$title"
-					echo -e "\t<div class='radioIcon'>"
-					#echo -e "\t&#128250;"
-					echo -e "\t&#128250;"
-					echo -e "\t</div>"
-					echo -e "\t</div>"
-					echo -e "</a>"
-				} > "$webDirectory/live/channel_$channelNumber.index"
+				################################################################################
+				# add links to channel list, this is for the channel list used on individual pages
+				################################################################################
+				if echo $lineCaught | grep -Eq "radio=[\",']true";then
+					# if the link is a radio station
+					{
+						echo -e "<div id='$channelNumber'>"
+						echo -e "\t<a class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
+						echo -e "\t\t$title"
+						echo -e "\t<div class='radioIcon'>"
+						echo -e "\t&#128251;"
+						echo -e "\t</div>"
+						echo -e "\t</a>"
+						echo -e "</div>"
+					} >> "$channelListPath"
+				else
+					{
+						echo -e "<div id='$channelNumber'>"
+						echo -e "\t<a class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
+						echo -e "\t\t$title"
+						echo -e "\t<div class='radioIcon'>"
+						echo -e "\t&#128250;"
+						echo -e "\t</div>"
+						echo -e "\t</a>"
+						echo -e "</div>"
+					} >> "$channelListPath"
+				fi
 			fi
-			# write the data to the index path
-			cat "$webDirectory/live/channel_$channelNumber.index" >> "$indexPath"
-			################################################################################
-			# increment the channel number
-			#channelNumber=$(($channelNumber + 1))
 		fi
 		# if the line is a info line
 		if echo "$line" | grep -q "#EXTINF";then
@@ -1125,38 +1038,30 @@ webGen(){
 			lineCaught=""
 		fi
 	done
-	{
-		echo -e "</div>"
-		# add the footer
-		echo "<?PHP";
-		echo "include('../header.php')";
-		echo "?>";
-		# create top jump button
-		echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
-		# add space for jump button when scrolled all the way down
-		echo "<hr class='topButtonSpace'>"
-		echo -e "</body>"
-		echo -e "</html>"
-	} >> "$indexPath"
 
 	# build the group pages
 	buildGroupPages "$webDirectory"
 
 	# copy over the new versions of the generated webpages
-	cp -v "$indexPath" "$indexOutputPath"
 	cp -v "$channelListPath" "$channelOutputPath"
-	#IFS=$IFS_NORMAL
 }
 ################################################################################
-################################################################################
-################################################################################
 resetCache(){
+	webDirectory=$(webRoot)
+	echo "The paths to be removed are"
+	echo " - $webDirectory/live/*.index"
+	echo "Starting reset..."
+	rm -v "$webDirectory"/live/*.index
+}
+################################################################################
+nukeCache(){
 	webDirectory=$(webRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.html"
 	echo " - $webDirectory/live/*.php"
 	echo " - $webDirectory/live/*.index"
 	echo " - $webDirectory/live/*.png"
+	echo "Starting delete..."
 	rm -v "$webDirectory"/live/*.html
 	rm -v "$webDirectory"/live/*.php
 	rm -v "$webDirectory"/live/*.index
@@ -1175,10 +1080,12 @@ checkCron(){
 	#############################################################
 	if test -f "$webDirectory/live/update.cfg";then
 		echo "[START]: Update started on $(date)"
+		echo "[WEBGEN]: Generate and update webpages"
+		main webGen
 		echo "[UPDATE]: Combine all iptv configs..."
 		main update
 		echo "[WEBGEN]: Generate and update webpages"
-		main webgen
+		main webGen
 		echo "[CLEAN]: Remove the update config"
 		rm -rv "$webDirectory/live/update.cfg"
 		echo "[END]: Update ended at $(date)"
@@ -1187,6 +1094,11 @@ checkCron(){
 }
 ################################################################################
 main(){
+	################################################################################
+	# if --debug flag used activate bash debugging for script
+	if echo "$@" | grep "debug";then
+		set -x
+	fi
 	################################################################################
 	webRoot
 	################################################################################
@@ -1210,6 +1122,8 @@ main(){
 		fullUpdate
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
+	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		nukeCache
 	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
 		checkCron
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
@@ -1218,7 +1132,7 @@ main(){
 		pip3 install --upgrade youtube-dl
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# download the latest version of the javascript video player libary
-		curl https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
+		curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
 		echo "# iptv4everyone CLI for administration"

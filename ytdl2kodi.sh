@@ -19,14 +19,10 @@ ytdl2kodi_caption(){
 ytdl2kodi_channel_extractor(){
 	################################################################################
 	# import and run the debug check
-	source /usr/share/ytdl2kodi/debugLib
-	debugCheck
 	################################################################################
 	# NOTE: look at youtube-dl-selection for ripping info for nfo files
 	# NOTE: also use youtube-dl for ripping the link to the video/or downloading
 	channelLink=$(echo "$1")
-	echo "################################################################################"
-	echo "[INFO]: Arguments = '$@'"
 	echo "################################################################################"
 	echo "[INFO]: Running Channel Extractor on = '$channelLink'"
 	echo "################################################################################"
@@ -345,8 +341,6 @@ ytdl2kodi_channel_meta_extractor(){
 	# NOTE: also use youtube-dl for ripping the link to the video/or downloading
 	################################################################################
 	# import and run the debug check
-	source /usr/share/ytdl2kodi/debugLib
-	debugCheck
 	################################################################################
 	echo "################################################################################"
 	echo "# Now extracting metadata for channel from '$2' #"
@@ -602,8 +596,6 @@ ytdl2kodi_sleep(){
 ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
-	source /usr/share/ytdl2kodi/debugLib
-	debugCheck
 	# check dependencies to get the latest version of youtube-dl
 	ytdl2kodi_depends_check
 	################################################################################
@@ -621,7 +613,7 @@ ytdl2kodi_update(){
 	# check for defined sources
 	if [ -f /etc/ytdl2kodi/sources.cfg ];then
 		# load the config file
-		linkList=$(cat /etc/ytdl2kodi/sources.cfg)
+		linkList=$(grep --invert-match "^#" "/etc/ytdl2kodi/sources.cfg")
 	else
 		# if no config exists create the default config
 		linkList="https://www.newgrounds.com/"
@@ -633,20 +625,38 @@ ytdl2kodi_update(){
 	echo "Loading up username sources..."
 	if [ -f /etc/ytdl2kodi/usernameSources.cfg ];then
 		# load the config file
-		userLinkList=$(cat /etc/ytdl2kodi/usernameSources.cfg)
+		userLinkList=$(grep --invert-match "^#" /etc/ytdl2kodi/usernameSources.cfg)
 	else
 		# if no config exists create the default config
 		userLinkList="https://www.youtube.com/user/BlueXephos/videos?disable_polymer=1"
 		# write the new config from the path variable
-		echo "$userLinkList" > /etc/ytdl2kodi/usernameSources.cfg
+		{
+			echo "$userLinkList"
+			printf "\n"
+		} > /etc/ytdl2kodi/usernameSources.cfg
 	fi
+	set -x
 	################################################################################
+	# add in the web added link lists
+	echo "PRE Link List = $linkList"
+	find "/etc/ytdl2kodi/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | while read libaryConfigPath;do
+		# create a space just in case none exists
+		linkList=$(printf  "$linkList\n$(grep --invert-match "^#" "$libaryConfigPath")\n")
+	done
+	echo "POST Link List = $linkList"
+	find "/etc/ytdl2kodi/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | while read libaryConfigPath;do
+		# create a space just in case none exists
+		userLinkList=$(printf  "$userLinkList\n$(grep --invert-match "^#" "$libaryConfigPath")\n")
+		#userLinkList=$(echo "$userLinkList" && grep --invert-match "^#" "$libaryConfigPath" && printf "\n")
+	done
 	# cleanup links of comments
-	userLinkList=$(echo "$userLinkList" | sed "s/^#.*$//g" )
-	linkList=$(echo "$linkList" | sed "s/^#.*$//g" )
+	#linkList=$(echo "$linkList" | sed "s/^#.*$//g" )
+	#userLinkList=$(echo "$userLinkList" | sed "s/^#.*$//g" )
+
 	# sort and dedupe lists, then randomize the processing order
-	linkList=$(echo "$linkList" | sort --unique | shuf )
-	userLinkList=$(echo "$userLinkList" | sort --unique | shuf )
+	#linkList=$(echo "$linkList" | sort --unique | shuf )
+	#userLinkList=$(echo "$userLinkList" | sort --unique | shuf )
+
 	################################################################################
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
@@ -669,19 +679,7 @@ ytdl2kodi_update(){
 		echo "{}" > "/etc/ytdl2kodi/meta/channelData.json"
 	fi
 	################################################################################
-	# for each link in the users sources
-	echo "Processing user sources..."
 	currentlyProcessing=0
-	for link in $userLinkList;do
-		echo "Running channel metadata extractor on '$link' ..."
-		# check links aginst existing stream files to pervent duplicating the work
-		ytdl2kodi_channel_extractor "$link" --username
-		currentlyProcessing="$(($currentlyProcessing + 1))"
-		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
-			echo "[INFO]: Channel Processing Limit Reached!"
-			exit 0
-		fi
-	done
 	################################################################################
 	# for each link in the sources
 	echo "Processing sources..."
@@ -690,6 +688,20 @@ ytdl2kodi_update(){
 		echo "Running channel metadata extractor on '$link' ..."
 		# check links aginst existing stream files to pervent duplicating the work
 		ytdl2kodi_channel_extractor "$link"
+		currentlyProcessing="$(($currentlyProcessing + 1))"
+		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
+			echo "[INFO]: Channel Processing Limit Reached!"
+			exit 0
+		fi
+	done
+	################################################################################
+	# for each link in the users sources
+	echo "Processing user sources..."
+	echo "User Link List = $userlinkList"
+	for link in $userLinkList;do
+		echo "Running channel metadata extractor on '$link' ..."
+		# check links aginst existing stream files to pervent duplicating the work
+		ytdl2kodi_channel_extractor "$link" --username
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
 			echo "[INFO]: Channel Processing Limit Reached!"
@@ -729,8 +741,6 @@ ytdl2kodi_video_extractor(){
 	# NOTE: also use youtube-dl for ripping the link to the video/or downloading
 	################################################################################
 	# import and run the debug check
-	source /usr/share/ytdl2kodi/debugLib
-	debugCheck
 	################################################################################
 	selection=$1
 	channelLink=$2

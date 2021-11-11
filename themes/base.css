@@ -1,8 +1,13 @@
+html{
+	font-family: OpenDyslexic;
+}
 select{
 	font-size: 1em;
 }
 .tag{
-	line-height: 3em;
+	line-height: 1em;
+	font-size: 1em;
+	display: inline-block;
 }
 hr{
 	visiblity: hidden;
@@ -59,7 +64,7 @@ html{
 	margin: 0px;
 	padding: 0px;
 	word-wrap: break-word;
-	color: white;
+	color: var(--borderColor);
 }
 .channelLink {
 	margin-bottom: 0.05em;
@@ -132,11 +137,11 @@ body{
 }
 h1 {
 	text-align: center;
-	color: white;
+	color: var(--textColor);
 	-webkit-text-stroke: 0.04em black;
 }
 .date{
-	color: white;
+	color: var(--textColor);
 	font-size: 1em;
 	-webkit-text-stroke: 0.01em black;
 }
@@ -184,21 +189,16 @@ h1 {
 }
 h2 {
 	text-align: center;
-	/*
-	color: white;
-	*/
 	color: var(--textColor);
 	-webkit-text-stroke: 0.04em black;
 }
 ol li{
+	color: var(--textColor);
 	text-align:left !important;
 }
 .header{
 	text-decoration: none;
 	text-align: center;
-	/*
-	color: white;
-	*/
 	color: var(--textColor);
 	display: inline-block;
 	width: 95vw;
@@ -402,7 +402,7 @@ ol{
 	margin: 0px;
 	text-align: center;
 	background-color: darkgreen;
-	color: white;
+	color: var(--textColor);
 	position: fixed;
 	top: 0px;
 	z-index: 99;
@@ -423,11 +423,6 @@ ol{
 	margin: 0.5em;
 	padding: 0.5em;
 	border-style: solid;
-	/*
-	border-color: white;
-	background-color: gray;
-	color: white;
-	*/
 	border-color: var(--borderColor);
 	background-color: var(--glassBackground);
 	color: var(--textColor);
@@ -438,7 +433,10 @@ ol{
 
 .titlecard .button{
 	white-space: nowrap;
-	line-height: 3em;
+	font-size: 1em;
+	/*
+	line-height: 3em;A
+	*/
 }
 .header .button{
 	white-space: nowrap;
@@ -599,13 +597,6 @@ ol{
 	margin: 0em;
 	padding: 1em;
 	border-style: solid;
-	/*
-	padding-top: 50vh;
-	padding-bottom: 40vh;
-	border-color: white;
-	background-color: gray;
-	color: white;
-	*/
 	border-color: var(--borderColor);
 	background-color: var(--glassBackground);
 	color: var(--textColor);
@@ -682,11 +673,6 @@ ol{
 	margin: 0.5em;
 	margin-top: 1em;
 	display: inline-block;
-	/*
-	color: white;
-	background-color: gray;
-	border: 4px solid white;
-	*/
 	color: var(--textColor);
 	background-color: var(--glassBackground);
 	border: 0.2em solid var(--borderColor);
@@ -700,10 +686,6 @@ ol{
 }
 .indexSeries:hover{
 	box-shadow: 0px 0px 0px black;
-	/*
-	background-color: white;
-	color: black;
-	*/
 	color: var(--highlightText);
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -736,7 +718,7 @@ ol{
 	background-image: var(--staticBackground);
 }
 a{
-	color: white;
+	color: var(--textColor);
 	text-decoration: underline;
 }
 a:hover{
@@ -748,9 +730,11 @@ p, dl{
 	padding: 10px;
 }
 ul{
+	color: var(--textColor);
 	text-align: left;
 }
 ol{
+	color: var(--textColor);
 	text-align: left;
 }
 .sXXeXX{
@@ -765,7 +749,7 @@ ol{
 	box-shadow: 0px 0px 1em black;
 	text-align: center;
 	text-decoration: none;
-	color: white;
+	color: var(--textColor);
 	text-align: center;
 	margin: 5px;
 	display: inline-block;
@@ -863,7 +847,7 @@ table{
 .settingListCard{
 	text-align: left;
 	box-shadow: 0px 0px 1em black;
-	color: white;
+	color: var(--textColor);
 	background-color: var(--glassBackground);
 	min-height: 8em;
 	text-align: center;

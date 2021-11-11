@@ -35,7 +35,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeLibary' value='".$link."'>Remove Libary</button>\n";
+				echo "	<button class='button' type='submit' name='removeComicLibary' value='".$link."'>Remove Libary</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";

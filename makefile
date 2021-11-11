@@ -66,7 +66,8 @@ build-deb:
 	mkdir -p debian/usr/share/mms/themes;
 	mkdir -p debian/usr/share/mms/templates;
 	mkdir -p debian/usr/share/mms/settings;
-	mkdir -p debian/var/cache/nfo2web/web;
+	#mkdir -p debian/var/cache/nfo2web/web;
+	mkdir -p debian/var/cache/nfo2web/cache;
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/mms;
 	mkdir -p debian/etc/mms/themes;
@@ -102,7 +103,8 @@ build-deb:
 	touch debian/etc/comic2web/.placeholder
 	touch debian/etc/comic2web/libaries.d/.placeholder
 	touch debian/etc/comic2web/sources.d/.placeholder
-	touch debian/var/cache/nfo2web/web/.placeholder
+	#touch debian/var/cache/nfo2web/web/.placeholder
+	touch debian/var/cache/nfo2web/cache/.placeholder
 	touch debian/usr/share/mms/settings/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/ytdl2kodi/*.d/
@@ -125,6 +127,13 @@ build-deb:
 	cat themes/default.css > debian/usr/share/mms/themes/default-soft.css
 	cat themes/soft-mod.css >> debian/usr/share/mms/themes/default-soft.css
 	cat themes/base.css >> debian/usr/share/mms/themes/default-soft.css
+	# - cyan
+	cat themes/cyan.css > debian/usr/share/mms/themes/cyan.css
+	cat themes/base.css >> debian/usr/share/mms/themes/cyan.css
+	# - cyan-soft
+	cat themes/cyan.css > debian/usr/share/mms/themes/cyan-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/cyan-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/cyan-soft.css
 	# - blue
 	cat themes/blue.css > debian/usr/share/mms/themes/blue.css
 	cat themes/base.css >> debian/usr/share/mms/themes/blue.css
