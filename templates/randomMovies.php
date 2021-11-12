@@ -1,5 +1,5 @@
 <?php
-$cacheFile="updatedComics.index";
+$cacheFile="randomMovies.index";
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 2 * 3600){
 		// update the cached file
@@ -15,7 +15,7 @@ if (file_exists($cacheFile)){
 if ($writeFile){
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/nfo2web/web/comics/*/comic.index"));
+	$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/nfo2web/web/movies/*/movies.index | shuf"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	$counter=0;
@@ -27,7 +27,7 @@ if ($writeFile){
 					$counter += 1;
 					if ($counter == 1){
 						fwrite($fileObj,"<div class='titleCard'>");
-						fwrite($fileObj,"<h1>Updated Comics</h1>");
+						fwrite($fileObj,"<h1>Random Movies</h1>");
 						fwrite($fileObj,"<div class='listCard'>");
 					}
 					// read the index entry

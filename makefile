@@ -114,6 +114,7 @@ build-deb:
 	#chown -R www-data:www-data debian/etc/mms/*.d/
 	chown -R www-data:www-data debian/etc/mms/
 	# copy update scripts to /usr/bin
+	cp 2web.sh debian/usr/bin/2web
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web

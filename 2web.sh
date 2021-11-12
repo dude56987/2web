@@ -1,3 +1,4 @@
+#! /bin/bash
 ########################################################################
 STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
@@ -86,29 +87,29 @@ update2web(){
 }
 ################################################################################
 main(){
-	################################################################################
-	#webRoot
-	################################################################################
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		# update the metadata and build webpages for all generators
+	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
+		# update main components
 		update2Web
-		nfo2web update
-		iptv2web update
-		comic2web update
-	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		# update the metadata and build webpages for all generators
+		/usr/bin/nfo2web update
+		/usr/bin/iptv2web update
+		/usr/bin/comic2web update
+	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
 		# update the website content
-		nfo2web webgen
-		iptv2web webgen
-		comic2web webgen
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		/usr/bin/nfo2web webgen
+		/usr/bin/iptv2web webgen
+		/usr/bin/comic2web webgen
+	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# upgrade packages related to operation of webserver
-		nfo2web upgrade
-		iptv2web upgrade
-		comic2web upgrade
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+		/usr/bin/nfo2web upgrade
+		/usr/bin/iptv2web upgrade
+		/usr/bin/comic2web upgrade
+	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
-		nfo2web nuke
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+		/usr/bin/nfo2web reset
+		/usr/bin/comic2web reset
+		/usr/bin/iptv2web reset
+	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		echo "########################################################################"
 		echo "# 2web CLI for administration"
 		echo "# Copyright (C) 2020  Carl J Smith"
@@ -127,8 +128,8 @@ main(){
 		echo "# along with this program.  If not, see <http://www.gnu.org/licenses/>."
 		echo "########################################################################"
 		echo "HELP INFO"
-		echo "This is the iptv4everyone administration and update program."
-		echo "To return to this menu use 'iptv4everyone help'"
+		echo "This is the 2web administration and update program."
+		echo "To return to this menu use '2web help'"
 		echo "Other commands are listed below."
 		echo ""
 		echo "update"
@@ -148,6 +149,10 @@ main(){
 		echo "########################################################################"
 		# this is also ran on import
 	else
-		INFO "Loading 2web libary..."
+		# this is the default option to be ran without arguments
+		main --help
 	fi
 }
+################################################################################
+main "$@"
+exit

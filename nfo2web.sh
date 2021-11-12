@@ -651,8 +651,8 @@ processMovie(){
 		# add the movie to the movie index page
 		################################################################################
 		{
-			echo "<a class='indexSeries' href='./$movieWebPath'>"
-			echo "	<img loading='lazy' src='./$movieWebPath/$movieWebPath-poster-web.png'>"
+			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
+			echo "	<img loading='lazy' src='/movies/$movieWebPath/$movieWebPath-poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "	</div>"
@@ -1421,8 +1421,8 @@ processShow(){
 	#showIndexPath="$webDirectory/shows/index.php"
 	# add show page to the show index
 	{
-		echo "<a class='indexSeries' href='./$showTitle/'>"
-		echo "	<img loading='lazy' src='./$showTitle/poster-web.png'>"
+		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
+		echo "	<img loading='lazy' src='/shows/$showTitle/poster-web.png'>"
 		#echo "  <marquee direction='up' scrolldelay='100'>"
 		echo "	<div>"
 		echo "		$showTitle"
@@ -1479,6 +1479,12 @@ getLibSum(){
 	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
 	echo "$tempLibList"
+}
+################################################################################
+linkFile(){
+	if ! test -L "$2";then
+		ln -s "$1" "$2"
+	fi
 }
 ################################################################################
 buildUpdatedShows(){
@@ -1697,25 +1703,11 @@ buildHomePage(){
 		ln -sf "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
 	fi
 	################################################################################
-	# if time is older than one day for .index files
-	if cacheCheck "$webDirectory/updatedShows.index" "1";then
-		buildUpdatedShows "$webDirectory" 50 > "$webDirectory/updatedShows.index"
-	fi
-	if cacheCheck "$webDirectory/updatedMovies.index" "1";then
-		buildUpdatedMovies "$webDirectory" 50 > "$webDirectory/updatedMovies.index"
-	fi
-	if cacheCheck "$webDirectory/randomShows.index" "10";then
-		buildRandomShows "$webDirectory" 50 > "$webDirectory/randomShows.index"
-	fi
-	if cacheCheck "$webDirectory/randomMovies.index" "10";then
-		buildRandomMovies "$webDirectory" 50 > "$webDirectory/randomMovies.index"
-	fi
-	if cacheCheck "$webDirectory/randomChannels.index" "10";then
-		buildRandomChannels "$webDirectory" 50 > "$webDirectory/randomChannels.index"
-	fi
-	if cacheCheck "$webDirectory/randomComics.index" "10";then
-		buildRandomComics "$webDirectory" 50 > "$webDirectory/randomComics.index"
-	fi
+	linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+	linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
+	linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
+	linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
+	linkFile "/usr/share/mms/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
 }
 ########################################################################
 getDirSum(){
@@ -1998,21 +1990,22 @@ main(){
 		mkdir -p "$webDirectory/kodi/"
 		chown -R www-data:www-data "$webDirectory/kodi/"
 		# link the settings scripts
-		ln -s "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
-		ln -s "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
-		ln -s "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
-		ln -s "/usr/share/mms/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
-		ln -s "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
-		ln -s "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
-		ln -s "/usr/share/mms/settings/comicsDL.php" "$webDirectory/comicsDL.php"
-		ln -s "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
-		ln -s "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
-		ln -s "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
-		ln -s "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
-		ln -s "/usr/share/mms/link.php" "$webDirectory/link.php"
-		ln -s "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
-		ln -s "/usr/share/mms/404.php" "$webDirectory/404.php"
-		ln -s "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
+		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
+		linkFile "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
+		linkFile "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
+		linkFile "/usr/share/mms/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
+		linkFile "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
+		linkFile "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
+		linkFile "/usr/share/mms/settings/comicsDL.php" "$webDirectory/comicsDL.php"
+		linkFile "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
+		linkFile "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
+		linkFile "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
+		linkFile "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
+		linkFile "/usr/share/mms/link.php" "$webDirectory/link.php"
+		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
+		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		################################################################################
 		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
 			# build the cache directory if none exists

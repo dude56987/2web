@@ -23,30 +23,48 @@
 	if (file_exists("stats.index")){
 		include("stats.index");
 	}
-	if (file_exists("updatedShows.index")){
-		$tempPrefix="shows/";
-		$tempString=(str_replace("href='","href='$tempPrefix",str_replace("src='","src='$tempPrefix",file_get_contents("updatedShows.index"))));
-		echo "$tempString";
+	if (file_exists("shows")){
+		if (file_exists("updatedShows.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
+		}else{
+			echo("<h2>Show index is still being built...<h2>");
+		}
 	}
-	if (file_exists("updatedMovies.index")){
-		$tempPrefix="movies/";
-		$tempString=(str_replace("href='","href='$tempPrefix",str_replace("src='","src='$tempPrefix",file_get_contents("updatedMovies.index"))));
-		echo "$tempString";
+	if (file_exists("movies")){
+		if (file_exists("updatedShows.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
+		}
 	}
-	if (file_exists("randomShows.index")){
-		$tempPrefix="shows/";
-		$tempString=(str_replace("href='","href='$tempPrefix",str_replace("src='","src='$tempPrefix",file_get_contents("randomShows.index"))));
-		echo "$tempString";
+	if (file_exists("movies")){
+		if (file_exists("randomMovies.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
+		}
 	}
-	if (file_exists("randomMovies.index")){
-		$tempPrefix="movies/";
-		$tempString=(str_replace("href='","href='$tempPrefix",str_replace("src='","src='$tempPrefix",file_get_contents("randomMovies.index"))));
-		echo "$tempString";
+	if (file_exists("shows")){
+		if (file_exists("randomShows.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/randomShows.php");
+		}
 	}
-	include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
-	include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
-	include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-	include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
+	if (file_exists("comics")){
+		if (file_exists("updatedComics.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
+		}
+	}
+	if (file_exists("comics")){
+		if (file_exists("randomComics.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
+		}
+	}
+	if (file_exists("live")){
+		if (file_exists("updatedChannels.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
+		}
+	}
+	if (file_exists("live")){
+		if (file_exists("randomChannels.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
+		}
+	}
 	// add the footer
 	include("header.php");
 ?>
