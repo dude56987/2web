@@ -6,7 +6,7 @@
 
 <?php
 include('header.php');
-include('settingsHeader.php');
+//include('settingsHeader.php');
 ?>
 
 <div class='settingListCard'>
@@ -14,11 +14,42 @@ include('settingsHeader.php');
 # enable error reporting
 ini_set("display_errors", 1);
 error_reporting(E_ALL);
-
+function clear(){
+	flush();
+	ob_flush();
+}
+function countdown($countdownTime){
+	$index=0;
+	$waitTime=rand(1,$countdownTime);
+	while($index < $waitTime){
+		$index += 1;
+		echo "$index..";
+		clear();
+		sleep(1);
+	}
+	echo "Done!";
+	clear();
+	sleep(1);
+}
 # try to process the link to be added
-if (array_key_exists("update",$_POST)){
-	echo "Scheduling system update!<br>\n";
-	touch("/var/cache/nfo2web/web/update/update.cfg");
+if (array_key_exists("update_nfo",$_POST)){
+	echo "Scheduling nfo update!<br>\n";
+	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("update_iptv",$_POST)){
+	echo "Scheduling iptv2web update!<br>\n";
+	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("update_comics",$_POST)){
+	echo "Scheduling comic2web update!<br>\n";
+	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addCustomRadioLink",$_POST)){
 	# this will add a custom m3u file with a single entry
 	$link=$_POST['addCustomRadioLink'];
@@ -99,12 +130,18 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/radio.php#addRadioLink'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("cacheQuality",$_POST)){
 	$cacheQuality=$_POST['cacheQuality'];
 	# change the default cache quality
 	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
 	# write the config file
 	file_put_contents("cacheQuality.cfg",$cacheQuality);
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheQuality'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("cacheUpgradeQuality",$_POST)){
 	$cacheUpgradeQuality=$_POST['cacheUpgradeQuality'];
 	# change the default cache quality
@@ -115,6 +152,9 @@ if (array_key_exists("update",$_POST)){
 	}else{
 		file_put_contents("cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
 	# change the default cache quality
@@ -125,6 +165,9 @@ if (array_key_exists("update",$_POST)){
 	}else{
 		file_put_contents("cacheFramerate.cfg",$cacheFramerate);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheFramerate'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("cacheResize",$_POST)){
 	$cacheResize=$_POST['cacheResize'];
 	# change the default cache quality
@@ -135,6 +178,22 @@ if (array_key_exists("update",$_POST)){
 	}else{
 		file_put_contents("cacheResize.cfg",$cacheResize);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheResize'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("cacheDelay",$_POST)){
+	$cacheResize=$_POST['cacheDelay'];
+	# change the default cache quality
+	echo "Changing cache delay to '".$cacheResize."'<br>\n";
+	# write the config file
+	if ($cacheResize == ''){
+		unlink("cacheResize.cfg");
+	}else{
+		file_put_contents("cacheResize.cfg",$cacheResize);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheResize'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	echo "Running addLink on link ".$link."<br>\n";
@@ -148,6 +207,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/tv.php#addLink'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("ytdl_add_source",$_POST)){
 	$link=$_POST['ytdl_add_source'];
 	echo "Running ytdl_add_source on link ".$link."<br>\n";
@@ -161,6 +223,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("ytdl_remove_source",$_POST)){
 	$link=$_POST['ytdl_remove_source'];
 	echo "Running ytdl_remove_source on link ".$link."<br>\n";
@@ -172,6 +237,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("ytdl_add_username_source",$_POST)){
 	$link=$_POST['ytdl_add_username_source'];
 	echo "Running ytdl_add_username_source on link ".$link."<br>\n";
@@ -180,11 +248,15 @@ if (array_key_exists("update",$_POST)){
 	$configPath="/etc/ytdl2kodi/usernameSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
+	#
 	if ( ! file_exists($configPath)){
 		echo "Adding ytdl username source ".$link."<br>\n";
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("ytdl_remove_username_source",$_POST)){
 	$link=$_POST['ytdl_remove_username_source'];
 	echo "Running ytdl_remove_username_source on link ".$link."<br>\n";
@@ -196,6 +268,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addLibary",$_POST)){
 	$link=$_POST['addLibary'];
 	echo "Running addLibary on link ".$link."<br>\n";
@@ -209,6 +284,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addComicLibary",$_POST)){
 	$link=$_POST['addComicLibary'];
 	echo "Running addComicLibary on link ".$link."<br>\n";
@@ -222,6 +300,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("removeComicLibary",$_POST)){
 	$link=$_POST['removeComicLibary'];
 	echo "Running removeComicLibary on link ".$link."<br>\n";
@@ -233,6 +314,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
 	echo "Running moveToBottom on link ".$link."<br>\n";
@@ -246,6 +330,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("moveCustomToBottom",$_POST)){
 	$link=$_POST['moveCustomToBottom'];
 	echo "Running moveCustomToBottom on link ".$link."<br>\n";
@@ -259,6 +346,9 @@ if (array_key_exists("update",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("removeLink",$_POST)){
 	$link=$_POST['removeLink'];
 	echo "Running removeLink on link ".$link."<br>\n";
@@ -270,6 +360,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("removeLibary",$_POST)){
 	$link=$_POST['removeLibary'];
 	echo "Running removeLibary on link ".$link."<br>\n";
@@ -281,6 +374,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("removeRadioLink",$_POST)){
 	$link=$_POST['removeRadioLink'];
 	echo "Running removeRadioLink on link ".$link."<br>\n";
@@ -292,6 +388,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("removeCustomLink",$_POST)){
 	$link=$_POST['removeCustomLink'];
 	echo "Running removeCustomLink on link ".$link."<br>\n";
@@ -303,7 +402,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-
+	countdown(5);
+	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("blockLink",$_POST)){
 	$link=$_POST['blockLink'];
 	echo "Running blockLink on link ".$link."<br>\n";
@@ -315,6 +416,9 @@ if (array_key_exists("update",$_POST)){
 		# create the blocked link file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("unblockLink",$_POST)){
 	$link=$_POST['unblockLink'];
 	echo "Running unblockLink on link ".$link."<br>\n";
@@ -326,6 +430,9 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("blockGroup",$_POST)){
 	$link=$_POST['blockGroup'];
 	echo "Running blockGroup on link ".$link."<br>\n";
@@ -337,6 +444,9 @@ if (array_key_exists("update",$_POST)){
 		# create the blocked link file
 		file_put_contents($configPath,$link);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("unblockGroup",$_POST)){
 	$link=$_POST['unblockGroup'];
 	echo "Running unblockGroup on link ".$link."<br>\n";
@@ -348,10 +458,16 @@ if (array_key_exists("update",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	clear();
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	echo "Changing theme to ".$theme."<br>\n";
 	file_put_contents("/etc/mms/theme.cfg",$theme);
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#webTheme'>BACK</a><hr>";
+	clear();
 }
 ?>
 

@@ -67,7 +67,7 @@ function debugCheck(){
 function validString(){
 	stringToCheck="$1"
 	if ! echo "$@" | grep -q "\-q";then
-		echo "[INFO]: Checking string '$stringToCheck'"
+		INFO "Checking string '$stringToCheck'"
 	fi
 	# convert string letters to all uppercase and look for returned NULL string
 	# jq returns these strings instead of failing outright
@@ -86,7 +86,7 @@ function validString(){
 	else
 		# all checks have been passed the string is correct
 		if ! echo "$@" | grep -q "\-q";then
-			echo "[INFO]: String passed all checks and is correct"
+			INFO "String passed all checks and is correct"
 		fi
 		return 0
 	fi
@@ -158,26 +158,20 @@ processMovie(){
 		nfoInfo=$(cat "$moviePath")
 		# rip the movie title
 		movieTitle=$(cleanXml "$nfoInfo" "title")
-		echo "[INFO]: movie title = '$movieTitle'"
+		INFO "movie title = '$movieTitle'"
 		movieYear=$(cleanXml "$nfoInfo" "year")
-		echo "[INFO]: movie year = '$movieYear'"
+		INFO "movie year = '$movieYear'"
 		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		moviePlot=$(ripXmlTag "$nfoInfo" "plot")
-		echo "[INFO]: movie plot = '$moviePlot'"
+		INFO "movie plot = '$moviePlot'"
 		moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
 		moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
-		#moviePlot=$(echo "$moviePlot" | recode ..php)
-		#echo "[INFO]: movie plot = '$moviePlot'"
-		#moviePlot=$(echo "$moviePlot" | markdown )
-		#echo "[INFO]: movie plot = '$moviePlot'"
 		moviePlot=$(echo "$moviePlot" | txt2html --extract )
-		echo "[INFO]: movie plot = '$moviePlot'"
-		#moviePlot=$(echo "$moviePlot"| txt2html --link-only --extract -p 10 )
-		#echo "[INFO]: movie plot = '$moviePlot'"
+		INFO "movie plot = '$moviePlot'"
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
-		echo "[INFO]: movie web path = '$movieWebPath'"
+		INFO "movie web path = '$movieWebPath'"
 		################################################################################
 		# check the state now that the movie web path has been determined
 		################################################################################
@@ -189,31 +183,31 @@ processMovie(){
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
 				# this means they are the same so no update needs run
-				echo "[INFO]: State is unchanged for $movieTitle, no update is needed."
+				INFO "State is unchanged for $movieTitle, no update is needed."
 				echo "[DEBUG]: $currentSum == $libarySum"
 				addToLog "INFO" "Movie unchanged" "$movieTitle, $currentSum" "$logPagePath"
 				return
 			else
-				echo "[INFO]: States are diffrent, updating $movieTitle..."
+				INFO "States are diffrent, updating $movieTitle..."
 				echo "[DEBUG]: $currentSum != $libarySum"
 				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			fi
 		else
-			echo "[INFO]: No movie state exists for $movieTitle, updating..."
+			INFO "No movie state exists for $movieTitle, updating..."
 			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
 		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
 		################################################################################
 		moviePagePath="$webDirectory/movies/$movieWebPath/index.php"
-		echo "[INFO]: movie page path = '$moviePagePath'"
+		INFO "movie page path = '$moviePagePath'"
 		mkdir -p "$webDirectory/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
 		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
 		# link stylesheets
-		ln -s "$webDirectory/style.css" "$webDirectory/movies/$movieWebPath/style.css"
+		linkFile "$webDirectory/style.css" "$webDirectory/movies/$movieWebPath/style.css"
 		################################################################################
 		################################################################################
 		# using the path of the found nfo file, check for a file extension
@@ -308,75 +302,75 @@ processMovie(){
 			mimeType="video"
 		fi
 		# link the movie nfo file
-		echo "[INFO]: linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		ln -s "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		echo "[INFO]: linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
-		ln -s "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
+		INFO "linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
+		linkFile "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
+		INFO "linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
+		linkFile "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		# show gathered info
-		echo "[INFO]: mediaType = $mediaType"
-		echo "[INFO]: mimeType = $mimeType"
-		echo "[INFO]: videoPath = $videoPath"
+		INFO "mediaType = $mediaType"
+		INFO "mimeType = $mimeType"
+		INFO "videoPath = $videoPath"
 		movieVideoPath="${moviePath//.nfo/$sufix}"
-		echo "[INFO]: movieVideoPath = $videoPath"
+		INFO "movieVideoPath = $videoPath"
 
 		# link the video from the libary to the generated website
-		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/movies/$movieWebPath/$movieWebPath$sufix'"
-		ln -s "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
+		INFO "linking '$movieVideoPath' to '$webDirectory/movies/$movieWebPath/$movieWebPath$sufix'"
+		linkFile "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
 
-		echo "[INFO]: linking '$movieVideoPath' to '$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix'"
-		ln -s "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
+		INFO "linking '$movieVideoPath' to '$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix'"
+		linkFile "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${moviePath//.nfo}-poster"
-		echo "[INFO]: thumbnail template = $thumbnail"
-		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
-		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
+		INFO "thumbnail template = $thumbnail"
+		INFO "thumbnail path 1 = $thumbnail.png"
+		INFO "thumbnail path 2 = $thumbnail.jpg"
 		# creating alternate thumbnail paths
-		echo "[INFO]: thumbnail path 3 = '$movieDir/poster.jpg'"
-		echo "[INFO]: thumbnail path 4 = '$movieDir/poster.png'"
+		INFO "thumbnail path 3 = '$movieDir/poster.jpg'"
+		INFO "thumbnail path 4 = '$movieDir/poster.png'"
 		#
 		thumbnailShort="${moviePath//.nfo}"
-		echo "[INFO]: thumbnail path 5 = '$thumbnailShort.png'"
-		echo "[INFO]: thumbnail path 6 = '$thumbnailShort.jpg'"
+		INFO "thumbnail path 5 = '$thumbnailShort.png'"
+		INFO "thumbnail path 6 = '$thumbnailShort.jpg'"
 		thumbnailShort2="${moviePath//.nfo}-thumb"
-		echo "[INFO]: thumbnail path 7 = '$thumbnailShort2.png'"
-		echo "[INFO]: thumbnail path 8 = '$thumbnailShort2.jpg'"
+		INFO "thumbnail path 7 = '$thumbnailShort2.png'"
+		INFO "thumbnail path 8 = '$thumbnailShort2.jpg'"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
-		echo "[INFO]: new thumbnail path = '$thumbnailPath'"
+		INFO "new thumbnail path = '$thumbnailPath'"
 		# link all images to the kodi path
 		if ls "$movieDir" | grep "\.jpg" ;then
-			echo "[INFO]: Found media '$movieDir/*.jpg' !"
-			ln -s "$movieDir"/*.jpg "$webDirectory/kodi/movies/$movieWebPath/"
-			ln -s "$movieDir"/*.jpg "$webDirectory/movies/$movieWebPath/"
+			INFO "Found media '$movieDir/*.jpg' !"
+			linkFile "$movieDir"/*.jpg "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.jpg "$webDirectory/movies/$movieWebPath/"
 		elif ls "$movieDir" | grep "\.png" ;then
-			echo "[INFO]: Found media '$movieDir/*.png' !"
-			ln -s "$movieDir"/*.png "$webDirectory/kodi/movies/$movieWebPath/"
-			ln -s "$movieDir"/*.png "$webDirectory/movies/$movieWebPath/"
+			INFO "Found media '$movieDir/*.png' !"
+			linkFile "$movieDir"/*.png "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.png "$webDirectory/movies/$movieWebPath/"
 		else
 			echo "[ERROR]: No media files could be found!"
 			addToLog "ERROR" "No media files could be found!" "$movieDir" "$logPagePath"
 		fi
 		# copy over subtitles
 		if ls "$movieDir" | grep "\.srt" ;then
-			ln -s "$movieDir"/*.srt "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.srt "$webDirectory/kodi/movies/$movieWebPath/"
 		elif ls "$movieDir" | grep "\.sub" ;then
-			ln -s "$movieDir"/*.sub "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.sub "$webDirectory/kodi/movies/$movieWebPath/"
 		elif ls "$movieDir" | grep "\.idx" ;then
-			ln -s "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
 		fi
 		# link the fanart
 		if [ -f "$movieDir/fanart.png" ];then
-			echo "[INFO]: Found $movieDir/fanart.png"
+			INFO "Found $movieDir/fanart.png"
 			fanartPath="fanart.png"
-			echo "[INFO]: Found fanart at '$movieDir/$fanartPath'"
-			ln -s "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
-			ln -s "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+			INFO "Found fanart at '$movieDir/$fanartPath'"
+			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
+			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
 		elif [ -f "$show/fanart.jpg" ];then
 			fanartPath="fanart.jpg"
-			echo "[INFO]: Found fanart at '$movieDir/$fanartPath'"
-			ln -s "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
-			ln -s "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+			INFO "Found fanart at '$movieDir/$fanartPath'"
+			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
+			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
 		else
 			echo "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
 		fi
@@ -413,83 +407,83 @@ processMovie(){
 
 		# check for a local thumbnail
 		if [ -f "$thumbnailPath.jpg" ];then
-			echo "[INFO]: Thumbnail already linked..."
+			INFO "Thumbnail already linked..."
 			thumbnailExt=".jpg"
 		elif [ -f "$thumbnailPath.png" ];then
-			echo "[INFO]: Thumbnail already linked..."
+			INFO "Thumbnail already linked..."
 			thumbnailExt=".png"
 		else
-			echo "[INFO]: No thumbnail exists, looking for thumb file..."
+			INFO "No thumbnail exists, looking for thumb file..."
 			# no thumbnail has been linked or downloaded
 			if [ -f "$thumbnail.png" ];then
-				echo "[INFO]: found PNG thumbnail '$thumbnail.png'..."
+				INFO "found PNG thumbnail '$thumbnail.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
-				ln -s "$thumbnail.png" "$thumbnailPath.png"
-				ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
+				linkFile "$thumbnail.png" "$thumbnailPath.png"
+				linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailPath.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$thumbnail.jpg" ];then
-				echo "[INFO]: found JPG thumbnail '$thumbnail.jpg'..."
+				INFO "found JPG thumbnail '$thumbnail.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
-				ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
-				ln -s "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+				linkFile  "$thumbnail.jpg" "$thumbnailPath.jpg"
+				linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$movieDir/poster.jpg" ];then
-				echo "[INFO]: found JPG thumbnail '$movieDir/poster.jpg'..."
+				INFO "found JPG thumbnail '$movieDir/poster.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
-				ln -s "$movieDir/poster.jpg" "$thumbnailPath.jpg"
-				ln -s "$movieDir/poster.jpg" "$thumbnailPathKodi.jpg"
+				linkFile "$movieDir/poster.jpg" "$thumbnailPath.jpg"
+				linkFile "$movieDir/poster.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$movieDir/poster.png" ];then
-				echo "[INFO]: found PNG thumbnail '$movieDir/poster.png'..."
+				INFO "found PNG thumbnail '$movieDir/poster.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
-				ln -s "$movieDir/poster.png" "$thumbnailPath.png"
-				ln -s "$movieDir/poster.png" "$thumbnailPathKodi.png"
+				linkFile "$movieDir/poster.png" "$thumbnailPath.png"
+				linkFile "$movieDir/poster.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$movieDir/poster.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$thumbnailShort.png" ];then
-				echo "[INFO]: found PNG thumbnail '$thumbnailShort.png'..."
+				INFO "found PNG thumbnail '$thumbnailShort.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
-				ln -s "$thumbnailShort.png" "$thumbnailPath.png"
-				ln -s "$thumbnailShort.png" "$thumbnailPathKodi.png"
+				linkFile "$thumbnailShort.png" "$thumbnailPath.png"
+				linkFile "$thumbnailShort.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailShort.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$thumbnailShort.jpg" ];then
-				echo "[INFO]: found JPG thumbnail '$thumbnailShort.jpg'..."
+				INFO "found JPG thumbnail '$thumbnailShort.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
-				ln -s "$thumbnailShort.jpg" "$thumbnailPath.jpg"
-				ln -s "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
+				linkFile "$thumbnailShort.jpg" "$thumbnailPath.jpg"
+				linkFile "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailShort.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$thumbnailShort2.png" ];then
-				echo "[INFO]: found PNG thumbnail '$thumbnailShort2.png'..."
+				INFO "found PNG thumbnail '$thumbnailShort2.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
-				ln -s "$thumbnailShort2.png" "$thumbnailPath.png"
-				ln -s "$thumbnailShort2.png" "$thumbnailPathKodi.png"
+				linkFile "$thumbnailShort2.png" "$thumbnailPath.png"
+				linkFile "$thumbnailShort2.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailShort2.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			elif [ -f "$thumbnailShort2.jpg" ];then
-				echo "[INFO]: found JPG thumbnail '$thumbnailShort2.jpg'..."
+				INFO "found JPG thumbnail '$thumbnailShort2.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
-				ln -s "$thumbnailShort2.jpg" "$thumbnailPath.jpg"
-				ln -s "$thumbnailShort2.jpg" "$thumbnailPathKodi.jpg"
+				linkFile "$thumbnailShort2.jpg" "$thumbnailPath.jpg"
+				linkFile "$thumbnailShort2.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
 					convert "$thumbnailShort2.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
@@ -502,8 +496,8 @@ processMovie(){
 					thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
 					echo "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
 					if validString "$thumbnailLink";then
-						echo "[INFO]: Try to download movie thumbnail..."
-						echo "[INFO]: Thumbnail found at '$thumbnailLink'"
+						INFO "Try to download movie thumbnail..."
+						INFO "Thumbnail found at '$thumbnailLink'"
 						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
 						thumbnailExt=".png"
 						# download the thumbnail
@@ -514,7 +508,7 @@ processMovie(){
 						# generate the web thumbnail
 						convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
 						# link the downloaded thumbnail
-						ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+						linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 					else
 						echo "[DEBUG]: Thumbnail link is invalid '$thumbnailLink'"
 					fi
@@ -527,7 +521,7 @@ processMovie(){
 					addToLog "WARNING" "Generating Thumbnail" "$thumbnailLink" "$logPagePath"
 					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
 					# try to generate a thumbnail from video file
-					echo "[INFO]: Attempting to create thumbnail from video source..."
+					INFO "Attempting to create thumbnail from video source..."
 					#tempFileSize=0
 					tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$movieVideoPath")
 					tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$movieVideoPath")
@@ -566,7 +560,7 @@ processMovie(){
 							# break the loop by breaking the comparison
 							tempFileSize=$largestFileSize
 							# link the thumbnail created to the kodi path
-							ln -s "$thumbnailPath.png" "$thumbnailPathKodi.png"
+							linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
 						elif [ $tempFileSize -eq 0 ];then
 							# break the loop, no thumbnail could be generated at all
 							# - Blank white or black space takes up more than 0 bytes
@@ -585,7 +579,7 @@ processMovie(){
 			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
 			#yt_id=${videoPath//^.*\?video_id\=/}
 			yt_id=${videoPath//*video_id=}
-			echo "[INFO]: yt-id = $yt_id"
+			INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			{
 				# embed the youtube player
@@ -688,33 +682,33 @@ checkForThumbnail(){
 	thumbnailPath=$2
 	thumbnailPathKodi=$3
 	########################################################################
-	echo "[INFO]: new thumbnail path = $thumbnailPath"
+	INFO "new thumbnail path = $thumbnailPath"
 	# check for a local thumbnail
 	if [ -f "$thumbnailPath.jpg" ];then
 		thumbnailExt=".jpg"
-		echo "[INFO]: Thumbnail already linked..."
+		INFO "Thumbnail already linked..."
 	elif [ -f "$thumbnailPath.png" ];then
 		thumbnailExt=".png"
-		echo "[INFO]: Thumbnail already linked..."
+		INFO "Thumbnail already linked..."
 	else
 		# no thumbnail has been linked or downloaded
 		if [ -f "$thumbnail.png" ];then
-			echo "[INFO]: found PNG thumbnail..."
+			INFO "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
-			ln -s "$thumbnail.png" "$thumbnailPath.png"
-			ln -s "$thumbnail.png" "$thumbnailPathKodi.png"
+			linkFile "$thumbnail.png" "$thumbnailPath.png"
+			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
 		elif [ -f "$thumbnail.jpg" ];then
-			echo "[INFO]: found JPG thumbnail..."
+			INFO "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
-			ln -s "$thumbnail.jpg" "$thumbnailPath.jpg"
-			ln -s "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
+			linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
 		else
 			if echo "$nfoInfo" | grep "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
-				echo "[INFO]: Try to download episode thumbnail..."
-				echo "[INFO]: Thumbnail found at $thumbnailLink"
+				INFO "Try to download episode thumbnail..."
+				INFO "Thumbnail found at $thumbnailLink"
 				addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
 				thumbnailExt=".png"
 				# download the thumbnail
@@ -723,7 +717,7 @@ checkForThumbnail(){
 					curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
 				fi
 				# link the downloaded thumbnail
-				ln -s "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+				linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 			fi
 			touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
@@ -733,7 +727,7 @@ checkForThumbnail(){
 				addToLog "WARNING" "Generating Thumbnail" "$videoPath" "$showLogPath"
 				echo "[ERROR]: Failed to find thumbnail inside nfo file!"
 				# try to generate a thumbnail from video file
-				echo "[INFO]: Attempting to create thumbnail from video source..."
+				INFO "Attempting to create thumbnail from video source..."
 				#tempFileSize=0
 				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$videoPath")
 				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$videoPath")
@@ -774,7 +768,7 @@ checkForThumbnail(){
 						tempFileSize=$largestFileSize
 						# write the thubmnail data
 						# link the thumbnail created to the kodi path
-						ln -s "$thumbnailPath.png" "$thumbnailPathKodi.png"
+						linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
 					elif [ $tempFileSize -eq 0 ];then
 						# break the loop, no thumbnail could be generated at all
 						# - Blank white or black space takes up more than 0 bytes
@@ -797,7 +791,7 @@ processEpisode(){
 	#logPagePath="$webDirectory/log.php"
 	logPagePath="$webDirectory/log.php"
 	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
-	echo "[INFO]: checking if episode path exists $episode"
+	INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
 		echo "################################################################################"
@@ -806,29 +800,25 @@ processEpisode(){
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
-		echo "[INFO]: Episode show title = '$episodeShowTitle'"
+		INFO "Episode show title = '$episodeShowTitle'"
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
-		echo "[INFO]: Episode show title after clean = '$episodeShowTitle'"
+		INFO "Episode show title after clean = '$episodeShowTitle'"
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
-		echo "[INFO]: Episode title = '$episodeShowTitle'"
+		INFO "Episode title = '$episodeShowTitle'"
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html --eight_bit_clean --extract -p 10 )
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html -ec --eight_bit_clean --extract -p 10 )
 		episodePlot=$(ripXmlTag "$nfoInfo" "plot")
-		echo "[INFO]: episode plot = '$episodePlot'"
+		INFO "episode plot = '$episodePlot'"
 		episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
 		episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
-		#episodePlot=$(echo "$episodePlot" | recode ..php )
-		echo "[INFO]: episode plot = '$episodePlot'"
-		#episodePlot=$(echo "$episodePlot" | markdown )
-		#echo "[INFO]: episode plot = '$episodePlot'"
+		INFO "episode plot = '$episodePlot'"
 		episodePlot=$(echo "$episodePlot" | txt2html --extract )
-		echo "[INFO]: episode plot = '$episodePlot'"
-		#episodePlot=$(echo "$episodePlot"| txt2html --link-only --extract -p 10 )
+		INFO "episode plot = '$episodePlot'"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
-		echo "[INFO]: Episode season = '$episodeSeason'"
+		INFO "Episode season = '$episodeSeason'"
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
-		echo "[INFO]: Episode air date = '$episodeAired'"
+		INFO "Episode air date = '$episodeAired'"
 		if [ "$episodeSeason" -lt 10 ];then
 			if ! echo "$episodeSeason"| grep "^0";then
 				# add a zero to make it format correctly
@@ -836,7 +826,7 @@ processEpisode(){
 			fi
 		fi
 		episodeSeasonPath="Season $episodeSeason"
-		echo "[INFO]: Episode season path = '$episodeSeasonPath'"
+		INFO "Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
 		if [ "$episodeNumber" -lt 10 ];then
 			if ! echo "$episodeNumber"| grep "^0";then
@@ -844,14 +834,14 @@ processEpisode(){
 				episodeNumber="0$episodeNumber"
 			fi
 		fi
-		echo "[INFO]: Episode number = '$episodeNumber'"
+		INFO "Episode number = '$episodeNumber'"
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
 		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js";then
 			# link in missing hls libary from live subdirectory
-			ln -s "$webDirectory/live/hls.js" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js"
+			linkFile "$webDirectory/live/hls.js" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js"
 		fi
 		# check the episode has not already been processed
 		if [ -f "$episodePagePath" ];then
@@ -859,14 +849,14 @@ processEpisode(){
 			# - this also prevents caching below done for new cacheable videos
 			return
 		fi
-		echo "[INFO]: Episode page path = '$episodePagePath'"
-		echo "[INFO]: Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
+		INFO "Episode page path = '$episodePagePath'"
+		INFO "Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
 		mkdir -p "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
 		chown -R www-data:www-data "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
 		mkdir -p "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		# link stylesheet
-		ln -s "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
+		linkFile "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
 			videoPath="${episode//.nfo/.mkv}"
@@ -979,15 +969,15 @@ processEpisode(){
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
-		echo "[INFO]: linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		ln -s "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		INFO "linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		linkFile "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		linkFile "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# show info gathered
-		echo "[INFO]: mediaType = $mediaType"
-		echo "[INFO]: mimeType = $mimeType"
-		echo "[INFO]: videoPath = $videoPath"
+		INFO "mediaType = $mediaType"
+		INFO "mimeType = $mimeType"
+		INFO "videoPath = $videoPath"
 		episodeVideoPath="${episode//.nfo/$sufix}"
-		echo "[INFO]: episodeVideoPath = $videoPath"
+		INFO "episodeVideoPath = $videoPath"
 
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
 		if echo "$sufix" | grep --ignore-case "strm";then
@@ -995,7 +985,7 @@ processEpisode(){
 
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
-			echo "[INFO]: yt-id = $yt_id"
+			INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 
 			# generate a link to the local caching resolver
@@ -1023,19 +1013,19 @@ processEpisode(){
 			#	# - timeout will stop the download after 0.1 seconds
 			#	timeout 0.1 curl "$resolverUrl" > /dev/null
 			#fi
-			echo "[INFO]: building resolver url for plugin link..."
+			INFO "building resolver url for plugin link..."
 			echo "$resolverUrl" > "$tempPath"
 		else
 			# link the video from the libary to the generated website
-			echo "[INFO]: linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
-			ln -s "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-			ln -s "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			INFO "linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
+			linkFile "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			linkFile "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 		fi
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
-		echo "[INFO]: thumbnail template = $thumbnail"
-		echo "[INFO]: thumbnail path 1 = $thumbnail.png"
-		echo "[INFO]: thumbnail path 2 = $thumbnail.jpg"
+		INFO "thumbnail template = $thumbnail"
+		INFO "thumbnail path 1 = $thumbnail.png"
+		INFO "thumbnail path 2 = $thumbnail.jpg"
 		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 		# check for the thumbnail and link it
@@ -1043,7 +1033,7 @@ processEpisode(){
 		# get the extension
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		# convert the found episode thumbnail into a web thumb
-		echo "[INFO]: building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
+		INFO "building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
 		if ! test -f "$thumbnailPath-web.png";then
 			convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
 		fi
@@ -1051,7 +1041,7 @@ processEpisode(){
 		if echo "$videoPath" | grep --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
-			echo "[INFO]: yt-id = $yt_id"
+			INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			{
 				# embed the youtube player
@@ -1224,11 +1214,11 @@ processShow(){
 	# create the path sum for reconizing the libary path
 	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
 	# create directory
-	echo "[INFO]: creating show directory at '$webDirectory/$showTitle/'"
+	INFO "creating show directory at '$webDirectory/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
 	# link stylesheet
-	ln -s "$webDirectory/style.css" "$webDirectory/shows/$showTitle/style.css"
+	linkFile "$webDirectory/style.css" "$webDirectory/shows/$showTitle/style.css"
 	# check show state before processing
 	if [ -f "$webDirectory/shows/$showTitle/state_$pathSum.cfg" ];then
 		# a existing state was found
@@ -1237,12 +1227,12 @@ processShow(){
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
 			# this means they are the same so no update needs run
-			echo "[INFO]: State is unchanged for $showTitle, no update is needed."
+			INFO "State is unchanged for $showTitle, no update is needed."
 			echo "[DEBUG]: $currentSum == $libarySum"
 			addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
 			return
 		else
-			echo "[INFO]: States are diffrent, updating $showTitle..."
+			INFO "States are diffrent, updating $showTitle..."
 			echo "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
@@ -1252,7 +1242,7 @@ processShow(){
 			touch "$webDirectory/shows/$showTitle/"
 		fi
 	else
-		echo "[INFO]: No show state exists for $showTitle, updating..."
+		INFO "No show state exists for $showTitle, updating..."
 		addToLog "NEW" "Creating new show" "$showTitle" "$logPagePath"
 		# update the show directory modification date when the state has been changed
 		touch "$webDirectory/shows/$showTitle/"
@@ -1268,32 +1258,32 @@ processShow(){
 	mkdir -p "$webDirectory/kodi/shows/$showTitle/"
 	chown -R www-data:www-data "$webDirectory/kodi/shows/$showTitle"
 	# linking tvshow.nfo data
-	ln -s "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
-	ln -s "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
+	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
+	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
 	# link all images to the kodi path
 	if ls "$show" | grep "\.jpg" ;then
-		ln -s "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
-		ln -s "$show"/*.jpg "$webDirectory/shows/$showTitle/"
+		linkFile "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
+		linkFile "$show"/*.jpg "$webDirectory/shows/$showTitle/"
 	fi
 	if ls "$show" | grep "\.png" ;then
-		ln -s "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
-		ln -s "$show"/*.png "$webDirectory/shows/$showTitle/"
+		linkFile "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
+		linkFile "$show"/*.png "$webDirectory/shows/$showTitle/"
 	fi
 	# link the poster
 	if [ -f "$show/poster.png" ];then
 		posterPath="poster.png"
-		echo "[INFO]: Found $show/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		INFO "Found $show/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
 		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
 			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	elif [ -f "$show/poster.jpg" ];then
 		posterPath="poster.jpg"
-		echo "[INFO]: Found $show/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		ln -s "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		INFO "Found $show/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
 		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
 			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
@@ -1303,33 +1293,33 @@ processShow(){
 	fi
 	# link the fanart
 	if [ -f "$show/fanart.png" ];then
-		echo "[INFO]: Found $show/fanart.png"
+		INFO "Found $show/fanart.png"
 		fanartPath="fanart.png"
-		echo "[INFO]: Found $show/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
+		INFO "Found $show/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	elif [ -f "$show/fanart.jpg" ];then
 		fanartPath="fanart.jpg"
-		echo "[INFO]: Found $show/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		ln -s "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
+		INFO "Found $show/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	else
 		echo "[WARNING]: could not find $show/fanart.[png/jpg]"
 	fi
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
-	echo "[INFO]: Creating directory at = '$webDirectory/shows/$showTitle/'"
+	INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
-	echo "[INFO]: Creating showPagePath = $showPagePath"
+	INFO "Creating showPagePath = $showPagePath"
 	touch "$showPagePath"
 	################################################################################
 	# begin building the html of the page
 	################################################################################
 	# generate the episodes based on .nfo files
 	for season in "$show"/*;do
-		echo "[INFO]: checking for season folder at '$season'"
+		INFO "checking for season folder at '$season'"
 		if [ -d "$season" ];then
-			echo "[INFO]: found season folder at '$season'"
+			INFO "found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
 			# if the folder is a directory that means a season has been found
@@ -1408,7 +1398,7 @@ processShow(){
 				#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 
 				# create top jump button
-				echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+				echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
 				echo "<hr class='topButtonSpace'>"
 				echo "</body>"
 				echo "</html>"
@@ -1628,7 +1618,7 @@ buildHomePage(){
 	webDirectory=$1
 	headerPagePath=$2
 
-	echo "[INFO]: Building home page..."
+	INFO "Building home page..."
 	# do not generate stats if website is in process of being updated
 	# stats generation is IO intense, so it only needs ran ONCE at the end
 	# if the stats.index cache is more than 1 day old update it
@@ -1699,11 +1689,8 @@ buildHomePage(){
 		} > "$webDirectory/stats.index"
 	fi
 	# link homepage
-	if ! test -L "$webDirectory/index.php";then
-		ln -sf "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
-	fi
-	################################################################################
 	linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+	# link lists
 	linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
 	linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
 	linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
@@ -1725,9 +1712,7 @@ function buildShowIndex(){
 	headerPagePath="$2"
 	showIndexPath="$webDirectory/shows/index.php"
 	# if the shows index is not a php link or does not exist write it
-	if ! test -h "$showIndexPath";then
-		ln -sf "/usr/share/mms/templates/shows.php" "$showIndexPath"
-	fi
+	linkFile "/usr/share/mms/templates/shows.php" "$showIndexPath"
 }
 ########################################################################
 getDirSumByTime(){
@@ -1802,15 +1787,11 @@ scanForRandomBackgrounds(){
 }
 ########################################################################
 function buildMovieIndex(){
-
 	webDirectory=$1
 	headerPagePath=$2
 	# movie path
 	movieIndexPath="$webDirectory/movies/index.php"
-	# if the shows index is not a php link or does not exist write it
-	if ! test -h "$movieIndexPath";then
-		ln -sf "/usr/share/mms/templates/movies.php" "$movieIndexPath"
-	fi
+	linkFile "/usr/share/mms/templates/movies.php" "$movieIndexPath"
 }
 ########################################################################
 function cacheCheck(){
@@ -1823,16 +1804,16 @@ function cacheCheck(){
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
-			INFO "[INFO]: File is to old, update the file $1"
+			INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			INFO "[INFO]: File in cache, do not update $1"
+			INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		INFO "[INFO]: File does not exist, it must be created $1"
+		INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -1843,7 +1824,6 @@ webRoot(){
 		webDirectory=$(cat /etc/nfo2web/web.cfg)
 	else
 		#mkdir -p /var/cache/nfo2web/web/
-		chown -R www-data:www-data "/var/cache/nfo2web/web/"
 		echo "/var/cache/nfo2web/cache" > /etc/nfo2web/web.cfg
 		webDirectory="/var/cache/nfo2web/cache"
 	fi
@@ -1853,7 +1833,7 @@ webRoot(){
 ########################################################################
 function libaryPaths(){
 	# add the download directory to the paths
-	echo "$(downloadDir)"
+	#echo "$(downloadDir)"
 	# check for server libary config
 	if [ ! -f /etc/nfo2web/libaries.cfg ];then
 		# if no config exists create the default config
@@ -1948,26 +1928,16 @@ main(){
 		# - Should create its own web directory
 		################################################################################
 		# load the libary directory
-		if ! test -f /etc/nfo2web/libaries.cfg ];then
+		if ! test -f /etc/nfo2web/libaries.cfg;then
 			mkdir -p /var/cache/nfo2web/libary/
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
 		fi
 		libaries=$(libaryPaths)
 		# the webdirectory is a cache where the generated website is stored
 		webDirectory="$(webRoot)"
-		set -x
 		# force overwrite symbolic link to web directory
 		# - link must be used to also use premade apache settings
 		ln -sfn "$webDirectory" "/var/cache/nfo2web/web"
-		set +x
-		#if [ -f /etc/nfo2web/web.cfg ];then
-		#	webDirectory=$(cat /etc/nfo2web/web.cfg)
-		#else
-		#	mkdir -p /var/cache/nfo2web/web/
-		#	chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		#	echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
-		#	webDirectory="/var/cache/nfo2web/web"
-		#fi
 		# check if system is active
 		if [ -f "/tmp/nfo2web.active" ];then
 			# system is already running exit
@@ -2007,216 +1977,13 @@ main(){
 		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
 		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		################################################################################
+
 		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
 			# build the cache directory if none exists
 			mkdir -p "$webDirectory/RESOLVER-CACHE/"
 			# set permissions
 			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
 		fi
-		# build bumps from youtube videos
-		# - this should load a /etc/mms/bumps.cfg file
-		if ! [ -f "/etc/mms/bumps.cfg" ];then
-			{
-				echo "# this is a comment"
-				echo "# - To add more bumps to randomly choose from"
-				echo "#   add links to videos in this file"
-				echo "# gold particles"
-				echo "https://www.youtube.com/watch?v=aNVviTECNM0"
-				echo "# spiral of color bubbles"
-				echo "https://www.youtube.com/watch?v=vyMUhgMeJ8A"
-				echo "# spiral of color ridges"
-				echo "https://www.youtube.com/watch?v=97jRHEj0HZw"
-				echo "# blue lavalamp river "
-				echo "https://www.youtube.com/watch?v=XR-e5I0QkcY"
-				echo "# fall down the hypno hole"
-				echo "https://www.youtube.com/watch?v=oTXoUgjpHFs"
-				echo "# dark ambient swirl"
-				echo "https://www.youtube.com/watch?v=lwbjQUY_xd0"
-			} >> "/etc/mms/bumps.cfg"
-		fi
-		bumpConfig=$(grep -v "^#" /etc/mms/bumps.cfg)
-		# - each non # entry in the file should be a web link to a loop video that
-		#   can have the first 30 seconds cut off for the bump
-		# - the resolver will pick random bumps from the $webdirectory/bumps/ directory
-		# - users can add bump and skip files directly by naming them anything
-		#   with -bump.mp4 as the last part of the filename "*-bump.mp4"
-		# - bump and skip files generated from remote web links will be listed
-		#   by the md5sum of the web link e.g. ":LIU435435LDKJD4389DLKJDFJ-bump.mp4"
-		if ! [ -d "$webDirectory/bumps/" ];then
-			mkdir -p "$webDirectory/bumps/"
-		fi
-		echo "$bumpConfig" | while read bumpLink;do
-			break;#DEBUG
-			# create sum for link
-			bumpLinkSum=$(echo "$bumpLink" | md5sum | cut -d' ' -f1)
-			# read each link in the link config and check if it has been downloaded
-			if ! [ -f "$webDirectory/bumps/$bumpLinkSum-bump.mp4" ];then
-				# download the file as the base for the bump
-				/usr/local/bin/youtube-dl "$bumpLink" --format "worst" --recode-video mp4 -o "$webDirectory/bumps/$bumpLinkSum-BASE.mp4"
-				# the bump has not been created from the base, cut the video with ffmpeg
-				ffmpeg -i "$webDirectory/bumps/$bumpLinkSum-BASE.mp4" -to 30 -codec copy "$webDirectory/bumps/$bumpLinkSum-bump.mp4"
-				# set permissions in case user set file has been used
-				chown www-data:www-data "$webDirectory/bumps/$bumpLinkSum-bump.mp4"
-				ffmpeg -i "$webDirectory/bumps/$bumpLinkSum-BASE.mp4" -to 1 -codec copy "$webDirectory/bumps/$bumpLinkSum-skip.mp4"
-				chown www-data:www-data "$webDirectory/bumps/$bumpLinkSum-skip.mp4"
-				# remove the base bump since it is no longer nessassary
-				rm -v "$webDirectory/bumps/$bumpLinkSum-BASE.mp4"
-			fi
-		done
-		# generate the bump for the resolver cache if a file can not be downloaded
-		#if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4" ];then
-			# build the base bump image if it does not exist yet, this is the longest part of the process, so cache it
-			#convert -size 800x600 plasma:cyan-white "$webDirectory/RESOLVER-CACHE/baseBump.png"
-			# build frames of animation
-			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[=   ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
-			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[ =  ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
-			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[  = ]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
-			#convert "$webDirectory/RESOLVER-CACHE/baseBump.png" -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500 -gravity center caption:'Loading\n[   =]' -composite "$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
-			# use links for last frames of the loop
-			#ln -s  "BASEBUMP_03.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
-			#ln -s  "BASEBUMP_02.png" "$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
-		#	#-composite -draw 'circle 100,100 200,800'\
-		#	# frame 1
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF1F"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_01.png"
-		#	# frame 2
-		#	#-gravity center caption:"▀"\
-		#	#-composite -draw 'circle 100,100 400,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF2E"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_02.png"
-		#	# frame 3
-		#	#-gravity center caption:"▝"\
-		#	#-composite -draw 'circle 100,100 600,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF3D"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_03.png"
-		#	# frame 4
-		#	#-gravity center caption:"▐"\
-		#	#-composite -draw 'circle 100,100 800,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF4C"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_04.png"
-		#	# frame 5
-		#	#-gravity center caption:"▗"\
-		#	#-composite -draw 'circle 100,100 1000,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF4C"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_05.png"
-		#	# frame 6
-		#	#-gravity center caption:"▃"\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF3D"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_06.png"
-		#	# frame 7
-		#	#-gravity center caption:"▖"\
-		#	#-composite -draw 'circle 100,100 1400,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF2E"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_07.png"
-		#	# frame 8
-		#	#-gravity center caption:"▌"\
-		#	#-composite -draw 'circle 100,100 1600,800'\
-		#	convert -size 1920x1080 plasma:white-cyan\
-		#		-size 1920x1080 radial-gradient:"#00FF1F"-"rgba(0,0,0,0)" -composite\
-		#		-background none -font 'DejaVu-Sans-Mono' -fill white\
-		#		-stroke black -strokewidth 2 -style Bold -size 1820x980\
-		#		-gravity center caption:"Loading..." -composite\
-		#		"$webDirectory/RESOLVER-CACHE/BASEBUMP_07.png"
-		#	# combine animation together
-		#	#ffmpeg -y -loop 1 -f image2 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 28 -t 30 -vcodec theora -b:v 128k "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.ogv"
-		#	ffmpeg -y -loop 1 -f image2 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP_%02d.png" -r 28 -t 30 -c:v libx264 -preset slow -profile:v high -crf 18 -coder 1 -pix_fmt yuv420p -movflags +faststart -g 30 -bf 2 -c:a aac -b:a 384k -profile:a aac_low "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
-		#	#ffmpeg -i input -c:v libx264 -preset slow -profile:v high -crf 18 -coder 1 -pix_fmt yuv420p -movflags +faststart -g 30 -bf 2 -c:a aac -b:a 384k -profile:a aac_low output
-		#	chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-		#else
-		#	# update the modified time so the bump video generated will not be cleaned with the cache
-		#	touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.png"
-		#	# set permissions in case user set file has been used
-		#	chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-bump.mp4"
-		#fi
-		#if ! [ -f "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4" ];then
-		#	#convert -size 800x600 plasma:green-lightgreen "$webDirectory/RESOLVER-CACHE/baseSkip.png"
-		#	# frame 1
-		#	#-gravity center caption:"▘"\
-		#	convert -size 800x600 radial-gradient:"#00FF1F"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_01.png"
-		#	# frame 2
-		#	#-gravity center caption:"▀"\
-		#	convert -size 800x600 radial-gradient:"#00FF2E"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_02.png"
-		#	# frame 3
-		#	#-gravity center caption:"▝"\
-		#	convert -size 800x600 radial-gradient:"#00FF3D"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_03.png"
-		#	# frame 4
-		#	#-gravity center caption:"▐"\
-		#	convert -size 800x600 radial-gradient:"#00FF4C"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_04.png"
-		#	# frame 5
-		#	#-gravity center caption:"▗"\
-		#	convert -size 800x600 radial-gradient:"#00FF4C"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_05.png"
-		#	# frame 6
-		#	#-gravity center caption:"▃"\
-		#	convert -size 800x600 radial-gradient:"#00FF3D"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_06.png"
-		#	# frame 7
-		#	#-gravity center caption:"▖"\
-		#	convert -size 800x600 radial-gradient:"#00FF2E"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_07.png"
-		#	# frame 8
-		#	#-gravity center caption:"▌"\
-		#	convert -size 800x600 radial-gradient:"#00FF1F"-"#000000" -background none\
-		#		-font 'DejaVu-Sans-Mono' -fill white -stroke black -strokewidth 8 -style Bold -size 700x500\
-		#		-gravity center caption:""\
-		#		-composite "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_08.png"
-		#	# combine
-		#	ffmpeg -y -loop 1 -i "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip_%02d.png" -r 8 -t 1 "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
-		#	# set permissions on all generated files
-		#	chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-		#else
-		#	# update the modified time so the bump video generated will not be cleaned with the cache
-		#	touch "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.png"
-		#	# set permissions in case user set file has been used
-		#	chown www-data:www-data "$webDirectory/RESOLVER-CACHE/BASEBUMP-skip.mp4"
-		#fi
-
 
 		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
 		if [ -f "/etc/at.deny" ];then
@@ -2227,16 +1994,20 @@ main(){
 				echo "$data" > "/etc/at.deny"
 			fi
 		fi
+
 		# install the php streaming script
-		ln -s "/usr/share/mms/stream.php" "$webDirectory/stream.php"
+		#ln -s "/usr/share/mms/stream.php" "$webDirectory/stream.php"
+
 		# link the randomFanart.php script
-		ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
-		ln -s "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
-		ln -s "$webDirectory/randomFanart.php" "$webDirectory/movies/randomFanart.php"
+		linkFile "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
+		linkFile "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
+		linkFile "$webDirectory/randomFanart.php" "$webDirectory/movies/randomFanart.php"
+
 		# link randomPoster.php
-		ln -s "/usr/share/nfo2web/randomPoster.php" "$webDirectory/randomPoster.php"
-		ln -s "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
-		ln -s "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
+		linkFile "/usr/share/nfo2web/randomPoster.php" "$webDirectory/randomPoster.php"
+		linkFile "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
+		linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
+
 		# link the stylesheet based on the chosen theme
 		if ! [ -f /etc/mms/theme.cfg ];then
 			echo "default.css" > "/etc/mms/theme.cfg"
@@ -2245,28 +2016,10 @@ main(){
 		# load the chosen theme
 		theme=$(cat "/etc/mms/theme.cfg")
 		# link the theme and overwrite if another theme is chosen
-		ln -sf "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
+		linkFile "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
 		# link stylesheet
-		ln -s "$webDirectory/style.css" "$webDirectory/movies/style.css"
-		ln -s "$webDirectory/style.css" "$webDirectory/shows/style.css"
-		# compare libaries to see if updates are needed
-		#if [ -f "$webDirectory/state.cfg" ];then
-		#	# a existing state was found
-		#	currentSum=$(cat "$webDirectory/state.cfg")
-		#	libarySum=$(getLibSum)
-		#	# if the current state is the same as the state of the last update
-		#	if [ "$libarySum" == "$currentSum" ];then
-		#		# this means they are the same so no update needs run
-		#		echo "[INFO]: State is unchanged, no update is needed."
-		#		echo "[DEBUG]: $currentSum == $libarySum"
-		#		exit
-		#	else
-		#		echo "[INFO]: States are diffrent, updating..."
-		#		echo "[DEBUG]: $currentSum != $libarySum"
-		#	fi
-		#else
-		#	echo "[INFO]: No state exists, updating..."
-		#fi
+		linkFile "$webDirectory/style.css" "$webDirectory/movies/style.css"
+		linkFile "$webDirectory/style.css" "$webDirectory/shows/style.css"
 		# create the log path
 		logPagePath="$webDirectory/log.php"
 		# create the homepage path
@@ -2281,7 +2034,7 @@ main(){
 		#touch "$homePagePath"
 		# check for the header
 		if ! test -L "$webDirectory/header.php";then
-			ln -sf "/usr/share/mms/templates/header.php" "$webDirectory/header.php"
+			linkFile "/usr/share/mms/templates/header.php" "$webDirectory/header.php"
 		fi
 		# build log page
 		{
@@ -2432,7 +2185,7 @@ main(){
 			echo "include('header.php')";
 			echo "?>";
 			# create top jump button
-			echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
+			echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
 			echo "<hr class='topButtonSpace'>"
 			echo "</body>"
 			echo "</html>"

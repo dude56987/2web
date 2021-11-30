@@ -146,11 +146,17 @@ function cacheUrl($sum,$videoLink){
 		$command = 'echo "'.$command.'"';
 	}else{
 		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
+		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 2 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		$command = 'echo "'.$command." && ".$dlCommand.'"';
+		//$command = 'echo "'.$command." && ".$dlCommand.'"';
+		$command = 'echo "'.$command.'"';
+		$dlCommand = 'echo "'.$dlCommand.'"';
 	}
+	# - Place the higher quality download or the mp4 conversion in a batch queue
+	#   that adds a new task once every 60 seconds if system load is below 1.5
+	# - This will prevent active downloads from being overwhelmed
+	$dlCommand = $dlCommand." | /usr/bin/at -q b now";
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
@@ -175,6 +181,7 @@ function cacheUrl($sum,$videoLink){
 	fclose($logFile);
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
+	runShellCommand($dlCommand);
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
 			# exit connection after adding batch process to queue
@@ -244,12 +251,14 @@ function buildBump($sum){
 		$command = $command."/usr/bin/convert 'RESOLVER-CACHE/baseBump.png' -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 300x100 -gravity center caption:'Loading...' -composite 'RESOLVER-CACHE/".$sum.".png'";
 		runShellCommand($command);
 	}
+	/*
 	if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.mp4")){
 		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
 		//$command = "";
 		$command = $command."/usr/bin/ffmpeg -loop 1 -i RESOLVER-CACHE/".$sum."-bump.png -r 1 -t 10 RESOLVER-CACHE/".$sum."-bump.mp4";
 		runShellCommand($command);
 	}
+ */
 }
 ################################################################################
 function redirect($url){

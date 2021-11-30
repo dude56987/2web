@@ -86,7 +86,7 @@ ytdl2kodi_channel_extractor(){
 			# this means the reset time has not yet passed so exit out without downloading
 			echo "[WARNING]: The reset time has not yet passed skipping..."
 			echo "[INFO]: channelLink : '$channelLink'"
-			exit 1
+			return
 		else
 			echo "[INFO]: The reset time has passed, Processing link..."
 		fi
@@ -265,7 +265,7 @@ ytdl2kodi_channel_extractor(){
 		episodeProcessingLimit=$(cat /etc/ytdl2kodi/episodeProcessingLimit.cfg)
 	else
 		# if no config exists create the default config
-		episodeProcessingLimit="25"
+		episodeProcessingLimit="40"
 		# write the new config from the path variable
 		echo "$episodeProcessingLimit" > /etc/ytdl2kodi/episodeProcessingLimit.cfg
 	fi
@@ -284,7 +284,7 @@ ytdl2kodi_channel_extractor(){
 		# is done in processing the episode
 		if [ $processedEpisodes -ge $episodeProcessingLimit ];then
 			echo "[INFO]: Exceeded Episode Processing Limit, skipping rendering episode..."
-			exit
+			return
 		fi
 		echo "[INFO]: Preprocessing '$link' ..."
 		echo "[INFO]: Running metadata extractor on '$link' ..."
@@ -346,7 +346,6 @@ ytdl2kodi_channel_meta_extractor(){
 	echo "# Now extracting metadata for channel from '$2' #"
 	echo "################################################################################"
 	################################################################################
-	echo "The arguments $@"
 	# create the show title based on the arguments
 	showTitle="$1"
 	echo "The showtitle = $1"
@@ -382,7 +381,7 @@ ytdl2kodi_channel_meta_extractor(){
 	if [ -f "$fileName" ];then
 		echo "Series file already exists..."
 		echo "Skipping creating series data..."
-		exit
+		return
 	else
 		################################################################################
 		# webpage
@@ -408,7 +407,7 @@ ytdl2kodi_channel_meta_extractor(){
 				# if the above runs and fails then noise will be generated below
 			else
 				#dont create the metadata as no base image can be created yet
-				exit
+				return
 			fi
 		fi
 		################################################################################
@@ -432,7 +431,7 @@ ytdl2kodi_channel_meta_extractor(){
 		if ! [ -f "$downloadPath$showTitle/webpage.png" ];then
 			echo "No fanart could be created or downloaded metadata failed..."
 			echo
-			exit
+			return
 		fi
 		################################################################################
 		# compose seed based noise over username based images
@@ -494,7 +493,7 @@ ytdl2kodi_channel_meta_extractor(){
 	echo "################################################################################"
 	echo "# Metadata extraction finished #"
 	echo "################################################################################"
-	exit
+	return
 }
 
 ytdl2kodi_depends_check(){
@@ -550,7 +549,7 @@ ytdl2kodi_reset_cache(){
 		echo "No download path was set, can not clear cache."
 	fi
 }
-
+################################################################################
 ytdl2kodi_rip_title(){
 	webpageLink=$1
 	# extract the domain name from the link
@@ -564,8 +563,9 @@ ytdl2kodi_rip_title(){
 		showTitle=$(echo "$showTitle" | cut -d'.' -f1)
 	fi
 	echo "$showTitle"
-	exit
+	return
 }
+################################################################################
 ytdl2kodi_sleep(){
 	################################################################################
 	# checking sleepTime.cfg to see the max wait time between downloads
@@ -587,12 +587,54 @@ ytdl2kodi_sleep(){
 		sleep "$tempTime"
 	else
 		echo "Wait time disabled..."
-		exit
+		return
 	fi
 	################################################################################
-	exit
+	return
 }
-
+################################################################################
+function sitePaths(){
+	# check for server libary config
+	if [ ! -f /etc/ytdl2kodi/sources.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "/var/cache/ytdl2kodi/"
+		} >> "/etc/ytdl2kodi/sources.cfg"
+	fi
+	# write path to console
+	cat "/etc/ytdl2kodi/sources.cfg"
+	# create a space just in case none exists
+	printf "\n"
+	# read the additional configs
+	find "/etc/ytdl2kodi/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+		cat "$libaryConfigPath"
+		# create a space just in case none exists
+		printf "\n"
+	done
+}
+################################################################################
+function userPaths(){
+	# check for server libary config
+	if [ ! -f /etc/ytdl2kodi/usernameSources.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "/var/cache/ytdl2kodi/"
+		} >> "/etc/ytdl2kodi/usernameSources.cfg"
+	fi
+	# write path to console
+	cat "/etc/ytdl2kodi/usernameSources.cfg"
+	# create a space just in case none exists
+	printf "\n"
+	# read the additional configs
+	find "/etc/ytdl2kodi/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+		cat "$libaryConfigPath"
+		# create a space just in case none exists
+		printf "\n"
+	done
+}
+################################################################################
 ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
@@ -604,59 +646,8 @@ ytdl2kodi_update(){
 		# if the script is running already do not launch a duplicate process
 		echo "[WARNING]: ytdl2kodi_update is already running..."
 		echo "[WARNING]: Only one instance of ytdl2kodi should be run at a time..."
-		exit
+		return
 	fi
-	################################################################################
-	# scan sources config file and fetch each source
-	################################################################################
-	echo "Loading up sources..."
-	# check for defined sources
-	if [ -f /etc/ytdl2kodi/sources.cfg ];then
-		# load the config file
-		linkList=$(grep --invert-match "^#" "/etc/ytdl2kodi/sources.cfg")
-	else
-		# if no config exists create the default config
-		linkList="https://www.newgrounds.com/"
-		# write the new config from the path variable
-		echo "$linkList" > /etc/ytdl2kodi/sources.cfg
-	fi
-	################################################################################
-	# check for defined user sources
-	echo "Loading up username sources..."
-	if [ -f /etc/ytdl2kodi/usernameSources.cfg ];then
-		# load the config file
-		userLinkList=$(grep --invert-match "^#" /etc/ytdl2kodi/usernameSources.cfg)
-	else
-		# if no config exists create the default config
-		userLinkList="https://www.youtube.com/user/BlueXephos/videos?disable_polymer=1"
-		# write the new config from the path variable
-		{
-			echo "$userLinkList"
-			printf "\n"
-		} > /etc/ytdl2kodi/usernameSources.cfg
-	fi
-	set -x
-	################################################################################
-	# add in the web added link lists
-	echo "PRE Link List = $linkList"
-	find "/etc/ytdl2kodi/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | while read libaryConfigPath;do
-		# create a space just in case none exists
-		linkList=$(printf  "$linkList\n$(grep --invert-match "^#" "$libaryConfigPath")\n")
-	done
-	echo "POST Link List = $linkList"
-	find "/etc/ytdl2kodi/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | while read libaryConfigPath;do
-		# create a space just in case none exists
-		userLinkList=$(printf  "$userLinkList\n$(grep --invert-match "^#" "$libaryConfigPath")\n")
-		#userLinkList=$(echo "$userLinkList" && grep --invert-match "^#" "$libaryConfigPath" && printf "\n")
-	done
-	# cleanup links of comments
-	#linkList=$(echo "$linkList" | sed "s/^#.*$//g" )
-	#userLinkList=$(echo "$userLinkList" | sed "s/^#.*$//g" )
-
-	# sort and dedupe lists, then randomize the processing order
-	#linkList=$(echo "$linkList" | sort --unique | shuf )
-	#userLinkList=$(echo "$userLinkList" | sort --unique | shuf )
-
 	################################################################################
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
@@ -682,36 +673,41 @@ ytdl2kodi_update(){
 	currentlyProcessing=0
 	################################################################################
 	# for each link in the sources
+	linkList=$(sitePaths)
 	echo "Processing sources..."
 	echo "Link List = $linkList"
 	for link in $linkList;do
+		currentlyProcessing="$(($currentlyProcessing + 1))"
+		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
+			echo "[INFO]: Channel Processing Limit Reached!"
+			break
+		fi
 		echo "Running channel metadata extractor on '$link' ..."
 		# check links aginst existing stream files to pervent duplicating the work
 		ytdl2kodi_channel_extractor "$link"
-		currentlyProcessing="$(($currentlyProcessing + 1))"
-		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
-			echo "[INFO]: Channel Processing Limit Reached!"
-			exit 0
-		fi
 	done
 	################################################################################
+	# reset currently processing for the
+	currentlyProcessing=0
+	################################################################################
 	# for each link in the users sources
+	userlinkList=$(userPaths)
 	echo "Processing user sources..."
 	echo "User Link List = $userlinkList"
 	for link in $userLinkList;do
-		echo "Running channel metadata extractor on '$link' ..."
-		# check links aginst existing stream files to pervent duplicating the work
-		ytdl2kodi_channel_extractor "$link" --username
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
 			echo "[INFO]: Channel Processing Limit Reached!"
-			exit 0
+			break
 		fi
+		echo "Running channel metadata extractor on '$link' ..."
+		# check links aginst existing stream files to pervent duplicating the work
+		ytdl2kodi_channel_extractor "$link" --username
 	done
 	################################################################################
-	exit
+	return
 }
-
+################################################################################
 validString(){
 	stringToCheck="$1"
 	echo "[INFO]: Checking string '$stringToCheck'"
@@ -731,9 +727,8 @@ validString(){
 		return 0
 	fi
 }
-
+################################################################################
 ytdl2kodi_video_extractor(){
-	#! /bin/bash
 	################################################################################
 	# VIDEO EXTRACTOR
 	################################################################################
@@ -808,7 +803,7 @@ ytdl2kodi_video_extractor(){
 		echo "The info extractor timed out after $timeLimitSeconds seconds..."
 		echo "Skipping..."
 		echo
-		exit
+		return
 	else
 		echo "Return code of ytdl = $infoCheck"
 		# if the info returns a failure code
@@ -818,7 +813,7 @@ ytdl2kodi_video_extractor(){
 		echo "The info extractor failed..."
 		echo "Skipping..."
 		echo
-		exit
+		return
 	fi
 	################################################################################
 	formatCheck=$(echo "$info" | jq ".formats[0].url")
@@ -834,7 +829,7 @@ ytdl2kodi_video_extractor(){
 		echo "Found URL = '$formatCheck'"
 		echo "Skipping..."
 		echo
-		exit
+		return
 	fi
 	if echo "$formatCheck" | grep ".zip";then
 		# this is not a video file link its a zip file so ignore it
@@ -843,7 +838,7 @@ ytdl2kodi_video_extractor(){
 		echo "This is a zip file not a video link"
 		echo "Skipping..."
 		echo
-		exit
+		return
 	fi
 	if echo "$formatCheck" | grep ".swf";then
 		# this is not a video file link its a zip file so ignore it
@@ -852,7 +847,7 @@ ytdl2kodi_video_extractor(){
 		echo "This is a swf file not a video link"
 		echo "Skipping..."
 		echo
-		exit
+		return
 	fi
 	################################################################################
 	# Build the filename from the download path id and title
@@ -895,7 +890,7 @@ ytdl2kodi_video_extractor(){
 			echo "$selection" >> $previousDownloadsPath
 			echo "Skipping video..."
 			echo
-			exit
+			return
 		fi
 	else
 		# create the showtitle from the base url this is default
@@ -924,7 +919,7 @@ ytdl2kodi_video_extractor(){
 		 #this means no viable title could be found or created from the plot
 		 echo "No title was found or created..."
 		 echo
-		 exit
+		 return
 	fi
 	################################################################################
 	# create the directory for the show data if it does not exist
@@ -978,7 +973,7 @@ ytdl2kodi_video_extractor(){
 		# so decremnt the episode number to prevent gaps
 		echo "Skipping..."
 		echo
-		exit
+		return
 	fi
 	################################################################################
 	# build stream file for video or download video file
@@ -1038,7 +1033,7 @@ ytdl2kodi_video_extractor(){
 		echo "[INFO]: There is no video link available!"
 		echo "[INFO]: Skipping..."
 		echo
-		exit
+		return
 	fi
 	################################################################################
 	# create the file if it dont exist
@@ -1049,7 +1044,7 @@ ytdl2kodi_video_extractor(){
 		echo "[INFO]: This download has already been processed..."
 		echo "[INFO]: '$sourceUrl' matches another previously downloaded video in this series..."
 		echo
-		exit
+		return
 	else
 		# if the url has not been added, add it
 		touch $foundLinksPath
@@ -1209,9 +1204,8 @@ ytdl2kodi_video_extractor(){
 	echo "[INFO]:################################################################################"
 	echo "[INFO]:# The extractor has finished #"
 	echo "[INFO]:################################################################################"
-	exit
+	return
 }
-
 ################################################################################
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then

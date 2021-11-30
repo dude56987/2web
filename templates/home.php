@@ -14,7 +14,7 @@
 	include("header.php");
 ?>
 <!-- create top jump button -->
-<a href='#top' id='topButton' class='button'>&uarr;</a>
+<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 	if (file_exists("progress.index")){

@@ -11,15 +11,26 @@
 ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
+?>
 
-echo "<div class='settingListCard'>\n";
+<div class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+	<li><a href='#serverLibaryPaths'>Server Libary Paths</a></li>
+	<li><a href='#libaryPaths'>Libary Paths</a></li>
+	<li><a href='#addLibaryPath'>Add Libary Path</a></li>
+	<ul>
+</div>
+
+<?php
+echo "<div id='serverLibaryPaths' class='settingListCard'>\n";
 echo "<h2>Server Libary Paths</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/nfo2web/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='libaryPaths' class='settingListCard'>";
 echo "<h2>Libary Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/nfo2web/libaries.d/*.cfg"));
 // reverse the time sort
@@ -47,7 +58,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='addLibaryPath' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Libary Path</h2>
 <input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>

@@ -19,7 +19,7 @@ echo file_get_contents("/etc/iptv2web/sources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
 $sourceFiles = scandir("/etc/iptv2web/sources.d/");
 //print_r($sourceFiles);
@@ -74,7 +74,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='addLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Link</h2>
 <input width='60%' type='text' name='addLink' placeholder='Link'>

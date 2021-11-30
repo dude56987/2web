@@ -14,14 +14,16 @@ include("header.php");
 include("settingsHeader.php");
 ?>
 
-<div class='inputCard'>
+<div id='update' class='inputCard'>
 	<h2>Update</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<button class='button' type='submit' name='update' value='true'>UPDATE</button>
+		<button class='button' type='submit' name='update_nfo' value='true'>UPDATE NFO</button>
+		<button class='button' type='submit' name='update_iptv' value='true'>UPDATE IPTV</button>
+		<button class='button' type='submit' name='update_comics' value='true'>UPDATE COMICS</button>
 	</form>
 </div>
 <!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
+<div id='webTheme' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Web Theme</h2>
 			<ul>

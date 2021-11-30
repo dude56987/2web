@@ -9,7 +9,20 @@ ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
 
-echo "<div class='settingListCard'>\n";
+?>
+
+<div id='index' class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+	<li><a href='#serverRadioLinkConfig'>Server Radio Link Config</a></li>
+	<li><a href='#radioLinks'>Radio Links</a></li>
+	<li><a href='#addRadioStation'>Add Radio Station</a></li>
+	<ul>
+</div>
+
+<?php
+
+echo "<div id='serverRadioLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Radio Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/iptv2web/radioSources.cfg");
@@ -22,7 +35,7 @@ echo "<h2>Custom Radio Links</h2>\n";
 echo "</div>";
 
 
-echo "<div class='settingListCard'>";
+echo "<div id='radioLinks' class='settingListCard'>";
 echo "<h2>Radio Links</h2>\n";
 $sourceFiles = scandir("/etc/iptv2web/radioSources.d/");
 //print_r($sourceFiles);
@@ -118,7 +131,7 @@ foreach($sourceFiles as $sourceFile){
 //echo "</table>";
 echo "</div>";
 
-echo "<div class='inputCard'>";
+echo "<div id='addRadioLink' class='inputCard'>";
 echo "<form action='admin.php' method='post'>\n";
 echo "<h2>Add Radio Link</h2>\n";
 echo "<input width='60%' type='text' name='addRadioLink' placeholder='Link'>\n";
@@ -126,7 +139,7 @@ echo "<input class='button' type='submit'>\n";
 echo "</form>\n";
 echo "</div>";
 
-echo "<div class='inputCard'>";
+echo "<div id='addRadioStation' class='inputCard'>";
 echo "<form action='admin.php' method='post'>\n";
 echo "<h2>Add Radio Station</h2>\n";
 echo "<input width='60%' type='text' name='addCustomRadioLink' placeholder='Link'>\n";

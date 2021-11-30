@@ -17,7 +17,7 @@ include("../header.php");
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
 <?php // create top jump button ?>
-<a href='#top' id='topButton' class='button'>&uarr;</a>
+<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 # add the updated shows below the header
@@ -27,7 +27,7 @@ include("../updatedShows.index");
 <div class='settingListCard'>
 <?php
 // get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/nfo2web/web/shows/*/shows.index"));
+$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/shows/*/shows.index | sort"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 foreach($sourceFiles as $sourceFile){

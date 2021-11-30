@@ -954,8 +954,6 @@ webGen(){
 					echo "include('../randomChannels.php');";
 					echo "include('../header.php');";
 					echo "?>";
-					# create top jump button
-					echo "<a href='#top' id='topButton' class='button'>&uarr;</a>"
 					# add space for jump button when scrolled all the way down
 					echo "<hr class='topButtonSpace'>"
 					echo "</body>"
@@ -1004,27 +1002,27 @@ webGen(){
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
 					# if the link is a radio station
 					{
-						echo -e "<div id='$channelNumber'>"
-						echo -e "\t<a class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						#echo -e "<div id='$channelNumber'>"
+						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"
 						echo -e "\t&#128251;"
 						echo -e "\t</div>"
 						echo -e "\t</a>"
-						echo -e "</div>"
+						#echo -e "</div>"
 					} >> "$channelListPath"
 				else
 					{
-						echo -e "<div id='$channelNumber'>"
-						echo -e "\t<a class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						#echo -e "<div id='$channelNumber'>"
+						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"
 						echo -e "\t&#128250;"
 						echo -e "\t</div>"
 						echo -e "\t</a>"
-						echo -e "</div>"
+						#echo -e "</div>"
 					} >> "$channelListPath"
 				fi
 			fi

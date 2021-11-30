@@ -11,15 +11,34 @@
 ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
+?>
 
-echo "<div class='settingListCard'>\n";
+<div id='index' class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+		<li><a href='#addComicLibary'>Add Comic Libary Paths</a></li>
+		<li><a href='#comicServerLibaryPaths'>Server Libary Paths Config</a></li>
+		<li><a href='#comicLibaryPaths'>Comic Libary Paths</a></li>
+	</ul>
+</div>
+
+<div id='addComicLibary' class='inputCard'>
+<form action='admin.php' method='post'>
+	<h2>Add Comic Libary Path</h2>
+	<input width='60%' type='text' name='addComicLibary' placeholder='/absolute/path/to/the/libary'>
+	<input class='button' type='submit'>
+</form>
+</div>
+
+<?php
+echo "<div id='comicServerLibaryPaths' class='settingListCard'>\n";
 echo "<h2>Comic Server Libary Paths</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/comic2web/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='comicLibaryPaths' class='settingListCard'>";
 echo "<h2>Comic Libary Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/comic2web/libaries.d/*.cfg"));
 // reverse the time sort
@@ -45,14 +64,6 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Comic Libary Path</h2>
-	<input width='60%' type='text' name='addComicLibary' placeholder='/absolute/path/to/the/libary'>
-	<input class='button' type='submit'>
-</form>
 </div>
 
 </body>

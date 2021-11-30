@@ -21,9 +21,9 @@
 			echo "&#128250;SHOWS";
 			echo "</a>";
 		}
-		if (file_exists("$webDirectory/live/channels.m3u")){
-			echo "<a class='button' href='/live'>";
-			echo "&#128225;LIVE";
+		if (file_exists("$webDirectory/music/")){
+			echo "<a class='button' href='/music'>";
+			echo "&#9834;MUSIC";
 			echo "</a>";
 		}
 		if (file_exists("$webDirectory/comics/")){
@@ -31,9 +31,9 @@
 			echo "&#128214;COMICS";
 			echo "</a>";
 		}
-		if (file_exists("$webDirectory/music/")){
-			echo "<a class='button' href='/music'>";
-			echo "&#9834;MUSIC";
+		if (file_exists("$webDirectory/live/channels.m3u")){
+			echo "<a class='button' href='/live'>";
+			echo "&#128225;LIVE";
 			echo "</a>";
 		}
 		echo "<a class='button' href='/system.php'>";

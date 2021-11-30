@@ -17,7 +17,7 @@ include("../header.php");
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexLink")' placeholder='Search...' >
 
 <?php // create top jump button ?>
-<a href='#top' id='topButton' class='button'>&uarr;</a>
+<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 # add the updated movies below the header

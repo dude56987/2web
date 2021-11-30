@@ -24,13 +24,13 @@
 <hr>
 
 <!-- create top jump button -->
-<a href='#top' id='topButton' class='button'>&uarr;</a>
+<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <div class='settingListCard'>
 
 <?php
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/nfo2web/web/comics/*/comic.index"));
+	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/comics/*/comic.index | sort"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){

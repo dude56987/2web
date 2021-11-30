@@ -15,7 +15,7 @@ if (file_exists($cacheFile)){
 if ($writeFile){
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/nfo2web/web/live/channel_*.index"));
+	$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/nfo2web/web/live/channel_*.index"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	$counter=0;

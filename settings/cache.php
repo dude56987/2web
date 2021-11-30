@@ -13,9 +13,18 @@ ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
 ?>
-
-<!-- create the theme picker based on installed themes -->
 <div class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+	<li><a href='#cacheQuality'>Cache Quality</a></li>
+	<li><a href='#cacheUpgradeQuality'>Cache Upgrade Quality</a></li>
+	<li><a href='#cacheResize'>HLS Size</a></li>
+	<li><a href='#cacheFramerate'>HLS Framerate(FPS)</a></li>
+	<li><a href='#cacheDelay'>Cache Time</a></li>
+	<ul>
+</div>
+<!-- create the theme picker based on installed themes -->
+<div id='cacheQuality' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Cache Stream Quality</h2>
 		<p>
@@ -44,7 +53,7 @@ include("settingsHeader.php");
 </div>
 
 <!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
+<div id='cacheUpgradeQuality' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Cache Upgrade Quality</h2>
 		<p>
@@ -72,7 +81,7 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Quality</button>
 	</form>
 </div>
-<div class='inputCard'>
+<div id='cacheResize' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>HLS Size</h2>
 		<p>
@@ -99,7 +108,7 @@ include("settingsHeader.php");
 
 
 <!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
+<div id='cacheFramerate' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>HLS FrameRate</h2>
 		<p>
@@ -126,7 +135,7 @@ include("settingsHeader.php");
 </div>
 
 <!-- create the theme picker based on installed themes -->
-<div class='inputCard'>
+<div id='cacheDelay' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Cache Time</h2>
 		<p>

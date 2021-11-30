@@ -11,15 +11,47 @@
 ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
+?>
 
-echo "<div class='settingListCard'>\n";
+<div id='index' class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+		<li><a href='#serverWebsiteSources'>Server Website Sources</a></li>
+		<li><a href='#websiteSources'>Website Sources</a></li>
+		<li><a href='#serverUsernameSources'>Server Username Sources</a></li>
+		<li><a href='#addWebsiteSource'>Add Website Source</a></li>
+		<li><a href='#addUsernameSource'>Add Username Source</a></li>
+		<li><a href='#episodeProcessingLimit'>Episode Processing Limit</a></li>
+		<li><a href='#downloadPath'>Download Path</a></li>
+		<li><a href='#channelProcessingLimit'>Channel Processing Limit</a></li>
+		<li><a href='#channelCacheUpdateDelay'>Channel Cache Update Delay</a></li>
+		<li><a href='#videoFetchTimeLimit'>Video Fetch Time Limit</a></li>
+		<li><a href='#sleepTime'>Sleep Time</a></li>
+	</ul>
+</div>
+
+<?php
+echo "<div id='serverWebsiteSources' class='inputCard'>\n";
 echo "<h2>Server Website Sources</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/ytdl2kodi/sources.cfg");
+/*
+$data = fopen("/etc/ytdl2kodi/sources.cfg",'r');
+if ($data){
+	while (($line = fgets($data)) !== false){
+		if(strpos("#",$line) == 0){
+			echo "<div class='codeCommentLine'>".$line."</div>";
+		}else{
+			echo "<div class='codeLine'>".$line."</div>";
+		}
+	}
+	fclose($data);
+}
+*/
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='websiteSources' class='settingListCard'>";
 echo "<h2>Website Sources</h2>\n";
 $sourceFiles = scandir("/etc/ytdl2kodi/sources.d/");
 //print_r($sourceFiles);
@@ -57,14 +89,14 @@ foreach($sourceFiles as $sourceFile){
 }
 echo "</div>\n";
 
-echo "<div class='settingListCard'>\n";
+echo "<div id='serverUsernameSources' class='settingListCard'>\n";
 echo "<h2>Server Username Sources</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/ytdl2kodi/usernameSources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='usernameSources' class='settingListCard'>";
 echo "<h2>Username Sources</h2>\n";
 $sourceFiles = scandir("/etc/ytdl2kodi/usernameSources.d/");
 //print_r($sourceFiles);
@@ -103,7 +135,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='addWebsiteSource' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Website Source</h2>
 <ul>
@@ -122,7 +154,7 @@ foreach($sourceFiles as $sourceFile){
 </form>
 </div>
 
-<div class='inputCard'>
+<div id='addUsernameSource' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Username Source</h2>
 <ul>
@@ -138,7 +170,7 @@ foreach($sourceFiles as $sourceFile){
 </form>
 </div>
 
-<div class='inputCard'>
+<div id='episodeProcessingLimit' class='inputCard'>
 <h2>Episode Processing Limit</h2>
 <ul>
 	<li>
@@ -153,7 +185,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='downloadPath' class='inputCard'>
 <h2>Download Path</h2>
 <ul>
 	<li>
@@ -165,7 +197,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='channelProcessingLimit' class='inputCard'>
 <h2>Channel Processing Limit</h2>
 <ul>
 	<li>
@@ -177,7 +209,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='channelCacheUpdateDelay' class='inputCard'>
 <h2>Channel Cache Update Delay</h2>
 <ul>
 	<li>
@@ -189,7 +221,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='videoFetchTimeLimit' class='inputCard'>
 <h2>Video Fetch Time Limit</h2>
 <ul>
 	<li>
@@ -201,7 +233,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div class='inputCard'>
+<div id='sleepTime' class='inputCard'>
 <h2>Sleep Time</h2>
 <ul>
 	<li>

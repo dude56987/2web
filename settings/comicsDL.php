@@ -11,15 +11,33 @@
 ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
+?>
+<div class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+		<li><a href='#addComicDownloadLink'>Add Comic Download Link</a></li>
+		<li><a href='#serverDownloadLinkConfig'>Server Download Link Config</a></li>
+		<li><a href='#currentLinks'>Current Links</a></li>
+	</ul>
+</div>
 
-echo "<div class='settingListCard'>\n";
+<div id='addComicDownloadLink' class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Add Comic Download Link</h2>
+<input width='60%' type='text' name='addComic' placeholder='http://link.com/test'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+<?PHP
+echo "<div id='serverDownloadLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Comic Download Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/comic2web/sources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
+echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
 $sourceFiles = scandir("/etc/comic2web/sources.d/");
 //print_r($sourceFiles);
@@ -60,14 +78,6 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Comic Download Link</h2>
-<input width='60%' type='text' name='addComic' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
-</form>
 </div>
 
 </body>
