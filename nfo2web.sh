@@ -1092,7 +1092,7 @@ processEpisode(){
 				echo -e "}else{"
 				echo
 				echo -e "<?PHP"
-				echo -e "echo \"video.src = 'RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
+				echo -e "echo \"video.src = '/RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
 				echo -e "?>"
 				echo -e ""
 				echo -e "}"
@@ -1111,6 +1111,11 @@ processEpisode(){
 				echo "<a class='button hardLink' href='$ytLink'>"
 				echo "	Hard Link"
 				echo "</a>"
+
+				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
+				echo "	Play All"
+				echo "</a>"
+
 				echo "<div class='aired'>"
 				echo "$episodeAired"
 				echo "</div>"
@@ -1136,6 +1141,11 @@ processEpisode(){
 					echo "Hard Link"
 					echo "</a>"
 				fi
+
+				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
+				echo "	Play All"
+				echo "</a>"
+
 				echo "<div class='aired'>"
 				echo "$episodeAired"
 				echo "</div>"
@@ -1153,6 +1163,9 @@ processEpisode(){
 				# create a hard link
 				echo "<a class='button hardLink' href='$episodePath$sufix'>"
 				echo "Hard Link"
+				echo "</a>"
+				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
+				echo "	Play All"
 				echo "</a>"
 				echo "<div class='aired'>"
 				echo "$episodeAired"
@@ -1974,6 +1987,7 @@ main(){
 		linkFile "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		linkFile "/usr/share/mms/link.php" "$webDirectory/link.php"
 		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+		linkFile "/usr/share/mms/m3u-gen.php" "$webDirectory/m3u-gen.php"
 		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
 		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		################################################################################
@@ -2078,33 +2092,33 @@ main(){
 		echo "$libaries" | while read libary;do
 			# check if the libary directory exists
 			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
-			echo "Check if directory exists at $libary"
+			INFO "Check if directory exists at '$libary'"
 			if [ -e "$libary" ];then
-				addToLog "INFO" "Starting library scan" "$libary" "$logPagePath"
-				echo "[INFO]: library exists at '$libary'"
+				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
+				INFO "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				for show in "$libary"/*;do
-					echo "[INFO]: show path = '$show'"
+					INFO "show path = '$show'"
 					################################################################################
 					# process page metadata
 					################################################################################
 					# if the show directory contains a nfo file defining the show
-					echo "[INFO]: searching for metadata at '$show/tvshow.nfo'"
+					INFO "searching for metadata at '$show/tvshow.nfo'"
 					if [ -f "$show/tvshow.nfo" ];then
-						echo "[INFO]: found metadata at '$show/tvshow.nfo'"
+						INFO "found metadata at '$show/tvshow.nfo'"
 						# load update the tvshow.nfo file and get the metadata required for
 						showMeta=$(cat "$show/tvshow.nfo")
 						showTitle=$(ripXmlTag "$showMeta" "title")
-						echo "[INFO]: showTitle = '$showTitle'"
+						INFO "showTitle = '$showTitle'"
 						showTitle=$(cleanText "$showTitle")
-						echo "[INFO]: showTitle after cleanText() = '$showTitle'"
+						INFO "showTitle after cleanText() = '$showTitle'"
 						if echo "$showMeta" | grep "<tvshow>";then
 							# make sure show has episodes
 							if ls "$show"/*/*.nfo;then
 								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 								# write log info from show to the log, this must be done here to keep ordering
 								# of the log and to make log show even when the state of the show is unchanged
-								echo "[INFO]: Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
+								INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
 								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
 
 							else

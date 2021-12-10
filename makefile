@@ -198,6 +198,7 @@ build-deb:
 	cp link.php debian/usr/share/mms/link.php
 	# copy the resolvers
 	cp ytdl-resolver.php debian/usr/share/mms/
+	cp m3u-gen.php debian/usr/share/mms/
 	cp stream.php debian/usr/share/mms/
 	cp 404.php debian/usr/share/mms/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
