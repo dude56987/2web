@@ -17,9 +17,27 @@ include("settingsHeader.php");
 <div id='update' class='inputCard'>
 	<h2>Update</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<button class='button' type='submit' name='update_nfo' value='true'>UPDATE NFO</button>
-		<button class='button' type='submit' name='update_iptv' value='true'>UPDATE IPTV</button>
-		<button class='button' type='submit' name='update_comics' value='true'>UPDATE COMICS</button>
+		<div class=''>
+			<button class='button' type='submit' name='all_update' value='true'>UPDATE ALL</button>
+			<button class='button' type='submit' name='all_webgen' value='true'>WEBGEN ALL</button>
+		</div>
+
+		<div class=''>
+			<button class='button' type='submit' name='nfo_update' value='true'>UPDATE NFO</button>
+			<button class='button' type='submit' name='nfo_webgen' value='true'>NFO WEBGEN</button>
+		</div>
+
+		<div class=''>
+			<button class='button' type='submit' name='iptv_update' value='true'>UPDATE IPTV</button>
+			<button class='button' type='submit' name='iptv_webgen' value='true'>IPTV WEBGEN</button>
+		</div>
+
+		<div class=''>
+			<button class='button' type='submit' name='comic_update' value='true'>UPDATE COMICS</button>
+			<button class='button' type='submit' name='comic_webgen' value='true'>COMICS WEBGEN</button>
+		</div>
+
+
 	</form>
 </div>
 <!-- create the theme picker based on installed themes -->

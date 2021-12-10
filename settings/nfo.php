@@ -32,7 +32,7 @@ echo "</div>";
 
 echo "<div id='libaryPaths' class='settingListCard'>";
 echo "<h2>Libary Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/nfo2web/libaries.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -1 /etc/nfo2web/libaries.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 # write each config file as a editable entry

@@ -32,21 +32,53 @@ function countdown($countdownTime){
 	sleep(1);
 }
 # try to process the link to be added
-if (array_key_exists("update_nfo",$_POST)){
+#
+#
+if (array_key_exists("all_update",$_POST)){
+	echo "Scheduling 2web update!<br>\n";
+	shell_exec("echo '2web update' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("all_webgen",$_POST)){
+	echo "Scheduling 2web update!<br>\n";
+	shell_exec("echo '2web webgen' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("nfo_update",$_POST)){
 	echo "Scheduling nfo update!<br>\n";
-	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
+	shell_exec("echo 'nfo2web update' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("update_iptv",$_POST)){
+}else if (array_key_exists("nfo_webgen",$_POST)){
+	echo "Scheduling nfo2web update!<br>\n";
+	shell_exec("echo 'nfo2web webgen' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("iptv_update",$_POST)){
 	echo "Scheduling iptv2web update!<br>\n";
-	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
+	shell_exec("echo 'iptv2web update' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("update_comics",$_POST)){
+}else if (array_key_exists("iptv_webgen",$_POST)){
+	echo "Scheduling iptv2web update!<br>\n";
+	shell_exec("echo 'iptv2web webgen' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("comic_update",$_POST)){
 	echo "Scheduling comic2web update!<br>\n";
-	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
+	shell_exec("echo 'comic2web update' | /usr/bin/at -q b now");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("comic_webgen",$_POST)){
+	echo "Scheduling comic2web update!<br>\n";
+	shell_exec("echo 'comic2web webgen' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
