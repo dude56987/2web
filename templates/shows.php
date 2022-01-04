@@ -27,9 +27,7 @@ include("../updatedShows.index");
 <div class='settingListCard'>
 <?php
 // get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/shows/*/shows.index | sort"));
-// reverse the time sort
-$sourceFiles = array_reverse($sourceFiles);
+$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/shows/*/shows.index"));
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
 	if (file_exists($sourceFile)){
@@ -39,6 +37,8 @@ foreach($sourceFiles as $sourceFile){
 				$data=file_get_contents($sourceFile);
 				// write the index entry
 				echo "$data";
+				flush();
+				ob_flush();
 			}
 		}
 	}

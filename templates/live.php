@@ -28,6 +28,7 @@ include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
 
 <div class='titleCard'>
 	<h1>Groups</h1>
+	<div class='listCard'>
 <?php
 // find all the groups
 $sourceFiles=scandir("/var/cache/nfo2web/web/live/groups/");
@@ -40,6 +41,7 @@ foreach($sourceFiles as $sourceFile){
 	echo "	</a>";
 }
 ?>
+	</div>
 	<hr>
 	<div class="filterButtonBox">
 		<input type="button" class="button liveFilter" value="📺 TV" onclick="filterByClass('indexLink','📺')">
@@ -51,19 +53,43 @@ foreach($sourceFiles as $sourceFile){
 
 <div class='settingListCard'>
 <?php
-// get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",file_get_contents("channels.m3u"));
-// reverse the time sort
-//$sourceFiles = array_reverse($sourceFiles);
-foreach($sourceFiles as $sourceFile){
-	if ( ! strpos($sourceFile,"#EXTINF")){
-		$sourceFileName = md5($sourceFile);
-		if (file_exists("channel_".$sourceFileName.".index")){
-			if (is_file("channel_".$sourceFileName.".index")){
-				// read the index entry
-				$data=file_get_contents("channel_".$sourceFileName.".index");
-				// write the index entry
-				echo "$data";
+if(file_exists("channels.m3u")){
+	// get a list of all the genetrated index links for the page
+	$sourceFiles = explode("\n",file_get_contents("channels.m3u"));
+	// reverse the time sort
+	//$sourceFiles = array_reverse($sourceFiles);
+	foreach($sourceFiles as $sourceFile){
+		if ( ! strpos($sourceFile,"#EXTINF")){
+			$sourceFileName = md5($sourceFile);
+			if (file_exists("channel_".$sourceFileName.".index")){
+				if (is_file("channel_".$sourceFileName.".index")){
+					// read the index entry
+					$data=file_get_contents("channel_".$sourceFileName.".index");
+					// write the index entry
+					echo "$data";
+					flush();
+					ob_flush();
+				}
+			}
+		}
+	}
+}else{
+	// get a list of all the genetrated index links for the page
+	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/live/channel_*.index | sort"));
+	// reverse the time sort
+	$sourceFiles = array_reverse($sourceFiles);
+	foreach($sourceFiles as $sourceFile){
+		$sourceFileName = $sourceFile;
+		if (file_exists($sourceFile)){
+			if (is_file($sourceFile)){
+				if (strpos($sourceFile,".index")){
+					// read the index entry
+					$data=file_get_contents($sourceFile);
+					// write the index entry
+					echo "$data";
+					flush();
+					ob_flush();
+				}
 			}
 		}
 	}

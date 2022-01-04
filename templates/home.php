@@ -1,11 +1,7 @@
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='style.css'>
-<script>
-	<?php
-		include("nfo2web.js");
-	?>
-</script>
+	<script src='/nfo2web.js'></script>
 </head>
 <body>
 
@@ -26,8 +22,6 @@
 	if (file_exists("shows")){
 		if (file_exists("updatedShows.php")){
 			include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
-		}else{
-			echo("<h2>Show index is still being built...<h2>");
 		}
 	}
 	if (file_exists("movies")){

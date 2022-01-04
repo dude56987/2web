@@ -27,7 +27,7 @@ include("../updatedMovies.index");
 <div class='settingListCard'>
 <?php
 // get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/movies/*/movies.index | sort"));
+$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/movies/*/movies.index"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 foreach($sourceFiles as $sourceFile){
@@ -39,6 +39,8 @@ foreach($sourceFiles as $sourceFile){
 				$data=file_get_contents($sourceFile);
 				// write the index entry
 				echo "$data";
+				flush();
+				ob_flush();
 			}
 		}
 	}

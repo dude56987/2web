@@ -48,5 +48,8 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+// flush the buffer
+flush();
+ob_flush();
 ?>
 

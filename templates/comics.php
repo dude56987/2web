@@ -42,6 +42,8 @@
 					$data=file_get_contents($sourceFile);
 					// write the index entry
 					echo "$data";
+					flush();
+					ob_flush();
 				}
 			}
 		}

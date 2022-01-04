@@ -387,15 +387,12 @@ processMovie(){
 			echo "<link rel='stylesheet' href='style.css' />"
 			echo "<style>"
 			echo "$tempStyle"
-			#cat /usr/share/nfo2web/style.css
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
-			#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 			echo "<?PHP";
 			echo "include('../../header.php')";
 			echo "?>";
-			#sed "s/href='/href='..\/..\//g" < "$headerPagePath"
 			echo "<div class='titleCard'>"
 			echo "<h1>$movieTitle</h1>"
 			echo "</div>"
@@ -634,7 +631,6 @@ processMovie(){
 		fi
 		{
 			# add footer
-			#sed "s/href='/href='..\/..\//g" < "$headerPagePath"
 			echo "<?PHP";
 			echo "include('../../header.php')";
 			echo "?>";
@@ -783,6 +779,7 @@ checkForThumbnail(){
 }
 ########################################################################
 processEpisode(){
+	# episode is the path to the episode nfo file
 	episode="$1"
 	episodeShowTitle="$2"
 	showPagePath="$3"
@@ -839,15 +836,25 @@ processEpisode(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
-		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js";then
-			# link in missing hls libary from live subdirectory
-			linkFile "$webDirectory/live/hls.js" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/hls.js"
-		fi
+
 		# check the episode has not already been processed
 		if [ -f "$episodePagePath" ];then
 			# if this episode has already been processed by the system then skip processeing it with this function
 			# - this also prevents caching below done for new cacheable videos
 			return
+		fi
+		# with  the check out of the way write the episode data gathered for website php
+		if test -d "$webDirectory/shows/$episodeShowTitle/data/";then
+			mkdir "$webDirectory/shows/$episodeShowTitle/data/"
+		fi
+		if test -f "$webDirectory/shows/$episodeShowTitle/data/showTitle.index";then
+			echo "$episodeShowTitle" > "$webDirectory/shows/$episodeShowTitle/data/showTitle.index"
+		fi
+		if test -f "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-title.index";then
+			echo "$episodeTitle" > "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-title.index"
+		fi
+		if test -f "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-plot.index";then
+			echo "$episodePlot" > "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-plot.index"
 		fi
 		INFO "Episode page path = '$episodePagePath'"
 		INFO "Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
@@ -951,7 +958,6 @@ processEpisode(){
 		{
 			# the style variable must be set inline, not in head, this may be a bug in firefox
 			echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
-			#echo "<html id='top' class='seriesBackground' >"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='style.css' />"
 			echo "<style>"
@@ -960,7 +966,6 @@ processEpisode(){
 			echo "</style>"
 			echo "</head>"
 			echo "<body>"
-			#cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "<?PHP";
 			echo "include('../../../header.php')";
 			echo "?>";
@@ -1179,7 +1184,6 @@ processEpisode(){
 			echo "<?PHP";
 			echo "include('../../../header.php')";
 			echo "?>";
-			#cat "$headerPagePath" | sed "s/href='/href='..\/..\/..\//g"
 			echo "</body>"
 			echo "</html>"
 		} >> "$episodePagePath"
@@ -1324,7 +1328,7 @@ processShow(){
 	INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
 	INFO "Creating showPagePath = $showPagePath"
-	touch "$showPagePath"
+	#touch "$showPagePath"
 	################################################################################
 	# begin building the html of the page
 	################################################################################
@@ -1356,33 +1360,34 @@ processShow(){
 			fi
 			#tempStyle="html{ background-image: url(\"$fanartPath\") }"
 			# build top of show webpage containing all of the shows meta info
+			linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
 			{
-				#echo "<html id='top' style='$tempStyle'>"
 				echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
 				echo "<head>"
 				echo "<link rel='stylesheet' href='style.css' />"
-				#echo "<style>"
-				#echo "$tempStyle"
-				#cat /usr/share/nfo2web/style.css
-				#echo "</style>"
-				echo "<script>"
-				cat /usr/share/nfo2web/nfo2web.js
-				echo "</script>"
+				echo "<script src='/nfo2web.js'></script>"
 				echo "</head>"
 				echo "<body>"
+				# create top jump button
+				echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
 				echo "<?PHP";
 				echo "include('../../header.php')";
 				echo "?>";
-				#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
 				echo "<div class='titleCard'>"
 				echo "<h1>$showTitle</h1>"
 				echo "</div>"
+
+				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$showTitle\"'>"
+				echo "	Play All"
+				echo "</a>"
+
 				# add the search box
 				echo " <input id='searchBox' class='searchBox' type='text'"
 				echo " onkeyup='filter(\"showPageEpisode\")' placeholder='Search...' >"
 				# add the most recently updated series
 				echo "<div class='episodeList'>"
-			} > "$showPagePath"
+			#} > "$showPagePath"
+			} > /dev/null
 			################################################################################
 			# after processing each season rebuild the show page index entirely
 			for generatedSeason in "$webDirectory/shows/$showTitle"/*;do
@@ -1399,29 +1404,25 @@ processShow(){
 						# read all season indexes
 						cat "$generatedSeason/season.index"
 						echo "</div>"
-					} >> "$showPagePath"
+					#} >> "$showPagePath"
+					} > /dev/null
 				fi
 			done
 			{
 				echo "</div>"
 				echo "<?PHP";
+				# add footer
 				echo "include('../../header.php')";
 				echo "?>";
-				# add footer
-				#cat "$headerPagePath" | sed "s/href='/href='..\/..\//g"
-
-				# create top jump button
-				echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
 				echo "<hr class='topButtonSpace'>"
 				echo "</body>"
 				echo "</html>"
-			} >> "$showPagePath"
+			#} >> "$showPagePath"
+			} > /dev/null
 		else
 			echo "Season folder $season does not exist"
 		fi
 	done
-	# create show index information
-	#showIndexPath="$webDirectory/shows/index.php"
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
@@ -1432,7 +1433,6 @@ processShow(){
 		echo "	</div>"
 		#echo "  </marquee>"
 		echo "</a>"
-	#} >> "$showIndexPath"
 	} > "$webDirectory/shows/$showTitle/shows.index"
 	# update the libary sum
 	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
@@ -1629,7 +1629,6 @@ buildRandomComics(){
 buildHomePage(){
 
 	webDirectory=$1
-	headerPagePath=$2
 
 	INFO "Building home page..."
 	# do not generate stats if website is in process of being updated
@@ -1722,7 +1721,6 @@ getDirSum(){
 ########################################################################
 function buildShowIndex(){
 	webDirectory="$1"
-	headerPagePath="$2"
 	showIndexPath="$webDirectory/shows/index.php"
 	# if the shows index is not a php link or does not exist write it
 	linkFile "/usr/share/mms/templates/shows.php" "$showIndexPath"
@@ -1801,7 +1799,6 @@ scanForRandomBackgrounds(){
 ########################################################################
 function buildMovieIndex(){
 	webDirectory=$1
-	headerPagePath=$2
 	# movie path
 	movieIndexPath="$webDirectory/movies/index.php"
 	linkFile "/usr/share/mms/templates/movies.php" "$movieIndexPath"
@@ -1900,10 +1897,13 @@ main(){
 		echo "  This will delete the cached website."
 		echo "########################################################################"
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		echo "[INFO]: Reseting web cache states..."
-		rm -rv $(webRoot)/*/*/state_*.cfg
+		echo "[INFO]: R eseting web cache states..."
+		# verbose removal of found files allows files to be visible as they are removed
+		find "$(webRoot)/shows/" -type f -name 'state_*.cfg' -exec rm -v {} \;
+		find "$(webRoot)/movies/" -type f -name 'state_*.cfg' -exec rm -v {} \;
 		echo "[INFO]: Reseting web log for individual shows/movies..."
-		rm -rv $(webRoot)/*/*/log.index
+		find "$(webRoot)/shows/" -type f -name 'log.index' -exec rm -v {} \;
+		find "$(webRoot)/movies/" -type f -name 'log.index' -exec rm -v {} \;
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
@@ -2041,29 +2041,22 @@ main(){
 		headerPagePath="$webDirectory/header.php"
 		showIndexPath="$webDirectory/shows/index.php"
 		movieIndexPath="$webDirectory/movies/index.php"
-		touch "$showIndexPath"
-		touch "$movieIndexPath"
-		touch "$headerPagePath"
+		#touch "$showIndexPath"
+		#touch "$movieIndexPath"
 		touch "$logPagePath"
 		#touch "$homePagePath"
 		# check for the header
-		if ! test -L "$webDirectory/header.php";then
-			linkFile "/usr/share/mms/templates/header.php" "$webDirectory/header.php"
-		fi
+		linkFile "/usr/share/mms/templates/header.php" "$headerPagePath"
 		# build log page
 		{
 			echo "<html id='top' class='randomFanart'>"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='style.css' />"
 			echo "<style>"
-			# cat /usr/share/nfo2web/style.css
 			echo "</style>"
-			echo "<script>"
-			cat /usr/share/nfo2web/nfo2web.js
-			echo "</script>"
+			echo "<script src='/nfo2web.js'></script>"
 			echo "</head>"
 			echo "<body>"
-			#cat "$headerPagePath"
 			echo "<?PHP";
 			echo "include('header.php');";
 			echo "include('settingsHeader.php');";
@@ -2084,7 +2077,6 @@ main(){
 			echo "<table>"
 		} > "$logPagePath"
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-		#buildHomePage "$webDirectory" "$headerPagePath" --in-progress
 		IFS_BACKUP=$IFS
 		IFS=$(echo -e "\n")
 		# read each libary from the libary config, single path per line
@@ -2132,60 +2124,10 @@ main(){
 					elif grep "<movie>" "$show"/*.nfo;then
 						# this is a move directory not a show
 						processMovie "$show" "$webDirectory"
-						#buildMovieIndex
 					fi
 				done
-				# rebuild the homepage after processing each existing libary item
-				#buildHomePage "$webDirectory" "$headerPagePath" --in-progress
 			fi
-			#images=""
-			#if find "$webDirectory/movies/" -name "poster.png";then
-			#	echo "[INFO]: Found movie posters in PNG format"
-			#	images="$images $(find "$webDirectory/movies/" -name "poster.png" -printf '"%p" ')"
-			#	echo "[DEBUG]: images 1 = $images"
-			#fi
-			#if find "$webDirectory/shows/" -name "poster.png";then
-			#	echo "[INFO]: Found show posters in PNG format"
-			#	images="$images $(find "$webDirectory/shows/" -name "poster.png" -printf '"%p" ')"
-			#	echo "[DEBUG]: images 2 = $images"
-			#fi
-			#if find "$webDirectory/shows/" -name "poster.jpg";then
-			#	echo "[INFO]: Found show posters in JPG format"
-			#	images="$images $(find "$webDirectory/shows/" -name "poster.jpg" -printf '"%p" ')"
-			#	echo "[DEBUG]: images 3 = $images"
-			#fi
-			#if find "$webDirectory/movies/" -name "poster.jpg";then
-			#	echo "[INFO]: Found movie posters in JPG format"
-			#	images="$images $(find "$webDirectory/movies/" -name "poster.jpg" -printf '"%p" ')"
-			#	echo "[DEBUG]: images 4 = $images"
-			#fi
-			# shuffle the list of images
-			#images=$(echo "$images" | shuf)
-			#tempFiles=""
-			#for imageFile in $images;do
-			#	tempFiles="$tempFiles -texture '$imageFile'"
-			#done
-			#echo "[DEBUG]: images 5 = $images"
-			#tempFiles=$(echo "$images" | sed "s/\"\ /\" -texture /g")
-			# build poster list
-			#images=$(find "$webDirectory/" -name "poster.[jpg|png]" -printf "%p " | shuf)
-			#echo "[DEBUG]: images 5 = $images"
-			# create the homepage background after processing each libary location
-			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid \
-			#montage -geometry +0+0 -alpha on -blur 100.5 -background none \
-			#	"$webDirectory"/shows/*/poster.png \
-			#	"$webDirectory"/shows/*/poster.jpg \
-			#	"$webDirectory"/movies/*/poster.png \
-			#	"$webDirectory"/movies/*/poster.jpg \
-			#	"$webDirectory/background.png"
-			# ------------------------------------------------------------------ #
-			#	"$webDirectory"/shows/*/*/*.png \
-			#	"$webDirectory"/shows/*/*/*.jpg \
-			#	$(find "$webDirectory/movies/" -name "poster.jpg" -printf '"%p" ') \
-			#	$(find "$webDirectory/shows/" -name "poster.jpg" -printf '"%p" ') \
-			#	"$webDirectory/background.png"
-			#echo "[DEBUG]: montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles '$webDirectory/background.png'"
-			#montage -geometry -15-15 -alpha on -blur 1.5 -background none -tile 5x4 +polaroid $tempFiles "$webDirectory/background.png"
+			# update random backgrounds
 			scanForRandomBackgrounds "$webDirectory"
 		done
 		# add the end to the log, add the jump to top button and finish out the html
@@ -2194,7 +2136,6 @@ main(){
 			echo "</table>"
 			echo "</div>"
 			# add footer
-			#cat "$headerPagePath"
 			echo "<?PHP";
 			echo "include('header.php')";
 			echo "?>";
@@ -2206,11 +2147,11 @@ main(){
 		} >> "$logPagePath"
 		# create the final index pages, these should not have the progress indicator
 		# build the final version of the homepage without the progress indicator
-		buildHomePage "$webDirectory" "$headerPagePath"
+		buildHomePage "$webDirectory"
 		# build the movie index
-		buildMovieIndex "$webDirectory" "$headerPagePath"
+		buildMovieIndex "$webDirectory"
 		# build the show index
-		buildShowIndex "$webDirectory" "$headerPagePath"
+		buildShowIndex "$webDirectory"
 		# write the md5sum state of the libary for change checking
 		#echo "$libarySum" > "$webDirectory/state.cfg"
 		#getLibSum > "$webDirectory/state.cfg"
