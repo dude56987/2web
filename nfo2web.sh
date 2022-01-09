@@ -384,7 +384,7 @@ processMovie(){
 		{
 			echo "<html id='top'>"
 			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
+			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
 			echo "$tempStyle"
 			echo "</style>"
@@ -498,10 +498,11 @@ processMovie(){
 						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
 						thumbnailExt=".png"
 						# download the thumbnail
+						downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
 						#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-						if ! test -f "$thumbnailPath$thumbnailExt";then
-							curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
-						fi
+						#if ! test -f "$thumbnailPath$thumbnailExt";then
+						#	curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+						#fi
 						# generate the web thumbnail
 						convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
 						# link the downloaded thumbnail
@@ -672,6 +673,17 @@ getThumbnailExt(){
 	return 0
 }
 ########################################################################
+downloadThumbnail(){
+	thumbnailLink=$1
+	thumbnailPath=$2
+	thumbnailExt=$3
+	# if the link has already been downloaded then dont download it
+	if ! test -f "$thumbnailPath$thumbnailExt";then
+		# if it dont exist download it
+		curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+	fi
+}
+########################################################################
 checkForThumbnail(){
 	#checkForThumbnail $episode
 	thumbnail=$1
@@ -708,10 +720,11 @@ checkForThumbnail(){
 				addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
 				thumbnailExt=".png"
 				# download the thumbnail
+				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
 				#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-				if ! test -f "$thumbnailPath$thumbnailExt";then
-					curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
-				fi
+				#if ! test -f "$thumbnailPath$thumbnailExt";then
+				#	curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+				#fi
 				# link the downloaded thumbnail
 				linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 			fi
@@ -959,7 +972,7 @@ processEpisode(){
 			# the style variable must be set inline, not in head, this may be a bug in firefox
 			echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
 			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
+			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
 			#add the fanart
 			#echo "$tempStyle"
@@ -970,7 +983,7 @@ processEpisode(){
 			echo "include('../../../header.php')";
 			echo "?>";
 			echo "<div class='titleCard'>"
-			echo "<h1>$episodeShowTitle ${episodeSeason}x${episodeNumber}</h1>"
+			echo "<h1><a href='/shows/$episodeShowTitle/'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
@@ -1060,56 +1073,6 @@ processEpisode(){
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
 			fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
 			{
-				echo -e "<script src='hls.js'></script>"
-				echo -e "<video id='video' class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls autoplay>"
-				#echo -e "<source src='$fullRedirect' type='video/mp4'>"
-				echo -e "<?PHP"
-				#echo -e "<source src='<?PHP md5(\"$ytLink\") ?>.mp4' type='video/mp4'>"
-				echo -e "echo '<source src=\"RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\">';"
-				echo -e "?>"
-				#echo -e "echo \"video.src = 'RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
-				echo -e "</video>"
-				echo -e "<script>"
-				echo -e "var video = document.getElementById('video');"
-				echo -e "var videoSrc = '$fullRedirect';"
-				echo
-				echo -e "	if (video.canPlayType('application/vnd.apple.mpegurl')) {"
-				echo -e "		video.src = videoSrc;"
-				echo
-				echo -e "		video.addEventListener('canplay',function() {"
-				echo -e "			video.play();"
-				echo -e "		});"
-				echo
-				echo -e "}else if(Hls.isSupported()) {"
-				echo
-				echo -e "		var hls = new Hls({"
-				echo -e "			debug: true;"
-				echo -e "		});"
-				echo
-				echo -e "		hls.loadSource(videoSrc);"
-				echo -e "		hls.attachMedia(video);"
-				echo
-				echo -e "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {"
-				echo -e "			video.muted = true;"
-				echo -e "			video.play();"
-				echo -e "		});"
-				echo
-				echo -e "}else{"
-				echo
-				echo -e "<?PHP"
-				echo -e "echo \"video.src = '/RESOLVER-CACHE/'.md5('$ytLink').'.mp4'\""
-				echo -e "?>"
-				echo -e ""
-				echo -e "}"
-				echo -e "</script>"
-			#} >> "$episodePagePath"
-			} >> /dev/null
-			#{
-			#	echo "<video id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-			#	echo "<source src='$fullRedirect' type='video/mp4'>"
-			#	echo "</video>"
-			#} >> "$episodePagePath"
-			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
@@ -1127,7 +1090,6 @@ processEpisode(){
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
-			#echo "$videoPath" tr -d 'plugin://plugin.video.youtube/play/?video_id='
 		elif echo "$videoPath" | grep "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
@@ -1190,31 +1152,23 @@ processEpisode(){
 		################################################################################
 		# add the episode to the show page
 		################################################################################
-		if [ $episodeNumber -eq 1 ];then
-			{
-				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.php'>"
-				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb-web.png'>"
-				#echo "  <marquee direction='up' scrolldelay='100'>"
-				echo "	<h3 class='title'>"
-				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
-				echo "		$episodeTitle"
-				echo "	</h3>"
-				#echo "  </marquee>"
-				echo "</a>"
-			} > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		tempEpisodeSeasonThumb="<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<h3 class='title'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n		$episodeTitle"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</h3>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
+
+		if [ "$episodeNumber" -eq 1 ];then
+			echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		else
-			{
-				echo "<a class='showPageEpisode' href='$episodeSeasonPath/$episodePath.php'>"
-				echo "	<img loading='lazy' src='$episodeSeasonPath/$episodePath-thumb-web.png'>"
-				#echo "  <marquee direction='up' scrolldelay='100'>"
-				echo "	<h3 class='title'>"
-				echo "		<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
-				echo "		$episodeTitle"
-				echo "	</h3>"
-				#echo "  </marquee>"
-				echo "</a>"
-			} >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+			echo -ne "$tempEpisodeSeasonThumb" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		fi
+
+		# write the episode index file
+		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
+
 	else
 		echo "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1361,64 +1315,6 @@ processShow(){
 			#tempStyle="html{ background-image: url(\"$fanartPath\") }"
 			# build top of show webpage containing all of the shows meta info
 			linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
-			{
-				echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
-				echo "<head>"
-				echo "<link rel='stylesheet' href='style.css' />"
-				echo "<script src='/nfo2web.js'></script>"
-				echo "</head>"
-				echo "<body>"
-				# create top jump button
-				echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
-				echo "<?PHP";
-				echo "include('../../header.php')";
-				echo "?>";
-				echo "<div class='titleCard'>"
-				echo "<h1>$showTitle</h1>"
-				echo "</div>"
-
-				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$showTitle\"'>"
-				echo "	Play All"
-				echo "</a>"
-
-				# add the search box
-				echo " <input id='searchBox' class='searchBox' type='text'"
-				echo " onkeyup='filter(\"showPageEpisode\")' placeholder='Search...' >"
-				# add the most recently updated series
-				echo "<div class='episodeList'>"
-			#} > "$showPagePath"
-			} > /dev/null
-			################################################################################
-			# after processing each season rebuild the show page index entirely
-			for generatedSeason in "$webDirectory/shows/$showTitle"/*;do
-				if [ -f "$generatedSeason/season.index" ];then
-					tempSeasonName=$(echo "$generatedSeason" | rev | cut -d'/' -f1 | rev)
-					{
-						echo "<div class='seasonContainer'>"
-						echo "<div class='seasonHeader'>"
-						echo "	<h2>"
-						echo "		$tempSeasonName"
-						echo "	</h2>"
-						echo "</div>"
-						echo "<hr>"
-						# read all season indexes
-						cat "$generatedSeason/season.index"
-						echo "</div>"
-					#} >> "$showPagePath"
-					} > /dev/null
-				fi
-			done
-			{
-				echo "</div>"
-				echo "<?PHP";
-				# add footer
-				echo "include('../../header.php')";
-				echo "?>";
-				echo "<hr class='topButtonSpace'>"
-				echo "</body>"
-				echo "</html>"
-			#} >> "$showPagePath"
-			} > /dev/null
 		else
 			echo "Season folder $season does not exist"
 		fi
@@ -1707,6 +1603,7 @@ buildHomePage(){
 	linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
 	linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
 	linkFile "/usr/share/mms/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
+	linkFile "/usr/share/mms/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 }
 ########################################################################
 getDirSum(){
@@ -1902,8 +1799,15 @@ main(){
 		find "$(webRoot)/shows/" -type f -name 'state_*.cfg' -exec rm -v {} \;
 		find "$(webRoot)/movies/" -type f -name 'state_*.cfg' -exec rm -v {} \;
 		echo "[INFO]: Reseting web log for individual shows/movies..."
-		find "$(webRoot)/shows/" -type f -name 'log.index' -exec rm -v {} \;
-		find "$(webRoot)/movies/" -type f -name 'log.index' -exec rm -v {} \;
+		find "$(webRoot)/movies/"  -mindepth 1 -type f -name 'log.index' -exec rm -v {} \;
+		find "$(webRoot)/shows/"  -mindepth 2 -type f -name 'log.index' -exec rm -v {} \;
+		# remove all individual episode files that lock rebuilding of the episode data
+		echo "[INFO]: Reseting video player pages shows/movies..."
+		find "$(webRoot)/movies/" -mindepth 1 -type f -name '*.php' -exec rm -v {} \;
+		find "$(webRoot)/shows/" -mindepth 2  -type f -name '*.php' -exec rm -v {} \;
+		# remove cached m3u files
+		echo "[INFO]: Reseting m3u playlist cache..."
+		find "$(webRoot)/m3u_cache/" -type f -name '*.m3u' -exec rm -v {} \;
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
@@ -1964,14 +1868,22 @@ main(){
 			trap "rm -v /tmp/nfo2web.active" EXIT
 		fi
 		# make sure the directories exist and have correct permissions, also link stylesheets
-		mkdir -p "$webDirectory"
-		chown -R www-data:www-data "$webDirectory"
-		mkdir -p "$webDirectory/shows/"
-		chown -R www-data:www-data "$webDirectory/shows/"
-		mkdir -p "$webDirectory/movies/"
-		chown -R www-data:www-data "$webDirectory/movies/"
-		mkdir -p "$webDirectory/kodi/"
-		chown -R www-data:www-data "$webDirectory/kodi/"
+		if ! test -d "$webDirectory/";then
+			mkdir -p "$webDirectory"
+			chown -R www-data:www-data "$webDirectory"
+		fi
+		if ! test -d "$webDirectory/shows/";then
+			mkdir -p "$webDirectory/shows/"
+			chown -R www-data:www-data "$webDirectory/shows/"
+		fi
+		if ! test -d "$webDirectory/movies/";then
+			mkdir -p "$webDirectory/movies/"
+			chown -R www-data:www-data "$webDirectory/movies/"
+		fi
+		if ! test -d "$webDirectory/kodi/";then
+			mkdir -p "$webDirectory/kodi/"
+			chown -R www-data:www-data "$webDirectory/kodi/"
+		fi
 		# link the settings scripts
 		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
 		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
@@ -1989,8 +1901,37 @@ main(){
 		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		linkFile "/usr/share/mms/m3u-gen.php" "$webDirectory/m3u-gen.php"
 		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
+		linkFile "/usr/share/mms/401.php" "$webDirectory/401.php"
 		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
+		# link homepage
+		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+		# link lists these can be built and rebuilt during libary update
+		linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
+		linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
+		linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
+		linkFile "/usr/share/mms/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
+		linkFile "/usr/share/mms/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 		################################################################################
+		# build the login users file
+		counter=0
+		#find '/etc/2web/users/' -name '*.cfg' | while read fileName;do
+		#	counter=$(( $counter + 1 ))
+		#	if [ $counter -le 0 ];then
+		#		cat "$fileName" > "/var/cache/nfo2web/htpasswd.cfg"
+		#		echo -ne "\n" >> "/var/cache/nfo2web/htpasswd.cfg"
+		#	else
+		#		cat "$fileName" >> "/var/cache/nfo2web/htpasswd.cfg"
+		#		echo -ne "\n" >> "/var/cache/nfo2web/htpasswd.cfg"
+		#	fi
+		#done
+		if [ $(cat /etc/2web/users/*.cfg | wc -l ) -gt 0 ];then
+			# if there are any users
+			linkFile "/usr/share/mms/templates/_htaccess" "$webDirectory/.htaccess"
+			cat /etc/2web/users/*.cfg > "/var/cache/nfo2web/htpasswd.cfg"
+		else
+			# if there are no users set in the cfg remove the .htaccess file
+			rm -v "$webDirectory/.htaccess"
+		fi
 
 		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
 			# build the cache directory if none exists
@@ -2030,7 +1971,7 @@ main(){
 		# load the chosen theme
 		theme=$(cat "/etc/mms/theme.cfg")
 		# link the theme and overwrite if another theme is chosen
-		linkFile "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
+		ln -sf "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
 		# link stylesheet
 		linkFile "$webDirectory/style.css" "$webDirectory/movies/style.css"
 		linkFile "$webDirectory/style.css" "$webDirectory/shows/style.css"
@@ -2051,7 +1992,7 @@ main(){
 		{
 			echo "<html id='top' class='randomFanart'>"
 			echo "<head>"
-			echo "<link rel='stylesheet' href='style.css' />"
+			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
 			echo "</style>"
 			echo "<script src='/nfo2web.js'></script>"

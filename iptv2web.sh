@@ -36,6 +36,7 @@ function INFO(){
 	printf "$output\r"
 	#printf "$output\n"
 	# DEBUG sleep
+	#sleep 0.2
 }
 ################################################################################
 function ERROR(){
@@ -105,6 +106,7 @@ examineIconLink(){
 			# build a md5sum from the icon link
 			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
 			if ! test -f "$localIconPath";then
+				INFO "Downloading thumbnail '$iconLink'"
 				#timeout 600 curl "$iconLink" | convert - -adaptive-resize 128x200\! "$localIconPath"
 				# if the file does not exist in the cache download it
 				timeout 120 curl --silent "$iconLink" > "$localIconPath"
@@ -117,6 +119,7 @@ examineIconLink(){
 		# try to download the icon with youtube-dl
 		if ! test -f "$localIconPath";then
 			tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
+			INFO "Downloading thumbnail '$tempIconLlink'"
 			# if the file does not exist in the cache download it
 			timeout 120 curl --silent "$tempIconLink" > "$localIconPath"
 			# resize the icon to standard size
@@ -140,16 +143,19 @@ examineIconLink(){
 			#timeout 30 ffmpeg -y -i "$(streamlink --stream-url "$link" best)" -ss 1 -frames:v 1 "$localIconPath"
 			if ! echo -n "$radio" | grep -q "true";then
 				if streamPass --can-handle-url "$link";then
+					INFO "Downloading thumbnail '$link'"
 					# resolve with streamlink and then screenshot
-					timeout 5 ffmpeg -y -i "$(streamPass --stream-url "$link" best)" -frames:v 1 "$localIconPath"
+					timeout 5 ffmpeg -hide_banner -loglevel quiet -y -i "$(streamPass --stream-url "$link" best)" -frames:v 1 "$localIconPath"
 				else
+					INFO "Downloading thumbnail '$link'"
 					# raw stream screenshot
-					timeout 5 ffmpeg -y -i "$link" -frames:v 1 "$localIconPath"
+					timeout 5 ffmpeg -hide_banner -loglevel quiet -y -i "$link" -frames:v 1 "$localIconPath"
 				fi
 			fi
 			# resize the icon to standard size
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			# add text over retrieved thumbnail
+			ALERT "timeout 600 convert '$localIconPath' -adaptive-resize 200x200\! -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:'$title' -composite '$localIconPath'"
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 		fi
 		killFakeImage "$localIconPath"
@@ -166,7 +172,9 @@ examineIconLink(){
 			timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
 		fi
 		# create the icon thumbnail for the web interface
+		INFO "Creating image thumbnail..."
 		timeout 600 convert "$localIconPath" -adaptive-resize 128x128\! "$localIconThumbPath"
+		INFO "Creating image icon..."
 		timeout 600 convert "$localIconPath" -adaptive-resize 32x32\! "$localIconThumbMiniPath"
 	fi
 }
@@ -365,8 +373,9 @@ function process_M3U(){
 }
 ################################################################################
 linkFile(){
+	# link file if it is a link
 	if ! test -L "$2";then
-		ln -s "$1" "$2"
+		ln -sf "$1" "$2"
 	fi
 }
 ################################################################################
@@ -433,17 +442,17 @@ function processLink(){
 			# generate a md5 from the url for the cache
 			linkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 
-			if cacheCheck "$webDirectory/cache/$linkSum.index" "10";then
+			if cacheCheck "$webDirectory/live/cache/$linkSum.index" "10";then
 				# create the cache directory if it does not exist
-				mkdir -p "$webDirectory/cache/"
+				mkdir -p "$webDirectory/live/cache/"
 				# if no cached file exists
 				# if downloaded file is older than 10 days update it
-				timeout 120 curl --silent "$link" > "$webDirectory/cache/$linkSum.index"
+				timeout 120 curl --silent "$link" > "$webDirectory/live/cache/$linkSum.index"
 			fi
 
 			# if it is a playlist file add it to the list by download
 			#downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
-			downloadedM3U=$(cat "$webDirectory/cache/$linkSum.index")
+			downloadedM3U=$(cat "$webDirectory/live/cache/$linkSum.index")
 			process_M3U "$downloadedM3U" "$webDirectory" "$radioFile"
 		else
 			INFO "Link is Unknown..."
@@ -530,10 +539,14 @@ webRoot(){
 }
 ################################################################################
 webUpdateCheck(){
-	# if the update number is divisible by 400
+	# if the update number is divisible by x
 	if echo "$1 % 50" | bc ;then
 		webGen
 	fi
+}
+################################################################################
+ALERT(){
+	echo "$1";
 }
 ################################################################################
 fullUpdate(){
@@ -580,8 +593,8 @@ fullUpdate(){
 	# for each link in the sources
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
-	echo "#EXTM3U" > $channelsPath
-	echo "#EXTM3U" > $channelsRawPath
+	echo "#EXTM3U" > "$channelsPath"
+	echo "#EXTM3U" > "$channelsRawPath"
 	################################################################################
 	# read video sources
 	################################################################################
@@ -594,7 +607,8 @@ fullUpdate(){
 	processedSources=0
 	# add user created custom local configs first
 	INFO "Adding m3u sources from /etc/iptv2web/sources.d/"
-	find /etc/iptv2web/sources.d/*.m3u -name "*.m3u" -type "f" | while read configFile;do
+	find "/etc/iptv2web/sources.d/" -name '*.m3u' -type 'f' | while read configFile;do
+		ALERT "Adding m3u source from $configFile"
 		# add file to main m3u, exclude description line
 		process_M3U_file "$configFile" "$webDirectory"
 		processedSources=$(($processedSources + 1))
@@ -602,7 +616,8 @@ fullUpdate(){
 		webUpdateCheck "$processedSources"
 	done
 	INFO "Adding m3u8 sources from /etc/iptv2web/sources.d/"
-	find /etc/iptv2web/sources.d/ -name "*.m3u8" -type "f" | while read configFile;do
+	find "/etc/iptv2web/sources.d/" -name '*.m3u8' -type 'f' | while read configFile;do
+		ALERT "Adding m3u8 source from $configFile"
 		# add file to main m3u8, exclude description line
 		process_M3U_file "$configFile" "$webDirectory"
 		processedSources=$(($processedSources + 1))
@@ -612,6 +627,7 @@ fullUpdate(){
 	INFO "Adding /etc/iptv2web/sources.cfg"
 	# read main config m3u sources and merge them
 	loadWithoutComments "/etc/iptv2web/sources.cfg" | while read link;do
+		ALERT "Adding web source from $configFile"
 		processLink "$link" "$channelsPath"
 		processedSources=$(($processedSources + 1))
 		INFO "processing source $processedSources/$totalSources"
@@ -620,7 +636,8 @@ fullUpdate(){
 	# add external sources last
 	INFO "Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
 	# load the config file list
-	find /etc/iptv2web/sources.d/ -name "*.m3u" -type "f" | while read configFile;do
+	find "/etc/iptv2web/sources.d/" -name '*.cfg' -type 'f' | while read configFile;do
+		ALERT "Adding web source from $configFile"
 		# read each config file
 		loadWithoutComments "$configFile" | while read link;do
 			processLink "$link" "$channelsPath"
@@ -634,6 +651,7 @@ fullUpdate(){
 	################################################################################
 	# read main radio config
 	echo -n "$radioLinkList" | while read link;do
+		ALERT "Adding radio source from $link"
 		# process radio link
 		processLink "$link" "$channelsPath" "true"
 		processedSources=$(($processedSources + 1))
@@ -641,8 +659,20 @@ fullUpdate(){
 		webUpdateCheck "$processedSources"
 	done
 	# check for radio sources
-	find /etc/iptv2web/radioSources.d/ -name "*.m3u" -type "f" | while read configFile;do
+	find /etc/iptv2web/radioSources.d/ -name '*.m3u' -type 'f' | while read configFile;do
 		loadWithoutComments "$configFile" | while read link;do
+			ALERT "Adding radio source from $configFile"
+			# process radio link
+			processLink "$link" "$channelsPath" "true"
+			processedSources=$(($processedSources + 1))
+			INFO "processing source $processedSources/$totalSources"
+			webUpdateCheck "$processedSources"
+		done
+	done
+	# check for radio source files
+	find /etc/iptv2web/radioSources.d/ -name '*.cfg' -type 'f' | while read configFile;do
+		loadWithoutComments "$configFile" | while read link;do
+			ALERT "Adding radio source from $configFile"
 			# process radio link
 			processLink "$link" "$channelsPath" "true"
 			processedSources=$(($processedSources + 1))
@@ -656,6 +686,8 @@ fullUpdate(){
 	cp -v "$channelsRawPath" "$channelsRawOutputPath"
 	# generate the finished website
 	webGen
+	# fix any permission errors in the website
+	chown -R www-data:www-data "/var/cache/nfo2web/web/"
 }
 ################################################################################
 function buildPage(){
@@ -695,8 +727,9 @@ function buildPage(){
 	else
 		# build the page but dont write it, this function is intended to be
 		# piped into a file
-		echo -e "$tabs<script src='hls.js'></script>"
-		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' controls autoplay></video>"
+		echo -e "$tabs<script src='/nfo2web.js'></script>"
+		echo -e "$tabs<script src='/live/hls.js'></script>"
+		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' autoplay muted></video>"
 		echo -e "$tabs<script>"
 		echo -e "$tabs	if(Hls.isSupported()) {"
 		echo -e "$tabs		var video = document.getElementById('video');"
@@ -706,7 +739,7 @@ function buildPage(){
 		echo -e "$tabs		hls.loadSource('$link');"
 		echo -e "$tabs		hls.attachMedia(video);"
 		echo -e "$tabs		hls.on(Hls.Events.MEDIA_ATTACHED, function() {"
-		echo -e "$tabs			video.muted = true;"
+		echo -e "$tabs			video.muted = false;"
 		echo -e "$tabs			video.play();"
 		echo -e "$tabs		});"
 		echo -e "$tabs	}"
@@ -725,39 +758,34 @@ function buildPage(){
 function buildGroupPages(){
 	webDirectory=$1
 	################################################################################
-	find "$webDirectory/live/groups/" -type "d" | while read groupPath;do
+	find "$webDirectory/live/groups/" -type 'd' | while read groupPath;do
 		if ! [ "$groupPath" == "$webDirectory/live/groups/" ];then
 			INFO "Building group pages for (groupPath = '$groupPath')"
 			# link assets
-			linkFile "$webDirectory/style.css" "$groupPath"
-			linkFile "$webDirectory/randomFanart.php" "$groupPath"
-			cat "$webDirectory/fanart.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/fanart.cfg"
-			linkFile "$webDirectory/randomPoster.php" "$groupPath"
-			cat "$webDirectory/poster.cfg" | sed "s/^/..\/..\/..\//g" > "$groupPath/poster.cfg"
-			# blank the index file
-			#echo "" > "$groupPath/index.index"
+			linkFile "$webDirectory/style.css" "$groupPath/style.css"
+			linkFile "$webDirectory/randomFanart.php" "$groupPath/randomFanart.php"
+			linkFile "$webDirectory/randomPoster.php" "$groupPath/randomPoster.php"
+			linkFile "$webDirectory/fanart.cfg" "$groupPath/fanart.cfg"
+			linkFile "$webDirectory/poster.cfg" "$groupPath/poster.cfg"
+			# build the group index that lists all the groups
 			{
 				echo "<html id='top' class='liveBackground'>"
 				echo "<head>"
 				echo "<title></title>"
 				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
-				echo "	<script>"
-				cat /usr/share/nfo2web/nfo2web.js
-				echo "	</script>"
+				echo "	<script src='/nfo2web.js'></script>"
 				echo "</head>"
 				echo "<body>"
 				echo "<?PHP";
 				echo "include('../../../header.php')";
 				echo "?>";
-				#echo "$headerData"
 				echo " <input id='searchBox' class='searchBox' type='text'"
 				echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
 				echo "<hr>"
 			} > "$groupPath/index.index"
-			# build the group index that lists all the groups
 			# build the groups
-			groupList=$(find -maxdepth 1 -type "d" "$groupPath")
-			find -L "$groupPath" -type f | while read groupIndex;do
+			groupList=$(find "$groupPath" -maxdepth 1 -type 'd')
+			find -L "$groupPath" -type 'f' | while read groupIndex;do
 				# the .index file is found
 				if echo "$groupIndex" | grep -Eq ".index";then
 					# not index.index
@@ -820,7 +848,7 @@ function buildRadioPage(){
 		# piped into a file
 		# make the background for the audio player the poster of the audio stream
 		customStyle="background-image: url(\"$poster\");"
-		echo -e "$tabs<audio class='livePlayer' style='$customStyle' poster='$poster' controls autoplay>"
+		echo -e "$tabs<audio id='video' class='livePlayer' style='$customStyle' poster='$poster' autoplay muted>"
 		echo -e "$tabs<source src='$link' type='audio/mpeg'>"
 		echo -e "$tabs</audio>"
 	fi
@@ -913,10 +941,11 @@ webGen(){
 				################################################################################
 				{
 					# build the page
-					echo "<html id='top' class='liveBackground'>"
+					echo "<html onload='forcePlay()'  id='top' class='liveBackground'>"
 					echo "<head>"
 					echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
 					echo " <title>$title</title>"
+					echo "	<script src='/nfo2web.js'></script>"
 					echo "</head>"
 					echo "<body>"
 					# place the header
@@ -924,19 +953,61 @@ webGen(){
 					echo "include('../header.php')";
 					echo "?>";
 					echo "<div class='listCard'>";
+					echo "<div id='videoPlayerContainer'>";
 					if echo "$lineCaught" | grep -Eq "radio=[\",']true";then
 						buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
 					else
 						buildPage "$title" "$link" "$iconLink" "\t\t\t"
 					fi
+					echo "<div class='videoPlayerControls'>"
+					# play
+					echo "<button id='playButton' class='button' style='display:none;' onclick='playPause()' alt='play'>&#9654;</button>"
+					# pause
+					echo "<button id='pauseButton' class='button' onclick='playPause()' alt='pause'>&#9208;</button>"
+					#echo "<input type='range' onload='startVideoUpdateLoop()' id='videoPositionBar' value='0' />"
+					#echo "<a class='button' onclick='stopVideo()'>Stop</a>"
+					#echo "<a class='button' onclick='reloadVideo()'>Replay</a>"
+					# volume controls
+					echo "<span>"
+					echo "<button class='button' onclick='volumeDown()'>&#128264;</button>"
+					echo "<span id='currentVolume'>100</span>%"
+					echo "<button class='button' onclick='volumeUp()'>&#128266;</button>"
+					#echo "<span>"
+					# mute
+					#echo "<a id='muteButton' class='button' onclick='muteUnMute()'>Mute</a>"
+					#echo "<a id='muteButton' class='button' onclick='muteUnMute()'>&#x1f507;</a>"
+					# nmute
+					#echo "<a id='unMuteButton' class='button' style='display:none;' onclick='muteUnMute()'>Unmute</a>"
+					#echo "<a id='unMuteButton' class='button' style='display:none;' onclick='muteUnMute()'>&#x1f4e2;</a>"
+					#echo "</span>"
+					echo "</span>"
+					echo "<span>";
+					# show controls
+					echo "<button id='showControls' onload='hideControls()' class='button' onclick='showControls()'>&#127899;</button>"
+					# hide controls
+					echo "<button id='hideControls' class='button' style='display:none;' onclick='hideControls()'>&#128317;</button>"
+					echo "</span>"
+					echo "<span>";
+					# fullscreen
+					echo "<button id='fullscreenButton' class='button' onclick='openFullscreen()'>&#11028;</button>"
+					# exit fullscreen
+					echo "<button id='exitFullscreenButton' class='button' style='display:none;' onclick='closeFullscreen()'>&#11029;</button>"
+					echo "</span>"
+					echo "</div>"
+
+					echo "</div>"
+
 					echo "	<div class='channelList'>"
 					# create the line that will be replaced by the link list to all the channels
 					echo "		<?PHP";
 					echo "			include('channelList.php')";
 					echo "		?>";
 					echo "	</div>"
+
 					echo "</div>"
+
 					echo "<div>";
+
 					echo "<br>"
 					echo "<div class='descriptionCard'>"
 					echo "	<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
@@ -1048,22 +1119,30 @@ resetCache(){
 	webDirectory=$(webRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.index"
+	echo " - $webDirectory/live/channel_*.html"
 	echo "Starting reset..."
-	rm -v "$webDirectory"/live/*.index
+	find "$(webRoot)/live/" -type f -name 'channel_*.php' -exec rm -v {} \;
+	find "$(webRoot)/live/" -type f -name '*.index' -exec rm -v {} \;
 }
 ################################################################################
 nukeCache(){
 	webDirectory=$(webRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.html"
+	echo " - $webDirectory/live/groups/*/"
 	echo " - $webDirectory/live/*.php"
 	echo " - $webDirectory/live/*.index"
 	echo " - $webDirectory/live/*.png"
+	echo " - $webDirectory/live/*.js"
+	echo " - $webDirectory/live/cache/*.index"
 	echo "Starting delete..."
 	rm -v "$webDirectory"/live/*.html
+	rm -rv "$webDirectory"/groups/*/
 	rm -v "$webDirectory"/live/*.php
 	rm -v "$webDirectory"/live/*.index
 	rm -v "$webDirectory"/live/*.png
+	rm -v "$webDirectory"/live/*.js
+	rm -v "$webDirectory"/live/cache/*.index
 }
 ################################################################################
 checkCron(){
@@ -1129,8 +1208,27 @@ main(){
 		pip3 install --upgrade streamlink
 		pip3 install --upgrade youtube-dl
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
-		# download the latest version of the javascript video player libary
-		curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
+		if cacheCheck "$(webRoot)/live/hls.js" 120;then
+			# download the latest version of the javascript video player libary
+			curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
+			# check the hls.js downloaded correctly
+			if [ $(wc -l "$(webRoot)/live/hls.js") -le 0 ];then
+				# the downloaded file has 0 lines of text and the download has failed
+				ALERT "The download of hls.js has failed..."
+				# try to use the backup hls.js
+				if test -f "$(webRoot)/live/hls.js.backup";then
+					cp "$(webRoot)/live/hls.js.backup" "$(webRoot)/live/hls.js"
+				else
+					ALERT "NO BACKUP OF hls.js COULD BE FOUND, playback will be broken."
+					ALERT "iptv2web can not build a functional website without a copy of hls.js"
+					exit
+				fi
+			else
+				INFO "hls.js has been updated correctly..."
+				# save this downloaded file as a backup
+				cp "$(webRoot)/live/hls.js" "$(webRoot)/live/hls.js.backup"
+			fi
+		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
 		echo "# iptv4everyone CLI for administration"

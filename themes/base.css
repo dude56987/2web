@@ -1,8 +1,17 @@
 html{
 	font-family: OpenDyslexic;
+	height: 100%;
+}
+body{
+	background: linear-gradient(to top, var(--glassBackground),transparent);
+	margin: 0px;
+	min-height: 100%;
 }
 select{
 	font-size: 1em;
+}
+sup{
+	font-size: 0.5em;
 }
 .tag{
 	line-height: 1em;
@@ -94,6 +103,9 @@ html{
 	margin: 2em;
 	vertical-align: top !important;
 }
+.listCard .showPageEpisode .title{
+	display: none;
+}
 .listCard .indexLink{
 	width: 5em;
 }
@@ -129,11 +141,6 @@ html{
 	display: block;
 	width: auto;
 	margin: 1em;
-}
-body{
-	background: linear-gradient(to top, var(--glassBackground),transparent);
-	margin: 0px;
-	min-height: 100vh;
 }
 h1 {
 	text-align: center;
@@ -231,16 +238,27 @@ ol li{
  background-color: #CC0000 !important;
  color: var(--textColor) !important;
 }
-/*
+#videoPlayerContainer{
+	display: inline-block;
+}
 @media (hover: none){
-*/
+	.videoPlayerControls{
+		font-size: 2em;
+	}
+}
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
 		/*on desktop sites do not have the scroll slide channel list, place the list below the player*/
 		.channelList{
+			display: none !important;
+			/*
 			display: block !important;
 			margin-left: auto !important;
 			margin-right: auto !important;
+			*/
+		}
+		.videoPlayerControls{
+			font-size: 2em;
 		}
 	}
 	/* on desktop sites remove margin gaps so links are clickable */
@@ -250,6 +268,7 @@ ol li{
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
+	/* if the window is smaller than 800px */
 	.menuButton{
 		display: block !important;
 		background-color: var(--glassBackground);
@@ -293,7 +312,7 @@ ol{
 	background-attachment: fixed;
 }
 .randomFanart{
-	background: url("randomFanart.php");
+	background: url("/randomFanart.php");
 	background-size: 100vw 100vh;
 	/*
 	background-color: darkgray;
@@ -303,7 +322,7 @@ ol{
 	background-attachment: fixed;
 }
 .liveBackground{
-	background-image: url("../randomFanart.php");
+	background-image: url("/randomFanart.php");
 }
 .liveFilter{
 	font-size: 1em;
@@ -343,7 +362,7 @@ ol{
 		float: none !important;
 	}
 	.liveBackground{
-		background-image: url("../randomPoster.php");
+		background-image: url("/randomPoster.php");
 	}
 	.channelList{
 		width: 80vw !important;
@@ -371,7 +390,7 @@ ol{
 		min-width: 0px !important;
 	}
 	.randomFanart{
-		background: url("randomPoster.php") !important;
+		background: url("/randomPoster.php") !important;
 		background-size: 100vw 100vh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
@@ -443,6 +462,62 @@ ol{
 #homeButton{
 	float: left;
 }
+.videoPlayerControls{
+	font-size: 100% !important;
+}
+.videoPlayerControls .button{
+	padding: 0px !important;
+	margin: 0px !important;
+	margin-left: 0px !important;
+	margin-right: auto !important;
+	font-size: 100% !important;
+	text-align: center !important;
+	height: 2em;
+	width: 2em;
+	vertical-align: top;
+}
+#videoPlayerContainer{
+	background-color: var(--glassBackground);
+	box-shadow: 0px 0px 1em white;
+	vertical-align: top;
+}
+#videoPlayerContainer #video{
+	width: 100% !important;
+	box-shadow: none !important;
+}
+@media all and (display-mode: fullscreen){
+	/*
+	@media (hover: none){
+		/*Fullscreen and touchscreen only*/
+		/*
+		.videoPlayerControls .button{
+			font-size: 2vh !important;
+		}
+		.videoPlayerControls{
+			font-size: 1vh !important;
+		}
+	}
+	*/
+	#videoPlayerContainer #video{
+		width: 100% !important;
+		height: 95% !important;
+	}
+	.videoPlayerControls{
+		width: 100% !important;
+		height: 5% !important;
+		background-color: black;
+		opacity: 0;
+	}
+	.videoPlayerControls:hover{
+		opacity: 1;
+	}
+	#videoPlayerContainer{
+		background-color: black;
+	}
+}
+input{
+	font-size: 1em;
+}
 .button{
 	box-shadow: 0px 0px 1em black;
 	margin: 0.5em;
@@ -459,9 +534,7 @@ ol{
 .titlecard .button{
 	white-space: nowrap;
 	font-size: 1em;
-	/*
-	line-height: 3em;A
-	*/
+	line-height: 4em;
 }
 .header .button{
 	white-space: nowrap;
@@ -543,6 +616,9 @@ ol{
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.videoPlayerControls{
+		font-size: 1em;
+	}
 	/***********************************************/
 	/*This means the web browser is in portrat mode*/
 	/***********************************************/
@@ -888,7 +964,7 @@ table{
 	text-align: center;
 }
 .channelList{
-	height: 20em;
+	height: 22em;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	width: 40%;
@@ -913,6 +989,10 @@ table{
 	width: 1em;
 	height: 1em;
 	float: left;
+}
+.settingsEntry .button{
+	width: 40vw;
+	float: none;
 }
 .settingsEntry{
 	margin: 1em;

@@ -6,49 +6,50 @@
 ################################################################################
 # cleanup interrupted updates on reboot
 #@reboot root /bin/rm /tmp/nfo2web.active >> /var/log/nfo2web.log
-@reboot root /bin/rm /tmp/iptv2web.active
+@reboot root /bin/rm /tmp/nfo2web.active
 #@reboot root /bin/rm /tmp/iptv2web.active >> /var/log/iptv2web.log
 @reboot root /bin/rm /tmp/iptv2web.active
+#@reboot root /bin/rm /tmp/comic2web.active >> /var/log/comic2web.log
+@reboot root /bin/rm /tmp/comic2web.active
 ################################################################################
 # update every 4 hours, if youtube sources are included updates can be frequent
-#0 */4 * * * root /usr/bin/nfo2web update > /var/log/nfo2web.log
-0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update
+#0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/nfo2web.log
+0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web
 ################################################################################
 # update the iptv lists once a week changes to these are more infrequent
-#@weekly root /usr/bin/iptv2web update > /var/log/iptv2web_update.log
-@weekly root /usr/bin/niceload /usr/bin/iptv2web update
+#@weekly root /usr/bin/niceload /usr/bin/iptv2web update > /var/log/iptv2web_update.log
+@weekly root /usr/bin/niceload /usr/bin/iptv2web
 ################################################################################
 # update the comic books
-@monthly root /usr/bin/niceload /usr/bin/comic2web update
-################################################################################
-# update the comic website pages
-@weekly root /usr/bin/niceload /usr/bin/comic2web webgen
+@monthly root /usr/bin/niceload /usr/bin/comic2web
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-#@daily root /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
+#@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
 @daily root /usr/bin/niceload /usr/bin/iptv2web upgrade
 ################################################################################
 # update the hls.js libary
-#@monthly root /usr/bin/iptv2web libary > /var/log/iptv2web_libary.log
+#@monthly root /usr/bin/niceload /usr/bin/iptv2web libary > /var/log/iptv2web_libary.log
 @monthly root /usr/bin/niceload /usr/bin/iptv2web libary
 ################################################################################
 # clean resolver cache daily, remove cached files older than 7 days
-#@daily root /usr/bin/mmsCleanCache > /var/log/mmsCleanCache.log
-@daily root /usr/bin/mmsCleanCache
+# also run cache cleanup after reboot
+#@daily root /usr/bin/niceload /usr/bin/mmsCleanCache > /var/log/mmsCleanCache.log
+@daily root /usr/bin/niceload /usr/bin/mmsCleanCache
+@reboot root /usr/bin/niceload /usr/bin/mmsCleanCache
 ################################################################################
 # Please choose only one of the below update schedules for ytdl2nfo
 ################################################################################
 # run update every hour
-#@hourly root	/usr/bin/ytdl2nfo
+#@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every 4 hours
-* */4 * * *	root	/usr/bin/ytdl2nfo
+#* */4 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every 6 hours
-#* */6 * * *	root	/usr/bin/ytdl2nfo
+#* */6 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every 12 hours
-#* */12 * * *	root	/usr/bin/ytdl2nfo
+#* */12 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every day once
-#@daily	root	/usr/bin/ytdl2nfo
+#@daily	root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every week once
-#@weekly root	/usr/bin/ytdl2nfo
+#@weekly root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every month once
-#@monthly root	/usr/bin/ytdl2nfo
+#@monthly root	/usr/bin/niceload /usr/bin/ytdl2nfo

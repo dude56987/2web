@@ -119,7 +119,7 @@ include("settingsHeader.php");
 				// add the cache Mode as a option
 				if(file_exists("cacheFramerate.cfg")){
 					$cacheFramerate= file_get_contents('cacheFramerate.cfg');
-					echo "<option selected value='$cacheFramerate'>$cacheFramerate</option>";
+					echo "<option selected value='$cacheFramerate'>$cacheFramerate FPS</option>";
 				}
 			?>
 			<option value=''>Copy Input</option>
@@ -142,6 +142,13 @@ include("settingsHeader.php");
 			Change the number of days that the cache will retain videos.
 		</p>
 		<select name='cacheDelay'>
+		<?php
+				// add the cache Mode as a option
+				if(file_exists("cacheDelay.cfg")){
+					$cacheDelay= file_get_contents('cacheDelay.cfg');
+					echo "<option selected value='$cacheDelay'>$cacheDelay Days</option>";
+				}
+		?>
 			<option value='1'>1 Days</option>
 			<option value='3'>3 Days</option>
 			<option value='7' selected>7 Days</option>

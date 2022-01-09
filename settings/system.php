@@ -17,22 +17,22 @@ include("settingsHeader.php");
 <div id='update' class='inputCard'>
 	<h2>Update</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<div class=''>
+		<div class='titleCard'>
 			<button class='button' type='submit' name='all_update' value='true'>UPDATE ALL</button>
 			<button class='button' type='submit' name='all_webgen' value='true'>WEBGEN ALL</button>
 		</div>
 
-		<div class=''>
+		<div class='titleCard'>
 			<button class='button' type='submit' name='nfo_update' value='true'>UPDATE NFO</button>
 			<button class='button' type='submit' name='nfo_webgen' value='true'>NFO WEBGEN</button>
 		</div>
 
-		<div class=''>
+		<div class='titleCard'>
 			<button class='button' type='submit' name='iptv_update' value='true'>UPDATE IPTV</button>
 			<button class='button' type='submit' name='iptv_webgen' value='true'>IPTV WEBGEN</button>
 		</div>
 
-		<div class=''>
+		<div class='titleCard'>
 			<button class='button' type='submit' name='comic_update' value='true'>UPDATE COMICS</button>
 			<button class='button' type='submit' name='comic_webgen' value='true'>COMICS WEBGEN</button>
 		</div>
@@ -92,6 +92,99 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Theme</button>
 	</form>
 </div>
+
+<div id='addComicLibary' class='inputCard'>
+<form action='admin.php' method='post'>
+	<h2>Add New User</h2>
+	<ul>
+		<li>New usernames will be added on next scheduled web update.( ~ 24 hours max )</li>
+	</ul>
+	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME'>
+	<input width='60%' type='text' name='newUserPass' placeholder='NEW USER PASSWORD'>
+	<input class='button' type='submit'>
+</form>
+</div>
+
+<!--
+<div id='addComicLibary' class='inputCard'>
+<form action='admin.php' method='post'>
+	<h2>Delete User</h2>
+	<ul>
+		<li>New usernames will be added on next scheduled web update.( ~ 24 hours max )</li>
+	</ul>
+	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME'>
+	<input width='60%' type='text' name='newUserPass' placeholder='NEW USER PASSWORD'>
+	<input class='button' type='submit'>
+</form>
+</div>
+
+
+<div id='addComicLibary' class='inputCard'>
+<form action='admin.php' method='post'>
+	<h2>Edit User Password</h2>
+	<input width='60%' type='text' name='editUserName' placeholder='USERNAME'>
+	<input width='60%' type='text' name='orignalUserPass' placeholder='CURRENT PASSWORD'>
+	<input width='60%' type='text' name='editUserPass' placeholder='NEW PASSWORD'>
+	<input width='60%' type='text' name='editUserPassVerify' placeholder='NEW PASSWORD'>
+	<input class='button' type='submit'>
+</form>
+</div>
+-->
+
+
+<div id='webTheme' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Remove User</h2>
+			<ul>
+				<li>
+					Remove existing user from accessing the website
+				</li>
+			</ul>
+			<select name='removeUser'>
+			<?PHP
+			# build theme list
+			$themePath="/etc/mms/theme.cfg";
+			//echo "THEME PATH = ".$themePath."<br>";
+			if (file_exists($themePath)){
+				$activeTheme=file_get_contents($themePath);
+				$activeTheme=str_replace("\n","",$activeTheme);
+				//echo "ACTIVE THEME = ".$activeTheme."<br>";
+				# read in theme files in /usr/share/mms/
+				$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/users/*.cfg"));
+				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
+				foreach($sourceFiles as $sourceFile){
+					if (strpos($sourceFile,".cfg")){
+						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
+						$tempTheme=str_replace("/etc/2web/users/","",$sourceFile);
+						$themeName=str_replace(".cfg","",$tempTheme);
+						//echo "TEMP THEME = ".$tempTheme."<br>\n";
+						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
+						if ($tempTheme == $activeTheme){
+							# mark the active theme as selected
+							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
+						}else{
+							# add other theme options found
+							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
+						}
+					}
+				}
+			}
+			?>
+			<!--
+			<option value='default.css' selected>Default</option>
+			<option value='red.css' >Red</option>
+			<option value='green.css' >Green</option>
+			<option value='blue.css' >Blue</option>
+			-->
+		</select>
+		<button class='button' type='submit'>Remove User</button>
+	</form>
+</div>
+
+
+
+
+
 
 </body>
 </html>

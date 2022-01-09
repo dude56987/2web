@@ -26,22 +26,24 @@ include("../header.php");
 include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
 ?>
 
-<div class='titleCard'>
-	<h1>Groups</h1>
-	<div class='listCard'>
 <?php
 // find all the groups
-$sourceFiles=scandir("/var/cache/nfo2web/web/live/groups/");
-$sourceFiles=array_diff($sourceFiles,array('..','.'));
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	# read the directory name
-	echo "	<a class='button tag' href='/live/groups/$sourceFile/'>";
-	echo "		$sourceFile";
-	echo "	</a>";
+if(is_dir("/var/cache/nfo2web/web/live/groups/")){
+	echo "<div class='titleCard'>";
+	echo "<h1>Groups</h1>";
+	echo "<div class='listCard'>";
+	$sourceFiles=scandir("/var/cache/nfo2web/web/live/groups/");
+	$sourceFiles=array_diff($sourceFiles,array('..','.'));
+	foreach($sourceFiles as $sourceFile){
+		$sourceFileName = $sourceFile;
+		# read the directory name
+		echo "	<a class='button tag' href='/live/groups/$sourceFile/'>";
+		echo "		$sourceFile";
+		echo "	</a>";
+	}
+	echo "</div>";
 }
 ?>
-	</div>
 	<hr>
 	<div class="filterButtonBox">
 		<input type="button" class="button liveFilter" value="📺 TV" onclick="filterByClass('indexLink','📺')">

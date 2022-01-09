@@ -14,7 +14,19 @@ webRoot(){
 	echo "$webDirectory"
 }
 ################################################################################
-# delete symlinks in the cache older than one day
-find "$(webRoot)/RESOLVER-CACHE/" -type l -mtime +1 -delete
+if test -f "$(webRoot)/cacheDelay.cfg";then
+	echo "Loading cache settings..."
+	cacheDelay=$(cat "$(webRoot)/cacheDelay.cfg")
+else
+	echo "Using default cache settings..."
+	cacheDelay="14"
+fi
+echo "Cache Delay = $cacheDelay"
 # delete files older than 14 days ( 2 weeks )
-find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +14 -delete
+if test -f "$(webRoot)/RESOLVER-CACHE/";then
+	find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -delete
+fi
+# delete the m3u cache
+if test -f "$(webRoot)/M3U-CACHE/";then
+	find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -delete
+fi

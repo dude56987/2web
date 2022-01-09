@@ -20,6 +20,9 @@
 		include("stats.index");
 	}
 	if (file_exists("shows")){
+		if (file_exists("updatedEpisodes.php")){
+			include($_SERVER['DOCUMENT_ROOT']."/updatedEpisodes.php");
+		}
 		if (file_exists("updatedShows.php")){
 			include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
 		}

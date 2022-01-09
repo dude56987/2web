@@ -14,10 +14,12 @@ include('header.php');
 # enable error reporting
 ini_set("display_errors", 1);
 error_reporting(E_ALL);
+////////////////////////////////////////////////////////////////////////////////
 function clear(){
 	flush();
 	ob_flush();
 }
+////////////////////////////////////////////////////////////////////////////////
 function countdown($countdownTime){
 	$index=0;
 	$waitTime=rand(1,$countdownTime);
@@ -31,10 +33,39 @@ function countdown($countdownTime){
 	clear();
 	sleep(1);
 }
-# try to process the link to be added
-#
-#
-if (array_key_exists("all_update",$_POST)){
+////////////////////////////////////////////////////////////////////////////////
+function checkUsernamePass($userName, $password){
+	$passSum = file_get_contents("/etc/2web/users/".md5($userName));
+	if ( $passSum == md5($password) ){
+		return true;
+	}else{
+		return false;
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+if (array_key_exists("newUserName",$_POST)){
+	$userName=$_POST['newUserName'];
+	echo "Creating new user '$userName'";
+	if (array_key_exists("newUserPass",$_POST)){
+		if ( ! file_exists("/etc/2web/users/")){
+			mkdir("/etc/2web/users/");
+		}
+		$userPass=$_POST['newUserPass'];
+		# build the password
+		$passSum=md5($userPass);
+		shell_exec("htpasswd -cb /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		//echo ( "Writing ".($userName.":".$passSum)." to ".("/etc/2web/users/".md5($userName).".cfg")."<br>" );
+		//file_put_contents( ("/etc/2web/users/".md5($userName).".cfg"), ($userName.":$".$passSum) );
+
+		# create a new htaccces file
+		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
+	}
+}else if (array_key_exists("removeUser",$_POST)){
+	echo "Removing user $userName from authorization list<br>\n";
+	countdown(5);
+	$userName=$_POST['removeUser'];
+	unlink("/etc/2web/users/$userName.cfg");
+}else if (array_key_exists("all_update",$_POST)){
 	echo "Scheduling 2web update!<br>\n";
 	shell_exec("echo '2web update' | /usr/bin/at -q b now");
 	countdown(5);
@@ -99,13 +130,18 @@ if (array_key_exists("all_update",$_POST)){
 			# read the link and create a custom config
 			$configPath="/etc/iptv2web/radioSources.d/".$sumOfLink.".m3u";
 			# create the custom link content
-			$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
+			#$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
+			$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle;
 			echo "Checking for Config file ".$configPath."<br>\n";
 			# write the link to a file at the configPath if the path does not already exist
+			$fileObject=fopen($configPath,'w');
 			if ( ! file_exists($configPath)){
 				echo "Adding link ".$link."<br>\n";
 				# write the config file
-				file_put_contents($configPath,$content);
+			//file_put_contents($configPath,$content);
+				fwrite($fileObject,$content);
+				fwrite($fileObject,$link);
+				fclose($fileObject);
 			}else{
 				echo "[ERROR]: Custom Radio link creation failed '".$link."'<br>\n";
 			}
@@ -115,6 +151,9 @@ if (array_key_exists("all_update",$_POST)){
 	}else{
 		echo "[ERROR]: Custom Radio Title not found<br>";
 	}
+	countdown(5);
+	echo "<hr><a class='button' href='/radio.php'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addCustomLink",$_POST)){
 	# this will add a custom m3u file with a single entry
 	$link=$_POST['addCustomLink'];
@@ -135,10 +174,19 @@ if (array_key_exists("all_update",$_POST)){
 			$content='#EXTM3U\n'.'#EXTINF:-1 tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
 			echo "Checking for Config file ".$configPath."<br>\n";
 			# write the link to a file at the configPath if the path does not already exist
+			/*
 			if ( ! file_exists($configPath)){
 				echo "Adding link ".$link."<br>\n";
 				# write the config file
 				file_put_contents($configPath,$content);
+			*/
+			$fileObject=fopen($configPath,'w');
+			if ( ! file_exists($configPath)){
+				echo "Adding link ".$link."<br>\n";
+				# write the config file
+				fwrite($fileObject,$content);
+				fwrite($fileObject,$link);
+				fclose($fileObject);
 			}else{
 				echo "[ERROR]: Custom link creation failed '".$link."'<br>\n";
 			}
@@ -148,7 +196,9 @@ if (array_key_exists("all_update",$_POST)){
 	}else{
 		echo "[ERROR]: Custom Title not found<br>";
 	}
-
+	countdown(5);
+	echo "<hr><a class='button' href='/tv.php'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addRadioLink",$_POST)){
 	$link=$_POST['addRadioLink'];
 	echo "Running addRadioLink on link ".$link."<br>\n";
@@ -214,17 +264,17 @@ if (array_key_exists("all_update",$_POST)){
 	echo "<hr><a class='button' href='/cache.php#cacheResize'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheDelay",$_POST)){
-	$cacheResize=$_POST['cacheDelay'];
+	$cacheDelay =$_POST['cacheDelay'];
 	# change the default cache quality
-	echo "Changing cache delay to '".$cacheResize."'<br>\n";
+	echo "Changing cache delay to '".$cacheDelay."'<br>\n";
 	# write the config file
-	if ($cacheResize == ''){
-		unlink("cacheResize.cfg");
+	if ($cacheDelay == ''){
+		unlink("cacheDelay.cfg");
 	}else{
-		file_put_contents("cacheResize.cfg",$cacheResize);
+		file_put_contents("cacheDelay.cfg",$cacheDelay);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheResize'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/cache.php#cacheDelay'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];

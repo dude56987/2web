@@ -74,6 +74,8 @@ build-deb:
 	mkdir -p debian/etc/ytdl2kodi/;
 	mkdir -p debian/etc/ytdl2kodi/sources.d/
 	mkdir -p debian/etc/ytdl2kodi/usernameSources.d/
+	mkdir -p debian/etc/2web/;
+	mkdir -p debian/etc/2web/users/;
 	mkdir -p debian/etc/nfo2web/;
 	mkdir -p debian/etc/nfo2web/libaries.d/;
 	mkdir -p debian/etc/comic2web/;
@@ -106,7 +108,9 @@ build-deb:
 	#touch debian/var/cache/nfo2web/web/.placeholder
 	touch debian/var/cache/nfo2web/cache/.placeholder
 	touch debian/usr/share/mms/settings/.placeholder
+	touch debian/etc/2web/users/.placeholder
 	# fix ownership
+	chown -R www-data:www-data debian/etc/2web/users/
 	chown -R www-data:www-data debian/etc/ytdl2kodi/*.d/
 	chown -R www-data:www-data debian/etc/iptv2web/*.d/
 	chown -R www-data:www-data debian/etc/nfo2web/*.d/
@@ -201,6 +205,7 @@ build-deb:
 	cp m3u-gen.php debian/usr/share/mms/
 	cp stream.php debian/usr/share/mms/
 	cp 404.php debian/usr/share/mms/
+	cp 401.php debian/usr/share/mms/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp nfo2web.desktop debian/usr/share/applications/

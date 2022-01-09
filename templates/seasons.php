@@ -6,6 +6,7 @@
 <body>
 <a href='#' id='topButton' class='button'>&uarr;</a>
 <?PHP
+ini_set('display_errors', 1);
 // this file is to be placed in the show directory
 // - /shows/$showName/index.php
 $activeDir=getcwd();
@@ -29,19 +30,22 @@ echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"'>";
 # after processing each season rebuild the show page index entirely
 // get a list of all the genetrated index links for the page
 //$sourceFiles = explode("\n",shell_exec("ls -1 $activeDir/*/season.index"));
-$sourceFiles = explode("\n",shell_exec("find '$activeDir/' -name 'season.index' | sort"));
-foreach($sourceFiles as $sourceFile){
-	if (is_file($sourceFile)){
-		$seasonName = str_replace('/season.index','',$sourceFile);
-		$seasonName = str_replace($activeDir.'/','',$seasonName);
-		//
-		echo "	<a href='#$seasonName' class='button'>";
-		echo "		$seasonName";
-		echo "	</a>";
-		flush();
-		ob_flush();
+//$seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'season.index' | sort"));
+$seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
+foreach($seasonDirs as $seasonDir){
+	if (is_dir($seasonDir)){
+		if (is_file($seasonDir."/season.index")){
+			$seasonName = str_replace('/season.index','',$seasonDir);
+			$seasonName = str_replace($activeDir.'/','',$seasonName);
+			echo "	<a href='#$seasonName' class='button'>";
+			echo "		$seasonName";
+			echo "	</a>";
+			flush();
+			ob_flush();
+		}
 	}
 }
+echo "<hr>";
 ?>
 
 </div>
@@ -49,27 +53,25 @@ foreach($sourceFiles as $sourceFile){
 <input id='searchBox' class='searchBox' type='text'
  onkeyup='filter("showPageEpisode")' placeholder='Search...' >
 <div class='episodeList'>
-
 <?PHP
-foreach($sourceFiles as $sourceFile){
-	if (is_file($sourceFile)){
-		$seasonName = str_replace('/season.index','',$sourceFile);
-		$seasonName = str_replace($activeDir.'/','',$seasonName);
-		//
-		echo "<div id='$seasonName' class='seasonContainer'>";
+$seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
+foreach($seasonDirs as $seasonDir){
+	if (is_dir($seasonDir)){
+		$seasonName = str_replace($activeDir.'/','',$seasonDir);
+		echo "<div class='seasonContainer'>";
 		echo "<div class='seasonHeader'>";
-		echo "	<h2>";
-		echo "		$seasonName";
-		echo "	</h2>";
+		echo "<h2 id='$seasonName'>$seasonName</h2>";
 		echo "</div>";
 		echo "<hr>";
-		// read the index entry
-		$data=file_get_contents($sourceFile);
-		// write the index entry
-		echo "$data";
+		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name 'episode_*.index' | sort"));
+		foreach($episodeFiles as $episodeFile){
+			if (is_file($episodeFile)){
+				echo file_get_contents($episodeFile);
+				flush();
+				ob_flush();
+			}
+		}
 		echo "</div>";
-		flush();
-		ob_flush();
 	}
 }
 ?>

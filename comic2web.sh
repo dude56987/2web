@@ -144,11 +144,11 @@ function update(){
 	downloadDirectory="$(downloadDir)"
 	################################################################################
 	# make the download directory if is does not exist
-	mkdir -p "$downloadDirectory"
+	createDir "$downloadDirectory"
 	# make comics directory
-	mkdir -p "$webDirectory/comics/"
+	createDir "$webDirectory/comics/"
 	# create web and cache directories
-	mkdir -p "$webDirectory/comicCache/"
+	createDir "$webDirectory/comicCache/"
 	# remove mark files older than 40 days, this will cause the comic to be updated
 	find "$webDirectory/comicCache/" -type f -name "download_*.index" -mtime +30 -delete
 	# clean the cache of old files
@@ -263,6 +263,14 @@ prefixNumber(){
 	#set +x
 }
 ################################################################################
+createDir(){
+	if ! test -d "$1";then
+		mkdir -p "$1"
+		# set ownership of directory and subdirectories as www-data
+		chown -R www-data:www-data "$1"
+	fi
+}
+################################################################################
 scanPages(){
 	# - TODO: build a function that reads all image files in a directory, makes webpages for them
 	#         index in directory links to first page, last page should link to .. index above
@@ -291,7 +299,7 @@ scanPages(){
 			#tempComicChapter="$(pickPath "$imagePath" 2)"
 			tempComicChapter=$pageChapter
 			if cacheCheck "$webDirectory/comics/$tempComicName/$tempComicChapter/index.php" 10;then
-				mkdir -p "$webDirectory/comics/$tempComicName/$tempComicChapter"
+				createDir "$webDirectory/comics/$tempComicName/$tempComicChapter"
 				# render if the page is older than 10 days
 				# get the total chapters
 				if ! test -f "$webDirectory/comics/$tempComicName/totalChapters.cfg";then
@@ -332,7 +340,7 @@ scanPages(){
 			tempComicName="$(pickPath "$imagePath" 2)"
 			#tempComicName="$(cleanText "$tempComicName")"
 			if cacheCheck "$webDirectory/comics/$tempComicName/index.php" 10;then
-				mkdir -p "$webDirectory/comics/$tempComicName/"
+				createDir "$webDirectory/comics/$tempComicName/"
 				# link the image file to the web directory
 				#echo "[INFO]: Linking single chapter comic $tempComicName"
 				# if the total pages has not yet been stored
@@ -493,10 +501,8 @@ renderPage(){
 		# single chapter comic
 		pagePath="$webDirectory/comics/$pageComicName/$pageNumber.html"
 	fi
-	if ! test -d "$webDirectory/kodi/comics_tank/$pageComicName/";then
-		# if no zip directory exists then create the zip directory
-		mkdir -p "$webDirectory/kodi/comics_tank/$pageComicName/"
-	fi
+	# if no zip directory exists then create the zip directory
+	createDir "$webDirectory/kodi/comics_tank/$pageComicName/"
 	# write the downloadable .zip file
 	# zip requires the current working directory be changed
 	if [ $isChapter = true ];then
@@ -600,9 +606,9 @@ renderPage(){
 		else
 			echo "	<a href='$nextPage.html' class='comicPageButton right'>&#8618;<br>$nextPage</a>"
 		fi
-		echo "	<a class='comicHomeButton comicPageButton center' href='../../..'>"
-		echo "		HOME"
-		echo "	</a>"
+		#echo "	<a class='comicHomeButton comicPageButton center' href='../../..'>"
+		#echo "		HOME"
+		#echo "	</a>"
 		echo "	<a class='comicIndexButton comicPageButton center' href='index.php'>"
 		echo "		BACK"
 		echo "	</a>"
@@ -688,7 +694,10 @@ renderPage(){
 			echo "<hr>"
 			echo "<div class='titleCard'>"
 			echo "<h1>$pageComicName</h1>"
-			echo "<a class='button' href='$pageComicName.cbz'>Download</a>"
+			echo "<a class='button' href='$pageComicName.cbz'>Download "
+			# get the file size and list it in the download button
+			echo $(	du -sh "$webDirectory/comics/$pageComicName.cbz" | cut -f1 );
+			echo "</a>"
 			echo "</div>"
 		} > "$webDirectory/comics/$pageComicName/index.php"
 		#if echo "$pageType" | grep "chapter";then
@@ -859,8 +868,9 @@ webUpdate(){
 	downloadDirectory="$(libaryPaths)"
 
 	# create the kodi directory
-	mkdir -p "$webDirectory/kodi/comics/"
-	mkdir -p "$webDirectory/comics/"
+	createDir "$webDirectory/kodi/comics/"
+	createDir "$webDirectory/comics/"
+
 	# link the random poster script
 	ln -s "/usr/share/nfo2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
 	ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
@@ -962,6 +972,8 @@ main(){
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		update
+	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		rm -rv $(webRoot)/comics/*
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then

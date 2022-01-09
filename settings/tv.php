@@ -36,12 +36,12 @@ foreach($sourceFiles as $sourceFile){
 	if (file_exists($sourceFile)){
 		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
-			if (strpos($sourceFile,".cfg")){
+			if (strpos(strtolower($sourceFile),".cfg")){
 				echo "<div class='settingsEntry'>";
 				//echo "<hr>\n";
 				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
-
+				/*
 				# try to find a icon for the link
 				$iconLink=md5("http://".gethostname().".local:444/iptv-resolver.php?url=\"".$link."\"");
 
@@ -53,13 +53,11 @@ foreach($sourceFiles as $sourceFile){
 					# if the link is a redirected generated link get a diffrent icon
 					echo "	<img class='settingsThumb' src='".$iconLink.".png'>";
 				}
+				*/
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
-				echo "	</form>\n";
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='blockLink' value='".$link."'>BLOCK</button>\n";
 				echo "	</form>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>Move Down</button>\n";
@@ -67,7 +65,19 @@ foreach($sourceFiles as $sourceFile){
 				echo "</div>\n";
 				echo "</div>\n";
 				//echo "</div>";
+			}else if (strpos(strtolower($sourceFile),".m3u")){
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
+				echo "	</form>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>Move Down</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
 			}
+
 		}
 	}
 }

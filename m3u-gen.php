@@ -101,7 +101,7 @@ if (array_key_exists("showTitle",$_GET)){
 				//echo "Checking full season path '$fullSeasonPath'<br>\n";//DEBUG
 				// find directories that are valid season directories
 				if (strpos(strtolower($fullSeasonPath),"season")){
-					//if (is_dir($fullSeasonPath)){
+					if (is_dir($fullSeasonPath)){
 							$episodePaths=scandir($fullSeasonPath);
 							//print_r($episodePaths);
 							$episodePaths=array_diff($episodePaths,array('..','.'));
@@ -111,17 +111,18 @@ if (array_key_exists("showTitle",$_GET)){
 								//echo "Checking episode path '$fullEpisodePath'<br>\n";//DEBUG
 								// if a non genrated file it is a media file
 								//if (file_exists($episodePath)){
-									if (strpos($episodePath,".avi") || strpos($episodePath,".strm") || strpos($episodePath,".mkv")){
+									if (strpos($episodePath,".avi") || strpos($episodePath,".strm") || strpos($episodePath,".mkv") || strpos($episodePath,".mp4") || strpos($episodePath,".m4v") || strpos($episodePath,".mpg") || strpos($episodePath,".mpeg") || strpos($episodePath,".ogv") || strpos($episodePath,".mp3") || strpos($episodePath,".ogg")){
 										//echo "episode is correct type of file...<br>\n";//DEBUG
 										//fwrite($data, "http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
 										//fwrite($data, "http://".gethostname().".local:444/kodi/shows/$showTitle/$seasonPath/$episodePath\n");
+										fwrite($data, "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n");
 										fwrite($data, "../kodi/shows/$showTitle/$seasonPath/$episodePath\n");
 										//echo ("http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
 										//echo "../kodi/$showTitle/$seasonPath/$episodePath<br>\n";
 									}
 								//}
 							}
-						//}
+						}
 					}
 				}
 			// close the file
