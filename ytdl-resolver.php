@@ -146,7 +146,7 @@ function cacheUrl($sum,$videoLink){
 		$command = 'echo "'.$command.'"';
 	}else{
 		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 2 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
+		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 20 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
 		//$command = 'echo "'.$command." && ".$dlCommand.'"';
@@ -415,7 +415,7 @@ if (array_key_exists("url",$_GET)){
 			# should be able to exit here as it should have wrote the file to the
 			# server and sent the created file from RAM the the client, the
 			# download has also already been forked
-			sleep(1);
+			sleep(20);
 			# wait for either the bump or the file to be downloaded and redirect
 			while(true){
 				# if 60 seconds of the video has been downloaded then launch the video
@@ -428,7 +428,7 @@ if (array_key_exists("url",$_GET)){
 				//}else if(file_exists("RESOLVER-CACHE/".$sum."_master.m3u")){
 				//	redirect('RESOLVER-CACHE/'.$sum.'_master.m3u');
 				//}
-				sleep(1);
+				sleep(20);
 			}
 		}
 	}

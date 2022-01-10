@@ -60,11 +60,14 @@ if (array_key_exists("newUserName",$_POST)){
 		# create a new htaccces file
 		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
 	}
-}else if (array_key_exists("removeUser",$_POST)){
-	echo "Removing user $userName from authorization list<br>\n";
 	countdown(5);
+	echo "<hr><a class='button' href='/system.php#addNewUser'>BACK</a><hr>";
+}else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
-	unlink("/etc/2web/users/$userName.cfg");
+	echo "Removing user $userName from authorization list<br>\n";
+	unlink("/etc/2web/users/$userName");
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#removeUser'>BACK</a><hr>";
 }else if (array_key_exists("all_update",$_POST)){
 	echo "Scheduling 2web update!<br>\n";
 	shell_exec("echo '2web update' | /usr/bin/at -q b now");

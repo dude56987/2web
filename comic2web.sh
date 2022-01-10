@@ -269,6 +269,7 @@ createDir(){
 		# set ownership of directory and subdirectories as www-data
 		chown -R www-data:www-data "$1"
 	fi
+	chown www-data:www-data "$1"
 }
 ################################################################################
 scanPages(){
@@ -299,6 +300,7 @@ scanPages(){
 			#tempComicChapter="$(pickPath "$imagePath" 2)"
 			tempComicChapter=$pageChapter
 			if cacheCheck "$webDirectory/comics/$tempComicName/$tempComicChapter/index.php" 10;then
+				createDir "$webDirectory/comics/$tempComicName"
 				createDir "$webDirectory/comics/$tempComicName/$tempComicChapter"
 				# render if the page is older than 10 days
 				# get the total chapters
@@ -699,6 +701,7 @@ renderPage(){
 			echo $(	du -sh "$webDirectory/comics/$pageComicName.cbz" | cut -f1 );
 			echo "</a>"
 			echo "</div>"
+			echo "<div class='settingListCard'>"
 		} > "$webDirectory/comics/$pageComicName/index.php"
 		#if echo "$pageType" | grep "chapter";then
 		if [ $isChapter = true ];then
@@ -840,6 +843,7 @@ renderPage(){
 			done
 		fi
 		{
+			echo "</div>"
 			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
 			echo "<?PHP";
 			echo "include('../../header.php')";

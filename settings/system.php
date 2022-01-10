@@ -93,14 +93,14 @@ include("settingsHeader.php");
 	</form>
 </div>
 
-<div id='addComicLibary' class='inputCard'>
+<div id='addNewUser' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add New User</h2>
 	<ul>
 		<li>New usernames will be added on next scheduled web update.( ~ 24 hours max )</li>
 	</ul>
-	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME'>
-	<input width='60%' type='text' name='newUserPass' placeholder='NEW USER PASSWORD'>
+	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
+	<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
 	<input class='button' type='submit'>
 </form>
 </div>
@@ -132,7 +132,7 @@ include("settingsHeader.php");
 -->
 
 
-<div id='webTheme' class='inputCard'>
+<div id='removeUser' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Remove User</h2>
 			<ul>

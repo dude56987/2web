@@ -23,8 +23,8 @@ export PS4='+ ${LINENO}	|	'
 tabs 4
 ########################################################################
 STOP(){
-	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
-	read -r #DEBUG DELETE ME
+	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<"
+	read -r
 }
 ########################################################################
 INFO(){
@@ -97,17 +97,23 @@ ripXmlTag(){
 	tag=$2
 	# remove complex xml tags, they make parsing more difficult
 	#data=$(echo "$data" | grep -v "/>")
-	data=$(echo "$data" | grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>")
+	set -x
+	data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>")
+	set +x
 	# remove after slash tags, they break everything
 	data="${data//<$tag \/>}"
+	data="${data//<$tag\/>}"
 	#data=$(grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>" < "$data")
 	#data=$("$data" | grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>")
 	# convert null line endings
 	# remove all new lines so grep can read multi line entries
 	#data=$(echo "$data" | tr -d '\n')
 	#data=$(echo "$data" | sed -z "s/\n/<br>/g")
-	data="${data//<$tag>}"
-	data="${data//<\/$tag>}"
+	#data="${data//<$tag>}"
+	#data="${data//<\/$tag>}"
+	# pull data from between the tags
+	data="$(echo "$data" | cut -d'>' -f2 )"
+	data="$(echo "$data" | cut -d'<' -f1 )"
 	# if multuple lines of tag info are given format them for html
 	#if [ "$(echo "$data" | wc -l)" -gt 1 ];then
 	#	lineEnding="<br>"
@@ -116,15 +122,16 @@ ripXmlTag(){
 	#fi
 	if validString "$tag" -q;then
 		# loop though info
-		echo -e "$data" | while read -r line;do
+		#echo -e "$data" | while read -r line;do
 			# read lines until you reach the end tag line
 			#echo "$line$lineEnding"
-			echo "$line"
-		done
+		#	echo "$line"
+		#done
+		echo "$data"
 		return 0
 	else
-		echo "[DEBUG]: Tag must be at least one character in length!"
-		echo "[ERROR]: Program FAILURE has occured!"
+		INFO "[DEBUG]: Tag must be at least one character in length!"
+		INFO "[ERROR]: Program FAILURE has occured!"
 		return 1
 	fi
 }
@@ -133,6 +140,10 @@ cleanXml(){
 	data=$1
 	tag=$2
 	cleanText "$(ripXmlTag "$data" "$tag")"
+}
+########################################################################
+ALERT(){
+	echo "$1";
 }
 ########################################################################
 processMovie(){
@@ -184,12 +195,12 @@ processMovie(){
 			if [ "$libarySum" == "$currentSum" ];then
 				# this means they are the same so no update needs run
 				INFO "State is unchanged for $movieTitle, no update is needed."
-				echo "[DEBUG]: $currentSum == $libarySum"
+				INFO "[DEBUG]: $currentSum == $libarySum"
 				addToLog "INFO" "Movie unchanged" "$movieTitle, $currentSum" "$logPagePath"
 				return
 			else
 				INFO "States are diffrent, updating $movieTitle..."
-				echo "[DEBUG]: $currentSum != $libarySum"
+				INFO "[DEBUG]: $currentSum != $libarySum"
 				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			fi
@@ -487,12 +498,12 @@ processMovie(){
 			else
 				if echo "$nfoInfo" | grep "fanart";then
 					# pull the double nested xml info for the movie thumb
-					echo "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
+					INFO "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
-					echo "[DEBUG]: ThumbnailLink phase 2 = $thumbnailLink"
+					INFO "[DEBUG]: ThumbnailLink phase 2 = $thumbnailLink"
 					thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
-					echo "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
-					if validString "$thumbnailLink";then
+					INFO "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
+					if validString "$thumbnailLink" -q;then
 						INFO "Try to download movie thumbnail..."
 						INFO "Thumbnail found at '$thumbnailLink'"
 						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
@@ -508,13 +519,13 @@ processMovie(){
 						# link the downloaded thumbnail
 						linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 					else
-						echo "[DEBUG]: Thumbnail link is invalid '$thumbnailLink'"
+						INFO "[DEBUG]: Thumbnail link is invalid '$thumbnailLink'"
 					fi
 				fi
 				touch "$thumbnailPath$thumbnailExt"
 				# check if the thumb download failed
 				tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
-				echo "[DEBUG]: file size $tempFileSize"
+				INFO "[DEBUG]: file size $tempFileSize"
 				if [ "$tempFileSize" -eq 0 ];then
 					addToLog "WARNING" "Generating Thumbnail" "$thumbnailLink" "$logPagePath"
 					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
@@ -538,8 +549,8 @@ processMovie(){
 						# - place -ss in front of -i for speed boost in seeking to correct frame of source
 						# - tempTimeCode is in seconds
 						# - '-y' to force overwriting the empty file
-						echo "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
-						echo "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$movieVideoPath' -vframes 1 '$thumbnailPath.png'"
+						INFO "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
+						INFO "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$movieVideoPath' -vframes 1 '$thumbnailPath.png'"
 						#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 						# store the image inside a variable
 						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
@@ -731,7 +742,7 @@ checkForThumbnail(){
 			touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
 			tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
-			echo "[DEBUG]: file size $tempFileSize"
+			INFO "[DEBUG]: file size $tempFileSize"
 			if [ "$tempFileSize" -eq 0 ];then
 				addToLog "WARNING" "Generating Thumbnail" "$videoPath" "$showLogPath"
 				echo "[ERROR]: Failed to find thumbnail inside nfo file!"
@@ -755,8 +766,8 @@ checkForThumbnail(){
 					# - place -ss in front of -i for speed boost in seeking to correct frame of source
 					# - tempTimeCode is in seconds
 					# - '-y' to force overwriting the empty file
-					echo "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
-					echo "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
+					INFO "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
+					ALERT "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
 					#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 					# store the image inside a variable
 					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
@@ -804,6 +815,7 @@ processEpisode(){
 	INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
+		set -x
 		echo "################################################################################"
 		echo "Processing Episode $episode"
 		echo "################################################################################"
@@ -848,6 +860,8 @@ processEpisode(){
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
+		set +x
+		STOP
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
 
 		# check the episode has not already been processed
@@ -1012,9 +1026,9 @@ processEpisode(){
 			# split up airdate data to check if caching should be done
 			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
-			echo "[DEBUG]:  Checking if file was released in the last month"
-			echo "[DEBUG]:  aired year $airedYear == current year $(date +"%Y")"
-			echo "[DEBUG]:  aired month $airedMonth == current month $(date +"%m")"
+			ALERT "[DEBUG]:  Checking if file was released in the last month"
+			ALERT "[DEBUG]:  aired year $airedYear == current year $(date +"%Y")"
+			ALERT "[DEBUG]:  aired month $airedMonth == current month $(date +"%m")"
 			# if the airdate was this year
 			#if [ $airedYear -eq "$(date +"%Y")" ];then
 				# if the airdate was this month
@@ -1199,12 +1213,12 @@ processShow(){
 		if [ "$libarySum" == "$currentSum" ];then
 			# this means they are the same so no update needs run
 			INFO "State is unchanged for $showTitle, no update is needed."
-			echo "[DEBUG]: $currentSum == $libarySum"
+			INFO "[DEBUG]: $currentSum == $libarySum"
 			addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
 			return
 		else
 			INFO "States are diffrent, updating $showTitle..."
-			echo "[DEBUG]: $currentSum != $libarySum"
+			INFO "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
 			updateInfo="$showTitle\n$currentSum != $libarySum"
@@ -1260,7 +1274,7 @@ processShow(){
 			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	else
-		echo "[WARNING]: could not find $show/poster.[png/jpg]"
+		INFO "[WARNING]: could not find $show/poster.[png/jpg]"
 	fi
 	# link the fanart
 	if [ -f "$show/fanart.png" ];then
@@ -1275,7 +1289,7 @@ processShow(){
 		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
 		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	else
-		echo "[WARNING]: could not find $show/fanart.[png/jpg]"
+		INFO "[WARNING]: could not find $show/fanart.[png/jpg]"
 	fi
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
@@ -1287,7 +1301,8 @@ processShow(){
 	# begin building the html of the page
 	################################################################################
 	# generate the episodes based on .nfo files
-	for season in "$show"/*;do
+	#for season in "$show"/*;do
+	find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
 		INFO "checking for season folder at '$season'"
 		if [ -d "$season" ];then
 			INFO "found season folder at '$season'"
@@ -1316,7 +1331,7 @@ processShow(){
 			# build top of show webpage containing all of the shows meta info
 			linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
 		else
-			echo "Season folder $season does not exist"
+			INFO "Season folder $season does not exist"
 		fi
 	done
 	# add show page to the show index
@@ -1618,9 +1633,7 @@ getDirSum(){
 ########################################################################
 function buildShowIndex(){
 	webDirectory="$1"
-	showIndexPath="$webDirectory/shows/index.php"
-	# if the shows index is not a php link or does not exist write it
-	linkFile "/usr/share/mms/templates/shows.php" "$showIndexPath"
+	linkFile "/usr/share/mms/templates/shows.php" "$webDirectory/shows/index.php"
 }
 ########################################################################
 getDirSumByTime(){
@@ -1696,9 +1709,7 @@ scanForRandomBackgrounds(){
 ########################################################################
 function buildMovieIndex(){
 	webDirectory=$1
-	# movie path
-	movieIndexPath="$webDirectory/movies/index.php"
-	linkFile "/usr/share/mms/templates/movies.php" "$movieIndexPath"
+	linkFile "/usr/share/mms/templates/movies.php" "$webDirectory/movies/index.php"
 }
 ########################################################################
 function cacheCheck(){
@@ -1884,6 +1895,11 @@ main(){
 			mkdir -p "$webDirectory/kodi/"
 			chown -R www-data:www-data "$webDirectory/kodi/"
 		fi
+		if ! test -d "$webDirectory/settings/";then
+			mkdir -p "$webDirectory/settings/"
+			chown -R www-data:www-data "$webDirectory/settings/"
+		fi
+
 		# link the settings scripts
 		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
 		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
@@ -1897,6 +1913,7 @@ main(){
 		linkFile "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		linkFile "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
 		linkFile "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
+
 		linkFile "/usr/share/mms/link.php" "$webDirectory/link.php"
 		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		linkFile "/usr/share/mms/m3u-gen.php" "$webDirectory/m3u-gen.php"
@@ -1905,6 +1922,9 @@ main(){
 		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		# link homepage
 		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+		# link the movies and shows index
+		linkFile "/usr/share/mms/templates/movies.php" "$webDirectory/movies/index.php"
+		linkFile "/usr/share/mms/templates/shows.php" "$webDirectory/shows/index.php"
 		# link lists these can be built and rebuilt during libary update
 		linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
 		linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
@@ -1938,6 +1958,12 @@ main(){
 			mkdir -p "$webDirectory/RESOLVER-CACHE/"
 			# set permissions
 			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+		fi
+
+		# if the certs are older than 364 days renew recreate a new valid key
+		if [ $(find /var/cache/nfo2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
+			# generate a new private key and public cert for the SSL certification
+			openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/nfo2web/ssl-private.key -out /var/cache/nfo2web/ssl-certs.crt
 		fi
 
 		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
@@ -2045,7 +2071,7 @@ main(){
 						INFO "showTitle = '$showTitle'"
 						showTitle=$(cleanText "$showTitle")
 						INFO "showTitle after cleanText() = '$showTitle'"
-						if echo "$showMeta" | grep "<tvshow>";then
+						if echo "$showMeta" | grep -q "<tvshow>";then
 							# make sure show has episodes
 							if ls "$show"/*/*.nfo;then
 								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
@@ -2062,7 +2088,7 @@ main(){
 							echo "[ERROR]: Show nfo file is invalid!"
 							addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
 						fi
-					elif grep "<movie>" "$show"/*.nfo;then
+					elif grep -q "<movie>" "$show"/*.nfo;then
 						# this is a move directory not a show
 						processMovie "$show" "$webDirectory"
 					fi

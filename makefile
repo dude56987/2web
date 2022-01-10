@@ -215,8 +215,8 @@ build-deb:
 	# copy over the cron job
 	cp nfo2web.cron debian/etc/cron.d/nfo2web-update
 	# copy over apache configs
-	cp -v apacheConf/nfo2web-ports.conf debian/etc/apache2/conf-enabled/
-	cp -v apacheConf/nfo2web-website.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-nfo2web-website.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-nfo2web-website-SSL.conf debian/etc/apache2/sites-enabled/
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk

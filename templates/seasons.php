@@ -63,6 +63,8 @@ foreach($seasonDirs as $seasonDir){
 		echo "<h2 id='$seasonName'>$seasonName</h2>";
 		echo "</div>";
 		echo "<hr>";
+		// set so script keeps running even if user cancels it
+		ignore_user_abort(true);
 		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name 'episode_*.index' | sort"));
 		foreach($episodeFiles as $episodeFile){
 			if (is_file($episodeFile)){
