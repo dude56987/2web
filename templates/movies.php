@@ -29,7 +29,7 @@ include("../updatedMovies.index");
 // get a list of all the genetrated index links for the page
 $sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/movies/*/movies.index"));
 // reverse the time sort
-$sourceFiles = array_reverse($sourceFiles);
+//$sourceFiles = array_reverse($sourceFiles);
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
 	if (file_exists($sourceFile)){

@@ -77,14 +77,14 @@ For when you need more than the web interface can handle. This help section defi
 	</p>
 	<?PHP
 	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
-
-	echo '<p>The hard link is http://'.gethostname().'.local:444/kodi/channels.m3u</p>';
+	$tempPath='http://'.gethostname().'.local/kodi/channels.m3u';
+	echo '<p>The hard link is <a href='.$tempPath.'>'.$tempPath.'</p>';
 	?>
 	<p>
 	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
 	</p>
 	<?PHP
-	echo'<a class="button" href="http://'.gethostname().'.local:444/kodi/channels_raw.m3u">channels_raw.m3u</a>';
+	echo'<a class="button" href="http://'.gethostname().'.local/kodi/channels_raw.m3u">channels_raw.m3u</a>';
 ?>
 	<p>
 	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
@@ -124,7 +124,7 @@ For when you need more than the web interface can handle. This help section defi
 	<h3 id="kodi_TLDR" >TLDR</h3>
 	<p>
 		<?PHP
-		echo "The http://".gethostname().".local:444/kodi/ directory contains";
+		echo "The http://".gethostname().".local/kodi/ directory contains";
 		echo " http directories that can be used to link content into kodi.";
 		?>
 	</p>
@@ -184,7 +184,6 @@ For when you need more than the web interface can handle. This help section defi
 			?>
 			"</li>
 			<li>Change "Remote Path" to "kodi"</li>
-			<li>Change "port" to "444"</li>
 			<li>Enter the Path That has been added</li>
 			<li>Go to movies</li>
 			<li>On the "Set content" screen</li>
@@ -216,7 +215,6 @@ For when you need more than the web interface can handle. This help section defi
 			?>
 			"</li>
 			<li>Change "Remote Path" to "kodi"</li>
-			<li>Change "port" to "444"</li>
 			<li>Enter the path that has been added above to the list</li>
 			<li>Go to comics</li>
 			<li>Select OK</li>

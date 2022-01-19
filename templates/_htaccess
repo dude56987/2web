@@ -1,0 +1,4 @@
+AuthUserFile /var/cache/nfo2web/htpasswd.cfg
+AuthName "Authorization Required"
+AuthType Basic
+Require valid-user

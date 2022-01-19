@@ -1,5 +1,6 @@
 <?php
-$cacheFile="headerData.index";
+$webDirectory=$_SERVER["DOCUMENT_ROOT"];
+$cacheFile=$webDirectory."/headerData.index";
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 2 * 3600){
@@ -20,6 +21,7 @@ if ($writeFile){
 
 	# build the header
 	$fileData .= "<div id='header' class='header'>";
+
 	$fileData .= "<hr class='menuButton'/>";
 	$fileData .= "<hr class='menuButton'/>";
 	$fileData .= "<hr class='menuButton'/>";
@@ -29,7 +31,6 @@ if ($writeFile){
 	$fileData .= "<a class='button' href='/link.php'>";
 	$fileData .= "&#128279;LINK";
 	$fileData .= "</a>";
-	$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 	if (file_exists("$webDirectory/movies/")){
 		$fileData .= "<a class='button' href='/movies'>";
 		$fileData .= "&#127916;MOVIES";
@@ -55,18 +56,25 @@ if ($writeFile){
 		$fileData .= "&#128225;LIVE";
 		$fileData .= "</a>";
 	}
-	$fileData .= "<a class='button' href='/system.php'>";
-	$fileData .= "&#128421;SETTINGS";
-	$fileData .= "</a>";
-	$fileData .= "</div>";
 	fwrite($fileObj,"$fileData");
-
 	// close the file
 	fclose($fileObj);
 	ignore_user_abort(false);
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
-
+if (isset($_SERVER['HTTPS'])){
+	echo "<a class='button' href='/system.php'>";
+	echo "&#128421;SETTINGS";
+	echo "</a>";
+	echo "<a class='button' href='/logout.php'>";
+	echo "&#128274;LOGOUT";
+	echo "</a>";
+}else{
+	echo "<a class='button' href='/system.php'>";
+	echo "&#128274;LOGIN";
+	echo "</a>";
+}
+echo "</div>";
 
 ?>

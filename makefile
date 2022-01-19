@@ -203,8 +203,9 @@ build-deb:
 	# copy the resolvers
 	cp ytdl-resolver.php debian/usr/share/mms/
 	cp m3u-gen.php debian/usr/share/mms/
-	cp stream.php debian/usr/share/mms/
+	cp transcode.php debian/usr/share/mms/
 	cp 404.php debian/usr/share/mms/
+	cp 403.php debian/usr/share/mms/
 	cp 401.php debian/usr/share/mms/
 	cp iptv-resolver.php debian/usr/share/nfo2web/
 	# copy over the .desktop launcher file to place link in system menus
@@ -215,8 +216,10 @@ build-deb:
 	# copy over the cron job
 	cp nfo2web.cron debian/etc/cron.d/nfo2web-update
 	# copy over apache configs
+	cp -v apacheConf/0-nfo2web-ports.conf debian/etc/apache2/sites-enabled/
 	cp -v apacheConf/0-nfo2web-website.conf debian/etc/apache2/sites-enabled/
 	cp -v apacheConf/0-nfo2web-website-SSL.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-nfo2web-website-compat.conf debian/etc/apache2/sites-enabled/
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk

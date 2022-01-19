@@ -241,11 +241,13 @@ ol li{
 #videoPlayerContainer{
 	display: inline-block;
 }
+/*
 @media (hover: none){
 	.videoPlayerControls{
 		font-size: 2em;
 	}
 }
+*/
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
 		/*on desktop sites do not have the scroll slide channel list, place the list below the player*/
@@ -534,7 +536,7 @@ input{
 .titlecard .button{
 	white-space: nowrap;
 	font-size: 1em;
-	line-height: 4em;
+	line-height: 2em;
 }
 .header .button{
 	white-space: nowrap;
@@ -779,7 +781,7 @@ input{
 	color: var(--textColor);
 	background-color: var(--glassBackground);
 	border: 0.2em solid var(--borderColor);
-	width: 8em;
+	width: 6em;
 	min-height: 12em;
 	box-shadow: 0px 0px 1em black;
 	/*

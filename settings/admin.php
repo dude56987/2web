@@ -44,13 +44,14 @@ function checkUsernamePass($userName, $password){
 }
 ////////////////////////////////////////////////////////////////////////////////
 if (array_key_exists("newUserName",$_POST)){
-	$userName=$_POST['newUserName'];
+	# make all chacters lowercase for password
+	$userName=strtolower($_POST['newUserName']);
 	echo "Creating new user '$userName'";
 	if (array_key_exists("newUserPass",$_POST)){
 		if ( ! file_exists("/etc/2web/users/")){
 			mkdir("/etc/2web/users/");
 		}
-		$userPass=$_POST['newUserPass'];
+		$userPass=strtolower($_POST['newUserPass']);
 		# build the password
 		$passSum=md5($userPass);
 		shell_exec("htpasswd -cb /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );

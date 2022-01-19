@@ -96,37 +96,16 @@ ripXmlTag(){
 	data=$1
 	tag=$2
 	# remove complex xml tags, they make parsing more difficult
-	#data=$(echo "$data" | grep -v "/>")
-	set -x
-	data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>")
-	set +x
+	#data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>" | tr -d '\n' | tac | tail -n 1)
+	data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>" | tr -d '\n' | tac | tail -n 1)
 	# remove after slash tags, they break everything
 	data="${data//<$tag \/>}"
 	data="${data//<$tag\/>}"
-	#data=$(grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>" < "$data")
-	#data=$("$data" | grep -Ez --ignore-case --only-matching "<$tag>.*</$tag>")
-	# convert null line endings
-	# remove all new lines so grep can read multi line entries
-	#data=$(echo "$data" | tr -d '\n')
-	#data=$(echo "$data" | sed -z "s/\n/<br>/g")
-	#data="${data//<$tag>}"
-	#data="${data//<\/$tag>}"
 	# pull data from between the tags
 	data="$(echo "$data" | cut -d'>' -f2 )"
 	data="$(echo "$data" | cut -d'<' -f1 )"
 	# if multuple lines of tag info are given format them for html
-	#if [ "$(echo "$data" | wc -l)" -gt 1 ];then
-	#	lineEnding="<br>"
-	#else
-	#	lineEnding=""
-	#fi
 	if validString "$tag" -q;then
-		# loop though info
-		#echo -e "$data" | while read -r line;do
-			# read lines until you reach the end tag line
-			#echo "$line$lineEnding"
-		#	echo "$line"
-		#done
 		echo "$data"
 		return 0
 	else
@@ -135,6 +114,31 @@ ripXmlTag(){
 		return 1
 	fi
 }
+########################################################################
+ripXmlTagMultiLine(){
+	data=$1
+	tag=$2
+	# remove complex xml tags, they make parsing more difficult
+	data=$(echo "$data" | grep -Ez --ignore-case --only-matching "<$tag>.*.?</$tag>")
+	# remove after slash tags, they break everything
+	data="${data//<$tag \/>}"
+	data="${data//<$tag\/>}"
+	# pull data from between the tags
+	data="${data//<$tag>}"
+	data="${data//<\/$tag>}"
+	#data="$(echo "$data" | cut -d'>' -f2 )"
+	#data="$(echo "$data" | cut -d'<' -f1 )"
+	# if multuple lines of tag info are given format them for html
+	if validString "$tag" -q;then
+		echo "$data"
+		return 0
+	else
+		INFO "[DEBUG]: Tag must be at least one character in length!"
+		INFO "[ERROR]: Program FAILURE has occured!"
+		return 1
+	fi
+}
+
 ########################################################################
 cleanXml(){
 	data=$1
@@ -173,10 +177,10 @@ processMovie(){
 		movieYear=$(cleanXml "$nfoInfo" "year")
 		INFO "movie year = '$movieYear'"
 		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
-		moviePlot=$(ripXmlTag "$nfoInfo" "plot")
+		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		INFO "movie plot = '$moviePlot'"
-		moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
-		moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
+		#moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
+		#moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
 		moviePlot=$(echo "$moviePlot" | txt2html --extract )
 		INFO "movie plot = '$moviePlot'"
 		# create the episode page path
@@ -515,7 +519,7 @@ processMovie(){
 						#	curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
 						#fi
 						# generate the web thumbnail
-						convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
+						convert "$thumbnailPath$thumbnailExt" -adaptive-resize "200x100" "$thumbnailPath-web.png"
 						# link the downloaded thumbnail
 						linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 					else
@@ -830,10 +834,10 @@ processEpisode(){
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html --eight_bit_clean --extract -p 10 )
 		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html -ec --eight_bit_clean --extract -p 10 )
-		episodePlot=$(ripXmlTag "$nfoInfo" "plot")
+		episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		INFO "episode plot = '$episodePlot'"
-		episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
-		episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
+		#episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
+		#episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
 		INFO "episode plot = '$episodePlot'"
 		episodePlot=$(echo "$episodePlot" | txt2html --extract )
 		INFO "episode plot = '$episodePlot'"
@@ -1085,7 +1089,8 @@ processEpisode(){
 				echo "</iframe>"
 			} >> "$episodePagePath"
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
-			fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
+			#fullRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+			fullRedirect="/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1094,21 +1099,25 @@ processEpisode(){
 				echo "	Hard Link"
 				echo "</a>"
 
-				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
-				echo "	Play All"
-				echo "</a>"
-
 				echo "<div class='aired'>"
 				echo "$episodeAired"
 				echo "</div>"
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
-		elif echo "$videoPath" | grep "http";then
+		#elif echo "$videoPath" | grep "http";then
+		else
 			{
 				# build the html5 media player for local and remotly accessable media
 				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-				echo "<source src='$videoPath' type='$mimeType'>"
+				# redirect mkv files to the transcoder to cache the video file for the webplayer
+				if echo "$videoPath" | grep -qE ".mkv|.avi";then
+					fullRedirect="/transcode.php?link=\"$videoPath\""
+					echo "<source src='$fullRedirect' type='video/mp4'>"
+				else
+					echo "<source src='$videoPath' type='$mimeType'>"
+				fi
+				#echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1123,37 +1132,30 @@ processEpisode(){
 					echo "</a>"
 				fi
 
-				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
-				echo "	Play All"
-				echo "</a>"
-
 				echo "<div class='aired'>"
 				echo "$episodeAired"
 				echo "</div>"
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
-		else
-			{
-				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-				echo "<source src='$episodePath$sufix' type='$mimeType'>"
-				echo "</$mediaType>"
-				echo "<div class='descriptionCard'>"
-				echo "<h2>$episodeTitle</h2>"
-				# create a hard link
-				echo "<a class='button hardLink' href='$episodePath$sufix'>"
-				echo "Hard Link"
-				echo "</a>"
-				echo "<a class='button hardLink' href='/m3u-gen.php?showTitle=\"$episodeShowTitle\"'>"
-				echo "	Play All"
-				echo "</a>"
-				echo "<div class='aired'>"
-				echo "$episodeAired"
-				echo "</div>"
-				echo "$episodePlot"
-				echo "</div>"
-			} >> "$episodePagePath"
+		#else
+		#	{
+		#		# build the html5 media player for local and remotly accessable media
+		#		echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+		#		echo "<source src='$episodePath$sufix' type='$mimeType'>"
+		#		echo "</$mediaType>"
+		#		echo "<div class='descriptionCard'>"
+		#		echo "<h2>$episodeTitle</h2>"
+		#		# create a hard link
+		#		echo "<a class='button hardLink' href='$episodePath$sufix'>"
+		#		echo "Hard Link"
+		#		echo "</a>"
+		#		echo "<div class='aired'>"
+		#		echo "$episodeAired"
+		#		echo "</div>"
+		#		echo "$episodePlot"
+		#		echo "</div>"
+		#	} >> "$episodePagePath"
 		fi
 		{
 			# add footer
@@ -1301,8 +1303,8 @@ processShow(){
 	# begin building the html of the page
 	################################################################################
 	# generate the episodes based on .nfo files
-	#for season in "$show"/*;do
-	find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
+	#find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
+	for season in "$show"/*;do
 		INFO "checking for season folder at '$season'"
 		if [ -d "$season" ];then
 			INFO "found season folder at '$season'"
@@ -1899,10 +1901,19 @@ main(){
 			mkdir -p "$webDirectory/settings/"
 			chown -R www-data:www-data "$webDirectory/settings/"
 		fi
-
-		# link the settings scripts
-		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+		################################################################################
+		# Link website scripts into website directory to build a functional site
+		# - The php web interface
+		#  - These scripts limit libary checking for interface updates to once per 2 hours
+		#  - Adding users to enable password protection of site
+		#  - Is only available from the https version of the website
+		# - The php resolver scripts
+		#  - These scripts allow for kodi to play .strm files though youtube-dl
+		#  - Generate m3u files to allow android phones to share the media to any video player
+		################################################################################
+		# admin contorl file
 		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
+		# settings interface files
 		linkFile "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
 		linkFile "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
 		linkFile "/usr/share/mms/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
@@ -1913,12 +1924,17 @@ main(){
 		linkFile "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
 		linkFile "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
 		linkFile "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
-
+		linkFile "/usr/share/mms/settings/logout.php" "$webDirectory/logout.php"
+		# help/info docs
 		linkFile "/usr/share/mms/link.php" "$webDirectory/link.php"
+		# caching resolvers
 		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		linkFile "/usr/share/mms/m3u-gen.php" "$webDirectory/m3u-gen.php"
+		# error documents
 		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
+		linkFile "/usr/share/mms/403.php" "$webDirectory/403.php"
 		linkFile "/usr/share/mms/401.php" "$webDirectory/401.php"
+		# global javascript libary
 		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
 		# link homepage
 		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
@@ -1978,6 +1994,7 @@ main(){
 
 		# install the php streaming script
 		#ln -s "/usr/share/mms/stream.php" "$webDirectory/stream.php"
+		linkFile "/usr/share/mms/transcode.php" "$webDirectory/transcode.php"
 
 		# link the randomFanart.php script
 		linkFile "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
