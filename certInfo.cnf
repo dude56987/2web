@@ -1,0 +1,9 @@
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+countryName             = NZ
+stateOrProvinceName     = NZ
+localityName            = NZ
+organizationName        = NZ
+commonName              = NZ

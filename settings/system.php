@@ -40,67 +40,19 @@ include("settingsHeader.php");
 
 	</form>
 </div>
-<!-- create the theme picker based on installed themes -->
-<div id='webTheme' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Web Theme</h2>
-			<ul>
-				<li>
-					Custom themes can be installed in /usr/share/mms/themes/
-				</li>
-				<li>
-					Theme will change next time website updates.
-				</li>
-			</ul>
-			<select name='theme'>
-			<?PHP
-			# build theme list
-			$themePath="/etc/mms/theme.cfg";
-			//echo "THEME PATH = ".$themePath."<br>";
-			if (file_exists($themePath)){
-				$activeTheme=file_get_contents($themePath);
-				$activeTheme=str_replace("\n","",$activeTheme);
-				//echo "ACTIVE THEME = ".$activeTheme."<br>";
-				# read in theme files in /usr/share/mms/
-				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/mms/themes/*.css"));
-				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
-				foreach($sourceFiles as $sourceFile){
-					if (strpos($sourceFile,".css")){
-						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
-						$tempTheme=str_replace("/usr/share/mms/themes/","",$sourceFile);
-						$themeName=str_replace(".css","",$tempTheme);
-						//echo "TEMP THEME = ".$tempTheme."<br>\n";
-						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
-						if ($tempTheme == $activeTheme){
-							# mark the active theme as selected
-							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
-						}else{
-							# add other theme options found
-							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
-						}
-					}
-				}
-			}
-			?>
-			<!--
-			<option value='default.css' selected>Default</option>
-			<option value='red.css' >Red</option>
-			<option value='green.css' >Green</option>
-			<option value='blue.css' >Blue</option>
-			-->
-		</select>
-		<button class='button' type='submit'>Change Theme</button>
-	</form>
-</div>
 
 <div id='addNewUser' class='inputCard'>
 <form action='admin.php' method='post'>
-	<h2>Add New User</h2>
+	<h2>Add New System Administrator</h2>
 	<ul>
-		<li>New usernames will be added on next scheduled web update.( ~ 24 hours max )</li>
+		<li>New administrators will be added on next scheduled web update.( ~ 24 hours max )</li>
+		<li>
+			<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
+		</li>
+		<li>
+			<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
+		</li>
 	</ul>
-	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
-	<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
 	<input class='button' type='submit'>
 </form>
 </div>
@@ -181,10 +133,74 @@ include("settingsHeader.php");
 	</form>
 </div>
 
+<!-- create the theme picker based on installed themes -->
+<div id='webTheme' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Web Theme</h2>
+			<ul>
+				<li>
+					Custom themes can be installed in /usr/share/mms/themes/
+				</li>
+				<li>
+					Theme will change next time website updates.
+				</li>
+			</ul>
+			<select name='theme'>
+			<?PHP
+			# build theme list
+			$themePath="/etc/mms/theme.cfg";
+			//echo "THEME PATH = ".$themePath."<br>";
+			if (file_exists($themePath)){
+				$activeTheme=file_get_contents($themePath);
+				$activeTheme=str_replace("\n","",$activeTheme);
+				//echo "ACTIVE THEME = ".$activeTheme."<br>";
+				# read in theme files in /usr/share/mms/
+				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/mms/themes/*.css"));
+				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
+				foreach($sourceFiles as $sourceFile){
+					if (strpos($sourceFile,".css")){
+						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
+						$tempTheme=str_replace("/usr/share/mms/themes/","",$sourceFile);
+						$themeName=str_replace(".css","",$tempTheme);
+						//echo "TEMP THEME = ".$tempTheme."<br>\n";
+						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
+						if ($tempTheme == $activeTheme){
+							# mark the active theme as selected
+							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
+						}else{
+							# add other theme options found
+							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
+						}
+					}
+				}
+			}
+			?>
+			<!--
+			<option value='default.css' selected>Default</option>
+			<option value='red.css' >Red</option>
+			<option value='green.css' >Green</option>
+			<option value='blue.css' >Blue</option>
+			-->
+		</select>
+		<button class='button' type='submit'>Change Theme</button>
+	</form>
+</div>
 
 
-
-
+<div id='firewall' class='inputCard'>
+<h2>Firewall</h2>
+	<ul>
+		<li>
+			Unlock port 80 for the public interface
+		</li>
+		<li>
+			Unlock port 443 to login to the admin interface
+		</li>
+		<li>
+			Unlock port 444 for compatibility mode
+		</li>
+	</ul>
+</div>
 
 </body>
 </html>

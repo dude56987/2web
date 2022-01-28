@@ -373,6 +373,36 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addComicDownloadLink",$_POST)){
+	$link=$_POST['addComicDownloadLink'];
+	echo "Running addComicDownloadLink on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/comic2web/sources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the libary path to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding ".$link." to comic downloader...<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/comicsDL.php#addComicDownloadLink'>BACK</a><hr>";
+	clear();
+}else if(array_key_exists("removeComicDownloadLink",$_POST)){
+	$link=$_POST['removeComicDownloadLink'];
+	echo "Running removeComicDownloadLink on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/comic2web/sources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing comicDownloadLink ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/comicsDL.php#currentLinks'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addComicLibary",$_POST)){
 	$link=$_POST['addComicLibary'];
 	echo "Running addComicLibary on link ".$link."<br>\n";
@@ -554,6 +584,16 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#webTheme'>BACK</a><hr>";
 	clear();
+}else{
+	countdown(5);
+	echo "<h1>[ERROR]:UNKNOWN COMMAND SUBMITTED TO API</h1>";
+	echo "<ul>";
+	echo "<li>";
+	print_r($_POST);
+	echo "</li>";
+	echo "<li>This incident will be logged.</li>";
+	echo "<li>If you are lost <a href='/index.php'>here</a> is a link back to the homepage.</li>";
+	echo "</ul>";
 }
 ?>
 

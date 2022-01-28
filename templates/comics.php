@@ -54,7 +54,7 @@
 
 <?php
 	// add random comics above the footer
-	include("../randomComics.index");
+	include("../randomComics.php");
 	// add the footer
 	include("../header.php");
 	echo "<hr class='topButtonSpace'>"

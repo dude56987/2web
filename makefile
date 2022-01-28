@@ -117,6 +117,8 @@ build-deb:
 	chown -R www-data:www-data debian/etc/comic2web/*.d/
 	#chown -R www-data:www-data debian/etc/mms/*.d/
 	chown -R www-data:www-data debian/etc/mms/
+	# copy the certInfo default script
+	cp certInfo.cnf debian/etc/2web/
 	# copy update scripts to /usr/bin
 	cp 2web.sh debian/usr/bin/2web
 	cp nfo2web.sh debian/usr/bin/nfo2web
@@ -132,6 +134,13 @@ build-deb:
 	cat themes/default.css > debian/usr/share/mms/themes/default-soft.css
 	cat themes/soft-mod.css >> debian/usr/share/mms/themes/default-soft.css
 	cat themes/base.css >> debian/usr/share/mms/themes/default-soft.css
+	# - yellow
+	cat themes/yellow.css > debian/usr/share/mms/themes/yellow.css
+	cat themes/base.css >> debian/usr/share/mms/themes/yellow.css
+	# - yellow-soft
+	cat themes/yellow.css > debian/usr/share/mms/themes/yellow-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/mms/themes/yellow-soft.css
+	cat themes/base.css >> debian/usr/share/mms/themes/yellow-soft.css
 	# - cyan
 	cat themes/cyan.css > debian/usr/share/mms/themes/cyan.css
 	cat themes/base.css >> debian/usr/share/mms/themes/cyan.css
@@ -216,7 +225,7 @@ build-deb:
 	# copy over the cron job
 	cp nfo2web.cron debian/etc/cron.d/nfo2web-update
 	# copy over apache configs
-	cp -v apacheConf/0-nfo2web-ports.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-nfo2web-ports.conf debian/etc/apache2/conf-enabled/
 	cp -v apacheConf/0-nfo2web-website.conf debian/etc/apache2/sites-enabled/
 	cp -v apacheConf/0-nfo2web-website-SSL.conf debian/etc/apache2/sites-enabled/
 	cp -v apacheConf/0-nfo2web-website-compat.conf debian/etc/apache2/sites-enabled/

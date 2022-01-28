@@ -24,7 +24,7 @@ include("settingsHeader.php");
 <div id='addComicDownloadLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Comic Download Link</h2>
-<input width='60%' type='text' name='addComic' placeholder='http://link.com/test'>
+<input width='60%' type='text' name='addComicDownloadLink' placeholder='http://link.com/test'>
 <input class='button' type='submit'>
 </form>
 </div>
@@ -57,19 +57,10 @@ foreach($sourceFiles as $sourceFile){
 				//echo "<hr>\n";
 				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
-
-				if (file_exists(md5($link).".png")){
-					# if the link is direct
-					echo "	<img class='settingsThumb' src='".md5($link).".png'>";
-				}
-				if (file_exists($iconLink)){
-					# if the link is a redirected generated link get a diffrent icon
-					echo "	<img class='settingsThumb' src='".$iconLink.".png'>";
-				}
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeComic' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeComicDownloadLink' value='".$link."'>Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";

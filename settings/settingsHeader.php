@@ -13,9 +13,11 @@
 			echo "		<div>\n";
 			echo "			<a class='button' href='/tv.php#index'>TV</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/radio.php#index'>RADIO</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/iptv_blocked.php#index'>BLOCKED</a>\n";
 			echo "		</div>\n";
@@ -27,6 +29,7 @@
 			echo "		<div>\n";
 			echo "			<a class='button' href='/nfo.php#index'>Libaries</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/ytdl2nfo.php#index'>Downloads</a>\n";
 			echo "		</div>\n";
@@ -38,6 +41,7 @@
 			echo "		<div>\n";
 			echo "			<a class='button' href='/comics.php#index'>Libaries</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/comicsDL.php#index'>Downloads</a>\n";
 			echo "		</div>\n";
@@ -49,9 +53,11 @@
 			echo "		<div>\n";
 			echo "			<a class='button' href='/system.php#index'>System</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/cache.php#index'>Cache</a>\n";
 			echo "		</div>\n";
+			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/log.php#index'>Log</a>\n";
 			echo "		</div>\n";

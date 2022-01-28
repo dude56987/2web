@@ -819,7 +819,6 @@ processEpisode(){
 	INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
-		set -x
 		echo "################################################################################"
 		echo "Processing Episode $episode"
 		echo "################################################################################"
@@ -1026,7 +1025,7 @@ processEpisode(){
 
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
-			resolverUrl="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\""
+			resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			# split up airdate data to check if caching should be done
 			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
@@ -1364,7 +1363,7 @@ addToLog(){
 		echo -e "$errorType"
 		echo -e "</td>"
 		echo -e "<td>"
-		echo -e "$errorDescription"
+		echo -e "$errorDescription" | txt2html --extract
 		echo -e "</td>"
 		echo -e "<td>"
 		# convert the error details into html
@@ -1549,16 +1548,18 @@ buildHomePage(){
 	# if the stats.index cache is more than 1 day old update it
 	if cacheCheck "$webDirectory/stats.index" "10";then
 		# figure out the stats
-		totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name "index.php" | wc -l)
-		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name "*.nfo" | wc -l)
-		totalShows=$(find "$webDirectory"/shows/*/ -name "tvshow.nfo" | wc -l)
-		totalMovies=$(find "$webDirectory"/movies/*/ -name "*.nfo" | wc -l)
+		totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name 'index.php' | wc -l)
+		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
+		totalShows=$(find "$webDirectory"/shows/*/ -name 'tvshow.nfo' | wc -l)
+		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
 		if [ -f "$webDirectory/kodi/channels.m3u" ];then
 			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
 			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
 		fi
 		# count website size in total ignoring symlinks
 		webSize=$(du -shP "$webDirectory" | cut -f1)
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
 		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
 		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
 		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
@@ -1602,6 +1603,9 @@ buildHomePage(){
 			fi
 			echo "		<span>"
 			echo "			Web:$webSize "
+			echo "		</span>"
+			echo "		<span>"
+			echo "			Cache:$cacheSize"
 			echo "		</span>"
 			echo "		<span>"
 			echo "			Media:$mediaSize"
@@ -1763,15 +1767,40 @@ function libaryPaths(){
 		} >> "/etc/nfo2web/libaries.cfg"
 	fi
 	# write path to console
+	#grep -i "^#" "/etc/nfo2web/libaries.cfg"
 	cat "/etc/nfo2web/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
-	find "/etc/nfo2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+	find "/etc/nfo2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
+		#grep -i "^#" "$libaryConfigPath"
 		cat "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
 	done
+}
+########################################################################
+function updateCerts(){
+	genCert='no'
+	# if the cert exists
+	if test -f /var/cache/nfo2web/ssl-cert.crt;then
+		# if the certs are older than 364 days renew recreate a new valid key
+		if [ $(find /var/cache/nfo2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
+			# the cert has expired
+			echo "[INFO]: Updating cert..."
+			# generate a new private key and public cert for the SSL certification
+			genCert='yes'
+		else
+			echo "[INFO]: Cert still active..."
+		fi
+	else
+		echo "[INFO]: Creating cert..."
+		# if the cert does not exist
+		genCert='yes'
+	fi
+	if [ $genCert == 'yes' ];then
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/nfo2web/ssl-private.key -out /var/cache/nfo2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
+	fi
 }
 ########################################################################
 main(){
@@ -1824,6 +1853,9 @@ main(){
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+	elif [ "$1" == "--certs" ] || [ "$1" == "certs" ] ;then
+		echo "[INFO]: Checking for local SSL certs..."
+		updateCerts
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		echo "[INFO]: Reseting web cache to blank..."
 		rm -rv $(webRoot)/*
@@ -1862,7 +1894,8 @@ main(){
 			mkdir -p /var/cache/nfo2web/libary/
 			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
 		fi
-		libaries=$(libaryPaths)
+		#libaries=$(libaryPaths | tr -s "\n" | shuf )
+		libaries=$(libaryPaths | tr -s "\n" | shuf )
 		# the webdirectory is a cache where the generated website is stored
 		webDirectory="$(webRoot)"
 		# force overwrite symbolic link to web directory
@@ -1911,7 +1944,7 @@ main(){
 		#  - These scripts allow for kodi to play .strm files though youtube-dl
 		#  - Generate m3u files to allow android phones to share the media to any video player
 		################################################################################
-		# admin contorl file
+		# admin control file
 		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
 		# settings interface files
 		linkFile "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
@@ -1975,12 +2008,8 @@ main(){
 			# set permissions
 			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
 		fi
-
-		# if the certs are older than 364 days renew recreate a new valid key
-		if [ $(find /var/cache/nfo2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
-			# generate a new private key and public cert for the SSL certification
-			openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/nfo2web/ssl-private.key -out /var/cache/nfo2web/ssl-certs.crt
-		fi
+		# update the certificates
+		updateCerts
 
 		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
 		if [ -f "/etc/at.deny" ];then
@@ -2061,9 +2090,11 @@ main(){
 			echo "<table>"
 		} > "$logPagePath"
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-		IFS_BACKUP=$IFS
-		IFS=$(echo -e "\n")
+		#IFS_BACKUP=$IFS
+		#IFS=$(echo -e "\n")
+		addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 		# read each libary from the libary config, single path per line
+		ALERT "LIBARIES: $libaries";
 		#for libary in $libaries;do
 		echo "$libaries" | while read libary;do
 			# check if the libary directory exists

@@ -73,7 +73,7 @@ html{
 	margin: 0px;
 	padding: 0px;
 	word-wrap: break-word;
-	color: var(--borderColor);
+	color: var(--textColor);
 }
 .channelLink {
 	margin-bottom: 0.05em;

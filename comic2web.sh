@@ -3,6 +3,18 @@
 # enable debug log
 #set -x
 ################################################################################
+ALERT(){
+	echo "$1";
+	echo;
+}
+################################################################################
+linkFile(){
+	# link file if it is a link
+	if ! test -L "$2";then
+		ln -sf "$1" "$2"
+	fi
+}
+################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
 	if [ -f /etc/nfo2web/web.cfg ];then
@@ -88,7 +100,6 @@ function downloadDir(){
 }
 ################################################################################
 function libaryPaths(){
-	set -x
 	# add the download directory to the paths
 	echo "$(downloadDir)"
 	# check for server libary config
@@ -109,7 +120,6 @@ function libaryPaths(){
 		# create a space just in case none exists
 		printf "\n"
 	done
-	set +x
 }
 ################################################################################
 function update(){
@@ -137,7 +147,7 @@ function update(){
 	fi
 	# load sources
 	comicSources=$(grep -v "^#" /etc/comic2web/sources.cfg)
-	comicSources=$(echo -e "$comicSources\n$(grep -v "^#" /etc/comic2web/sources.d/*.cfg)")
+	comicSources=$(echo -e "$comicSources\n$(grep -v --no-filename "^#" /etc/comic2web/sources.d/*.cfg)")
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -150,9 +160,10 @@ function update(){
 	# create web and cache directories
 	createDir "$webDirectory/comicCache/"
 	# remove mark files older than 40 days, this will cause the comic to be updated
-	find "$webDirectory/comicCache/" -type f -name "download_*.index" -mtime +30 -delete
+	find "$webDirectory/comicCache/" -type f -name "download_*.index" -mtime +40 -delete
 	# clean the cache of old files
 	# scan the sources
+	ALERT "Comic Download Sources: $comicSources"
 	#for comicSource in $comicSources;do
 	echo "$comicSources" | while read comicSource;do
 		# generate a md5sum for the source
@@ -164,13 +175,35 @@ function update(){
 			# - gallery-dl with json output will download into the $downloadDirectory/
 			# - niceload --net will sleep a process when the network is overloaded
 			#sem --bg --retries 2 --no-notice --ungroup --jobs 1 --id downloadQueue "echo 'Processing...';sleep 15;gallery-dl --write-metadata --dest '$downloadDirectory' '$comicSource'"
-			/usr/local/bin/gallery-dl --write-metadata --dest "$downloadDirectory" "$comicSource"
+			#--exec 'convert {} {}.png && rm {}'
+			#/usr/local/bin/gallery-dl --write-metadata --exec 'convert {} {}.jpg && rm {}' --dest "$downloadDirectory" "$comicSource"
+			#/usr/local/bin/gallery-dl --write-metadata --exec 'convert {} {}.jpg' --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
+			/usr/local/bin/gallery-dl --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
+			#/usr/local/bin/gallery-dl --write-metadata --exec '/usr/bin/comic2web convert {}' --dest "$downloadDirectory" "$comicSource"
 			# download unfinished chapters
 			#/usr/local/bin/gallery-dl --chapter-range "$downloadChapters" --write-metadata --dest "$downloadDirectory" "$comicSource"
 			# after download mark the download to have been successfully cached
-			touch "$webDirectory/comicCache/$comicSum.index"
+			#touch "$webDirectory/comicCache/download_$comicSum.index"
 		fi
 	done
+}
+################################################################################
+convertImage(){
+	fileName=$1
+
+	# convert the image files
+	if echo "$fileName" | grep -q ".webm$";then
+		newName=$(echo "$fileName" | sed "s/\.webm/.jpg/g")
+	elif echo "$fileName" | grep -q ".png$";then
+		newName=$(echo "$fileName" | sed "s/\.png/.jpg/g")
+	fi
+
+	if ! test -f "$newName";then
+		# convert the filename
+		convert "$fileName" "$newName"
+	fi
+
+	return 0
 }
 ################################################################################
 cleanText(){
@@ -328,9 +361,7 @@ scanPages(){
 				# prefix the number for file sorting, output above makes more sense without leading zeros
 				pageNumber=$(prefixNumber $pageNumber)
 				# link image inside comic chapter directory
-				if ! test -f "$webDirectory/comics/$tempComicName/$tempComicChapter/$pageNumber.jpg";then
-					ln -s "$imagePath" "$webDirectory/comics/$tempComicName/$tempComicChapter/$pageNumber.jpg"
-				fi
+				linkFile "$imagePath" "$webDirectory/comics/$tempComicName/$tempComicChapter/$pageNumber.jpg"
 				# render the web page
 				renderPage "$imagePath" "$webDirectory" "$pageNumber" chapter "$pageChapter"
 			else
@@ -358,9 +389,7 @@ scanPages(){
 				INFO "Rendering $tempComicName page $pageNumber/$totalPages"
 				# prefix the number for file sorting, output above makes more sense without leading zeros
 				pageNumber=$(prefixNumber $pageNumber)
-				if ! test -f "$webDirectory/comics/$tempComicName/$pageNumber.jpg";then
-					ln -s "$imagePath" "$webDirectory/comics/$tempComicName/$pageNumber.jpg"
-				fi
+				linkFile "$imagePath" "$webDirectory/comics/$tempComicName/$pageNumber.jpg"
 				# render the page
 				renderPage "$imagePath" "$webDirectory" $pageNumber single
 			else
@@ -388,7 +417,7 @@ renderPage(){
 	################################################################################
 	pageName=$(popPath "$page")
 	if [ $isChapter = true ];then
-		pageComicName=$(pickPath "$page" 3)
+		pageComicName=$(pickPath "$page" 3 | tr -d "'")
 		# remove : as it breaks web paths
 		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 		# multi chapter comic
@@ -397,9 +426,7 @@ renderPage(){
 			echo "$pageChapterPathName" > "$webDirectory/comics/$pageComicName/$pageChapterName/chapterTitle.cfg"
 		fi
 		# link the image file into the web directory
-		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg";then
-			ln -s "$imagePath" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
-		fi
+		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png";then
 			#set -x
@@ -426,9 +453,7 @@ renderPage(){
 			#set +x
 		fi
 		# link the image
-		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber.jpg";then
-			ln -s "$imagePath" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
-		fi
+		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
 		# get page width and height
 		tempImageData=$(identify -verbose "$webDirectory/comics/$pageComicName/$pageNumber.jpg" | grep "Geometry" |  cut -d':' -f2 | sed "s/+0//g")
 		# get the total pages
@@ -446,9 +471,7 @@ renderPage(){
 	tempStyleThumb="background: url(\"$pageNumber-thumb.png\")"
 
 	# link missing stylesheets for this chapter of the comic
-	if [ ! -f "$webDirectory/comics/style.css" ];then
-		ln -s "$webDirectory/style.css" "$webDirectory/comics/style.css"
-	fi
+	linkFile "$webDirectory/style.css" "$webDirectory/comics/style.css"
 
 	if [ $isChapter = true ];then
 		# figure out the back and forward pages
@@ -470,13 +493,9 @@ renderPage(){
 	if [[ 10#$previousPage -le 0 ]];then
 		if [ $isChapter = true ];then
 			# if the previous page is 0 then link back to the index
-			if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/0000.html";then
-				ln -s "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/0000.html"
-			fi
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/0000.html"
 		else
-			if ! test -f "$webDirectory/comics/$pageComicName/0000.html";then
-				ln -s "index.php" "$webDirectory/comics/$pageComicName/0000.html"
-			fi
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/0000.html"
 		fi
 
 		if [ $isChapter = true ];then
@@ -509,9 +528,7 @@ renderPage(){
 	# zip requires the current working directory be changed
 	if [ $isChapter = true ];then
 		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
-		if ! test -f "$pageComicName-$pageChapterName-$pageNumber.jpg";then
-			ln -s "$imagePath" "$pageComicName-$pageChapterName-$pageNumber.jpg"
-		fi
+		linkFile "$imagePath" "$pageComicName-$pageChapterName-$pageNumber.jpg"
 		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageChapterName-$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
@@ -524,9 +541,7 @@ renderPage(){
 		#zip -9 --symlinks "$webDirectory/comics/$pageComicName/$pageComicName.zip" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 	else
 		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
-		if ! test -f "$imagePath" "$pageComicName-$pageNumber.jpg";then
-			ln -s "$imagePath" "$pageComicName-$pageNumber.jpg"
-		fi
+		linkFile "$imagePath" "$pageComicName-$pageNumber.jpg"
 		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if this is the last page create the zip file
@@ -612,7 +627,7 @@ renderPage(){
 		#echo "		HOME"
 		#echo "	</a>"
 		echo "	<a class='comicIndexButton comicPageButton center' href='index.php'>"
-		echo "		BACK"
+		echo "		&uarr;"
 		echo "	</a>"
 		#echo "<div class='comicFooter'>"
 		#echo "	$pageNumber"
@@ -632,9 +647,7 @@ renderPage(){
 		#if ! [ -f "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.jpg" ];then
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if there is no next page in this chapter of the comic
-			if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.html";then
-				ln -s "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.html"
-			fi
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.html"
 			# if this is the last chapter of a multi chapter comic
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
 				buildPagesIndex=true
@@ -645,9 +658,7 @@ renderPage(){
 		#if ! [ -f "$webDirectory/comics/$pageComicName/$nextPage.jpg" ];then
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# link to the index page
-			if ! test -f "$webDirectory/comics/$pageComicName/$nextPage.html";then
-				ln -s "index.php" "$webDirectory/comics/$pageComicName/$nextPage.html"
-			fi
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$nextPage.html"
 			buildPagesIndex=true
 		fi
 	fi
@@ -857,7 +868,7 @@ renderPage(){
 		find -L "." -type f -name "thumb.png" > "$webDirectory/comics/poster.cfg"
 		# link fanart to poster list
 		# NOTE: find a way to create a fanart list than duplicating the poster list
-		ln -s "poster.cfg" "fanart.cfg"
+		linkFile "poster.cfg" "fanart.cfg"
 	fi
 }
 ################################################################################
@@ -869,23 +880,23 @@ webUpdate(){
 
 	webDirectory=$(webRoot)
 	#downloadDirectory="$(downloadDir)"
-	downloadDirectory="$(libaryPaths)"
+	downloadDirectory="$(libaryPaths | tr -s '\n' | shuf )"
 
 	# create the kodi directory
 	createDir "$webDirectory/kodi/comics/"
 	createDir "$webDirectory/comics/"
 
 	# link the random poster script
-	ln -s "/usr/share/nfo2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
-	ln -s "/usr/share/nfo2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
+	linkFile "/usr/share/nfo2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
+	linkFile "/usr/share/nfo2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
 	# link the kodi directory to the download directory
 	#ln -s "$downloadDirectory" "$webDirectory/kodi/comics"
 
 	totalComics=0
 
-	INFO "Scanning libary config '$downloadDirectory'"
+	ALERT "Scanning libary config '$downloadDirectory'"
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
-		INFO "Scanning Libary Path... '$comicLibaryPath'"
+		ALERT "Scanning Libary Path... '$comicLibaryPath'"
 		# read each comicWebsite directory from the download directory
 		find "$comicLibaryPath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
 			INFO "scanning comic website path '$comicWebsitePath'"
@@ -928,16 +939,9 @@ webUpdate(){
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
 	INFO "Checking for comic index page..."
 	# finish building main index page a-z
-	if ! test -h "$webDirectory/comics/index.php";then
-		# link the php homepage
-		ln -sf "/usr/share/mms/templates/comics.php" "$webDirectory/comics/index.php"
-	fi
-	if ! test -h "$webDirectory/randomComics.php";then
-		ln -sf "/usr/share/mms/templates/randomComics.php" "$webDirectory/randomComics.php"
-	fi
-	if ! test -h "$webDirectory/updatedComics.php";then
-		ln -sf "/usr/share/mms/templates/updatedComics.php" "$webDirectory/updatedComics.php"
-	fi
+	linkFile "/usr/share/mms/templates/comics.php" "$webDirectory/comics/index.php"
+	linkFile "/usr/share/mms/templates/randomComics.php" "$webDirectory/randomComics.php"
+	linkFile "/usr/share/mms/templates/updatedComics.php" "$webDirectory/updatedComics.php"
 	# build links to each comic in the index page
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 		# multi chapter comic
@@ -965,6 +969,7 @@ function resetCache(){
 			rm -rv "$comicPath" || INFO "No path to remove at '$comicPath'"
 		fi
 	done
+	rm -rv "$webDirectory/comicCache/download_"*.index || INFO "No path to remove at '$webDirectory/comicCache/download_*.index'"
 	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
 }
 ################################################################################
@@ -983,6 +988,9 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
 		pip3 install --upgrade gallery-dl
+	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
+		# comic2web --convert filePath
+		convertImage "$3"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
 		echo "# comic2web CLI for administration"
