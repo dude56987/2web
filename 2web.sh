@@ -119,7 +119,7 @@ main(){
 			cacheDelay="14"
 		fi
 		echo "Cache Delay = $cacheDelay"
-		# delete files older than 14 days ( 2 weeks )
+		# delete files older than x days
 		if test -f "$(webRoot)/RESOLVER-CACHE/";then
 			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -delete
 		fi

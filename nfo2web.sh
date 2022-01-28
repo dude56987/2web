@@ -1026,22 +1026,27 @@ processEpisode(){
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
 			resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
-			# split up airdate data to check if caching should be done
-			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
-			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
-			ALERT "[DEBUG]:  Checking if file was released in the last month"
-			ALERT "[DEBUG]:  aired year $airedYear == current year $(date +"%Y")"
-			ALERT "[DEBUG]:  aired month $airedMonth == current month $(date +"%m")"
-			# if the airdate was this year
-			#if [ $airedYear -eq "$(date +"%Y")" ];then
-				# if the airdate was this month
-			#	if [ $airedMonth -eq "$(date +"%m")" ];then
-					# cache the video if it is from this month
-					# - only newly created videos get this far into the process to be cached
-			#		echo "[DEBUG]:  Caching file..."
-			#		curl "$resolverUrl&batch=true" > /dev/null
-			#	fi
-			#fi
+
+			# if the config option is set to cache new episodes
+			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
+				# split up airdate data to check if caching should be done
+				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
+				airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
+				ALERT "[DEBUG]: Checking if file was released in the last month"
+				ALERT "[DEBUG]: aired year $airedYear == current year $(date +"%Y")"
+				ALERT "[DEBUG]: aired month $airedMonth == current month $(date +"%m")"
+				# if the airdate was this year
+				if [ $airedYear -eq "$(date +"%Y")" ];then
+					# if the airdate was this month
+					if [ $airedMonth -eq "$(date +"%m")" ];then
+						# cache the video if it is from this month
+						# - only newly created videos get this far into the process to be cached
+						ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
+						curl "$resolverUrl&batch=true" > /dev/null
+					fi
+				fi
+			fi
+
 			#if [ "$episodeAired" == "$(date +"%Y-%m-%d")" ];then
 			#	echo "[INFO]: airdate $episodeAired == todays date $(date +'%Y-%m-%d') ]"
 			#	# if the episode aired today cache the episode
@@ -1088,7 +1093,7 @@ processEpisode(){
 				echo "</iframe>"
 			} >> "$episodePagePath"
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
-			#fullRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+			cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			fullRedirect="/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
@@ -1096,6 +1101,10 @@ processEpisode(){
 				# create a hard link
 				echo "<a class='button hardLink' href='$ytLink'>"
 				echo "	Hard Link"
+				echo "</a>"
+
+				echo "<a class='button hardLink' href='$cacheRedirect'>"
+				echo "	Cache Link"
 				echo "</a>"
 
 				echo "<div class='aired'>"
@@ -1938,6 +1947,13 @@ main(){
 			mkdir -p "$webDirectory/settings/"
 			chown -R www-data:www-data "$webDirectory/settings/"
 		fi
+		# create config files if they do not exist
+		if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
+			# by default disable caching of new episodes
+			echo "no" > /etc/2web/cacheNewEpisodes.cfg
+			chown www-data:www-data /etc/2web/cacheNewEpisodes.cfg
+		fi
+
 		################################################################################
 		# Link website scripts into website directory to build a functional site
 		# - The php web interface

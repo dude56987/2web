@@ -56,7 +56,6 @@ include("settingsHeader.php");
 	<input class='button' type='submit'>
 </form>
 </div>
-
 <!--
 <div id='addComicLibary' class='inputCard'>
 <form action='admin.php' method='post'>

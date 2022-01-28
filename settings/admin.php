@@ -280,6 +280,19 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/cache.php#cacheDelay'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("cacheNewEpisodes",$_POST)){
+	$cacheNewEpisodes=$_POST['cacheNewEpisodes'];
+	# change the default cache quality
+	echo "Changing cache delay to '".$cacheNewEpisodes."'<br>\n";
+	# write the config file
+	if ($cacheNewEpisodes == ''){
+		unlink("/etc/2web/cacheNewEpisodes.cfg");
+	}else{
+		file_put_contents("/etc/2web/cacheNewEpisodes.cfg",$cacheNewEpisodes);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/cache.php#cacheNewEpisodes'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	echo "Running addLink on link ".$link."<br>\n";

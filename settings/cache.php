@@ -130,7 +130,7 @@ include("settingsHeader.php");
 			<option value='60'>60 FPS</option>
 			<option value='120'>120 FPS</option>
 		</select>
-		<button class='button' type='submit'>Change Cache Mode</button>
+		<button class='button' type='submit'>Change Cache Framerate</button>
 	</form>
 </div>
 
@@ -160,6 +160,36 @@ include("settingsHeader.php");
 			<option value='forever'>forever</option>
 		</select>
 		<button class='button' type='submit'>Change Cache Time</button>
+	</form>
+</div>
+
+<div id='cacheNewEpisodes' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Cache New Episodes</h2>
+			<ul>
+				<li>
+					Automatically cache episodes that first aired this month.
+				</li>
+			</ul>
+		<select name='cacheNewEpisodes'>
+			<?php
+			// figure out the currently selected theme
+			if (file_exists("/etc/2web/cacheNewEpisodes.cfg")){
+				$selected=file_get_contents("/etc/2web/cacheNewEpisodes.cfg");
+				if ($selected == "yes"){
+					echo "<option value='yes' selected>Yes</option>";
+					echo "<option value='no'>No</option>";
+				}else{
+					echo "<option value='no' selected>No</option>";
+					echo "<option value='yes'>Yes</option>";
+				}
+			}else{
+				echo "<option value='no' selected>No</option>";
+				echo "<option value='yes'>Yes</option>";
+			}
+			?>
+		</select>
+		<button class='button' type='submit'>Change</button>
 	</form>
 </div>
 
