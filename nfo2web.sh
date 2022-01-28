@@ -1183,7 +1183,8 @@ processEpisode(){
 
 		# write the episode index file
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
-
+		# create the episode file in the new index
+		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/new/episode_$episodePath.index"
 	else
 		echo "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1917,6 +1918,9 @@ main(){
 		if ! test -d "$webDirectory/";then
 			mkdir -p "$webDirectory"
 			chown -R www-data:www-data "$webDirectory"
+		fi
+		if ! test -d "$webDirectory/new/";then
+			mkdir -p "$webDirectory/new/"
 		fi
 		if ! test -d "$webDirectory/shows/";then
 			mkdir -p "$webDirectory/shows/"

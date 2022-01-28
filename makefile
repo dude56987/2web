@@ -122,7 +122,6 @@ build-deb:
 	# copy update scripts to /usr/bin
 	cp 2web.sh debian/usr/bin/2web
 	cp nfo2web.sh debian/usr/bin/nfo2web
-	cp mmsCleanCache.sh debian/usr/bin/mmsCleanCache
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
 	cp ytdl2kodi.sh debian/usr/bin/ytdl2kodi

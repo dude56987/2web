@@ -109,6 +109,28 @@ main(){
 		/usr/bin/nfo2web reset
 		/usr/bin/comic2web reset
 		/usr/bin/iptv2web reset
+	elif [ "$1" == "-cc" ] || [ "$1" == "--cleancache" ] || [ "$1" == "CleanCache" ] ;then
+		################################################################################
+		if test -f "$(webRoot)/cacheDelay.cfg";then
+			echo "Loading cache settings..."
+			cacheDelay=$(cat "$(webRoot)/cacheDelay.cfg")
+		else
+			echo "Using default cache settings..."
+			cacheDelay="14"
+		fi
+		echo "Cache Delay = $cacheDelay"
+		# delete files older than 14 days ( 2 weeks )
+		if test -f "$(webRoot)/RESOLVER-CACHE/";then
+			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -delete
+		fi
+		# delete the m3u cache
+		if test -f "$(webRoot)/M3U-CACHE/";then
+			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -delete
+		fi
+		# delete the new episodes cache
+		if test -f "$(webRoot)/new/";then
+			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -delete
+		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		echo "########################################################################"
 		echo "# 2web CLI for administration"
