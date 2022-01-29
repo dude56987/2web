@@ -41,10 +41,15 @@ if ($writeFile){
 				}
 			}
 			if ($counter >= 40){
+				// break the loop
 				break;
 			}
 		}
 	}
+	// create a final link to the full new list
+	fwrite($fileObj,"<a class='button showPageEpisode' href='/new/'>");
+	fwrite($fileObj,"Full List");
+	fwrite($fileObj,"</a>");
 	fwrite($fileObj,"</div>");
 	fwrite($fileObj,"</div>");
 	// close the file

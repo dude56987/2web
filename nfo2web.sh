@@ -863,12 +863,9 @@ processEpisode(){
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		episodePath="${showTitle} - s${episodeSeason}e${episodeNumber} - $episodeTitle"
-		set +x
-		STOP
 		episodePagePath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php"
-
 		# check the episode has not already been processed
-		if [ -f "$episodePagePath" ];then
+		if test -f "$episodePagePath";then
 			# if this episode has already been processed by the system then skip processeing it with this function
 			# - this also prevents caching below done for new cacheable videos
 			return
@@ -1121,7 +1118,9 @@ processEpisode(){
 				# redirect mkv files to the transcoder to cache the video file for the webplayer
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then
 					fullRedirect="/transcode.php?link=\"$videoPath\""
-					echo "<source src='$fullRedirect' type='video/mp4'>"
+					#echo "<source src='$fullRedirect' type='video/mp4'>"
+					# TODO: works but needs to be toggleable, above is correct code for the transcode.php script
+					echo "<source src='$videoPath' type='$mimeType'>"
 				else
 					echo "<source src='$videoPath' type='$mimeType'>"
 				fi
@@ -1994,6 +1993,8 @@ main(){
 		# link the movies and shows index
 		linkFile "/usr/share/mms/templates/movies.php" "$webDirectory/movies/index.php"
 		linkFile "/usr/share/mms/templates/shows.php" "$webDirectory/shows/index.php"
+		# add the new index
+		linkFile "/usr/share/mms/templates/new.php" "$webDirectory/new/index.php"
 		# link lists these can be built and rebuilt during libary update
 		linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
 		linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
