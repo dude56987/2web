@@ -207,9 +207,11 @@ convertImage(){
 }
 ################################################################################
 cleanText(){
+	echo "$1" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
+	return
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	if [ -f /usr/bin/inline-detox ];then
-		echo "$1" | inline-detox --remove-trailing | sed "s/-/ /g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g" | sed "s/\ /_/g" | tr -d '#`'
+		echo "$1" | inline-detox --remove-trailing | sed "s/-/ /g" | sed -e "s/^[ \t]*//g" | tr -s ' ' | sed "s/\ /_/g" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
 	else
 		# use sed to remove punctuation
 		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g" | sed "s/\ /_/g" | tr -d '#`'
@@ -329,7 +331,7 @@ scanPages(){
 		if echo "$pageType" | grep -q "chapter";then
 			# is a chapter based comic
 			tempComicName="$(pickPath "$imagePath" 3)"
-			#tempComicName="$(cleanText "$tempComicName")"
+			tempComicName="$(cleanText "$tempComicName")"
 			#tempComicChapter="$(pickPath "$imagePath" 2)"
 			tempComicChapter=$pageChapter
 			if cacheCheck "$webDirectory/comics/$tempComicName/$tempComicChapter/index.php" 10;then
@@ -371,7 +373,7 @@ scanPages(){
 		else
 			# is a single chapter comic
 			tempComicName="$(pickPath "$imagePath" 2)"
-			#tempComicName="$(cleanText "$tempComicName")"
+			tempComicName="$(cleanText "$tempComicName")"
 			if cacheCheck "$webDirectory/comics/$tempComicName/index.php" 10;then
 				createDir "$webDirectory/comics/$tempComicName/"
 				# link the image file to the web directory
@@ -418,6 +420,7 @@ renderPage(){
 	pageName=$(popPath "$page")
 	if [ $isChapter = true ];then
 		pageComicName=$(pickPath "$page" 3 | tr -d "'")
+		pageComicName=$(cleanText "$pageComicName")
 		# remove : as it breaks web paths
 		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 		# multi chapter comic
@@ -442,7 +445,7 @@ renderPage(){
 	else
 		# single chapter comic
 		pageComicName=$(pickPath "$page" 2)
-		#pageComicName=$(cleanText "$pageComicName")
+		pageComicName=$(cleanText "$pageComicName")
 		# remove : as it breaks web paths
 		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 
