@@ -3,9 +3,20 @@
 	--glassBackground: rgba(0,255,255,0.85);
 	--borderColor: black;
 	--textColor: black;
+	--textShadowColor: white;
 	--shadowColor: black;
 	--highlightText: black;
-	--highlightBackground: rgba(256,256,256,0.9);
+	--highlightBackground: white;
 	--highlightBorder: white;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+html{
+	text-shadow: 0.1em 0.1em 3px var(--textShadowColor),
+	-0.1em 0.1em 3px var(--textShadowColor),
+	0.1em -0.1em 3px var(--textShadowColor),
+	-0.1em -0.1em 3px var(--textShadowColor),
+	0px 0px var(--textShadowColor);
+}
+:hover{
+	text-shadow: none;
 }

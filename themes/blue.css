@@ -5,7 +5,7 @@
 	--textColor: white;
 	--shadowColor: black;
 	--highlightText: black;
-	--highlightBackground: rgba(256,256,256,0.9);
+	--highlightBackground: white;
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
