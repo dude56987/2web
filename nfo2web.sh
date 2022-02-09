@@ -34,14 +34,14 @@ INFO(){
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
+	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
 	# print the line
 	printf "$output\r"
 }
 ########################################################################
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
-	if [ -f /usr/bin/inline-detox ];then
+	if test -f /usr/bin/inline-detox;then
 		echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g" | tr -d '#'
 	else
 		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
@@ -49,15 +49,15 @@ cleanText(){
 }
 ########################################################################
 function debugCheck(){
-	if [ -f /etc/nfo2web/debug.enabled ];then
+	if test -f /etc/nfo2web/debug.enabled;then
 		# if debug mode is enabled show execution
 		set -x
 	else
-		if ! [ -d /etc/nfo2web/ ];then
+		if ! test -d /etc/nfo2web/;then
 			# create dir if one does not exist
 			mkdir -p /etc/nfo2web/
 		fi
-		if ! [ -f /etc/nfo2web/debug.disabled ];then
+		if ! test -f /etc/nfo2web/debug.disabled;then
 			# create debug flag file disabed, if it does not exist
 			touch /etc/nfo2web/debug.disabled
 		fi
@@ -74,13 +74,13 @@ function validString(){
 	if echo "${stringToCheck^^}" | grep "NULL";then
 		# this means the function is a null string returned by jq
 		if ! echo "$@" | grep -q "\-q";then
-			echo "[WARNING]:string is a NULL value"
+			INFO "[WARNING]:string is a NULL value"
 		fi
 		return 2
 	elif [ 1 -ge "$(expr length "$stringToCheck")" ];then
 		# this means the string is only one character
 		if ! echo "$@" | grep -q "\-q";then
-			echo "[WARNING]:String length is less than one"
+			INFO "[WARNING]:String length is less than one"
 		fi
 		return 1
 	else
@@ -96,7 +96,6 @@ ripXmlTag(){
 	data=$1
 	tag=$2
 	# remove complex xml tags, they make parsing more difficult
-	#data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>" | tr -d '\n' | tac | tail -n 1)
 	data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*?</$tag>" | tr -d '\n' | tac | tail -n 1)
 	# remove after slash tags, they break everything
 	data="${data//<$tag \/>}"
@@ -154,17 +153,14 @@ processMovie(){
 	moviePath=$1
 	webDirectory=$2
 	# figure out the movie directory
-	#movieDir=$(echo "$moviePath" | rev | cut -d'/' -f'2-' | rev )
 	movieDir=$moviePath
 	# find the movie nfo in the movie path
 	moviePath=$(find "$moviePath"/*.nfo)
 	# create log path
 	logPagePath="$webDirectory/log.php"
-	echo "################################################################################"
-	echo "Processing movie $moviePath"
-	echo "################################################################################"
+	INFO "Processing movie $moviePath"
 	# if moviepath exists
-	if [ -f "$moviePath" ];then
+	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
 
@@ -179,8 +175,6 @@ processMovie(){
 		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		INFO "movie plot = '$moviePlot'"
-		#moviePlot=$(echo "$moviePlot" | inline-detox -s "utf_8-only" )
-		#moviePlot=$(echo "$moviePlot" | sed "s/_/ /g" )
 		moviePlot=$(echo "$moviePlot" | txt2html --extract )
 		INFO "movie plot = '$moviePlot'"
 		# create the episode page path
@@ -190,8 +184,9 @@ processMovie(){
 		################################################################################
 		# check the state now that the movie web path has been determined
 		################################################################################
+		updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")\n$moviePath"
 		# check movie state as soon as posible processing
-		if [ -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg" ];then
+		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
 			# a existing state was found
 			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
 			libarySum=$(getDirSum "$movieDir")
@@ -200,17 +195,16 @@ processMovie(){
 				# this means they are the same so no update needs run
 				INFO "State is unchanged for $movieTitle, no update is needed."
 				INFO "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$movieTitle, $currentSum" "$logPagePath"
+				addToLog "INFO" "Movie unchanged" "$updateInfo" "$logPagePath"
 				return
 			else
 				INFO "States are diffrent, updating $movieTitle..."
 				INFO "[DEBUG]: $currentSum != $libarySum"
-				updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			fi
 		else
 			INFO "No movie state exists for $movieTitle, updating..."
-			addToLog "NEW" "Adding new movie " "$movieTitle" "$logPagePath"
+			addToLog "NEW" "Adding new movie " "$updateInfo" "$logPagePath"
 		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
@@ -223,7 +217,6 @@ processMovie(){
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
 		# link stylesheets
 		linkFile "$webDirectory/style.css" "$webDirectory/movies/$movieWebPath/style.css"
-		################################################################################
 		################################################################################
 		# using the path of the found nfo file, check for a file extension
 		#  that is not nfo
@@ -278,36 +271,36 @@ processMovie(){
 			videoPath=$(cat "$videoPath")
 			sufix=".strm"
 		else
-			echo "[ERROR]: could not find video file"
+			INFO "[ERROR]: could not find video file"
 			addToLog "ERROR" "No video file in directory" "$movieDir" "$logPagePath"
 			return
 		fi
 		# set the video type based on the found video path
-		if echo "$videoPath" | grep --ignore-case ".mp3";then
+		if echo "$videoPath" | grep -q --ignore-case ".mp3";then
 			mediaType="audio"
 			mimeType="audio/mp3"
-		elif echo "$videoPath" | grep --ignore-case ".ogg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".ogg";then
 			mediaType="audio"
 			mimeType="audio/ogg"
-		elif echo "$videoPath" | grep --ignore-case ".ogv";then
+		elif echo "$videoPath" | grep -q --ignore-case ".ogv";then
 			mediaType="video"
 			mimeType="video/ogv"
-		elif echo "$videoPath" | grep --ignore-case ".mp4";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mp4";then
 			mediaType="video"
 			mimeType="video/mp4"
-		elif echo "$videoPath" | grep --ignore-case ".m4v";then
+		elif echo "$videoPath" | grep -q --ignore-case ".m4v";then
 			mediaType="video"
 			mimeType="video/m4v"
-		elif echo "$videoPath" | grep --ignore-case ".avi";then
+		elif echo "$videoPath" | grep -q --ignore-case ".avi";then
 			mediaType="video"
 			mimeType="video/avi"
-		elif echo "$videoPath" | grep --ignore-case ".mpeg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mpeg";then
 			mediaType="video"
 			mimeType="video/mpeg"
-		elif echo "$videoPath" | grep --ignore-case ".mpg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mpg";then
 			mediaType="video"
 			mimeType="video/mpg"
-		elif echo "$videoPath" | grep --ignore-case ".mkv";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mkv";then
 			mediaType="video"
 			mimeType="video/x-matroska"
 		else
@@ -363,7 +356,7 @@ processMovie(){
 			linkFile "$movieDir"/*.png "$webDirectory/kodi/movies/$movieWebPath/"
 			linkFile "$movieDir"/*.png "$webDirectory/movies/$movieWebPath/"
 		else
-			echo "[ERROR]: No media files could be found!"
+			ALERT "[ERROR]: No media files could be found!"
 			addToLog "ERROR" "No media files could be found!" "$movieDir" "$logPagePath"
 		fi
 		# copy over subtitles
@@ -375,24 +368,24 @@ processMovie(){
 			linkFile "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
 		fi
 		# link the fanart
-		if [ -f "$movieDir/fanart.png" ];then
+		if test -f "$movieDir/fanart.png";then
 			INFO "Found $movieDir/fanart.png"
 			fanartPath="fanart.png"
 			INFO "Found fanart at '$movieDir/$fanartPath'"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
-		elif [ -f "$show/fanart.jpg" ];then
+		elif test -f "$show/fanart.jpg";then
 			fanartPath="fanart.jpg"
 			INFO "Found fanart at '$movieDir/$fanartPath'"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
 		else
-			echo "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
+			ALERT "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
 		fi
 		# find the fanart for the episode background
-		if [ -f "$movieDir/fanart.png" ];then
+		if test -f "$movieDir/fanart.png";then
 			tempStyle="html{ background-image: url(\"fanart.png\") }"
-		elif [ -f "$movieDir/fanart.jpg" ];then
+		elif test -f "$movieDir/fanart.jpg";then
 			tempStyle="html{ background-image: url(\"fanart.jpg\") }"
 		fi
 		# start rendering the html
@@ -418,89 +411,89 @@ processMovie(){
 		thumbnailExt=getThumbnailExt "$thumbnailPath"
 
 		# check for a local thumbnail
-		if [ -f "$thumbnailPath.jpg" ];then
+		if test -f "$thumbnailPath.jpg";then
 			INFO "Thumbnail already linked..."
 			thumbnailExt=".jpg"
-		elif [ -f "$thumbnailPath.png" ];then
+		elif test -f "$thumbnailPath.png";then
 			INFO "Thumbnail already linked..."
 			thumbnailExt=".png"
 		else
 			INFO "No thumbnail exists, looking for thumb file..."
 			# no thumbnail has been linked or downloaded
-			if [ -f "$thumbnail.png" ];then
+			if test -f "$thumbnail.png";then
 				INFO "found PNG thumbnail '$thumbnail.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				linkFile "$thumbnail.png" "$thumbnailPath.png"
 				linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailPath.png" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailPath.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$thumbnail.jpg" ];then
+			elif test -f "$thumbnail.jpg";then
 				INFO "found JPG thumbnail '$thumbnail.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				linkFile  "$thumbnail.jpg" "$thumbnailPath.jpg"
 				linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$movieDir/poster.jpg" ];then
+			elif test -f "$movieDir/poster.jpg";then
 				INFO "found JPG thumbnail '$movieDir/poster.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				linkFile "$movieDir/poster.jpg" "$thumbnailPath.jpg"
 				linkFile "$movieDir/poster.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailPath.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$movieDir/poster.png" ];then
+			elif test -f "$movieDir/poster.png";then
 				INFO "found PNG thumbnail '$movieDir/poster.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				linkFile "$movieDir/poster.png" "$thumbnailPath.png"
 				linkFile "$movieDir/poster.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$movieDir/poster.png" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$movieDir/poster.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$thumbnailShort.png" ];then
+			elif test -f "$thumbnailShort.png";then
 				INFO "found PNG thumbnail '$thumbnailShort.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				linkFile "$thumbnailShort.png" "$thumbnailPath.png"
 				linkFile "$thumbnailShort.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailShort.png" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailShort.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$thumbnailShort.jpg" ];then
+			elif test -f "$thumbnailShort.jpg";then
 				INFO "found JPG thumbnail '$thumbnailShort.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				linkFile "$thumbnailShort.jpg" "$thumbnailPath.jpg"
 				linkFile "$thumbnailShort.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailShort.jpg" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailShort.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$thumbnailShort2.png" ];then
+			elif test -f "$thumbnailShort2.png";then
 				INFO "found PNG thumbnail '$thumbnailShort2.png'..."
 				thumbnailExt=".png"
 				# link thumbnail into output directory
 				linkFile "$thumbnailShort2.png" "$thumbnailPath.png"
 				linkFile "$thumbnailShort2.png" "$thumbnailPathKodi.png"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailShort2.png" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailShort2.png" -resize "200x100" "$thumbnailPath-web.png"
 				fi
-			elif [ -f "$thumbnailShort2.jpg" ];then
+			elif test -f "$thumbnailShort2.jpg";then
 				INFO "found JPG thumbnail '$thumbnailShort2.jpg'..."
 				thumbnailExt=".jpg"
 				# link thumbnail into output directory
 				linkFile "$thumbnailShort2.jpg" "$thumbnailPath.jpg"
 				linkFile "$thumbnailShort2.jpg" "$thumbnailPathKodi.jpg"
 				if ! test -f "$thumbnailPath-web.png";then
-					convert "$thumbnailShort2.jpg" -resize "200x100" "$thumbnailPath-web.png"
+					convert -quiet "$thumbnailShort2.jpg" -resize "200x100" "$thumbnailPath-web.png"
 				fi
 			else
-				if echo "$nfoInfo" | grep "fanart";then
+				if echo "$nfoInfo" | grep -q "fanart";then
 					# pull the double nested xml info for the movie thumb
 					INFO "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
 					thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
@@ -532,7 +525,7 @@ processMovie(){
 				INFO "[DEBUG]: file size $tempFileSize"
 				if [ "$tempFileSize" -eq 0 ];then
 					addToLog "WARNING" "Generating Thumbnail" "$thumbnailLink" "$logPagePath"
-					echo "[ERROR]: Failed to find thumbnail inside nfo file!"
+					ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 					# try to generate a thumbnail from video file
 					INFO "Attempting to create thumbnail from video source..."
 					#tempFileSize=0
@@ -557,9 +550,9 @@ processMovie(){
 						INFO "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$movieVideoPath' -vframes 1 '$thumbnailPath.png'"
 						#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 						# store the image inside a variable
-						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
+						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 						# resize the image before checking the filesize
-						convert "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
+						convert -quiet "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
 						# get the size of the file, after it has been created
 						tempFileSize=$(wc --bytes < "$thumbnailPath.png")
 						# - increment the timecode to get from the video to find a thumbnail that is not
@@ -586,7 +579,7 @@ processMovie(){
 			fi
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
-		if echo "$videoPath" | grep --ignore-case "plugin://";then
+		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
 			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
 			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
@@ -610,7 +603,7 @@ processMovie(){
 				echo "	$moviePlot"
 				echo "</div>"
 			} >> "$moviePagePath"
-		elif echo "$videoPath" | grep "http";then
+		elif echo "$videoPath" | grep -q "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
 				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls preload>"
@@ -664,8 +657,17 @@ processMovie(){
 			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
+		# create the movie entry in new movies
+		{
+			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
+			echo "	<img loading='lazy' src='/movies/$movieWebPath/$movieWebPath-poster-web.png'>"
+			echo "	<div class='title'>"
+			echo "		$movieTitle"
+			echo "	</div>"
+			echo "</a>"
+		} > "$webDirectory/new/movie_$movieWebPath.index"
 	else
-		echo "[WARNING]: The file '$moviePath' could not be found!"
+		ALERT "[WARNING]: The file '$moviePath' could not be found!"
 	fi
 	# update the path sum after successfull
 	touch "$webDirectory/movies/$movieWebPath/"
@@ -676,9 +678,9 @@ processMovie(){
 getThumbnailExt(){
 	thumbnailPath=$1
 	########################################################################
-	if [ -f "$thumbnailPath.jpg" ];then
+	if test -f "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
-	elif [ -f "$thumbnailPath.png" ];then
+	elif test -f "$thumbnailPath.png";then
 		thumbnailExt=".png"
 	else
 		return 1
@@ -695,7 +697,7 @@ downloadThumbnail(){
 	# if the link has already been downloaded then dont download it
 	if ! test -f "$thumbnailPath$thumbnailExt";then
 		# if it dont exist download it
-		curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
+		curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"
 	fi
 }
 ########################################################################
@@ -707,28 +709,28 @@ checkForThumbnail(){
 	########################################################################
 	INFO "new thumbnail path = $thumbnailPath"
 	# check for a local thumbnail
-	if [ -f "$thumbnailPath.jpg" ];then
+	if test -f "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
 		INFO "Thumbnail already linked..."
-	elif [ -f "$thumbnailPath.png" ];then
+	elif test -f "$thumbnailPath.png";then
 		thumbnailExt=".png"
 		INFO "Thumbnail already linked..."
 	else
 		# no thumbnail has been linked or downloaded
-		if [ -f "$thumbnail.png" ];then
+		if test -f "$thumbnail.png";then
 			INFO "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.png" "$thumbnailPath.png"
 			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
-		elif [ -f "$thumbnail.jpg" ];then
+		elif test -f "$thumbnail.jpg";then
 			INFO "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
 			linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
 		else
-			if echo "$nfoInfo" | grep "thumb";then
+			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
 				INFO "Try to download episode thumbnail..."
 				INFO "Thumbnail found at $thumbnailLink"
@@ -749,7 +751,7 @@ checkForThumbnail(){
 			INFO "[DEBUG]: file size $tempFileSize"
 			if [ "$tempFileSize" -eq 0 ];then
 				addToLog "WARNING" "Generating Thumbnail" "$videoPath" "$showLogPath"
-				echo "[ERROR]: Failed to find thumbnail inside nfo file!"
+				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 				# try to generate a thumbnail from video file
 				INFO "Attempting to create thumbnail from video source..."
 				#tempFileSize=0
@@ -774,9 +776,9 @@ checkForThumbnail(){
 					ALERT "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
 					#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 					# store the image inside a variable
-					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert - "$thumbnailPath.png" )
+					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 					# resize the image before checking the filesize
-					convert "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
+					convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
 					tempFileSize=$(echo "$image" | wc --bytes)
 					# get the size of the file, after it has been created
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
@@ -819,9 +821,7 @@ processEpisode(){
 	INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
-		echo "################################################################################"
-		echo "Processing Episode $episode"
-		echo "################################################################################"
+		INFO "Processing Episode $episode"
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
@@ -854,7 +854,7 @@ processEpisode(){
 		INFO "Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
 		if [ "$episodeNumber" -lt 10 ];then
-			if ! echo "$episodeNumber"| grep "^0";then
+			if ! echo "$episodeNumber"| grep -q "^0";then
 				# add a zero to make it format correctly
 				episodeNumber="0$episodeNumber"
 			fi
@@ -925,37 +925,37 @@ processEpisode(){
 			sufix=".strm"
 		else
 			# no video file could be found this should be logged
-			echo "[ERROR]: could not find video file"
+			ALERT "[ERROR]: could not find video file"
 			addToLog "ERROR" "No video file" "$episode" "$showLogPath"
 			# exit the function  cancel building the episode
 			return
 		fi
 		# set the video type based on the found video path
-		if echo "$videoPath" | grep --ignore-case ".mp3";then
+		if echo "$videoPath" | grep -q --ignore-case ".mp3";then
 			mediaType="audio"
 			mimeType="audio/mp3"
-		elif echo "$videoPath" | grep --ignore-case ".ogg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".ogg";then
 			mediaType="audio"
 			mimeType="audio/ogg"
-		elif echo "$videoPath" | grep --ignore-case ".ogv";then
+		elif echo "$videoPath" | grep -q --ignore-case ".ogv";then
 			mediaType="video"
 			mimeType="video/ogv"
-		elif echo "$videoPath" | grep --ignore-case ".mp4";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mp4";then
 			mediaType="video"
 			mimeType="video/mp4"
-		elif echo "$videoPath" | grep --ignore-case ".m4v";then
+		elif echo "$videoPath" | grep -q --ignore-case ".m4v";then
 			mediaType="video"
 			mimeType="video/m4v"
-		elif echo "$videoPath" | grep --ignore-case ".mpeg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mpeg";then
 			mediaType="video"
 			mimeType="video/mpeg"
-		elif echo "$videoPath" | grep --ignore-case ".mpg";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mpg";then
 			mediaType="video"
 			mimeType="video/mpg"
-		elif echo "$videoPath" | grep --ignore-case ".avi";then
+		elif echo "$videoPath" | grep -q --ignore-case ".avi";then
 			mediaType="video"
 			mimeType="video/avi"
-		elif echo "$videoPath" | grep --ignore-case ".mkv";then
+		elif echo "$videoPath" | grep -q --ignore-case ".mkv";then
 			mediaType="video"
 			mimeType="video/x-matroska"
 		else
@@ -1012,7 +1012,7 @@ processEpisode(){
 		INFO "episodeVideoPath = $videoPath"
 
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
-		if echo "$sufix" | grep --ignore-case "strm";then
+		if echo "$sufix" | grep -q --ignore-case "strm";then
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
 			# change the video path into a video id to make it embedable
@@ -1039,7 +1039,7 @@ processEpisode(){
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
 						ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
-						curl "$resolverUrl&batch=true" > /dev/null
+						curl --silent "$resolverUrl&batch=true" > /dev/null
 					fi
 				fi
 			fi
@@ -1072,10 +1072,10 @@ processEpisode(){
 		# convert the found episode thumbnail into a web thumb
 		INFO "building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
 		if ! test -f "$thumbnailPath-web.png";then
-			convert "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
+			convert -quiet "$thumbnailPath$thumbnailExt" -resize "200x100" "$thumbnailPath-web.png"
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
-		if echo "$videoPath" | grep --ignore-case "plugin://";then
+		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
 			INFO "yt-id = $yt_id"
@@ -1194,7 +1194,7 @@ processEpisode(){
 		# create the episode file in the new index
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/new/episode_$episodePath.index"
 	else
-		echo "[WARNING]: The file '$episode' could not be found!"
+		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
 }
 ################################################################################
@@ -1219,6 +1219,7 @@ processShow(){
 		# a existing state was found
 		currentSum=$(cat "$webDirectory/shows/$showTitle/state_$pathSum.cfg")
 		libarySum=$(getDirSum "$show")
+		updateInfo="$showTitle\n$currentSum != $libarySum\n$(ls "$show")\n$show"
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
 			# this means they are the same so no update needs run
@@ -1231,14 +1232,13 @@ processShow(){
 			INFO "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			echo "" > "$showLogPath"
-			updateInfo="$showTitle\n$currentSum != $libarySum"
 			addToLog "UPDATE" "Updating Show" "$updateInfo" "$logPagePath"
 			# update the show directory modification date when the state has been changed
 			touch "$webDirectory/shows/$showTitle/"
 		fi
 	else
 		INFO "No show state exists for $showTitle, updating..."
-		addToLog "NEW" "Creating new show" "$showTitle" "$logPagePath"
+		addToLog "NEW" "Creating new show" "$updateInfo" "$logPagePath"
 		# update the show directory modification date when the state has been changed
 		touch "$webDirectory/shows/$showTitle/"
 	fi
@@ -1256,11 +1256,11 @@ processShow(){
 	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
 	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
 	# link all images to the kodi path
-	if ls "$show" | grep "\.jpg" ;then
+	if ls "$show" | grep -q "\.jpg" ;then
 		linkFile "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
 		linkFile "$show"/*.jpg "$webDirectory/shows/$showTitle/"
 	fi
-	if ls "$show" | grep "\.png" ;then
+	if ls "$show" | grep -q "\.png" ;then
 		linkFile "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
 		linkFile "$show"/*.png "$webDirectory/shows/$showTitle/"
 	fi
@@ -1272,7 +1272,7 @@ processShow(){
 		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
 		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	elif [ -f "$show/poster.jpg" ];then
 		posterPath="poster.jpg"
@@ -1281,7 +1281,7 @@ processShow(){
 		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
 		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	else
 		INFO "[WARNING]: could not find $show/poster.[png/jpg]"
@@ -1314,32 +1314,48 @@ processShow(){
 	#find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
 	for season in "$show"/*;do
 		INFO "checking for season folder at '$season'"
-		if [ -d "$season" ];then
+		if test -d "$season";then
 			INFO "found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
-			# if the folder is a directory that means a season has been found
-			# read each episode in the series
-			for episode in "$season"/*.nfo;do
-				processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
-			done
-			################################################################################
-			headerPagePath="$webDirectory/header.php"
 
-			# find the fanart for the episode background
-			if [ -f "$webDirectory/shows/$showTitle/fanart.png" ];then
-				tempStyle="--backgroundFanart: url(\"fanart.png\");"
-			elif [ -f "$webDirectory/shows/$showTitle/fanart.jpg" ];then
-				tempStyle="--backgroundFanart: url(\"fanart.jpg\");"
+			# get the season folder sum, youtube channels can have 2k + episodes a season
+			currentSeasonSum=$(cat "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg")
+			libarySeasonSum=$(getDirSum "$season")
+			if [ "$libarySeasonSum" == "$currentSeasonSum" ];then
+				# this season folder is unchanged ignore it
+				INFO "Season Unchanged $season"
+			else
+				# update the altered season files
+				################################################################################
+
+				# if the folder is a directory that means a season has been found
+				# read each episode in the series
+				for episode in "$season"/*.nfo;do
+					processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
+				done
+				################################################################################
+				headerPagePath="$webDirectory/header.php"
+
+				# find the fanart for the episode background
+				if test -f "$webDirectory/shows/$showTitle/fanart.png";then
+					tempStyle="--backgroundFanart: url(\"fanart.png\");"
+				elif test -f "$webDirectory/shows/$showTitle/fanart.jpg";then
+					tempStyle="--backgroundFanart: url(\"fanart.jpg\");"
+				fi
+				if test -f "$webDirectory/shows/$showTitle/poster.png";then
+					tempStyle="$tempStyle --backgroundPoster: url(\"poster.png\")"
+				elif test -f "$webDirectory/shows/$showTitle/poster.jpg";then
+					tempStyle="$tempStyle --backgroundPoster: url(\"poster.jpg\")"
+				fi
+				#tempStyle="html{ background-image: url(\"$fanartPath\") }"
+				# build top of show webpage containing all of the shows meta info
+				linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
+
+
+				# update the season sum file
+				getDirSum "$show" > "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg"
 			fi
-			if [ -f "$webDirectory/shows/$showTitle/poster.png" ];then
-				tempStyle="$tempStyle --backgroundPoster: url(\"poster.png\")"
-			elif [ -f "$webDirectory/shows/$showTitle/poster.jpg" ];then
-				tempStyle="$tempStyle --backgroundPoster: url(\"poster.jpg\")"
-			fi
-			#tempStyle="html{ background-image: url(\"$fanartPath\") }"
-			# build top of show webpage containing all of the shows meta info
-			linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
 		else
 			INFO "Season folder $season does not exist"
 		fi
@@ -1561,7 +1577,7 @@ buildHomePage(){
 		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
 		totalShows=$(find "$webDirectory"/shows/*/ -name 'tvshow.nfo' | wc -l)
 		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
-		if [ -f "$webDirectory/kodi/channels.m3u" ];then
+		if test -f "$webDirectory/kodi/channels.m3u";then
 			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
 			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
 		fi
@@ -1598,7 +1614,7 @@ buildHomePage(){
 				echo "			Comics:$totalComics"
 				echo "		</span>"
 			fi
-			if [ -f "$webDirectory/kodi/channels.m3u" ];then
+			if test -f "$webDirectory/kodi/channels.m3u";then
 				if [ "$totalChannels" -gt 0 ];then
 					echo "		<span>"
 					echo "			Channels:$totalChannels"
@@ -1733,7 +1749,7 @@ function cacheCheck(){
 	cacheDays="$2"
 
 	# return true if cached needs updated
-	if [ -f "$filePath" ];then
+	if test -f "$filePath";then
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
@@ -1753,7 +1769,7 @@ function cacheCheck(){
 ########################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/nfo2web/web.cfg ];then
+	if test -f /etc/nfo2web/web.cfg;then
 		webDirectory=$(cat /etc/nfo2web/web.cfg)
 	else
 		#mkdir -p /var/cache/nfo2web/web/
@@ -1911,7 +1927,7 @@ main(){
 		# - link must be used to also use premade apache settings
 		ln -sfn "$webDirectory" "/var/cache/nfo2web/web"
 		# check if system is active
-		if [ -f "/tmp/nfo2web.active" ];then
+		if test -f "/tmp/nfo2web.active";then
 			# system is already running exit
 			echo "[INFO]: nfo2web is already processing data in another process."
 			echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
@@ -2023,7 +2039,7 @@ main(){
 			rm -v "$webDirectory/.htaccess"
 		fi
 
-		if ! [ -d "$webDirectory/RESOLVER-CACHE/" ];then
+		if ! test -d "$webDirectory/RESOLVER-CACHE/";then
 			# build the cache directory if none exists
 			mkdir -p "$webDirectory/RESOLVER-CACHE/"
 			# set permissions
@@ -2033,7 +2049,7 @@ main(){
 		updateCerts
 
 		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
-		if [ -f "/etc/at.deny" ];then
+		if test -f "/etc/at.deny";then
 			# the file exists check for the www-data line
 			if grep -q "www-data" "/etc/at.deny";then
 				# remove www-data from the deny file for scheduler
@@ -2057,7 +2073,7 @@ main(){
 		linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
 
 		# link the stylesheet based on the chosen theme
-		if ! [ -f /etc/mms/theme.cfg ];then
+		if ! test -f /etc/mms/theme.cfg;then
 			echo "default.css" > "/etc/mms/theme.cfg"
 			chown www-data:www-data "/etc/mms/theme.cfg"
 		fi
@@ -2095,6 +2111,7 @@ main(){
 			echo "include('header.php');";
 			echo "include('settingsHeader.php');";
 			echo "?>";
+			echo "<div class='settingsListCard'>"
 			# add the javascript sorter
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
@@ -2125,14 +2142,15 @@ main(){
 				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
 				INFO "library exists at '$libary'"
 				# read each tvshow directory from the libary
-				for show in "$libary"/*;do
+				#for show in "$libary"/*;do
+				find "$libary/" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
 					INFO "show path = '$show'"
 					################################################################################
 					# process page metadata
 					################################################################################
 					# if the show directory contains a nfo file defining the show
 					INFO "searching for metadata at '$show/tvshow.nfo'"
-					if [ -f "$show/tvshow.nfo" ];then
+					if test -f "$show/tvshow.nfo";then
 						INFO "found metadata at '$show/tvshow.nfo'"
 						# load update the tvshow.nfo file and get the metadata required for
 						showMeta=$(cat "$show/tvshow.nfo")
@@ -2170,6 +2188,7 @@ main(){
 		addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 		{
 			echo "</table>"
+			echo "</div>"
 			echo "</div>"
 			# add footer
 			echo "<?PHP";
