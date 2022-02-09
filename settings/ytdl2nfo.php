@@ -247,6 +247,8 @@ foreach($sourceFiles as $sourceFile){
 	echo file_get_contents("/etc/ytdl2kodi/sleepTime.cfg");
 ?>
 </div>
-
+<?PHP
+	include("header.php");
+?>
 </body>
 </html>

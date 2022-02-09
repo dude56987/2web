@@ -200,6 +200,8 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 </div>
-
+<?PHP
+	include("header.php");
+?>
 </body>
 </html>

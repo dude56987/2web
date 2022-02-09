@@ -65,6 +65,8 @@ foreach($sourceFiles as $sourceFile){
 <input class='button' type='submit'>
 </form>
 </div>
-
+<?php
+include("header.php");
+?>
 </body>
 </html>

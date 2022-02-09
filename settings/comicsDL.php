@@ -70,6 +70,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 </div>
-
+<?PHP
+	include("header.php");
+?>
 </body>
 </html>

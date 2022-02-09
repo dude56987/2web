@@ -11,8 +11,21 @@
 ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
+?>
 
-echo "<div class='settingListCard'>\n";
+<div class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+	<li><a href='#serverLinkConfig'>Server Link Config</a></li>
+	<li><a href='#currentLinks'>Current Links</a></li>
+	<li><a href='#addLink'>Add Link</a></li>
+	<li><a href='#addCustomLink'>Add Custom Link</a></li>
+	<ul>
+</div>
+
+
+<?php
+echo "<div id='serverLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Link Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/iptv2web/sources.cfg");
@@ -92,7 +105,7 @@ foreach($sourceFiles as $sourceFile){
 </form>
 </div>
 
-<div class='inputCard'>
+<div id='addCustomLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Custom Link</h2>
 <input width='60%' type='text' name='addCustomLink' placeholder='Link'>
@@ -102,5 +115,8 @@ foreach($sourceFiles as $sourceFile){
 </form>
 </div>
 
+<?PHP
+	include("header.php");
+?>
 </body>
 </html>

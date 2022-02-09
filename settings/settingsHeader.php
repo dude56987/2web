@@ -68,47 +68,6 @@
 	<div class=''>
 		<ul>
 			<?PHP
-		//	$pageURL = $_SERVER['REQUEST_URI'];
-		//	if ( ! (($pageURL == "/tv.php") || ($pageURL == "/radio.php") || ($pageURL == "/iptv_blocked.php"))){
-				echo "<li>Live";
-				echo "<ul>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/tv.php#index'>TV</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/radio.php#index'>Radio</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/iptv_blocked.php#index'>Blocked</a>\n";
-				echo "	</li>\n";
-				echo "</ul>\n";
-				echo "</li>";
-		//	}
-		//	if ( ! (($pageURL == "/nfo.php") || ($pageURL == "/ytdl2nfo.php"))){
-				echo "<li>Video On Demand";
-				echo "	<ul>\n";
-				echo "		<li>\n";
-				echo "			<a class='' href='/nfo.php#index'>Libaries</a>\n";
-				echo "		</li>\n";
-				echo "		<li>\n";
-				echo "			<a class='' href='/ytdl2nfo.php#index'>Downloads</a>\n";
-				echo "		</li>\n";
-				echo "	</ul>\n";
-				echo "</li>";
-		//	}
-		//	if ( ! (($pageURL == "/comicsDL.php") || ($pageURL == "/comics.php"))){
-				echo "<li>Comics";
-				echo "<ul>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/comics.php#index'>Libaries</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/comicsDL.php#index'>Downloads</a>\n";
-				echo "	</li>\n";
-				echo "</ul>\n";
-				echo "</li>";
-		//	}
-		//	if ( ! (($pageURL == "/system.php") || ($pageURL == "/cache.php") || ($pageURL == "/log.php"))){
 				echo "<li>General";
 				echo "<ul>\n";
 				echo "	<li>\n";
@@ -122,7 +81,42 @@
 				echo "	</li>\n";
 				echo "</ul>\n";
 				echo "</li>";
-		//	}
+
+				echo "<li>Live";
+				echo "<ul>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/tv.php#index'>TV</a>\n";
+				echo "	</li>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/radio.php#index'>Radio</a>\n";
+				echo "	</li>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/iptv_blocked.php#index'>Blocked</a>\n";
+				echo "	</li>\n";
+				echo "</ul>\n";
+				echo "</li>";
+
+				echo "<li>Video On Demand";
+				echo "	<ul>\n";
+				echo "		<li>\n";
+				echo "			<a class='' href='/nfo.php#index'>Libaries</a>\n";
+				echo "		</li>\n";
+				echo "		<li>\n";
+				echo "			<a class='' href='/ytdl2nfo.php#index'>Downloads</a>\n";
+				echo "		</li>\n";
+				echo "	</ul>\n";
+				echo "</li>";
+
+				echo "<li>Comics";
+				echo "<ul>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/comics.php#index'>Libaries</a>\n";
+				echo "	</li>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/comicsDL.php#index'>Downloads</a>\n";
+				echo "	</li>\n";
+				echo "</ul>\n";
+				echo "</li>";
 		?>
 		</ul>
 	</div>
