@@ -17,10 +17,12 @@ if ($writeFile){
 	// set so script keeps running even if user cancels it
 	ignore_user_abort(true);
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/nfo2web/web/movies/*/movies.index"));
+	//$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/nfo2web/web/movies/*/movies.index"));
+	$sourceFiles = explode("\n",shell_exec("find '/var/cache/nfo2web/web/new/' -name 'movie_*.index' -printf '%T+ %p\n' | sort | cut -d' ' -f2-"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	$counter=0;
+	$drawBottom=0;
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
@@ -31,6 +33,7 @@ if ($writeFile){
 						fwrite($fileObj,"<div class='titleCard'>");
 						fwrite($fileObj,"<h1>Updated Movies</h1>");
 						fwrite($fileObj,"<div class='listCard'>");
+						$drawBottom = 1;
 					}
 					// read the index entry
 					$data=file_get_contents($sourceFile);
@@ -39,12 +42,21 @@ if ($writeFile){
 				}
 			}
 			if ($counter >= 40){
+				// break the loop
 				break;
 			}
 		}
 	}
-	fwrite($fileObj,"</div>");
-	fwrite($fileObj,"</div>");
+	if ($drawBottom == 1){
+		// create a final link to the full new list
+		fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=movies'>");
+		fwrite($fileObj,"Full");
+		fwrite($fileObj,"<br>");
+		fwrite($fileObj,"List");
+		fwrite($fileObj,"</a>");
+		fwrite($fileObj,"</div>");
+		fwrite($fileObj,"</div>");
+	}
 	// close the file
 	fclose($fileObj);
 }

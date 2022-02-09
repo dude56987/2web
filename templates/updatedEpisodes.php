@@ -23,6 +23,7 @@ if ($writeFile){
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	$counter=0;
+	$drawBottom=0;
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
@@ -33,6 +34,7 @@ if ($writeFile){
 						fwrite($fileObj,"<div class='titleCard'>");
 						fwrite($fileObj,"<h1>Updated Episodes</h1>");
 						fwrite($fileObj,"<div class='listCard'>");
+						$drawBottom = 1;
 					}
 					// read the index entry
 					$data=file_get_contents($sourceFile);
@@ -46,12 +48,14 @@ if ($writeFile){
 			}
 		}
 	}
-	// create a final link to the full new list
-	fwrite($fileObj,"<a class='button showPageEpisode' href='/new/'>");
-	fwrite($fileObj,"Full List");
-	fwrite($fileObj,"</a>");
-	fwrite($fileObj,"</div>");
-	fwrite($fileObj,"</div>");
+	if ($drawBottom == 1){
+		// create a final link to the full new list
+		fwrite($fileObj,"<a class='button showPageEpisode' href='/new/index.php?filter=episodes'>");
+		fwrite($fileObj,"Full List");
+		fwrite($fileObj,"</a>");
+		fwrite($fileObj,"</div>");
+		fwrite($fileObj,"</div>");
+	}
 	// close the file
 	fclose($fileObj);
 }
