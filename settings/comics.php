@@ -22,6 +22,24 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='index' class='inputCard'>
+	<h2>Supported libary file types</h2>
+	<ul>
+		<li>.txt</li>
+		<li>.zip</li>
+		<li>.cbz</li>
+		<li>.pdf</li>
+		<li>local jpeg directories
+			<ul>
+				<li>one directory per comic</li>
+				<li>directory name will be comic name</li>
+				<li>You can place directories with image files inside the top level directory for chapters</li>
+				<li>This is based on gallery-dl's download directory structure</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
 <div id='addComicLibary' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add Comic Libary Path</h2>

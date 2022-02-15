@@ -186,6 +186,111 @@ function update(){
 			#touch "$webDirectory/comicCache/download_$comicSum.index"
 		fi
 	done
+	# check for pdf files in comic libaries
+	comicLibaries="$(libaryPaths | tr -s '\n' | shuf )"
+	# first convert epub files to pdf files
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.txt' | sort | while read txtFilePath;do
+			txtComicName=$(popPath "$txtFilePath" | sed "s/.txt//g")
+			# only extract the cbz once
+			if ! test -d "${downloadDirectory}txt2comic/$txtComicName/$txtComicName.pdf";then
+				mkdir -p "${downloadDirectory}txt2comic/$txtComicName/"
+				# extract the cbz file to the download directory
+				INFO "Found txt '$txtComicName', converting to comic book..."
+				# convert epub files into pdf files to be converted below
+				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" | wkhtmltopdf - "${downloadDirectory}txt2comic/$txtComicName/$txtComicName.pdf"
+			fi
+		done
+	done
+	# first convert epub files to pdf files
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.epub' | sort | while read epubFilePath;do
+			epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
+			# only extract the cbz once
+			if ! test -d "${downloadDirectory}epub2comic/$epubComicName.pdf";then
+				mkdir -p "${downloadDirectory}epub2comic/"
+				# extract the cbz file to the download directory
+				INFO "Found epub '$epubComicName', converting to comic book..."
+				# convert epub files into pdf files to be converted below
+				if test -f /usr/bin/ebook-convert;then
+					ebook-convert "$epubFilePath" "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
+				fi
+				#pandoc -f epub -t pdf "$epubFilePath" -o "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
+				#pandoc "$epubFilePath" -o "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
+			fi
+		done
+	done
+
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each pdf file found in the pdf libary locations
+		find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
+			pdfComicName=$(popPath "$pdfFilePath" | sed "s/.pdf//g")
+			# only extract the pdf once
+			if ! test -d "${downloadDirectory}pdf2comic/$pdfComicName/";then
+				mkdir -p "${downloadDirectory}pdf2comic/$pdfComicName/"
+				# extract the pdf file to the download directory
+				INFO "Found pdf '$pdfComicName', converting to comic book..."
+				# - load the pdf file with its filename as the comic name into the comic download directory
+				pdftoppm "$pdfFilePath" -jpeg -cropbox "$downloadDirectory/pdf2comic/$pdfComicName/$pdfComicName"
+				# trim all whitespace from image files
+				ALERT "${downloadDirectory}pdf2comic/$pdfComicName/"
+				find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+					ALERT "convert '$pdfImageFilePath' -fuzz '10%' -trim '$pdfImageFilePath'"
+					# trim the whitespace
+					convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+				done
+			fi
+		done
+	done
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.cbz' | sort | while read cbzFilePath;do
+			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
+			# only extract the cbz once
+			if ! test -d "$downloadDirectory/cbz2comic/$cbzComicName/";then
+				mkdir -p "$downloadDirectory/cbz2comic/$cbzComicName/"
+				# extract the cbz file to the download directory
+				INFO "Found cbz '$cbzComicName', converting to comic book..."
+				# - load the cbz file with its filename as the comic name into the comic download directory
+				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
+				#pdftoppm "$cbzFilePath" -jpeg -cropbox "$downloadDirectory/cbz2comic/$cbzComicName/$cbzComicName"
+				# trim all whitespace from image files
+				ALERT "${downloadDirectory}cbz2comic/$cbzComicName/"
+				#find "${downloadDirectory}cbz2comic/$cbzComicName/" -type f -name '*.jpg' | sort | while read cbzImageFilePath;do
+				#	ALERT "convert '$cbzImageFilePath' -fuzz '10%' -trim '$cbzImageFilePath'"
+				#	# trim the whitespace
+				#	convert "$cbzImageFilePath" -fuzz '10%' -trim "$cbzImageFilePath"
+				#done
+			fi
+		done
+	done
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.zip' | sort | while read cbzFilePath;do
+			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
+			# only extract the cbz once
+			if ! test -d "$downloadDirectory/cbz2comic/$cbzComicName/";then
+				mkdir -p "$downloadDirectory/cbz2comic/$cbzComicName/"
+				# extract the cbz file to the download directory
+				INFO "Found cbz '$cbzComicName', converting to comic book..."
+				# - load the cbz file with its filename as the comic name into the comic download directory
+				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
+				# trim all whitespace from image files
+				ALERT "${downloadDirectory}cbz2comic/$cbzComicName/"
+				#find "${downloadDirectory}cbz2comic/$cbzComicName/" -type f -name '*.jpg' | sort | while read cbzImageFilePath;do
+				#	ALERT "convert '$cbzImageFilePath' -fuzz '10%' -trim '$cbzImageFilePath'"
+				#	# trim the whitespace
+				#	convert "$cbzImageFilePath" -fuzz '10%' -trim "$cbzImageFilePath"
+				#done
+			fi
+		done
+	done
+
+
+
+
 }
 ################################################################################
 convertImage(){
@@ -909,7 +1014,9 @@ webUpdate(){
 			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 				INFO "link the comics to the kodi directory"
 				# link this comic to the kodi directory
-				ln -s "$comicNamePath" "$webDirectory/kodi/comics/"
+				if test -d "$webDirectory/kodi/comics/";then
+					ln -s "$comicNamePath" "$webDirectory/kodi/comics/"
+				fi
 				INFO "scanning comic path '$comicNamePath'"
 				# add one to the total comics
 				totalComics=$(( $totalComics + 1 ))
