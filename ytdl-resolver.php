@@ -396,22 +396,22 @@ if (array_key_exists("url",$_GET)){
 			# build the m3u file before caching the video it is part of the buffering process
 			# build a list of available bumps
 			# iterate though the bumps directory and pick a video file randomly
-			$tempFiles = glob("bumps/*-bump.mp4");
-			$bumpFile= $tempFiles[array_rand($tempFiles)];
-			$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
-			debug("BumpFile : ".$bumpFile);
-			debug("SkipFile : ".$skipFile);
+			//$tempFiles = glob("bumps/*-bump.mp4");
+			//$bumpFile= $tempFiles[array_rand($tempFiles)];
+			//$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
+			//debug("BumpFile : ".$bumpFile);
+			//debug("SkipFile : ".$skipFile);
 			# figure out the absolute server path
 			$serverPath='http://'.gethostname().'.local/';
 
 			# link the bump file
-			if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4")){
-				symlink("../$bumpFile",("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4"));
-			}
+			//if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4")){
+				//symlink("../$bumpFile",("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4"));
+			//}
 			# link the skip file
-			if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4")){
-				symlink("../$skipFile",("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4"));
-			}
+			//if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4")){
+				//symlink("../$skipFile",("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4"));
+			//}
 			# write the bumps to the buffer file to allow managed delay for download and playback
 			for ($index=1;$index <= 30;$index+=1){
 				# write 20 lines of the bump
@@ -521,7 +521,7 @@ if (array_key_exists("url",$_GET)){
 	echo "</div>";
 	echo "<div class='settingListCard'>";
 	echo "<h2>Random Cached Videos</h2>";
-	$sourceFiles = explode("\n",shell_exec("ls -t1 $webDirectory/RESOLVER-CACHE/*/*.mp4"));
+	$sourceFiles = explode("\n",shell_exec("ls -t1 RESOLVER-CACHE/*/*.mp4"));
 	// reverse the time sort
 	//$sourceFiles = array_reverse($sourceFiles);
 	# build the video index
