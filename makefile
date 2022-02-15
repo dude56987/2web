@@ -245,7 +245,7 @@ build-deb:
 	chmod -Rv go-w debian/
 	chmod -Rv u+w debian/
 	# build the package
-	dpkg-deb --build debian
+	dpkg-deb -Z xz --build debian
 	cp -v debian.deb nfo2web_UNSTABLE.deb
 	rm -v debian.deb
 	rm -rv debian
