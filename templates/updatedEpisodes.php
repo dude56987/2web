@@ -50,7 +50,7 @@ if ($writeFile){
 	}
 	if ($drawBottom == 1){
 		// create a final link to the full new list
-		fwrite($fileObj,"<a class='button showPageEpisode' href='/new/index.php?filter=episodes'>");
+		fwrite($fileObj,"<a class='showPageEpisode' href='/new/index.php?filter=episodes'>");
 		fwrite($fileObj,"Full List");
 		fwrite($fileObj,"</a>");
 		fwrite($fileObj,"</div>");
