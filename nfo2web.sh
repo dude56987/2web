@@ -181,6 +181,7 @@ processMovie(){
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
 		#INFO "movie web path = '$movieWebPath'"
+		INFO "Processing movie $movieTitle $movieYear at $movieDir"
 		################################################################################
 		# check the state now that the movie web path has been determined
 		################################################################################
@@ -196,6 +197,11 @@ processMovie(){
 				#INFO "State is unchanged for $movieTitle, no update is needed."
 				#ALERT "[DEBUG]: $currentSum == $libarySum"
 				addToLog "INFO" "Movie unchanged" "$updateInfo" "$logPagePath"
+				# if the movie is updating a check should be preformed to see if there are multuple  state_*.cfg files inside the movie web directory
+				if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
+					# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
+					addToLog "ERROR" "Multuple Movie Sources" "Movie path '$movieDir'" "$logPagePath"
+				fi
 				return
 			else
 				#INFO "States are diffrent, updating $movieTitle..."
@@ -374,7 +380,7 @@ processMovie(){
 			#INFO "Found fanart at '$movieDir/$fanartPath'"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
-		elif test -f "$show/fanart.jpg";then
+		elif test -f "$movieDir/fanart.jpg";then
 			fanartPath="fanart.jpg"
 			#INFO "Found fanart at '$movieDir/$fanartPath'"
 			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
@@ -550,7 +556,7 @@ processMovie(){
 						#INFO "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$movieVideoPath' -vframes 1 '$thumbnailPath.png'"
 						#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 						# store the image inside a variable
-						image=$(ffmpeg -loglevel quiet -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
+						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 						# resize the image before checking the filesize
 						convert -quiet "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
 						# get the size of the file, after it has been created
@@ -776,7 +782,7 @@ checkForThumbnail(){
 					#ALERT "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
 					#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 					# store the image inside a variable
-					image=$(ffmpeg -loglevel quiet -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
+					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 					# resize the image before checking the filesize
 					convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
 					tempFileSize=$(echo "$image" | wc --bytes)
@@ -1271,7 +1277,7 @@ processShow(){
 	# link the poster
 	if [ -f "$show/poster.png" ];then
 		posterPath="poster.png"
-		INFO "Found $show/$posterPath"
+		#INFO "Found $show/$posterPath"
 		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
 		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
@@ -1280,7 +1286,7 @@ processShow(){
 		fi
 	elif [ -f "$show/poster.jpg" ];then
 		posterPath="poster.jpg"
-		INFO "Found $show/$posterPath"
+		#INFO "Found $show/$posterPath"
 		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
 		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
 		# create the web thumbnails
@@ -1288,7 +1294,7 @@ processShow(){
 			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	else
-		INFO "[WARNING]: could not find $show/poster.[png/jpg]"
+		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]" "$logPagePath"
 	fi
 	# link the fanart
 	if test -f "$show/fanart.png";then
@@ -1303,13 +1309,13 @@ processShow(){
 		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
 		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
 	else
-		ALERT "[WARNING]: could not find $show/fanart.[png/jpg]"
+		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg]" "$logPagePath"
 	fi
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
-	INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
+	#INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
 	mkdir -p "$webDirectory/shows/$showTitle/"
-	INFO "Creating showPagePath = $showPagePath"
+	#INFO "Creating showPagePath = $showPagePath"
 	#touch "$showPagePath"
 	################################################################################
 	# begin building the html of the page
@@ -1421,9 +1427,7 @@ getLibSum(){
 	totalList=""
 	while read -r line;do
 		# read each line and load the file
-		#tempList=$(ls -lR $line)
 		tempList=$(ls -R "$line")
-		#tempList=$(cat "$line"/*/*.cfg)
 		# add value to list
 		totalList="$totalList$tempList"
 	done < /etc/nfo2web/libaries.cfg
