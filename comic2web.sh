@@ -200,29 +200,28 @@ function update(){
 				INFO "Found txt '$txtComicName', converting to comic book..."
 				# convert epub files into pdf files to be converted below
 				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" | wkhtmltopdf - "${downloadDirectory}txt2comic/$txtComicName/$txtComicName.pdf"
+				chown -R www-data:www-data "${downloadDirectory}txt2comic/$txtComicName/"
 			fi
 		done
 	done
-	# first convert epub files to pdf files
-	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each cbz file found in the cbz libary locations
-		find "$comicLibaryPath" -type f -name '*.epub' | sort | while read epubFilePath;do
-			epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
-			# only extract the cbz once
-			if ! test -d "${downloadDirectory}epub2comic/$epubComicName.pdf";then
-				mkdir -p "${downloadDirectory}epub2comic/"
-				# extract the cbz file to the download directory
-				INFO "Found epub '$epubComicName', converting to comic book..."
-				# convert epub files into pdf files to be converted below
-				if test -f /usr/bin/ebook-convert;then
+	if test -f /usr/bin/ebook-convert;then
+		# first convert epub files to pdf files
+		echo "$comicLibaries" | sort | while read comicLibaryPath;do
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.epub' | sort | while read epubFilePath;do
+				epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
+				# only extract the cbz once
+				if ! test -d "${downloadDirectory}epub2comic/$epubComicName.pdf";then
+					mkdir -p "${downloadDirectory}epub2comic/"
+					# extract the cbz file to the download directory
+					INFO "Found epub '$epubComicName', converting to comic book..."
+					# convert epub files into pdf files to be converted below
 					ebook-convert "$epubFilePath" "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
+					chown -R www-data:www-data "${downloadDirectory}epub2comic/$epubComicName/"
 				fi
-				#pandoc -f epub -t pdf "$epubFilePath" -o "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
-				#pandoc "$epubFilePath" -o "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
-			fi
+			done
 		done
-	done
-
+	fi
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each pdf file found in the pdf libary locations
 		find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
@@ -234,12 +233,19 @@ function update(){
 				INFO "Found pdf '$pdfComicName', converting to comic book..."
 				# - load the pdf file with its filename as the comic name into the comic download directory
 				pdftoppm "$pdfFilePath" -jpeg -cropbox "$downloadDirectory/pdf2comic/$pdfComicName/$pdfComicName"
+				# change ownership to server
+				chown -R www-data:www-data "${downloadDirectory}pdf2comic/$pdfComicName/"
+				# get comic book pages
+				data=$(find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg')
+				dataLength=$(echo "$data" | wc -l)
+				counter=0
 				# trim all whitespace from image files
-				ALERT "${downloadDirectory}pdf2comic/$pdfComicName/"
-				find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
-					ALERT "convert '$pdfImageFilePath' -fuzz '10%' -trim '$pdfImageFilePath'"
+				#find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+				find "$data" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+					INFO "Cleanup of comic edges $pdfComicName page $counter/$dataLength"
 					# trim the whitespace
 					convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+					counter=$(( $counter + 1 ))
 				done
 			fi
 		done
@@ -255,14 +261,7 @@ function update(){
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
 				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
-				#pdftoppm "$cbzFilePath" -jpeg -cropbox "$downloadDirectory/cbz2comic/$cbzComicName/$cbzComicName"
-				# trim all whitespace from image files
-				ALERT "${downloadDirectory}cbz2comic/$cbzComicName/"
-				#find "${downloadDirectory}cbz2comic/$cbzComicName/" -type f -name '*.jpg' | sort | while read cbzImageFilePath;do
-				#	ALERT "convert '$cbzImageFilePath' -fuzz '10%' -trim '$cbzImageFilePath'"
-				#	# trim the whitespace
-				#	convert "$cbzImageFilePath" -fuzz '10%' -trim "$cbzImageFilePath"
-				#done
+				chown -R www-data:www-data "${downloadDirectory}cbz2comic/$cbzComicName/"
 			fi
 		done
 	done
@@ -277,20 +276,10 @@ function update(){
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
 				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
-				# trim all whitespace from image files
-				ALERT "${downloadDirectory}cbz2comic/$cbzComicName/"
-				#find "${downloadDirectory}cbz2comic/$cbzComicName/" -type f -name '*.jpg' | sort | while read cbzImageFilePath;do
-				#	ALERT "convert '$cbzImageFilePath' -fuzz '10%' -trim '$cbzImageFilePath'"
-				#	# trim the whitespace
-				#	convert "$cbzImageFilePath" -fuzz '10%' -trim "$cbzImageFilePath"
-				#done
+				chown -R www-data:www-data "${downloadDirectory}cbz2comic/$cbzComicName/"
 			fi
 		done
 	done
-
-
-
-
 }
 ################################################################################
 convertImage(){
@@ -1070,6 +1059,7 @@ webUpdate(){
 ################################################################################
 function resetCache(){
 	webDirectory=$(webRoot)
+	downloadDirectory="$(downloadDir)"
 	# remove web cache
 	rm -rv "$webDirectory/comics/" || INFO "No comic web directory at '$webDirectory/comics/'"
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | while read comicPath;do
@@ -1080,6 +1070,10 @@ function resetCache(){
 		fi
 	done
 	rm -rv "$webDirectory/comicCache/download_"*.index || INFO "No path to remove at '$webDirectory/comicCache/download_*.index'"
+	rm -rv "$downloadDirectory/pdf2comic/" || INFO "No path to remove at '$downloadDirectory/pdf2comic/'"
+	rm -rv "$downloadDirectory/txt2comic/" || INFO "No path to remove at '$downloadDirectory/txt2comic/'"
+	rm -rv "$downloadDirectory/epub2comic/" || INFO "No path to remove at '$downloadDirectory/epub2comic/'"
+	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
 	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
 }
 ################################################################################
