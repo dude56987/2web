@@ -87,7 +87,14 @@ update2web(){
 }
 ################################################################################
 main(){
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
+	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
+		# update main components
+		update2Web
+		# update the metadata and build webpages for all generators
+		/usr/bin/nfo2web
+		/usr/bin/iptv2web
+		/usr/bin/comic2web
+	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2Web
 		# update the metadata and build webpages for all generators
@@ -109,7 +116,8 @@ main(){
 		/usr/bin/nfo2web reset
 		/usr/bin/comic2web reset
 		/usr/bin/iptv2web reset
-	elif [ "$1" == "-cc" ] || [ "$1" == "--cleancache" ] || [ "$1" == "CleanCache" ] ;then
+	elif [ "$1" == "-cc" ] || [ "$1" == "--cleancache" ] || [ "$1" == "cleancache" ] ;then
+		# run the cleanup to remove cached files older than the cache time
 		################################################################################
 		if test -f "$(webRoot)/cacheDelay.cfg";then
 			echo "Loading cache settings..."
@@ -120,21 +128,29 @@ main(){
 		fi
 		echo "Cache Delay = $cacheDelay"
 		# delete files older than x days
+		echo "Checking for cache files in $(webRoot)/RESOLVER-CACHE/"
+		find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay"
+		INFO "Removing files..."
 		if test -f "$(webRoot)/RESOLVER-CACHE/";then
 			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -delete
 		fi
+		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
+		find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay"
+		INFO "Removing files..."
 		# delete the m3u cache
 		if test -f "$(webRoot)/M3U-CACHE/";then
-			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -delete
+			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.index' -delete
 		fi
+		echo "Checking for cache files in $(webRoot)/new/"
+		find "$(webRoot)/new/" -type f -mtime +"$cacheDelay"
 		# delete the new episodes cache
 		if test -f "$(webRoot)/new/";then
-			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -delete
+			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -name '*.index' -delete
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		echo "########################################################################"
 		echo "# 2web CLI for administration"
-		echo "# Copyright (C) 2020  Carl J Smith"
+		echo "# Copyright (C) 2021  Carl J Smith"
 		echo "#"
 		echo "# This program is free software: you can redistribute it and/or modify"
 		echo "# it under the terms of the GNU General Public License as published by"

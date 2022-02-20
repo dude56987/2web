@@ -34,8 +34,8 @@
 # clean resolver cache daily, remove cached files older than 7 days
 # also run cache cleanup after reboot
 #@daily root /usr/bin/niceload /usr/bin/mmsCleanCache > /var/log/mmsCleanCache.log
-@daily root /usr/bin/niceload /usr/bin/2web CleanCache
-@reboot root /usr/bin/niceload /usr/bin/2web CleanCache
+@daily root /usr/bin/niceload /usr/bin/2web cleancache
+@reboot root /usr/bin/niceload /usr/bin/2web cleancache
 ################################################################################
 # Please choose only one of the below update schedules for ytdl2nfo
 ################################################################################
