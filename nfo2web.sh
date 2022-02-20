@@ -186,6 +186,7 @@ processMovie(){
 		# check the state now that the movie web path has been determined
 		################################################################################
 		updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")\n$moviePath"
+		unchangedInfo="$movieTitle\n$currentSum == $libarySum\n$(ls "$movieDir")\n$moviePath"
 		# check movie state as soon as posible processing
 		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
 			# a existing state was found
@@ -196,7 +197,7 @@ processMovie(){
 				# this means they are the same so no update needs run
 				#INFO "State is unchanged for $movieTitle, no update is needed."
 				#ALERT "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$updateInfo" "$logPagePath"
+				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
 				# if the movie is updating a check should be preformed to see if there are multuple  state_*.cfg files inside the movie web directory
 				if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
 					# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
