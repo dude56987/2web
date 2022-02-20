@@ -4,6 +4,7 @@
 #set -x
 ################################################################################
 ALERT(){
+	echo;
 	echo "$1";
 	echo;
 }
@@ -24,6 +25,11 @@ webRoot(){
 		chown -R www-data:www-data "/var/cache/nfo2web/web/"
 		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
 		webDirectory="/var/cache/nfo2web/web"
+	fi
+	# check for a trailing slash appended to the path
+	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+		# rip the last byte off the string and return the correct path
+		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
 	fi
 	#mkdir -p "$webDirectory"
 	echo "$webDirectory"
@@ -215,8 +221,9 @@ function update(){
 					mkdir -p "${downloadDirectory}epub2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found epub '$epubComicName', converting to comic book..."
+					# allow ebook convert to run as root
 					# convert epub files into pdf files to be converted below
-					ebook-convert "$epubFilePath" "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
+					export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox" && ebook-convert "$epubFilePath" "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
 					chown -R www-data:www-data "${downloadDirectory}epub2comic/$epubComicName/"
 				fi
 			done
@@ -232,7 +239,7 @@ function update(){
 				# extract the pdf file to the download directory
 				INFO "Found pdf '$pdfComicName', converting to comic book..."
 				# - load the pdf file with its filename as the comic name into the comic download directory
-				pdftoppm "$pdfFilePath" -jpeg -cropbox "$downloadDirectory/pdf2comic/$pdfComicName/$pdfComicName"
+				pdftoppm "$pdfFilePath" -jpeg -cropbox "${downloadDirectory}pdf2comic/$pdfComicName/$pdfComicName"
 				# change ownership to server
 				chown -R www-data:www-data "${downloadDirectory}pdf2comic/$pdfComicName/"
 				# get comic book pages
@@ -240,9 +247,9 @@ function update(){
 				dataLength=$(echo "$data" | wc -l)
 				counter=0
 				# trim all whitespace from image files
-				#find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
-				find "$data" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
-					INFO "Cleanup of comic edges $pdfComicName page $counter/$dataLength"
+				#find "$data" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+				find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+					INFO "Trimming whitespace from $pdfComicName page $counter/$dataLength"
 					# trim the whitespace
 					convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 					counter=$(( $counter + 1 ))
@@ -806,8 +813,25 @@ renderPage(){
 			echo "<h1>$pageComicName</h1>"
 			echo "<a class='button' href='$pageComicName.cbz'>Download "
 			# get the file size and list it in the download button
-			echo $(	du -sh "$webDirectory/comics/$pageComicName.cbz" | cut -f1 );
+			echo $(	du -sh "$webDirectory/comics/$pageComicName/$pageComicName.cbz" | cut -f1 );
 			echo "</a>"
+			# get the total comic book pages, pages are jpg files, thumbnails are png files
+			totalComicBookPages=0
+			if [ $isChapter = true ];then
+				#find "$webDirectory/comics/$pageComicName/" -type f -name 'totalPages.cfg' | while read comicPageTotalEntry;do
+				for comicPageTotalEntry in "$webDirectory/comics/$pageComicName/"*/totalPages.cfg;do
+					tempTotalComicPages=$(cat "$comicPageTotalEntry" )
+					if [ $tempTotalComicPages -gt 0 ];then
+						totalComicBookPages=$(( "$totalComicBookPages" + "$tempTotalComicPages" ))
+					fi
+				done
+			else
+				tempTotalComicPages=$(cat "$webDirectory/comics/$pageComicName/totalPages.cfg" )
+				if [ $tempTotalComicPages -gt 0 ];then
+					totalComicBookPages=$(( "$totalComicBookPages" + "$tempTotalComicPages" ))
+				fi
+			fi
+			echo "<span>Total Pages: $totalComicBookPages </span>"
 			echo "</div>"
 			echo "<div class='settingListCard'>"
 		} > "$webDirectory/comics/$pageComicName/index.php"
