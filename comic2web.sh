@@ -18,17 +18,17 @@ linkFile(){
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/nfo2web/web.cfg ];then
-		webDirectory=$(cat /etc/nfo2web/web.cfg)
+	if [ -f /etc/2web/nfo/web.cfg ];then
+		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
-		#mkdir -p /var/cache/nfo2web/web/
-		chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
-		webDirectory="/var/cache/nfo2web/web"
+		#mkdir -p /var/cache/2web/nfo/web/
+		chown -R www-data:www-data "/var/cache/2web/nfo/web/"
+		echo "/var/cache/2web/nfo/web" > /etc/2web/nfo/web.cfg
+		webDirectory="/var/cache/2web/nfo/web"
 	fi
 	# check for a trailing slash appended to the path
 	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path
+		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
 		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
 	fi
 	#mkdir -p "$webDirectory"
@@ -94,34 +94,34 @@ function loadWithoutComments(){
 }
 ################################################################################
 function downloadDir(){
-	if [ ! -f /etc/comic2web/download.cfg ];then
+	if [ ! -f /etc/2web/comics/download.cfg ];then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
 			echo "/var/cache/comic2web/"
-		} >> "/etc/comic2web/download.cfg"
+		} >> "/etc/2web/comics/download.cfg"
 	fi
 	# write path to console
-	cat "/etc/comic2web/download.cfg"
+	cat "/etc/2web/comics/download.cfg"
 }
 ################################################################################
 function libaryPaths(){
 	# add the download directory to the paths
 	echo "$(downloadDir)"
 	# check for server libary config
-	if [ ! -f /etc/comic2web/libaries.cfg ];then
+	if [ ! -f /etc/2web/comics/libaries.cfg ];then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/comic2web/"
-		} >> "/etc/comic2web/libaries.cfg"
+			echo "/var/cache/2web/comics/"
+		} >> "/etc/2web/comics/libaries.cfg"
 	fi
 	# write path to console
-	cat "/etc/comic2web/libaries.cfg"
+	cat "/etc/2web/comics/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
-	find "/etc/comic2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+	find "/etc/2web/comics/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
 		cat "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
@@ -134,7 +134,7 @@ function update(){
 	# this will launch a processing queue that downloads updates to comics
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! test -f /etc/comic2web/sources.cfg;then
+	if ! test -f /etc/2web/comics/sources.cfg;then
 		# if no config exists create the default config
 		{
 		echo "##################################################"
@@ -149,11 +149,11 @@ function update(){
 		echo "##################################################"
 		# write the new config from the path variable
 		echo "https://xkcd.com/"
-		} > /etc/comic2web/sources.cfg
+		} > /etc/2web/comics/sources.cfg
 	fi
 	# load sources
-	comicSources=$(grep -v "^#" /etc/comic2web/sources.cfg)
-	comicSources=$(echo -e "$comicSources\n$(grep -v --no-filename "^#" /etc/comic2web/sources.d/*.cfg)")
+	comicSources=$(grep -v "^#" /etc/2web/comics/sources.cfg)
+	comicSources=$(echo -e "$comicSources\n$(grep -v --no-filename "^#" /etc/2web/comics/sources.d/*.cfg)")
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -670,7 +670,7 @@ renderPage(){
 	fi
 	{
 		echo "<script>"
-		cat /usr/share/nfo2web/nfo2web.js
+		cat /usr/share/2web/2web.js
 		# add a listener to pass the key event into a function
 		echo "function setupKeys() {"
 		echo "	document.body.addEventListener('keydown', function(event){"
@@ -779,7 +779,7 @@ renderPage(){
 			echo "html{ background-image: url(\"thumb.png\") }"
 			echo "</style>"
 			echo "<script>"
-			cat /usr/share/nfo2web/nfo2web.js
+			cat /usr/share/2web/2web.js
 			# add a listener to pass the key event into a function
 			echo "function setupKeys() {"
 			echo "	document.body.addEventListener('keydown', function(event){"
@@ -892,7 +892,7 @@ renderPage(){
 					echo "</style>"
 					echo "<link rel='stylesheet' href='../../style.css'>"
 					echo "<script>"
-					cat /usr/share/nfo2web/nfo2web.js
+					cat /usr/share/2web/2web.js
 					# add a listener to pass the key event into a function
 					echo "function setupKeys() {"
 					echo "	document.body.addEventListener('keydown', function(event){"
@@ -1008,8 +1008,8 @@ webUpdate(){
 	createDir "$webDirectory/comics/"
 
 	# link the random poster script
-	linkFile "/usr/share/nfo2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
-	linkFile "/usr/share/nfo2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
+	linkFile "/usr/share/2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
+	linkFile "/usr/share/2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
 	# link the kodi directory to the download directory
 	#ln -s "$downloadDirectory" "$webDirectory/kodi/comics"
 
@@ -1062,9 +1062,9 @@ webUpdate(){
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
 	INFO "Checking for comic index page..."
 	# finish building main index page a-z
-	linkFile "/usr/share/mms/templates/comics.php" "$webDirectory/comics/index.php"
-	linkFile "/usr/share/mms/templates/randomComics.php" "$webDirectory/randomComics.php"
-	linkFile "/usr/share/mms/templates/updatedComics.php" "$webDirectory/updatedComics.php"
+	linkFile "/usr/share/2web/templates/comics.php" "$webDirectory/comics/index.php"
+	linkFile "/usr/share/2web/templates/randomComics.php" "$webDirectory/randomComics.php"
+	linkFile "/usr/share/2web/templates/updatedComics.php" "$webDirectory/updatedComics.php"
 	# build links to each comic in the index page
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 		# multi chapter comic

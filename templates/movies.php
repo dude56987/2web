@@ -21,7 +21,7 @@ include("../header.php");
 
 <?php
 # add the updated movies below the header
-include("../updatedMovies.index");
+include("../updatedMovies.php");
 ################################################################################
 ?>
 <div class='settingListCard'>
@@ -49,7 +49,7 @@ foreach($sourceFiles as $sourceFile){
 </div>
 <?php
 // add random movies above the footer
-include("../randomMovies.index");
+include("../randomMovies.php");
 // add the footer
 include("../header.php");
 echo "<hr class='topButtonSpace'>"

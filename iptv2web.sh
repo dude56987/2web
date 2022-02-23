@@ -262,15 +262,15 @@ function process_M3U(){
 	lineCaught=""
 
 	# check for blocked channel config
-	if ! test -f "/etc/iptv2web/blockedGroups.cfg";then
-		touch "/etc/iptv2web/blockedGroups.cfg"
+	if ! test -f "/etc/2web/iptv/blockedGroups.cfg";then
+		touch "/etc/2web/iptv/blockedGroups.cfg"
 		# each line in this file is a string that if found will be blocked
-		echo "news" > "/etc/iptv2web/blockedGroups.cfg"
+		echo "news" > "/etc/2web/iptv/blockedGroups.cfg"
 	fi
 
 	# load up the blocked channel groups
-	blockedGroups=$(cat /etc/iptv2web/blockedGroups.cfg)
-	blockedGroups=$(printf "$blockedGroups\n$(cat /etc/iptv2web/blockedGroups.d/*.cfg)")
+	blockedGroups=$(cat /etc/2web/iptv/blockedGroups.cfg)
+	blockedGroups=$(printf "$blockedGroups\n$(cat /etc/2web/iptv/blockedGroups.d/*.cfg)")
 
 	echo -n "$channels" | while read line;do
 		# if a info line was detected on the last line
@@ -526,12 +526,12 @@ function processLink(){
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if test -f /etc/nfo2web/web.cfg;then
-		webDirectory=$(cat /etc/nfo2web/web.cfg)
+	if test -f /etc/2web/nfo/web.cfg;then
+		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
 		mkdir -p /var/cache/nfo2web/web/
 		chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
+		echo "/var/cache/nfo2web/web" > /etc/2web/nfo/web.cfg
 		webDirectory="/var/cache/nfo2web/web"
 	fi
 	mkdir -p "$webDirectory"
@@ -556,23 +556,23 @@ fullUpdate(){
 	# enable debug
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! test -f "/etc/iptv2web/sources.cfg";then
+	if ! test -f "/etc/2web/iptv/sources.cfg";then
 		# if no config exists create the default config from the template
 		{
-			cat /usr/share/mms/templates/live_sources.cfg
-		} > /etc/iptv2web/sources.cfg
+			cat /usr/share/2web/templates/live_sources.cfg
+		} > /etc/2web/iptv/sources.cfg
 	fi
 	# load the link list
-	linkList="$(loadWithoutComments /etc/iptv2web/sources.cfg)"
+	linkList="$(loadWithoutComments /etc/2web/iptv/sources.cfg)"
 	# build the radio sources cfg file if it does not exist
-	if ! test -f "/etc/iptv2web/radioSources.cfg";then
+	if ! test -f "/etc/2web/iptv/radioSources.cfg";then
 		# if no config exists create the default config from the template
 		{
-			cat /usr/share/mms/templates/live_radioSources.cfg
-		} > /etc/iptv2web/radioSources.cfg
+			cat /usr/share/2web/templates/live_radioSources.cfg
+		} > /etc/2web/iptv/radioSources.cfg
 	fi
 	# load the radio link list
-	radioLinkList="$(loadWithoutComments /etc/iptv2web/radioSources.cfg)"
+	radioLinkList="$(loadWithoutComments /etc/2web/iptv/radioSources.cfg)"
 	################################################################################
 
 	webDirectory=$(webRoot)
@@ -606,8 +606,8 @@ fullUpdate(){
 	################################################################################
 	processedSources=0
 	# add user created custom local configs first
-	INFO "Adding m3u sources from /etc/iptv2web/sources.d/"
-	find "/etc/iptv2web/sources.d/" -name '*.m3u' -type 'f' | while read configFile;do
+	INFO "Adding m3u sources from /etc/2web/iptv/sources.d/"
+	find "/etc/2web/iptv/sources.d/" -name '*.m3u' -type 'f' | while read configFile;do
 		ALERT "Adding m3u source from $configFile"
 		# add file to main m3u, exclude description line
 		process_M3U_file "$configFile" "$webDirectory"
@@ -615,8 +615,8 @@ fullUpdate(){
 		INFO "processing source $processedSources/$totalSources"
 		webUpdateCheck "$processedSources"
 	done
-	INFO "Adding m3u8 sources from /etc/iptv2web/sources.d/"
-	find "/etc/iptv2web/sources.d/" -name '*.m3u8' -type 'f' | while read configFile;do
+	INFO "Adding m3u8 sources from /etc/2web/iptv/sources.d/"
+	find "/etc/2web/iptv/sources.d/" -name '*.m3u8' -type 'f' | while read configFile;do
 		ALERT "Adding m3u8 source from $configFile"
 		# add file to main m3u8, exclude description line
 		process_M3U_file "$configFile" "$webDirectory"
@@ -624,9 +624,9 @@ fullUpdate(){
 		INFO "processing source $processedSources/$totalSources"
 		webUpdateCheck "$processedSources"
 	done
-	INFO "Adding /etc/iptv2web/sources.cfg"
+	INFO "Adding /etc/2web/iptv/sources.cfg"
 	# read main config m3u sources and merge them
-	loadWithoutComments "/etc/iptv2web/sources.cfg" | while read link;do
+	loadWithoutComments "/etc/2web/iptv/sources.cfg" | while read link;do
 		ALERT "Adding web source from $configFile"
 		processLink "$link" "$channelsPath"
 		processedSources=$(($processedSources + 1))
@@ -634,9 +634,9 @@ fullUpdate(){
 		webUpdateCheck "$processedSources"
 	done
 	# add external sources last
-	INFO "Adding generated sources from /etc/iptv2web/sources.d/*.cfg"
+	INFO "Adding generated sources from /etc/2web/iptv/sources.d/*.cfg"
 	# load the config file list
-	find "/etc/iptv2web/sources.d/" -name '*.cfg' -type 'f' | while read configFile;do
+	find "/etc/2web/iptv/sources.d/" -name '*.cfg' -type 'f' | while read configFile;do
 		ALERT "Adding web source from $configFile"
 		# read each config file
 		loadWithoutComments "$configFile" | while read link;do
@@ -659,7 +659,7 @@ fullUpdate(){
 		webUpdateCheck "$processedSources"
 	done
 	# check for radio sources
-	find /etc/iptv2web/radioSources.d/ -name '*.m3u' -type 'f' | while read configFile;do
+	find /etc/2web/iptv/radioSources.d/ -name '*.m3u' -type 'f' | while read configFile;do
 		loadWithoutComments "$configFile" | while read link;do
 			ALERT "Adding radio source from $configFile"
 			# process radio link
@@ -670,7 +670,7 @@ fullUpdate(){
 		done
 	done
 	# check for radio source files
-	find /etc/iptv2web/radioSources.d/ -name '*.cfg' -type 'f' | while read configFile;do
+	find /etc/2web/iptv/radioSources.d/ -name '*.cfg' -type 'f' | while read configFile;do
 		loadWithoutComments "$configFile" | while read link;do
 			ALERT "Adding radio source from $configFile"
 			# process radio link
@@ -727,7 +727,7 @@ function buildPage(){
 	else
 		# build the page but dont write it, this function is intended to be
 		# piped into a file
-		echo -e "$tabs<script src='/nfo2web.js'></script>"
+		echo -e "$tabs<script src='/2web.js'></script>"
 		echo -e "$tabs<script src='/live/hls.js'></script>"
 		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' autoplay muted></video>"
 		echo -e "$tabs<script>"
@@ -773,7 +773,7 @@ function buildGroupPages(){
 				echo "<head>"
 				echo "<title></title>"
 				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
-				echo "	<script src='/nfo2web.js'></script>"
+				echo "	<script src='/2web.js'></script>"
 				echo "</head>"
 				echo "<body>"
 				echo "<?PHP";
@@ -875,10 +875,10 @@ webGen(){
 	fi
 	################################################################################
 	# link the home php page
-	linkFile  "/usr/share/mms/templates/live.php" "$webDirectory/live/index.php"
+	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
 	# lists
-	linkFile  "/usr/share/mms/templates/randomChannels.php" "$webDirectory/randomChannels.php"
-	linkFile  "/usr/share/mms/templates/updatedChannels.php" "$webDirectory/updatedChannels.php"
+	linkFile  "/usr/share/2web/templates/randomChannels.php" "$webDirectory/randomChannels.php"
+	linkFile  "/usr/share/2web/templates/updatedChannels.php" "$webDirectory/updatedChannels.php"
 	# copy over the stylesheet
 	linkFile "$webDirectory/style.css" "$webDirectory/live/style.css"
 	# copy over the resolver
@@ -945,7 +945,7 @@ webGen(){
 					echo "<head>"
 					echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
 					echo " <title>$title</title>"
-					echo "	<script src='/nfo2web.js'></script>"
+					echo "	<script src='/2web.js'></script>"
 					echo "</head>"
 					echo "<body>"
 					# place the header

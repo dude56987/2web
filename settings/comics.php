@@ -52,13 +52,13 @@ include("settingsHeader.php");
 echo "<div id='comicServerLibaryPaths' class='settingListCard'>\n";
 echo "<h2>Comic Server Libary Paths</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/comic2web/libaries.cfg");
+echo file_get_contents("/etc/2web/comics/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div id='comicLibaryPaths' class='settingListCard'>";
 echo "<h2>Comic Libary Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/comic2web/libaries.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/libaries.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 # write each config file as a editable entry

@@ -132,7 +132,7 @@ if (array_key_exists("newUserName",$_POST)){
 			# create sum of link
 			$sumOfLink=md5($link);
 			# read the link and create a custom config
-			$configPath="/etc/iptv2web/radioSources.d/".$sumOfLink.".m3u";
+			$configPath="/etc/2web/iptv/radioSources.d/".$sumOfLink.".m3u";
 			# create the custom link content
 			#$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
 			$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle;
@@ -173,7 +173,7 @@ if (array_key_exists("newUserName",$_POST)){
 			# create sum of link
 			$sumOfLink=md5($link);
 			# read the link and create a custom config
-			$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".m3u";
+			$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 			# create the custom link content
 			$content='#EXTM3U\n'.'#EXTINF:-1 tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
 			echo "Checking for Config file ".$configPath."<br>\n";
@@ -208,7 +208,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running addRadioLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/iptv2web/radioSources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/radioSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -298,7 +298,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running addLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -375,7 +375,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running addLibary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/nfo2web/libaries.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/nfo/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -391,7 +391,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running addComicDownloadLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/comic2web/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/comic/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -406,7 +406,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeComicDownloadLink'];
 	echo "Running removeComicDownloadLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/comic2web/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/comics/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing comicDownloadLink ".$link."<br>\n";
@@ -421,7 +421,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running addComicLibary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/comic2web/libaries.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -436,7 +436,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeComicLibary'];
 	echo "Running removeComicLibary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/comic2web/libaries.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing libary ".$link."<br>\n";
@@ -451,7 +451,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running moveToBottom on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if (file_exists($configPath)){
@@ -467,7 +467,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running moveCustomToBottom on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".m3u";
+	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if (file_exists($configPath)){
@@ -482,7 +482,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeLink'];
 	echo "Running removeLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing link ".$link."<br>\n";
@@ -496,7 +496,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeLibary'];
 	echo "Running removeLibary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/nfo2web/libaries.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/nfo/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing link ".$link."<br>\n";
@@ -510,7 +510,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeRadioLink'];
 	echo "Running removeRadioLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/radioSources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/radioSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing link ".$link."<br>\n";
@@ -524,7 +524,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['removeCustomLink'];
 	echo "Running removeCustomLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/sources.d/".$sumOfLink.".m3u";
+	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing link ".$link."<br>\n";
@@ -538,7 +538,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['blockLink'];
 	echo "Running blockLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/blockedLinks.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/blockedLinks.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if ( ! file_exists($configPath)){
 		echo "Blocking link ".$link."<br>\n";
@@ -552,7 +552,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['unblockLink'];
 	echo "Running unblockLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/blockedLinks.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/blockedLinks.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Unblocking link ".$link."<br>\n";
@@ -566,7 +566,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['blockGroup'];
 	echo "Running blockGroup on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/blockedGroups.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/blockedGroups.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if ( ! file_exists($configPath)){
 		echo "Blocking link ".$link."<br>\n";
@@ -580,7 +580,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['unblockGroup'];
 	echo "Running unblockGroup on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/iptv2web/blockedGroups.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/iptv/blockedGroups.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Unblocking link ".$link."<br>\n";
@@ -593,7 +593,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	echo "Changing theme to ".$theme."<br>\n";
-	file_put_contents("/etc/mms/theme.cfg",$theme);
+	file_put_contents("/etc/2web/theme.cfg",$theme);
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#webTheme'>BACK</a><hr>";
 	clear();

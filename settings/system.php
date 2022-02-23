@@ -94,13 +94,13 @@ include("settingsHeader.php");
 			<select name='removeUser'>
 			<?PHP
 			# build theme list
-			$themePath="/etc/mms/theme.cfg";
+			$themePath="/etc/2web/theme.cfg";
 			//echo "THEME PATH = ".$themePath."<br>";
 			if (file_exists($themePath)){
 				$activeTheme=file_get_contents($themePath);
 				$activeTheme=str_replace("\n","",$activeTheme);
 				//echo "ACTIVE THEME = ".$activeTheme."<br>";
-				# read in theme files in /usr/share/mms/
+				# read in theme files in /usr/share/2web/
 				$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/users/*.cfg"));
 				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
 				foreach($sourceFiles as $sourceFile){
@@ -138,7 +138,7 @@ include("settingsHeader.php");
 		<h2>Web Theme</h2>
 			<ul>
 				<li>
-					Custom themes can be installed in /usr/share/mms/themes/
+					Custom themes can be installed in /usr/share/2web/themes/
 				</li>
 				<li>
 					Theme will change next time website updates.
@@ -147,19 +147,19 @@ include("settingsHeader.php");
 			<select name='theme'>
 			<?PHP
 			# build theme list
-			$themePath="/etc/mms/theme.cfg";
+			$themePath="/etc/2web/theme.cfg";
 			//echo "THEME PATH = ".$themePath."<br>";
 			if (file_exists($themePath)){
 				$activeTheme=file_get_contents($themePath);
 				$activeTheme=str_replace("\n","",$activeTheme);
 				//echo "ACTIVE THEME = ".$activeTheme."<br>";
-				# read in theme files in /usr/share/mms/
-				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/mms/themes/*.css"));
+				# read in theme files in /usr/share/2web/
+				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/2web/themes/*.css"));
 				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
 				foreach($sourceFiles as $sourceFile){
 					if (strpos($sourceFile,".css")){
 						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
-						$tempTheme=str_replace("/usr/share/mms/themes/","",$sourceFile);
+						$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
 						$themeName=str_replace(".css","",$tempTheme);
 						//echo "TEMP THEME = ".$tempTheme."<br>\n";
 						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";

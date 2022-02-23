@@ -18,7 +18,7 @@ if ($writeFile){
 	ignore_user_abort(true);
 	// get a list of all the genetrated index links for the page
 	//$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/nfo2web/web/movies/*/movies.index"));
-	$sourceFiles = explode("\n",shell_exec("find '/var/cache/nfo2web/web/new/' -name 'movie_*.index' -printf '%T+ %p\n' | sort | cut -d' ' -f2-"));
+	$sourceFiles = explode("\n",shell_exec("find '/var/cache/2web/web/new/' -name 'movie_*.index' -printf '%T+ %p\n' | sort | cut -d' ' -f2-"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	$counter=0;

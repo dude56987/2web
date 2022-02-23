@@ -25,7 +25,7 @@ include("settingsHeader.php");
 echo "<div id='serverRadioLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Radio Link Config</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/iptv2web/radioSources.cfg");
+echo file_get_contents("/etc/2web/iptv/radioSources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
@@ -37,9 +37,9 @@ echo "</div>";
 
 echo "<div id='radioLinks' class='settingListCard'>";
 echo "<h2>Radio Links</h2>\n";
-$sourceFiles = scandir("/etc/iptv2web/radioSources.d/");
+$sourceFiles = scandir("/etc/2web/iptv/radioSources.d/");
 //print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/iptv2web/radioSources.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/iptv/radioSources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);
@@ -47,7 +47,7 @@ $sourceFiles = array_reverse($sourceFiles);
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
 	//$sourceFileName = array_reverse(explode("/",$sourceFile))[0];
-	//$sourceFile = "/etc/iptv2web/sources.d/".$sourceFile;
+	//$sourceFile = "/etc/2web/iptv/sources.d/".$sourceFile;
 	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
 		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
@@ -89,7 +89,7 @@ foreach($sourceFiles as $sourceFile){
 }
 
 # read the custom links
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/iptv2web/radioSources.d/*.m3u"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/iptv/radioSources.d/*.m3u"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);

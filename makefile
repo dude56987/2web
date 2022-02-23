@@ -39,8 +39,13 @@ test: install
 	sudo time -v iptv2web webgen
 	sudo time -v iptv2web update
 	sudo time -v iptv2web webgen
+lint:
+	# check the package
+	lintian 2web_UNSTABLE.deb
+	# check the package in detail
+	lintian -a 2web_UNSTABLE.deb
 install: build
-	sudo gdebi -n nfo2web_UNSTABLE.deb
+	sudo gdebi -n 2web_UNSTABLE.deb
 uninstall:
 	sudo apt-get purge nfo2web
 uninstall-broken:
@@ -48,9 +53,9 @@ uninstall-broken:
 installed-size:
 	du -sx --exclude DEBIAN ./debian/
 debugOn:
-	sudo mv /etc/nfo2web/debug.disabled /etc/nfo2web/debug.enabled
+	sudo mv /etc/2web/nfo/debug.disabled /etc/2web/nfo/debug.enabled
 debugOff:
-	sudo mv /etc/nfo2web/debug.enabled /etc/nfo2web/debug.disabled
+	sudo mv /etc/2web/nfo/debug.enabled /etc/2web/nfo/debug.disabled
 build:
 	sudo make build-deb;
 build-deb:
@@ -60,63 +65,64 @@ build-deb:
 	mkdir -p debian/usr;
 	mkdir -p debian/usr/bin;
 	mkdir -p debian/usr/share/applications;
-	mkdir -p debian/usr/share/nfo2web;
-	mkdir -p debian/usr/share/iptv2web;
-	mkdir -p debian/usr/share/mms;
-	mkdir -p debian/usr/share/mms/themes;
-	mkdir -p debian/usr/share/mms/templates;
-	mkdir -p debian/usr/share/mms/settings;
-	#mkdir -p debian/var/cache/nfo2web/web;
-	mkdir -p debian/var/cache/nfo2web/cache;
+	mkdir -p debian/usr/share/2web/nfo;
+	mkdir -p debian/usr/share/2web/iptv;
+	mkdir -p debian/usr/share/2web/;
+	mkdir -p debian/usr/share/2web/themes;
+	mkdir -p debian/usr/share/2web/templates;
+	mkdir -p debian/usr/share/2web/settings;
+	#mkdir -p debian/var/cache/web/web;
+	mkdir -p debian/var/cache/2web/cache;
 	mkdir -p debian/etc;
-	mkdir -p debian/etc/mms;
-	mkdir -p debian/etc/mms/themes;
+	mkdir -p debian/etc/2web/;
+	mkdir -p debian/etc/2web/themes;
 	mkdir -p debian/etc/ytdl2kodi/;
 	mkdir -p debian/etc/ytdl2kodi/sources.d/
 	mkdir -p debian/etc/ytdl2kodi/usernameSources.d/
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/users/;
-	mkdir -p debian/etc/nfo2web/;
-	mkdir -p debian/etc/nfo2web/libaries.d/;
-	mkdir -p debian/etc/comic2web/;
-	mkdir -p debian/etc/comic2web/libaries.d/;
-	mkdir -p debian/etc/comic2web/sources.d/;
-	mkdir -p debian/etc/iptv2web/;
-	mkdir -p debian/etc/iptv2web/sources.d/;
-	mkdir -p debian/etc/iptv2web/blockedGroups.d/;
-	mkdir -p debian/etc/iptv2web/radioSources.d/;
-	mkdir -p debian/etc/iptv2web/blockedLinks.d/;
+	mkdir -p debian/etc/2web/nfo/;
+	mkdir -p debian/etc/2web/nfo/libaries.d/;
+	mkdir -p debian/etc/2web/comics/;
+	mkdir -p debian/etc/2web/comics/libaries.d/;
+	mkdir -p debian/etc/2web/comics/sources.d/;
+	mkdir -p debian/etc/2web/iptv/;
+	mkdir -p debian/etc/2web/iptv/sources.d/;
+	mkdir -p debian/etc/2web/iptv/blockedGroups.d/;
+	mkdir -p debian/etc/2web/iptv/radioSources.d/;
+	mkdir -p debian/etc/2web/iptv/blockedLinks.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
+	mkdir -p debian/etc/apache2/sites-available/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# copy templates over
-	cp -rv templates/. debian/usr/share/mms/templates/
+	cp -rv templates/. debian/usr/share/2web/templates/
 	# make placeholder
 	touch debian/etc/ytdl2kodi/sources.d/.placeholder
 	touch debian/etc/ytdl2kodi/usernameSources.d/.placeholder
-	touch debian/etc/iptv2web/.placeholder
-	touch debian/etc/iptv2web/sources.d/.placeholder
-	touch debian/etc/iptv2web/blockedGroups.d/.placeholder
-	touch debian/etc/iptv2web/radioSources.d/.placeholder
-	touch debian/etc/iptv2web/blockedLinks.d/.placeholder
-	touch debian/etc/nfo2web/.placeholder
-	touch debian/etc/nfo2web/libaries.d/.placeholder
-	touch debian/etc/comic2web/.placeholder
-	touch debian/etc/comic2web/libaries.d/.placeholder
-	touch debian/etc/comic2web/sources.d/.placeholder
+	touch debian/etc/2web/iptv/.placeholder
+	touch debian/etc/2web/iptv/sources.d/.placeholder
+	touch debian/etc/2web/iptv/blockedGroups.d/.placeholder
+	touch debian/etc/2web/iptv/radioSources.d/.placeholder
+	touch debian/etc/2web/iptv/blockedLinks.d/.placeholder
+	touch debian/etc/2web/nfo/.placeholder
+	touch debian/etc/2web/nfo/libaries.d/.placeholder
+	touch debian/etc/2web/comics/.placeholder
+	touch debian/etc/2web/comics/libaries.d/.placeholder
+	touch debian/etc/2web/comics/sources.d/.placeholder
 	#touch debian/var/cache/nfo2web/web/.placeholder
-	touch debian/var/cache/nfo2web/cache/.placeholder
-	touch debian/usr/share/mms/settings/.placeholder
+	touch debian/var/cache/2web/cache/.placeholder
+	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/etc/2web/users/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/2web/users/
 	chown -R www-data:www-data debian/etc/ytdl2kodi/*.d/
-	chown -R www-data:www-data debian/etc/iptv2web/*.d/
-	chown -R www-data:www-data debian/etc/nfo2web/*.d/
-	chown -R www-data:www-data debian/etc/comic2web/*.d/
-	#chown -R www-data:www-data debian/etc/mms/*.d/
-	chown -R www-data:www-data debian/etc/mms/
+	chown -R www-data:www-data debian/etc/2web/iptv/*.d/
+	chown -R www-data:www-data debian/etc/2web/nfo/*.d/
+	chown -R www-data:www-data debian/etc/2web/comics/*.d/
+	#chown -R www-data:www-data debian/etc/2web/*.d/
+	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
 	# copy update scripts to /usr/bin
@@ -127,107 +133,107 @@ build-deb:
 	cp ytdl2kodi.sh debian/usr/bin/ytdl2kodi
 	# build the default themes
 	# - default (gray)
-	cat themes/default.css > debian/usr/share/mms/themes/default.css
-	cat themes/base.css >> debian/usr/share/mms/themes/default.css
+	cat themes/default.css > debian/usr/share/2web/themes/default.css
+	cat themes/base.css >> debian/usr/share/2web/themes/default.css
 	# - default-soft (gray)
-	cat themes/default.css > debian/usr/share/mms/themes/default-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/default-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/default-soft.css
+	cat themes/default.css > debian/usr/share/2web/themes/default-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/default-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/default-soft.css
 	# - yellow
-	cat themes/yellow.css > debian/usr/share/mms/themes/yellow.css
-	cat themes/base.css >> debian/usr/share/mms/themes/yellow.css
+	cat themes/yellow.css > debian/usr/share/2web/themes/yellow.css
+	cat themes/base.css >> debian/usr/share/2web/themes/yellow.css
 	# - yellow-soft
-	cat themes/yellow.css > debian/usr/share/mms/themes/yellow-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/yellow-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/yellow-soft.css
+	cat themes/yellow.css > debian/usr/share/2web/themes/yellow-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/yellow-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/yellow-soft.css
 	# - cyan
-	cat themes/cyan.css > debian/usr/share/mms/themes/cyan.css
-	cat themes/base.css >> debian/usr/share/mms/themes/cyan.css
+	cat themes/cyan.css > debian/usr/share/2web/themes/cyan.css
+	cat themes/base.css >> debian/usr/share/2web/themes/cyan.css
 	# - cyan-soft
-	cat themes/cyan.css > debian/usr/share/mms/themes/cyan-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/cyan-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/cyan-soft.css
+	cat themes/cyan.css > debian/usr/share/2web/themes/cyan-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/cyan-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/cyan-soft.css
 	# - blue
-	cat themes/blue.css > debian/usr/share/mms/themes/blue.css
-	cat themes/base.css >> debian/usr/share/mms/themes/blue.css
+	cat themes/blue.css > debian/usr/share/2web/themes/blue.css
+	cat themes/base.css >> debian/usr/share/2web/themes/blue.css
 	# - blue-soft
-	cat themes/blue.css > debian/usr/share/mms/themes/blue-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/blue-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/blue-soft.css
+	cat themes/blue.css > debian/usr/share/2web/themes/blue-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/blue-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/blue-soft.css
 	# - red
-	cat themes/red.css > debian/usr/share/mms/themes/red.css
-	cat themes/base.css >> debian/usr/share/mms/themes/red.css
+	cat themes/red.css > debian/usr/share/2web/themes/red.css
+	cat themes/base.css >> debian/usr/share/2web/themes/red.css
 	# - red-soft
-	cat themes/red.css > debian/usr/share/mms/themes/red-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/red-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/red-soft.css
+	cat themes/red.css > debian/usr/share/2web/themes/red-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/red-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/red-soft.css
 	# - green
-	cat themes/green.css > debian/usr/share/mms/themes/green.css
-	cat themes/base.css >> debian/usr/share/mms/themes/green.css
+	cat themes/green.css > debian/usr/share/2web/themes/green.css
+	cat themes/base.css >> debian/usr/share/2web/themes/green.css
 	# - green-soft
-	cat themes/green.css > debian/usr/share/mms/themes/green-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/green-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/green-soft.css
+	cat themes/green.css > debian/usr/share/2web/themes/green-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/green-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/green-soft.css
 	# - violet
-	cat themes/violet.css > debian/usr/share/mms/themes/violet.css
-	cat themes/base.css >> debian/usr/share/mms/themes/violet.css
+	cat themes/violet.css > debian/usr/share/2web/themes/violet.css
+	cat themes/base.css >> debian/usr/share/2web/themes/violet.css
 	# - violet-soft
-	cat themes/violet.css > debian/usr/share/mms/themes/violet-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/violet-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/violet-soft.css
+	cat themes/violet.css > debian/usr/share/2web/themes/violet-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/violet-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/violet-soft.css
 	# - orange
-	cat themes/orange.css > debian/usr/share/mms/themes/orange.css
-	cat themes/base.css >> debian/usr/share/mms/themes/orange.css
+	cat themes/orange.css > debian/usr/share/2web/themes/orange.css
+	cat themes/base.css >> debian/usr/share/2web/themes/orange.css
 	# - orange-soft
-	cat themes/orange.css > debian/usr/share/mms/themes/orange-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/orange-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/orange-soft.css
+	cat themes/orange.css > debian/usr/share/2web/themes/orange-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/orange-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/orange-soft.css
 	# - brown
-	cat themes/brown.css > debian/usr/share/mms/themes/brown.css
-	cat themes/base.css >> debian/usr/share/mms/themes/brown.css
+	cat themes/brown.css > debian/usr/share/2web/themes/brown.css
+	cat themes/base.css >> debian/usr/share/2web/themes/brown.css
 	# - brown-soft ;P
-	cat themes/brown.css > debian/usr/share/mms/themes/brown-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/brown-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/brown-soft.css
+	cat themes/brown.css > debian/usr/share/2web/themes/brown-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/brown-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/brown-soft.css
 	# - rainbow
-	cat themes/rainbow.css > debian/usr/share/mms/themes/rainbow.css
-	cat themes/base.css >> debian/usr/share/mms/themes/rainbow.css
+	cat themes/rainbow.css > debian/usr/share/2web/themes/rainbow.css
+	cat themes/base.css >> debian/usr/share/2web/themes/rainbow.css
 	# - rainbow-soft
-	cat themes/rainbow.css > debian/usr/share/mms/themes/rainbow-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/mms/themes/rainbow-soft.css
-	cat themes/base.css >> debian/usr/share/mms/themes/rainbow-soft.css
+	cat themes/rainbow.css > debian/usr/share/2web/themes/rainbow-soft.css
+	cat themes/soft-mod.css >> debian/usr/share/2web/themes/rainbow-soft.css
+	cat themes/base.css >> debian/usr/share/2web/themes/rainbow-soft.css
 	# user created themes, themes are constructed from above using base theme
 	# user themes can be any self contained .css file
-	#cp themes/*.css debian/usr/share/mms/themes/
+	#cp themes/*.css debian/usr/share/2web/themes/
 	# copy over javascript libary
-	cp nfo2web.js debian/usr/share/nfo2web/
+	cp 2web.js debian/usr/share/2web/
 	# copy over php scripts
-	cp randomFanart.php debian/usr/share/nfo2web/
-	cp randomPoster.php debian/usr/share/nfo2web/
+	cp templates/randomFanart.php debian/usr/share/2web/nfo/
+	cp templates/randomPoster.php debian/usr/share/2web/nfo/
 	# copy over the settings pages
-	cp settings/*.php debian/usr/share/mms/settings/
+	cp settings/*.php debian/usr/share/2web/settings/
 	# copy link page
-	cp link.php debian/usr/share/mms/link.php
+	cp link.php debian/usr/share/2web/link.php
 	# copy the resolvers
-	cp ytdl-resolver.php debian/usr/share/mms/
-	cp m3u-gen.php debian/usr/share/mms/
-	cp transcode.php debian/usr/share/mms/
-	cp 404.php debian/usr/share/mms/
-	cp 403.php debian/usr/share/mms/
-	cp 401.php debian/usr/share/mms/
-	cp iptv-resolver.php debian/usr/share/nfo2web/
+	cp ytdl-resolver.php debian/usr/share/2web/
+	cp m3u-gen.php debian/usr/share/2web/
+	cp transcode.php debian/usr/share/2web/
+	cp 404.php debian/usr/share/2web/
+	cp 403.php debian/usr/share/2web/
+	cp 401.php debian/usr/share/2web/
+	cp iptv-resolver.php debian/usr/share/2web/nfo/
 	# copy over the .desktop launcher file to place link in system menus
-	cp nfo2web.desktop debian/usr/share/applications/
+	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
 	chmod u+rwx debian/usr/bin/*
 	chmod go-rwx debian/usr/bin/*
 	# copy over the cron job
-	cp nfo2web.cron debian/etc/cron.d/nfo2web-update
+	cp 2web.cron debian/etc/cron.d/2web-update
 	# copy over apache configs
-	cp -v apacheConf/0-nfo2web-ports.conf debian/etc/apache2/conf-enabled/
-	cp -v apacheConf/0-nfo2web-website.conf debian/etc/apache2/sites-enabled/
-	cp -v apacheConf/0-nfo2web-website-SSL.conf debian/etc/apache2/sites-enabled/
-	cp -v apacheConf/0-nfo2web-website-compat.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-2web-ports.conf debian/etc/apache2/conf-enabled/
+	cp -v apacheConf/0-2web-website.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-2web-website-SSL.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-2web-website-compat.conf debian/etc/apache2/sites-enabled/
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk
@@ -246,6 +252,6 @@ build-deb:
 	chmod -Rv u+w debian/
 	# build the package
 	dpkg-deb -Z xz --build debian
-	cp -v debian.deb nfo2web_UNSTABLE.deb
+	cp -v debian.deb 2web_UNSTABLE.deb
 	rm -v debian.deb
 	rm -rv debian

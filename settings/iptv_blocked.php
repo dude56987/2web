@@ -43,16 +43,16 @@ include("settingsHeader.php");
 echo "<div id='serverBlockedGroups' class='inputCard'>";
 echo "<h2>Server Blocked Groups</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/iptv2web/blockedGroups.cfg");
+echo file_get_contents("/etc/2web/iptv/blockedGroups.cfg");
 echo "</pre>\n";
 echo "</div>";
 
 
-$sourceFiles = scandir("/etc/iptv2web/blockedGroups.d/");
+$sourceFiles = scandir("/etc/2web/iptv/blockedGroups.d/");
 $blockedGroups = array();
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	$sourceFile = "/etc/iptv2web/blockedGroups.d/".$sourceFile;
+	$sourceFile = "/etc/2web/iptv/blockedGroups.d/".$sourceFile;
 	//echo "[DEBUG]: found file ".$sourceFile."<br>";
 	if (file_exists($sourceFile)){
 		//echo "[DEBUG]: file exists ".$sourceFile."<br>";
@@ -70,7 +70,7 @@ foreach($sourceFiles as $sourceFile){
 <h1>Active/Blocked Groups</h1>
 <?php
 // find all the groups
-$sourceFiles=scandir("/var/cache/nfo2web/web/live/groups/");
+$sourceFiles=scandir("/var/cache/2web/nfo/web/live/groups/");
 $sourceFiles=array_diff($sourceFiles,array('..','.'));
 $groups=array();
 # read the directory name and make a button to block it

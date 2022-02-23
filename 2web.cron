@@ -33,7 +33,7 @@
 ################################################################################
 # clean resolver cache daily, remove cached files older than 7 days
 # also run cache cleanup after reboot
-#@daily root /usr/bin/niceload /usr/bin/mmsCleanCache > /var/log/mmsCleanCache.log
+#@daily root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
 @daily root /usr/bin/niceload /usr/bin/2web cleancache
 @reboot root /usr/bin/niceload /usr/bin/2web cleancache
 ################################################################################

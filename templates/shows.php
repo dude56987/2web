@@ -21,7 +21,7 @@ include("../header.php");
 
 <?php
 # add the updated shows below the header
-include("../updatedShows.index");
+include("../updatedShows.php");
 ################################################################################
 ?>
 <div class='settingListCard'>
@@ -47,7 +47,7 @@ foreach($sourceFiles as $sourceFile){
 </div>
 <?php
 // add random shows above the footer
-include("../randomShows.index");
+include("../randomShows.php");
 // add the footer
 include("../header.php");
 echo "<hr class='topButtonSpace'>"

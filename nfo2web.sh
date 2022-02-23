@@ -49,17 +49,17 @@ cleanText(){
 }
 ########################################################################
 function debugCheck(){
-	if test -f /etc/nfo2web/debug.enabled;then
+	if test -f /etc/2web/nfo/debug.enabled;then
 		# if debug mode is enabled show execution
 		set -x
 	else
-		if ! test -d /etc/nfo2web/;then
+		if ! test -d /etc/2web/nfo/;then
 			# create dir if one does not exist
-			mkdir -p /etc/nfo2web/
+			mkdir -p /etc/2web/nfo/
 		fi
-		if ! test -f /etc/nfo2web/debug.disabled;then
+		if ! test -f /etc/2web/nfo/debug.disabled;then
 			# create debug flag file disabed, if it does not exist
-			touch /etc/nfo2web/debug.disabled
+			touch /etc/2web/nfo/debug.disabled
 		fi
 	fi
 }
@@ -182,27 +182,29 @@ processMovie(){
 		movieWebPath="${movieTitle} ($movieYear)"
 		#INFO "movie web path = '$movieWebPath'"
 		INFO "Processing movie $movieTitle $movieYear at $movieDir"
+		# if the movie is updating a check should be preformed to see if there are multuple  state_*.cfg files inside the movie web directory
+		if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
+			# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
+			addToLog "ERROR" "Multiple Movie Sources" "Movie path '$movieDir' is a duplicate\n\nYou can remove on the server with the command\n\n\trm -rvi '$movieDir'\n\nRemove excess copies to stabilize the library data.\n\nBackups should not be placed in media library paths." "$logPagePath"
+		fi
 		################################################################################
 		# check the state now that the movie web path has been determined
 		################################################################################
-		updateInfo="$movieTitle\n$currentSum != $libarySum\n$(ls "$movieDir")\n$moviePath"
-		unchangedInfo="$movieTitle\n$currentSum == $libarySum\n$(ls "$movieDir")\n$moviePath"
 		# check movie state as soon as posible processing
 		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
 			# a existing state was found
 			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
 			libarySum=$(getDirSum "$movieDir")
+			# create the info
+			updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+			#unchangedInfo="$movieTitle\n\n$currentSum == $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+			unchangedInfo="$movieTitle"
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
 				# this means they are the same so no update needs run
 				#INFO "State is unchanged for $movieTitle, no update is needed."
 				#ALERT "[DEBUG]: $currentSum == $libarySum"
 				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
-				# if the movie is updating a check should be preformed to see if there are multuple  state_*.cfg files inside the movie web directory
-				if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
-					# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
-					addToLog "ERROR" "Multuple Movie Sources" "Movie path '$movieDir'" "$logPagePath"
-				fi
 				return
 			else
 				#INFO "States are diffrent, updating $movieTitle..."
@@ -211,7 +213,7 @@ processMovie(){
 			fi
 		else
 			#ALERT "No movie state exists for $movieTitle, updating..."
-			addToLog "NEW" "Adding new movie " "$updateInfo" "$logPagePath"
+			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
 		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
@@ -510,7 +512,7 @@ processMovie(){
 					if validString "$thumbnailLink" -q;then
 						#INFO "Try to download movie thumbnail..."
 						#INFO "Thumbnail found at '$thumbnailLink'"
-						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
+						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 						thumbnailExt=".png"
 						# download the thumbnail
 						downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
@@ -741,7 +743,7 @@ checkForThumbnail(){
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
 				#INFO "Try to download episode thumbnail..."
 				#INFO "Thumbnail found at $thumbnailLink"
-				addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$showLogPath"
+				addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 				thumbnailExt=".png"
 				# download the thumbnail
 				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
@@ -757,7 +759,7 @@ checkForThumbnail(){
 			tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
 			#INFO "[DEBUG]: file size $tempFileSize"
 			if [ "$tempFileSize" -eq 0 ];then
-				addToLog "WARNING" "Generating Thumbnail" "$videoPath" "$showLogPath"
+				addToLog "WARNING" "Generating Thumbnail" "$videoPath" "$logPagePath"
 				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 				# try to generate a thumbnail from video file
 				#INFO "Attempting to create thumbnail from video source..."
@@ -900,7 +902,7 @@ processEpisode(){
 		mkdir -p "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		# link stylesheet
-		linkFile "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
+		#linkFile "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
 		# find the videofile refrenced by the nfo file
 		if [ -f "${episode//.nfo/.mkv}" ];then
 			videoPath="${episode//.nfo/.mkv}"
@@ -936,7 +938,7 @@ processEpisode(){
 		else
 			# no video file could be found this should be logged
 			ALERT "[ERROR]: could not find video file"
-			addToLog "ERROR" "No video file" "$episode" "$showLogPath"
+			addToLog "ERROR" "No video file" "$episode" "$logPagePath"
 			# exit the function  cancel building the episode
 			return
 		fi
@@ -1315,7 +1317,9 @@ processShow(){
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
 	#INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
-	mkdir -p "$webDirectory/shows/$showTitle/"
+	if ! test -d "$webDirectory/shows/$showTitle/";then
+		mkdir -p "$webDirectory/shows/$showTitle/"
+	fi
 	#INFO "Creating showPagePath = $showPagePath"
 	#touch "$showPagePath"
 	################################################################################
@@ -1329,10 +1333,11 @@ processShow(){
 			#INFO "found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
+			seasonSum=$(echo "$season" | md5sum | cut -d' ' -f1)
 
 			# get the season folder sum, youtube channels can have 2k + episodes a season
-			if test -f "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg";then
-				currentSeasonSum=$(cat "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg")
+			if test -f "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg";then
+				currentSeasonSum=$(cat "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg")
 			else
 				currentSeasonSum="0"
 			fi
@@ -1369,11 +1374,11 @@ processShow(){
 				fi
 				#tempStyle="html{ background-image: url(\"$fanartPath\") }"
 				# build top of show webpage containing all of the shows meta info
-				linkFile "/usr/share/mms/templates/seasons.php" "$showPagePath"
+				linkFile "/usr/share/2web/templates/seasons.php" "$showPagePath"
 
 				# update the season sum file
-				#getDirSum "$show" > "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg"
-				echo "$libarySeasonSum" > "$webDirectory/shows/$showTitle/$seasonName/state_season.cfg"
+				#getDirSum "$show" > "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
+				echo "$libarySeasonSum" > "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
 			fi
 		#else
 		#	INFO "Season folder $season does not exist"
@@ -1431,7 +1436,7 @@ getLibSum(){
 		tempList=$(ls -R "$line")
 		# add value to list
 		totalList="$totalList$tempList"
-	done < /etc/nfo2web/libaries.cfg
+	done < /etc/2web/nfo/libaries.cfg
 	# convert lists into md5sum
 	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
@@ -1440,7 +1445,7 @@ getLibSum(){
 ################################################################################
 linkFile(){
 	if ! test -L "$2";then
-		ln -s "$1" "$2"
+		ln -sf "$1" "$2"
 	fi
 }
 ################################################################################
@@ -1660,13 +1665,13 @@ buildHomePage(){
 		} > "$webDirectory/stats.index"
 	fi
 	# link homepage
-	linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
 	# link lists
-	linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
-	linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
-	linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
-	linkFile "/usr/share/mms/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
-	linkFile "/usr/share/mms/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
+	linkFile "/usr/share/2web/templates/randomMovies.php" "$webDirectory/randomMovies.php"
+	linkFile "/usr/share/2web/templates/randomShows.php" "$webDirectory/randomShows.php"
+	linkFile "/usr/share/2web/templates/updatedShows.php" "$webDirectory/updatedShows.php"
+	linkFile "/usr/share/2web/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
+	linkFile "/usr/share/2web/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 }
 ########################################################################
 getDirSum(){
@@ -1681,7 +1686,7 @@ getDirSum(){
 ########################################################################
 function buildShowIndex(){
 	webDirectory="$1"
-	linkFile "/usr/share/mms/templates/shows.php" "$webDirectory/shows/index.php"
+	linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
 }
 ########################################################################
 getDirSumByTime(){
@@ -1757,7 +1762,7 @@ scanForRandomBackgrounds(){
 ########################################################################
 function buildMovieIndex(){
 	webDirectory=$1
-	linkFile "/usr/share/mms/templates/movies.php" "$webDirectory/movies/index.php"
+	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
 }
 ########################################################################
 function cacheCheck(){
@@ -1765,35 +1770,43 @@ function cacheCheck(){
 	filePath="$1"
 	cacheDays="$2"
 
+	fileName=$( echo "$filePath" | rev | cut -d'/' -f'1'| rev )
+	fileDir=$( echo "$filePath" | rev | cut -d'/' -f'2-'| rev )
+
 	# return true if cached needs updated
 	if test -f "$filePath";then
-		# the file exists
-		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
-			# the file is more than "$2" days old, it needs updated
-			INFO "File is to old, update the file $1"
+		# check the file date
+		fileFound=$(find "$fileDir" -type f -name "$fileName" -mtime "+$cacheDays" | wc -l)
+		if [ "$fileFound" -gt 0 ] ;then
+			# the file is more than "$cacheDays" days old, it needs updated
+			#INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			INFO "File in cache, do not update $1"
+			#INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		INFO "File does not exist, it must be created $1"
+		#INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
 ########################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if test -f /etc/nfo2web/web.cfg;then
-		webDirectory=$(cat /etc/nfo2web/web.cfg)
+	if [ -f /etc/2web/nfo/web.cfg ];then
+		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
-		#mkdir -p /var/cache/nfo2web/web/
-		echo "/var/cache/nfo2web/cache" > /etc/nfo2web/web.cfg
-		webDirectory="/var/cache/nfo2web/cache"
+		chown -R www-data:www-data "/var/cache/2web/cache/"
+		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
+		webDirectory="/var/cache/2web/cache/"
 	fi
-	#mkdir -p "$webDirectory"
+	# check for a trailing slash appended to the path
+	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
+		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
+	fi
 	echo "$webDirectory"
 }
 ########################################################################
@@ -1801,20 +1814,20 @@ function libaryPaths(){
 	# add the download directory to the paths
 	#echo "$(downloadDir)"
 	# check for server libary config
-	if [ ! -f /etc/nfo2web/libaries.cfg ];then
+	if [ ! -f /etc/2web/nfo/libaries.cfg ];then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/nfo2web/"
-		} >> "/etc/nfo2web/libaries.cfg"
+			# add the default download directory
+			echo "/var/cache/2web/libary/"
+		} >> "/etc/2web/nfo/libaries.cfg"
 	fi
 	# write path to console
-	#grep -i "^#" "/etc/nfo2web/libaries.cfg"
-	cat "/etc/nfo2web/libaries.cfg"
+	cat "/etc/2web/nfo/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
-	find "/etc/nfo2web/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
+	find "/etc/2web/nfo/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
 		#grep -i "^#" "$libaryConfigPath"
 		cat "$libaryConfigPath"
 		# create a space just in case none exists
@@ -1825,9 +1838,9 @@ function libaryPaths(){
 function updateCerts(){
 	genCert='no'
 	# if the cert exists
-	if test -f /var/cache/nfo2web/ssl-cert.crt;then
+	if test -f /var/cache/2web/ssl-cert.crt;then
 		# if the certs are older than 364 days renew recreate a new valid key
-		if [ $(find /var/cache/nfo2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
+		if [ $(find /var/cache/2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
 			# the cert has expired
 			echo "[INFO]: Updating cert..."
 			# generate a new private key and public cert for the SSL certification
@@ -1841,7 +1854,7 @@ function updateCerts(){
 		genCert='yes'
 	fi
 	if [ $genCert == 'yes' ];then
-		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/nfo2web/ssl-private.key -out /var/cache/nfo2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
 	fi
 }
 ########################################################################
@@ -1932,9 +1945,9 @@ main(){
 		# - Should create its own web directory
 		################################################################################
 		# load the libary directory
-		if ! test -f /etc/nfo2web/libaries.cfg;then
-			mkdir -p /var/cache/nfo2web/libary/
-			echo "/var/cache/nfo2web/libary" > /etc/nfo2web/libaries.cfg
+		if ! test -f /etc/2web/nfo/libaries.cfg;then
+			mkdir -p /var/cache/2web/libary/
+			echo "/var/cache/2web/libary" > /etc/2web/nfo/libaries.cfg
 		fi
 		#libaries=$(libaryPaths | tr -s "\n" | shuf )
 		libaries=$(libaryPaths | tr -s "\n" | shuf )
@@ -1942,7 +1955,7 @@ main(){
 		webDirectory="$(webRoot)"
 		# force overwrite symbolic link to web directory
 		# - link must be used to also use premade apache settings
-		ln -sfn "$webDirectory" "/var/cache/nfo2web/web"
+		ln -sfn "$webDirectory" "/var/cache/2web/web"
 		# check if system is active
 		if test -f "/tmp/nfo2web.active";then
 			# system is already running exit
@@ -1997,60 +2010,50 @@ main(){
 		#  - Generate m3u files to allow android phones to share the media to any video player
 		################################################################################
 		# admin control file
-		linkFile "/usr/share/mms/settings/admin.php" "$webDirectory/admin.php"
+		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/admin.php"
 		# settings interface files
-		linkFile "/usr/share/mms/settings/radio.php" "$webDirectory/radio.php"
-		linkFile "/usr/share/mms/settings/tv.php" "$webDirectory/tv.php"
-		linkFile "/usr/share/mms/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
-		linkFile "/usr/share/mms/settings/nfo.php" "$webDirectory/nfo.php"
-		linkFile "/usr/share/mms/settings/comics.php" "$webDirectory/comics.php"
-		linkFile "/usr/share/mms/settings/comicsDL.php" "$webDirectory/comicsDL.php"
-		linkFile "/usr/share/mms/settings/cache.php" "$webDirectory/cache.php"
-		linkFile "/usr/share/mms/settings/system.php" "$webDirectory/system.php"
-		linkFile "/usr/share/mms/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
-		linkFile "/usr/share/mms/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
-		linkFile "/usr/share/mms/settings/logout.php" "$webDirectory/logout.php"
+		linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/radio.php"
+		linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/tv.php"
+		linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
+		linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/nfo.php"
+		linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/comics.php"
+		linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/comicsDL.php"
+		linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/cache.php"
+		linkFile "/usr/share/2web/settings/system.php" "$webDirectory/system.php"
+		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
+		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
+		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 		# help/info docs
-		linkFile "/usr/share/mms/link.php" "$webDirectory/link.php"
+		linkFile "/usr/share/2web/link.php" "$webDirectory/link.php"
 		# caching resolvers
-		linkFile "/usr/share/mms/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
-		linkFile "/usr/share/mms/m3u-gen.php" "$webDirectory/m3u-gen.php"
+		linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+		linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
 		# error documents
-		linkFile "/usr/share/mms/404.php" "$webDirectory/404.php"
-		linkFile "/usr/share/mms/403.php" "$webDirectory/403.php"
-		linkFile "/usr/share/mms/401.php" "$webDirectory/401.php"
+		linkFile "/usr/share/2web/404.php" "$webDirectory/404.php"
+		linkFile "/usr/share/2web/403.php" "$webDirectory/403.php"
+		linkFile "/usr/share/2web/401.php" "$webDirectory/401.php"
 		# global javascript libary
-		linkFile "/usr/share/nfo2web/nfo2web.js" "$webDirectory/nfo2web.js"
+		linkFile "/usr/share/2web/2web.js" "$webDirectory/2web.js"
 		# link homepage
-		linkFile "/usr/share/mms/templates/home.php" "$webDirectory/index.php"
+		linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
 		# link the movies and shows index
-		linkFile "/usr/share/mms/templates/movies.php" "$webDirectory/movies/index.php"
-		linkFile "/usr/share/mms/templates/shows.php" "$webDirectory/shows/index.php"
+		linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
+		linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
 		# add the new index
-		linkFile "/usr/share/mms/templates/new.php" "$webDirectory/new/index.php"
+		linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
 		# link lists these can be built and rebuilt during libary update
-		linkFile "/usr/share/mms/templates/randomMovies.php" "$webDirectory/randomMovies.php"
-		linkFile "/usr/share/mms/templates/randomShows.php" "$webDirectory/randomShows.php"
-		linkFile "/usr/share/mms/templates/updatedShows.php" "$webDirectory/updatedShows.php"
-		linkFile "/usr/share/mms/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
-		linkFile "/usr/share/mms/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
+		linkFile "/usr/share/2web/templates/randomMovies.php" "$webDirectory/randomMovies.php"
+		linkFile "/usr/share/2web/templates/randomShows.php" "$webDirectory/randomShows.php"
+		linkFile "/usr/share/2web/templates/updatedShows.php" "$webDirectory/updatedShows.php"
+		linkFile "/usr/share/2web/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
+		linkFile "/usr/share/2web/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 		################################################################################
 		# build the login users file
 		counter=0
-		#find '/etc/2web/users/' -name '*.cfg' | while read fileName;do
-		#	counter=$(( $counter + 1 ))
-		#	if [ $counter -le 0 ];then
-		#		cat "$fileName" > "/var/cache/nfo2web/htpasswd.cfg"
-		#		echo -ne "\n" >> "/var/cache/nfo2web/htpasswd.cfg"
-		#	else
-		#		cat "$fileName" >> "/var/cache/nfo2web/htpasswd.cfg"
-		#		echo -ne "\n" >> "/var/cache/nfo2web/htpasswd.cfg"
-		#	fi
-		#done
 		if [ $(cat /etc/2web/users/*.cfg | wc -l ) -gt 0 ];then
 			# if there are any users
-			linkFile "/usr/share/mms/templates/_htaccess" "$webDirectory/.htaccess"
-			cat /etc/2web/users/*.cfg > "/var/cache/nfo2web/htpasswd.cfg"
+			linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
+			cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 		else
 			# if there are no users set in the cfg remove the .htaccess file
 			rm -v "$webDirectory/.htaccess"
@@ -2076,28 +2079,28 @@ main(){
 		fi
 
 		# install the php streaming script
-		#ln -s "/usr/share/mms/stream.php" "$webDirectory/stream.php"
-		linkFile "/usr/share/mms/transcode.php" "$webDirectory/transcode.php"
+		#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
+		linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
 
 		# link the randomFanart.php script
-		linkFile "/usr/share/nfo2web/randomFanart.php" "$webDirectory/randomFanart.php"
+		linkFile "/usr/share/2web/randomFanart.php" "$webDirectory/randomFanart.php"
 		linkFile "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
 		linkFile "$webDirectory/randomFanart.php" "$webDirectory/movies/randomFanart.php"
 
 		# link randomPoster.php
-		linkFile "/usr/share/nfo2web/randomPoster.php" "$webDirectory/randomPoster.php"
+		linkFile "/usr/share/2web/randomPoster.php" "$webDirectory/randomPoster.php"
 		linkFile "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
 		linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
 
 		# link the stylesheet based on the chosen theme
-		if ! test -f /etc/mms/theme.cfg;then
-			echo "default.css" > "/etc/mms/theme.cfg"
-			chown www-data:www-data "/etc/mms/theme.cfg"
+		if ! test -f /etc/2web/theme.cfg;then
+			echo "default.css" > "/etc/2web/theme.cfg"
+			chown www-data:www-data "/etc/2web/theme.cfg"
 		fi
 		# load the chosen theme
-		theme=$(cat "/etc/mms/theme.cfg")
+		theme=$(cat "/etc/2web/theme.cfg")
 		# link the theme and overwrite if another theme is chosen
-		ln -sf "/usr/share/mms/themes/$theme" "$webDirectory/style.css"
+		ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
 		# link stylesheet
 		linkFile "$webDirectory/style.css" "$webDirectory/movies/style.css"
 		linkFile "$webDirectory/style.css" "$webDirectory/shows/style.css"
@@ -2113,7 +2116,7 @@ main(){
 		touch "$logPagePath"
 		#touch "$homePagePath"
 		# check for the header
-		linkFile "/usr/share/mms/templates/header.php" "$headerPagePath"
+		linkFile "/usr/share/2web/templates/header.php" "$headerPagePath"
 		# build log page
 		{
 			echo "<html id='top' class='randomFanart'>"
@@ -2121,7 +2124,7 @@ main(){
 			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
 			echo "</style>"
-			echo "<script src='/nfo2web.js'></script>"
+			echo "<script src='/2web.js'></script>"
 			echo "</head>"
 			echo "<body>"
 			echo "<?PHP";
@@ -2145,8 +2148,6 @@ main(){
 			echo "<table>"
 		} > "$logPagePath"
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-		#IFS_BACKUP=$IFS
-		#IFS=$(echo -e "\n")
 		addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 		# read each libary from the libary config, single path per line
 		ALERT "LIBARIES: $libaries";
@@ -2155,19 +2156,20 @@ main(){
 			# check if the libary directory exists
 			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
 			#INFO "Check if directory exists at '$libary'"
-			if [ -e "$libary" ];then
+			if test -d "$libary";then
 				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
 				#INFO "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				#for show in "$libary"/*;do
-				find "$libary/" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
+				find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
 					#INFO "show path = '$show'"
 					################################################################################
 					# process page metadata
 					################################################################################
 					# if the show directory contains a nfo file defining the show
 					#INFO "searching for metadata at '$show/tvshow.nfo'"
-					if test -f "$show/tvshow.nfo";then
+					#if test -f "$show/tvshow.nfo";then
+					if grep -q "<tvshow>" "$show"/*.nfo;then
 						#INFO "found metadata at '$show/tvshow.nfo'"
 						# load update the tvshow.nfo file and get the metadata required for
 						showMeta=$(cat "$show/tvshow.nfo")
@@ -2176,17 +2178,20 @@ main(){
 						showTitle=$(cleanText "$showTitle")
 						#INFO "showTitle after cleanText() = '$showTitle'"
 						if echo "$showMeta" | grep -q "<tvshow>";then
+							# pipe the output to a black hole and cache
+							episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
+							#ls "$show"/*/*.nfo > /dev/null
 							# make sure show has episodes
-							if ls "$show"/*/*.nfo;then
+							if [ $episodeSearchResults -gt 0 ];then
 								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 								# write log info from show to the log, this must be done here to keep ordering
 								# of the log and to make log show even when the state of the show is unchanged
 								#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-								cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
+								#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
 
 							else
 								echo "[ERROR]: Show has no episodes!"
-								addToLog "WARNING" "Show has no episodes" "$show" "$logPagePath"
+								addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
 							fi
 						else
 							echo "[ERROR]: Show nfo file is invalid!"

@@ -33,15 +33,15 @@ include("settingsHeader.php");
 echo "<div id='serverDownloadLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Comic Download Link Config</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/comic2web/sources.cfg");
+echo file_get_contents("/etc/2web/comics/sources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
-$sourceFiles = scandir("/etc/comic2web/sources.d/");
+$sourceFiles = scandir("/etc/2web/comics/sources.d/");
 //print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/comic2web/sources.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/sources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);

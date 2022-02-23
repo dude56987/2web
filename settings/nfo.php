@@ -26,13 +26,13 @@ include("settingsHeader.php");
 echo "<div id='serverLibaryPaths' class='settingListCard'>\n";
 echo "<h2>Server Libary Paths</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/nfo2web/libaries.cfg");
+echo file_get_contents("/etc/2web/nfo/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div id='libaryPaths' class='settingListCard'>";
 echo "<h2>Libary Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -1 /etc/nfo2web/libaries.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/nfo/libaries.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 # write each config file as a editable entry
