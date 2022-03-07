@@ -3,7 +3,7 @@
 	<link rel='stylesheet' type='text/css' href='style.css'>
 <script>
 	<?php
-		include("../nfo2web.js");
+		include("../2web.js");
 	?>
 </script>
 </head>
@@ -27,7 +27,7 @@ include("../updatedShows.php");
 <div class='settingListCard'>
 <?php
 // get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/shows/*/shows.index"));
+$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/shows/*/shows.index"));
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
 	if (file_exists($sourceFile)){

@@ -69,18 +69,21 @@ cacheCheck(){
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/nfo2web/web.cfg ];then
-		webDirectory=$(cat /etc/nfo2web/web.cfg)
+	if [ -f /etc/2web/nfo/web.cfg ];then
+		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
-		#mkdir -p /var/cache/nfo2web/web/
-		chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		echo "/var/cache/nfo2web/web" > /etc/nfo2web/web.cfg
-		webDirectory="/var/cache/nfo2web/web"
+		chown -R www-data:www-data "/var/cache/2web/cache/"
+		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
+		webDirectory="/var/cache/2web/cache/"
 	fi
-	#mkdir -p "$webDirectory"
+	# check for a trailing slash appended to the path
+	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
+		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
+	fi
 	echo "$webDirectory"
 }
-################################################################################
+########################################################################
 update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
@@ -126,26 +129,21 @@ main(){
 			echo "Using default cache settings..."
 			cacheDelay="14"
 		fi
-		echo "Cache Delay = $cacheDelay"
+		echo "Checking cache for files older than ${cacheDelay} Days"
 		# delete files older than x days
 		echo "Checking for cache files in $(webRoot)/RESOLVER-CACHE/"
-		find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay"
-		INFO "Removing files..."
-		if test -f "$(webRoot)/RESOLVER-CACHE/";then
-			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -delete
+		if test -d "$(webRoot)/RESOLVER-CACHE/";then
+			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
 		fi
 		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
-		find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay"
-		INFO "Removing files..."
 		# delete the m3u cache
-		if test -f "$(webRoot)/M3U-CACHE/";then
-			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.index' -delete
+		if test -d "$(webRoot)/M3U-CACHE/";then
+			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
 		echo "Checking for cache files in $(webRoot)/new/"
-		find "$(webRoot)/new/" -type f -mtime +"$cacheDelay"
 		# delete the new episodes cache
-		if test -f "$(webRoot)/new/";then
-			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -name '*.index' -delete
+		if test -d "$(webRoot)/new/";then
+			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		echo "########################################################################"

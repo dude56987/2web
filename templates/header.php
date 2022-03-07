@@ -28,9 +28,15 @@ if ($writeFile){
 	$fileData .= "<a class='button' href='/index.php'>";
 	$fileData .= "&#127968;HOME";
 	$fileData .= "</a>";
+	$fileData .= "<a class='button' href='/new/'>";
+	$fileData .= "&#128220;";
+	$fileData .= "New";
+	$fileData .= "</a>";
 	$fileData .= "<a class='button' href='/link.php'>";
 	$fileData .= "&#128279;LINK";
 	$fileData .= "</a>";
+
+
 	if (file_exists("$webDirectory/movies/")){
 		$fileData .= "<a class='button' href='/movies'>";
 		$fileData .= "&#127916;MOVIES";

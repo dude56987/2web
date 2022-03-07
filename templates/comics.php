@@ -1,11 +1,8 @@
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='style.css'>
-<script>
-	<?php
-		include("../nfo2web.js");
-	?>
-</script>
+	<script src='/nfo2web.js'></script>
+	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>
 
@@ -30,7 +27,7 @@
 
 <?php
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/comics/*/comic.index | sort"));
+	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){

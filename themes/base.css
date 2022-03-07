@@ -178,6 +178,12 @@ h1 {
 .ERROR{
 	background-color: darkred;
 }
+.DOWNLOAD{
+	background-color: green;
+}
+.DEBUG{
+	background-color: gray;
+}
 .WARNING{
 	background-color: orange;
 }

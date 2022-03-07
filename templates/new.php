@@ -1,7 +1,8 @@
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
-	<script src='/nfo2web.js'></script>
+	<script src='/2web.js'></script>
+	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>
 <?php
@@ -24,18 +25,20 @@ if (array_key_exists("filter",$_GET)){
 	//echo "<p>filter = $filterType</p>";
 	if ($filterType == 'movies'){
 		echo "<h2>Recently added Movies</h2>";
-		$filterCommand = "ls -t1 /var/cache/nfo2web/web/new/movie_*.index";
+		$filterCommand = 'ls -t1 /var/cache/2web/web/new/movie_*.index';
 	}else if ($filterType == 'episodes'){
 		echo "<h2>Recently added Episodes</h2>";
-		$filterCommand = "ls -t1 /var/cache/nfo2web/web/new/episode_*.index";
+		$filterCommand = 'ls -t1 /var/cache/2web/web/new/episode_*.index';
 	}else{
 		echo "<h2>Recently added Media</h2>";
-		$filterCommand = "ls -t1 /var/cache/nfo2web/web/new/*.index";
+		$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
 	}
 }else{
 	echo "<h2>Recently added Media</h2>";
-	$filterCommand = "ls -t1 /var/cache/nfo2web/web/new/*.index";
+	$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
 }
+$filterCommand = $filterCommand." | tac | tail -n 500 | tac";
+//echo "<br>$filterCommand<br>";
 ?>
 
 <a class='button' href='?filter=episodes'>Episodes</a>

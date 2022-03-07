@@ -98,6 +98,8 @@ build-deb:
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
+	# add icon
+	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
 	touch debian/etc/ytdl2kodi/sources.d/.placeholder
 	touch debian/etc/ytdl2kodi/usernameSources.d/.placeholder
@@ -208,8 +210,8 @@ build-deb:
 	# copy over javascript libary
 	cp 2web.js debian/usr/share/2web/
 	# copy over php scripts
-	cp templates/randomFanart.php debian/usr/share/2web/nfo/
-	cp templates/randomPoster.php debian/usr/share/2web/nfo/
+	cp templates/randomFanart.php debian/usr/share/2web/
+	cp templates/randomPoster.php debian/usr/share/2web/
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
 	# copy link page
@@ -221,7 +223,7 @@ build-deb:
 	cp 404.php debian/usr/share/2web/
 	cp 403.php debian/usr/share/2web/
 	cp 401.php debian/usr/share/2web/
-	cp iptv-resolver.php debian/usr/share/2web/nfo/
+	cp iptv-resolver.php debian/usr/share/2web/iptv/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root

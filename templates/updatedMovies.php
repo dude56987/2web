@@ -53,6 +53,8 @@ if ($writeFile){
 		fwrite($fileObj,"Full");
 		fwrite($fileObj,"<br>");
 		fwrite($fileObj,"List");
+		fwrite($fileObj,"<br>");
+		fwrite($fileObj,"&#128220;");
 		fwrite($fileObj,"</a>");
 		fwrite($fileObj,"</div>");
 		fwrite($fileObj,"</div>");

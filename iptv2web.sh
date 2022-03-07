@@ -155,8 +155,8 @@ examineIconLink(){
 			# resize the icon to standard size
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			# add text over retrieved thumbnail
-			ALERT "timeout 600 convert '$localIconPath' -adaptive-resize 200x200\! -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:'$title' -composite '$localIconPath'"
-			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
+			ALERT "timeout 600 convert '$localIconPath' -adaptive-resize 200x200\! -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -size 200x200 -gravity center caption:'$title' -composite '$localIconPath'"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 		fi
 		killFakeImage "$localIconPath"
 		if ! test -f "$localIconPath";then
@@ -164,7 +164,7 @@ examineIconLink(){
 			swirlAmount=$(echo -n "$title" | wc -c)
 			timeout 600 convert -size 200x200 +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
 			# add text over generated image
-			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
+			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 			linkColor=$(echo -n "$link" | md5sum | cut --bytes='1-6')
 			# convert to grayscale
 			timeout 600 convert "$localIconPath" -colorSpace "gray" "$localIconPath"
@@ -182,7 +182,7 @@ examineIconLink(){
 function webGenCheck(){
 	# read either from argument or filesystem
 	if echo -n "$@" | grep -q "\-\-filecheck";then
-		channelCount=$(( $(cat /var/cache/nfo2web/web/kodi/channels.m3u | wc -l) / 2))
+		channelCount=$(( $(cat /var/cache/2web/web/kodi/channels.m3u | wc -l) / 2))
 	else
 		channelCount=$1
 	fi
@@ -428,16 +428,16 @@ function processLink(){
 		return 0
 	elif test -f "$link";then
 		# if the link is a local address
-		INFO "Link is a local address. Adding local file..."
+		#INFO "Link is a local address. Adding local file..."
 		# add local files
 		grep -v "#EXTM3U" "$link" >> "$channelsPath"
 		return 0
 	elif echo -n "$link" | grep -Eq "^http";then
 		# if the link is a web address
-		INFO "Link is a web url..."
+		#INFO "Link is a web url..."
 		# if the link is a link to a playlist download the playlist
 		if echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
-			INFO "Link is a m3u playlist..."
+			#INFO "Link is a m3u playlist..."
 
 			# generate a md5 from the url for the cache
 			linkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
@@ -526,15 +526,18 @@ function processLink(){
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if test -f /etc/2web/nfo/web.cfg;then
+	if [ -f /etc/2web/nfo/web.cfg ];then
 		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
-		mkdir -p /var/cache/nfo2web/web/
-		chown -R www-data:www-data "/var/cache/nfo2web/web/"
-		echo "/var/cache/nfo2web/web" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/nfo2web/web"
+		chown -R www-data:www-data "/var/cache/2web/cache/"
+		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
+		webDirectory="/var/cache/2web/cache/"
 	fi
-	mkdir -p "$webDirectory"
+	# check for a trailing slash appended to the path
+	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
+		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
+	fi
 	echo "$webDirectory"
 }
 ################################################################################
@@ -576,7 +579,10 @@ fullUpdate(){
 	################################################################################
 
 	webDirectory=$(webRoot)
-	mkdir -p "$webDirectory/live/"
+	if test -d "$webDirectory/live/";then
+		mkdir -p "$webDirectory/live/"
+		chown -R www-data:www-data "$webDirectory/live/"
+	fi
 
 	# generate the placeholder website
 	webGen
@@ -586,8 +592,8 @@ fullUpdate(){
 	channelsRawPath="$webDirectory/live/channels_raw.index"
 	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
 
-	# link the channels to the kodi directory
-	linkFile  "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
+	# link the channel lists to the kodi directory
+	linkFile "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
 	linkFile "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
 
 	# for each link in the sources
@@ -598,8 +604,8 @@ fullUpdate(){
 	################################################################################
 	# read video sources
 	################################################################################
-	if test -f "$webDirectory/live/totalSources.index";then
-		totalSources=$(cat "$webDirectory/live/totalSources.index")
+	if test -f "${webDirectory}live/totalSources.index";then
+		totalSources=$(cat "${webDirectory}live/totalSources.index")
 	else
 		totalSources="?"
 	fi
@@ -684,10 +690,11 @@ fullUpdate(){
 	# after processing all configs copy the temp channels path over
 	cp -v "$channelsPath" "$channelsOutputPath"
 	cp -v "$channelsRawPath" "$channelsRawOutputPath"
+
 	# generate the finished website
 	webGen
 	# fix any permission errors in the website
-	chown -R www-data:www-data "/var/cache/nfo2web/web/"
+	chown -R www-data:www-data "/var/cache/2web/web/"
 }
 ################################################################################
 function buildPage(){
@@ -882,7 +889,7 @@ webGen(){
 	# copy over the stylesheet
 	linkFile "$webDirectory/style.css" "$webDirectory/live/style.css"
 	# copy over the resolver
-	linkFile "/usr/share/nfo2web/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
+	linkFile "/usr/share/2web/iptv/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
 
 	# build the background lists for random background
 	cat "$webDirectory/fanart.cfg" | sed "s/^/..\//g" > "$webDirectory/live/fanart.cfg"

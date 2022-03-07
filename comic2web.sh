@@ -21,17 +21,15 @@ webRoot(){
 	if [ -f /etc/2web/nfo/web.cfg ];then
 		webDirectory=$(cat /etc/2web/nfo/web.cfg)
 	else
-		#mkdir -p /var/cache/2web/nfo/web/
-		chown -R www-data:www-data "/var/cache/2web/nfo/web/"
-		echo "/var/cache/2web/nfo/web" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/2web/nfo/web"
+		chown -R www-data:www-data "/var/cache/2web/cache/"
+		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
+		webDirectory="/var/cache/2web/cache/"
 	fi
 	# check for a trailing slash appended to the path
 	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
 		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
 		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
 	fi
-	#mkdir -p "$webDirectory"
 	echo "$webDirectory"
 }
 ################################################################################
@@ -422,6 +420,7 @@ scanPages(){
 	# set page number counter
 	pageNumber=0
 
+	# scan for all jpg and png images in the comic book directory
 	find -L "$pagesDirectory" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | sort | while read imagePath;do
 		pageNumber=$(( 10#$pageNumber + 1 ))
 		################################################################################
@@ -1008,8 +1007,8 @@ webUpdate(){
 	createDir "$webDirectory/comics/"
 
 	# link the random poster script
-	linkFile "/usr/share/2web/randomPoster.php" "$webDirectory/comics/randomPoster.php"
-	linkFile "/usr/share/2web/randomFanart.php" "$webDirectory/comics/randomFanart.php"
+	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/comics/randomPoster.php"
+	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/comics/randomFanart.php"
 	# link the kodi directory to the download directory
 	#ln -s "$downloadDirectory" "$webDirectory/kodi/comics"
 
