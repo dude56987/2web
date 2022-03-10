@@ -25,30 +25,44 @@ if (array_key_exists("filter",$_GET)){
 	//echo "<p>filter = $filterType</p>";
 	if ($filterType == 'movies'){
 		echo "<h2>Recently added Movies</h2>";
-		$filterCommand = 'ls -t1 /var/cache/2web/web/new/movie_*.index';
+		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/movie_*.index';
+		$filterCommand = "find '/var/cache/2web/web/new/' -name 'movie_*.index' -printf '%T+ %p\n'";
 	}else if ($filterType == 'episodes'){
 		echo "<h2>Recently added Episodes</h2>";
-		$filterCommand = 'ls -t1 /var/cache/2web/web/new/episode_*.index';
+		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/episode_*.index';
+		$filterCommand = "find '/var/cache/2web/web/new/' -name 'episode_*.index' -printf '%T+ %p\n'";
+	}else if ($filterType == 'comics'){
+		echo "<h2>Recently added Comics</h2>";
+		$filterCommand = "find '/var/cache/2web/web/new/' -name 'comic_*.index' -printf '%T+ %p\n'";
 	}else{
 		echo "<h2>Recently added Media</h2>";
-		$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
+		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
+		$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
 	}
 }else{
 	echo "<h2>Recently added Media</h2>";
-	$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
+	//$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
+	$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
 }
-$filterCommand = $filterCommand." | tac | tail -n 500 | tac";
+# sort list based on time
+$filterCommand = $filterCommand." | sort | cut -d' ' -f2-";
+# limit list to 200 entries
+$filterCommand = $filterCommand." | tail -n 200 | tac";
+//$filterCommand = $filterCommand." | tac | tail -n 200 | tac";
 //echo "<br>$filterCommand<br>";
 ?>
 
 <a class='button' href='?filter=episodes'>Episodes</a>
 <a class='button' href='?filter=movies'>Movies</a>
+<a class='button' href='?filter=comics'>Comics</a>
 <a class='button' href='?filter=all'>All</a>
 </div>
 
 
 <div class='settingListCard'>
 <?php
+flush();
+ob_flush();
 // get a list of all the genetrated index links for the page
 $sourceFiles = explode("\n",shell_exec($filterCommand));
 foreach($sourceFiles as $sourceFile){

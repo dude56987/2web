@@ -637,6 +637,9 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "Hard Link"
 					echo "</a>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "</a>"
 				fi
 				echo "$moviePlot"
 				echo "</div>"
@@ -651,6 +654,9 @@ processMovie(){
 				# create a hard link
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "Hard Link"
+				echo "</a>"
+				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
 				echo "</div>"
@@ -1132,6 +1138,10 @@ processEpisode(){
 				echo "	Cache Link"
 				echo "</a>"
 
+				#echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)$fullRedirect'>"
+				#echo "<span id='vlcIcon'>&#9650;</span> VLC"
+				#echo "</a>"
+
 				echo "<div class='aired'>"
 				echo "$episodeAired"
 				echo "</div>"
@@ -1166,6 +1176,9 @@ processEpisode(){
 					echo "Hard Link"
 					echo "</a>"
 				fi
+				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+				echo "<span id='vlcIcon'>&#9650;</span> VLC"
+				echo "</a>"
 
 				echo "<div class='aired'>"
 				echo "$episodeAired"
@@ -1981,6 +1994,7 @@ main(){
 		libaries=$(libaryPaths | tr -s "\n" | shuf )
 		# the webdirectory is a cache where the generated website is stored
 		webDirectory="$(webRoot)"
+		ALERT "Building web directory at '$webDirectory'"
 		# force overwrite symbolic link to web directory
 		# - link must be used to also use premade apache settings
 		ln -sfn "$webDirectory" "/var/cache/2web/web"
@@ -2210,7 +2224,8 @@ main(){
 						#INFO "showTitle after cleanText() = '$showTitle'"
 						if echo "$showMeta" | grep -q "<tvshow>";then
 							# pipe the output to a black hole and cache
-							episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
+							#episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
+							episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
 							#ls "$show"/*/*.nfo > /dev/null
 							# make sure show has episodes
 							if [ $episodeSearchResults -gt 0 ];then

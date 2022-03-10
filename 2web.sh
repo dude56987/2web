@@ -92,7 +92,7 @@ update2web(){
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
-		update2Web
+		update2web
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web
 		/usr/bin/iptv2web

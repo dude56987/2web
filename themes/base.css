@@ -175,6 +175,10 @@ h1 {
   z-index: 99; /* Make sure it does not overlap */
 	padding: 0px;
 }
+#vlcIcon{
+	color: orange;
+	font-weight: bold;
+}
 .ERROR{
 	background-color: darkred;
 }
@@ -287,6 +291,10 @@ ol li{
 	.header a{
 		margin-top: 0px;
 		margin-bottom: 0px;
+	}
+	/* Hide the vlc button on desktop sites */
+	.vlcButton{
+		display: none;
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){

@@ -31,6 +31,7 @@ if ($writeFile){
 						fwrite($fileObj,"<div class='titleCard'>");
 						fwrite($fileObj,"<h1>Updated Comics</h1>");
 						fwrite($fileObj,"<div class='listCard'>");
+						$drawBottom = 1;
 					}
 					// read the index entry
 					$data=file_get_contents($sourceFile);
@@ -43,8 +44,20 @@ if ($writeFile){
 			}
 		}
 	}
-	fwrite($fileObj,"</div>");
-	fwrite($fileObj,"</div>");
+	if ($drawBottom == 1){
+
+		// create a final link to the full new list
+		fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=comics'>");
+		fwrite($fileObj,"Full");
+		fwrite($fileObj,"<br>");
+		fwrite($fileObj,"List");
+		fwrite($fileObj,"<br>");
+		fwrite($fileObj,"&#128220;");
+		fwrite($fileObj,"</a>");
+		fwrite($fileObj,"</div>");
+		fwrite($fileObj,"</div>");
+	}
+
 	// close the file
 	fclose($fileObj);
 }

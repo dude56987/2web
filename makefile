@@ -96,6 +96,8 @@ build-deb:
 	mkdir -p debian/etc/apache2/sites-available/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
+	# write version info
+	git log --oneline | wc -l > debian/etc/2web/version.cfg
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
 	# add icon

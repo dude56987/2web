@@ -250,6 +250,8 @@ function update(){
 					INFO "Trimming whitespace from $pdfComicName page $counter/$dataLength"
 					# trim the whitespace
 					convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+					# add a border to the edge of the image
+					convert "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
 					counter=$(( $counter + 1 ))
 				done
 			fi
@@ -1076,6 +1078,14 @@ webUpdate(){
 				echo "<div>$tempComicName</div>"
 				echo "</a>"
 			} > "$comicNamePath/comic.index"
+		fi
+		if ! test -f "$webDirectory/new/comic_$tempComicName.index";then
+			{
+				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+				echo "<div>$tempComicName</div>"
+				echo "</a>"
+			} > "$webDirectory/new/comic_$tempComicName.index"
 		fi
 	done
 }
