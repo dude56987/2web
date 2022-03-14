@@ -11,7 +11,7 @@ ini_set('display_errors', 1);
 // - /shows/$showName/index.php
 $activeDir=getcwd();
 $showTitle=array_reverse(explode('/',$activeDir))[0];
-include('../../header.php');
+include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 ?>
 <div class='titleCard'>
 <?PHP
@@ -19,10 +19,31 @@ echo "<h1>$showTitle</h1>";
 ?>
 <hr>
 <div class='listCard'>
+
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"'>";
 ?>
 	Play All<sup>(External)<sup>
+</a>
+
+<?PHP
+echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?showTitle=\"$showTitle\"'>";
+?>
+	<span id='vlcIcon'>&#9650;</span> VLC
+	Play All<sup>(External)<sup>
+</a>
+
+<?PHP
+echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
+?>
+	Play Random<sup>(External)<sup>
+</a>
+
+<?PHP
+echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
+?>
+	<span id='vlcIcon'>&#9650;</span> VLC
+	Play Random<sup>(External)<sup>
 </a>
 
 <?PHP

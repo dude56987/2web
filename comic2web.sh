@@ -719,21 +719,52 @@ renderPage(){
 	fi
 	{
 		if [ $((10#$previousPage)) -eq 0 ];then
-			echo "	<a href='index.php' class='comicPageButton left'>&#8617;<br>Back</a>"
+			echo "	<a href='index.php' class='comicPageButton left'>"
+			echo "		&#8617;"
+			echo "	<br>"
+			echo "		Back"
+			echo "	</a>"
 		else
-			echo "	<a href='$previousPage.html' class='comicPageButton left'>&#8617;<br>$previousPage</a>"
+			echo "	<a href='$previousPage.html' class='comicPageButton left'>"
+			echo "		&#8617;"
+			echo "		<br>"
+			echo "		<span class='comicPageNumbers'>"
+			echo "			$((10#$pageNumber))/$totalPages"
+			echo "		</span>"
+			echo "	</a>"
 		fi
 		if [  $((10#$nextPage)) -gt $totalPages ];then
-			echo "	<a href='index.php' class='comicPageButton right'>&#8618;<br>Back</a>"
+			echo "	<a href='index.php' class='comicPageButton right'>"
+			echo "		&#8618;"
+			echo "		<br>"
+			echo "		Back"
+			echo "	</a>"
 		else
-			echo "	<a href='$nextPage.html' class='comicPageButton right'>&#8618;<br>$nextPage</a>"
+			echo "	<a href='$nextPage.html' class='comicPageButton right'>"
+			echo "		&#8618;"
+			echo "		<br>"
+			echo "		<span class='comicPageNumbers'>"
+			echo "			$((10#$pageNumber))/$totalPages"
+			echo "		</span>"
+			echo "	</a>"
 		fi
 		#echo "	<a class='comicHomeButton comicPageButton center' href='../../..'>"
 		#echo "		HOME"
 		#echo "	</a>"
-		echo "	<a class='comicIndexButton comicPageButton center' href='index.php'>"
+		echo "	<a class='comicIndexButton comicPageButton center' href='index.php#$pageNumber'>"
 		echo "		&uarr;"
 		echo "	</a>"
+
+		if [ $isChapter = true ];then
+			echo "	<div class='comicPagePopup center' href='index.php'>"
+			echo "		Chapter $((10#$pageChapter))/$totalChapters <hr> Page $((10#$pageNumber))/$totalPages"
+			echo "	</div>"
+		else
+			echo "	<div class='comicPagePopup center' href='index.php'>"
+			echo "		Page $((10#$pageNumber))/$totalPages"
+			echo "	</div>"
+		fi
+
 		#echo "<div class='comicFooter'>"
 		#echo "	$pageNumber"
 		#echo "</div>"
@@ -945,7 +976,7 @@ renderPage(){
 					tempImageName="$(popPath "$imagePath" | sed "s/\.jpg//g")"
 
 					{
-						echo "<a href='./$tempImageName.html' class='indexSeries' >"
+						echo "<a id='$tempImageName' href='./$tempImageName.html' class='indexSeries' >"
 						echo "<img loading='lazy' src='./$tempImageName-thumb.png' />"
 						echo "<div>$tempImageName</div>"
 						echo "</a>"
@@ -968,7 +999,7 @@ renderPage(){
 				# single chapter comic image
 				tempName="$(popPath "$imagePath" | sed "s/\.jpg//g")"
 				{
-					echo "<a href='./$tempName.html' class='indexSeries' >"
+					echo "<a id='$tempName' href='./$tempName.html' class='indexSeries' >"
 					echo "<img loading='lazy' src='./$tempName-thumb.png' />"
 					echo "<div>$tempName</div>"
 					echo "</a>"
@@ -1109,18 +1140,40 @@ function resetCache(){
 	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
 	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
 }
+lockProc(){
+	# check if system is active
+	if test -f "/tmp/comic2web.active";then
+		# system is already running exit
+		echo "[INFO]: comic2web is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/comic2web.active'."
+		exit
+	else
+		# set the active flag
+		touch /tmp/comic2web.active
+		# create a trap to remove nfo2web lockfile
+		trap "rm -v /tmp/comic2web.active" EXIT
+	fi
+}
 ################################################################################
 main(){
 	################################################################################
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		# lock the process
+		lockProc
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		# lock the process
+		lockProc
 		update
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		# lock the process
+		lockProc
 		rm -rv $(webRoot)/comics/*
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+		# lock the process
+		lockProc
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
@@ -1131,7 +1184,7 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
 		echo "# comic2web CLI for administration"
-		echo "# Copyright (C) 2020  Carl J Smith"
+		echo "# Copyright (C) 2022  Carl J Smith"
 		echo "#"
 		echo "# This program is free software: you can redistribute it and/or modify"
 		echo "# it under the terms of the GNU General Public License as published by"
@@ -1164,8 +1217,15 @@ main(){
 		echo "	Download the latest version of the gallery-dl using pip."
 		echo "########################################################################"
 	else
-		main --update
-		main --webgen
+		# lock the process
+		lockProc
+		# gen prelem website
+		webUpdate
+		# update sources
+		update
+		# update webpages
+		webUpdate
+		# display the help
 		main --help
 	fi
 }

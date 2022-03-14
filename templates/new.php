@@ -40,6 +40,7 @@ if (array_key_exists("filter",$_GET)){
 		$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
 	}
 }else{
+	$filterType="all";
 	echo "<h2>Recently added Media</h2>";
 	//$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
 	$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
@@ -47,7 +48,7 @@ if (array_key_exists("filter",$_GET)){
 # sort list based on time
 $filterCommand = $filterCommand." | sort | cut -d' ' -f2-";
 # limit list to 200 entries
-$filterCommand = $filterCommand." | tail -n 200 | tac";
+$filterCommand = $filterCommand." | tail -n 500 | tac";
 //$filterCommand = $filterCommand." | tac | tail -n 200 | tac";
 //echo "<br>$filterCommand<br>";
 ?>
@@ -63,22 +64,47 @@ $filterCommand = $filterCommand." | tail -n 200 | tac";
 <?php
 flush();
 ob_flush();
-// get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec($filterCommand));
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	if (file_exists($sourceFile)){
-		if (is_file($sourceFile)){
-			if (strpos($sourceFile,".index")){
-				// read the index entry
-				$data=file_get_contents($sourceFile);
-				// write the index entry
-				echo "$data";
-				flush();
-				ob_flush();
+
+$cacheFile="new_$filterType.index";
+if (file_exists($cacheFile)){
+	if (time()-filemtime($cacheFile) > 300){
+		// update the cached file
+		$writeFile=true;
+	}else{
+		// read from the already cached file
+		$writeFile=false;
+	}
+}else{
+	# write the file if it does not exist
+	$writeFile=true;
+}
+# load the cached file or write a new cached fill
+if ($writeFile){
+	ignore_user_abort(true);
+	$fileHandle = fopen("new_$filterType.index",'w');
+	// get a list of all the genetrated index links for the page
+	$sourceFiles = explode("\n",shell_exec($filterCommand));
+	foreach($sourceFiles as $sourceFile){
+		$sourceFileName = $sourceFile;
+		if (file_exists($sourceFile)){
+			if (is_file($sourceFile)){
+				if (strpos($sourceFile,".index")){
+					// read the index entry
+					$data=file_get_contents($sourceFile);
+					// write the index entry
+					echo "$data";
+					fwrite($fileHandle, "$data");
+					flush();
+					ob_flush();
+				}
 			}
 		}
 	}
+	fclose($fileHandle);
+	ignore_user_abort(false);
+}else{
+	# load the cached file
+	echo file_get_contents("new_$filterType.index");
 }
 ?>
 </div>

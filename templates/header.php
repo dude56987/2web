@@ -3,7 +3,7 @@ $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/headerData.index";
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
-	if (time()-filemtime($cacheFile) > 2 * 3600){
+	if (time()-filemtime($cacheFile) > 300){
 		// update the cached file
 		$writeFile=true;
 	}else{

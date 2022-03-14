@@ -1030,7 +1030,7 @@ processEpisode(){
 			echo "include('../../../header.php')";
 			echo "?>";
 			echo "<div class='titleCard'>"
-			echo "<h1><a href='/shows/$episodeShowTitle/'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
+			echo "<h1><a href='/shows/$episodeShowTitle/#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
@@ -1072,7 +1072,10 @@ processEpisode(){
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
 						#ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
-						timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
+						tempSum=$(echo "$ytLink" | md5sum | cut -d' ' -f1)
+						mkdir $webDirectory/RESOLVER-CACHE/$tempSum/
+						#timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
+						echo "/usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -M -q c 'now'
 						#timeout 20 curl --silent "$resolverUrl" > /dev/null
 					fi
 				fi
@@ -1138,9 +1141,9 @@ processEpisode(){
 				echo "	Cache Link"
 				echo "</a>"
 
-				#echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)$fullRedirect'>"
-				#echo "<span id='vlcIcon'>&#9650;</span> VLC"
-				#echo "</a>"
+				echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
+				echo "<span id='vlcIcon'>&#9650;</span> VLC"
+				echo "</a>"
 
 				echo "<div class='aired'>"
 				echo "$episodeAired"
@@ -1896,6 +1899,10 @@ function updateCerts(){
 	fi
 	if [ $genCert == 'yes' ];then
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
+		# convert the ssl certificate into the der format
+		# - der format can be copied to other systems at /usr/local/share/ca-certificates/
+		# - linux only updates after update-ca-certificates
+		openssl x509 -in /var/cache/2web/ssl-cert.crt -out /var/cache/2web/ssl-cert.der -outform DER
 	fi
 }
 ########################################################################

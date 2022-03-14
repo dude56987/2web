@@ -74,15 +74,31 @@ if (array_key_exists("showTitle",$_GET)){
 	//echo "showTitle=$showTitle<br>\n";
 	//echo "showPath=$showPath<br>\n";
 
-	//echo "Checking '$showPath'<br>\n";
+		//echo "Checking '$showPath'<br>\n";
 	if (is_dir($showPath)){
 		# create the cache if it does not exist
 		if (! is_dir($rootServerPath."/m3u_cache/")){
 			mkdir("$rootServerPath/m3u_cache/");
 		}
-		// cache sum
-		$cacheSum = md5($showTitle);
+
+		if (array_key_exists("sort",$_GET)){
+			if ($_GET['sort'] == 'random'){
+				// cache sum must be randomized for random option, duplicated randmizations will use the cached file
+				// - currently 20 variations of the randomization pattern can be created
+				$tempRand = rand(0,20);
+				$cacheSum = md5("$tempRand".$showTitle);
+			}else{
+				$cacheSum = md5($showTitle);
+			}
+		}else{
+			// cache sum
+			$cacheSum = md5($showTitle);
+		}
+
 		$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
+
+		$totalFileList=Array();
+
 		// check for existing redirect
 		if (is_file($cacheFile)){
 			# redirect to the built cache file if it exists
@@ -97,34 +113,55 @@ if (array_key_exists("showTitle",$_GET)){
 			$seasonPaths = array_diff($seasonPaths,array('..','.'));
 			foreach ($seasonPaths as &$seasonPath){
 				//echo "Checking season path '$seasonPath'<br>\n";//DEBUG
-				$fullSeasonPath="$showPath/$seasonPath";
+				$fullSeasonPath = "$showPath/$seasonPath";
 				//echo "Checking full season path '$fullSeasonPath'<br>\n";//DEBUG
 				// find directories that are valid season directories
 				if (strpos(strtolower($fullSeasonPath),"season")){
 					if (is_dir($fullSeasonPath)){
-							$episodePaths=scandir($fullSeasonPath);
-							//print_r($episodePaths);
-							$episodePaths=array_diff($episodePaths,array('..','.'));
-							foreach ($episodePaths as &$episodePath){
-								$fullEpisodePath="$showPath/$episodePath";
-								//echo "Checking episode path '$episodePath'<br>\n";//DEBUG
-								//echo "Checking episode path '$fullEpisodePath'<br>\n";//DEBUG
-								// if a non genrated file it is a media file
-								//if (file_exists($episodePath)){
-									if (strpos($episodePath,".avi") || strpos($episodePath,".strm") || strpos($episodePath,".mkv") || strpos($episodePath,".mp4") || strpos($episodePath,".m4v") || strpos($episodePath,".mpg") || strpos($episodePath,".mpeg") || strpos($episodePath,".ogv") || strpos($episodePath,".mp3") || strpos($episodePath,".ogg")){
-										//echo "episode is correct type of file...<br>\n";//DEBUG
-										//fwrite($data, "http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
-										//fwrite($data, "http://".gethostname().".local:444/kodi/shows/$showTitle/$seasonPath/$episodePath\n");
-										fwrite($data, "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n");
-										fwrite($data, "../kodi/shows/$showTitle/$seasonPath/$episodePath\n");
-										//echo ("http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
-										//echo "../kodi/$showTitle/$seasonPath/$episodePath<br>\n";
-									}
-								//}
+						$episodePaths = scandir($fullSeasonPath);
+						//print_r($episodePaths);
+						$episodePaths = array_diff($episodePaths,array('..','.'));
+						# shuffle the paths if random is selected
+						//if (array_key_exists("sort",$_GET)){
+						//	if ($_GET['sort'] == 'random'){
+						//		# if randomization is chosen then randomize the list to be wrote here
+						//		# - limit to 1000 random entries
+						//		shuffle($episodePaths);
+						//	}
+						//}
+						#
+						foreach ($episodePaths as $episodePath){
+							$fullEpisodePath="$showPath/$episodePath";
+							//echo "Checking episode path '$episodePath'<br>\n";//DEBUG
+							//echo "Checking episode path '$fullEpisodePath'<br>\n";//DEBUG
+							// if a non genrated file it is a media file
+							//if (file_exists($episodePath)){
+							if (strpos($episodePath,".avi") || strpos($episodePath,".strm") || strpos($episodePath,".mkv") || strpos($episodePath,".mp4") || strpos($episodePath,".m4v") || strpos($episodePath,".mpg") || strpos($episodePath,".mpeg") || strpos($episodePath,".ogv") || strpos($episodePath,".mp3") || strpos($episodePath,".ogg")){
+								//echo "episode is correct type of file...<br>\n";//DEBUG
+								//fwrite($data, "http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
+								//fwrite($data, "http://".gethostname().".local:444/kodi/shows/$showTitle/$seasonPath/$episodePath\n");
+								$tempDataEntry = "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n";
+								$tempDataEntry = $tempDataEntry."../kodi/shows/$showTitle/$seasonPath/$episodePath\n";
+								array_push($totalFileList,$tempDataEntry);
+								# fwrite($data, "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n");
+								# fwrite($data, "../kodi/shows/$showTitle/$seasonPath/$episodePath\n");
+								//echo ("http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
+								//echo "../kodi/$showTitle/$seasonPath/$episodePath<br>\n";
 							}
+						//}
 						}
 					}
 				}
+			}
+			if (array_key_exists("sort",$_GET)){
+				if ($_GET['sort'] == 'random'){
+					# randomize the list before writing it to the file
+					shuffle($totalFileList);
+				}
+			}
+			foreach ($totalFileList as $tempLineData){
+				fwrite($data, $tempLineData);
+			}
 			// close the file
 			fclose($data);
 			// redirect to episode path
