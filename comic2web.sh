@@ -833,6 +833,8 @@ renderPage(){
 			echo "</script>"
 			echo "</head>"
 			echo "<body onload='setupKeys();'>"
+			#create top jump button
+			echo "<a href='#' id='topButton' class='button'>&uarr;</a>";
 			echo "<?PHP";
 			echo "include('../../header.php')";
 			echo "?>";
@@ -949,6 +951,8 @@ renderPage(){
 					echo "</script>"
 					echo "</head>"
 					echo "<body onload='setupKeys();'>"
+					#create top jump button
+					echo "<a href='#' id='topButton' class='button'>&uarr;</a>";
 					echo "<?PHP";
 					echo "include('../../../header.php')";
 					echo "?>";
