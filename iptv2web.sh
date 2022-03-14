@@ -1023,6 +1023,9 @@ webGen(){
 					echo "	<a class='button hardLink' href='$link'>"
 					echo "		Hard Link"
 					echo "	</a>"
+					echo "	<a class='button hardLink vlcButton' href='vlc://$link'>"
+					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "	</a>"
 					for group in $groupTitle;do
 						echo "	<a class='button groupButton tag' href='groups/$group/'>$group</a>"
 					done

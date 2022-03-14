@@ -2017,6 +2017,7 @@ main(){
 		fi
 		if ! test -d "$webDirectory/new/";then
 			mkdir -p "$webDirectory/new/"
+			chown -R www-data:www-data "$webDirectory/new/"
 		fi
 		if ! test -d "$webDirectory/shows/";then
 			mkdir -p "$webDirectory/shows/"
@@ -2224,8 +2225,8 @@ main(){
 						#INFO "showTitle after cleanText() = '$showTitle'"
 						if echo "$showMeta" | grep -q "<tvshow>";then
 							# pipe the output to a black hole and cache
-							#episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
-							episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
+							episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
+							#episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
 							#ls "$show"/*/*.nfo > /dev/null
 							# make sure show has episodes
 							if [ $episodeSearchResults -gt 0 ];then
