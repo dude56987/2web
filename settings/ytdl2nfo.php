@@ -50,7 +50,29 @@ if ($data){
 */
 echo "</pre>\n";
 echo "</div>";
+?>
 
+<div id='addWebsiteSource' class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Add Website Source</h2>
+<ul>
+	<li>
+		Website sources will be added as shows based on video links found on source pages.
+	</li>
+	<li>
+		Website sources will be grouped by website name.
+	</li>
+	<li>
+		Website sources can be search pages.
+	</li>
+</ul>
+<input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+
+<?php
 echo "<div id='websiteSources' class='settingListCard'>";
 echo "<h2>Website Sources</h2>\n";
 $sourceFiles = scandir("/etc/ytdl2kodi/sources.d/");
@@ -89,13 +111,31 @@ foreach($sourceFiles as $sourceFile){
 }
 echo "</div>\n";
 
-echo "<div id='serverUsernameSources' class='settingListCard'>\n";
+echo "<div id='serverUsernameSources' class='inputCard'>\n";
 echo "<h2>Server Username Sources</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/ytdl2kodi/usernameSources.cfg");
 echo "</pre>\n";
 echo "</div>";
+?>
 
+<div id='addUsernameSource' class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Add Username Source</h2>
+<ul>
+	<li>
+		For websites with usernames, will create a show with all of that usernames content.
+	</li>
+	<li>
+		The same usernames on diffrent sites will link to the same generated show.
+	</li>
+</ul>
+<input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
+<input class='button' type='submit'>
+</form>
+</div>
+
+<?php
 echo "<div id='usernameSources' class='settingListCard'>";
 echo "<h2>Username Sources</h2>\n";
 $sourceFiles = scandir("/etc/ytdl2kodi/usernameSources.d/");
@@ -134,42 +174,6 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 </div>
-
-<div id='addWebsiteSource' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Website Source</h2>
-<ul>
-	<li>
-	Website sources will be added as shows based on video links found on source pages.
-	</li>
-	<li>
-	Website sources will be grouped by website name.
-	</li>
-	<li>
-	Website sources can be search pages.
-	</li>
-</ul>
-<input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
-</form>
-</div>
-
-<div id='addUsernameSource' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Username Source</h2>
-<ul>
-	<li>
-		For websites with usernames, will create a show with all of that usernames content.
-	</li>
-	<li>
-		The same usernames on diffrent sites will link to the same generated show.
-	</li>
-</ul>
-<input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
-</form>
-</div>
-
 <div id='episodeProcessingLimit' class='inputCard'>
 <h2>Episode Processing Limit</h2>
 <ul>

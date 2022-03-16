@@ -1,4 +1,7 @@
 #! /bin/bash
+################################################################################
+#set -x
+################################################################################
 ytdl2kodi_caption(){
 	# ytdl2kodi_caption "pathToImage" "captionToUse"
 	if ! [ -f /etc/ytdl2kodi/captionFont.cfg ];then
@@ -15,7 +18,21 @@ ytdl2kodi_caption(){
 		echo "$(convert -list font)" >> /etc/ytdl2kodi/captionFont.cfg
 	fi
 }
-
+################################################################################
+getDownloadPath(){
+	# check for a user defined download path
+	if test -f /etc/ytdl2kodi/downloadPath.cfg;then
+		# load the config file
+		downloadPath=$(cat /etc/ytdl2kodi/downloadPath.cfg)
+	else
+		# if no config exists create the default config
+		downloadPath="/var/cache/ytdl2kodi/"
+		# write the new config from the path variable
+		echo "$downloadPath" > /etc/ytdl2kodi/downloadPath.cfg
+	fi
+	echo "$downloadPath"
+}
+################################################################################
 ytdl2kodi_channel_extractor(){
 	################################################################################
 	# import and run the debug check
@@ -33,16 +50,7 @@ ytdl2kodi_channel_extractor(){
 	#echo "[INFO]: baseUrl 2 cut = '$baseUrl'"
 	################################################################################
 	echo "[INFO]: Checking for download configuration at '/etc/ytdl2kodi/downloadPath.cfg'"
-	# check for a user defined download path
-	if [ -f /etc/ytdl2kodi/downloadPath.cfg ];then
-		# load the config file
-		downloadPath=$(cat /etc/ytdl2kodi/downloadPath.cfg)
-	else
-		# if no config exists create the default config
-		downloadPath="/var/cache/ytdl2kodi/"
-		# write the new config from the path variable
-		echo "$downloadPath" > /etc/ytdl2kodi/downloadPath.cfg
-	fi
+	downloadPath="$(getDownloadPath)"
 	echo "[INFO]: DownloadPath set to = $downloadPath"
 	################################################################################
 	# remove domain prefix since since some sites vary the use of the prefix
@@ -59,6 +67,10 @@ ytdl2kodi_channel_extractor(){
 		baseUrl="$newUrl"
 	fi
 	echo "[INFO]: baseUrl = '$baseUrl'"
+	if [ "$baseUrl" == "" ];then
+		# ignore blank lines
+		return
+	fi
 	################################################################################
 	# check for a timer on the channel link
 	################################################################################
@@ -74,15 +86,17 @@ ytdl2kodi_channel_extractor(){
 	# check the config database to see if the $channelLink has a entry
 	# create a default channel cache
 	touch /etc/ytdl2kodi/channelUpdateCache.cfg
+	cat "/etc/ytdl2kodi/channelUpdateCache.cfg"#DEBUG
 	# if that entry exists then
-	if cat "/etc/ytdl2kodi/channelUpdateCache.cfg" | grep -q "$channelLink";then
+	echo "[INFO]: searching for channelLink : '$channelLink'"
+	if grep -q "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg";then
 		# get the line containing the channel link
-		temp=$(cat "/etc/ytdl2kodi/channelUpdateCache.cfg" | grep "$channelLink")
+		temp=$(grep "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg")
 		#  check the second field which will be a date
 		resetTime=$(echo "$temp" | cut -d " " -f2)
 		echo "[INFO]: { resetTime = $resetTime } > { now = ~$(date '+%s' ) }"
 		# update the channel updated cache if the reset time is less than the current time
-		if [ $resetTime -gt $(date "+%s") ];then
+		if [ "$resetTime" -gt "$(date "+%s")" ];then
 			# this means the reset time has not yet passed so exit out without downloading
 			echo "[WARNING]: The reset time has not yet passed skipping..."
 			echo "[INFO]: channelLink : '$channelLink'"
@@ -247,17 +261,6 @@ ytdl2kodi_channel_extractor(){
 	# write the channel metadata for total episodes
 	totalEpisodes=$(echo "$linkList" | wc -l)
 	channelId=$(echo "$channelLink" | sed "s/[[:punct:]]//g")
-	# write the totalEpisodes json database
-	metaData=$(cat "/etc/ytdl2kodi/meta/channelData.json")
-	metaData=$(echo "$metaData" | jq ".$channelId.totalEpisodes = $totalEpisodes")
-	# write the metadata for this channel to the channelData database
-	if echo "$metaData" | jq -e;then
-		echo "[INFO]: Writing metadata..."
-		echo "$metaData" > "/etc/ytdl2kodi/meta/channelData.json"
-	else
-		echo "[ERROR]: Metadata could not be properly created!"
-		echo "[DEBUG]: metadata = '$metaData'"
-	fi
 	################################################################################
 	# load up the episode processing limit
 	if [ -f /etc/ytdl2kodi/episodeProcessingLimit.cfg ];then
@@ -278,7 +281,7 @@ ytdl2kodi_channel_extractor(){
 	# remove entries that exist in previousDownloads.cfg
 	# this requires the episodes to be stored inside of the series individually
 	#$linkList=$(echo "$linkList" | uniq -u)
-	echo $linkList
+	#echo $linkList
 	for link in $linkList;do
 		# episode processing limit should be checked before any work
 		# is done in processing the episode
@@ -303,11 +306,11 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	temp="$channelLink $(($(date '+%s')+$(($channelCacheUpdateDelay * 60 * 60))))"
 	# create the new link or write the link
-	if cat "/etc/ytdl2kodi/channelUpdateCache.cfg" | grep "$channelLink";then
+	if  grep -q "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg";then
 		# update file to the next update time
 		tempFile=""
 		for line in cat "/etc/ytdl2kodi/channelUpdateCache.cfg";do
-			if echo "$line" | grep "$channelLink";then
+			if echo "$line" | grep -q "$channelLink";then
 				tempFile="$tempFile$temp\n"
 			else
 				tempFile="$tempFile$line\n"
@@ -320,19 +323,7 @@ ytdl2kodi_channel_extractor(){
 	fi
 	# write the channel metadata for lastProcessed.cfg in seconds
 	lastProcessed=$(date "+%s")
-	# write the totalEpisodes json info to the database
-	metaData=$(cat "/etc/ytdl2kodi/meta/channelData.json")
-	metaData=$(echo "$metaData" | jq ".$channelId.lastProcessed = $lastProcessed")
-	# write the metadata for this channel to the channelData database
-	if echo "$metaData" | jq -e;then
-		echo "[INFO]: Writing metadata..."
-		echo "$metaData" > "/etc/ytdl2kodi/meta/channelData.json"
-	else
-		echo "[ERROR]: Metadata could not be properly created!"
-		echo "[DEBUG]: metadata = '$metaData'"
-	fi
 }
-
 ytdl2kodi_channel_meta_extractor(){
 	################################################################################
 	# META DATA EXTRACTOR
@@ -470,16 +461,17 @@ ytdl2kodi_channel_meta_extractor(){
 		################################################################################
 		# Create the nfo file last since it is the switch this entire script checks for
 		################################################################################
-		touch "$fileName"
-		echo "<?xml version='1.0' encoding='UTF-8'?>" > "$fileName"
-		echo "<tvshow>" >> "$fileName"
-		echo "<title>$showTitle</title>" >> "$fileName"
-		echo "<studio>ytdl2kodi</studio>" >> "$fileName"
-		echo "<genre>Internet</genre>" >> "$fileName"
-		echo "<plot>Videos from $channelUrl</plot>" >> "$fileName"
-		echo "<premiered>$(date +%F)</premiered>" >> "$fileName"
-		echo "<director>$showTitle</director>" >> "$fileName"
-		echo "</tvshow>" >> "$fileName"
+		{
+			echo "<?xml version='1.0' encoding='UTF-8'?>"
+			echo "<tvshow>"
+			echo "<title>$showTitle</title>"
+			echo "<studio>ytdl2kodi</studio>"
+			echo "<genre>Internet</genre>"
+			echo "<plot>Videos from $channelUrl</plot>"
+			echo "<premiered>$(date +%F)</premiered>"
+			echo "<director>$showTitle</director>"
+			echo "</tvshow>"
+		} > "$fileName"
 		# remove extra image files
 		if [ -f "$downloadPath$showTitle/webpage.png" ];then
 			# remove the webpage.png temp image file
@@ -522,7 +514,6 @@ ytdl2kodi_reset_cache(){
 			echo "/etc/ytdl2kodi/previousDownloads/*.cfg"
 			echo "/etc/ytdl2kodi/foundLinks/*.cfg"
 			echo "/etc/ytdl2kodi/channelUpdateCache.cfg"
-			echo "/etc/ytdl2kodi/meta/channelData.json"
 			echo -n "Would you still like to remove all files and reset the cache?[y/n]:"
 			read doIt
 			if echo "$doIt" | grep -q "y" ;then
@@ -538,7 +529,6 @@ ytdl2kodi_reset_cache(){
 				rm -vr "/etc/ytdl2kodi/previousDownloads/" &
 				rm -vr "/etc/ytdl2kodi/foundLinks/" &
 				rm -v "/etc/ytdl2kodi/channelUpdateCache.cfg" &
-				rm -v "/etc/ytdl2kodi/meta/channelData.json" &
 				# remove lock file
 				rm -v /tmp/ytdl2kodi_LOCKFILE &
 				# kill all processes
@@ -595,7 +585,7 @@ ytdl2kodi_sleep(){
 ################################################################################
 function sitePaths(){
 	# check for server libary config
-	if [ ! -f /etc/ytdl2kodi/sources.cfg ];then
+	if ! test -f /etc/ytdl2kodi/sources.cfg;then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
@@ -603,12 +593,12 @@ function sitePaths(){
 		} >> "/etc/ytdl2kodi/sources.cfg"
 	fi
 	# write path to console
-	cat "/etc/ytdl2kodi/sources.cfg"
+	grep -v "^#"  "/etc/ytdl2kodi/sources.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
 	find "/etc/ytdl2kodi/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		cat "$libaryConfigPath"
+		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
 	done
@@ -616,7 +606,7 @@ function sitePaths(){
 ################################################################################
 function userPaths(){
 	# check for server libary config
-	if [ ! -f /etc/ytdl2kodi/usernameSources.cfg ];then
+	if ! test -f /etc/ytdl2kodi/usernameSources.cfg;then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
@@ -624,12 +614,12 @@ function userPaths(){
 		} >> "/etc/ytdl2kodi/usernameSources.cfg"
 	fi
 	# write path to console
-	cat "/etc/ytdl2kodi/usernameSources.cfg"
+	grep -v "^#" "/etc/ytdl2kodi/usernameSources.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
 	find "/etc/ytdl2kodi/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		cat "$libaryConfigPath"
+		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
 	done
@@ -665,26 +655,31 @@ ytdl2kodi_update(){
 	# create the blank temporary database
 	mkdir -p /tmp/ytdl2kodi/
 	mkdir -p /etc/ytdl2kodi/meta/
-	# if no meta database exists create one
-	if ! [ -f "/etc/ytdl2kodi/meta/channelData.json" ];then
-		echo "{}" > "/etc/ytdl2kodi/meta/channelData.json"
-	fi
 	################################################################################
 	currentlyProcessing=0
 	################################################################################
 	# for each link in the sources
-	linkList=$(sitePaths)
+	siteLinkList=$(sitePaths)
 	echo "Processing sources..."
-	echo "Link List = $linkList"
-	for link in $linkList;do
+	echo "Site Link List = '$siteLinkList'"
+	siteLinkList="$(echo "$siteLinkList" | tr -s '\n')"
+	siteLinkList="$(echo "$siteLinkList" | sed "s/\n/ /g")"
+	echo "Site Link List = '$siteLinkList'"
+	#echo "$siteLinkList" | while read link;do
+	for link in $siteLinkList;do
+		echo "[INFO]:Checking site link '$link' ..."
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
 			echo "[INFO]: Channel Processing Limit Reached!"
 			break
 		fi
-		echo "Running channel metadata extractor on '$link' ..."
-		# check links aginst existing stream files to pervent duplicating the work
-		ytdl2kodi_channel_extractor "$link"
+		if [ "$link" == "" ];then
+			echo "'$link' is blank..."
+		else
+			echo "Running channel metadata extractor on '$link'..."
+			# check links aginst existing stream files to pervent duplicating the work
+			ytdl2kodi_channel_extractor "$link"
+		fi
 	done
 	################################################################################
 	# reset currently processing for the
@@ -693,16 +688,25 @@ ytdl2kodi_update(){
 	# for each link in the users sources
 	userlinkList=$(userPaths)
 	echo "Processing user sources..."
-	echo "User Link List = $userlinkList"
-	for link in $userLinkList;do
+	echo "User Link List = '$userlinkList'"
+	userlinkList="$(echo "$userlinkList" | tr -s '\n')"
+	userlinkList="$(echo "$userlinkList" | sed "s/\n/ /g")"
+	echo "User Link List post cleanup = '$userlinkList'"
+	#echo "$userLinkList" | while read -r link;do
+	for link in $userlinkList;do
+		echo "[INFO]:Checking user link '$link' ..."
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
 			echo "[INFO]: Channel Processing Limit Reached!"
 			break
 		fi
-		echo "Running channel metadata extractor on '$link' ..."
-		# check links aginst existing stream files to pervent duplicating the work
-		ytdl2kodi_channel_extractor "$link" --username
+		if [ "$link" == "" ];then
+			echo "'$link' is blank..."
+		else
+			echo "[INFO]:Running channel metadata extractor on '$link' ..."
+			# check links aginst existing stream files to pervent duplicating the work
+			ytdl2kodi_channel_extractor "$link" --username
+		fi
 	done
 	################################################################################
 	return
@@ -1166,8 +1170,8 @@ ytdl2kodi_video_extractor(){
 	tempTimeHours=$(date "+%H" | sed "s/^[0]*//g")
 	tempTimeMinutes=$(date "+%M" | sed "s/^[0]*//g")
 	# convert into seconds
-	tempTimeHours=$(($tempTimeHours * 60 * 60))
-	tempTimeMinutes=$(($tempTimeMinutes * 60))
+	tempTimeHours=$((10#$tempTimeHours * 60 * 60))
+	tempTimeMinutes=$((10#$tempTimeMinutes * 60))
 	# add the current time to the airdate
 	tempTime=$(date -d "$airdate" "+%s")
 	tempTime=$(($tempTime + $tempTimeHours + $tempTimeMinutes))
@@ -1212,6 +1216,14 @@ main(){
 		ytdl2kodi_update
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		ytdl2kodi_reset_cache
+	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		echo "########################################################################"
+		echo "[INFO]: Reseting web cache to blank..."
+		rm -rv $(getDownloadPath)/*
+		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
+		echo "[SUCCESS]: Site will remain the same until updated."
+		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+		echo "########################################################################"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
 		echo "# ytdl2kodi CLI for administration"
