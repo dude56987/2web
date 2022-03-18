@@ -193,6 +193,8 @@ function cacheUrl($sum,$videoLink){
 	fwrite($logFile,$command."\n");
 	fwrite($logFile,"DL-COMMAND:\n");
 	fwrite($logFile,$dlCommand."\n");
+	fwrite($logFile,"MD5 Source:\n");
+	fwrite($logFile,$videoLink."\n");
 	fclose($logFile);
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
@@ -362,15 +364,15 @@ if (array_key_exists("url",$_GET)){
 		# By default use the cache for video playback, this works on everything
 		################################################################################
 		debug("Creating resolver cache<br>");
-		if ( ! file_exists("$webDirectory/RESOLVER-CACHE/")){
-			mkdir("$webDirectory/RESOLVER-CACHE/");
-		}
+		#if ( ! file_exists("$webDirectory/RESOLVER-CACHE/")){
+		#	mkdir("$webDirectory/RESOLVER-CACHE/");
+		#}
 		// craft the url to the cache link
-		$url = "RESOLVER-CACHE/$sum/$sum.mp4";
+		$url = "/RESOLVER-CACHE/$sum/$sum.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
 		#check for the first x segments of the hls playback, ~30 seconds
-		if (file_exists($url)){
+		if (file_exists("$webDirectory$url")){
 			# touch the file to update the mtime and delay cache removal
 			touch($url);
 			redirect($url);
@@ -378,12 +380,12 @@ if (array_key_exists("url",$_GET)){
 			debug("No file exists in the cache<br>");
 			debug("cache is set<br>");
 			// create the directory to hold the video files within the resolver cache
-			if ( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/")){
-				mkdir("$webDirectory/RESOLVER-CACHE/".$sum."/");
+			if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/")){
+				mkdir("$webDirectory/RESOLVER-CACHE/$sum/");
 			}
 
 			# build a m3u playlist that plays the bump and then the video
-			$playlist=fopen("$webDirectory/RESOLVER-CACHE/".$sum."/master.m3u8", "w");
+			$playlist=fopen("$webDirectory/RESOLVER-CACHE/$sum/master.m3u8", "w");
 			# add the file header
 			//header("Content-Type: application/mpegurl");
 			//header("Content-Disposition: attachment; filename=" . ($sum."_master.m3u"));
@@ -419,7 +421,7 @@ if (array_key_exists("url",$_GET)){
 				//fwrite($playlist,$sum."-bump.mp4\n");
 				//fwrite($playlist,"$webDirectory/RESOLVER-CACHE/".$sum."-bump.mp4\n");
 				//fwrite($playlist,$serverPath."RESOLVER-CACHE/".$sum."/bump.mp4\n");
-				fwrite($playlist,$serverPath."RESOLVER-CACHE/".$sum."/$sum-stream1.ts\n");
+				fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/$sum-stream1.ts\n");
 				//print "#EXTINF:,Loading... $index/30\n";
 				//print "RESOLVER-CACHE/".$sum."-bump.mp4\n";
 			}
@@ -450,6 +452,7 @@ if (array_key_exists("url",$_GET)){
 				}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.m3u")){
 					# if the stream has x segments (segments start as 0)
 					# - currently 10 seconds of video
+					# - force loading of 3 segments before resolution
 					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream2.ts")){
 						# redirect to the stream
 						//header("Content-Type: application/mpegurl");

@@ -225,7 +225,7 @@ processMovie(){
 	# if moviepath exists
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
-		pathSum=$(echo "$movieDir" | md5sum | cut -d' ' -f1)
+		pathSum=$(echo -n "$movieDir" | md5sum | cut -d' ' -f1)
 
 		################################################################################
 		# for each episode build a page for the episode
@@ -1059,6 +1059,7 @@ processEpisode(){
 
 			# if the config option is set to cache new episodes
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
+				addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
 				# split up airdate data to check if caching should be done
 				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 				airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
@@ -1066,21 +1067,35 @@ processEpisode(){
 				#ALERT "[DEBUG]: aired year $airedYear == current year $(date +"%Y")"
 				#ALERT "[DEBUG]: aired month $airedMonth == current month $(date +"%m")"
 				# if the airdate was this year
-				if [ $airedYear -eq "$(date +"%Y")" ];then
+				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
+					addToLog "DEBUG" "Episode matches year" "$showTitle - $episodePath\n $((10#$airedYear)) ?= $((10#$(date +"%Y")))" "$logPagePath"
 					# if the airdate was this month
-					if [ $airedMonth -eq "$(date +"%m")" ];then
+					if [ $((10#$airedMonth)) -eq "$((10#$(date +"%m")))" ];then
+						addToLog "DEBUG" "Episode matches month" "$showTitle - $episodePath\n $((10#$airedMonth)) ?= $((10#$(date +"%m")))" "$logPagePath"
+						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath" "$logPagePath"
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
 						#ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
-						tempSum=$(echo "$ytLink" | md5sum | cut -d' ' -f1)
-						mkdir $webDirectory/RESOLVER-CACHE/$tempSum/
+						#tempSum=$(echo -n "$ytLink" | tr -d '"' | tr -d "'" | md5sum | cut -d' ' -f1)
+						tempSum=$(echo -n "\"$ytLink\"" | md5sum | cut -d' ' -f1)
+						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
+						echo "Video link cached with nfo2web" > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "Orignal Link = '$videoPath'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "Youtube Link = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "MD5 Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "MD5 Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						#timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
-						echo "/usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -M -q c 'now'
+						#'/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
+						#/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o "$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4" -c "$ytLink"
+						#echo "/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | batch
+						#echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | batch
+						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
 						#timeout 20 curl --silent "$resolverUrl" > /dev/null
+						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 					fi
 				fi
 			fi
-
 			#if [ "$episodeAired" == "$(date +"%Y-%m-%d")" ];then
 			#	echo "[INFO]: airdate $episodeAired == todays date $(date +'%Y-%m-%d') ]"
 			#	# if the episode aired today cache the episode
@@ -1374,7 +1389,7 @@ processShow(){
 			#INFO "found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
-			seasonSum=$(echo "$season" | md5sum | cut -d' ' -f1)
+			seasonSum=$(echo -n "$season" | md5sum | cut -d' ' -f1)
 
 			# get the season folder sum, youtube channels can have 2k + episodes a season
 			if test -f "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg";then
@@ -1482,7 +1497,7 @@ getLibSum(){
 		totalList="$totalList$tempList"
 	done < /etc/2web/nfo/libaries.cfg
 	# convert lists into md5sum
-	tempLibList="$(echo "$totalList" | md5sum | cut -d' ' -f1)"
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
 	echo "$tempLibList"
 }

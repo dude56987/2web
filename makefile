@@ -76,10 +76,10 @@ build-deb:
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/themes;
-	mkdir -p debian/etc/ytdl2kodi/;
-	mkdir -p debian/etc/ytdl2kodi/sources.d/
-	mkdir -p debian/etc/ytdl2kodi/usernameSources.d/
 	mkdir -p debian/etc/2web/;
+	mkdir -p debian/etc/2web/ytdl/
+	mkdir -p debian/etc/2web/ytdl/sources.d/
+	mkdir -p debian/etc/2web/ytdl/usernameSources.d/
 	mkdir -p debian/etc/2web/users/;
 	mkdir -p debian/etc/2web/nfo/;
 	mkdir -p debian/etc/2web/nfo/libaries.d/;
@@ -103,8 +103,8 @@ build-deb:
 	# add icon
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
-	touch debian/etc/ytdl2kodi/sources.d/.placeholder
-	touch debian/etc/ytdl2kodi/usernameSources.d/.placeholder
+	touch debian/etc/2web/ytdl/sources.d/.placeholder
+	touch debian/etc/2web/ytdl/usernameSources.d/.placeholder
 	touch debian/etc/2web/iptv/.placeholder
 	touch debian/etc/2web/iptv/sources.d/.placeholder
 	touch debian/etc/2web/iptv/blockedGroups.d/.placeholder
@@ -121,7 +121,7 @@ build-deb:
 	touch debian/etc/2web/users/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/2web/users/
-	chown -R www-data:www-data debian/etc/ytdl2kodi/*.d/
+	chown -R www-data:www-data debian/etc/2web/ytdl/*.d/
 	chown -R www-data:www-data debian/etc/2web/iptv/*.d/
 	chown -R www-data:www-data debian/etc/2web/nfo/*.d/
 	chown -R www-data:www-data debian/etc/2web/comics/*.d/
@@ -134,7 +134,7 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
-	cp ytdl2kodi.sh debian/usr/bin/ytdl2kodi
+	cp ytdl2kodi.sh debian/usr/bin/ytdl2nfo
 	# build the default themes
 	# - default (gray)
 	cat themes/default.css > debian/usr/share/2web/themes/default.css

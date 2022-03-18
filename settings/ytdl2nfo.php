@@ -34,9 +34,9 @@ include("settingsHeader.php");
 echo "<div id='serverWebsiteSources' class='inputCard'>\n";
 echo "<h2>Server Website Sources</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/ytdl2kodi/sources.cfg");
+echo file_get_contents("/etc/2web/ytdl/sources.cfg");
 /*
-$data = fopen("/etc/ytdl2kodi/sources.cfg",'r');
+$data = fopen("/etc/2web/ytdl/sources.cfg",'r');
 if ($data){
 	while (($line = fgets($data)) !== false){
 		if(strpos("#",$line) == 0){
@@ -75,9 +75,9 @@ echo "</div>";
 <?php
 echo "<div id='websiteSources' class='settingListCard'>";
 echo "<h2>Website Sources</h2>\n";
-$sourceFiles = scandir("/etc/ytdl2kodi/sources.d/");
+$sourceFiles = scandir("/etc/2web/ytdl/sources.d/");
 //print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/ytdl2kodi/sources.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ytdl/sources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);
@@ -114,7 +114,7 @@ echo "</div>\n";
 echo "<div id='serverUsernameSources' class='inputCard'>\n";
 echo "<h2>Server Username Sources</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/ytdl2kodi/usernameSources.cfg");
+echo file_get_contents("/etc/2web/ytdl/usernameSources.cfg");
 echo "</pre>\n";
 echo "</div>";
 ?>
@@ -138,9 +138,9 @@ echo "</div>";
 <?php
 echo "<div id='usernameSources' class='settingListCard'>";
 echo "<h2>Username Sources</h2>\n";
-$sourceFiles = scandir("/etc/ytdl2kodi/usernameSources.d/");
+$sourceFiles = scandir("/etc/2web/ytdl/usernameSources.d/");
 //print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/ytdl2kodi/usernameSources.d/*.cfg"));
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ytdl/usernameSources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
 //print_r($sourceFiles);
@@ -185,7 +185,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/episodeProcessingLimit.cfg");
+	echo file_get_contents("/etc/2web/ytdl/episodeProcessingLimit.cfg");
 ?>
 </div>
 
@@ -197,7 +197,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/downloadPath.cfg");
+	echo file_get_contents("/etc/2web/ytdl/downloadPath.cfg");
 ?>
 </div>
 
@@ -209,7 +209,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/channelProcessingLimit.cfg");
+	echo file_get_contents("/etc/2web/ytdl/channelProcessingLimit.cfg");
 ?>
 </div>
 
@@ -221,7 +221,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/channelCacheUpdateDelay.cfg");
+	echo file_get_contents("/etc/2web/ytdl/channelCacheUpdateDelay.cfg");
 ?>
 </div>
 
@@ -233,7 +233,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/videoFetchTimeLimit.cfg");
+	echo file_get_contents("/etc/2web/ytdl/videoFetchTimeLimit.cfg");
 ?>
 </div>
 
@@ -248,7 +248,7 @@ foreach($sourceFiles as $sourceFile){
 	</li>
 </ul>
 <?PHP
-	echo file_get_contents("/etc/ytdl2kodi/sleepTime.cfg");
+	echo file_get_contents("/etc/2web/ytdl/sleepTime.cfg");
 ?>
 </div>
 <?PHP

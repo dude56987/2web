@@ -283,7 +283,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("cacheNewEpisodes",$_POST)){
 	$cacheNewEpisodes=$_POST['cacheNewEpisodes'];
 	# change the default cache quality
-	echo "Changing cache delay to '".$cacheNewEpisodes."'<br>\n";
+	echo "Changing cache new episodes option to '".$cacheNewEpisodes."'<br>\n";
 	# write the config file
 	if ($cacheNewEpisodes == ''){
 		unlink("/etc/2web/cacheNewEpisodes.cfg");
@@ -314,7 +314,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running ytdl_add_source on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/ytdl2kodi/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/ytdl/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -329,7 +329,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['ytdl_remove_source'];
 	echo "Running ytdl_remove_source on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/ytdl2kodi/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/ytdl/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing ytdl source ".$link."<br>\n";
@@ -344,7 +344,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running ytdl_add_username_source on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/ytdl2kodi/usernameSources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/ytdl/usernameSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	#
@@ -360,7 +360,7 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['ytdl_remove_username_source'];
 	echo "Running ytdl_remove_username_source on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
-	$configPath="/etc/ytdl2kodi/usernameSources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/ytdl/usernameSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
 		echo "Removing ytdl username source ".$link."<br>\n";

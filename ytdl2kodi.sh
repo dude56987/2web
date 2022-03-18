@@ -4,31 +4,31 @@
 ################################################################################
 ytdl2kodi_caption(){
 	# ytdl2kodi_caption "pathToImage" "captionToUse"
-	if ! [ -f /etc/ytdl2kodi/captionFont.cfg ];then
+	if ! [ -f /etc/2web/ytdl/captionFont.cfg ];then
 		# create the defaut font
-		echo "OpenDyslexic-Bold" > /etc/ytdl2kodi/captionFont.cfg
+		echo "OpenDyslexic-Bold" > /etc/2web/ytdl/captionFont.cfg
 	fi
-	captionFont=$(cat /etc/ytdl2kodi/captionFont.cfg)
+	captionFont=$(cat /etc/2web/ytdl/captionFont.cfg)
 	if echo "$(convert -list font)" | grep "$captionFont";then
 		# the caption font chosen exists and can be used
 		echo "$chosenFont"
 	else
-		echo "ERROR: The caption font '$captionFont' does not exist on the current system!" > /etc/ytdl2kodi/captionFont.cfg
-		echo "Choose from one of the following fonts by editing this file /etc/ytdl2kodi/captionFont.cfg" >> /etc/ytdl2kodi/captionFont.cfg
-		echo "$(convert -list font)" >> /etc/ytdl2kodi/captionFont.cfg
+		echo "ERROR: The caption font '$captionFont' does not exist on the current system!" > /etc/2web/ytdl/captionFont.cfg
+		echo "Choose from one of the following fonts by editing this file /etc/2web/ytdl/captionFont.cfg" >> /etc/2web/ytdl/captionFont.cfg
+		echo "$(convert -list font)" >> /etc/2web/ytdl/captionFont.cfg
 	fi
 }
 ################################################################################
 getDownloadPath(){
 	# check for a user defined download path
-	if test -f /etc/ytdl2kodi/downloadPath.cfg;then
+	if test -f /etc/2web/ytdl/downloadPath.cfg;then
 		# load the config file
-		downloadPath=$(cat /etc/ytdl2kodi/downloadPath.cfg)
+		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
 		downloadPath="/var/cache/ytdl2kodi/"
 		# write the new config from the path variable
-		echo "$downloadPath" > /etc/ytdl2kodi/downloadPath.cfg
+		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
 	echo "$downloadPath"
 }
@@ -49,7 +49,7 @@ ytdl2kodi_channel_extractor(){
 	baseUrl=$(echo "$baseUrl" | cut -d':' -f1)
 	#echo "[INFO]: baseUrl 2 cut = '$baseUrl'"
 	################################################################################
-	echo "[INFO]: Checking for download configuration at '/etc/ytdl2kodi/downloadPath.cfg'"
+	echo "[INFO]: Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	downloadPath="$(getDownloadPath)"
 	echo "[INFO]: DownloadPath set to = $downloadPath"
 	################################################################################
@@ -74,24 +74,24 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	# check for a timer on the channel link
 	################################################################################
-	if [ -f /etc/ytdl2kodi/channelCacheUpdateDelay.cfg ];then
+	if [ -f /etc/2web/ytdl/channelCacheUpdateDelay.cfg ];then
 		# load the cache update delay
-		channelCacheUpdateDelay=$(cat /etc/ytdl2kodi/channelCacheUpdateDelay.cfg)
+		channelCacheUpdateDelay=$(cat /etc/2web/ytdl/channelCacheUpdateDelay.cfg)
 	else
 		# set the cache update delay to six hours
 		channelCacheUpdateDelay="6"
-		touch /etc/ytdl2kodi/channelCacheUpdateDelay.cfg
-		echo "$channelCacheUpdateDelay" > /etc/ytdl2kodi/channelCacheUpdateDelay.cfg
+		touch /etc/2web/ytdl/channelCacheUpdateDelay.cfg
+		echo "$channelCacheUpdateDelay" > /etc/2web/ytdl/channelCacheUpdateDelay.cfg
 	fi
 	# check the config database to see if the $channelLink has a entry
 	# create a default channel cache
-	touch /etc/ytdl2kodi/channelUpdateCache.cfg
-	cat "/etc/ytdl2kodi/channelUpdateCache.cfg"#DEBUG
+	touch /etc/2web/ytdl/channelUpdateCache.cfg
+	cat "/etc/2web/ytdl/channelUpdateCache.cfg"#DEBUG
 	# if that entry exists then
 	echo "[INFO]: searching for channelLink : '$channelLink'"
-	if grep -q "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg";then
+	if grep -q "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg";then
 		# get the line containing the channel link
-		temp=$(grep "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg")
+		temp=$(grep "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg")
 		#  check the second field which will be a date
 		resetTime=$(echo "$temp" | cut -d " " -f2)
 		echo "[INFO]: { resetTime = $resetTime } > { now = ~$(date '+%s' ) }"
@@ -200,9 +200,9 @@ ytdl2kodi_channel_extractor(){
 	# and removed if it has already been processed
 	################################################################################
 	# create previous downloads list if it does not already exist
-	mkdir -p /etc/ytdl2kodi/previousDownloads/
+	mkdir -p /etc/2web/ytdl/previousDownloads/
 	# make list channel specific
-	previousDownloadsPath=/etc/ytdl2kodi/previousDownloads/$(echo "$channelLink" | sha256sum | cut -d' ' -f1).cfg
+	previousDownloadsPath=/etc/2web/ytdl/previousDownloads/$(echo "$channelLink" | sha256sum | cut -d' ' -f1).cfg
 	touch $previousDownloadsPath
 	previousDownloads=$(cat $previousDownloadsPath)
 	################################################################################
@@ -235,12 +235,12 @@ ytdl2kodi_channel_extractor(){
 			echo "Incorrect format PNG"
 		elif echo "$link" | grep -q ".jpg";then
 			# this is not a video file link its a zip file so ignore it
-			touch /etc/ytdl2kodi/previousDownloads.cfg
+			touch /etc/2web/ytdl/previousDownloads.cfg
 			echo "$selection" >> $previousDownloadsPath
 			echo "Incorrect format JPG"
 		elif echo "$link" | grep -q ".ico";then
 			# this is not a video file link its a zip file so ignore it
-			touch /etc/ytdl2kodi/previousDownloads.cfg
+			touch /etc/2web/ytdl/previousDownloads.cfg
 			echo "$selection" >> $previousDownloadsPath
 			echo "Incorrect format ICO"
 		elif echo "$previousDownloads" | grep -q "$link";then
@@ -257,26 +257,26 @@ ytdl2kodi_channel_extractor(){
 	# get the number of links
 	echo "[INFO]: Link List entries = $(echo \"$linkList\" | wc -l)"
 	# create the channel metadata path
-	mkdir -p "/etc/ytdl2kodi/meta/"
+	mkdir -p "/etc/2web/ytdl/meta/"
 	# write the channel metadata for total episodes
 	totalEpisodes=$(echo "$linkList" | wc -l)
 	channelId=$(echo "$channelLink" | sed "s/[[:punct:]]//g")
 	################################################################################
 	# load up the episode processing limit
-	if [ -f /etc/ytdl2kodi/episodeProcessingLimit.cfg ];then
+	if [ -f /etc/2web/ytdl/episodeProcessingLimit.cfg ];then
 		# load the config file
-		episodeProcessingLimit=$(cat /etc/ytdl2kodi/episodeProcessingLimit.cfg)
+		episodeProcessingLimit=$(cat /etc/2web/ytdl/episodeProcessingLimit.cfg)
 	else
 		# if no config exists create the default config
 		episodeProcessingLimit="40"
 		# write the new config from the path variable
-		echo "$episodeProcessingLimit" > /etc/ytdl2kodi/episodeProcessingLimit.cfg
+		echo "$episodeProcessingLimit" > /etc/2web/ytdl/episodeProcessingLimit.cfg
 	fi
 	################################################################################
 	mkdir -p /tmp/ytdl2kodi/
 	processedEpisodes=0
 	# merge existing
-	#$oldLinks=$(cat /etc/ytdl2kodi/previousDownloads.cfg)
+	#$oldLinks=$(cat /etc/2web/ytdl/previousDownloads.cfg)
 	#$linklist=$(echo -e "$linkList\n$oldLinks")
 	# remove entries that exist in previousDownloads.cfg
 	# this requires the episodes to be stored inside of the series individually
@@ -306,20 +306,20 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	temp="$channelLink $(($(date '+%s')+$(($channelCacheUpdateDelay * 60 * 60))))"
 	# create the new link or write the link
-	if  grep -q "$channelLink" "/etc/ytdl2kodi/channelUpdateCache.cfg";then
+	if  grep -q "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg";then
 		# update file to the next update time
 		tempFile=""
-		for line in cat "/etc/ytdl2kodi/channelUpdateCache.cfg";do
+		for line in cat "/etc/2web/ytdl/channelUpdateCache.cfg";do
 			if echo "$line" | grep -q "$channelLink";then
 				tempFile="$tempFile$temp\n"
 			else
 				tempFile="$tempFile$line\n"
 			fi
 		done
-		echo "$tempFile" > "/etc/ytdl2kodi/channelUpdateCache.cfg"
+		echo "$tempFile" > "/etc/2web/ytdl/channelUpdateCache.cfg"
 	else
 		# add the channel to the channel update cache
-		echo "$temp" >> /etc/ytdl2kodi/channelUpdateCache.cfg
+		echo "$temp" >> /etc/2web/ytdl/channelUpdateCache.cfg
 	fi
 	# write the channel metadata for lastProcessed.cfg in seconds
 	lastProcessed=$(date "+%s")
@@ -352,16 +352,16 @@ ytdl2kodi_channel_meta_extractor(){
 	# generate the swirl amount
 	swirlAmount=$(echo "$showTitle" | wc -c)
 	################################################################################
-	echo "Checking for download configuration at '/etc/ytdl2kodi/downloadPath.cfg'"
+	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	# check for a user defined download path
-	if [ -f /etc/ytdl2kodi/downloadPath.cfg ];then
+	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
 		# load the config file
-		downloadPath=$(cat /etc/ytdl2kodi/downloadPath.cfg)
+		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
 		downloadPath="/var/cache/ytdl2kodi/"
 		# write the new config from the path variable
-		echo "$downloadPath" > /etc/ytdl2kodi/downloadPath.cfg
+		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
 	echo "DownloadPath set to = $downloadPath"
 	################################################################################
@@ -386,7 +386,9 @@ ytdl2kodi_channel_meta_extractor(){
 			echo "--username was NOT found passing url '$tempWebUrl'"
 		fi
 		echo "Downloading webpage for fanart '$tempWebUrl'"
+		set -x
 		wkhtmltoimage --format png --enable-javascript --javascript-delay 30000 --width 1920 --disable-smart-width --height 1080 "$tempWebUrl" "$downloadPath$showTitle/webpage.png"
+		set +x
 		if [ -f "$downloadPath$showTitle/webpage.png" ];then
 			# blur the webpage image slightly
 			echo "convert -blur 0x3 \"$downloadPath$showTitle/webpage.png\" \"$downloadPath$showTitle/webpage.png\""
@@ -505,15 +507,15 @@ ytdl2kodi_depends_check(){
 ytdl2kodi_reset_cache(){
 	echo -n "Would you like to reset the entire video cache and all databases?[y/n]:"
 	read doIt
-	if [ -f /etc/ytdl2kodi/downloadPath.cfg ];then
+	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
 		if echo "$doIt" | grep -q "y" ;then
-			downloadPath="$(cat /etc/ytdl2kodi/downloadPath.cfg)"
+			downloadPath="$(cat /etc/2web/ytdl/downloadPath.cfg)"
 			echo "The paths to be removed are"
 			echo "$downloadPath"
-			echo "/etc/ytdl2kodi/episodeDatabase/"
-			echo "/etc/ytdl2kodi/previousDownloads/*.cfg"
-			echo "/etc/ytdl2kodi/foundLinks/*.cfg"
-			echo "/etc/ytdl2kodi/channelUpdateCache.cfg"
+			echo "/etc/2web/ytdl/episodeDatabase/"
+			echo "/etc/2web/ytdl/previousDownloads/*.cfg"
+			echo "/etc/2web/ytdl/foundLinks/*.cfg"
+			echo "/etc/2web/ytdl/channelUpdateCache.cfg"
 			echo -n "Would you still like to remove all files and reset the cache?[y/n]:"
 			read doIt
 			if echo "$doIt" | grep -q "y" ;then
@@ -522,13 +524,13 @@ ytdl2kodi_reset_cache(){
 				mkdir -p "$downloadPath"
 				touch "$downloadPath.placeholder"
 				# empty the databases
-				rm -rv "/etc/ytdl2kodi/episodeDatabase/"
-				mkdir -p "/etc/ytdl2kodi/episodeDatabase/"
-				touch "/etc/ytdl2kodi/episodeDatabase/.placeholder"
+				rm -rv "/etc/2web/ytdl/episodeDatabase/"
+				mkdir -p "/etc/2web/ytdl/episodeDatabase/"
+				touch "/etc/2web/ytdl/episodeDatabase/.placeholder"
 				# remove all previous downloads
-				rm -vr "/etc/ytdl2kodi/previousDownloads/" &
-				rm -vr "/etc/ytdl2kodi/foundLinks/" &
-				rm -v "/etc/ytdl2kodi/channelUpdateCache.cfg" &
+				rm -vr "/etc/2web/ytdl/previousDownloads/" &
+				rm -vr "/etc/2web/ytdl/foundLinks/" &
+				rm -v "/etc/2web/ytdl/channelUpdateCache.cfg" &
 				# remove lock file
 				rm -v /tmp/ytdl2kodi_LOCKFILE &
 				# kill all processes
@@ -559,15 +561,15 @@ ytdl2kodi_rip_title(){
 ytdl2kodi_sleep(){
 	################################################################################
 	# checking sleepTime.cfg to see the max wait time between downloads
-	echo "Loading up sleep config '/etc/ytdl2kodi/sleepTime.cfg'"
-	if [ -f /etc/ytdl2kodi/sleepTime.cfg ];then
+	echo "Loading up sleep config '/etc/2web/ytdl/sleepTime.cfg'"
+	if [ -f /etc/2web/ytdl/sleepTime.cfg ];then
 		# load the config file
-		sleepTime=$(cat /etc/ytdl2kodi/sleepTime.cfg)
+		sleepTime=$(cat /etc/2web/ytdl/sleepTime.cfg)
 	else
 		# if no config exists create the default config
 		sleepTime="30"
 		# write the new config from the path variable
-		echo "$sleepTime" > /etc/ytdl2kodi/sleepTime.cfg
+		echo "$sleepTime" > /etc/2web/ytdl/sleepTime.cfg
 	fi
 	################################################################################
 	# sleep between 0 and 10 seconds between each link download
@@ -585,19 +587,19 @@ ytdl2kodi_sleep(){
 ################################################################################
 function sitePaths(){
 	# check for server libary config
-	if ! test -f /etc/ytdl2kodi/sources.cfg;then
+	if ! test -f /etc/2web/ytdl/sources.cfg;then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/ytdl2kodi/"
-		} >> "/etc/ytdl2kodi/sources.cfg"
+			echo "# Server site paths"
+		} >> "/etc/2web/ytdl/sources.cfg"
 	fi
 	# write path to console
-	grep -v "^#"  "/etc/ytdl2kodi/sources.cfg"
+	grep -v "^#"  "/etc/2web/ytdl/sources.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
-	find "/etc/ytdl2kodi/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+	find "/etc/2web/ytdl/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
 		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
@@ -606,19 +608,19 @@ function sitePaths(){
 ################################################################################
 function userPaths(){
 	# check for server libary config
-	if ! test -f /etc/ytdl2kodi/usernameSources.cfg;then
+	if ! test -f /etc/2web/ytdl/usernameSources.cfg;then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/ytdl2kodi/"
-		} >> "/etc/ytdl2kodi/usernameSources.cfg"
+			echo "# server user paths"
+		} >> "/etc/2web/ytdl/usernameSources.cfg"
 	fi
 	# write path to console
-	grep -v "^#" "/etc/ytdl2kodi/usernameSources.cfg"
+	grep -v "^#" "/etc/2web/ytdl/usernameSources.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
-	find "/etc/ytdl2kodi/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
+	find "/etc/2web/ytdl/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
 		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
@@ -642,19 +644,19 @@ ytdl2kodi_update(){
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
 	# be processed every hour it is run
-	if [ -f /etc/ytdl2kodi/channelProcessingLimit.cfg ];then
+	if [ -f /etc/2web/ytdl/channelProcessingLimit.cfg ];then
 		# load the config file
-		channelProcessingLimit=$(cat /etc/ytdl2kodi/channelProcessingLimit.cfg)
+		channelProcessingLimit=$(cat /etc/2web/ytdl/channelProcessingLimit.cfg)
 	else
 		# if no config exists create the default config
 		channelProcessingLimit="1000"
 		# write the new config from the path variable
-		echo "1000" > /etc/ytdl2kodi/channelProcessingLimit.cfg
+		echo "1000" > /etc/2web/ytdl/channelProcessingLimit.cfg
 	fi
 	################################################################################
 	# create the blank temporary database
 	mkdir -p /tmp/ytdl2kodi/
-	mkdir -p /etc/ytdl2kodi/meta/
+	mkdir -p /etc/2web/ytdl/meta/
 	################################################################################
 	currentlyProcessing=0
 	################################################################################
@@ -747,9 +749,9 @@ ytdl2kodi_video_extractor(){
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	################################################################################
 	# create previous downloads list if it does not already exist
-	mkdir -p /etc/ytdl2kodi/previousDownloads/
+	mkdir -p /etc/2web/ytdl/previousDownloads/
 	# make list channel specific
-	previousDownloadsPath=/etc/ytdl2kodi/previousDownloads/$channelSum.cfg
+	previousDownloadsPath=/etc/2web/ytdl/previousDownloads/$channelSum.cfg
 	################################################################################
 	echo "################################################################################"
 	echo "# Now extracting '$selection' #"
@@ -757,28 +759,28 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	mkdir -p /tmp/ytdl2kodi/
 	################################################################################
-	echo "Checking for download configuration at '/etc/ytdl2kodi/downloadPath.cfg'"
+	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	# check for a user defined download path
-	if [ -f /etc/ytdl2kodi/downloadPath.cfg ];then
+	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
 		# load the config file
-		downloadPath=$(cat /etc/ytdl2kodi/downloadPath.cfg)
+		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
 		downloadPath="/var/cache/ytdl2kodi/"
 		# write the new config from the path variable
-		echo "$downloadPath" > /etc/ytdl2kodi/downloadPath.cfg
+		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
 	echo "DownloadPath set to = $downloadPath"
 	# create the path if it does not exist, then move into it
 	mkdir -p "$downloadPath"
 	################################################################################
-	echo "Checking for video fetch time limit '/etc/ytdl2kodi/videoFetchTimeLimit.cfg'"
-	if ! [ -f "/etc/ytdl2kodi/videoFetchTimeLimit.cfg" ];then
+	echo "Checking for video fetch time limit '/etc/2web/ytdl/videoFetchTimeLimit.cfg'"
+	if ! [ -f "/etc/2web/ytdl/videoFetchTimeLimit.cfg" ];then
 		# if no episodes have bee set create the variable
-		echo "30" > "/etc/ytdl2kodi/videoFetchTimeLimit.cfg"
+		echo "30" > "/etc/2web/ytdl/videoFetchTimeLimit.cfg"
 	fi
 	# create the episode numbering specific to the show
-	timeLimitSeconds=$(cat "/etc/ytdl2kodi/videoFetchTimeLimit.cfg")
+	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
 	echo "Extracting metadata from '$selection'..."
 	# print youtube-dl command for debugging
@@ -927,14 +929,14 @@ ytdl2kodi_video_extractor(){
 	fi
 	################################################################################
 	# create the directory for the show data if it does not exist
-	mkdir -p "/etc/ytdl2kodi/episodeDatabase/"
+	mkdir -p "/etc/2web/ytdl/episodeDatabase/"
 	# the database tracks the episode number based on all previous episodes
-	if ! [ -f "/etc/ytdl2kodi/episodeDatabase/$showTitle-$episodeSeason.cfg" ];then
+	if ! [ -f "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg" ];then
 		# if no episodes exist create the variable
-		echo "0" > "/etc/ytdl2kodi/episodeDatabase/$showTitle-$episodeSeason.cfg"
+		echo "0" > "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg"
 	fi
 	# create the episode numbering specific to the show
-	epNum=$(cat "/etc/ytdl2kodi/episodeDatabase/$showTitle-$episodeSeason.cfg")
+	epNum=$(cat "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg")
 	# increment episode number but dont save because it may fail
 	epNum=$(($epNum + 1))
 	# if the episode number is less than 10 add a 0 prefix for proper file sorting
@@ -1012,17 +1014,17 @@ ytdl2kodi_video_extractor(){
 	fi
 	################################################################################
 	# make the found links directory if it does not exist, and the channel specific list
-	mkdir -p /etc/ytdl2kodi/foundLinks/
-	foundLinksPath=/etc/ytdl2kodi/foundLinks/$channelSum.cfg
+	mkdir -p /etc/2web/ytdl/foundLinks/
+	foundLinksPath=/etc/2web/ytdl/foundLinks/$channelSum.cfg
 	################################################################################
 	echo "[INFO]: Checking for found video links '$foundLinksPath'"
 	################################################################################
 	# check the length of the source url is long enough to be a link
 	if [ 5 -lt $(expr length "$sourceUrl") ];then
 		# check if a custom resolver has been specified with a custom url
-		if [ -f /etc/ytdl2kodi/customResolverUrl.cfg ];then
+		if [ -f /etc/2web/ytdl/customResolverUrl.cfg ];then
 			# custom resolver should take presidence over system default resolvers
-			resolverString=$(cat /etc/ytdl2kodi/customResolverUrl.cfg)
+			resolverString=$(cat /etc/2web/ytdl/customResolverUrl.cfg)
 			# - This should not affect the $sourceUrl variable since it is
 			#   also used for thumbnail generation
 			# - Wrap the selection in quotes for the custom resolver
@@ -1105,13 +1107,13 @@ ytdl2kodi_video_extractor(){
 		webpageUrl=$(echo "$info" | jq -r ".webpage_url" | sed "s/http:/https:/g")
 		echo "[INFO]: Creating thumbnail from webpage '$webpageUrl'"
 		# complex commands are made easier to debug when you can see the contents being fed in
-		if ! [ -f "$fileName-thumb.png" ];then
+		if ! test -f "$fileName-thumb.png";then
 			echo "wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 \"$webpageUrl\" \"$fileName-thumb.png\""
 			wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "$webpageUrl" "$fileName-thumb.png"
 			# if the file was created successfully, write title over webpage image
 			writeCaption="yes"
 		fi
-		if ! [ -f "$fileName-thumb.png" ];then
+		if ! test -f "$fileName-thumb.png";then
 			echo "[INFO]: Webpage thumbnail could not be downloaded, generating plasma image"
 			# if no webpage was downloaded
 			convert -size 400x200 plasma: "$fileName-thumb.png"
@@ -1193,7 +1195,7 @@ ytdl2kodi_video_extractor(){
 		# cast the string to a number, removes extra 0 prefixes
 		epNum=$(echo "$epNum" | sed "s/^[0]*//g")
 		# set the new episode number and save it
-		echo "$epNum" > "/etc/ytdl2kodi/episodeDatabase/$showTitle-$episodeSeason.cfg"
+		echo "$epNum" > "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg"
 		# if this download is not listed in previousDownloads then add it
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
