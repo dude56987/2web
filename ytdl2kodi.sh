@@ -766,7 +766,7 @@ ytdl2kodi_video_extractor(){
 		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
-		downloadPath="/var/cache/ytdl2kodi/"
+		downloadPath="/var/cache/2web/download/"
 		# write the new config from the path variable
 		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
