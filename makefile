@@ -134,7 +134,7 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
-	cp ytdl2kodi.sh debian/usr/bin/ytdl2nfo
+	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
 	# build the default themes
 	# - default (gray)
 	cat themes/default.css > debian/usr/share/2web/themes/default.css
