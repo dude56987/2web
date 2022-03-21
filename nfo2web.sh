@@ -1059,7 +1059,7 @@ processEpisode(){
 
 			# if the config option is set to cache new episodes
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
-				addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
+				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
 				# split up airdate data to check if caching should be done
 				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 				airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
@@ -1068,10 +1068,10 @@ processEpisode(){
 				#ALERT "[DEBUG]: aired month $airedMonth == current month $(date +"%m")"
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
-					addToLog "DEBUG" "Episode matches year" "$showTitle - $episodePath\n $((10#$airedYear)) ?= $((10#$(date +"%Y")))" "$logPagePath"
+					#addToLog "DEBUG" "Episode matches year" "$showTitle - $episodePath\n $((10#$airedYear)) ?= $((10#$(date +"%Y")))" "$logPagePath"
 					# if the airdate was this month
 					if [ $((10#$airedMonth)) -eq "$((10#$(date +"%m")))" ];then
-						addToLog "DEBUG" "Episode matches month" "$showTitle - $episodePath\n $((10#$airedMonth)) ?= $((10#$(date +"%m")))" "$logPagePath"
+						#addToLog "DEBUG" "Episode matches month" "$showTitle - $episodePath\n $((10#$airedMonth)) ?= $((10#$(date +"%m")))" "$logPagePath"
 						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath" "$logPagePath"
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
@@ -1870,15 +1870,16 @@ webRoot(){
 }
 ########################################################################
 function libaryPaths(){
-	# add the download directory to the paths
-	#echo "$(downloadDir)"
 	# check for server libary config
-	if [ ! -f /etc/2web/nfo/libaries.cfg ];then
+	if ! test -f /etc/2web/nfo/libaries.cfg ];then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
 			# add the default download directory
-			echo "/var/cache/2web/libary/"
+			echo "# Server Default Libaries config/"
+			# add the download directory to the paths
+			#echo "$(downloadDir)"
+			echo "/var/cache/2web/download/"
 		} >> "/etc/2web/nfo/libaries.cfg"
 	fi
 	# write path to console
@@ -2008,10 +2009,6 @@ main(){
 		# - Should create its own web directory
 		################################################################################
 		# load the libary directory
-		if ! test -f /etc/2web/nfo/libaries.cfg;then
-			mkdir -p /var/cache/2web/libary/
-			echo "/var/cache/2web/libary" > /etc/2web/nfo/libaries.cfg
-		fi
 		#libaries=$(libaryPaths | tr -s "\n" | shuf )
 		libaries=$(libaryPaths | tr -s "\n" | shuf )
 		# the webdirectory is a cache where the generated website is stored

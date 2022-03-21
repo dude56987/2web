@@ -26,7 +26,7 @@ getDownloadPath(){
 		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
-		downloadPath="/var/cache/ytdl2kodi/"
+		downloadPath="/var/cache/2web/download/"
 		# write the new config from the path variable
 		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
@@ -353,16 +353,7 @@ ytdl2kodi_channel_meta_extractor(){
 	swirlAmount=$(echo "$showTitle" | wc -c)
 	################################################################################
 	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
-	# check for a user defined download path
-	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
-		# load the config file
-		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
-	else
-		# if no config exists create the default config
-		downloadPath="/var/cache/ytdl2kodi/"
-		# write the new config from the path variable
-		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
-	fi
+	downloadPath="$(getDownloadPath)"
 	echo "DownloadPath set to = $downloadPath"
 	################################################################################
 	# create show directory
@@ -761,15 +752,7 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	# check for a user defined download path
-	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
-		# load the config file
-		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
-	else
-		# if no config exists create the default config
-		downloadPath="/var/cache/2web/download/"
-		# write the new config from the path variable
-		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
-	fi
+	downloadPath="$(getDownloadPath)"
 	echo "DownloadPath set to = $downloadPath"
 	# create the path if it does not exist, then move into it
 	mkdir -p "$downloadPath"
