@@ -23,13 +23,23 @@ include("settingsHeader.php");
 </div>
 
 <?php
-echo "<div id='serverLibaryPaths' class='settingListCard'>\n";
+echo "<div id='serverLibaryPaths' class='inputCard'>\n";
 echo "<h2>Server Libary Paths</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/nfo/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
+?>
 
+<div id='addLibaryPath' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Libary Path</h2>
+		<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
+		<input class='button' type='submit'>
+	</form>
+</div>
+
+<?php
 echo "<div id='libaryPaths' class='settingListCard'>";
 echo "<h2>Libary Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/nfo/libaries.d/*.cfg"));
@@ -56,14 +66,6 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div id='addLibaryPath' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Libary Path</h2>
-<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
-<input class='button' type='submit'>
-</form>
 </div>
 <?php
 include("header.php");

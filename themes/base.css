@@ -1050,8 +1050,11 @@ table{
 	float: left;
 }
 .settingsEntry .button{
+	/*
 	width: 40vw;
+	*/
 	float: none;
+	font-size: 1em;
 }
 .settingsEntry{
 	margin: 1em;
