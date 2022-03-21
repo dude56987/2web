@@ -217,14 +217,14 @@ build-deb:
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
 	# copy link page
-	cp link.php debian/usr/share/2web/link.php
+	cp templates/link.php debian/usr/share/2web/link.php
 	# copy the resolvers
 	cp ytdl-resolver.php debian/usr/share/2web/
 	cp m3u-gen.php debian/usr/share/2web/
 	cp transcode.php debian/usr/share/2web/
-	cp 404.php debian/usr/share/2web/
-	cp 403.php debian/usr/share/2web/
-	cp 401.php debian/usr/share/2web/
+	cp templates/404.php debian/usr/share/2web/
+	cp templates/403.php debian/usr/share/2web/
+	cp templates/401.php debian/usr/share/2web/
 	cp iptv-resolver.php debian/usr/share/2web/iptv/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
