@@ -224,6 +224,7 @@ h2 {
 	-webkit-text-stroke: 0.04em black;
 }
 ol li{
+	margin-left: 1em;
 	color: var(--textColor);
 	text-align:left !important;
 }

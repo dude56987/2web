@@ -36,8 +36,6 @@ include("settingsHeader.php");
 			<button class='button' type='submit' name='comic_update' value='true'>UPDATE COMICS</button>
 			<button class='button' type='submit' name='comic_webgen' value='true'>COMICS WEBGEN</button>
 		</div>
-
-
 	</form>
 </div>
 
@@ -199,6 +197,23 @@ include("settingsHeader.php");
 			Unlock port 444 for compatibility mode
 		</li>
 	</ul>
+</div>
+
+<?PHP
+	if (file_exists("/etc/2web/version.cfg")){
+		echo "<div id='version' class='inputCard'>";
+		echo "<h2>2web Version Info</h2>";
+		echo "	<div>";
+		echo "		Version: #".file_get_contents("/etc/2web/version.cfg");
+		echo "	</div>";
+		if (file_exists("/etc/2web/versionDate.cfg")){
+			echo "	<div>";
+			echo "		Version Publish Date: ".file_get_contents("/etc/2web/versionDate.cfg");
+			echo "	</div>";
+		}
+		echo "</div>";
+	}
+?>
 </div>
 <?PHP
 	include("header.php");

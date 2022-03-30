@@ -13,7 +13,7 @@ include("header.php")
 <div class='titleCard linkInfo'>
 <h1>Linking</h1>
 
-<div class="inputCard">
+<div class="titleCard">
 	<ul>
 		<li><a href="#hard_linking">Hard Linking</a></li>
 		<li><a href="#android">Android</a></li>
@@ -64,7 +64,7 @@ For when you need more than the web interface can handle. This help section defi
 <div class='titleCard linkInfo'>
 	<h2 id="android">Android</h2>
 
-	<div class="inputCard">
+	<div class="titleCard">
 	<ul>
 		<li><a href="#android_live">Android Live</a></li>
 		<li><a href="#android_ondemand">Android On-Demand</a></li>
@@ -82,14 +82,16 @@ For when you need more than the web interface can handle. This help section defi
 	<?PHP
 	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
 	$tempPath='http://'.gethostname().'.local/kodi/channels.m3u';
-	echo '<p>The hard link is <a href='.$tempPath.'>'.$tempPath.'</p>';
+	echo '<p>The hard link is <a href='.$tempPath.'>'.$tempPath.'</a></p>';
 	?>
 	<p>
 	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
 	</p>
 	<?PHP
-	echo'<a class="button" href="http://'.gethostname().'.local/kodi/channels_raw.m3u">channels_raw.m3u</a>';
-?>
+		echo '<a class="button" href="http://'.gethostname().'.local/kodi/channels_raw.m3u">';
+		echo 'channels_raw.m3u';
+		echo '</a>';
+	?>
 	<p>
 	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
 	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
@@ -117,7 +119,7 @@ For when you need more than the web interface can handle. This help section defi
 <div class='titleCard linkInfo'>
 	<h2 id="kodi">Kodi</h2>
 
-	<div class="inputCard">
+	<div class="titleCard">
 		<ul>
 			<li><a href="#kodi_TLDR">TLDR</a></li>
 			<li><a href="#kodi_live">Live Channels</a></li>
@@ -140,7 +142,7 @@ For when you need more than the web interface can handle. This help section defi
 	<p>
 		To install the client in kodi from the home menu go to
 	</p>
-	<ol class='inputCard'>
+	<ol class='titleCard'>
 	<li>in kodi go to home</li>
 	<li>settings</li>
 	<li>addons</li>
@@ -172,7 +174,7 @@ For when you need more than the web interface can handle. This help section defi
 	<h3 id="kodi_ondemand">Kodi On-Demand</h3>
 		To add the OnDemand content of this server to a kodi libary you would go to
 		<h4>Step-By-Step<h4>
-		<ol class='inputCard'>
+		<ol class='titleCard'>
 			<li>in kodi go to home</li>
 			<li>settings</li>
 			<li>media</li>
@@ -203,7 +205,7 @@ For when you need more than the web interface can handle. This help section defi
 			Kodi can be linked to this servers comic collection by using the kodi pictures interface.
 		</p>
 		<h4>Step-By-Step<h4>
-		<ol class='inputCard'>
+		<ol class='titleCard'>
 			<li>in kodi go to home</li>
 			<li>settings</li>
 			<li>media</li>
@@ -229,7 +231,7 @@ For when you need more than the web interface can handle. This help section defi
 <div class='titleCard linkInfo'>
 	<h2 id="desktop">Desktop</h2>
 
-	<div class="inputCard">
+	<div class="titleCard">
 		<ul>
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
 			<li><a href="#desktop_hard_links">Hard links</a></li>
