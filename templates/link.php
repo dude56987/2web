@@ -1,11 +1,15 @@
 <html class='randomFanart'>
 <head>
 	<link href="style.css" rel="stylesheet">
+	<script src='/2web.js'></script>
 </head>
 <body>
 <?PHP
 include("header.php")
 ?>
+
+<input id='searchBox' class='searchBox' type='text' onkeyup='filter("titleCard")' placeholder='Search...' >
+
 <div class='titleCard linkInfo'>
 <h1>Linking</h1>
 

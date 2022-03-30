@@ -1,10 +1,7 @@
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='style.css'>
-<script>
-	<?php
-		include("../2web.js");
-	?>
+	<script src='/2web.js'></script>
 </script>
 </head>
 <body>

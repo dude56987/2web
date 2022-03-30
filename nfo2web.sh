@@ -226,7 +226,7 @@ processMovie(){
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo -n "$movieDir" | md5sum | cut -d' ' -f1)
-
+		addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
 		################################################################################
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
@@ -632,7 +632,7 @@ processMovie(){
 				if [ "$sufix" = ".strm" ];then
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "Hard Link"
-					echo "</a><br>"
+					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "Hard Link"
@@ -1186,17 +1186,25 @@ processEpisode(){
 				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
+					cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "Hard Link"
-					echo "</a><br>"
+					echo "</a>"
+					# cache link
+					echo "<a class='button hardLink' href='$cacheRedirect'>"
+					echo "Cache Link"
+					echo "</a>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
+					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "Hard Link"
 					echo "</a>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "</a>"
 				fi
-				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
-				echo "<span id='vlcIcon'>&#9650;</span> VLC"
-				echo "</a>"
 
 				echo "<div class='aired'>"
 				echo "$episodeAired"
@@ -1649,80 +1657,6 @@ buildHomePage(){
 	webDirectory=$1
 
 	INFO "Building home page..."
-	# do not generate stats if website is in process of being updated
-	# stats generation is IO intense, so it only needs ran ONCE at the end
-	# if the stats.index cache is more than 1 day old update it
-	if cacheCheck "$webDirectory/stats.index" "10";then
-		# figure out the stats
-		totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name 'index.php' | wc -l)
-		totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
-		totalShows=$(find "$webDirectory"/shows/*/ -name 'tvshow.nfo' | wc -l)
-		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
-		if test -f "$webDirectory/kodi/channels.m3u";then
-			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
-			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
-		fi
-		# count website size in total ignoring symlinks
-		webSize=$(du -shP "$webDirectory" | cut -f1)
-		# cache size for resolver-cache
-		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
-		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
-		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
-		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
-		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
-		#write a new stats index file
-		{
-			echo "<div class='date titleCard'>"
-			echo "	<div>"
-			echo "		Last updated on $(date)"
-			echo "	</div>"
-			echo "	<div>"
-			if [ "$totalShows" -gt 0 ];then
-				echo "		<span>"
-				echo "			Episodes:$totalEpisodes"
-				echo "		</span>"
-				echo "		<span>"
-				echo "			Shows:$totalShows"
-				echo "		</span>"
-			fi
-			if [ "$totalMovies" -gt 0 ];then
-				echo "		<span>"
-				echo "			Movies:$totalMovies"
-				echo "		</span>"
-			fi
-			if [ "$totalComics" -gt 0 ];then
-				echo "		<span>"
-				echo "			Comics:$totalComics"
-				echo "		</span>"
-			fi
-			if test -f "$webDirectory/kodi/channels.m3u";then
-				if [ "$totalChannels" -gt 0 ];then
-					echo "		<span>"
-					echo "			Channels:$totalChannels"
-					echo "		</span>"
-				fi
-				if [ "$totalRadio" -gt 0 ];then
-					echo "		<span>"
-					echo "			Radio:$totalRadio"
-					echo "		</span>"
-				fi
-			fi
-			echo "		<span>"
-			echo "			Web:$webSize "
-			echo "		</span>"
-			echo "		<span>"
-			echo "			Cache:$cacheSize"
-			echo "		</span>"
-			echo "		<span>"
-			echo "			Media:$mediaSize"
-			echo "		</span>"
-			echo "		<span>"
-			echo "			Free:$freeSpace"
-			echo "		</span>"
-			echo "	</div>"
-			echo "</div>"
-		} > "$webDirectory/stats.index"
-	fi
 	# link homepage
 	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
 	# link lists
@@ -1731,6 +1665,72 @@ buildHomePage(){
 	linkFile "/usr/share/2web/templates/updatedShows.php" "$webDirectory/updatedShows.php"
 	linkFile "/usr/share/2web/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
 	linkFile "/usr/share/2web/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
+
+	# check and update stats files
+	# - do not generate stats if website is in process of being updated
+	# - stats generation is IO intense, so it only needs ran ONCE at the end
+	# - each element in the stats is ran on a diffrent schedule based on its intensity and propensity to lock up the system
+	# - update the "last update on" data every run, this is simply to show the freshness of the content since updates are a batch process
+	echo "$(date)" > "$webDirectory/lastUpdate.index"
+	if test -d "$webDirectory/comics/";then
+		if cacheCheck "$webDirectory/totalComics.index" "0";then
+			# figure out the stats
+			totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name 'index.php' | wc -l)
+			# write the stats
+			echo "$totalComics" > "$webDirectory/totalComics.index"
+		fi
+	fi
+	if test -d "$webDirectory/shows/";then
+		if cacheCheck "$webDirectory/totalEpisodes.index" "3";then
+			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
+			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
+		fi
+		if cacheCheck "$webDirectory/totalShows.index" "0";then
+			totalShows=$(find "$webDirectory"/shows/*/ -name 'tvshow.nfo' | wc -l)
+			echo "$totalShows" > "$webDirectory/totalShows.index"
+		fi
+	fi
+	if cacheCheck "$webDirectory/totalMovies.index" "0";then
+		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
+		echo "$totalMovies" > "$webDirectory/totalMovies.index"
+	fi
+	if test -f "$webDirectory/kodi/channels.m3u";then
+		if cacheCheck "$webDirectory/totalChannels.index" "7";then
+			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
+			echo "$totalChannels" > "$webDirectory/totalChannels.index"
+		fi
+		if cacheCheck "$webDirectory/totalRadio.index" "7";then
+			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
+			echo "$totalRadio" > "$webDirectory/totalRadio.index"
+		fi
+	fi
+	if cacheCheck "$webDirectory/webSize.index" "7";then
+		# count website size in total ignoring symlinks
+		webSize=$(du -shP "$webDirectory" | cut -f1)
+		echo "$webSize" > "$webDirectory/webSize.index"
+	fi
+	if cacheCheck "$webDirectory/cacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/cacheSize.index"
+	fi
+	if cacheCheck "$webDirectory/mediaSize.index" "7";then
+		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
+		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
+		echo "$mediaSize" > "$webDirectory/mediaSize.index"
+	fi
+	if cacheCheck "$webDirectory/freeSpace.index" "7";then
+		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
+		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
+		echo "$freeSpace" > "$webDirectory/freeSpace.index"
+	fi
+	if cacheCheck "$webDirectory/fortune.index" "1";then
+		# write the fortune for this processing run...
+		if test -f /usr/games/fortune;then
+			todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
+			echo "$todaysFortune" > "$webDirectory/fortune.index"
+		fi
+	fi
 }
 ########################################################################
 getDirSum(){
@@ -1871,7 +1871,7 @@ webRoot(){
 ########################################################################
 function libaryPaths(){
 	# check for server libary config
-	if ! test -f /etc/2web/nfo/libaries.cfg ];then
+	if ! test -f /etc/2web/nfo/libaries.cfg;then
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
@@ -1880,16 +1880,19 @@ function libaryPaths(){
 			# add the download directory to the paths
 			#echo "$(downloadDir)"
 			echo "/var/cache/2web/download/"
-		} >> "/etc/2web/nfo/libaries.cfg"
+		} > "/etc/2web/nfo/libaries.cfg"
 	fi
 	# write path to console
-	cat "/etc/2web/nfo/libaries.cfg"
+	cat "/etc/2web/nfo/libaries.cfg" | grep -v "^#"
+	#cat "/etc/2web/nfo/libaries.cfg"
+	#grep -v "^#" "/etc/2web/nfo/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
 	find "/etc/2web/nfo/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
-		#grep -i "^#" "$libaryConfigPath"
-		cat "$libaryConfigPath"
+		#grep -v "^#" "$libaryConfigPath"
+		#cat "$libaryConfigPath"
+		cat "$libaryConfigPath" | grep -v "^#"
 		# create a space just in case none exists
 		printf "\n"
 	done
@@ -1919,6 +1922,10 @@ function updateCerts(){
 		# - der format can be copied to other systems at /usr/local/share/ca-certificates/
 		# - linux only updates after update-ca-certificates
 		openssl x509 -in /var/cache/2web/ssl-cert.crt -out /var/cache/2web/ssl-cert.der -outform DER
+		# add the cert to the system cert directory
+		ln -s /var/cache/2web/ssl-cert.crt /usr/share/ca-certificates/2web.crt
+		# update system cert file
+		update-ca-certificates --fresh
 	fi
 }
 ########################################################################
@@ -2071,6 +2078,11 @@ main(){
 		#  - These scripts allow for kodi to play .strm files though youtube-dl
 		#  - Generate m3u files to allow android phones to share the media to any video player
 		################################################################################
+		# enable the apache config
+		linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
+		linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
+		linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
+		linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
 		# admin control file
 		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/admin.php"
 		# settings interface files
@@ -2098,6 +2110,8 @@ main(){
 		linkFile "/usr/share/2web/2web.js" "$webDirectory/2web.js"
 		# link homepage
 		linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
+		# link stats script
+		linkFile "/usr/share/2web/templates/stats.php" "$webDirectory/stats.php"
 		# link the movies and shows index
 		linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
 		linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
@@ -2196,7 +2210,7 @@ main(){
 			echo "include('header.php');";
 			echo "include('settingsHeader.php');";
 			echo "?>";
-			echo "<div class='settingsListCard'>"
+			echo "<div class='inputCard'>"
 			# add the javascript sorter
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
@@ -2208,6 +2222,12 @@ main(){
 			echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
 			echo -n "<input type='button' class='button' value='New'"
 			echo    " onclick='toggleVisibleClass(\"NEW\")'>"
+			echo -n "<input type='button' class='button' value='Debug'"
+			echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
+			echo -n "<input type='button' class='button' value='Download'"
+			echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
+			echo "</div>"
+			echo "<div class='settingsListCard'>"
 			# start the table
 			echo "<div class='settingsTable'>"
 			echo "<table>"

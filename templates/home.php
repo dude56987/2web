@@ -17,8 +17,8 @@
 	if (file_exists("progress.index")){
 		include("progress.index");
 	}
-	if (file_exists("stats.index")){
-		include("stats.index");
+	if (file_exists("stats.php")){
+		include("stats.php");
 	}
 	if (file_exists("shows")){
 		if (file_exists("updatedEpisodes.php")){

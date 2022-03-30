@@ -36,31 +36,50 @@ if ($writeFile){
 	$fileData .= "&#128279;LINK";
 	$fileData .= "</a>";
 
-
 	if (file_exists("$webDirectory/movies/")){
-		$fileData .= "<a class='button' href='/movies'>";
-		$fileData .= "&#127916;MOVIES";
-		$fileData .= "</a>";
+		if (file_exists("$webDirectory/totalMovies.index")){
+			if ((file_get_contents("$webDirectory/totalMovies.index")) > 0){
+				$fileData .= "<a class='button' href='/movies'>";
+				$fileData .= "&#127916;MOVIES";
+				$fileData .= "</a>";
+			}
+		}
 	}
 	if (file_exists("$webDirectory/shows/")){
-		$fileData .= "<a class='button' href='/shows'>";
-		$fileData .= "&#128250;SHOWS";
-		$fileData .= "</a>";
+		if (file_exists("$webDirectory/totalShows.index")){
+			if ((file_get_contents("$webDirectory/totalShows.index")) > 0){
+				$fileData .= "<a class='button' href='/shows'>";
+				$fileData .= "&#128250;SHOWS";
+				$fileData .= "</a>";
+			}
+		}
 	}
 	if (file_exists("$webDirectory/music/")){
-		$fileData .= "<a class='button' href='/music'>";
-		$fileData .= "&#9834;MUSIC";
-		$fileData .= "</a>";
+		if (file_exists("$webDirectory/totalAlbums.index")){
+			if ((file_get_contents("$webDirectory/totalAlbums.index")) > 0){
+				$fileData .= "<a class='button' href='/music'>";
+				$fileData .= "&#9834;MUSIC";
+				$fileData .= "</a>";
+			}
+		}
 	}
 	if (file_exists("$webDirectory/comics/")){
-		$fileData .= "<a class='button' href='/comics'>";
-		$fileData .= "&#128214;COMICS";
-		$fileData .= "</a>";
+		if (file_exists("$webDirectory/totalComics.index")){
+			if ((file_get_contents("$webDirectory/totalComics.index")) > 0){
+				$fileData .= "<a class='button' href='/comics'>";
+				$fileData .= "&#128214;COMICS";
+				$fileData .= "</a>";
+			}
+		}
 	}
 	if (file_exists("$webDirectory/live/channels.m3u")){
-		$fileData .= "<a class='button' href='/live'>";
-		$fileData .= "&#128225;LIVE";
-		$fileData .= "</a>";
+		if (file_exists("$webDirectory/totalChannels.index")){
+			if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
+				$fileData .= "<a class='button' href='/live'>";
+				$fileData .= "&#128225;LIVE";
+				$fileData .= "</a>";
+			}
+		}
 	}
 	fwrite($fileObj,"$fileData");
 	// close the file

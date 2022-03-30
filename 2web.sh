@@ -88,6 +88,45 @@ update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 }
+########################################################################
+rebootCheck(){
+	echo "Checking if it is time to reboot the system..."
+	# check the reboot time
+	if test -f /etc/2web/rebootTime.cfg;then
+		rebootTime=$(cat /etc/2web/rebootTime.cfg)
+	else
+		rebootTime="4"
+		echo "$rebootTime" > /etc/2web/rebootTime.cfg
+	fi
+	currentTime=$(date "+%H")
+	echo "Reboot Time ?= Current Time"
+	echo "$rebootTime ?= $currentTime"
+	if [ "disabled" == "$rebootTime" ];then
+		return
+	elif [ $currentTime -gt 24 ];then
+		return
+	elif [ $currentTime -lt 0 ];then
+		return
+	else
+		# this is a usable reboot hour check if it is available
+		if [ "$currentTime" -eq "$rebootTime" ];then
+			echo -n "Rebooting"
+			# 5 second delay
+			sleep 1
+			echo -n "."
+			sleep 1
+			echo -n "."
+			sleep 1
+			echo -n "."
+			sleep 1
+			echo -n "."
+			sleep 1
+			echo -n "."
+			# reboot the system
+			/usr/sbin/reboot
+		fi
+	fi
+}
 ################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
@@ -97,6 +136,47 @@ main(){
 		/usr/bin/nfo2web
 		/usr/bin/iptv2web
 		/usr/bin/comic2web
+		rebootCheck
+	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
+		# parllelize the processes
+		###########################
+		# update main components
+		# - all processes are locked so conflicts will not arise from launching this process multuple times
+		update2web
+		# update the on-demand downloads
+		/usr/bin/ytdl2nfo &
+		sleep 30
+		# update the metadata and build webpages for all generators
+		/usr/bin/nfo2web &
+		sleep 10
+		/usr/bin/iptv2web &
+		/usr/bin/comic2web &
+		while 1;do
+			if test -f /tmp/comic2web.active;then
+				sleep 1
+			elif test -f /tmp/iptv2web.active;then
+				sleep 1
+			elif test -f /tmp/nfo2web.active;then
+				sleep 1
+			else
+				# break the loop and run the reboot check
+				break
+			fi
+		done
+		# run the reboot check after all modules have finished running
+		rebootCheck
+	elif [ "$1" == "-I" ] || [ "$1" == "--iptv" ] || [ "$1" == "iptv" ];then
+		/usr/bin/iptv2web
+		rebootCheck
+	elif [ "$1" == "-Y" ] || [ "$1" == "--ytdl" ] || [ "$1" == "ytdl" ];then
+		/usr/bin/ytdl2nfo
+		rebootCheck
+	elif [ "$1" == "-N" ] || [ "$1" == "--nfo" ] || [ "$1" == "nfo" ];then
+		/usr/bin/nfo2web
+		rebootCheck
+	elif [ "$1" == "-C" ] || [ "$1" == "--comic" ] || [ "$1" == "comic" ];then
+		/usr/bin/comic2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2Web
@@ -104,11 +184,13 @@ main(){
 		/usr/bin/nfo2web update
 		/usr/bin/iptv2web update
 		/usr/bin/comic2web update
+		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
 		# update the website content
 		/usr/bin/nfo2web webgen
 		/usr/bin/iptv2web webgen
 		/usr/bin/comic2web webgen
+		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# upgrade packages related to operation of webserver
 		/usr/bin/nfo2web upgrade
@@ -119,7 +201,9 @@ main(){
 		/usr/bin/nfo2web reset
 		/usr/bin/comic2web reset
 		/usr/bin/iptv2web reset
-	elif [ "$1" == "-cc" ] || [ "$1" == "--cleancache" ] || [ "$1" == "cleancache" ] ;then
+	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
+		rebootCheck
+	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		# run the cleanup to remove cached files older than the cache time
 		################################################################################
 		if test -f "$(webRoot)/cacheDelay.cfg";then
@@ -148,7 +232,7 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		echo "########################################################################"
 		echo "# 2web CLI for administration"
-		echo "# Copyright (C) 2021  Carl J Smith"
+		echo "# Copyright (C) 2022  Carl J Smith"
 		echo "#"
 		echo "# This program is free software: you can redistribute it and/or modify"
 		echo "# it under the terms of the GNU General Public License as published by"
@@ -168,19 +252,44 @@ main(){
 		echo "To return to this menu use '2web help'"
 		echo "Other commands are listed below."
 		echo ""
-		echo "update"
-		echo "  This will update the m3u file used to make the website."
+		echo "-a or --all or all"
+		echo "	Run all 2web components"
 		echo ""
-		echo "cron"
-		echo "  Run the cron check script."
+		echo "-p or --parallel or parallel"
+		echo "	Run all 2web compentents in parallel."
 		echo ""
-		echo "reset"
-		echo "  Reset the cache."
+		echo "-I or --iptv or iptv"
+		echo "	Update iptv2web"
 		echo ""
-		echo "webgen"
-		echo "	Build the website from the m3u generated."
+		echo "-N or --nfo or nfo"
+		echo "	Update nfo2web"
 		echo ""
-		echo "libary"
+		echo "-C or --comic or comic"
+		echo "	Update comic2web"
+		echo ""
+		echo "-rc or --reboot-check or rebootcheck"
+		echo "	Check if it is the reboot hour and reboot if it is."
+		echo ""
+		echo "-cc or --clean-cache or cleancache"
+		echo "	Cleanup the web caches based on web cache time setting"
+		echo ""
+		echo "-U or --upgrade or upgrade"
+		echo "	Upgrade libaries used by modules in the background for operation."
+		echo "	This can fix issues with backend resolution issues."
+		echo "	- youtube-dl"
+		echo "	- gallery-dl"
+		echo "	- hls.js"
+		echo ""
+		echo "-u or --update or update"
+		echo "  Update all 2web components."
+		echo ""
+		echo "-r or --reset or reset"
+		echo "  Reset the state of all 2web components without deleting generated data."
+		echo ""
+		echo "-w or --webgen or webgen"
+		echo "	Generate webpage parts of all 2web components."
+		echo ""
+		echo "-l or --libary or libary"
 		echo "	Download the latest version of the hls.js libary for use."
 		echo "########################################################################"
 		# this is also ran on import

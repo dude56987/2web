@@ -1,4 +1,8 @@
 <?php
+# if no channel index exists exit
+if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/totalComics.index")){
+	exit();
+}
 $cacheFile="randomComics.index";
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 2 * 3600){

@@ -1,4 +1,8 @@
 <?php
+# if no index exists
+if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/totalMovies.index")){
+	exit();
+}
 $cacheFile="updatedMovies.index";
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 2 * 3600){

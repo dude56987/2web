@@ -95,6 +95,7 @@ build-deb:
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-available/;
 	mkdir -p debian/etc/apache2/sites-enabled/;
+	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# write version info
 	git log --oneline | wc -l > debian/etc/2web/version.cfg
@@ -234,10 +235,10 @@ build-deb:
 	# copy over the cron job
 	cp 2web.cron debian/etc/cron.d/2web-update
 	# copy over apache configs
-	cp -v apacheConf/0-2web-ports.conf debian/etc/apache2/conf-enabled/
-	cp -v apacheConf/0-2web-website.conf debian/etc/apache2/sites-enabled/
-	cp -v apacheConf/0-2web-website-SSL.conf debian/etc/apache2/sites-enabled/
-	cp -v apacheConf/0-2web-website-compat.conf debian/etc/apache2/sites-enabled/
+	cp -v apacheConf/0-2web-ports.conf debian/etc/apache2/conf-available/
+	cp -v apacheConf/0-2web-website.conf debian/etc/apache2/sites-available/
+	cp -v apacheConf/0-2web-website-SSL.conf debian/etc/apache2/sites-available/
+	cp -v apacheConf/0-2web-website-compat.conf debian/etc/apache2/sites-available/
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk

@@ -1041,7 +1041,12 @@ webUpdate(){
 
 	# create the kodi directory
 	createDir "$webDirectory/kodi/comics/"
+
+	# create the web directory
 	createDir "$webDirectory/comics/"
+
+	# link the homepage
+	linkFile "/usr/share/2web/templates/comics.php" "$webDirectory/comics/index.php"
 
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/comics/randomPoster.php"
@@ -1061,6 +1066,8 @@ webUpdate(){
 			#mkdir -p "$webDirectory/comics/$(popPath $comicWebsitePath)"
 			# build the website tag index page
 			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
+				# check the md5sum for this directory to see if the data has changed
+
 				INFO "link the comics to the kodi directory"
 				# link this comic to the kodi directory
 				if test -d "$webDirectory/kodi/comics/";then
@@ -1090,6 +1097,27 @@ webUpdate(){
 						scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
 					done
 				fi
+				# search for new comics
+				find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
+					# create the comic index files here in order to allow dynamic index view during updates
+					tempComicName="$(popPath "$comicNamePath")"
+					if ! test -f "$comicNamePath/comic.index";then
+						{
+							echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+							echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+							echo "<div>$tempComicName</div>"
+							echo "</a>"
+						} > "$comicNamePath/comic.index"
+					fi
+					if ! test -f "$webDirectory/new/comic_$tempComicName.index";then
+						{
+							echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+							echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+							echo "<div>$tempComicName</div>"
+							echo "</a>"
+						} > "$webDirectory/new/comic_$tempComicName.index"
+					fi
+				done
 			done
 			# finish website tag index page
 		done
@@ -1143,7 +1171,9 @@ function resetCache(){
 	rm -rv "$downloadDirectory/epub2comic/" || INFO "No path to remove at '$downloadDirectory/epub2comic/'"
 	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
 	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
+	rm -rv "$webDirectory/new/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
 }
+################################################################################
 lockProc(){
 	# check if system is active
 	if test -f "/tmp/comic2web.active";then
@@ -1175,6 +1205,7 @@ main(){
 		# lock the process
 		lockProc
 		rm -rv $(webRoot)/comics/*
+		rm -rv $(webRoot)/new/comic_*.index
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		# lock the process
 		lockProc

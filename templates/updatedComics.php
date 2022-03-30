@@ -1,4 +1,8 @@
 <?php
+# if no comics exist exit
+if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/totalComics.index")){
+	exit();
+}
 $cacheFile="updatedComics.index";
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 2 * 3600){

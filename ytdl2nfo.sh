@@ -458,7 +458,7 @@ ytdl2kodi_channel_meta_extractor(){
 			echo "<?xml version='1.0' encoding='UTF-8'?>"
 			echo "<tvshow>"
 			echo "<title>$showTitle</title>"
-			echo "<studio>ytdl2kodi</studio>"
+			echo "<studio>Internet</studio>"
 			echo "<genre>Internet</genre>"
 			echo "<plot>Videos from $channelUrl</plot>"
 			echo "<premiered>$(date +%F)</premiered>"
@@ -483,13 +483,6 @@ ytdl2kodi_channel_meta_extractor(){
 
 ytdl2kodi_depends_check(){
 	# Install the most recent version of youtube-dl by using pip3, everything else is too slow to update
-	if [ -f /usr/bin/youtube-dl ];then
-		# remove existing youtube-dl if it exists
-		apt-get purge youtube-dl -y
-	fi
-	if [ -f /snap/bin/youtube-dl ];then
-		snap remove youtube-dl
-	fi
 	# install youtube-dl from the latest repo
 	# install the missing package
 	pip3 install --upgrade youtube-dl
@@ -624,12 +617,17 @@ ytdl2kodi_update(){
 	# check dependencies to get the latest version of youtube-dl
 	ytdl2kodi_depends_check
 	################################################################################
-	# check if this script is already running on the system
-	if pgrep ytdl2kodi_update;then
-		# if the script is running already do not launch a duplicate process
-		echo "[WARNING]: ytdl2kodi_update is already running..."
-		echo "[WARNING]: Only one instance of ytdl2kodi should be run at a time..."
-		return
+	# check if system is active
+	if test -f "/tmp/ytdl2nfo.active";then
+		# system is already running exit
+		echo "[INFO]: ytdl2nfo is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/ytdl2nfo.active'."
+		exit
+	else
+		# set the active flag
+		touch /tmp/ytdl2nfo.active
+		# create a trap to remove nfo2web lockfile
+		trap "rm -v /tmp/ytdl2nfo.active" EXIT
 	fi
 	################################################################################
 	# create a limit to set the number of channels that can be processed at once
@@ -977,23 +975,26 @@ ytdl2kodi_video_extractor(){
 	else
 		# for generic extraction simply get the first format url, this is lowest quality to highest
 		# NOTE: the number of formats is unknown per video but each is assured to have one
-		sourceUrl=$(echo "$info" | jq ".formats[0].url" | sed 's/\"//g')
+		#sourceUrl=$(echo "$info" | jq ".formats[0].url" | sed 's/\"//g')
 		# try to get a usable format, lowest quality is checked first
-		if ! validString "$sourceUrl";then
-			# if previous format failed
-			sourceUrl=$(echo "$info" | jq ".formats[1].url" | sed 's/\"//g')
-		fi
-		if ! validString "$sourceUrl";then
-			sourceUrl=$(echo "$info" | jq ".formats[2].url" | sed 's/\"//g')
-		fi
-		if ! validString "$sourceUrl";then
-			sourceUrl=$(echo "$info" | jq ".formats[3].url" | sed 's/\"//g')
-		fi
-		# the default url is checked last because sometimes the json does not list
-		# a default url, it should be prioritized if it exists
-		if ! validString "$sourceUrl";then
-			sourceUrl=$(echo "$info" | jq ".url" | sed 's/\"//g')
-		fi
+		#if ! validString "$sourceUrl";then
+		#	# if previous format failed
+		#	sourceUrl=$(echo "$info" | jq ".formats[1].url" | sed 's/\"//g')
+		#fi
+		#if ! validString "$sourceUrl";then
+		#	sourceUrl=$(echo "$info" | jq ".formats[2].url" | sed 's/\"//g')
+		#fi
+		#if ! validString "$sourceUrl";then
+		#	sourceUrl=$(echo "$info" | jq ".formats[3].url" | sed 's/\"//g')
+		#fi
+		## the default url is checked last because sometimes the json does not list
+		## a default url, it should be prioritized if it exists
+		#if ! validString "$sourceUrl";then
+		#	sourceUrl=$(echo "$info" | jq ".url" | sed 's/\"//g')
+		#fi
+		#
+		# use the webpage as the source url
+		sourceUrl=$selection
 	fi
 	################################################################################
 	# make the found links directory if it does not exist, and the channel specific list
@@ -1211,8 +1212,8 @@ main(){
 		echo "########################################################################"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "########################################################################"
-		echo "# ytdl2kodi CLI for administration"
-		echo "# Copyright (C) 2020  Carl J Smith"
+		echo "# ytdl2nfo CLI for administration"
+		echo "# Copyright (C) 2022  Carl J Smith"
 		echo "#"
 		echo "# This program is free software: you can redistribute it and/or modify"
 		echo "# it under the terms of the GNU General Public License as published by"
