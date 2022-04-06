@@ -389,7 +389,7 @@ ol{
 		width: 90vw !important;
 	}
 	.inputCard{
-		width: 90vw !important;
+		width: 80vw !important;
 		float: none !important;
 	}
 	.liveBackground{
@@ -812,6 +812,7 @@ input{
 	background-color: var(--glassBackground);
 	box-shadow: 0px 0px 1em var(--shadowColor);
 	margin: 1em;
+	padding-bottom: 0.5em;
 }
 .listCard .indexSeries{
 	min-height: 0em !important;
@@ -1091,11 +1092,11 @@ table{
 	text-align: center;
 	box-shadow: 0px 0px 1em var(--shadowColor);
 	background-color: var(--glassBackground);
-	width: 45vw;
+	width: 40vw;
 	display: inline-block;
 	margin: 1em;
 	float: none;
-	min-height: 20em;
+	min-height: 3em;
 	max-height: 35em;
 	vertical-align: top;
 }
@@ -1120,4 +1121,9 @@ tr{
 .settingsTableData{
 	width: 100%;
 }
-
+.weatherIcon{
+	font-size: 6em;
+}
+.forcastSub{
+	font-size: 0.01em;
+}

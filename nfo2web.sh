@@ -1731,6 +1731,62 @@ buildHomePage(){
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
+	# look for the weather command
+	if test -f /usr/bin/weather;then
+		# check for weather config
+		if test -f /etc/2web/weatherLocation.cfg;then
+			# update the weather
+			weatherLocation=$(cat "/etc/2web/weatherLocation.cfg")
+			todaysWeather=$(/usr/bin/weather "$weatherLocation" )
+			todaysWeatherAsHtml=$(echo "$todaysWeather" | tr -s '.' | cut -d'.' -f1- | txt2html --extract )
+			# check for icon  based on the weather data
+			if echo "$todaysWeather" | grep --ignore-case "weather";then
+				if echo "$todaysWeather" | grep --ignore-case "clear";then
+					iconCode="&#127779;"
+					iconCode="$iconCode<div class='forcastSub'>Clear</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "cloudy";then
+					iconCode="&#127781;"
+					iconCode="$iconCode<div class='forcastSub'>cloudy</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "Light Rain";then
+					iconCode="&#127782;"
+					iconCode="$iconCode<div class='forcastSub'>Light Rain</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "rain";then
+					iconCode="&#127783;"
+					iconCode="$iconCode<div class='forcastSub'>Rain</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "snow";then
+					iconCode="&#127784;"
+					iconCode="$iconCode<div class='forcastSub'>Snow</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "thunderstorm";then
+					iconCode="<blink>&#127785;</blink>"
+					iconCode="$iconCode<div class='forcastSub'>Thunderstorm</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "shitstorm";then
+					iconCode="&#127786;"
+					iconCode="$iconCode<div class='forcastSub'>Shitstorm</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "light wind";then
+					iconCode="&#127787;"
+					iconCode="$iconCode<div class='forcastSub'>Light Wind</div>"
+				elif echo "$todaysWeather" | grep --ignore-case "strong wind";then
+					iconCode="&#127788;"
+					iconCode="$iconCode<div class='forcastSub'>Strong Wind</div>"
+				else
+					# sunny weather code
+					iconCode="&#127779;"
+					iconCode="$iconCode<div class='forcastSub'>Clear</div>"
+				fi
+			else
+				# sunny weather code
+				iconCode="&#127779;"
+				iconCode="$iconCode<div class='forcastSub'>Clear</div>"
+			fi
+			# store the weather info
+			{
+				echo "<div class='weatherIcon right'>"
+				echo "$iconCode"
+				echo "</div>"
+				echo "$todaysWeatherAsHtml"
+			} > "$webDirectory/weather.index"
+		fi
+	fi
 }
 ########################################################################
 getDirSum(){
@@ -1899,6 +1955,7 @@ function libaryPaths(){
 }
 ########################################################################
 function updateCerts(){
+	force=$1
 	genCert='no'
 	# if the cert exists
 	if test -f /var/cache/2web/ssl-cert.crt;then
@@ -1914,6 +1971,10 @@ function updateCerts(){
 	else
 		echo "[INFO]: Creating cert..."
 		# if the cert does not exist
+		genCert='yes'
+	fi
+	if $force;then
+		# force cert generation
 		genCert='yes'
 	fi
 	if [ $genCert == 'yes' ];then
@@ -1954,11 +2015,17 @@ main(){
 		echo "To return to this menu use 'nfo2web help'"
 		echo "Other commands are listed below."
 		echo ""
-		echo "update"
+		echo "--help or help"
+		echo "	Display this help menu"
+		echo "--cert or cert"
+		echo "	Updated he self signed ssl cert if it is older than 365 days"
+		echo "--CERT or CERT"
+		echo "	Force update the self signed ssl cert"
+		echo "-u --update or update"
 		echo "  This will update the webpages and refresh the database."
-		echo "reset"
+		echo "--reset or reset"
 		echo "  This will reset the state of the cache so everything will be updated."
-		echo "nuke"
+		echo "--nuke or nuke"
 		echo "  This will delete the cached website."
 		echo "########################################################################"
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
@@ -1982,6 +2049,9 @@ main(){
 	elif [ "$1" == "--certs" ] || [ "$1" == "certs" ] ;then
 		echo "[INFO]: Checking for local SSL certs..."
 		updateCerts
+	elif [ "$1" == "--CERTS" ] || [ "$1" == "CERTS" ] ;then
+		# force update certs
+		updateCerts 'yes'
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		echo "[INFO]: Reseting web cache to blank..."
 		rm -rv $(webRoot)/*

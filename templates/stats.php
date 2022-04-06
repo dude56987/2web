@@ -35,6 +35,11 @@ if (file_exists("fortune.index")){
 }else{
 	$todaysFortune = 0;
 }
+if (file_exists("weather.index")){
+	$todaysWeather= file_get_contents("weather.index");
+}else{
+	$todaysWeather= 0;
+}
 if (file_exists("webSize.index")){
 	$webSize = file_get_contents("webSize.index");
 }else{
@@ -108,8 +113,13 @@ echo "			Free:$freeSpace";
 echo "		</span>";
 echo "	</div>";
 if ( file_exists("fortune.index")){
-	echo "	<div>";
+	echo "	<div class='titleCard'>";
 	echo "$todaysFortune";
+	echo "	</div>";
+}
+if ( file_exists("weather.index")){
+	echo "	<div class='titleCard'>";
+	echo "$todaysWeather";
 	echo "	</div>";
 }
 echo "</div>"
