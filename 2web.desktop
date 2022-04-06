@@ -2,10 +2,10 @@
 Encoding=UTF-8
 Version=1.0
 Type=Application
-Exec=exo-open http://localhost:411/
-Name=Hackbox System Monitor
-Comment=Open Hackbox System Monitor to view system graphs
+Exec=exo-open http://localhost/
+Name=2web
+Comment=Access 2web media server on local machine
 Categories=System;
-GenericName=System Log Graphs
-Icon=utilities-system-monitor-symbolic
+GenericName=2web
+Icon=/usr/share/2web/favicon_default.png
 StartupNotify=true
