@@ -562,7 +562,7 @@ fullUpdate(){
 	if ! test -f "/etc/2web/iptv/sources.cfg";then
 		# if no config exists create the default config from the template
 		{
-			cat /usr/share/2web/templates/live_sources.cfg
+			cat /usr/share/2web/config_defaults/live_sources.cfg
 		} > /etc/2web/iptv/sources.cfg
 	fi
 	# load the link list

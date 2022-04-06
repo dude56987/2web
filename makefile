@@ -77,6 +77,7 @@ build-deb:
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/themes;
 	mkdir -p debian/etc/2web/;
+	mkdir -p debian/etc/2web/config_default/;
 	mkdir -p debian/etc/2web/ytdl/
 	mkdir -p debian/etc/2web/ytdl/sources.d/
 	mkdir -p debian/etc/2web/ytdl/usernameSources.d/
@@ -103,6 +104,8 @@ build-deb:
 	git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/etc/2web/versionDate.cfg
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
+	# copy over default config templates
+	cp -rv config_default/. debian/usr/share/2web/config_default/
 	# add icon
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
@@ -222,13 +225,14 @@ build-deb:
 	# copy link page
 	cp templates/link.php debian/usr/share/2web/link.php
 	# copy the resolvers
-	cp ytdl-resolver.php debian/usr/share/2web/
-	cp m3u-gen.php debian/usr/share/2web/
-	cp transcode.php debian/usr/share/2web/
+	cp resolvers/ytdl-resolver.php debian/usr/share/2web/
+	cp resolvers/m3u-gen.php debian/usr/share/2web/
+	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
+	#cp transcode.php debian/usr/share/2web/
+	# copy over web server code templates
 	cp templates/404.php debian/usr/share/2web/
 	cp templates/403.php debian/usr/share/2web/
 	cp templates/401.php debian/usr/share/2web/
-	cp iptv-resolver.php debian/usr/share/2web/iptv/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
