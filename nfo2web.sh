@@ -2168,14 +2168,14 @@ main(){
 		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 		# help/info docs
-		linkFile "/usr/share/2web/link.php" "$webDirectory/link.php"
+		linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
 		# caching resolvers
 		linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 		linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
 		# error documents
-		linkFile "/usr/share/2web/404.php" "$webDirectory/404.php"
-		linkFile "/usr/share/2web/403.php" "$webDirectory/403.php"
-		linkFile "/usr/share/2web/401.php" "$webDirectory/401.php"
+		linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
+		linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
+		linkFile "/usr/share/2web/templates/401.php" "$webDirectory/401.php"
 		# global javascript libary
 		linkFile "/usr/share/2web/2web.js" "$webDirectory/2web.js"
 		# link homepage
