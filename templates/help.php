@@ -11,7 +11,7 @@ include("header.php")
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("titleCard")' placeholder='Search...' >
 
 <div class='titleCard linkInfo'>
-<h1>Linking</h1>
+<h1>Help</h1>
 
 <div class="titleCard">
 	<ul>

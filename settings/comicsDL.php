@@ -68,8 +68,19 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
+
+
+
 ?>
 </div>
+
+<div id='currentLinks' class='settingListCard'>
+<h2>Supported Websites</h2>
+<?PHP
+	echo shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq");
+?>
+</div>
+
 <?PHP
 	include("header.php");
 ?>

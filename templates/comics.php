@@ -1,6 +1,6 @@
 <html id='top' class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/nfo2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
@@ -8,14 +8,14 @@
 
 <?php
 	ini_set('display_errors', 1);
-	include("../header.php");
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
 <!--  add the search box -->
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
 <?php
-	include("../updatedComics.php");
+	include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
 ?>
 
 <hr>
@@ -51,9 +51,9 @@
 
 <?php
 	// add random comics above the footer
-	include("../randomComics.php");
+	include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
 	// add the footer
-	include("../header.php");
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	echo "<hr class='topButtonSpace'>"
 ?>
 

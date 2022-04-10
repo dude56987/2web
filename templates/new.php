@@ -55,7 +55,7 @@ $filterCommand = $filterCommand." | tail -n 500 | tac";
 if (file_exists("$webDirectory/shows/")){
 	if (file_exists("$webDirectory/totalShows.index")){
 		if ((file_get_contents("$webDirectory/totalShows.index")) > 0){
-			echo "<a class='button' href='?filter=episodes'>Episodes</a>";
+			echo "<a class='button' href='?filter=episodes'>🎞️Episodes</a>";
 		}
 	}
 }
@@ -63,7 +63,7 @@ if (file_exists("$webDirectory/shows/")){
 if (file_exists("$webDirectory/movies/")){
 	if (file_exists("$webDirectory/totalMovies.index")){
 		if ((file_get_contents("$webDirectory/totalMovies.index")) > 0){
-			echo "<a class='button' href='?filter=movies'>Movies</a>";
+			echo "<a class='button' href='?filter=movies'>🎥Movies</a>";
 		}
 	}
 }
@@ -71,13 +71,13 @@ if (file_exists("$webDirectory/movies/")){
 if (file_exists("$webDirectory/comics/")){
 	if (file_exists("$webDirectory/totalComics.index")){
 		if ((file_get_contents("$webDirectory/totalComics.index")) > 0){
-			echo "<a class='button' href='?filter=comics'>Comics</a>";
+			echo "<a class='button' href='?filter=comics'>📚Comics</a>";
 		}
 	}
 }
 
 ?>
-<a class='button' href='?filter=all'>All</a>
+<a class='button' href='?filter=all'>📜All</a>
 </div>
 
 

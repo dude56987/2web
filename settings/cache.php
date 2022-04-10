@@ -102,7 +102,7 @@ include("settingsHeader.php");
 			<option value='240x120'>120p</option>
 			<option value='120x60'>60p</option>
 		</select>
-		<button class='button' type='submit'>Change Cache Mode</button>
+		<button class='button' type='submit'>Change Cache Quality</button>
 	</form>
 </div>
 
@@ -189,7 +189,7 @@ include("settingsHeader.php");
 			}
 			?>
 		</select>
-		<button class='button' type='submit'>Change</button>
+		<button class='button' type='submit'>Change Setting</button>
 	</form>
 </div>
 

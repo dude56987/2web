@@ -616,7 +616,7 @@ processMovie(){
 				echo "<div class='descriptionCard'>"
 				# create a hard link
 				echo "	<a class='button hardLink' href='$ytLink'>"
-				echo "		Hard Link"
+				echo "		🔗Direct Link"
 				echo "	</a>"
 				echo "	$moviePlot"
 				echo "</div>"
@@ -631,11 +631,11 @@ processMovie(){
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
 					echo "<a class='button hardLink' href='$videoPath'>"
-					echo "Hard Link"
+					echo "🔗Direct Link"
 					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
-					echo "Hard Link"
+					echo "🔗Direct Link"
 					echo "</a>"
 					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
@@ -653,7 +653,7 @@ processMovie(){
 				echo "<div class='descriptionCard'>"
 				# create a hard link
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
-				echo "Hard Link"
+				echo "🔗Direct Link"
 				echo "</a>"
 				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
@@ -1149,11 +1149,11 @@ processEpisode(){
 				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				echo "<a class='button hardLink' href='$ytLink'>"
-				echo "	Hard Link"
+				echo "	🔗Direct Link"
 				echo "</a>"
 
 				echo "<a class='button hardLink' href='$cacheRedirect'>"
-				echo "	Cache Link"
+				echo "	📥Cache Link"
 				echo "</a>"
 
 				echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
@@ -1188,18 +1188,18 @@ processEpisode(){
 				if [ "$sufix" = ".strm" ];then
 					cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 					echo "<a class='button hardLink' href='$videoPath'>"
-					echo "Hard Link"
+					echo "	🔗Direct Link"
 					echo "</a>"
 					# cache link
 					echo "<a class='button hardLink' href='$cacheRedirect'>"
-					echo "Cache Link"
+					echo "	📥Cache Link"
 					echo "</a>"
 					echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
-					echo "Hard Link"
+					echo "	🔗Direct Link"
 					echo "</a>"
 					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"

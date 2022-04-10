@@ -51,7 +51,7 @@ include("settingsHeader.php");
 			<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
 		</li>
 	</ul>
-	<input class='button' type='submit'>
+	<button class='button' type='submit'>Add User</button>
 </form>
 </div>
 <!--
@@ -83,7 +83,7 @@ include("settingsHeader.php");
 
 <div id='removeUser' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Remove User</h2>
+		<h2>Remove System Administrator</h2>
 			<ul>
 				<li>
 					Remove existing user from accessing the website

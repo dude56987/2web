@@ -18,6 +18,7 @@
 		<p>Login Failed! Unauthorized Access Detected!</p>
 		<ul>
 			<li><a onclick='window.location.reload(true)'>Reload Login Page</a></li>
+			<li><a href='/'>Return to Homepage</a></li>
 		</ul>
 		<hr>
 		<p>

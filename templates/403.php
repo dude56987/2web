@@ -31,6 +31,7 @@ if (! $_SERVER['HTTPS']){
 		<p>Access Forbidden! Unauthorized Access Detected!</p>
 		<ul>
 			<li><a onclick='window.location.reload(true)'>Reload Page</a></li>
+			<li><a href='/'>Return to Homepage</a></li>
 		</ul>
 		<hr>
 		<p>

@@ -845,7 +845,9 @@ renderPage(){
 			echo "<hr>"
 			echo "<div class='titleCard'>"
 			echo "<h1>$pageComicName</h1>"
-			echo "<a class='button' href='$pageComicName.cbz'>Download "
+			echo "<a class='button' href='$pageComicName.cbz'>"
+			echo "<span class='downloadIcon'>⮋</span>"
+			echo "Download"
 			# get the file size and list it in the download button
 			echo $(	du -sh "$webDirectory/comics/$pageComicName/$pageComicName.cbz" | cut -f1 );
 			echo "</a>"

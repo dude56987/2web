@@ -11,15 +11,15 @@
 			echo "	<div class='titleCard'>\n";
 			echo "		<h2>Live</h2>\n";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/tv.php#index'>TV</a>\n";
+			echo "			<a class='button' href='/tv.php#index'>📺TV</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/radio.php#index'>RADIO</a>\n";
+			echo "			<a class='button' href='/radio.php#index'>📻Radio</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/iptv_blocked.php#index'>BLOCKED</a>\n";
+			echo "			<a class='button' href='/iptv_blocked.php#index'>🚫Blocked</a>\n";
 			echo "		</div>\n";
 			echo "	</div>\n";
 		}
@@ -27,11 +27,11 @@
 			echo "	<div class='titleCard'>\n";
 			echo "		<h2 style='wrap-text: break-word;'>Video On Demand</h2>\n";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/nfo.php#index'>Libaries</a>\n";
+			echo "			<a class='button' href='/nfo.php#index'>🎞️Libaries</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/ytdl2nfo.php#index'>Downloads</a>\n";
+			echo "			<a class='button' href='/ytdl2nfo.php#index'>↓Downloads</a>\n";
 			echo "		</div>\n";
 			echo "	</div>\n";
 		}
@@ -39,11 +39,11 @@
 			echo "	<div class='titleCard'>\n";
 			echo "		<h2>Comics</h2>\n";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/comics.php#index'>Libaries</a>\n";
+			echo "			<a class='button' href='/comics.php#index'>📚Libaries</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/comicsDL.php#index'>Downloads</a>\n";
+			echo "			<a class='button' href='/comicsDL.php#index'>↓Downloads</a>\n";
 			echo "		</div>\n";
 			echo "	</div>\n";
 		}
@@ -51,15 +51,15 @@
 			echo "	<div class='titleCard'>\n";
 			echo "		<h2>General</h2>\n";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/system.php#index'>System</a>\n";
+			echo "			<a class='button' href='/system.php#index'>🎛️System</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/cache.php#index'>Cache</a>\n";
+			echo "			<a class='button' href='/cache.php#index'>📥Cache</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
-			echo "			<a class='button' href='/log.php#index'>Log</a>\n";
+			echo "			<a class='button' href='/log.php#index'>📋Log</a>\n";
 			echo "		</div>\n";
 			echo "	</div>\n";
 		}
@@ -71,13 +71,13 @@
 				echo "<li>General";
 				echo "<ul>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/system.php#index'>System</a>\n";
+				echo "		<a class='' href='/system.php#index'>🎛️ System</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/cache.php#index'>Cache</a>\n";
+				echo "		<a class='' href='/cache.php#index'>📥 Cache</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/log.php#index'>Log</a>\n";
+				echo "		<a class='' href='/log.php#index'>📋 Log</a>\n";
 				echo "	</li>\n";
 				echo "</ul>\n";
 				echo "</li>";
@@ -85,13 +85,13 @@
 				echo "<li>Live";
 				echo "<ul>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/tv.php#index'>TV</a>\n";
+				echo "		<a class='' href='/tv.php#index'>📺 TV</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/radio.php#index'>Radio</a>\n";
+				echo "		<a class='' href='/radio.php#index'>📻 Radio</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/iptv_blocked.php#index'>Blocked</a>\n";
+				echo "		<a class='' href='/iptv_blocked.php#index'>🚫 Blocked</a>\n";
 				echo "	</li>\n";
 				echo "</ul>\n";
 				echo "</li>";
@@ -99,10 +99,10 @@
 				echo "<li>Video On Demand";
 				echo "	<ul>\n";
 				echo "		<li>\n";
-				echo "			<a class='' href='/nfo.php#index'>Libaries</a>\n";
+				echo "			<a class='' href='/nfo.php#index'>🎞️ Libaries</a>\n";
 				echo "		</li>\n";
 				echo "		<li>\n";
-				echo "			<a class='' href='/ytdl2nfo.php#index'>Downloads</a>\n";
+				echo "			<a class='' href='/ytdl2nfo.php#index'>↓ Downloads</a>\n";
 				echo "		</li>\n";
 				echo "	</ul>\n";
 				echo "</li>";
@@ -110,10 +110,10 @@
 				echo "<li>Comics";
 				echo "<ul>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/comics.php#index'>Libaries</a>\n";
+				echo "		<a class='' href='/comics.php#index'>📚 Libaries</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
-				echo "		<a class='' href='/comicsDL.php#index'>Downloads</a>\n";
+				echo "		<a class='' href='/comicsDL.php#index'>↓ Downloads</a>\n";
 				echo "	</li>\n";
 				echo "</ul>\n";
 				echo "</li>";
