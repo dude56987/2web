@@ -40,6 +40,11 @@ if (file_exists("weather.index")){
 }else{
 	$todaysWeather= 0;
 }
+if (file_exists("totalWeatherStations.index")){
+	$totalWeatherStations = file_get_contents("totalWeatherStations.index");
+}else{
+	$totalWeatherStations = 0;
+}
 if (file_exists("webSize.index")){
 	$webSize = file_get_contents("webSize.index");
 }else{
@@ -67,6 +72,9 @@ if (file_exists("lastUpdate.index")){
 }
 
 echo "<div class='date titleCard'>";
+echo "<h1>";
+echo shell_exec("hostname");
+echo "</h1>";
 echo "	<div>";
 echo "		Last updated on $lastUpdate";
 echo "	</div>";
@@ -97,6 +105,11 @@ if ( $totalChannels > 0 ){
 if ( $totalRadio > 0 ){
 	echo "		<span>";
 	echo "			Radio:$totalRadio";
+	echo "		</span>";
+}
+if ( $totalWeatherStations > 0 ){
+	echo "		<span>";
+	echo "			Weather Stations:$totalWeatherStations";
 	echo "		</span>";
 }
 echo "		<span>";

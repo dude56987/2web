@@ -92,6 +92,8 @@ build-deb:
 	mkdir -p debian/etc/2web/iptv/blockedGroups.d/;
 	mkdir -p debian/etc/2web/iptv/radioSources.d/;
 	mkdir -p debian/etc/2web/iptv/blockedLinks.d/;
+	mkdir -p debian/etc/2web/weather/;
+	mkdir -p debian/etc/2web/weather/location.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-available/;
@@ -121,7 +123,7 @@ build-deb:
 	touch debian/etc/2web/comics/.placeholder
 	touch debian/etc/2web/comics/libaries.d/.placeholder
 	touch debian/etc/2web/comics/sources.d/.placeholder
-	#touch debian/var/cache/nfo2web/web/.placeholder
+	touch debian/etc/2web/weather/location.d/.placeholder
 	touch debian/var/cache/2web/cache/.placeholder
 	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/etc/2web/users/.placeholder
@@ -131,6 +133,7 @@ build-deb:
 	chown -R www-data:www-data debian/etc/2web/iptv/*.d/
 	chown -R www-data:www-data debian/etc/2web/nfo/*.d/
 	chown -R www-data:www-data debian/etc/2web/comics/*.d/
+	chown -R www-data:www-data debian/etc/2web/weather/*.d/
 	#chown -R www-data:www-data debian/etc/2web/*.d/
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
@@ -140,6 +143,7 @@ build-deb:
 	cp nfo2web.sh debian/usr/bin/nfo2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
+	cp weather2web.sh debian/usr/bin/weather2web
 	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
 	# build the default themes
 	# - default (gray)

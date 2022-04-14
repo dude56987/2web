@@ -1260,9 +1260,9 @@ processEpisode(){
 		# create the episode file in the new index
 		{
 			echo -ne "<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>"
-			echo -ne "\n	<h3 class='title'>"
-			echo -ne "\n  $episodeShowTitle"
-			echo -ne "\n	</h3>"
+			echo -ne "\n	<h2 class='title'>"
+			echo -ne "\n  	$episodeShowTitle"
+			echo -ne "\n	</h2>"
 			echo -ne "\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
 			echo -ne "\n	<h3 class='title'>"
 			echo -ne "\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
@@ -1731,6 +1731,10 @@ buildHomePage(){
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
+	if cacheCheck "$webDirectory/totalWeatherStations.index" "14";then
+		totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
+		echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
+	fi
 	# look for the weather command
 	if test -f /usr/bin/weather;then
 		# check for weather config
@@ -2164,6 +2168,7 @@ main(){
 		linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/comicsDL.php"
 		linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/cache.php"
 		linkFile "/usr/share/2web/settings/system.php" "$webDirectory/system.php"
+		linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/weather.php"
 		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
 		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"

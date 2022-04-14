@@ -47,7 +47,7 @@
 			echo "		</div>\n";
 			echo "	</div>\n";
 		}
-		if (($pageURL == "/system.php") || ($pageURL == "/cache.php") || ($pageURL == "/log.php")){
+		if (($pageURL == "/system.php") || ($pageURL == "/cache.php") || ($pageURL == "/log.php") || ($pageURL == "/weather.php")){
 			echo "	<div class='titleCard'>\n";
 			echo "		<h2>General</h2>\n";
 			echo "		<div>\n";
@@ -56,6 +56,9 @@
 			echo "		<hr>";
 			echo "		<div>\n";
 			echo "			<a class='button' href='/cache.php#index'>📥Cache</a>\n";
+			echo "		</div>\n";
+			echo "		<div>\n";
+			echo "			<a class='button' href='/weather.php#index'>🌤️Weather</a>\n";
 			echo "		</div>\n";
 			echo "		<hr>";
 			echo "		<div>\n";
@@ -75,6 +78,9 @@
 				echo "	</li>\n";
 				echo "	<li>\n";
 				echo "		<a class='' href='/cache.php#index'>📥 Cache</a>\n";
+				echo "	</li>\n";
+				echo "	<li>\n";
+				echo "		<a class='' href='/weather.php#index'>🌤️ Weather</a>\n";
 				echo "	</li>\n";
 				echo "	<li>\n";
 				echo "		<a class='' href='/log.php#index'>📋 Log</a>\n";

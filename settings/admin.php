@@ -386,6 +386,57 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
+
+}else if (array_key_exists("addWeatherLocation",$_POST)){
+	$link=$_POST['addWeatherLocation'];
+	echo "Running addWeatherLocation on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# run the weather command as a search command and check that the location has a result
+	$weatherTest=shell_exec("weather '".$_POST['addWeatherLocation']."'");
+	countdown(5);
+	# check if the location has failed
+	if (strpos($weatherTest, "Your search is ambiguous")){
+		echo "<div>";
+		echo "ERROR: Your location was not specific enough.";
+		echo "</div>";
+		echo "<pre>";
+		echo $weatherTest;
+		echo "</pre>";
+	}else if(strpos($weatherTest, "Current conditions")){
+		# read the link and create a custom config
+		$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
+		echo "Checking for Config file ".$configPath."<br>\n";
+		# write the libary path to a file at the configPath if the path does not already exist
+		if ( ! file_exists($configPath)){
+			echo "Adding ".$link." to weather stations...<br>\n";
+			# write the config file
+			file_put_contents($configPath,$link);
+		}
+	}else{
+		echo "<div>";
+		echo "ERROR: Your search has no results.";
+		echo "</div>";
+		echo "<pre>";
+		echo $weatherTest;
+		echo "</pre>";
+	}
+	echo "<hr><a class='button' href='/weather.php#addWeatherLocation'>BACK</a><hr>";
+	clear();
+}else if(array_key_exists("removeWeatherLocation",$_POST)){
+	$link=$_POST['removeWeatherLocation'];
+	echo "Running removeWeatherLocation on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing weather location ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/weather.php#currentLinks'>BACK</a><hr>";
+	clear();
+
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];
 	echo "Running addComicDownloadLink on link ".$link."<br>\n";

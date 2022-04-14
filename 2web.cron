@@ -53,3 +53,7 @@
 #@weekly root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every month once
 #@monthly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+################################################################################
+# Update weather info
+################################################################################
+*/15 * * * *	root	/usr/bin/niceload /usr/bin/weather2web

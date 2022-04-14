@@ -16,9 +16,11 @@ input{
 .seasonContainer{
 	border-radius: 0.3em;
 }
+/*
 .titleCard h1,h2,h3{
 	border-radius: 0.3em;
 }
+*/
 .showPageEpisode{
 	border-radius: 0.3em;
 }
@@ -32,4 +34,7 @@ video{
 	video{
 		border-radius: 0em;
 	}
+}
+.weatherForcast{
+	border-radius: 0.3em;
 }

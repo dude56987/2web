@@ -110,6 +110,16 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+// read the weather info for weather2web
+if (file_exists("$webDirectory/totalWeatherStations.index")){
+	echo "<a class='button' href='/weather/'>";
+	echo "🌤️";
+	echo "<span class='headerText'>";
+	echo "WEATHER";
+	echo "</span>";
+	echo "</a>";
+
+}
 if (isset($_SERVER['HTTPS'])){
 	echo "<a class='button' href='/system.php'>";
 	echo "🛠️";
