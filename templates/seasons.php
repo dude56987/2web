@@ -1,7 +1,7 @@
 <html id='top' class='seriesBackground' style='$tempStyle'>
 <head>
 <link rel='stylesheet' href='style.css' />
-<script src='/nfo2web.js'></script>
+<script src='/2web.js'></script>
 </head>
 <body>
 <a href='#' id='topButton' class='button'>&uarr;</a>

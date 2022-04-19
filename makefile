@@ -101,9 +101,13 @@ build-deb:
 	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	# write version info
-	git log --oneline | wc -l > debian/etc/2web/version.cfg
+	/usr/bin/git log --oneline | wc -l > debian/usr/share/2web/version.cfg
+	if /usr/bin/git status| grep "Changes not staged for";then echo "+UNSTABLE-BRANCH" >> debian/usr/share/2web/version.cfg;fi
+	if /usr/bin/git status| grep "Changes to be committed";then echo "+TESTING" >> debian/usr/share/2web/version.cfg;fi
+	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
-	git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/etc/2web/versionDate.cfg
+	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg
+	#/usr/bin/git log -1 >> debian/usr/share/2web/versionDate.cfg
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
 	# copy over default config templates

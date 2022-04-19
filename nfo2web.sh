@@ -1264,10 +1264,10 @@ processEpisode(){
 			echo -ne "\n  	$episodeShowTitle"
 			echo -ne "\n	</h2>"
 			echo -ne "\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
-			echo -ne "\n	<h3 class='title'>"
+			echo -ne "\n	<div class='title'>"
 			echo -ne "\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
 			echo -ne "\n		$episodeTitle"
-			echo -ne "\n	</h3>"
+			echo -ne "\n	</div>"
 			echo -ne "\n</a>"
 		} > "$webDirectory/new/episode_$episodePath.index"
 	else
@@ -1474,7 +1474,7 @@ addToLog(){
 	logPagePath=$4
 	{
 		# add error to log
-		echo -e "<tr class='$errorType'>"
+		echo -e "<tr class='logEntry $errorType'>"
 		echo -e "<td>"
 		echo -e "$errorType"
 		echo -e "</td>"
@@ -1694,7 +1694,7 @@ buildHomePage(){
 		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
 		echo "$totalMovies" > "$webDirectory/totalMovies.index"
 	fi
-	if test -f "$webDirectory/kodi/channels.m3u";then
+	if test -f "$webDirectory/live/channels.m3u";then
 		if cacheCheck "$webDirectory/totalChannels.index" "7";then
 			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
 			echo "$totalChannels" > "$webDirectory/totalChannels.index"
@@ -1964,7 +1964,7 @@ function updateCerts(){
 	# if the cert exists
 	if test -f /var/cache/2web/ssl-cert.crt;then
 		# if the certs are older than 364 days renew recreate a new valid key
-		if [ $(find /var/cache/2web/ -mtime +364 -name '*.crt' | wc -l) -gt 0 ] ;then
+		if [ $( find /var/cache/2web/ -mtime +365 -name '*.crt' | wc -l ) -gt 0 ] ;then
 			# the cert has expired
 			echo "[INFO]: Updating cert..."
 			# generate a new private key and public cert for the SSL certification
@@ -2285,8 +2285,9 @@ main(){
 			echo "include('header.php');";
 			echo "include('settingsHeader.php');";
 			echo "?>";
+			# add the javascript sorter controls
 			echo "<div class='inputCard'>"
-			# add the javascript sorter
+			echo "<h2>Filter Log Entries</h2>"
 			echo -n "<input type='button' class='button' value='Info'"
 			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
 			echo -n "<input type='button' class='button' value='Error'"
@@ -2302,6 +2303,10 @@ main(){
 			echo -n "<input type='button' class='button' value='Download'"
 			echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
 			echo "</div>"
+			echo "<hr>"
+			echo "<!--  add the search box -->"
+			echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
+			echo "<hr>"
 			echo "<div class='settingsListCard'>"
 			# start the table
 			echo "<div class='settingsTable'>"

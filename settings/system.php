@@ -200,15 +200,15 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-	if (file_exists("/etc/2web/version.cfg")){
+	if (file_exists("/usr/share/2web/version.cfg")){
 		echo "<div id='version' class='inputCard'>";
 		echo "<h2>2web Version Info</h2>";
 		echo "	<div>";
-		echo "		Version: #".file_get_contents("/etc/2web/version.cfg");
+		echo "		Version: #".file_get_contents("/usr/share/2web/version.cfg");
 		echo "	</div>";
-		if (file_exists("/etc/2web/versionDate.cfg")){
+		if (file_exists("/usr/share/2web/versionDate.cfg")){
 			echo "	<div>";
-			echo "		Version Publish Date: ".file_get_contents("/etc/2web/versionDate.cfg");
+			echo "		Version Publish Date: ".file_get_contents("/usr/share/2web/versionDate.cfg");
 			echo "	</div>";
 		}
 		echo "</div>";

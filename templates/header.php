@@ -90,17 +90,15 @@ if ($writeFile){
 			}
 		}
 	}
-	if (file_exists("$webDirectory/live/channels.m3u")){
-		if (file_exists("$webDirectory/totalChannels.index")){
-			if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
-				$fileData .= "<a class='button' href='/live'>";
-				$fileData .= "📡";
-				#$fileData .= "&#128225;";
-				$fileData .= "<span class='headerText'>";
-				$fileData .= "LIVE";
-				$fileData .= "</span>";
-				$fileData .= "</a>";
-			}
+	if (file_exists("$webDirectory/totalChannels.index")){
+		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
+			$fileData .= "<a class='button' href='/live'>";
+			$fileData .= "📡";
+			#$fileData .= "&#128225;";
+			$fileData .= "<span class='headerText'>";
+			$fileData .= "LIVE";
+			$fileData .= "</span>";
+			$fileData .= "</a>";
 		}
 	}
 	fwrite($fileObj,"$fileData");
@@ -112,29 +110,30 @@ if ($writeFile){
 echo file_get_contents($cacheFile);
 // read the weather info for weather2web
 if (file_exists("$webDirectory/totalWeatherStations.index")){
-	echo "<a class='button' href='/weather/'>";
-	echo "🌤️";
-	echo "<span class='headerText'>";
-	echo "WEATHER";
-	echo "</span>";
-	echo "</a>";
-
+	if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+		echo "<a class='button' href='/weather/'>";
+		echo "🌤️";
+		echo "<span class='headerText'>";
+		echo "WEATHER";
+		echo "</span>";
+		echo "</a>";
+	}
 }
 if (isset($_SERVER['HTTPS'])){
-	echo "<a class='button' href='/system.php'>";
+	echo "<a class='button headerLoginButton' href='/system.php'>";
 	echo "🛠️";
 	echo "<span class='headerText'>";
 	echo "SETTINGS";
 	echo "</span>";
 	echo "</a>";
-	echo "<a class='button' href='/logout.php'>";
+	echo "<a class='button headerLoginButton' href='/logout.php'>";
 	echo "🔒";
 	echo "<span class='headerText'>";
 	echo "LOGOUT";
 	echo "</span>";
 	echo "</a>";
 }else{
-	echo "<a class='button' href='/system.php'>";
+	echo "<a class='button headerLoginButton' href='/system.php'>";
 	echo "🔒";
 	echo "<span class='headerText'>";
 	echo "LOGIN";
@@ -144,8 +143,38 @@ if (isset($_SERVER['HTTPS'])){
 // draw the help button
 echo "<a class='button' href='/help.php'>";
 echo "❔";
+echo "<span class='headerText'>";
 echo "Help";
+echo "</span>";
 echo "</a>";
-
+echo "<div class='loginLogoutBoxSpacer'>";
 echo "</div>";
+echo "</div>";
+
+if (isset($_SERVER['HTTPS'])){
+	echo "<div class='loginLogoutBox'>";
+	echo "		<a class='button' href='/system.php'>";
+	echo "			🛠️";
+	echo "			<span class='headerText'>";
+	echo "				SETTINGS";
+	echo "			</span>";
+	echo "		</a>";
+	echo "	<hr>";
+	echo "		<a class='button' href='/logout.php'>";
+	echo "			🔒";
+	echo "			<span class='headerText'>";
+	echo "				LOGOUT";
+	echo "			</span>";
+	echo "		</a>";
+	echo "</div>";
+}else{
+	echo "<div class='loginLogoutBox'>";
+	echo "<a class='button' href='/system.php'>";
+	echo "🔓";
+	echo "<span class='headerText'>";
+	echo "LOGIN";
+	echo "</span>";
+	echo "</a>";
+	echo "</div>";
+}
 ?>

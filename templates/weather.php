@@ -1,7 +1,7 @@
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
-	<script src='/nfo2web.js'></script>
+	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>

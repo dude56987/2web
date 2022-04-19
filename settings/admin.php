@@ -29,7 +29,7 @@ function countdown($countdownTime){
 		clear();
 		sleep(1);
 	}
-	echo "Done!";
+	echo "Done!<br>";
 	clear();
 	sleep(1);
 }
@@ -396,10 +396,12 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	# check if the location has failed
 	if (strpos($weatherTest, "Your search is ambiguous")){
+		$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'");
 		echo "<div>";
 		echo "ERROR: Your location was not specific enough.";
 		echo "</div>";
-		echo "<pre>";
+		echo "<pre class='settingListCard'>";
+		echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
 		echo $weatherTest;
 		echo "</pre>";
 	}else if(strpos($weatherTest, "Current conditions")){
@@ -413,10 +415,12 @@ if (array_key_exists("newUserName",$_POST)){
 			file_put_contents($configPath,$link);
 		}
 	}else{
+		$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'\n");
 		echo "<div>";
 		echo "ERROR: Your search has no results.";
 		echo "</div>";
-		echo "<pre>";
+		echo "<pre class='settingListCard'>";
+		echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
 		echo $weatherTest;
 		echo "</pre>";
 	}

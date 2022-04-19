@@ -240,14 +240,6 @@ ol li{
 	color: var(--textColor);
 	text-align:left !important;
 }
-.header{
-	text-decoration: none;
-	text-align: center;
-	color: var(--textColor);
-	display: inline-block;
-	width: 95vw;
-	margin: 2vw;
-}
 .comicPageBackground{
 	/*
 	background-image: var(--staticBackground);
@@ -1177,7 +1169,7 @@ table{
 	margin: 1em;
 	float: none;
 	min-height: 3em;
-	max-height: 35em;
+	max-height: 45em;
 	vertical-align: top;
 }
 pre{
@@ -1229,5 +1221,101 @@ tr{
 	vertical-align: center;
 }
 .downloadIcon{
-	font-color: green;
+	color: lightgreen;
+}
+.loginLogoutBox{
+	display: none;
+	text-align: right;
+	line-height: 3em;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	z-index: 99;
+}
+/*
+.header{
+	padding-right: 10%;
+}
+*/
+.header{
+	text-decoration: none;
+	text-align: center;
+	color: var(--textColor);
+	display: inline-block;
+	width: 95vw;
+	margin: 2vw;
+/*
+	white-space: nowrap;
+*/
+}
+/*
+.headerLoginButton{
+	display: none;
+}
+*/
+/*
+@media (hover: none){
+	.header{
+		margin-right: 0px;
+	}
+	.headerLoginButton{
+		display: inline-block;
+	}
+	.loginLogoutBox{
+		display: none;
+	}
+}
+*/
+.loginLogoutBoxSpacer{
+	display: none;
+	width: 5em;
+	margin: 1em;
+	margin-left: 0.2em;
+	margin-right: 0.2em;
+	padding: 0.5em;
+	border-style: solid;
+	border-color: transparent;
+	border-width: 0.2em;
+}
+@media only screen and (max-width: 1250px), (orientation: portrait){
+	/*
+		 For the inbetween state of all and small
+	*/
+	.loginLogoutBoxSpacer{
+		display: inline-block;
+	}
+	.headerLoginButton{
+		display: none;
+	}
+	.loginLogoutBox{
+		display: block;
+	}
+	.header{
+		margin-right: 0px;
+	}
+}
+@media only screen and (max-width: 1100px), (orientation: portrait){
+	.headerText{
+		display: none;
+	}
+}
+@media only screen and (max-width: 800px), (orientation: portrait){
+	/*
+		This is for small portrat mode
+	*/
+	.loginLogoutBoxSpacer{
+		display: inline-block;
+	}
+	.headerLoginButton{
+		display: block;
+	}
+	.loginLogoutBox{
+		display: none;
+	}
+	.header{
+		margin-right: 0px;
+	}
+}
+.headerText{
+	font-size: 0.5em;
 }
