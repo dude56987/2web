@@ -126,7 +126,7 @@ echo "			Free:$freeSpace";
 echo "		</span>";
 echo "	</div>";
 if ( file_exists("fortune.index")){
-	echo "	<div class='titleCard'>";
+	echo "	<div class='titleCard fortuneText'>";
 	echo "$todaysFortune";
 	echo "	</div>";
 }

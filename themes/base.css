@@ -19,17 +19,17 @@ body{
 	min-height: 100%;
 }
 select{
-	font-size: 1em;
+	font-size: 1rem;
 }
 sup{
-	font-size: 0.5em;
+	font-size: 0.5rem;
 }
 a:visited {
 	color: inherit;
 }
 .tag{
-	line-height: 1em;
-	font-size: 1em;
+	line-height: 1rem;
+	font-size: 1rem;
 	display: inline-block;
 }
 hr{
@@ -37,53 +37,53 @@ hr{
 	border-width: 0px;
 }
 pre::-webkit-scrollbar{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--solidBackground);
 }
 pre::-webkit-scrollbar-thumb{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
 .listCard::-webkit-scrollbar{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--solidBackground);
 }
 .listCard::-webkit-scrollbar-thumb{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
 html::-webkit-scrollbar{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--solidBackground);
 }
 html::-webkit-scrollbar-thumb{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
 .weatherDescription::-webkit-scrollbar{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--solidBackground);
 }
 .weatherDescription::-webkit-scrollbar-thumb{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
 .channelList::-webkit-scrollbar{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--solidBackground);
 }
 .channelList::-webkit-scrollbar-thumb{
-	width: 0.8em;
+	width: 0.8rem;
 	background: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
 html{
@@ -100,7 +100,7 @@ html{
 	color: var(--textColor);
 }
 .channelLink {
-	margin-bottom: 0.05em;
+	margin-bottom: 0.05rem;
 	text-decoration: none;
 	display: flex;
 	width: 100%;
@@ -109,11 +109,11 @@ html{
 	text-align: center;
 	*/
 	text-align: left;
-	font-size: 1em;
+	font-size: 1rem;
 	word-wrap: break-word;
 	background-color: var(--glassBackground);
 	color: var(--textColor);
-	border-size: 0.02em;
+	border-size: 0.02rem;
 }
 .channelLink:hover {
 	background-color: var(--highlightBackground);
@@ -123,8 +123,8 @@ html{
 	color: var(--textColor);
 	display: inline-block;
 	padding: 0px !important;
-	width: 5em;
-	margin: 2em;
+	width: 5rem;
+	margin: 2rem;
 	vertical-align: top !important;
 }
 /*
@@ -133,11 +133,11 @@ html{
 }
 */
 .listCard .indexLink{
-	width: 5em;
+	width: 5rem;
 }
 .listCard .indexLink .indexIcon{
-	width: 5em;
-	height: 5em;
+	width: 5rem;
+	height: 5rem;
 }
 .listCard .indexLink .indexTitle{
 	display: none;
@@ -146,13 +146,13 @@ html{
 	font-weight: bold;
 	text-shadow: 2px 2px var(--shadowColor);
 	margin-left: auto;
-	font-size: 0.9em;
+	font-size: 0.9rem;
 	float: right;
 }
 .indexIcon{
 	background-image: var(--staticBackground);
-	width: 5em;
-	height: 5em;
+	width: 5rem;
+	height: 5rem;
 }
 @media (hover: none){
 	.indexIcon{
@@ -160,26 +160,26 @@ html{
 	}
 }
 #channelsDownloadLink{
-	padding: 1em;
+	padding: 1rem;
 	/*
-	width: 15em;
+	width: 15rem;
 	*/
 	display: block;
 	width: auto;
-	margin: 1em;
+	margin: 1rem;
 }
 h1 {
 	text-align: center;
 	color: var(--textColor);
-	-webkit-text-stroke: 0.04em black;
+	-webkit-text-stroke: 0.04rem black;
 }
 .date{
 	color: var(--textColor);
-	font-size: 1em;
-	-webkit-text-stroke: 0.01em black;
+	font-size: 1rem;
+	-webkit-text-stroke: 0.01rem black;
 }
 #topButton{
-	font-size: 2em;
+	font-size: 2rem;
 	font-weight: bold;
   position: fixed; /* Fixed/sticky position */
   bottom: 0px; /* Place the button at the bottom of the page */
@@ -219,7 +219,7 @@ h1 {
 }
 */
 .seasonContainer{
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	text-align: center;
 	/*
 	background-color: rgba(100,100,100,0.85);
@@ -233,10 +233,10 @@ h1 {
 h2 {
 	text-align: center;
 	color: var(--textColor);
-	-webkit-text-stroke: 0.04em black;
+	-webkit-text-stroke: 0.04rem black;
 }
 ol li{
-	margin-left: 1em;
+	margin-left: 1rem;
 	color: var(--textColor);
 	text-align:left !important;
 }
@@ -247,7 +247,7 @@ ol li{
 	filter: blurr(5px);
 }
 .menuButton{
-	border: 0.01em solid var(--borderColor);
+	border: 0.01rem solid var(--borderColor);
 	display: none !important;
 }
 .enabledSetting{
@@ -255,12 +255,12 @@ ol li{
  color: var(--textColor) !important;
 }
 .settingsEntry h3{
-	font-size: 3em;
+	font-size: 3rem;
 	/*
-	box-shadow: 0px 0px 1.5em var(--borderColor);
+	box-shadow: 0px 0px 1.5rem var(--borderColor);
 	*/
-	text-shadow: 1em 1em 1em 1em var(--borderColor);
-	-webkit-text-stroke: 0.04em black;
+	text-shadow: 1rem 1rem 1rem 1rem var(--borderColor);
+	-webkit-text-stroke: 0.04rem black;
 	margin: 0px;
 }
 .disabledSetting{
@@ -273,7 +273,7 @@ ol li{
 /*
 @media (hover: none){
 	.videoPlayerControls{
-		font-size: 2em;
+		font-size: 2rem;
 	}
 }
 */
@@ -289,10 +289,10 @@ ol li{
 			*/
 		}
 		.videoPlayerControls{
-			font-size: 2em;
+			font-size: 2rem;
 		}
 	}
-	/* on desktop sites remove margin gaps so links are clickable */
+	/* on desktop sites rremove margin gaps so links are clickable */
 	.header a{
 		margin-top: 0px;
 		margin-bottom: 0px;
@@ -307,26 +307,26 @@ ol li{
 	.menuButton{
 		display: block !important;
 		background-color: var(--glassBackground);
-		height: 0.5em;
+		height: 0.5rem;
 		margin: 0px;
 		/*
-		margin-top:0.2em;
+		margin-top:0.2rem;
 		*/
-		margin-bottom:0.5em;
+		margin-bottom:0.5rem;
 	}
 	.header a{
 		box-shadow: none;
 		margin-top: 0px;
 		margin-bottom: 0px;
-		text-size: 2em;
+		text-size: 2rem;
 		/*
-		padding-top: 1em;
-		padding-bottom: 1em;
+		padding-top: 1rem;
+		padding-bottom: 1rem;
 		transition: 1s;
 		*/
 	}
 	.header{
-		height: 3em;
+		height: 3rem;
 		overflow: hidden;
 		/*transition: 5s;*/
 	}
@@ -360,7 +360,7 @@ ol{
 	background-image: url("/randomFanart.php");
 }
 .liveFilter{
-	font-size: 1em;
+	font-size: 1rem;
 	margin-right: auto;
 	margin-left: auto;
 	width: 20vw;
@@ -431,7 +431,7 @@ ol{
 		background-attachment: fixed !important;
 	}
 	.progressIndicator{
-		font-size: 1em !important;
+		font-size: 1rem !important;
 	}
 	.hardLink{
 		width: auto !important;
@@ -447,14 +447,14 @@ ol{
 		float: none !important;
 	}
 	#topButton{
-		font-size: 2em; /* Increase font size */
+		font-size: 2rem; /* Increase font size */
 		width: 100vw;
 		margin: 0px;
 		border-right: none;
 		border-left: none;
 	}
 	.topButtonSpace{
-		font-size: 5em;
+		font-size: 5rem;
 		display: block !important;
 		border-style: none;
 	}
@@ -469,9 +469,9 @@ ol{
 	background-size: 100% 100%;
 	margin: 15px;
 	/*
-	box-shadow: 0px 0px 1.5em white;
+	box-shadow: 0px 0px 1.5rem white;
 	*/
-	box-shadow: 0px 0px 1.5em var(--borderColor);
+	box-shadow: 0px 0px 1.5rem var(--borderColor);
 	height: 400px;
 	min-width: 800px;
 	background-color: black;
@@ -485,7 +485,7 @@ ol{
 	position: fixed;
 	top: 0px;
 	z-index: 99;
-	font-size: 0.01em;
+	font-size: 0.01rem;
 	padding: 0px !important;
 }
 .settingsTab{
@@ -507,13 +507,13 @@ ol{
 	margin-right: auto !important;
 	font-size: 100% !important;
 	text-align: center !important;
-	height: 2em;
-	width: 2em;
+	height: 2rem;
+	width: 2rem;
 	vertical-align: top;
 }
 #videoPlayerContainer{
 	background-color: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	vertical-align: top;
 }
 #videoPlayerContainer #video{
@@ -551,31 +551,31 @@ ol{
 	}
 }
 input{
-	font-size: 1em;
+	font-size: 1rem;
 }
 .button{
-	box-shadow: 0px 0px 1em var(--shadowColor);
-	margin: 1em;
-	margin-left: 0.2em;
-	margin-right: 0.2em;
-	padding: 0.5em;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 1rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
+	padding: 0.5rem;
 	border-style: solid;
 	border-color: var(--borderColor);
 	background-color: var(--glassBackground);
 	color: var(--textColor);
-	border-width: 0.2em;
+	border-width: 0.2rem;
 	text-decoration: none;
 	text-align: center;
 }
 
 .titlecard .button{
 	white-space: nowrap;
-	font-size: 1em;
-	line-height: 4em;
+	font-size: 1rem;
+	line-height: 4rem;
 }
 .header .button{
 	white-space: nowrap;
-	line-height: 3em;
+	line-height: 3rem;
 }
 .button:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
@@ -654,7 +654,7 @@ input{
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
 	.videoPlayerControls{
-		font-size: 1em;
+		font-size: 1rem;
 	}
 	/***********************************************/
 	/*This means the web browser is in portrat mode*/
@@ -667,9 +667,9 @@ input{
 	}
 	.comicPane{
 		/*This means the picture is a portrat picture*/
-		font-size: 0.5em;
+		font-size: 0.5rem;
 		background-size: 100% 100% !important;
-		/*Remove left and right margins on screen*/
+		/*Rremove left and right margins on screen*/
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		margin: 0px !important;
@@ -680,9 +680,9 @@ input{
 	}
 	.comicThumbPane{
 		/*This means the picture is a portrat picture*/
-		font-size: 0.5em;
+		font-size: 0.5rem;
 		background-size: 100% 100% !important;
-		/*Remove left and right margins on screen*/
+		/*Rremove left and right margins on screen*/
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		margin: 0px !important;
@@ -693,9 +693,9 @@ input{
 	}
 	.comicWidePane{
 		/*This means the picture is a landscape picture*/
-		font-size: 0.5em;
+		font-size: 0.5rem;
 		background-size: 100% 100% !important;
-		/*Remove left and right margins on screen*/
+		/*Rremove left and right margins on screen*/
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		/*Add top and bottom margins on screen*/
@@ -707,9 +707,9 @@ input{
 	}
 	.comicThumbWidePane{
 		/*This means the picture is a landscape picture*/
-		font-size: 0.5em;
+		font-size: 0.5rem;
 		background-size: 100% 100% !important;
-		/*Remove left and right margins on screen*/
+		/*Rremove left and right margins on screen*/
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		/*Add top and bottom margins on screen*/
@@ -740,8 +740,8 @@ input{
 	opacity: 0 !important;
 	transition: opacity 1s ease;
 	background-color: var(--glassBackground);
-	font-size: 2em;
-	padding-bottom: 2em;
+	font-size: 2rem;
+	padding-bottom: 2rem;
 }
 .comicPagePopup:hover{
 	opacity: 1 !important;
@@ -756,15 +756,15 @@ input{
 	min-height: 50vh;
 	height: -webkit-fill-available;
 	height: -moz-fill;
-	font-size: 2em;
-	box-shadow: 0px 0px 1em var(--shadowColor);
-	margin: 0em;
-	padding: 1em;
+	font-size: 2rem;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 0rem;
+	padding: 1rem;
 	border-style: solid;
 	border-color: var(--borderColor);
 	background-color: var(--glassBackground);
 	color: var(--textColor);
-	border-width: 0.2em;
+	border-width: 0.2rem;
 	text-decoration: none;
 	text-align: center;
 	opacity: 0;
@@ -795,9 +795,9 @@ input{
 	color: white;
 	*/
 	color: var(--textColor);
-	border: 0.5em dotted;
-	padding: 1em;
-	margin-right: 1em;
+	border: 0.5rem dotted;
+	padding: 1rem;
+	margin-right: 1rem;
 	text-align: center;
 }
 .settingListCard h1{
@@ -861,14 +861,14 @@ input{
 	background-color: rgba(100,100,100,0.85);
 	*/
 	background-color: var(--glassBackground);
-	box-shadow: 0px 0px 1em var(--shadowColor);
-	margin: 1em;
-	padding-bottom: 0.5em;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 1rem;
+	padding-bottom: 0.5rem;
 }
 .listCard .indexSeries{
-	min-height: 0em !important;
-	width: 4em !important;
-	height: 6em !important;
+	min-height: 0rem !important;
+	width: 4rem !important;
+	height: 6rem !important;
 }
 .listCard .indexSeries div{
 	display: none;
@@ -878,20 +878,20 @@ input{
 	height: 100%;
 }
 .indexSeries{
-	font-size: 1em;
+	font-size: 1rem;
 	vertical-align: top;
 	text-decoration: none;
 	text-align: center;
-	margin: 1em;
-	margin-left: 0.2em;
-	margin-right: 0.2em;
+	margin: 1rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
 	display: inline-block;
 	color: var(--textColor);
 	background-color: var(--glassBackground);
-	border: 0.2em solid var(--borderColor);
-	width: 6em;
-	min-height: 12em;
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	border: 0.2rem solid var(--borderColor);
+	width: 6rem;
+	min-height: 12rem;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	/*
 	width: 200px;
 	height: 350px;
@@ -913,7 +913,7 @@ input{
 .indexSeries img{
 	background-color: white;
 	width: 100%;
-	height: 10em;
+	height: 10rem;
 	/*
 	width: 10vw;
 	width: 200px;
@@ -945,12 +945,12 @@ p, dl{
 ul{
 	color: var(--textColor);
 	text-align: left;
-	padding-inline-start: 2em;
+	padding-inline-start: 2rem;
 }
 ol{
 	color: var(--textColor);
 	text-align: left;
-	padding-inline-start: 2em;
+	padding-inline-start: 2rem;
 }
 .sXXeXX{
 	display: inline-block;
@@ -959,21 +959,21 @@ ol{
 /* EPISODE icons for show page */
 /*******************************/
 .showPageEpisode{
-	font-size: 1em;
+	font-size: 1rem;
 	border: 4px solid white;
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	text-align: center;
 	text-decoration: none;
 	color: var(--textColor);
 	text-align: center;
-	margin: 1em;
-	margin-left: 0.2em;
-	margin-right: 0.2em;
+	margin: 1rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
 	display: inline-block;
 	background-color: var(--glassBackground);
-	width: 8em;
+	width: 8rem;
 	/*
-	height: 8em;
+	height: 8rem;
 	height: 10vw;
 	height: 300px;
 	*/
@@ -990,13 +990,13 @@ ol{
 }
 .showPageEpisode h2{
 	margin: 0px;
-	font-size: 1em;
+	font-size: 1rem;
 	/*
 	background-color: var(--solidBackground);
 	*/
 }
 .showPageEpisode h3{
-	font-size: 0.5em;
+	font-size: 0.5rem;
 	/*
 	width: 200px;
 	height: 250px;
@@ -1005,7 +1005,7 @@ ol{
 	word-wrap: break-word;
 	display: inline-block;
 	/*
-	align-items: flex-end;
+	align-itrems: flex-end;
 	overflow-y: hidden;
 	overflow-x: hidden;
 	*/
@@ -1019,7 +1019,7 @@ ol{
 }
 .showPageEpisode img{
 	width: 100%;
-	height: 4em;
+	height: 4rem;
 	background-color: white;
 	background-image: var(--staticBackground);
 }
@@ -1057,14 +1057,14 @@ table{
 	width: 50%;
 	min-width: 0px;
 	margin: 0px;
-	height: 20em;
+	height: 20rem;
 }
 .descriptionCard{
-	margin-top: 1em;
+	margin-top: 1rem;
 	text-align: left;
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background-color: var(--glassBackground);
-	min-height: 8em;
+	min-height: 8rem;
 }
 /*
 .descriptionCard h2{
@@ -1073,14 +1073,14 @@ table{
 */
 .settingListCard{
 	text-align: left;
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	color: var(--textColor);
 	background-color: var(--glassBackground);
-	min-height: 8em;
+	min-height: 8rem;
 	text-align: center;
 }
 #player{
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	object-fit: cover;
 	float: left;
 	background-color: lightgray;
@@ -1088,7 +1088,7 @@ table{
 	text-align: center;
 }
 .channelList{
-	height: 22em;
+	height: 22rem;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	width: 40%;
@@ -1096,8 +1096,8 @@ table{
 	vertical-align: inherit;
 }
 .channelIcon{
-	width: 2em;
-	height: 2em;
+	width: 2rem;
+	height: 2rem;
 }
 .buttonContainer{
 	float: right;
@@ -1119,8 +1119,8 @@ table{
 	display: inline;
 }
 .settingsEntry img{
-	width: 1em;
-	height: 1em;
+	width: 1rem;
+	height: 1rem;
 	float: left;
 }
 .settingsEntry .button{
@@ -1128,10 +1128,10 @@ table{
 	width: 40vw;
 	*/
 	float: none;
-	font-size: 1em;
+	font-size: 1rem;
 }
 .settingsEntry{
-	margin: 1em;
+	margin: 1rem;
 	/*
 	margin-top: 0.5vh;
 	margin-bottom: 0.5vh;
@@ -1145,31 +1145,31 @@ table{
 	width: 45vw;
 	color: black;
 	float: none;
-	min-height: 5em;
+	min-height: 5rem;
 	text-align: center;
 	vertical-align: top;
 	word-break: break-all;
 }
 .searchBox{
 	width: 80vw;
-	font-size: 2em;
+	font-size: 2rem;
 	border-style: solid;
 	border-color: var(--borderColor);
 	background-color: var(--glassBackground);
 	color: var(--textColor);
-	border-width: 0.2em;
+	border-width: 0.2rem;
 	text-align: center;
 }
 .inputCard{
 	text-align: center;
-	box-shadow: 0px 0px 1em var(--shadowColor);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background-color: var(--glassBackground);
 	width: 40vw;
 	display: inline-block;
-	margin: 1em;
+	margin: 1rem;
 	float: none;
-	min-height: 3em;
-	max-height: 45em;
+	min-height: 3rem;
+	max-height: 45rem;
 	vertical-align: top;
 }
 pre{
@@ -1194,30 +1194,30 @@ tr{
 	width: 100%;
 }
 .weatherIcon{
-	font-size: 4em;
+	font-size: 4rem;
 }
 .forcastSub{
-	font-size: 0.01em;
+	font-size: 0.01rem;
 }
 .weatherForcast{
 	background-color: var(--glassBackground);
-	width: 8em;
+	width: 8rem;
 	vertical-align: top;
 	display: inline-block;
-	box-shadow: 0px 0px 1em var(--shadowColor);
-	margin: 1em;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 1rem;
 }
 .weatherDescription{
 	overflow-y: scroll;
-	font-size: 0.5em;
+	font-size: 0.5rem;
 	white-space: normal;
-	max-height: 15em;
+	max-height: 15rem;
 }
 .weatherForcast h3{
 	background-color: var(--solidBackground);
 	margin: 0px;
-	height: 2em;
-	font-size: 1em;
+	height: 2rem;
+	font-size: 1rem;
 	vertical-align: center;
 }
 .downloadIcon{
@@ -1226,7 +1226,7 @@ tr{
 .loginLogoutBox{
 	display: none;
 	text-align: right;
-	line-height: 3em;
+	line-height: 3rem;
 	position: absolute;
 	right: 0px;
 	top: 0px;
@@ -1268,14 +1268,14 @@ tr{
 */
 .loginLogoutBoxSpacer{
 	display: none;
-	width: 5em;
-	margin: 1em;
-	margin-left: 0.2em;
-	margin-right: 0.2em;
-	padding: 0.5em;
+	width: 5rem;
+	margin: 1rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
+	padding: 0.5rem;
 	border-style: solid;
 	border-color: transparent;
-	border-width: 0.2em;
+	border-width: 0.2rem;
 }
 @media only screen and (max-width: 1250px), (orientation: portrait){
 	/*
@@ -1317,5 +1317,14 @@ tr{
 	}
 }
 .headerText{
-	font-size: 0.5em;
+	font-size: 0.5rem;
+}
+.fortuneText{
+	white-space: pre;
+	text-align: left;
+	font-family: monospace;
+	max-height: 100rem;
+	font-size: 0.5rem;
+	overflow: scroll;
+	padding: 0.5rem;
 }

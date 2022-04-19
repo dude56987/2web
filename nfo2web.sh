@@ -1727,7 +1727,8 @@ buildHomePage(){
 	if cacheCheck "$webDirectory/fortune.index" "1";then
 		# write the fortune for this processing run...
 		if test -f /usr/games/fortune;then
-			todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
+			#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
+			todaysFortune=$(/usr/games/fortune -a)
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
