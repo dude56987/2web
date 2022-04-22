@@ -1196,6 +1196,9 @@ tr{
 .weatherIcon{
 	font-size: 4rem;
 }
+.weatherHomepageIcon{
+	padding: 1rem;
+}
 .forcastSub{
 	font-size: 0.01rem;
 }
@@ -1303,6 +1306,9 @@ tr{
 	/*
 		This is for small portrat mode
 	*/
+	.headerText{
+		display: inline;
+	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;
 	}
@@ -1325,6 +1331,17 @@ tr{
 	font-family: monospace;
 	max-height: 100rem;
 	font-size: 0.5rem;
-	overflow: scroll;
+	overflow: auto;
 	padding: 0.5rem;
 }
+.fortuneText::-webkit-scrollbar{
+	width: 0.8rem;
+	background: var(--solidBackground);
+}
+.fortuneText::-webkit-scrollbar-thumb{
+	width: 0.8rem;
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	border: 1px var(--textColor) solid;
+}
+

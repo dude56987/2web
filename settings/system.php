@@ -199,6 +199,22 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='homepageFortuneStatus' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Fortune</h2>
+			<ul>
+				<li>
+					Enable or disable the fortune message on the homepage.
+				</li>
+			</ul>
+			<select name='homepageFortuneStatus'>
+				<option value='enabled' >Enabled</option>
+				<option value='disabled' >Disabled</option>
+			</select>
+			<button class='button' type='submit'>Set Status</button>
+	</form>
+</div>
+
 <?PHP
 	if (file_exists("/usr/share/2web/version.cfg")){
 		echo "<div id='version' class='inputCard'>";

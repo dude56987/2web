@@ -193,6 +193,27 @@ function update(){
 				todaysWeatherAsHtml=$(echo "$todaysWeather" | grep -v "\.\.\." | tr -s '.' | cut -d'.' -f1- | txt2html --extract )
 				todaysForcastAsHtml=""
 
+				# if no hompage weather location exists set the first added weather location as the homepage location since this data is gathered here anyway
+				if ! test -f "/etc/2web/weather/homepageLocation.cfg";then
+					echo "$weatherLocation" > "/etc/2web/weather/homepageLocation.cfg"
+				fi
+				# write the weather info for homepage
+				if echo "$weatherLocation" | grep "$(cat '/etc/2web/weather/homepageLocation.cfg')";then
+					{
+						echo "<h3>"
+						echo "$weatherLocation"
+						echo "</h3>"
+						echo "<div class='weatherIcon weatherHomepageIcon right'>"
+						getWeatherIcon "$todaysWeather"
+						echo "</div>"
+						/usr/bin/weather "$weatherLocation" |\
+							grep --invert-match "Searching via name" |\
+							grep --invert-match "using result" |\
+							grep --invert-match "Current conditions at" |\
+							grep --invert-match "Last updated" |\
+							txt2html --extract
+					} > "$webDirectory/weather.index"
+				fi
 				# blank the forcast for rewriting
 				{
 					echo -n "<div id='$weatherLocation' class='titleCard weatherCard'>"
@@ -353,7 +374,7 @@ function update(){
 					echo "<div class='weatherIcon right'>"
 					getWeatherIcon "$todaysWeather"
 					echo "</div>"
-					echo "$todaysWeatherAsHtml"
+					echo "$todaysWeather"
 				} > "$webDirectory/weather/data/current_$locationSum.index"
 			fi
 			{

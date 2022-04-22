@@ -440,7 +440,50 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/weather.php#currentLinks'>BACK</a><hr>";
 	clear();
-
+}else if (array_key_exists("setHomepageWeatherLocation",$_POST)){
+	$link=$_POST['setHomepageWeatherLocation'];
+	echo "Running setHomepageWeatherLocation on location ".$link."<br>\n";
+	# read the link and create a custom config
+	$configPath="/etc/2web/weather/homepageLocation.cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if ( $link == "disabled"){
+		echo "Disabled Homepage Weather Location<br>\n";
+		# this means to remove the link
+		if (file_exists($configPath)){
+			unlink($configPath);
+		}
+	}else{
+		# write the libary path to a file at the configPath if the path does not already exist
+		if ( ! file_exists($configPath)){
+			echo "Setting homepage weather location to ".$link."...<br>\n";
+			# write the config file
+			file_put_contents($configPath,$link);
+		}
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/weather.php#setWeatherHomepageLocation'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("homepageFortuneStatus",$_POST)){
+	$link=$_POST['homepageFortuneStatus'];
+	echo "Running homepageFortuneStatus on location ".$link."<br>\n";
+	# read the link and create a custom config
+	$configPath="/etc/2web/fortuneStatus.cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if ( $link == "disabled"){
+		echo "Disabled Homepage fortune<br>\n";
+		# this means to remove the link
+		unlink($configPath);
+	}else{
+		# write the libary path to a file at the configPath if the path does not already exist
+		if ( ! file_exists($configPath)){
+			echo "Setting homepage fortune to ".$link."...<br>\n";
+			# write the config file
+			file_put_contents($configPath,$link);
+		}
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/system.php#homepageFortuneStatus'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];
 	echo "Running addComicDownloadLink on link ".$link."<br>\n";

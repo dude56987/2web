@@ -125,12 +125,15 @@ echo "		<span>";
 echo "			Free:$freeSpace";
 echo "		</span>";
 echo "	</div>";
-if ( file_exists("fortune.index")){
-	echo "	<div class='titleCard fortuneText'>";
-	echo "$todaysFortune";
+if ( file_exists("/etc/2web/fortuneStatus.cfg")){
+	echo "	<div class='titleCard'>";
+	echo "		<h3>Fortune</h3>";
+	echo "		<div class='fortuneText'>";
+	echo "			$todaysFortune";
+	echo "		</div>";
 	echo "	</div>";
 }
-if ( file_exists("weather.index")){
+if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
 	echo "	<div class='titleCard'>";
 	echo "$todaysWeather";
 	echo "	</div>";
