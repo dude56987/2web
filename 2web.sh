@@ -235,9 +235,9 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Version: #"
+		echo -n "2web Version: #"
 		cat /usr/share/2web/version.cfg
-		echo -n "Version Publish Date: "
+		echo -n "2web Version Publish Date: "
 		cat /usr/share/2web/versionDate.cfg
 	else
 		# this is the default option to be ran without arguments
