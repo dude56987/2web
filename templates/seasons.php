@@ -1,6 +1,6 @@
 <html id='top' class='seriesBackground' style='$tempStyle'>
 <head>
-<link rel='stylesheet' href='style.css' />
+<link rel='stylesheet' href='/style.css' />
 <script src='/2web.js'></script>
 </head>
 <body>

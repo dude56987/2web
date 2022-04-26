@@ -1,6 +1,6 @@
 <html id='top' class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 </script>
 </head>
