@@ -199,19 +199,22 @@ function update(){
 				fi
 				# write the weather info for homepage
 				if echo "$weatherLocation" | grep "$(cat '/etc/2web/weather/homepageLocation.cfg')";then
+					tempWeatherData=$(\
+						/usr/bin/weather "$weatherLocation" |\
+						grep --invert-match "Searching via name" |\
+						grep --invert-match "using result" |\
+						grep --invert-match "Current conditions at" |\
+						grep --invert-match "Last updated" |\
+						txt2html --extract\
+					)
 					{
 						echo "<h3>"
 						echo "$weatherLocation"
 						echo "</h3>"
 						echo "<div class='weatherIcon weatherHomepageIcon right'>"
-						getWeatherIcon "$todaysWeather"
+						getWeatherIcon "$tempWeatherData"
 						echo "</div>"
-						/usr/bin/weather "$weatherLocation" |\
-							grep --invert-match "Searching via name" |\
-							grep --invert-match "using result" |\
-							grep --invert-match "Current conditions at" |\
-							grep --invert-match "Last updated" |\
-							txt2html --extract
+						echo "$tempWeatherData"
 					} > "$webDirectory/weather.index"
 				fi
 				# blank the forcast for rewriting
@@ -529,7 +532,7 @@ lockProc(){
 		exit
 	else
 		# set the active flag
-		touch /tmp/comic2web.active
+		touch /tmp/weather2web.active
 		# create a trap to remove nfo2web lockfile
 		trap "rm -v /tmp/weather2web.active" EXIT
 	fi
@@ -578,7 +581,7 @@ main(){
 		echo "########################################################################"
 		echo "HELP INFO"
 		echo "This is the iptv4everyone administration and update program."
-		echo "To return to this menu use 'iptv4everyone help'"
+		echo "To return to this menu use 'weather2web help'"
 		echo "Other commands are listed below."
 		echo ""
 		echo "update"

@@ -16,14 +16,30 @@ include("settingsHeader.php");
 	<h2>Index</h2>
 	<ul>
 		<li><a href='#addWeatherLocation'>Add Weather Location</a></li>
+		<li><a href='#setHomepageWeatherLocation'>Set Homepage Weather Location</a></li>
+		<li><a href='#serverLocations'>Server Configured Locations</a></li>
+		<li><a href='#currentLocations'>Current Configured Locations</a></li>
 	</ul>
 </div>
 
 <div id='addWeatherLocation' class='inputCard'>
 <form action='admin.php' method='post'>
-<h2>Add Weather Location</h2>
-<input width='60%' type='text' name='addWeatherLocation' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
+	<h2>Add Weather Location</h2>
+	<ul>
+		<li>
+			Add a location to show weather forcasts.
+		</li>
+		<li>
+			If a city returns no results add city after the city name.
+			<ul>
+				<li>
+					'springfield, NY' vs 'springfield city, NY'
+				</li>
+			</ul>
+		</li>
+	</ul>
+	<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
+	<input class='button' type='submit'>
 </form>
 </div>
 
@@ -87,14 +103,14 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-echo "<div id='serverDownloadLinkConfig' class='settingListCard'>\n";
+echo "<div id='serverLocations' class='settingListCard'>\n";
 echo "<h2>Server Weather Location Config</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/weather/location.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div id='currentLinks' class='settingListCard'>";
+echo "<div id='currentLocations' class='settingListCard'>";
 echo "<h2>Current locations</h2>\n";
 $sourceFiles = scandir("/etc/2web/weather/location.d/");
 //print_r($sourceFiles);
