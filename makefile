@@ -56,7 +56,12 @@ debugOn:
 	sudo mv /etc/2web/nfo/debug.disabled /etc/2web/nfo/debug.enabled
 debugOff:
 	sudo mv /etc/2web/nfo/debug.enabled /etc/2web/nfo/debug.disabled
+build-tools:
+	# for making man files
+	sudo apt-get install pandoc
+	sudo apt-get install w3m
 build:
+	# install the build tools
 	sudo make build-deb;
 build-deb:
 	# build the directories inside the package
@@ -68,6 +73,8 @@ build-deb:
 	mkdir -p debian/usr/share/2web/nfo;
 	mkdir -p debian/usr/share/2web/iptv;
 	mkdir -p debian/usr/share/2web/;
+	mkdir -p debian/usr/share/2web/help/;
+	mkdir -p debian/usr/share/man/man1/;
 	mkdir -p debian/usr/share/2web/themes;
 	mkdir -p debian/usr/share/2web/templates;
 	mkdir -p debian/usr/share/2web/settings;
@@ -149,6 +156,20 @@ build-deb:
 	cp comic2web.sh debian/usr/bin/comic2web
 	cp weather2web.sh debian/usr/bin/weather2web
 	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
+	# build the man pages for the command line tools
+	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
+	pandoc -s help/man_2web.md help/man_copyright.md help/man_license.md -t man -o debian/usr/share/man/man1/2web.1.gz
+	pandoc -s help/man_nfo2web.md help/man_copyright.md help/man_license.md -t man -o debian/usr/share/man/man1/nfo2web.1.gz
+	# build the web versions of the CLI tools
+	pandoc -s help/man_2web.md help/man_copyright.md help/man_license.md -t html -o debian/usr/share/2web/help/2web.html
+	pandoc -s help/man_nfo2web.md help/man_copyright.md help/man_license.md -t html -o debian/usr/share/2web/help/nfo2web.html
+	# build the text only render of the manual
+	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
+	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
+	#pandoc --from markdown help/man_2web.md help/man_copyright.md help/man_license.md -t t2t -o debian/usr/share/2web/help/2web.t2t
+	# convert txt2tags markdown into ascii
+	#txt2tags --infile debian/usr/share/2web/help/2web.t2t --target txt --outfile debian/usr/share/2web/help/2web.txt
+	#cat help/man_2web.md help/man_copyright.md help/man_license.md | txt2tags --infile - --target adoc --outfile debian/usr/share/2web/help/2web.txt
 	# build the default themes
 	# - default (gray)
 	cat themes/default.css > debian/usr/share/2web/themes/default.css

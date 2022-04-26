@@ -135,7 +135,10 @@ main(){
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web
 		/usr/bin/iptv2web
+		# update nfo2web again to check for stats
+		/usr/bin/nfo2web
 		/usr/bin/comic2web
+		/usr/bin/nfo2web
 		rebootCheck
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		# parllelize the processes
@@ -230,69 +233,12 @@ main(){
 			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
-		echo "########################################################################"
-		echo "# 2web CLI for administration"
-		echo "# Copyright (C) 2022  Carl J Smith"
-		echo "#"
-		echo "# This program is free software: you can redistribute it and/or modify"
-		echo "# it under the terms of the GNU General Public License as published by"
-		echo "# the Free Software Foundation, either version 3 of the License, or"
-		echo "# (at your option) any later version."
-		echo "#"
-		echo "# This program is distributed in the hope that it will be useful,"
-		echo "# but WITHOUT ANY WARRANTY; without even the implied warranty of"
-		echo "# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"
-		echo "# GNU General Public License for more details."
-		echo "#"
-		echo "# You should have received a copy of the GNU General Public License"
-		echo "# along with this program.  If not, see <http://www.gnu.org/licenses/>."
-		echo "########################################################################"
-		echo "HELP INFO"
-		echo "This is the 2web administration and update program."
-		echo "To return to this menu use '2web help'"
-		echo "Other commands are listed below."
-		echo ""
-		echo "-a or --all or all"
-		echo "	Run all 2web components"
-		echo ""
-		echo "-p or --parallel or parallel"
-		echo "	Run all 2web compentents in parallel."
-		echo ""
-		echo "-I or --iptv or iptv"
-		echo "	Update iptv2web"
-		echo ""
-		echo "-N or --nfo or nfo"
-		echo "	Update nfo2web"
-		echo ""
-		echo "-C or --comic or comic"
-		echo "	Update comic2web"
-		echo ""
-		echo "-rc or --reboot-check or rebootcheck"
-		echo "	Check if it is the reboot hour and reboot if it is."
-		echo ""
-		echo "-cc or --clean-cache or cleancache"
-		echo "	Cleanup the web caches based on web cache time setting"
-		echo ""
-		echo "-U or --upgrade or upgrade"
-		echo "	Upgrade libaries used by modules in the background for operation."
-		echo "	This can fix issues with backend resolution issues."
-		echo "	- youtube-dl"
-		echo "	- gallery-dl"
-		echo "	- hls.js"
-		echo ""
-		echo "-u or --update or update"
-		echo "  Update all 2web components."
-		echo ""
-		echo "-r or --reset or reset"
-		echo "  Reset the state of all 2web components without deleting generated data."
-		echo ""
-		echo "-w or --webgen or webgen"
-		echo "	Generate webpage parts of all 2web components."
-		echo ""
-		echo "-l or --libary or libary"
-		echo "	Download the latest version of the hls.js libary for use."
-		echo "########################################################################"
-		# this is also ran on import
+		cat /usr/share/2web/help/2web.txt
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "Version: #"
+		cat /usr/share/2web/version.cfg
+		echo -n "Version Publish Date: "
+		cat /usr/share/2web/versionDate.cfg
 	else
 		# this is the default option to be ran without arguments
 		main --help

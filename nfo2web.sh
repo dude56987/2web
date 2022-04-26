@@ -1732,9 +1732,11 @@ buildHomePage(){
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
-	if cacheCheck "$webDirectory/totalWeatherStations.index" "14";then
-		totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
-		echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
+	if [ $( find /etc/2web/weather/location.d/ -name '*.cfg' | wc -l ) -gt 0 ];then
+		if cacheCheck "$webDirectory/totalWeatherStations.index" "14";then
+			totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
+			echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
+		fi
 	fi
 }
 ########################################################################
@@ -1942,41 +1944,12 @@ function updateCerts(){
 main(){
 	debugCheck
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		echo "########################################################################"
-		echo "# nfo2web CLI for administration"
-		echo "# Copyright (C) 2020  Carl J Smith"
-		echo "#"
-		echo "# This program is free software: you can redistribute it and/or modify"
-		echo "# it under the terms of the GNU General Public License as published by"
-		echo "# the Free Software Foundation, either version 3 of the License, or"
-		echo "# (at your option) any later version."
-		echo "#"
-		echo "# This program is distributed in the hope that it will be useful,"
-		echo "# but WITHOUT ANY WARRANTY; without even the implied warranty of"
-		echo "# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"
-		echo "# GNU General Public License for more details."
-		echo "#"
-		echo "# You should have received a copy of the GNU General Public License"
-		echo "# along with this program.  If not, see <http://www.gnu.org/licenses/>."
-		echo "########################################################################"
-		echo "HELP INFO"
-		echo "This is the nfo2web administration and update program."
-		echo "To return to this menu use 'nfo2web help'"
-		echo "Other commands are listed below."
-		echo ""
-		echo "--help or help"
-		echo "	Display this help menu"
-		echo "--cert or cert"
-		echo "	Updated he self signed ssl cert if it is older than 365 days"
-		echo "--CERT or CERT"
-		echo "	Force update the self signed ssl cert"
-		echo "-u --update or update"
-		echo "  This will update the webpages and refresh the database."
-		echo "--reset or reset"
-		echo "  This will reset the state of the cache so everything will be updated."
-		echo "--nuke or nuke"
-		echo "  This will delete the cached website."
-		echo "########################################################################"
+		cat /usr/share/2web/help/nfo2web.txt
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "2web Version: #"
+		cat /usr/share/2web/version.cfg
+		echo -n "2web Version Publish Date: "
+		cat /usr/share/2web/versionDate.cfg
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		echo "[INFO]: Reseting web cache states..."
 		# verbose removal of found files allows files to be visible as they are removed
