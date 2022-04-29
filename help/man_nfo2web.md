@@ -1,3 +1,5 @@
+% NFO2WEB(1)
+
 NAME
 ====
 
@@ -60,7 +62,3 @@ OPTIONS
 
 :   Download the latest version of the hls.js libary for use.
 
-BUGS
-====
-
-Bugs can be reported to the project page.

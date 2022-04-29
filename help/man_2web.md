@@ -1,7 +1,9 @@
+% 2WEB(1)
+
 NAME
 ====
 
-2web - CLI for administration
+2web - CLI for administration of 2web server
 
 SYNOPSIS
 ========
@@ -11,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-This is the 2web administration and update program. With this interface you can launch a update check on all 2web modules.
+This is the 2web administration and update program. With this interface you can launch a update check on all 2web modules. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a extremely large libary ~20k shows,movies,books, and ~100k channels/radio stations.
 
 OPTIONS
 =======
@@ -72,7 +74,64 @@ OPTIONS
 
 :   Download the latest version of the hls.js libary for use.
 
-BUGS
-====
+Features
+========
 
-Bugs can be reported to the project page.
+# Books
+
+## Text
+
+- Supported Filetypes
+  - PDF
+  - TXT
+  - EPUB (Expermental)
+
+## Comics
+
+- Supported Filetypes
+  - CBZ
+  - Image Directory
+
+#NFO Media Libaries
+
+## Movies
+
+- You can add movies
+  - through the web interface
+  - /etc/2web/nfo/libaries.cfg
+
+- Supported Filetypes
+  - MKV
+  - MP4
+  - AVI
+
+## Shows
+
+- You can add shows
+  - through the web interface
+  - /etc/2web/nfo/libaries.cfg
+
+- Supported Filetypes
+  - MKV
+  - MP4
+  - AVI
+
+# Live
+
+- Supports M3U iptv playlists
+
+## TV
+
+- Supports
+  - M3U iptv playlists
+  - Twitch Channels
+  - Live Youtube Channels
+  - Any link that can be resolved with streamlink can be added as a channel
+  - Custom Direct video stream Links
+
+## Radio
+
+- Supports
+  - M3U iptv playlists
+  - Custom Direct Radio Stream Links
+

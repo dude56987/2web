@@ -158,14 +158,26 @@ build-deb:
 	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
 	# build the man pages for the command line tools
 	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
-	pandoc -s help/man_2web.md help/man_copyright.md help/man_license.md -t man -o debian/usr/share/man/man1/2web.1.gz
-	pandoc -s help/man_nfo2web.md help/man_copyright.md help/man_license.md -t man -o debian/usr/share/man/man1/nfo2web.1.gz
-	# build the web versions of the CLI tools
-	pandoc -s help/man_2web.md help/man_copyright.md help/man_license.md -t html -o debian/usr/share/2web/help/2web.html
-	pandoc -s help/man_nfo2web.md help/man_copyright.md help/man_license.md -t html -o debian/usr/share/2web/help/nfo2web.html
+	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1.gz
+	pandoc --standalone help/man_nfo2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/nfo2web.1.gz
+	pandoc --standalone help/man_iptv2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/iptv2web.1.gz
+	pandoc --standalone help/man_comic2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/comic2web.1.gz
+	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1.gz
+	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
+	# build the web versions of the man pages
+	pandoc --standalone help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
+	pandoc --standalone help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
+	pandoc --standalone help/man_iptv2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/iptv2web.html
+	pandoc --standalone help/man_comic2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/comic2web.html
+	pandoc --standalone help/man_weather2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/weather2web.html
+	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
+	w3m debian/usr/share/2web/help/iptv2web.html > debian/usr/share/2web/help/iptv2web.txt
+	w3m debian/usr/share/2web/help/comic2web.html > debian/usr/share/2web/help/comic2web.txt
+	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
+	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	#pandoc --from markdown help/man_2web.md help/man_copyright.md help/man_license.md -t t2t -o debian/usr/share/2web/help/2web.t2t
 	# convert txt2tags markdown into ascii
 	#txt2tags --infile debian/usr/share/2web/help/2web.t2t --target txt --outfile debian/usr/share/2web/help/2web.txt
