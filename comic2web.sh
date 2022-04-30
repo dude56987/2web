@@ -9,6 +9,13 @@ ALERT(){
 	echo;
 }
 ################################################################################
+drawLine(){
+	width=$(tput cols)
+	buffer="=========================================================================================================================================="
+	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	printf "$output\n"
+}
+################################################################################
 linkFile(){
 	# link file if it is a link
 	if ! test -L "$2";then
@@ -1231,6 +1238,12 @@ main(){
 		webUpdate
 		# display the help
 		main --help
+		# on default execution show the server links at the bottom of output
+		drawLine
+		echo "http://$(hostname).local:80/"
+		drawLine
+		echo "http://$(hostname).local:80/comics/"
+		drawLine
 	fi
 }
 ################################################################################

@@ -17,6 +17,13 @@ INFO(){
 	printf "$output\r"
 }
 ################################################################################
+drawLine(){
+	width=$(tput cols)
+	buffer="=========================================================================================================================================="
+	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	printf "$output\n"
+}
+################################################################################
 debugCheck(){
 	if [ -f /etc/nfo2web/debug.enabled ];then
 		# if debug mode is enabled show execution
@@ -243,6 +250,14 @@ main(){
 		# this is the default option to be ran without arguments
 		main --help
 	fi
+	# show the server link at the bottom of the interface
+	drawLine
+	echo "http://$(hostname).local:80/"
+	drawLine
+	echo "http://$(hostname).local:80/new/"
+	drawLine
+	echo "http://$(hostname).local:80/system.php"
+	drawLine
 }
 ################################################################################
 main "$@"

@@ -71,49 +71,31 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "<hr><a class='button' href='/system.php#removeUser'>BACK</a><hr>";
 }else if (array_key_exists("all_update",$_POST)){
 	echo "Scheduling 2web update!<br>\n";
-	shell_exec("echo '2web update' | /usr/bin/at -q b now");
-	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
-	clear();
-}else if (array_key_exists("all_webgen",$_POST)){
-	echo "Scheduling 2web update!<br>\n";
-	shell_exec("echo '2web webgen' | /usr/bin/at -q b now");
+	shell_exec("echo '2web all' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("nfo_update",$_POST)){
 	echo "Scheduling nfo update!<br>\n";
-	shell_exec("echo 'nfo2web update' | /usr/bin/at -q b now");
-	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
-	clear();
-}else if (array_key_exists("nfo_webgen",$_POST)){
-	echo "Scheduling nfo2web update!<br>\n";
-	shell_exec("echo 'nfo2web webgen' | /usr/bin/at -q b now");
+	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("iptv_update",$_POST)){
 	echo "Scheduling iptv2web update!<br>\n";
-	shell_exec("echo 'iptv2web update' | /usr/bin/at -q b now");
-	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
-	clear();
-}else if (array_key_exists("iptv_webgen",$_POST)){
-	echo "Scheduling iptv2web update!<br>\n";
-	shell_exec("echo 'iptv2web webgen' | /usr/bin/at -q b now");
+	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("comic_update",$_POST)){
 	echo "Scheduling comic2web update!<br>\n";
-	shell_exec("echo 'comic2web update' | /usr/bin/at -q b now");
+	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("comic_webgen",$_POST)){
-	echo "Scheduling comic2web update!<br>\n";
-	shell_exec("echo 'comic2web webgen' | /usr/bin/at -q b now");
+}else if (array_key_exists("weather_update",$_POST)){
+	echo "Scheduling weather2web update!<br>\n";
+	shell_exec("echo 'weather2web' | /usr/bin/at -q b now");
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
 	clear();
@@ -393,7 +375,6 @@ if (array_key_exists("newUserName",$_POST)){
 	$sumOfLink=md5($link);
 	# run the weather command as a search command and check that the location has a result
 	$weatherTest=shell_exec("weather '".$_POST['addWeatherLocation']."'");
-	countdown(5);
 	# check if the location has failed
 	if (strpos($weatherTest, "Your search is ambiguous")){
 		$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'");
@@ -424,6 +405,7 @@ if (array_key_exists("newUserName",$_POST)){
 		echo $weatherTest;
 		echo "</pre>";
 	}
+	countdown(5);
 	echo "<hr><a class='button' href='/weather.php#addWeatherLocation'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeWeatherLocation",$_POST)){

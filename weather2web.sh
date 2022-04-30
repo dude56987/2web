@@ -9,6 +9,13 @@ ALERT(){
 	echo;
 }
 ################################################################################
+drawLine(){
+	width=$(tput cols)
+	buffer="=========================================================================================================================================="
+	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	printf "$output\n"
+}
+################################################################################
 linkFile(){
 	# link file if it is a link
 	if ! test -L "$2";then
@@ -574,6 +581,14 @@ main(){
 		webUpdate
 		# display the help
 		main --help
+		# show the server link at the bottom of the interface
+		drawLine
+		echo "http://$(hostname).local:80/"
+		drawLine
+		echo "http://$(hostname).local:80/weather/"
+		drawLine
+		echo "http://$(hostname).local:80/weather.php"
+		drawLine
 	fi
 }
 ################################################################################

@@ -13,28 +13,30 @@ ini_set('display_errors', 1);
 include("header.php");
 include("settingsHeader.php");
 ?>
+<div id='index' class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+		<li><a href='#update'>Update</a></li>
+		<li><a href='#addNewUser'>Add New Administrator</a></li>
+		<li><a href='#removeUser'>Remove Administrator</a></li>
+		<li><a href='#webTheme'>Change Web Theme</a></li>
+		<li><a href='#firewall'>Firewall</a></li>
+		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
+		<li><a href='#CLI_manuals'>CLI Manual Pages</a></li>
+	</ul>
+</div>
 
 <div id='update' class='inputCard'>
 	<h2>Update</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<div class=''>
 			<button class='button' type='submit' name='all_update' value='true'>UPDATE ALL</button>
-			<button class='button' type='submit' name='all_webgen' value='true'>WEBGEN ALL</button>
 		</div>
-
 		<div class=''>
 			<button class='button' type='submit' name='nfo_update' value='true'>UPDATE NFO</button>
-			<button class='button' type='submit' name='nfo_webgen' value='true'>NFO WEBGEN</button>
-		</div>
-
-		<div class=''>
 			<button class='button' type='submit' name='iptv_update' value='true'>UPDATE IPTV</button>
-			<button class='button' type='submit' name='iptv_webgen' value='true'>IPTV WEBGEN</button>
-		</div>
-
-		<div class=''>
 			<button class='button' type='submit' name='comic_update' value='true'>UPDATE COMICS</button>
-			<button class='button' type='submit' name='comic_webgen' value='true'>COMICS WEBGEN</button>
+			<button class='button' type='submit' name='weather_update' value='true'>UPDATE WEATHER</button>
 		</div>
 	</form>
 </div>
@@ -208,8 +210,16 @@ include("settingsHeader.php");
 				</li>
 			</ul>
 			<select name='homepageFortuneStatus'>
-				<option value='enabled' >Enabled</option>
-				<option value='disabled' >Disabled</option>
+				<?PHP
+				// if the fortuneStatus.cfg file exists that means the fortune is enabled
+				if (file_exists("/etc/2web/fortuneStatus.cfg")){
+					echo "<option value='enabled' selected>Enabled</option>";
+					echo "<option value='disabled' >Disabled</option>";
+				}else{
+					echo "<option value='disabled' selected>Disabled</option>";
+					echo "<option value='enabled' >Enabled</option>";
+				}
+				?>
 			</select>
 			<button class='button' type='submit'>Set Status</button>
 	</form>
@@ -231,6 +241,20 @@ include("settingsHeader.php");
 	}
 ?>
 </div>
+
+<div id='CLI_manuals' class='inputCard'>
+<h2>CLI(Command Line Interface) Manual Pages</h2>
+	<ul>
+		<li><a href="/manuals.php#README">README</a></li>
+		<li><a href="/manuals.php#2web">2web</a></li>
+		<li><a href="/manuals.php#nfo2web">nfo2web</a></li>
+		<li><a href="/manuals.php#comic2web">comic2web</a></li>
+		<li><a href="/manuals.php#iptv2web">iptv2web</a></li>
+		<li><a href="/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
+		<li><a href="/manuals.php#weather2web">weather2web</a></li>
+	</ul>
+</div>
+
 <?PHP
 	include("header.php");
 ?>

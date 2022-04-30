@@ -19,15 +19,15 @@ Generate a website for use on a LAN(Local Area Network) as a http accessable mul
 - Tested with dietpi os on Raspbery PI 4
 - Tested with Ubuntu
 
-##Access
+## Access
 
 	http://localhost:444/
 
-###Settings
+### Settings
 
 Web interface contains settings for adding locally stored server paths to content and ways to add remote content metadata and links to the server.
 
-##CLI
+## CLI
 
 The CLI can be used as root on the server to update various content stacks on the server.
 
@@ -91,7 +91,7 @@ or individually
   - CBZ
   - Image Directory
 
-#NFO Media Libaries
+# NFO Media Libaries
 
 ## Movies
 

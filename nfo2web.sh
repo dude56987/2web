@@ -27,6 +27,13 @@ STOP(){
 	read -r
 }
 ########################################################################
+drawLine(){
+	width=$(tput cols)
+	buffer="=========================================================================================================================================="
+	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	printf "$output\n"
+}
+########################################################################
 INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
@@ -2090,6 +2097,8 @@ main(){
 		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
 		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
 		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
+		# add the manuals page
+		linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/manuals.php"
 		# help/info docs
 		linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
 		# caching resolvers
@@ -2339,6 +2348,14 @@ main(){
 		# if no arguments are given run the update then help commands.
 		main update
 		main help
+		# show the server link at the bottom of the interface
+		drawLine
+		echo "http://$(hostname).local:80/"
+		drawLine
+		echo "http://$(hostname).local:80/movies/"
+		drawLine
+		echo "http://$(hostname).local:80/shows/"
+		drawLine
 	fi
 }
 main "$@"
