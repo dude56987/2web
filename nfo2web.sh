@@ -644,7 +644,7 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -662,7 +662,7 @@ processMovie(){
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
 				echo "</a>"
-				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
@@ -1023,7 +1023,7 @@ processEpisode(){
 		{
 			# the style variable must be set inline, not in head, this may be a bug in firefox
 			#echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
-			echo "<html id='top' class='seriesBackground'>"
+			echo "<html id='top' class='seriesBackground' style='background: url(\"../fanart.png\")'>"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
@@ -1348,43 +1348,6 @@ processShow(){
 		linkFile "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
 		linkFile "$show"/*.png "$webDirectory/shows/$showTitle/"
 	fi
-	# link the poster
-	if [ -f "$show/poster.png" ];then
-		posterPath="poster.png"
-		#INFO "Found $show/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
-		# create the web thumbnails
-		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
-		fi
-	elif [ -f "$show/poster.jpg" ];then
-		posterPath="poster.jpg"
-		#INFO "Found $show/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
-		# create the web thumbnails
-		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
-		fi
-	else
-		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]" "$logPagePath"
-	fi
-	# link the fanart
-	if test -f "$show/fanart.png";then
-		#INFO "Found $show/fanart.png"
-		fanartPath="fanart.png"
-		#INFO "Found $show/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
-	elif test -f "$show/fanart.jpg";then
-		fanartPath="fanart.jpg"
-		#INFO "Found $show/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
-	else
-		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg]" "$logPagePath"
-	fi
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
 	#INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
@@ -1458,6 +1421,72 @@ processShow(){
 		#	INFO "Season folder $season does not exist"
 		fi
 	done
+	# link the poster
+	if [ -f "$show/poster.png" ];then
+		posterPath="poster.png"
+		#INFO "Found $show/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		# create the web thumbnails
+		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		fi
+	elif [ -f "$show/poster.jpg" ];then
+		posterPath="poster.jpg"
+		#INFO "Found $show/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
+		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
+		# create the web thumbnails
+		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		fi
+	else
+		set -x
+		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
+		if test -f "$webDirectory/shows/$showTitle/poster-0.png";then
+			# to many images exist use only first set
+			cp "$webDirectory/shows/$showTitle/poster-0.png" "$webDirectory/shows/$showTitle/poster.png"
+		fi
+		convert "$webDirectory/shows/$showTitle/poster.png" -trim -blur 10x10 "$webDirectory/shows/$showTitle/poster.png"
+
+		echo "Creating the poster image from webpage..."
+		convert "$webDirectory/shows/$showTitle/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/poster.png"
+		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		linkFile "$webDirectory/shows/$showTitle/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
+		set +x
+		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]" "$logPagePath"
+	fi
+	# link the fanart
+	if test -f "$show/fanart.png";then
+		#INFO "Found $show/fanart.png"
+		fanartPath="fanart.png"
+		#INFO "Found $show/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
+	elif test -f "$show/fanart.jpg";then
+		fanartPath="fanart.jpg"
+		#INFO "Found $show/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
+		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
+	else
+		set -x
+		# get the list of image files
+		# create the failsafe background by combining all the thumbnails of episodes into a image
+		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x3 "$webDirectory/shows/$showTitle/fanart.png"
+		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
+			cp"$webDirectory/shows/$showTitle/fanart-0.png" "$webDirectory/shows/$showTitle/fanart.png"
+		fi
+		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 10x10 "$webDirectory/shows/$showTitle/fanart.png"
+		echo "Creating the fanart image from webpage..."
+		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
+		set +x
+		# error log
+		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg]" "$logPagePath"
+	fi
+	################################################################################
+	################################################################################
+	cp "$downloadPath$showTitle/poster.png" "$downloadPath$showTitle/season-all-poster.png"
+
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
@@ -1735,7 +1764,8 @@ buildHomePage(){
 		# write the fortune for this processing run...
 		if test -f /usr/games/fortune;then
 			#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
-			todaysFortune=$(/usr/games/fortune -a)
+			# replace tabs with spaces
+			todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
@@ -1830,6 +1860,13 @@ scanForRandomBackgrounds(){
 		cd "$webDirectory/movies/"
 		find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
 		find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+	fi
+	# remove empty lists
+	if [ "$( wc -l "$webDirectory/fanart.cfg" )" -lt 2 ];then
+		rm -v "$webDirectory/fanart.cfg"
+	fi
+	if [ "$( wc -l "$webDirectory/poster.cfg" )" -lt 2 ];then
+		rm -v "$webDirectory/poster.cfg"
 	fi
 }
 ########################################################################

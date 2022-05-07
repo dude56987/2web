@@ -291,6 +291,9 @@ function process_M3U(){
 				INFO "Radio line found mark radio tag true"
 				# if the line is a radio entry
 				radio="true"
+			else
+				INFO "No radio true tag found mark radio as false"
+				radio="false"
 			fi
 			iconLink=$(getIconLink "$lineCaught")
 			INFO "Icon Link = $iconLink"
@@ -506,6 +509,9 @@ function processLink(){
 				elif [[ "$radioFile" == "true" ]];then
 					ERROR "Radio file is being scanned"
 					radio="true"
+				else
+					INFO "Found generated video entry set radio to false"
+					radio="false"
 				fi
 				ERROR "[DEBUG]: WebIconPath = $webIconPath"
 				{

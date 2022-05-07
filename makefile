@@ -179,6 +179,7 @@ build-deb:
 	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	# build the readme
+	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
 	w3m debian/usr/share/2web/help/README.html > debian/usr/share/2web/help/README.txt
 	#pandoc --from markdown help/man_2web.md help/man_copyright.md help/man_license.md -t t2t -o debian/usr/share/2web/help/2web.t2t

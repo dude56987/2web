@@ -1,6 +1,2 @@
-# build ssl web certs
-/usr/bin/nfo2web certs
 # enable ssl module in apache
 a2enmod ssl
-# restart apache to load up the site
-apache2ctl restart

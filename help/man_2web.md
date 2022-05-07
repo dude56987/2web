@@ -1,4 +1,4 @@
-% 2WEB(1)
+% 2WEB()
 
 NAME
 ====
@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-This is the 2web administration and update program. With this interface you can launch a update check on all 2web modules. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a extremely large libary ~20k shows,movies,books, and ~100k channels/radio stations.
+This is the 2web administration and update program. With this interface you can launch a update check on all 2web modules. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a extremely large libary ~20k shows,movies,books, and ~100k channels/radio stations. The '2web_help' manual page contains more usage info.
 
 OPTIONS
 =======
@@ -32,7 +32,7 @@ OPTIONS
 
 `-p, --parallel, parallel`
 
-:   Run all 2web compentents in parallel.
+:   Run all 2web compentents in parallel.(!EXPERMIMENTAL!)
 
 `-I, --iptv, iptv`
 
@@ -72,66 +72,37 @@ OPTIONS
 
 `-l, --libary, libary`
 
-:   Download the latest version of the hls.js libary for use.
+:   Download the latest version of the hls.js library for use.
 
-Features
-========
+Understanding /etc/2web/
+===================
 
-# Books
+Contains all settings related to 2web and 2web modules. Sever only accessible config files exist and web interface editable example.d/ files exist for that use case. The file ownership of the example.d/ files can be set to root and not www-data to block the web interface out.
 
-## Text
 
-- Supported Filetypes
-  - PDF
-  - TXT
-  - EPUB (Expermental)
+- Directories
+  - /etc/2web/comics/
+    - This is where comic2web settings are stored
+  - /etc/2web/nfo/
+    - This is where nfo2web settings are stored
+  - /etc/2web/ytdl/
+    - This is where ytdl2nfo settings are stored
+  - /etc/2web/iptv/
+    - This is where iptv2web settings are stored
+  - /etc/2web/themes/
+    - This is the location of all default and user installed CSS themes. Any files found here with a .css extension will be copied into the theme list in the web interface.
+  - /etc/2web/users/
+    - This is where the administrator credentials are kept for users
 
-## Comics
-
-- Supported Filetypes
-  - CBZ
-  - Image Directory
-
-#NFO Media Libaries
-
-## Movies
-
-- You can add movies
-  - through the web interface
-  - /etc/2web/nfo/libaries.cfg
-
-- Supported Filetypes
-  - MKV
-  - MP4
-  - AVI
-
-## Shows
-
-- You can add shows
-  - through the web interface
-  - /etc/2web/nfo/libaries.cfg
-
-- Supported Filetypes
-  - MKV
-  - MP4
-  - AVI
-
-# Live
-
-- Supports M3U iptv playlists
-
-## TV
-
-- Supports
-  - M3U iptv playlists
-  - Twitch Channels
-  - Live Youtube Channels
-  - Any link that can be resolved with streamlink can be added as a channel
-  - Custom Direct video stream Links
-
-## Radio
-
-- Supports
-  - M3U iptv playlists
-  - Custom Direct Radio Stream Links
+- Files
+  - /etc/2web/theme.cfg
+    - This is the name of the theme file found in /etc/2web/themes/ that has been chosen as the website CSS theme.
+  - /etc/2web/fortuneStatus.cfg
+    - This is a binary file that if it exists the '/usr/bin/fortune' will be displayed on the homepage of the website.
+  - /etc/2web/certInfo.cnf
+    - This is the cert info template used to generate the ssl certificate. Look more into openssl key generation.
+  - /etc/2web/cacheNewEpisodes.cfg
+    - This will cause the new episodes to be cached in the background using a single file queue. Active caching still will work.
+  - /etc/2web/weatherLocation.cfg
+    - This determines the location used for the weather on the homepage.
 

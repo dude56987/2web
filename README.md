@@ -1,27 +1,36 @@
 2web
 ====
 
-Generate a website for use on a LAN(Local Area Network) as a http accessable multimedia libary for content. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a libary size of ~20k shows,movies,books, and ~100k channels/radio stations.
+Generate a website for use on a LAN(Local Area Network) as a http accessable multimedia libary for content. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a libary size of ~20k shows, ~20k movies, ~20k books, ~100 weather stations and ~100k channels/radio stations.
 
-- Comics
-- Movies
-- Shows
-- Live TV
-- Live Radio
-- Weather Forcasts
+## Supported Media
 
-- Add web addresses to include any website or individual channel on sites supported by youtube-dl as a show
-- Add web addreses of online comics to cache them locally in your comics section
-- Light touches of Javascript
-- Mostly PHP and Bash
-- Themes
+ - Comics
+ - Movies
+ - Shows
+ - Live TV
+ - Live Radio
+ - Weather Forcasts
 
-- Tested with dietpi os on Raspbery PI 4
-- Tested with Ubuntu
+## Features
+
+ - Add web addresses to include any website or individual channel on sites supported by youtube-dl as a show
+ - Add web addreses of online comics to cache them locally in your comics section
+ - Light touches of Javascript
+ - Mostly PHP and Bash
+ - Themes
+ - SOFTWARE DOES NOT TOUCH THE DATA SOURCES, everything is symlinked
+
+## Tested on
+
+ - dietpi on Raspbery PI 4
+ - Ubuntu
+ - Raspbian
+
 
 ## Access
 
-	http://localhost:444/
+	http://localhost/
 
 ### Settings
 
@@ -35,7 +44,7 @@ The master interface can update everything.
 
 	2web all
 
-Each individual web section has its own CLI interface for running manual generation or a clean reset of a individual section. Resets may be required for missing or removed content. Sometimes websites change thier layout and the remote metadata will duplicate this can be solved by a section reset.
+Each individual web section has its own CLI interface for running manual generation or a clean reset of a individual module. Resets may be required for missing or removed content. Sometimes after updates the layout will change and the remote metadata will duplicate this can be solved by a section reset. In the worst case if functionality is broken you can run '2web nuke' and '2web all' to delete all metadata and website data and rebuild the entire website.
 
 To update each section use the following
 
@@ -46,6 +55,8 @@ To update each section use the following
 	comic2web
 
 	weather2web
+
+	ytdl2nfo
 
 Resets can be done with the master interface by
 
@@ -61,6 +72,8 @@ and individually by
 
 	weather2web reset
 
+	ytdl2nfo reset
+
 Finally you can delete the entire website with
 
 	2web nuke
@@ -75,6 +88,7 @@ or individually
 
 	weather2web nuke
 
+	ytdl2nfo nuke
 
 # Books
 

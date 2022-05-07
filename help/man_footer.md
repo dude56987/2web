@@ -1,6 +1,6 @@
 SEE ALSO
 ========
-2web, comic2web, iptv2web, nfo2web, weather2web, ytdl2nfo
+2web, 2web_help, comic2web, iptv2web, nfo2web, weather2web, ytdl2nfo
 
 COPYRIGHT
 =========

@@ -341,10 +341,10 @@ ol{
 	background-color: var(--glassBackground);
 }
 .seriesBackground{
-	background: var(--backgroundFanart);
-	background-size: 100vw 100vh;
-	background-repeat: repeat;
-	background-attachment: fixed;
+	/*background: var(--backgroundFanart);*/
+	background-size: 100vw 100vh !important;
+	background-repeat: repeat !important;
+	background-attachment: fixed !important;
 }
 .randomFanart{
 	background: url("/randomFanart.php");
@@ -406,10 +406,10 @@ ol{
 		width: 100%;
 	}
 	.seriesBackground{
-		background: var(--backgroundPoster);
-		background-size: 100vw 100vh;
-		background-repeat: repeat;
-		background-attachment: fixed;
+		/*background: var(--backgroundPoster);*/
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
 	}
 	.header .button{
 		width: auto !important;
@@ -939,8 +939,14 @@ a:hover{
 	color: var(--highlightText);
 	background-color: var(--hightlightBackground);
 }
-p, dl{
+p:before {
+	content: " ";
+}
+p{
 	padding: 10px;
+}
+dl{
+	text-align: left;
 }
 ul{
 	color: var(--textColor);
@@ -1322,9 +1328,6 @@ tr{
 		margin-right: 0px;
 	}
 }
-.headerText{
-	font-size: 0.5rem;
-}
 .fortuneText{
 	white-space: pre;
 	text-align: left;
@@ -1344,4 +1347,23 @@ tr{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
 }
-
+pre{
+	border: solid;
+	background-color: var(--solidBackground);
+	padding: 1rem;
+	margin: 0.5rem;
+}
+/* Set the dark mode theme */
+@media (perfers-color-scheme: dark){
+	:root{
+		--solidBackground: #383838;
+		--glassBackground: rgba(100,100,100,0.85);
+		--borderColor: white;
+		--textColor: white;
+		--shadowColor: black;
+		--highlightText: black;
+		--highlightBackground: white;
+		--highlightBorder: lightgray;
+		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+	}
+}

@@ -291,15 +291,20 @@ ytdl2kodi_channel_extractor(){
 		fi
 		echo "[INFO]: Preprocessing '$link' ..."
 		echo "[INFO]: Running metadata extractor on '$link' ..."
-		# check links aginst existing stream files to pervent duplicating the work
-		if echo "$@" | grep -q "\-\-username";then
-			echo "[INFO]: Running username video extraction..."
-			ytdl2kodi_video_extractor "$link" "$channelLink" --username
+		if [ "$link" -eq "$channelLink" ];then
+			# this means a link was found to the channel itself, this can cause problems
+			echo "[INFO]: Found link to the channel on the channel page..."
 		else
-			echo "[INFO]: Running video extraction...."
-			ytdl2kodi_video_extractor "$link" "$channelLink"
+			# check links aginst existing stream files to pervent duplicating the work
+			if echo "$@" | grep -q "\-\-username";then
+				echo "[INFO]: Running username video extraction..."
+				ytdl2kodi_video_extractor "$link" "$channelLink" --username
+			else
+				echo "[INFO]: Running video extraction...."
+				ytdl2kodi_video_extractor "$link" "$channelLink"
+			fi
+			processedEpisodes=$(($processedEpisodes + 1))
 		fi
-		processedEpisodes=$(($processedEpisodes + 1))
 	done
 	################################################################################
 	# set the timer in the cache after the channel has been extracted
@@ -368,86 +373,86 @@ ytdl2kodi_channel_meta_extractor(){
 		################################################################################
 		# webpage
 		# generate a image from the webpage
-		echo "Downloading webpage to create image file for series"
-		if echo "$@" | grep -q "\-\-username";then
-			tempWebUrl="$channelUrl"
-			echo "--username found passing url '$tempWebUrl'"
-		else
-			tempWebUrl="$baseUrl"
-			echo "--username was NOT found passing url '$tempWebUrl'"
-		fi
-		echo "Downloading webpage for fanart '$tempWebUrl'"
-		set -x
-		wkhtmltoimage --format png --enable-javascript --javascript-delay 30000 --width 1920 --disable-smart-width --height 1080 "$tempWebUrl" "$downloadPath$showTitle/webpage.png"
-		set +x
-		if [ -f "$downloadPath$showTitle/webpage.png" ];then
-			# blur the webpage image slightly
-			echo "convert -blur 0x3 \"$downloadPath$showTitle/webpage.png\" \"$downloadPath$showTitle/webpage.png\""
-			convert -blur 0x3 "$downloadPath$showTitle/webpage.png" "$downloadPath$showTitle/webpage.png"
-		else
-			if [ $(ls "$downloadPath$showTitle/Season*/*.png" | grep -c -F .png) -ge 10 ];then
-				# create a collage using thumbnail files
-				montage "$downloadPath$showTitle/*.png" -background black -geometry 600x900\!+0+0 "$downloadPath$showTitle/webpage.png"
-				# if the above runs and fails then noise will be generated below
-			else
-				#dont create the metadata as no base image can be created yet
-				return
-			fi
-		fi
+		#echo "Downloading webpage to create image file for series"
+		#if echo "$@" | grep -q "\-\-username";then
+		#	tempWebUrl="$channelUrl"
+		#	echo "--username found passing url '$tempWebUrl'"
+		#else
+		#	tempWebUrl="$baseUrl"
+		#	echo "--username was NOT found passing url '$tempWebUrl'"
+		#fi
+		#echo "Downloading webpage for fanart '$tempWebUrl'"
+		#set -x
+		#wkhtmltoimage --format png --enable-javascript --javascript-delay 30000 --width 1920 --disable-smart-width --height 1080 "$tempWebUrl" "$downloadPath$showTitle/webpage.png"
+		#set +x
+		#if [ -f "$downloadPath$showTitle/webpage.png" ];then
+		#	# blur the webpage image slightly
+		#	echo "convert -blur 0x3 \"$downloadPath$showTitle/webpage.png\" \"$downloadPath$showTitle/webpage.png\""
+		#	convert -blur 0x3 "$downloadPath$showTitle/webpage.png" "$downloadPath$showTitle/webpage.png"
+		#else
+		#	if [ $(ls "$downloadPath$showTitle/Season*/*.png" | grep -c -F .png) -ge 10 ];then
+		#		# create a collage using thumbnail files
+		#		montage "$downloadPath$showTitle/*.png" -background black -geometry 600x900\!+0+0 "$downloadPath$showTitle/webpage.png"
+		#		# if the above runs and fails then noise will be generated below
+		#	else
+		#		#dont create the metadata as no base image can be created yet
+		#		return
+		#	fi
+		#fi
 		################################################################################
 		# if the thumbnail download fails create the poster from the favicon
-		echo "Downloading the websites favicon from '$baseUrl/favicon.ico'"
-		curl "$baseUrl/favicon.ico" > "$downloadPath$showTitle/icon.ico"
-		if [ -f "$downloadPath$showTitle/icon.ico" ];then
-			# scale up the favicon so it looks less awful than the fast scaling
-			echo "Scaling the icon up and composing text over it..."
-			################################################################################
-			echo "convert \"$downloadPath$showTitle/icon.ico\" -adaptive-resize 256x256 \"$downloadPath$showTitle/icon.png\""
-			convert "$downloadPath$showTitle/icon.ico" -adaptive-resize 256x256\! "$downloadPath$showTitle/icon.png"
-			#rm -v "$downloadPath$showTitle/icon.ico"
-		fi
-		if ! [ -f "$downloadPath$showTitle/webpage.png" ];then
-			echo "Creating failsafe noise background..."
-			# creating failsafe blank image with random noise
-			echo "convert -size 1920x1080 +seed \"$showTitle\" plasma: -swirl \"$swirlAmount\" \"$downloadPath$showTitle/webpage.png\""
-			convert -size 1920x1080 +seed "$showTitle" plasma: -swirl "$swirlAmount" "$downloadPath$showTitle/webpage.png"
-		fi
-		if ! [ -f "$downloadPath$showTitle/webpage.png" ];then
-			echo "No fanart could be created or downloaded metadata failed..."
-			echo
-			return
-		fi
+		#echo "Downloading the websites favicon from '$baseUrl/favicon.ico'"
+		#curl "$baseUrl/favicon.ico" > "$downloadPath$showTitle/icon.ico"
+		#if [ -f "$downloadPath$showTitle/icon.ico" ];then
+		#	# scale up the favicon so it looks less awful than the fast scaling
+		#	echo "Scaling the icon up and composing text over it..."
+		#	################################################################################
+		#	echo "convert \"$downloadPath$showTitle/icon.ico\" -adaptive-resize 256x256 \"$downloadPath$showTitle/icon.png\""
+		#	convert "$downloadPath$showTitle/icon.ico" -adaptive-resize 256x256\! "$downloadPath$showTitle/icon.png"
+		#	#rm -v "$downloadPath$showTitle/icon.ico"
+		#fi
+		#if ! [ -f "$downloadPath$showTitle/webpage.png" ];then
+		#	echo "Creating failsafe noise background..."
+		#	# creating failsafe blank image with random noise
+		#	echo "convert -size 1920x1080 +seed \"$showTitle\" plasma: -swirl \"$swirlAmount\" \"$downloadPath$showTitle/webpage.png\""
+		#	convert -size 1920x1080 +seed "$showTitle" plasma: -swirl "$swirlAmount" "$downloadPath$showTitle/webpage.png"
+		#fi
+		#if ! [ -f "$downloadPath$showTitle/webpage.png" ];then
+		#	echo "No fanart could be created or downloaded metadata failed..."
+		#	echo
+		#	return
+		#fi
 		################################################################################
 		# compose seed based noise over username based images
 		################################################################################
-		if echo "$@" | grep -q "\-\-username";then
-			echo "Add plasma over top of the webpage based on the '$showTitle'..."
-			echo "convert -size 1920x1080 plasma: +seed \"$showTitle\" -swirl \"$swirlAmount\" \"$downloadPath$showTitle/uniquePattern.png\""
-			convert -size 1920x1080 plasma: +seed "$showTitle" -swirl "$swirlAmount" "$downloadPath$showTitle/uniquePattern.png"
-			# compose pattern over top of the pulled webpage
-			echo "composite -dissolve 70 -gravity center \"$downloadPath$showTitle/webpage.png\" \"$downloadPath$showTitle/uniquePattern.png\" -alpha Set \"$downloadPath$showTitle/webpage.png\""
-			composite -dissolve 70 -gravity center "$downloadPath$showTitle/webpage.png" "$downloadPath$showTitle/uniquePattern.png" -alpha Set "$downloadPath$showTitle/webpage.png"
-		fi
-		if [ -f "$downloadPath$showTitle/icon.png" ];then
-			# compose the favicon over the background image
-			echo "composite \"$downloadPath$showTitle/icon.png\" -gravity SouthWest \"$downloadPath$showTitle/webpage.png\" -alpha Set \"$downloadPath$showTitle/webpage.png\""
-			composite "$downloadPath$showTitle/icon.png" -gravity SouthWest "$downloadPath$showTitle/webpage.png" -alpha Set "$downloadPath$showTitle/webpage.png"
-		fi
+		#if echo "$@" | grep -q "\-\-username";then
+		#	echo "Add plasma over top of the webpage based on the '$showTitle'..."
+		#	echo "convert -size 1920x1080 plasma: +seed \"$showTitle\" -swirl \"$swirlAmount\" \"$downloadPath$showTitle/uniquePattern.png\""
+		#	convert -size 1920x1080 plasma: +seed "$showTitle" -swirl "$swirlAmount" "$downloadPath$showTitle/uniquePattern.png"
+		#	# compose pattern over top of the pulled webpage
+		#	echo "composite -dissolve 70 -gravity center \"$downloadPath$showTitle/webpage.png\" \"$downloadPath$showTitle/uniquePattern.png\" -alpha Set \"$downloadPath$showTitle/webpage.png\""
+		#	composite -dissolve 70 -gravity center "$downloadPath$showTitle/webpage.png" "$downloadPath$showTitle/uniquePattern.png" -alpha Set "$downloadPath$showTitle/webpage.png"
+		#fi
+		#if [ -f "$downloadPath$showTitle/icon.png" ];then
+		#	# compose the favicon over the background image
+		#	echo "composite \"$downloadPath$showTitle/icon.png\" -gravity SouthWest \"$downloadPath$showTitle/webpage.png\" -alpha Set \"$downloadPath$showTitle/webpage.png\""
+		#	composite "$downloadPath$showTitle/icon.png" -gravity SouthWest "$downloadPath$showTitle/webpage.png" -alpha Set "$downloadPath$showTitle/webpage.png"
+		#fi
 		################################################################################
 		# create the poster with text overlay
 		################################################################################
-		echo "Creating the fanart image from webpage..."
-		convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 1920x1080 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/fanart.png"
+		#echo "Creating the fanart image from webpage..."
+		#convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 1920x1080 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/fanart.png"
 		################################################################################
-		echo "Creating the poster image from webpage..."
-		convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 600x900 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/poster.png"
-		cp "$downloadPath$showTitle/poster.png" "$downloadPath$showTitle/season-all-poster.png"
+		#echo "Creating the poster image from webpage..."
+		#convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 600x900 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/poster.png"
+		#cp "$downloadPath$showTitle/poster.png" "$downloadPath$showTitle/season-all-poster.png"
 		################################################################################
 		# create the banner
 		################################################################################
-		echo "Creating the banner image from webpage..."
-		convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 1000x300\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 1000x300 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/banner.png"
-		cp "$downloadPath$showTitle/banner.png" "$downloadPath$showTitle/season-all-banner.png"
+		#echo "Creating the banner image from webpage..."
+		#convert "$downloadPath$showTitle/webpage.png" -adaptive-resize 1000x300\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -style Bold -size 1000x300 -gravity center caption:"$showTitle" -composite "$downloadPath$showTitle/banner.png"
+		#cp "$downloadPath$showTitle/banner.png" "$downloadPath$showTitle/season-all-banner.png"
 		################################################################################
 		# remove the webpage.png temp image file
 		#rm -v "$downloadPath$showTitle/webpage.png"
@@ -466,14 +471,14 @@ ytdl2kodi_channel_meta_extractor(){
 			echo "</tvshow>"
 		} > "$fileName"
 		# remove extra image files
-		if [ -f "$downloadPath$showTitle/webpage.png" ];then
-			# remove the webpage.png temp image file
-			rm -v "$downloadPath$showTitle/webpage.png"
-		fi
-		if [ -f "$downloadPath$showTitle/uniquePattern.png" ];then
-			# remove the uniquePattern.png temp image file
-			rm -v "$downloadPath$showTitle/uniquePattern.png"
-		fi
+		#if [ -f "$downloadPath$showTitle/webpage.png" ];then
+		#	# remove the webpage.png temp image file
+		#	rm -v "$downloadPath$showTitle/webpage.png"
+		#fi
+		#if [ -f "$downloadPath$showTitle/uniquePattern.png" ];then
+		#	# remove the uniquePattern.png temp image file
+		#	rm -v "$downloadPath$showTitle/uniquePattern.png"
+		#fi
 	fi
 	echo "################################################################################"
 	echo "# Metadata extraction finished #"
@@ -1211,35 +1216,7 @@ main(){
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
 		echo "########################################################################"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		echo "########################################################################"
-		echo "# ytdl2nfo CLI for administration"
-		echo "# Copyright (C) 2022  Carl J Smith"
-		echo "#"
-		echo "# This program is free software: you can redistribute it and/or modify"
-		echo "# it under the terms of the GNU General Public License as published by"
-		echo "# the Free Software Foundation, either version 3 of the License, or"
-		echo "# (at your option) any later version."
-		echo "#"
-		echo "# This program is distributed in the hope that it will be useful,"
-		echo "# but WITHOUT ANY WARRANTY; without even the implied warranty of"
-		echo "# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"
-		echo "# GNU General Public License for more details."
-		echo "#"
-		echo "# You should have received a copy of the GNU General Public License"
-		echo "# along with this program.  If not, see <http://www.gnu.org/licenses/>."
-		echo "########################################################################"
-		echo "HELP INFO"
-		echo "This is the ytdl2nfo administration and update program."
-		echo "To return to this menu use 'ytdl2nfo help'"
-		echo "Other commands are listed below."
-		echo ""
-		echo "update"
-		echo "  This will update the m3u file used to make the website."
-		echo ""
-		echo "reset"
-		echo "  Reset the cache."
-		echo ""
-		echo "########################################################################"
+		cat "/usr/share/2web/help/ytdl2nfo.txt"
 	else
 		main --update
 		main --help

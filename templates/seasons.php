@@ -1,4 +1,4 @@
-<html id='top' class='seriesBackground' style='$tempStyle'>
+<html id='top' class='seriesBackground' style="background: url('fanart.png')">
 <head>
 <link rel='stylesheet' href='/style.css' />
 <script src='/2web.js'></script>
@@ -73,6 +73,7 @@ echo "<hr>";
 </div>
 <input id='searchBox' class='searchBox' type='text'
  onkeyup='filter("showPageEpisode")' placeholder='Search...' >
+<hr>
 <div class='episodeList'>
 <?PHP
 $seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));

@@ -825,13 +825,22 @@ renderPage(){
 			echo "		const key = event.key;"
 			echo "		switch (key){"
 			echo "			case 'ArrowRight':"
-			echo "				window.location.href='0001/';"
+			# if it is a chapter
+			if [ $isChapter = true ];then
+				echo "				window.location.href='0001/';"
+			else
+				echo "				window.location.href='0001.html';"
+			fi
 			echo "				break;"
 			echo "			case 'ArrowUp':"
 			echo "				window.location.href='..';"
 			echo "				break;"
 			echo "			case 'ArrowDown':"
-			echo "				window.location.href='0001/';"
+			if [ $isChapter = true ];then
+				echo "				window.location.href='0001/';"
+			else
+				echo "				window.location.href='0001.html';"
+			fi
 			echo "				break;"
 			echo "			"
 			echo "		}"

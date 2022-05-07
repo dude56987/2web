@@ -155,6 +155,8 @@ main(){
 		update2web
 		# update the on-demand downloads
 		/usr/bin/ytdl2nfo &
+		# update weather
+		/usr/bin/weather2web &
 		sleep 30
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web &
@@ -168,7 +170,13 @@ main(){
 				sleep 1
 			elif test -f /tmp/nfo2web.active;then
 				sleep 1
+			elif test -f /tmp/weather2web.active;then
+				sleep 1
 			else
+				# - run nfo2web after all other modules have finished to make sure
+				#   content is accessable via header checks and stats
+				# TODO: move stats and header checks into individual modules
+				/usr/bin/nfo2web
 				# break the loop and run the reboot check
 				break
 			fi
@@ -184,9 +192,11 @@ main(){
 	elif [ "$1" == "-N" ] || [ "$1" == "--nfo" ] || [ "$1" == "nfo" ];then
 		/usr/bin/nfo2web
 		rebootCheck
-	elif [ "$1" == "-C" ] || [ "$1" == "--comic" ] || [ "$1" == "comic" ];then
+	elif [ "$1" == "-c" ] || [ "$1" == "--comic" ] || [ "$1" == "comic" ];then
 		/usr/bin/comic2web
 		rebootCheck
+	elif [ "$1" == "-w" ] || [ "$1" == "--weather" ] || [ "$1" == "weather" ];then
+		/usr/bin/weather2web reset
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2Web
@@ -194,12 +204,14 @@ main(){
 		/usr/bin/nfo2web update
 		/usr/bin/iptv2web update
 		/usr/bin/comic2web update
+		/usr/bin/weather2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
 		# update the website content
 		/usr/bin/nfo2web webgen
 		/usr/bin/iptv2web webgen
 		/usr/bin/comic2web webgen
+		/usr/bin/weather2web
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# upgrade packages related to operation of webserver
@@ -211,6 +223,10 @@ main(){
 		/usr/bin/nfo2web reset
 		/usr/bin/comic2web reset
 		/usr/bin/iptv2web reset
+		/usr/bin/weather2web reset
+	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
+		# remove all website content
+		/usr/bin/nfo2web nuke
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
