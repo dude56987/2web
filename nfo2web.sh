@@ -127,16 +127,16 @@ ripXmlTag(){
 ripXmlTagMultiLine(){
 	data=$1
 	tag=$2
-	# remove complex xml tags, they make parsing more difficult
-	data=$(echo "$data" | grep -E --ignore-case --only-matching "<$tag>.*.?</$tag>")
+	# rip the tag data converted by converting lines to a token phrase to converted into html new lines
+	data=$(echo "$data" | sed -z 's/\n/ ____NEWLINE____ /g' | grep -E --ignore-case --only-matching "<$tag>.*.?</$tag>" )
 	# remove after slash tags, they break everything
 	data="${data//<$tag \/>}"
 	data="${data//<$tag\/>}"
 	# pull data from between the tags
 	data="${data//<$tag>}"
 	data="${data//<\/$tag>}"
-	#data="$(echo "$data" | cut -d'>' -f2 )"
-	#data="$(echo "$data" | cut -d'<' -f1 )"
+	# convert to html data after cleaning of tags is finished
+	data=$(echo "$data" | txt2html --extract | sed 's/____NEWLINE____/ <br> /g')
 	# if multuple lines of tag info are given format them for html
 	if validString "$tag" -q;then
 		echo "$data"
@@ -245,7 +245,7 @@ processMovie(){
 		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		#INFO "movie plot = '$moviePlot'"
-		moviePlot=$(echo "$moviePlot" | txt2html --extract )
+		#moviePlot=$(echo "$moviePlot" | txt2html --extract )
 		#INFO "movie plot = '$moviePlot'"
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
@@ -873,7 +873,7 @@ processEpisode(){
 		#episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
 		#episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
 		#INFO "episode plot = '$episodePlot'"
-		episodePlot=$(echo "$episodePlot" | txt2html --extract )
+		#episodePlot=$(echo "$episodePlot" | txt2html --extract )
 		#INFO "episode plot = '$episodePlot'"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		#INFO "Episode season = '$episodeSeason'"
