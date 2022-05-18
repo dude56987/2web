@@ -225,6 +225,30 @@ include("settingsHeader.php");
 	</form>
 </div>
 
+<div id='CLI_manuals' class='inputCard'>
+<h2>Server Services</h2>
+	<ul>
+		<li>List all available server services found to be active.</li>
+		<li>Not all linux services will be detected.</li>
+		<li>Services list is based off of <a href='https://dietpi.com/phpbb/viewtopic.php?t=5'>DietPI software listings</a></li>
+	</ul>
+	<a class='button' href="/serverServices.php">Active Server Services</a>
+	<hr>
+</div>
+
+<div id='CLI_manuals' class='inputCard'>
+<h2>CLI(Command Line Interface) Manual Pages</h2>
+	<ul>
+		<li><a href="/manuals.php#README">README</a></li>
+		<li><a href="/manuals.php#2web">2web</a></li>
+		<li><a href="/manuals.php#nfo2web">nfo2web</a></li>
+		<li><a href="/manuals.php#comic2web">comic2web</a></li>
+		<li><a href="/manuals.php#iptv2web">iptv2web</a></li>
+		<li><a href="/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
+		<li><a href="/manuals.php#weather2web">weather2web</a></li>
+	</ul>
+</div>
+
 <?PHP
 	if (file_exists("/usr/share/2web/version.cfg")){
 		echo "<div id='version' class='inputCard'>";
@@ -240,19 +264,6 @@ include("settingsHeader.php");
 		echo "</div>";
 	}
 ?>
-</div>
-
-<div id='CLI_manuals' class='inputCard'>
-<h2>CLI(Command Line Interface) Manual Pages</h2>
-	<ul>
-		<li><a href="/manuals.php#README">README</a></li>
-		<li><a href="/manuals.php#2web">2web</a></li>
-		<li><a href="/manuals.php#nfo2web">nfo2web</a></li>
-		<li><a href="/manuals.php#comic2web">comic2web</a></li>
-		<li><a href="/manuals.php#iptv2web">iptv2web</a></li>
-		<li><a href="/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
-		<li><a href="/manuals.php#weather2web">weather2web</a></li>
-	</ul>
 </div>
 
 <?PHP

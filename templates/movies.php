@@ -8,7 +8,7 @@
 <?php
 ################################################################################
 ini_set('display_errors', 1);
-include("../header.php");
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # add the search box
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
@@ -18,13 +18,14 @@ include("../header.php");
 
 <?php
 # add the updated movies below the header
-include("../updatedMovies.php");
+include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
 ################################################################################
 ?>
 <div class='settingListCard'>
 <?php
 // get a list of all the genetrated index links for the page
-$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/movies/*/movies.index"));
+//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/movies/*/movies.index"));
+$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/movies/movies.index"));
 // reverse the time sort
 //$sourceFiles = array_reverse($sourceFiles);
 foreach($sourceFiles as $sourceFile){
@@ -46,9 +47,9 @@ foreach($sourceFiles as $sourceFile){
 </div>
 <?php
 // add random movies above the footer
-include("../randomMovies.php");
+include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
 // add the footer
-include("../header.php");
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 echo "<hr class='topButtonSpace'>"
 ?>
 </body>

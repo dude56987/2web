@@ -27,7 +27,8 @@
 
 <?php
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
+	//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
+	$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/comics/comics.index"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
@@ -53,7 +54,7 @@
 	// add random comics above the footer
 	include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
 	// add the footer
-	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 	echo "<hr class='topButtonSpace'>"
 ?>
 

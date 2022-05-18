@@ -147,8 +147,10 @@ echo "<span class='headerText'>";
 echo "Help";
 echo "</span>";
 echo "</a>";
+
 echo "<div class='loginLogoutBoxSpacer'>";
 echo "</div>";
+# close the header bracket
 echo "</div>";
 
 if (isset($_SERVER['HTTPS'])){

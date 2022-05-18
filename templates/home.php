@@ -64,7 +64,7 @@
 		}
 	}
 	// add the footer
-	include("header.php");
+	include("footer.php");
 ?>
 
 </body>

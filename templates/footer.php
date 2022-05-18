@@ -126,7 +126,5 @@ echo "<span class='headerText'>";
 echo "Help";
 echo "</span>";
 echo "</a>";
-echo "<div class='loginLogoutBoxSpacer'>";
-echo "</div>";
 echo "</div>";
 ?>

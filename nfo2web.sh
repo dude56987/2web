@@ -182,7 +182,7 @@ checkMovieThumbPaths(){
 	echo -e "$possibleThumbPaths" | while read -r thumbPathToCheck;do
 		#ALERT "reading possible thumb path '$thumbPathToCheck'"
 		#addToLog "DEBUG" "Checking file path for thumbnail" "Checking file path '$thumbPathToCheck$thumbExtToCheck'" "$logPagePath"
-		possibleThumbExts=".jpg .png"
+		possibleThumbExts=".jpg .png .tbn"
 		#echo "$possibleThumbExts" | shuf |  while read -r thumbExtToCheck;do
 		for thumbExtToCheck in $possibleThumbExts;do
 			#ALERT "Reading possible thumb extension '$thumbExtToCheck'"
@@ -194,14 +194,8 @@ checkMovieThumbPaths(){
 				# link thumbnail into output directory
 				linkFile "$thumbPathToCheck$thumbExtToCheck" "$thumbnailPath$thumbExtToCheck"
 				linkFile "$thumbPathToCheck$thumbExtToCheck" "$thumbnailPathKodi$thumbExtToCheck"
-				if ! test -f "$thumbnailPath-web.png";then
-					convert -quiet "$thumbPathToCheck$thumbnailExtToCheck" -adaptive-resize "300x200" "$thumbnailPath-web.png"
-					#if [ $thumbExtToCheck == ".png" ];then
-					#	#convert -quiet "$thumbPathToCheck$thumbnailExtToCheck" "$thumbnailPath.jpg"
-					#	convert -quiet "$thumbPathToCheck$thumbnailExtToCheck" -adaptive-resize "200x100" "$thumbnailPath-web.png"
-					#else
-					#	convert -quiet "$thumbPathToCheck$thumbnailExtToCheck" -adaptive-resize "200x100" "$thumbnailPath-web.png"
-					#fi
+				if ! test -f "$thumbnailPath.png";then
+					convert -quiet "$thumbPathToCheck$thumbExtToCheck" "$thumbnailPath.png"
 				fi
 				# ouput the return value
 				echo "$thumbPathToCheck$thumbExtToCheck"
@@ -213,11 +207,6 @@ checkMovieThumbPaths(){
 	# return error no output
 	return 1
 }
-
-
-
-
-
 ########################################################################
 processMovie(){
 	moviePath=$1
@@ -294,25 +283,7 @@ processMovie(){
 		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
 		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
 		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
-		# link stylesheets
-		linkFile "$webDirectory/style.css" "$webDirectory/movies/$movieWebPath/style.css"
 		################################################################################
-		# using the path of the found nfo file, check for a file extension
-		#  that is not nfo
-		#foundNumber="${moviePath//.nfo/}"
-		#foundNumber=$(ls -1 "$foundNumber".*.nfo | wc -l)
-		# if the filename has more than one specific nfo file
-		#if [[ "$foundNumber" -gt 1 ]];then
-			# excess files were found, all that should exist is a thumb, video, and nfo file
-		#	echo "[INFO]: Excess files found..."
-		#	addToLog "WARNING" "Excess files" "Found $foundNumber files in $movieDir" "$logPagePath"
-		#elif [[ "$foundNumber" -lt 1 ]];then
-		#	echo "[INFO]: No data files found..."
-			# no files found this is a unpassable error
-		#	addToLog "INFO" "No data files found ???" "Found $foundNumber NFO files in $movieDir" "$logPagePath"
-			# exit function
-		#	return
-		#fi
 		################################################################################
 		# find the videofile refrenced by the nfo file
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
@@ -411,27 +382,12 @@ processMovie(){
 		thumbnail="${moviePath//.nfo}-poster"
 		# creating alternate thumbnail paths
 		thumbnailShort="${moviePath//.nfo}"
-		thumbnailPath="$webDirectory/movies/$movieWebPath/$movieWebPath-poster"
-		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/$movieWebPath-poster"
-		#addToLog "DEBUG" "thumbnailPath" "$thumbnailPath" "$logPagePath"
-		#addToLog "DEBUG" "thumbnailShort" "$thumbnailShort" "$logPagePath"
-		#addToLog "DEBUG" "thumbnailShort2" "$thumbnailShort-thumb" "$logPagePath"
-		#INFO "new thumbnail path = '$thumbnailPath'"
-		# link all images to the kodi path
-		if [ $(find "$movieDir" -type f -name '*.jpg' | wc -l) -gt 0 ] ;then
-			INFO "Found media '$movieDir/*.jpg' !"
-			# do not use linkFile function here or it will cause overwrites
-			ln -s "$movieDir"/*.jpg "$webDirectory/kodi/movies/$movieWebPath/"
-			#ln -s "$movieDir"/*.jpg "$webDirectory/movies/$movieWebPath/"
-		elif [ $(find "$movieDir" -type f -name '*.png' | wc -l) -gt 0 ] ;then
-			INFO "Found media '$movieDir/*.png' !"
-			# do not use linkFile function here or it will cause overwrites
-			ln -s "$movieDir"/*.png "$webDirectory/kodi/movies/$movieWebPath/"
-			#ln -s "$movieDir"/*.png "$webDirectory/movies/$movieWebPath/"
-		else
-			ALERT "[ERROR]: No media files could be found!"
-			addToLog "ERROR" "No media files could be found!" "Check in $movieDir for debug info" "$logPagePath"
-		fi
+		thumbnailPath="$webDirectory/movies/$movieWebPath/poster"
+		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/poster"
+
+		# check for the thumbnail and link it
+		#checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
+
 		# copy over subtitles
 		if [ $(find "$movieDir" -type f -name '*.srt' | wc -l) -gt 0 ] ;then
 			linkFile "$movieDir"/*.srt "$webDirectory/kodi/movies/$movieWebPath/"
@@ -442,30 +398,60 @@ processMovie(){
 		fi
 		# link the fanart
 		if test -f "$movieDir/fanart.png";then
-			#INFO "Found $movieDir/fanart.png"
-			fanartPath="fanart.png"
-			#INFO "Found fanart at '$movieDir/$fanartPath'"
-			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
-			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+			linkFile "$movieDir/fanart.png" "$webDirectory/movies/$movieWebPath/fanart.png"
 		elif test -f "$movieDir/fanart.jpg";then
-			fanartPath="fanart.jpg"
-			#INFO "Found fanart at '$movieDir/$fanartPath'"
-			linkFile "$movieDir/$fanartPath" "$webDirectory/movies/$movieWebPath/$fanartPath"
-			linkFile "$movieDir/$fanartPath" "$webDirectory/kodi/movies/$movieWebPath/$fanartPath"
+			linkFile "$movieDir/fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.jpg"
+			if ! test -f "$webDirectory/movies/$movieWebPath/fanart.png";then
+				convert -quiet "$webDirectory/movies/$movieWebPath/fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.png"
+			fi
 		else
+			# generate a fanart if no fanart could be found
 			ALERT "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
+			ffmpeg -y -ss 1 -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/movies/$movieWebPath/fanart.png"
+			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -blur 40x40 "$webDirectory/movies/$movieWebPath/fanart.png"
+			# add the title to the poster
+			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -adaptive-resize  1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/fanart.png"
 		fi
-		# find the fanart for the episode background
-		if test -f "$movieDir/fanart.png";then
-			tempStyle="html{ background-image: url(\"fanart.png\") }"
-		elif test -f "$movieDir/fanart.jpg";then
-			tempStyle="html{ background-image: url(\"fanart.jpg\") }"
+
+		# no thumbnail has been linked or downloaded search for one
+		fullThumbPath=$(checkMovieThumbPaths "$movieDir" "$thumbnail" "$thumbnailShort" "$logPagePath" "$thumbnailPath" "$thumbnailPathKodi")
+
+		# this is a simple check if the above search failed
+		if test -f "$movieDir/poster.png";then
+			linkFile "$movieDir/poster.png" "$webDirectory/movies/$movieWebPath/poster.png"
+		elif test -f "$movieDir/poster.jpg";then
+			linkFile "$movieDir/poster.jpg" "$webDirectory/movies/$movieWebPath/poster.jpg"
+			# link png for the web interface
+			convert -quiet "$movieDir/poster.jpg" "$webDirectory/movies/$movieWebPath/poster.png"
+		else
+			ALERT "[WARNING]: could not find poster '$movieDir/poster.[png/jpg]'"
+			# generate a poster from a thumbnail if no poster could be found in previous check
+			# generate a thumbnail at the first second
+			ffmpeg -y -ss 1 -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/movies/$movieWebPath/poster.png"
+			# blur the thumbnail
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -blur 40x40 "$webDirectory/movies/$movieWebPath/poster.png"
+			# add the title to the poster
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/poster.png"
 		fi
+
+		# link poster and fanart in the kodi section
+		if ! test -f "$webDirectory/kodi/movies/$movieWebPath/poster.png";then
+			linkFile "$webDirectory/movies/$movieWebPath/poster.png" "$webDirectory/kodi/movies/$movieWebPath/poster.png"
+		fi
+		if ! test -f "$webDirectory/kodi/movies/$movieWebPath/fanart.png";then
+			linkFile "$webDirectory/movies/$movieWebPath/fanart.png" "$webDirectory/kodi/movies/$movieWebPath/fanart.png"
+		fi
+		# build temp style
+		tempStyle=":root{"
+		tempStyle="$tempStyle --backgroundPoster: url(\"/movies/$movieTitle ($movieYear)/poster.png\");"
+		tempStyle="$tempStyle --backgroundFanart: url(\"/movies/$movieTitle ($movieYear)/fanart.png\");"
+		tempStyle="$tempStyle}"
 		# start rendering the html
 		{
-			echo "<html id='top'>"
+			echo "<html class='seriesBackground'>"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='/style.css' />"
+			echo "<title>$movieTitle ($movieYear)</title>"
 			echo "<style>"
 			echo "$tempStyle"
 			echo "</style>"
@@ -477,132 +463,111 @@ processMovie(){
 			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "<h1>$movieTitle ($movieYear)</h1>"
+			# add outside search links
+			echo "<div class='listCard'>"
+			echo "<a class='button' href='https://www.imdb.com/find?q=$movieTitle ($movieYear)'>🔎 IMDB</a>"
+			echo "<a class='button' href='https://en.wikipedia.org/w/?search=$movieTitle ($movieYear)'>🔎 WIKIPEDIA</a>"
+			echo "<a class='button' href='https://archive.org/details/movies?query=$movieTitle ($movieYear)'>🔎 ARCHIVE.ORG</a>"
+			echo "<a class='button' href='https://www.youtube.com/results?search_query=$movieTitle ($movieYear)'>🔎 YOUTUBE</a>"
+			echo "<a class='button' href='https://odysee.com/$/search?q=$movieTitle ($movieYear)'>🔎 ODYSEE</a>"
+			echo "<a class='button' href='https://rumble.com/search/video?q=$movieTitle ($movieYear)'>🔎 RUMBLE</a>"
+			echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$movieTitle ($movieYear)'>🔎 BITCHUTE</a>"
+			echo "<a class='button' href='https://www.twitch.tv/search?term=$movieTitle ($movieYear)'>🔎 TWITCH</a>"
+			echo "<a class='button' href='https://veoh.com/find/$movieTitle ($movieYear)'>🔎 VEOH</a>"
+			echo "</div>"
 			echo "</div>"
 		} > "$moviePagePath"
 
-		# check for the thumbnail and link it
-		#checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
 
-		# check for a local thumbnail
-		if test -f "$thumbnailPath.jpg";then
-			#INFO "Thumbnail already linked..."
-			thumbnailExt=".jpg"
-		elif test -f "$thumbnailPath.png";then
-			#INFO "Thumbnail already linked..."
-			thumbnailExt=".png"
-		else
-			#INFO "No thumbnail exists, looking for thumb file..."
-
-			# no thumbnail has been linked or downloaded
-			fullThumbPath=$(checkMovieThumbPaths "$movieDir" "$thumbnail" "$thumbnailShort" "$logPagePath" "$thumbnailPath" "$thumbnailPathKodi")
-			#addToLog "DEBUG" "Full Thumbnail Path" "'$fullThumbPath'" "$logPagePath"
-
-			if test -f "$fullThumbPath";then
-				thumbnailExt=".$(echo "$fullThumbPath" | cut -d'.' -f2)"
-				if ! test -f "$thumbnailPath-web.png";then
-					# create the web thumbnail if it does not exist
+		# generate a thumbnail from the xml data if it can be retreved
+		if ! test -f "$thumbnailPath.png";then
+			if echo "$nfoInfo" | grep -q "fanart";then
+				# pull the double nested xml info for the movie thumb
+				#INFO "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
+				thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
+				#INFO "[DEBUG]: ThumbnailLink phase 2 = $thumbnailLink"
+				thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
+				#INFO "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
+				if validString "$thumbnailLink" -q;then
+					#INFO "Try to download movie thumbnail..."
+					#INFO "Thumbnail found at '$thumbnailLink'"
+					addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
+					thumbnailExt=".png"
+					# download the thumbnail
+					ALERT "downloadThumbnail '$thumbnailLink' '$thumbnailPath' '$thumbnailExt'"
+					downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
+					# generate the web thumbnail
 					convert "$fullThumbPath" -adaptive-resize "300x200" "$thumbnailPath-web.png"
-				fi
-			fi
-			#addToLog "DEBUG" "Full Thumbnail Path" "'$thumbnailPath$thumbnailExt'" "$logPagePath"
-
-			if ! test -f "$thumbnailPath-web.png";then
-				if echo "$nfoInfo" | grep -q "fanart";then
-					# pull the double nested xml info for the movie thumb
-					#INFO "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
-					thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
-					#INFO "[DEBUG]: ThumbnailLink phase 2 = $thumbnailLink"
-					thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
-					#INFO "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
-					if validString "$thumbnailLink" -q;then
-						#INFO "Try to download movie thumbnail..."
-						#INFO "Thumbnail found at '$thumbnailLink'"
-						addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
-						thumbnailExt=".png"
-						# download the thumbnail
-						ALERT "downloadThumbnail '$thumbnailLink' '$thumbnailPath' '$thumbnailExt'"
-						downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
-						#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-						#if ! test -f "$thumbnailPath$thumbnailExt";then
-						#	curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
-						#fi
-						# generate the web thumbnail
-						#convert "$thumbnailPath$thumbnailExt" -adaptive-resize "200x100" "$thumbnailPath-web.png"
-						convert "$fullThumbPath" -adaptive-resize "300x200" "$thumbnailPath-web.png"
-						# link the downloaded thumbnail
-						linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
-					else
-						ALERT "[DEBUG]: Thumbnail download link is invalid '$thumbnailLink'"
-					fi
-				fi
-				#touch "$thumbnailPath$thumbnailExt"
-				# check if the thumb download failed
-				if test -f "$thumbnailPath$thumbnailExt";then
-					tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
+					# link the downloaded thumbnail
+					linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 				else
-					tempFileSize=0
-				fi
-				#ALERT "[DEBUG]: file size $tempFileSize"
-				if [ "$tempFileSize" -le 0 ];then
-					ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
-					addToLog "WARNING" "Generating Thumbnail from video file" "$movieVideoPath" "$logPagePath"
-					# try to generate a thumbnail from video file
-					#INFO "Attempting to create thumbnail from video source..."
-					#tempFileSize=0
-					tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$movieVideoPath")
-					tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$movieVideoPath")
-					if echo "$tempFrameRate" | grep -q ".";then
-						# remove any found decimal places in the frame rate
-						tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
-					fi
-					tempTimeCode=$(( $tempTotalFrames / 16 ))
-					tempTimeCode=$(($tempTimeCode / $tempFrameRate))
-					# - force the filesize to be large enough to be a complex descriptive thumbnail
-					# - filesize of images is directly related to visual complexity
-					largestFileSize=15000
-					largestImage=""
-					image=""
-					while [ $tempFileSize -lt $largestFileSize ];do
-						# - place -ss in front of -i for speed boost in seeking to correct frame of source
-						# - tempTimeCode is in seconds
-						# - '-y' to force overwriting the empty file
-						#INFO "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
-						#INFO "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$movieVideoPath' -vframes 1 '$thumbnailPath.png'"
-						#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
-						# store the image inside a variable
-						image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.jpg" )
-						# resize the image before checking the filesize
-						convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
-						# get the size of the file, after it has been created
-						tempFileSize=$(wc --bytes < "$thumbnailPath.jpg")
-						# - increment the timecode to get from the video to find a thumbnail that is not
-						#   a blank screen
-						# - This will create 50 screenshots 500/10 and use the screenshot with the largest
-						#   file size
-						tempTimeCode=$(($tempTimeCode + 10))
-						# after checking x seconds for a thumbnail of the thumbs created use the one with
-						# the largest file size
-						if [ $tempTimeCode -gt 500 ];then
-							# break the loop by breaking the comparison
-							tempFileSize=$largestFileSize
-							# link the thumbnail created to the kodi path
-							linkFile "$thumbnailPath.jpg" "$thumbnailPathKodi.jpg"
-						elif [ $tempFileSize -eq 0 ];then
-							# break the loop, no thumbnail could be generated at all
-							# - Blank white or black space takes up more than 0 bytes
-							# - A webpage generated thumbnail will be created as a alternative
-							rm "$thumbnailPath.jpg"
-							tempFileSize=16000
-						fi
-					done
+					ALERT "[DEBUG]: Thumbnail download link is invalid '$thumbnailLink'"
 				fi
 			fi
+
+			# check if the thumb download failed
+			if test -f "$thumbnailPath.png";then
+				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+			else
+				tempFileSize=0
+			fi
+			#ALERT "[DEBUG]: file size $tempFileSize"
+			if [ "$tempFileSize" -le 0 ];then
+				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
+				addToLog "WARNING" "Generating Thumbnail from video file" "$movieVideoPath" "$logPagePath"
+				# try to generate a thumbnail from video file
+				#INFO "Attempting to create thumbnail from video source..."
+				#tempFileSize=0
+				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$movieVideoPath")
+				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$movieVideoPath")
+				if echo "$tempFrameRate" | grep -q ".";then
+					# remove any found decimal places in the frame rate
+					tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
+				fi
+				tempTimeCode=$(( $tempTotalFrames / 16 ))
+				tempTimeCode=$(($tempTimeCode / $tempFrameRate))
+				# - force the filesize to be large enough to be a complex descriptive thumbnail
+				# - filesize of images is directly related to visual complexity
+				largestFileSize=15000
+				largestImage=""
+				image=""
+				while [ $tempFileSize -lt $largestFileSize ];do
+					# - place -ss in front of -i for speed boost in seeking to correct frame of source
+					# - tempTimeCode is in seconds
+					# - '-y' to force overwriting the empty file
+					# store the image inside a variable
+					image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.jpg" )
+					# resize the image before checking the filesize
+					convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
+					# get the size of the file, after it has been created
+					tempFileSize=$(wc --bytes < "$thumbnailPath.jpg")
+					# - increment the timecode to get from the video to find a thumbnail that is not
+					#   a blank screen
+					# - This will create 50 screenshots 500/10 and use the screenshot with the largest
+					#   file size
+					tempTimeCode=$(($tempTimeCode + 10))
+					# after checking x seconds for a thumbnail of the thumbs created use the one with
+					# the largest file size
+					if [ $tempTimeCode -gt 500 ];then
+						# break the loop by breaking the comparison
+						tempFileSize=$largestFileSize
+						# link the thumbnail created to the kodi path
+						linkFile "$thumbnailPath.jpg" "$thumbnailPathKodi.jpg"
+					elif [ $tempFileSize -eq 0 ];then
+						# break the loop, no thumbnail could be generated at all
+						# - Blank white or black space takes up more than 0 bytes
+						# - A webpage generated thumbnail will be created as a alternative
+						rm "$thumbnailPath.jpg"
+						tempFileSize=16000
+					fi
+				done
+			fi
 		fi
-		if test -f "$thumbnailPath-web.png";then
+		# create the web thumbnail if it does not exist and a thumbnail path was found
+		if ! test -f "$thumbnailPath-web.png";then
 			# convert the thumbnail into a web thumbnail
-			convert -quiet "$thumbnailPath$thumbnailExt" -adaptive-resize "300x200" "$thumbnailPath-web.png"
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize "300x200" "$webDirectory/movies/$movieWebPath/poster-web.png"
 		fi
-		set +x
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
@@ -682,7 +647,7 @@ processMovie(){
 		################################################################################
 		{
 			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
-			echo "	<img loading='lazy' src='/movies/$movieWebPath/$movieWebPath-poster-web.png'>"
+			echo "	<img loading='lazy' src='/movies/$movieWebPath/poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "		<br>"
@@ -693,7 +658,7 @@ processMovie(){
 		# create the movie entry in new movies
 		{
 			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
-			echo "	<img loading='lazy' src='/movies/$movieWebPath/$movieWebPath-poster-web.png'>"
+			echo "	<img loading='lazy' src='/movies/$movieWebPath/poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "		<br>"
@@ -701,13 +666,25 @@ processMovie(){
 			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/new/movie_$movieWebPath.index"
+		# add the movie to the new list
+		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/movies.index
+		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/all.index
+
+		# add the movie to the main movie index since it has been updated
+		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/movies/movies.index"
+
+		# link the new movie data to the new directory
+		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/new/movie_$movieTitle.index"
+		# add the updated movie to the new movies index
+		echo "$webDirectory/new/movie_$movieWebPath.index" >> "$webDirectory/new/movies.index"
+
+		# update the path sum after successfull
+		touch "$webDirectory/movies/$movieWebPath/"
+		touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
+		getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 	else
 		ALERT "[WARNING]: The file '$moviePath' could not be found!"
 	fi
-	# update the path sum after successfull
-	touch "$webDirectory/movies/$movieWebPath/"
-	touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
-	getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 }
 ########################################################################
 getThumbnailExt(){
@@ -764,20 +741,17 @@ checkForThumbnail(){
 			# link thumbnail into output directory
 			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
 			linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+			if ! test -f "$thumbnailPath.png";then
+				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
+			fi
 		else
 			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
-				#INFO "Try to download episode thumbnail..."
-				#INFO "Thumbnail found at $thumbnailLink"
 				addToLog "DOWNLOAD" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 				thumbnailExt=".png"
 				# download the thumbnail
 				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
-				#curl "$thumbnailLink" > "$thumbnailPath$thumbnailExt"
-				#if ! test -f "$thumbnailPath$thumbnailExt";then
-				#	curl "$thumbnailLink" | convert - "$thumbnailPath$thumbnailExt"
-				#fi
-				# link the downloaded thumbnail
+
 				linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 			fi
 			touch "$thumbnailPath$thumbnailExt"
@@ -1002,42 +976,42 @@ processEpisode(){
 			mediaType="video"
 			mimeType="video"
 		fi
-		# find the fanart for the episode background
-		if test -f "$webDirectory/shows/$episodeShowTitle/fanart.png";then
-			#tempStyle="html{ background-image: url('../fanart.png') }"
-			tempStyle="--backgroundFanart: url(\"../fanart.png\");"
-			#tempStyle="root:{ --backgroundFanart: url('../fanart.png');"
-		elif test -f "$webDirectory/shows/$episodeShowTitle/fanart.jpg";then
-			#tempStyle="root:{ --backgroundFanart: url('../fanart.jpg');"
-			tempStyle="--backgroundFanart: url(\"../fanart.jpg\");"
-			#tempStyle="html{ background-image: url('../fanart.jpg') }"
-		fi
-		if test -f "$webDirectory/shows/$episodeShowTitle/poster.png";then
-			#tempStyle="$tempStyle --backgroundPoster: url('../poster.png')}"
-			tempStyle="$tempStyle --backgroundPoster: url(\"../poster.png\")"
-		elif test -f "$webDirectory/shows/$episodeShowTitle/poster.jpg";then
-			#tempStyle="$tempStyle --backgroundPoster: url('../poster.jpg')}"
-			tempStyle="$tempStyle --backgroundPoster: url(\"../poster.jpg\")"
-		fi
+		# build the temp style theme
+		tempStyle=":root{"
+		tempStyle="$tempStyle --backgroundPoster: url(\"/shows/$episodeShowTitle/poster.png\");"
+		tempStyle="$tempStyle --backgroundFanart: url(\"/shows/$episodeShowTitle/fanart.png\");"
+		tempStyle="$tempStyle}"
 		# start rendering the html
 		{
 			# the style variable must be set inline, not in head, this may be a bug in firefox
 			#echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
-			echo "<html id='top' class='seriesBackground' style='background: url(\"../fanart.png\")'>"
+			echo "<html id='top' class='seriesBackground'>"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<style>"
 			#add the fanart
-			#echo "$tempStyle"
+			echo "$tempStyle"
 			echo "</style>"
 			echo "<link rel='icon' type='image/png' href='/favicon.png'>"
 			echo "</head>"
 			echo "<body>"
 			echo "<?PHP";
-			echo "include('../../../header.php')";
+			echo "include('$webDirectory/header.php')";
 			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "<h1><a href='/shows/$episodeShowTitle/#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
+			# add outside search links
+			echo "<div class='listCard'>"
+			echo "<a class='button' href='https://www.imdb.com/find?q=$episodeShowTitle $episodeTitle'>🔎 IMDB</a>"
+			echo "<a class='button' href='https://en.wikipedia.org/w/?search=$episodeShowTitle $episodeTitle'>🔎 WIKIPEDIA</a>"
+			echo "<a class='button' href='https://archive.org/details/movies?query=$episodeShowTitle $episodeTitle'>🔎 ARCHIVE.ORG</a>"
+			echo "<a class='button' href='https://www.youtube.com/results?search_query=$episodeShowTitle $episodeTitle'>🔎 YOUTUBE</a>"
+			echo "<a class='button' href='https://odysee.com/$/search?q=$episodeShowTitle $episodeTitle'>🔎 ODYSEE</a>"
+			echo "<a class='button' href='https://rumble.com/search/video?q=$episodeShowTitle $episodeTitle'>🔎 RUMBLE</a>"
+			echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$episodeShowTitle $episodeTitle'>🔎 BITCHUTE</a>"
+			echo "<a class='button' href='https://www.twitch.tv/search?term=$episodeShowTitle $episodeTitle'>🔎 TWITCH</a>"
+			echo "<a class='button' href='https://veoh.com/find/$episodeShowTitle $episodeTitle'>🔎 VEOH</a>"
+			echo "</div>"
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
@@ -1182,7 +1156,7 @@ processEpisode(){
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then
 					fullRedirect="/transcode.php?link=\"$videoPath\""
 					#echo "<source src='$fullRedirect' type='video/mp4'>"
-					# TODO: works but needs to be toggleable, above is correct code for the transcode.php script
+					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
 					echo "<source src='$videoPath' type='$mimeType'>"
 				else
 					echo "<source src='$videoPath' type='$mimeType'>"
@@ -1241,7 +1215,7 @@ processEpisode(){
 		{
 			# add footer
 			echo "<?PHP";
-			echo "include('../../../header.php')";
+			echo "include('$webDirectory/header.php')";
 			echo "?>";
 			echo "</body>"
 			echo "</html>"
@@ -1277,6 +1251,8 @@ processEpisode(){
 			echo -ne "\n	</div>"
 			echo -ne "\n</a>"
 		} > "$webDirectory/new/episode_$episodePath.index"
+		echo "$webDirectory/new/episode_$episodePath.index" >> $webDirectory/new/episodes.index
+		echo "$webDirectory/new/episode_$episodePath.index" >> $webDirectory/new/all.index
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1340,14 +1316,14 @@ processShow(){
 	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
 	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
 	# link all images to the kodi path
-	if ls "$show" | grep -q "\.jpg" ;then
-		linkFile "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
-		linkFile "$show"/*.jpg "$webDirectory/shows/$showTitle/"
-	fi
-	if ls "$show" | grep -q "\.png" ;then
-		linkFile "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
-		linkFile "$show"/*.png "$webDirectory/shows/$showTitle/"
-	fi
+	#if ls "$show" | grep -q "\.jpg" ;then
+	#	linkFile "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
+	#	linkFile "$show"/*.jpg "$webDirectory/shows/$showTitle/"
+	#fi
+	#if ls "$show" | grep -q "\.png" ;then
+	#	linkFile "$show"/*.png "$webDirectory/kodi/shows/$showTitle/"
+	#	linkFile "$show"/*.png "$webDirectory/shows/$showTitle/"
+	#fi
 	# building the webpage for the show
 	showPagePath="$webDirectory/shows/$showTitle/index.php"
 	#INFO "Creating directory at = '$webDirectory/shows/$showTitle/'"
@@ -1359,12 +1335,58 @@ processShow(){
 	################################################################################
 	# begin building the html of the page
 	################################################################################
-	# generate the episodes based on .nfo files
-	#find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
+	# link the poster
+	if test -f "$show/poster.png";then
+		linkFile "$show/poster.png" "$webDirectory/shows/$showTitle/poster.png"
+		linkFile "$show/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
+		# create the web thumbnails
+		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+		fi
+	elif test -f "$show/poster.jpg";then
+		linkFile "$show/poster.jpg" "$webDirectory/shows/$showTitle/poster.jpg"
+		linkFile "$show/poster.jpg" "$webDirectory/kodi/shows/$showTitle/poster.jpg"
+		# link the jpg to a png for the web browser
+		if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
+			convert -quiet "$webDirectory/shows/$showTitle/poster.jpg" "$webDirectory/shows/$showTitle/poster.png"
+		fi
+	fi
+	# create the web thumbnails
+	if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
+		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+	fi
+	# link the fanart
+	if test -f "$show/fanart.png";then
+		fanartPath="fanart.png"
+		linkFile "$show/fanart.png" "$webDirectory/shows/$showTitle/fanart.png"
+		linkFile "$show/fanart.png" "$webDirectory/kodi/shows/$showTitle/fanart.png"
+	elif test -f "$show/fanart.jpg";then
+		fanartPath="fanart.jpg"
+		linkFile "$show/fanart.jpg" "$webDirectory/shows/$showTitle/fanart.jpg"
+		linkFile "$show/fanart.jpg" "$webDirectory/kodi/shows/$showTitle/fanart.jpg"
+		# convert the fanart to png for web
+		if ! test -f "$webDirectory/shows/$showTitle/fanart.png";then
+			convert -quiet "$webDirectory/shows/$showTitle/fanart.jpg" "$webDirectory/shows/$showTitle/fanart.png"
+		fi
+	fi
+	if ! test -f "$webDirectory/shows/$showTitle/season-all-poster.png";then
+		# TODO: search and find the newest season poster and make that the season all poster
+		# copy the poster to be the season all poster
+		linkFile "$webDirectory/shows/$showTitle/poster.png" "$webDirectory/shows/$showTitle/season-all-poster.png"
+	fi
+	################################################################################
+	# process all individual episodes
+	################################################################################
+	# - Episodes must be processed after fanart is built because episodes search for
+	#   series fanart
+	# - generate the episodes based on .nfo files
+	################################################################################
+	# - find "$show/" -type 'd' -maxdepth 1 -mindepth 1 | while read -r season;do
+	# - seasons in shows can not use find loop because it creates a subshell inside the
+	#  loop which prevents chaninging of variable values used in the function
+	################################################################################
 	for season in "$show"/*;do
-		#INFO "checking for season folder at '$season'"
 		if test -d "$season";then
-			#INFO "found season folder at '$season'"
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
 			seasonSum=$(echo -n "$season" | md5sum | cut -d' ' -f1)
@@ -1392,101 +1414,55 @@ processShow(){
 				for episode in "$season"/*.nfo;do
 					processEpisode "$episode" "$showTitle" "$showPagePath" "$webDirectory"
 				done
+
 				################################################################################
 				headerPagePath="$webDirectory/header.php"
-
-				# find the fanart for the episode background
-				if test -f "$webDirectory/shows/$showTitle/fanart.png";then
-					tempStyle="--backgroundFanart: url(\"fanart.png\");"
-				elif test -f "$webDirectory/shows/$showTitle/fanart.jpg";then
-					tempStyle="--backgroundFanart: url(\"fanart.jpg\");"
-				fi
-				if test -f "$webDirectory/shows/$showTitle/poster.png";then
-					tempStyle="$tempStyle --backgroundPoster: url(\"poster.png\")"
-				elif test -f "$webDirectory/shows/$showTitle/poster.jpg";then
-					tempStyle="$tempStyle --backgroundPoster: url(\"poster.jpg\")"
-				fi
-				#tempStyle="html{ background-image: url(\"$fanartPath\") }"
 				# build top of show webpage containing all of the shows meta info
 				linkFile "/usr/share/2web/templates/seasons.php" "$showPagePath"
-
-				# update the season sum file
-				#getDirSum "$show" > "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
 
 				# update the season sum file
 				touch "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
 				echo "$libarySeasonSum" > "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
 			fi
-		#else
-		#	INFO "Season folder $season does not exist"
 		fi
 	done
-	# link the poster
-	if [ -f "$show/poster.png" ];then
-		posterPath="poster.png"
-		#INFO "Found $show/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
-		# create the web thumbnails
-		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
+
+
+	if ! test -f "$webDirectory/shows/$showTitle/fanart.png";then
+		# get the list of thumbnails
+		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | tail -n 24 | sed "s/^/'/g" | sed "s/$/'/g" | sed -z "s/\n/ /g" )
+		# get the list of image files
+		# create the failsafe background by combining all the thumbnails of episodes into a image
+		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
+		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
+		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
+			cp "$webDirectory/shows/$showTitle/fanart-0.png" "$webDirectory/shows/$showTitle/fanart.png"
+			rm "$webDirectory/shows/$showTitle/fanart-"*.png
 		fi
-	elif [ -f "$show/poster.jpg" ];then
-		posterPath="poster.jpg"
-		#INFO "Found $show/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/shows/$showTitle/$posterPath"
-		linkFile "$show/$posterPath" "$webDirectory/kodi/shows/$showTitle/$posterPath"
-		# create the web thumbnails
-		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
-			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
-		fi
-	else
-		set -x
+		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 40x40 "$webDirectory/shows/$showTitle/fanart.png"
+		echo "Creating the fanart image from webpage..."
+		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
+		# error log
+		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg], Generating one at <a href='/$show/fanart.png'>$show/fanart.png</a>" "$logPagePath"
+	fi
+	if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
+		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | tail -n 8 | sed "s/^/'/g" | sed "s/$/'/g" | sed -z "s/\n/ /g" )
 		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
+		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		if test -f "$webDirectory/shows/$showTitle/poster-0.png";then
 			# to many images exist use only first set
 			cp "$webDirectory/shows/$showTitle/poster-0.png" "$webDirectory/shows/$showTitle/poster.png"
+			# remove excess images
+			rm "$webDirectory/shows/$showTitle/poster-"*.png
 		fi
-		convert "$webDirectory/shows/$showTitle/poster.png" -trim -blur 10x10 "$webDirectory/shows/$showTitle/poster.png"
-
+		convert "$webDirectory/shows/$showTitle/poster.png" -trim -blur 40x40 "$webDirectory/shows/$showTitle/poster.png"
 		echo "Creating the poster image from webpage..."
 		convert "$webDirectory/shows/$showTitle/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/poster.png"
 		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		linkFile "$webDirectory/shows/$showTitle/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
-		set +x
+		# add log entry
 		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]" "$logPagePath"
 	fi
-	# link the fanart
-	if test -f "$show/fanart.png";then
-		#INFO "Found $show/fanart.png"
-		fanartPath="fanart.png"
-		#INFO "Found $show/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
-	elif test -f "$show/fanart.jpg";then
-		fanartPath="fanart.jpg"
-		#INFO "Found $show/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/shows/$showTitle/$fanartPath"
-		linkFile "$show/$fanartPath" "$webDirectory/kodi/shows/$showTitle/$fanartPath"
-	else
-		set -x
-		# get the list of image files
-		# create the failsafe background by combining all the thumbnails of episodes into a image
-		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x3 "$webDirectory/shows/$showTitle/fanart.png"
-		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
-			cp"$webDirectory/shows/$showTitle/fanart-0.png" "$webDirectory/shows/$showTitle/fanart.png"
-		fi
-		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 10x10 "$webDirectory/shows/$showTitle/fanart.png"
-		echo "Creating the fanart image from webpage..."
-		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
-		set +x
-		# error log
-		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg]" "$logPagePath"
-	fi
-	################################################################################
-	################################################################################
-	cp "$downloadPath$showTitle/poster.png" "$downloadPath$showTitle/season-all-poster.png"
-
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
@@ -1498,6 +1474,15 @@ processShow(){
 		#echo "  </marquee>"
 		echo "</a>"
 	} > "$webDirectory/shows/$showTitle/shows.index"
+
+	# add the show to the main show index since it has been updated
+	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/shows/shows.index"
+
+	# link the new episode data to the new directory
+	linkFile "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/new/show_$showTitle.index"
+	# add the updated show to the new shows index
+	echo "$webDirectory/new/show_$showTitle.index" >> "$webDirectory/new/shows.index"
+
 	# update the libary sum
 	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
 	getDirSum "$show" > "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
@@ -1549,6 +1534,8 @@ getLibSum(){
 linkFile(){
 	if ! test -L "$2";then
 		ln -sf "$1" "$2"
+		# DEBUG: log each linked file
+		#echo "ln -sf '$1' '$2'" >> /var/cache/2web/web/linkedFiles.log
 	fi
 }
 ################################################################################
@@ -1781,6 +1768,10 @@ getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
 	# convert lists into md5sum
 	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout
@@ -1816,8 +1807,47 @@ scanForRandomBackgrounds(){
 	webDirectory="$1"
 	backgroundUpdateDelay="7"
 	#########################################################################
-	# create fanart list
-	#########################################################################
+	# build the show fanart and poster indexes
+	################################################################################
+	if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
+		# create shows only fanart.cfg
+		cd "$webDirectory/shows/"
+		find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
+		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
+	fi
+	if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
+		# create shows only poster.cfg
+		cd "$webDirectory/shows/"
+		find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
+		find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
+	fi
+	################################################################################
+	# build the movie fanart and poster indexes
+	################################################################################
+	if cacheCheck "$webDirectory/movies/fanart.cfg" "$backgroundUpdateDelay";then
+		# create movies only fanart.cfg
+		cd "$webDirectory/movies/"
+		find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
+		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
+	fi
+	if cacheCheck "$webDirectory/movies/poster.cfg" "$backgroundUpdateDelay";then
+		# create movies only poster.cfg
+		cd "$webDirectory/movies/"
+		find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
+		find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+	fi
+	################################################################################
+	# build the main index by combining all the other indexes
+	################################################################################
+	if cacheCheck "$webDirectory/poster.cfg" "$backgroundUpdateDelay";then
+		# move into the web directory so paths from below searches are relative
+		cd $webDirectory
+		find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
+		find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
+		find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/poster.cfg"
+	fi
 	# if the fanart list is older than $backgroundUpdateDelay in days
 	if cacheCheck "$webDirectory/fanart.cfg" "$backgroundUpdateDelay";then
 		# move into the web directory so paths from below searches are relative
@@ -1828,44 +1858,13 @@ scanForRandomBackgrounds(){
 		find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
 		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/fanart.cfg"
 	fi
-	if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
-		# create shows only fanart.cfg
-		cd "$webDirectory/shows/"
-		find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
-		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
-	fi
-	if cacheCheck "$webDirectory/movies/fanart.cfg" "$backgroundUpdateDelay";then
-		# create movies only fanart.cfg
-		cd "$webDirectory/movies/"
-		find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
-		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
-	fi
-	if cacheCheck "$webDirectory/poster.cfg" "$backgroundUpdateDelay";then
-		# move into the web directory so paths from below searches are relative
-		cd $webDirectory
-		find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
-		find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-		find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
-		find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/poster.cfg"
-	fi
-	if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
-		# create shows only poster.cfg
-		cd "$webDirectory/shows/"
-		find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
-		find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
-	fi
-	if cacheCheck "$webDirectory/movies/poster.cfg" "$backgroundUpdateDelay";then
-		# create movies only poster.cfg
-		cd "$webDirectory/movies/"
-		find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
-		find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
-	fi
+	################################################################################
 	# remove empty lists
-	if [ "$( wc -l "$webDirectory/fanart.cfg" )" -lt 2 ];then
+	################################################################################
+	if [ "$( cat "$webDirectory/fanart.cfg" | wc -l )" -lt 2 ];then
 		rm -v "$webDirectory/fanart.cfg"
 	fi
-	if [ "$( wc -l "$webDirectory/poster.cfg" )" -lt 2 ];then
+	if [ "$( cat "$webDirectory/poster.cfg" | wc -l )" -lt 2 ];then
 		rm -v "$webDirectory/poster.cfg"
 	fi
 }
@@ -1953,20 +1952,15 @@ function updateCerts(){
 	force=$1
 	genCert='no'
 	# if the cert exists
-	if test -f /var/cache/2web/ssl-cert.crt;then
-		# if the certs are older than 364 days renew recreate a new valid key
-		if [ $( find /var/cache/2web/ -mtime +365 -name '*.crt' | wc -l ) -gt 0 ] ;then
-			# the cert has expired
-			echo "[INFO]: Updating cert..."
-			# generate a new private key and public cert for the SSL certification
-			genCert='yes'
-		else
-			echo "[INFO]: Cert still active..."
-		fi
-	else
-		echo "[INFO]: Creating cert..."
-		# if the cert does not exist
+	# if the certs are older than 364 days renew recreate a new valid key
+	if cacheCheck /var/cache/2web/ssl-cert.crt "365";then
+		# the cert has expired
+		echo "[INFO]: Updating cert..."
+		# generate a new private key and public cert for the SSL certification
 		genCert='yes'
+	else
+		echo "[INFO]: Cert still active..."
+		return
 	fi
 	if $force;then
 		# force cert generation
@@ -2122,6 +2116,7 @@ main(){
 		# admin control file
 		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/admin.php"
 		# settings interface files
+		linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/serverServices.php"
 		linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/radio.php"
 		linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/tv.php"
 		linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
@@ -2197,7 +2192,7 @@ main(){
 
 		# install the php streaming script
 		#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
-		linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
+		#linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
 
 		# link the randomFanart.php script
 		linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/randomFanart.php"
@@ -2225,7 +2220,6 @@ main(){
 		logPagePath="$webDirectory/log.php"
 		# create the homepage path
 		#homePagePath="$webDirectory/index.php"
-		headerPagePath="$webDirectory/header.php"
 		showIndexPath="$webDirectory/shows/index.php"
 		movieIndexPath="$webDirectory/movies/index.php"
 		#touch "$showIndexPath"
@@ -2233,7 +2227,8 @@ main(){
 		touch "$logPagePath"
 		#touch "$homePagePath"
 		# check for the header
-		linkFile "/usr/share/2web/templates/header.php" "$headerPagePath"
+		linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
+		linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
 		# build log page
 		{
 			echo "<html id='top' class='randomFanart'>"
@@ -2290,7 +2285,9 @@ main(){
 				#INFO "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				#for show in "$libary"/*;do
+				addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
 				find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
+					addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
 					#INFO "show path = '$show'"
 					################################################################################
 					# process page metadata
@@ -2352,6 +2349,35 @@ main(){
 			echo "</body>"
 			echo "</html>"
 		} >> "$logPagePath"
+		################################################################################
+		# - sort and clean main indexes
+		# - cleanup the new indexes by limiting the lists to 200 entries
+		# - only run cleanup if the indexes exist as the indexes trigger header buttons
+		################################################################################
+		if test -f "$webDirectory/shows/shows.index";then
+			tempList=$(cat "$webDirectory/shows/shows.index" )
+			echo "$tempList" | sort -u > "$webDirectory/shows/shows.index"
+			# new list
+			tempList=$(cat "$webDirectory/new/shows.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/new/shows.index"
+			# new episodes
+			tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/new/episodes.index"
+		fi
+		if test -f "$webDirectory/movies/movies.index";then
+			tempList=$(cat "$webDirectory/movies/movies.index" )
+			echo "$tempList" | sort -u > "$webDirectory/movies/movies.index"
+			# new movies
+			tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/new/movies.index"
+		fi
+		if test -f "$webDirectory/comics/comics.index";then
+			tempList=$(cat "$webDirectory/comics/comics.index" )
+			echo "$tempList" | sort -u > "$webDirectory/comics/comics.index"
+			# new comics
+			tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/new/comics.index"
+		fi
 		# create the final index pages, these should not have the progress indicator
 		# build the final version of the homepage without the progress indicator
 		buildHomePage "$webDirectory"

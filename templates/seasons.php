@@ -1,7 +1,19 @@
-<html id='top' class='seriesBackground' style="background: url('fanart.png')">
+<html class='seriesBackground'>
 <head>
 <link rel='stylesheet' href='/style.css' />
 <script src='/2web.js'></script>
+<style>
+<?PHP
+	# get the show name
+	$workingDirectory=getcwd();
+	$workingDirectory=explode('/',$workingDirectory);
+	$workingDirectory=array_pop($workingDirectory);
+	echo ":root{";
+	echo "--backgroundPoster: url('/shows/".$workingDirectory."/poster.png');";
+	echo "--backgroundFanart: url('/shows/".$workingDirectory."/fanart.png');";
+	echo"}";
+?>
+</style>
 </head>
 <body>
 <a href='#' id='topButton' class='button'>&uarr;</a>
@@ -23,7 +35,7 @@ echo "<h1>$showTitle</h1>";
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"'>";
 ?>
-	Play All<sup>(External)<sup>
+	▶️ Play All<sup>(External)<sup>
 </a>
 
 <?PHP
@@ -36,7 +48,7 @@ echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
 ?>
-	Play Random<sup>(External)<sup>
+	▶️ Play Random<sup>(External)<sup>
 </a>
 
 <?PHP
@@ -45,7 +57,9 @@ echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.
 	<span id='vlcIcon'>&#9650;</span> VLC
 	Play Random<sup>(External)<sup>
 </a>
+</div>
 
+<div class='listCard'>
 <?PHP
 ################################################################################
 # after processing each season rebuild the show page index entirely
@@ -59,17 +73,29 @@ foreach($seasonDirs as $seasonDir){
 			$seasonName = str_replace('/season.index','',$seasonDir);
 			$seasonName = str_replace($activeDir.'/','',$seasonName);
 			echo "	<a href='#$seasonName' class='button'>";
-			echo "		$seasonName";
+			echo "		📁 $seasonName";
 			echo "	</a>";
 			flush();
 			ob_flush();
 		}
 	}
 }
-echo "<hr>";
 ?>
-
 </div>
+<?PHP
+echo "<div class='listCard'>";
+echo "<a class='button' href='https://www.imdb.com/find?q=$showTitle'>🔎 IMDB</a>";
+echo "<a class='button' href='https://en.wikipedia.org/w/?search=$showTitle'>🔎 WIKIPEDIA</a>";
+echo "<a class='button' href='https://archive.org/details/movies?query=$showTitle'>🔎 ARCHIVE.ORG</a>";
+echo "<a class='button' href='https://www.youtube.com/results?search_query=$showTitle'>🔎 YOUTUBE</a>";
+echo "<a class='button' href='https://odysee.com/$/search?q=$showTitle'>🔎 ODYSEE</a>";
+echo "<a class='button' href='https://rumble.com/search/video?q=$showTitle'>🔎 RUMBLE</a>";
+echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$showTitle'>🔎 BITCHUTE</a>";
+echo "<a class='button' href='https://www.twitch.tv/search?term=$showTitle'>🔎 TWITCH</a>";
+echo "<a class='button' href='https://veoh.com/find/$showTitle'>🔎 VEOH</a>";
+echo "</div>";
+?>
+<hr>
 </div>
 <input id='searchBox' class='searchBox' type='text'
  onkeyup='filter("showPageEpisode")' placeholder='Search...' >

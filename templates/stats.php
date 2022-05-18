@@ -113,10 +113,10 @@ if ( $totalWeatherStations > 0 ){
 	echo "		</span>";
 }
 echo "		<span>";
-echo "			Web:$webSize ";
+echo "			Total Web:$webSize ";
 echo "		</span>";
 echo "		<span>";
-echo "			Cache:$cacheSize";
+echo "			Video Cache:$cacheSize";
 echo "		</span>";
 echo "		<span>";
 echo "			Media:$mediaSize";

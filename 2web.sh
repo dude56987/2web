@@ -44,6 +44,8 @@ getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
+	# add the version to the sum to update old versions
+	totalList="$totalList$(cat /usr/share/2web/version.cfg)"
 	# convert lists into md5sum
 	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
 	# write the md5sum to stdout

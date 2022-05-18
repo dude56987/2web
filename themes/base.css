@@ -36,6 +36,23 @@ hr{
 	visiblity: hidden;
 	border-width: 0px;
 }
+/* fix the scrollbars */
+/* MOZILLA SCROLLBAR */
+html{
+	scrollbar-color: var(--solidBackground) var(--glassBackground);
+	scrollbar-width: auto;
+}
+/* WEBKIT SCROLLBAR*/
+.fortuneText::-webkit-scrollbar{
+	width: 0.8rem;
+	background: var(--solidBackground);
+}
+.fortuneText::-webkit-scrollbar-thumb{
+	width: 0.8rem;
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	border: 1px var(--textColor) solid;
+}
 pre::-webkit-scrollbar{
 	width: 0.8rem;
 	background: var(--solidBackground);
@@ -307,12 +324,12 @@ ol li{
 	.menuButton{
 		display: block !important;
 		background-color: var(--glassBackground);
-		height: 0.5rem;
+		height: 0.33rem;
 		margin: 0px;
+		margin-top:0.6rem;
 		/*
-		margin-top:0.2rem;
-		*/
 		margin-bottom:0.5rem;
+		*/
 	}
 	.header a{
 		box-shadow: none;
@@ -341,7 +358,7 @@ ol{
 	background-color: var(--glassBackground);
 }
 .seriesBackground{
-	/*background: var(--backgroundFanart);*/
+	background: var(--backgroundFanart) !important;
 	background-size: 100vw 100vh !important;
 	background-repeat: repeat !important;
 	background-attachment: fixed !important;
@@ -406,7 +423,7 @@ ol{
 		width: 100%;
 	}
 	.seriesBackground{
-		/*background: var(--backgroundPoster);*/
+		background: var(--backgroundPoster) !important;
 		background-size: 100vw 100vh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
@@ -462,6 +479,8 @@ ol{
 @media only screen and (max-width: 400px), (orientation: portrait){
 	html{
 		font-size: 42px;
+		/* Make the scrollbar width thin on small touchscreen devices for FIREFOX */
+		scrollbar-width: thin;
 	}
 }
 
@@ -660,8 +679,8 @@ input{
 	/*This means the web browser is in portrat mode*/
 	/***********************************************/
 	.titlecard .button{
-		display: inline-block;
 		/*
+		display: inline-block;
 		width: -webkit-fill-available;
 		*/
 	}
@@ -1184,6 +1203,8 @@ pre{
 }
 table{
 	width: 100%;
+	padding: 0px !important;
+	margin: 0px !important;
 }
 tr{
 	width: 100%;
@@ -1336,16 +1357,6 @@ tr{
 	font-size: 0.5rem;
 	overflow: auto;
 	padding: 0.5rem;
-}
-.fortuneText::-webkit-scrollbar{
-	width: 0.8rem;
-	background: var(--solidBackground);
-}
-.fortuneText::-webkit-scrollbar-thumb{
-	width: 0.8rem;
-	background: var(--glassBackground);
-	box-shadow: 0px 0px 1rem var(--shadowColor);
-	border: 1px var(--textColor) solid;
 }
 pre{
 	border: solid;

@@ -101,7 +101,7 @@ if(file_exists("channels.m3u")){
 // add random movies above the footer
 include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
 // add the footer
-include("../header.php");
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 echo "<hr class='topButtonSpace'>"
 ?>
 </body>

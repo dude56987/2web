@@ -52,32 +52,21 @@ $filterCommand = $filterCommand." | tail -n 500 | tac";
 //$filterCommand = $filterCommand." | tac | tail -n 200 | tac";
 //echo "<br>$filterCommand<br>";
 
-if (file_exists("$webDirectory/shows/")){
-	if (file_exists("$webDirectory/totalShows.index")){
-		if ((file_get_contents("$webDirectory/totalShows.index")) > 0){
-			echo "<a class='button' href='?filter=episodes'>🎞️Episodes</a>";
-		}
-	}
+if (file_exists("$webDirectory/new/shows.index")){
+	echo "<a class='button' href='?filter=shows'>📺 shows</a>";
+	echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
 }
 
-if (file_exists("$webDirectory/movies/")){
-	if (file_exists("$webDirectory/totalMovies.index")){
-		if ((file_get_contents("$webDirectory/totalMovies.index")) > 0){
-			echo "<a class='button' href='?filter=movies'>🎥Movies</a>";
-		}
-	}
+if (file_exists("$webDirectory/new/movies.index")){
+	echo "<a class='button' href='?filter=movies'>🎥 Movies</a>";
 }
 
-if (file_exists("$webDirectory/comics/")){
-	if (file_exists("$webDirectory/totalComics.index")){
-		if ((file_get_contents("$webDirectory/totalComics.index")) > 0){
-			echo "<a class='button' href='?filter=comics'>📚Comics</a>";
-		}
-	}
+if (file_exists("$webDirectory/new/comics.index")){
+	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
 }
 
 ?>
-<a class='button' href='?filter=all'>📜All</a>
+<a class='button' href='?filter=all'>📜 All</a>
 </div>
 
 
@@ -104,7 +93,9 @@ if ($writeFile){
 	ignore_user_abort(true);
 	$fileHandle = fopen("new_$filterType.index",'w');
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec($filterCommand));
+	#$sourceFiles = explode("\n",shell_exec($filterCommand));
+	$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
+	$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
@@ -131,7 +122,7 @@ if ($writeFile){
 </div>
 <?php
 // add the footer
-include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 <hr class='topButtonSpace'>
 </body>

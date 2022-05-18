@@ -234,7 +234,7 @@ function update(){
 				# read each line of the forcast info
 				echo "$todaysForcast" | while read forcast;do
 					# pull forcast time
-					timeOfForcast=$(echo "$forcast"	| cut -d'.' -f1 | sed "s/EARLY THIS //g")
+					timeOfForcast=$(echo "$forcast"	| cut -d'.' -f1 | sed "s/EARLY THIS //g" | sed "s/LATE THIS //g"  | sed "s/REST OF //g" | sed "s/THIS //g" )
 					if [ $( echo -n "$timeOfForcast" | wc -c) -gt 0 ];then
 						# pull forcast info for time
 						tempForcast=$(echo "$forcast"	| cut -d'.' -f4-)
@@ -358,8 +358,7 @@ function update(){
 								echo -n "var(--glassBackground)"
 							fi
 							echo -n ",var(--glassBackground),var(--glassBackground))' >"
-							if echo "$timeOfForcast" | grep -q "NIGHT";then
-								timeOfForcast="$(echo "$timeOfForcast" | sed "s/ NIGHT//g" | sed "s/REST OF//g")"
+							if echo "$timeOfForcast" | grep -qE "(NIGHT|AFTERNOON|EVENING)";then
 								# nighttime forcast
 								echo -n "<h3>$timeOfForcast"
 								echo -n "🌙";

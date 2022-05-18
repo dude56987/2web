@@ -264,7 +264,7 @@ For when you need more than the web interface can handle. This help section defi
 	</div>
 </div>
 <?PHP
-include("header.php")
+include("footer.php")
 ?>
 </body>
 </html>
