@@ -173,6 +173,7 @@ checkMovieThumbPaths(){
 	possibleThumbPaths=""
 	possibleThumbPaths="${possibleThumbPaths}$thumbnail\n"
 	possibleThumbPaths="${possibleThumbPaths}$movieDir/poster\n"
+	possibleThumbPaths="${possibleThumbPaths}$movieDir/$movieDir-poster\n"
 	possibleThumbPaths="${possibleThumbPaths}$thumbnailShort\n"
 	possibleThumbPaths="${possibleThumbPaths}$thumbnailShort-thumb\n"
 	possibleThumbPaths=${possibleThumbPaths// /\ }
@@ -397,13 +398,18 @@ processMovie(){
 			linkFile "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
 		fi
 		# link the fanart
-		if test -f "$movieDir/fanart.png";then
+		if test -f "$movieDir/$movieTitle-fanart.png";then
+			linkFile "$movieDir/$movieTitle-fanart.png" "$webDirectory/movies/$movieWebPath/fanart.png"
+		elif test -f "$movieDir/$movieTitle-fanart.jpg";then
+			linkFile "$movieDir/$movieTitle-fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.jpg"
+		elif test -f "$movieDir/fanart.png";then
 			linkFile "$movieDir/fanart.png" "$webDirectory/movies/$movieWebPath/fanart.png"
+		elif test -f "$movieDir/$movieWebPath-fanart.jpg";then
+			linkFile "$movieDir/$movieWebPath-fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.jpg"
+		elif test -f "$movieDir/$movieWebPath-fanart.png";then
+			linkFile "$movieDir/$movieWebPath-fanart.png" "$webDirectory/movies/$movieWebPath/fanart.png"
 		elif test -f "$movieDir/fanart.jpg";then
 			linkFile "$movieDir/fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.jpg"
-			if ! test -f "$webDirectory/movies/$movieWebPath/fanart.png";then
-				convert -quiet "$webDirectory/movies/$movieWebPath/fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.png"
-			fi
 		else
 			# generate a fanart if no fanart could be found
 			ALERT "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
@@ -412,17 +418,26 @@ processMovie(){
 			# add the title to the poster
 			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -adaptive-resize  1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/fanart.png"
 		fi
+		if test -f "$webDirectory/movies/$movieWebPath/fanart.jpg";then
+			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.jpg" "$webDirectory/movies/$movieWebPath/fanart.png"
+		fi
 
 		# no thumbnail has been linked or downloaded search for one
 		fullThumbPath=$(checkMovieThumbPaths "$movieDir" "$thumbnail" "$thumbnailShort" "$logPagePath" "$thumbnailPath" "$thumbnailPathKodi")
 
 		# this is a simple check if the above search failed
-		if test -f "$movieDir/poster.png";then
+		if test -f "$movieDir/$movieTitle-poster.png";then
+			linkFile "$movieDir/$movieTitle-poster.png" "$webDirectory/movies/$movieWebPath/poster.png"
+		elif test -f "$movieDir/$movieTitle-poster.jpg";then
+			linkFile "$movieDir/$movieTitle-poster.jpg" "$webDirectory/movies/$movieWebPath/poster.jpg"
+		elif test -f "$movieDir/poster.png";then
 			linkFile "$movieDir/poster.png" "$webDirectory/movies/$movieWebPath/poster.png"
+		elif test -f "$movieDir/$movieWebPath-poster.jpg";then
+			linkFile "$movieDir/$movieWebPath-poster.jpg" "$webDirectory/movies/$movieWebPath/poster.jpg"
+		elif test -f "$movieDir/$movieWebPath-poster.png";then
+			linkFile "$movieDir/$movieWebPath-poster.png" "$webDirectory/movies/$movieWebPath/poster.png"
 		elif test -f "$movieDir/poster.jpg";then
 			linkFile "$movieDir/poster.jpg" "$webDirectory/movies/$movieWebPath/poster.jpg"
-			# link png for the web interface
-			convert -quiet "$movieDir/poster.jpg" "$webDirectory/movies/$movieWebPath/poster.png"
 		else
 			ALERT "[WARNING]: could not find poster '$movieDir/poster.[png/jpg]'"
 			# generate a poster from a thumbnail if no poster could be found in previous check
@@ -432,6 +447,10 @@ processMovie(){
 			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -blur 40x40 "$webDirectory/movies/$movieWebPath/poster.png"
 			# add the title to the poster
 			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/poster.png"
+		fi
+		if test -f "$webDirectory/movies/$movieWebPath/poster.jpg";then
+			# link png for the web interface
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.jpg" "$webDirectory/movies/$movieWebPath/poster.png"
 		fi
 
 		# link poster and fanart in the kodi section
@@ -655,17 +674,6 @@ processMovie(){
 			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
-		# create the movie entry in new movies
-		{
-			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
-			echo "	<img loading='lazy' src='/movies/$movieWebPath/poster-web.png'>"
-			echo "	<div class='title'>"
-			echo "		$movieTitle"
-			echo "		<br>"
-			echo "		($movieYear)"
-			echo "	</div>"
-			echo "</a>"
-		} > "$webDirectory/new/movie_$movieWebPath.index"
 		# add the movie to the new list
 		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/movies.index
 		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/all.index
@@ -674,7 +682,7 @@ processMovie(){
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/movies/movies.index"
 
 		# link the new movie data to the new directory
-		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/new/movie_$movieTitle.index"
+		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/new/movie_$movieWebPath.index"
 		# add the updated movie to the new movies index
 		echo "$webDirectory/new/movie_$movieWebPath.index" >> "$webDirectory/new/movies.index"
 
@@ -1426,7 +1434,6 @@ processShow(){
 			fi
 		fi
 	done
-
 
 	if ! test -f "$webDirectory/shows/$showTitle/fanart.png";then
 		# get the list of thumbnails

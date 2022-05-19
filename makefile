@@ -292,6 +292,8 @@ build-deb:
 	du -sx --exclude DEBIAN ./debian/ > Installed-Size.txt
 	# copy over package data
 	cp -rv debdata/. debian/DEBIAN/
+	# write the changelog
+	/usr/bin/git log --date short > ./debian/DEBIAN/changelog
 	# fix permissions in package
 	chmod -Rv 775 debian/DEBIAN/
 	chmod -Rv ugo+r debian/
