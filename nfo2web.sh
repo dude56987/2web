@@ -1996,8 +1996,14 @@ main(){
 		echo -n "2web Version Publish Date: "
 		cat /usr/share/2web/versionDate.cfg
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		echo "[INFO]: Reseting web cache states..."
 		# verbose removal of found files allows files to be visible as they are removed
+		# remove found .index files as they store web generated data
+		echo "[INFO]: Reseting web cache states..."
+		echo "[INFO]: Removing *.index files shows/movies/new..."
+		find "$(webRoot)/shows/" -type f -name '*.index' -exec rm -v {} \;
+		find "$(webRoot)/movies/" -type f -name '*.index' -exec rm -v {} \;
+		find "$(webRoot)/new/" -type f -name '*.index' -exec rm -v {} \;
+		echo "[INFO]: Reseting state files for shows/movies..."
 		find "$(webRoot)/shows/" -type f -name 'state_*.cfg' -exec rm -v {} \;
 		find "$(webRoot)/movies/" -type f -name 'state_*.cfg' -exec rm -v {} \;
 		echo "[INFO]: Reseting web log for individual shows/movies..."
