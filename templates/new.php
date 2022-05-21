@@ -25,33 +25,20 @@ if (array_key_exists("filter",$_GET)){
 	//echo "<p>filter = $filterType</p>";
 	if ($filterType == 'movies'){
 		echo "<h2>Recently added Movies</h2>";
-		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/movie_*.index';
-		$filterCommand = "find '/var/cache/2web/web/new/' -name 'movie_*.index' -printf '%T+ %p\n'";
 	}else if ($filterType == 'episodes'){
 		echo "<h2>Recently added Episodes</h2>";
-		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/episode_*.index';
-		$filterCommand = "find '/var/cache/2web/web/new/' -name 'episode_*.index' -printf '%T+ %p\n'";
 	}else if ($filterType == 'comics'){
 		echo "<h2>Recently added Comics</h2>";
-		$filterCommand = "find '/var/cache/2web/web/new/' -name 'comic_*.index' -printf '%T+ %p\n'";
 	}else{
 		echo "<h2>Recently added Media</h2>";
-		//$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
-		$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
 	}
 }else{
 	$filterType="all";
 	echo "<h2>Recently added Media</h2>";
-	//$filterCommand = 'ls -t1 /var/cache/2web/web/new/*.index';
-	$filterCommand = "find '/var/cache/2web/web/new/' -name '*.index' -printf '%T+ %p\n'";
 }
-# sort list based on time
-$filterCommand = $filterCommand." | sort | cut -d' ' -f2-";
-# limit list to 200 entries
-$filterCommand = $filterCommand." | tail -n 500 | tac";
-//$filterCommand = $filterCommand." | tac | tail -n 200 | tac";
-//echo "<br>$filterCommand<br>";
-
+?>
+<div class='listCard'>
+<?PHP
 if (file_exists("$webDirectory/new/shows.index")){
 	echo "<a class='button' href='?filter=shows'>📺 shows</a>";
 	echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
@@ -67,6 +54,7 @@ if (file_exists("$webDirectory/new/comics.index")){
 
 ?>
 <a class='button' href='?filter=all'>📜 All</a>
+</div>
 </div>
 
 
@@ -96,6 +84,8 @@ if ($writeFile){
 	#$sourceFiles = explode("\n",shell_exec($filterCommand));
 	$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
 	$sourceFiles = array_reverse($sourceFiles);
+	// limit the array to 200 items
+	array_splice($sourceFiles, 200);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
