@@ -76,9 +76,31 @@ foreach($sourceFiles as $sourceFile){
 
 <div id='currentLinks' class='settingListCard'>
 <h2>Supported Websites</h2>
+<table>
+	<tr>
+		<th>Extractor</th>
+		<th>SSL</th>
+		<th>HTTP</th>
+	</tr>
 <?PHP
-	echo shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq");
+	$extractors = explode("\n", shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq"));
+foreach($extractors as $extractor_name){
+	if ($extractor_name != ''){
+		echo "<tr>";
+		echo "<td>";
+		echo "$extractor_name";
+		echo "</td>";
+		echo "<td>";
+		echo "<a href='https://$extractor_name'>https://$extractor_name</a>";
+		echo "</td>";
+		echo "<td>";
+		echo "<a href='http://$extractor_name'>http://$extractor_name</a>";
+		echo "</td>";
+		echo "</tr>";
+	}
+}
 ?>
+</table>
 </div>
 
 <?PHP
