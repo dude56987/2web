@@ -16,7 +16,6 @@
 </style>
 </head>
 <body>
-<a href='#' id='topButton' class='button'>&uarr;</a>
 <?PHP
 ini_set('display_errors', 1);
 // this file is to be placed in the show directory
@@ -128,8 +127,7 @@ foreach($seasonDirs as $seasonDir){
 </div>
 <?PHP
 	# add footer
-	include('../../header.php');
+	include($_SERVER['DOCUMENT_ROOT'].'/footer.php');
 ?>
-<hr class='topButtonSpace'>
 </body>
 </html>

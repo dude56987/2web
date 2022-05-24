@@ -478,7 +478,7 @@ processMovie(){
 			echo "</head>"
 			echo "<body>"
 			echo "<?PHP";
-			echo "include('../../header.php')";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
 			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "<h1>$movieTitle ($movieYear)</h1>"
@@ -656,7 +656,7 @@ processMovie(){
 		{
 			# add footer
 			echo "<?PHP";
-			echo "include('../../header.php')";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
 			echo "?>";
 			echo "</body>"
 			echo "</html>"
@@ -1004,7 +1004,7 @@ processEpisode(){
 			echo "</head>"
 			echo "<body>"
 			echo "<?PHP";
-			echo "include('$webDirectory/header.php')";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
 			echo "?>";
 			echo "<div class='titleCard'>"
 			echo "<h1><a href='/shows/$episodeShowTitle/#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
@@ -1223,7 +1223,7 @@ processEpisode(){
 		{
 			# add footer
 			echo "<?PHP";
-			echo "include('$webDirectory/header.php')";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
 			echo "?>";
 			echo "</body>"
 			echo "</html>"
@@ -1495,7 +1495,7 @@ processShow(){
 	getDirSum "$show" > "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
 }
 ########################################################################
-addToLog(){
+function addToLog(){
 	errorType=$1
 	errorDescription=$2
 	errorDetails=$3
@@ -1768,6 +1768,39 @@ buildHomePage(){
 			totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
 			echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
 		fi
+	fi
+}
+########################################################################
+checkDirSum(){
+	webDirectory=$1
+	directory=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	if ! test -d "$webDirectory/sums/";then
+		mkdir -p "$webDirectory/sums/"
+	fi
+	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	newSum="$(getDirSum "$2")"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		return 0
 	fi
 }
 ########################################################################
@@ -2104,6 +2137,15 @@ main(){
 			mkdir -p "$webDirectory/settings/"
 			chown -R www-data:www-data "$webDirectory/settings/"
 		fi
+		if ! test -d "$webDirectory/sums/";then
+			mkdir -p "$webDirectory/sums/"
+			chown -R www-data:www-data "$webDirectory/sums/"
+		fi
+		if ! test -d "$webDirectory/views/";then
+			mkdir -p "$webDirectory/views/"
+			chown -R www-data:www-data "$webDirectory/views/"
+		fi
+
 		# create config files if they do not exist
 		if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
 			# by default disable caching of new episodes
@@ -2217,6 +2259,57 @@ main(){
 		linkFile "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
 		linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
 
+		# once a month rebuild all custom themes
+		# - a website reset or nuke will reset this timer
+		#if cacheCheck /var/cache/2web/web/themeGen.cfg "30";then
+		if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+			themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
+			#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+			themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
+			themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
+			#themeFonts=$(echo "$themeFonts" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+			themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
+			themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
+			#themeMods=$(echo "$themeMods" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+			themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
+			themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
+			#themeBases=$(echo "$themeBases" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+			themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
+			# build the custom stylesheets if they need to be built
+			for themeColor in $themeColors;do
+				tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
+				for themeFont in $themeFonts;do
+					tempPathFont=$(echo "$themeFont" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/font-//g" )
+					for themeMod in $themeMods;do
+						tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
+						for themeBase in $themeBases;do
+							tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
+							tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
+							#ALERT "Building theme at /usr/share/2web/themes/$tempThemeName.css"
+							#addToLog "DEBUG" "Building theme at /usr/share/2web/themes/$tempThemeName.css" "$logPagePath"
+							# build the theme
+							{
+								if test -f "$themeColor";then
+									cat "$themeColor"
+								fi
+								if test -f "$themeFont";then
+									cat "$themeFont"
+								fi
+								if test -f "$themeMod";then
+									cat "$themeMod"
+								fi
+								if test -f "$themeBase";then
+									cat "$themeBase"
+								fi
+							} > "/usr/share/2web/themes/$tempThemeName.css"
+						done
+					done
+				done
+			done
+			# update the timer
+			touch /var/cache/2web/web/themeGen.cfg
+		fi
+
 		# link the stylesheet based on the chosen theme
 		if ! test -f /etc/2web/theme.cfg;then
 			echo "default.css" > "/etc/2web/theme.cfg"
@@ -2229,6 +2322,7 @@ main(){
 		# link stylesheet
 		linkFile "$webDirectory/style.css" "$webDirectory/movies/style.css"
 		linkFile "$webDirectory/style.css" "$webDirectory/shows/style.css"
+
 		# create the log path
 		logPagePath="$webDirectory/log.php"
 		# create the homepage path
@@ -2254,7 +2348,7 @@ main(){
 			echo "</head>"
 			echo "<body>"
 			echo "<?PHP";
-			echo "include('header.php');";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
 			echo "include('settingsHeader.php');";
 			echo "?>";
 			# add the javascript sorter controls
@@ -2354,11 +2448,8 @@ main(){
 			echo "</div>"
 			# add footer
 			echo "<?PHP";
-			echo "include('header.php')";
+			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
 			echo "?>";
-			# create top jump button
-			echo "<a href='#' id='topButton' class='button'>&uarr;</a>"
-			echo "<hr class='topButtonSpace'>"
 			echo "</body>"
 			echo "</html>"
 		} >> "$logPagePath"
@@ -2367,29 +2458,34 @@ main(){
 		# - cleanup the new indexes by limiting the lists to 200 entries
 		# - only run cleanup if the indexes exist as the indexes trigger header buttons
 		################################################################################
+		#########
+		# SHOWS #
+		#########
 		if test -f "$webDirectory/shows/shows.index";then
 			tempList=$(cat "$webDirectory/shows/shows.index" )
 			echo "$tempList" | sort -u > "$webDirectory/shows/shows.index"
+		fi
+		if test -f "$webDirectory/new/shows.index";then
 			# new list
 			tempList=$(cat "$webDirectory/new/shows.index" | uniq | tail -n 200 )
 			echo "$tempList" > "$webDirectory/new/shows.index"
+		fi
+		if test -f "$webDirectory/new/episodes.index";then
 			# new episodes
 			tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
 			echo "$tempList" > "$webDirectory/new/episodes.index"
 		fi
+		##########
+		# MOVIES #
+		##########
 		if test -f "$webDirectory/movies/movies.index";then
 			tempList=$(cat "$webDirectory/movies/movies.index" )
 			echo "$tempList" | sort -u > "$webDirectory/movies/movies.index"
+		fi
+		if test -f "$webDirectory/new/movies.index";then
 			# new movies
 			tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
 			echo "$tempList" > "$webDirectory/new/movies.index"
-		fi
-		if test -f "$webDirectory/comics/comics.index";then
-			tempList=$(cat "$webDirectory/comics/comics.index" )
-			echo "$tempList" | sort -u > "$webDirectory/comics/comics.index"
-			# new comics
-			tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/new/comics.index"
 		fi
 		# create the final index pages, these should not have the progress indicator
 		# build the final version of the homepage without the progress indicator

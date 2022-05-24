@@ -1,6 +1,6 @@
 <?php
 # if comics exist exit
-if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalComics.index")){
+if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 	$cacheFile="updatedComics.index";
 	if (file_exists($cacheFile)){
 		if (time()-filemtime($cacheFile) > 2 * 3600){

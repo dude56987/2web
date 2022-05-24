@@ -13,8 +13,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexLink")' placeholder='Search...' >
 
-<?php // create top jump button ?>
-<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 # add the updated movies below the header
@@ -102,7 +100,6 @@ if(file_exists("channels.m3u")){
 include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-echo "<hr class='topButtonSpace'>"
 ?>
 </body>
 </html>

@@ -637,31 +637,23 @@ renderPage(){
 	# if no zip directory exists then create the zip directory
 	createDir "$webDirectory/kodi/comics_tank/$pageComicName/"
 	# write the downloadable .zip file
-	# zip requires the current working directory be changed
+	# - zip requires the current working directory be changed
 	if [ $isChapter = true ];then
 		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
 		linkFile "$imagePath" "$pageComicName-$pageChapterName-$pageNumber.jpg"
-		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageChapterName-$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
-				#set -x
 				# if this is the last page create the zip file
 				zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
-				#set +x
 			fi
 		fi
-		#zip -9 --symlinks "$webDirectory/comics/$pageComicName/$pageComicName.zip" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 	else
 		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
 		linkFile "$imagePath" "$pageComicName-$pageNumber.jpg"
-		#zip -jquT -9 "../$pageComicName.cbz" "$pageComicName-$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if this is the last page create the zip file
-			#set -x
 			zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
-			#set +x
 		fi
-		#zip -9 --symlinks "$webDirectory/comics/$pageComicName/$pageComicName.zip" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
 	fi
 	# check next and previous pages to make sure they can be linked to
 	# write the webpage for the individual image
@@ -849,8 +841,6 @@ renderPage(){
 			echo "</script>"
 			echo "</head>"
 			echo "<body onload='setupKeys();'>"
-			#create top jump button
-			echo "<a href='#' id='topButton' class='button'>&uarr;</a>";
 			echo "<?PHP";
 			echo "include('../../header.php')";
 			echo "?>";
@@ -969,8 +959,6 @@ renderPage(){
 					echo "</script>"
 					echo "</head>"
 					echo "<body onload='setupKeys();'>"
-					#create top jump button
-					echo "<a href='#' id='topButton' class='button'>&uarr;</a>";
 					echo "<?PHP";
 					echo "include('../../../header.php')";
 					echo "?>";
@@ -1008,7 +996,7 @@ renderPage(){
 				{
 					echo "</div>"
 					echo "<?PHP";
-					echo "include('../../../header.php')";
+					echo "include('../../../footer.php')";
 					echo "?>";
 					#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g"
 					echo "</body>"
@@ -1032,7 +1020,7 @@ renderPage(){
 			echo "</div>"
 			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
 			echo "<?PHP";
-			echo "include('../../header.php')";
+			echo "include('../../footer.php')";
 			echo "?>";
 			echo "</body>"
 			echo "</html>"
@@ -1169,6 +1157,17 @@ webUpdate(){
 			} > "$webDirectory/new/comic_$tempComicName.index"
 		fi
 	done
+	# cleanup index
+	if test -f "$webDirectory/comics/comics.index";then
+		tempList=$(cat "$webDirectory/comics/comics.index" )
+		echo "$tempList" | sort -u > "$webDirectory/comics/comics.index"
+	fi
+	# cleanup new comic index
+	if test -f "$webDirectory/new/comics.index";then
+		# new comics
+		tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/new/comics.index"
+	fi
 }
 ################################################################################
 function resetCache(){

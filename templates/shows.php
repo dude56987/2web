@@ -13,8 +13,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
-<?php // create top jump button ?>
-<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 # add the updated shows below the header
@@ -27,6 +25,7 @@ include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
 //$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/shows/*/shows.index"));
 if (file_exists("/var/cache/2web/web/shows/shows.index")){
 	$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/shows/shows.index"));
+	$sourceFiles = array_unique($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
@@ -47,7 +46,7 @@ if (file_exists("/var/cache/2web/web/shows/shows.index")){
 	echo "<ul>";
 	echo "<li>No Shows Have been scanned into the libary!</li>";
 	echo "<li>Add libary paths in the <a href='/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
-	echo "<li>Add download paths in <a href='/nfo.php'>video on demand admin interface</a></li>";
+	echo "<li>Add download links in <a href='/ytdl2nfo.php'>video on demand admin interface</a></li>";
 	echo "<li></li>";
 	echo "</ul>";
 }
@@ -58,7 +57,6 @@ if (file_exists("/var/cache/2web/web/shows/shows.index")){
 include($_SERVER['DOCUMENT_ROOT']."/randomShows.php");
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-echo "<hr class='topButtonSpace'>"
 ?>
 </body>
 </html>

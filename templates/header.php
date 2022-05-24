@@ -1,3 +1,5 @@
+<!-- create top jump button -->
+<a href='#' id='topButton' class='button'>&uarr;</a>
 <?php
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/headerData.index";
@@ -180,3 +182,4 @@ if (isset($_SERVER['HTTPS'])){
 	echo "</div>";
 }
 ?>
+

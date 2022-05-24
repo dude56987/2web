@@ -10,8 +10,6 @@
 	ini_set('display_errors', 1);
 	include("header.php");
 ?>
-<!-- create top jump button -->
-<a href='#' id='topButton' class='button'>&uarr;</a>
 
 <?php
 	if (file_exists("progress.index")){

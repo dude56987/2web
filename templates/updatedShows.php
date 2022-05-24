@@ -1,5 +1,5 @@
 <?php
-if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalShows.index")){
+if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 	$cacheFile="updatedShows.index";
 	if (file_exists($cacheFile)){
 		if (time()-filemtime($cacheFile) > 2 * 3600){

@@ -104,12 +104,18 @@ For when you need more than the web interface can handle. This help section defi
 	</p>
 	<h3 id="android_install_kodi">Android Install Kodi</h3>
 
-	<a class='button' href='https://kodi.wiki/view/HOW-TO:Install_Kodi_for_Android'>
-		Kodi WIKI: How to install kodi for android
-	</a>
-	<a class='button' href='https://play.google.com/store/apps/details?id=org.xbmc.kodi'>
-		Click here for the google play store link
-	</a>
+	<ul>
+		<li>
+			<a class='' href='https://kodi.wiki/view/HOW-TO:Install_Kodi_for_Android'>
+				Kodi WIKI: How to install kodi for android
+			</a>
+		</li>
+		<li>
+			<a class='' href='https://play.google.com/store/apps/details?id=org.xbmc.kodi'>
+				Click here for the google play store link
+			</a>
+		</li>
+	</ul>
 
 	<p>
 		You could install kodi on your android device and link it to the media collection on this server.
@@ -255,7 +261,7 @@ For when you need more than the web interface can handle. This help section defi
 	</p>
 	<h3 id="desktop_install_VLC">Install VLC</h3>
 	<div>
-		<a class='button' href='https://www.videolan.org/vlc/'>
+		<a class='' href='https://www.videolan.org/vlc/'>
 			Install VLC for your desktop computer.
 		</a>
 		<p>

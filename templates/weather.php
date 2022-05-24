@@ -14,9 +14,6 @@
 
 <hr>
 
-<!-- create top jump button -->
-<a href='#' id='topButton' class='button'>&uarr;</a>
-
 <!--
 <div class='settingListCard'>
 -->
@@ -75,8 +72,7 @@
 
 <?php
 	// add the footer
-	include($_SERVER['DOCUMENT_ROOT']."/header.php");
-	echo "<hr class='topButtonSpace'>"
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 
 </body>

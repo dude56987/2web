@@ -1,6 +1,6 @@
 <?php
 # if no index exists
-if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalMovies.index")){
+if (file_exists($_SERVER['DOCUMENT_ROOT']."/movies/movies.index")){
 	$cacheFile="randomMovies.index";
 	if (file_exists($cacheFile)){
 		if (time()-filemtime($cacheFile) > 2 * 3600){
@@ -17,9 +17,11 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalMovies.index")){
 	if ($writeFile){
 		$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 		// get a list of all the genetrated index links for the page
-		$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/2web/web/movies/*/movies.index | shuf"));
+		//$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/2web/web/movies/*/movies.index | shuf"));
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/movies/movies.index"));
+		shuffle($sourceFiles);
 		// reverse the time sort
-		$sourceFiles = array_reverse($sourceFiles);
+		//$sourceFiles = array_reverse($sourceFiles);
 		$counter=0;
 		foreach($sourceFiles as $sourceFile){
 			$sourceFileName = $sourceFile;

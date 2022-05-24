@@ -20,17 +20,16 @@
 
 <hr>
 
-<!-- create top jump button -->
-<a href='#' id='topButton' class='button'>&uarr;</a>
-
 <div class='settingListCard'>
 
 <?php
+if (file_exists("/var/cache/2web/web/comics/comics.index")){
 	// get a list of all the genetrated index links for the page
 	//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
 	$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/comics/comics.index"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
+	$sourceFiles = array_unique($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
@@ -46,8 +45,15 @@
 			}
 		}
 	}
+}else{
+	echo "<ul>";
+	echo "<li>No Comics Have been scanned into the libary!</li>";
+	echo "<li>Add libary paths in the <a href='/comics.php'>comics admin interface</a> to populate this page.</li>";
+	echo "<li>Add download links in <a href='/comicsDL.php'>comics admin interface</a></li>";
+	echo "<li></li>";
+	echo "</ul>";
+}
 ?>
-
 </div>
 
 <?php
@@ -55,7 +61,6 @@
 	include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-	echo "<hr class='topButtonSpace'>"
 ?>
 
 </body>

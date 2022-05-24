@@ -360,6 +360,7 @@ function update(){
 							echo -n ",var(--glassBackground),var(--glassBackground))' >"
 							if echo "$timeOfForcast" | grep -qE "(NIGHT|AFTERNOON|EVENING)";then
 								# nighttime forcast
+								timeOfForcast=$(echo "$timeOfForcast" | sed "s/ NIGHT//g")
 								echo -n "<h3>$timeOfForcast"
 								echo -n "🌙";
 							else

@@ -13,9 +13,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
-<?php // create top jump button ?>
-<a href='#' id='topButton' class='button'>&uarr;</a>
-
 <?php
 # add the updated movies below the header
 include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
@@ -23,26 +20,37 @@ include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
 ?>
 <div class='settingListCard'>
 <?php
-// get a list of all the genetrated index links for the page
-//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/movies/*/movies.index"));
-$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/movies/movies.index"));
-// reverse the time sort
-//$sourceFiles = array_reverse($sourceFiles);
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	if (file_exists($sourceFile)){
-		if (is_file($sourceFile)){
-			if (strpos($sourceFile,".index")){
-				// read the index entry
-				$data=file_get_contents($sourceFile);
-				// write the index entry
-				echo "$data";
-				flush();
-				ob_flush();
+if (file_exists("/var/cache/2web/web/movies/movies.index")){
+	// get a list of all the genetrated index links for the page
+	$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/movies/movies.index"));
+	// reverse the time sort
+	//$sourceFiles = array_reverse($sourceFiles);
+	$sourceFiles = array_unique($sourceFiles);
+	foreach($sourceFiles as $sourceFile){
+		$sourceFileName = $sourceFile;
+		if (file_exists($sourceFile)){
+			if (is_file($sourceFile)){
+				if (strpos($sourceFile,".index")){
+					// read the index entry
+					$data=file_get_contents($sourceFile);
+					// write the index entry
+					echo "$data";
+					flush();
+					ob_flush();
+				}
 			}
 		}
 	}
+}else{
+	// no shows have been loaded yet
+	echo "<ul>";
+	echo "<li>No Movies have been scanned into the libary!</li>";
+	echo "<li>Add libary paths in the <a href='/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
+	echo "<li>Add download links in <a href='/ytdl2nfo.php'>video on demand admin interface</a></li>";
+	echo "<li></li>";
+	echo "</ul>";
 }
+
 ?>
 </div>
 <?php
@@ -50,7 +58,6 @@ foreach($sourceFiles as $sourceFile){
 include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-echo "<hr class='topButtonSpace'>"
 ?>
 </body>
 </html>

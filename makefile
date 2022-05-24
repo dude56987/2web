@@ -76,6 +76,7 @@ build-deb:
 	mkdir -p debian/usr/share/2web/help/;
 	mkdir -p debian/usr/share/man/man1/;
 	mkdir -p debian/usr/share/2web/themes;
+	mkdir -p debian/usr/share/2web/theme-templates;
 	mkdir -p debian/usr/share/2web/templates;
 	mkdir -p debian/usr/share/2web/settings;
 	#mkdir -p debian/var/cache/web/web;
@@ -137,6 +138,7 @@ build-deb:
 	touch debian/etc/2web/weather/location.d/.placeholder
 	touch debian/var/cache/2web/cache/.placeholder
 	touch debian/usr/share/2web/settings/.placeholder
+	touch debian/usr/share/2web/themes/.placeholder
 	touch debian/etc/2web/users/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/2web/users/
@@ -182,84 +184,10 @@ build-deb:
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
 	w3m debian/usr/share/2web/help/README.html > debian/usr/share/2web/help/README.txt
-	#pandoc --from markdown help/man_2web.md help/man_copyright.md help/man_license.md -t t2t -o debian/usr/share/2web/help/2web.t2t
-	# convert txt2tags markdown into ascii
-	#txt2tags --infile debian/usr/share/2web/help/2web.t2t --target txt --outfile debian/usr/share/2web/help/2web.txt
-	#cat help/man_2web.md help/man_copyright.md help/man_license.md | txt2tags --infile - --target adoc --outfile debian/usr/share/2web/help/2web.txt
+	# copy over the theme templates
+	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# build the default themes
-	# - default (gray)
-	cat themes/default.css > debian/usr/share/2web/themes/default.css
-	cat themes/base.css >> debian/usr/share/2web/themes/default.css
-	# - default-soft (gray)
-	cat themes/default.css > debian/usr/share/2web/themes/default-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/default-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/default-soft.css
-	# - yellow
-	cat themes/yellow.css > debian/usr/share/2web/themes/yellow.css
-	cat themes/base.css >> debian/usr/share/2web/themes/yellow.css
-	# - yellow-soft
-	cat themes/yellow.css > debian/usr/share/2web/themes/yellow-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/yellow-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/yellow-soft.css
-	# - cyan
-	cat themes/cyan.css > debian/usr/share/2web/themes/cyan.css
-	cat themes/base.css >> debian/usr/share/2web/themes/cyan.css
-	# - cyan-soft
-	cat themes/cyan.css > debian/usr/share/2web/themes/cyan-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/cyan-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/cyan-soft.css
-	# - blue
-	cat themes/blue.css > debian/usr/share/2web/themes/blue.css
-	cat themes/base.css >> debian/usr/share/2web/themes/blue.css
-	# - blue-soft
-	cat themes/blue.css > debian/usr/share/2web/themes/blue-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/blue-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/blue-soft.css
-	# - red
-	cat themes/red.css > debian/usr/share/2web/themes/red.css
-	cat themes/base.css >> debian/usr/share/2web/themes/red.css
-	# - red-soft
-	cat themes/red.css > debian/usr/share/2web/themes/red-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/red-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/red-soft.css
-	# - green
-	cat themes/green.css > debian/usr/share/2web/themes/green.css
-	cat themes/base.css >> debian/usr/share/2web/themes/green.css
-	# - green-soft
-	cat themes/green.css > debian/usr/share/2web/themes/green-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/green-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/green-soft.css
-	# - violet
-	cat themes/violet.css > debian/usr/share/2web/themes/violet.css
-	cat themes/base.css >> debian/usr/share/2web/themes/violet.css
-	# - violet-soft
-	cat themes/violet.css > debian/usr/share/2web/themes/violet-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/violet-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/violet-soft.css
-	# - orange
-	cat themes/orange.css > debian/usr/share/2web/themes/orange.css
-	cat themes/base.css >> debian/usr/share/2web/themes/orange.css
-	# - orange-soft
-	cat themes/orange.css > debian/usr/share/2web/themes/orange-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/orange-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/orange-soft.css
-	# - brown
-	cat themes/brown.css > debian/usr/share/2web/themes/brown.css
-	cat themes/base.css >> debian/usr/share/2web/themes/brown.css
-	# - brown-soft ;P
-	cat themes/brown.css > debian/usr/share/2web/themes/brown-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/brown-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/brown-soft.css
-	# - rainbow
-	cat themes/rainbow.css > debian/usr/share/2web/themes/rainbow.css
-	cat themes/base.css >> debian/usr/share/2web/themes/rainbow.css
-	# - rainbow-soft
-	cat themes/rainbow.css > debian/usr/share/2web/themes/rainbow-soft.css
-	cat themes/soft-mod.css >> debian/usr/share/2web/themes/rainbow-soft.css
-	cat themes/base.css >> debian/usr/share/2web/themes/rainbow-soft.css
-	# user created themes, themes are constructed from above using base theme
 	# user themes can be any self contained .css file
-	#cp themes/*.css debian/usr/share/2web/themes/
 	# copy over javascript libary
 	cp 2web.js debian/usr/share/2web/
 	# copy over the settings pages

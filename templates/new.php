@@ -13,8 +13,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
 <hr>
-<?php // create top jump button ?>
-<a href='#' id='topButton' class='button'>&uarr;</a>
 
 
 <div class='titleCard'>
@@ -84,6 +82,7 @@ if ($writeFile){
 	#$sourceFiles = explode("\n",shell_exec($filterCommand));
 	$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
 	$sourceFiles = array_reverse($sourceFiles);
+	$sourceFiles = array_unique($sourceFiles);
 	// limit the array to 200 items
 	array_splice($sourceFiles, 200);
 	foreach($sourceFiles as $sourceFile){
@@ -114,6 +113,5 @@ if ($writeFile){
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
-<hr class='topButtonSpace'>
 </body>
 </html>
