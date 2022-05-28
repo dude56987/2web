@@ -49,6 +49,13 @@ array_push($services,Array('PaperMC', 25565, 'Minecraft Server'));
 array_push($services,Array('NZBGet', 6789, 'Metadata Tool'));
 array_push($services,Array('HTPC Manager', 8085, ''));
 array_push($services,Array('I2P', 7657, 'P2P Internet'));
+array_push($services,Array('YACY', 8090, 'P2P Search Engine'));
+array_push($services,Array('FOLDING@HOME', 7396, 'P2P Protein Folding'));
+array_push($services,Array('IPFS', 5003, 'P2P File Transfer'));
+array_push($services,Array('Ur Backup', 55414, 'Backup Server'));
+array_push($services,Array('GITEA', 3000, 'Git Server'));
+array_push($services,Array('SYNCTHING', 3000, 'File Sync Server'));
+array_push($services,Array('Vault Warden', 8001, 'Unoffical Bitwarden Pass Manager'));
 //array_push($services,Array('Unbound', 53, 'DNS Server'));
 ?>
 
