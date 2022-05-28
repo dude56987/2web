@@ -48,13 +48,13 @@ if ($writeFile){
 	# build the header
 	$fileData .= "<a class='' href='/index.php'>";
 	$fileData .= "🏠";
-	$fileData .= "<span class='headerText'>";
+	$fileData .= "<span class='footerText'>";
 	$fileData .= " HOME";
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
 	$fileData .= "<a class='' href='/new/'>";
 	$fileData .= "📜";
-	$fileData .= "<span class='headerText'>";
+	$fileData .= "<span class='footerText'>";
 	$fileData .= " NEW";
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
@@ -64,7 +64,7 @@ if ($writeFile){
 			if ((file_get_contents("$webDirectory/totalMovies.index")) > 0){
 				$fileData .= "<a class='' href='/movies'>";
 				$fileData .= "🎥";
-				$fileData .= "<span class='headerText'>";
+				$fileData .= "<span class='footerText'>";
 				$fileData .= " MOVIES";
 				$fileData .= "</span>";
 				$fileData .= "</a> ";
@@ -76,7 +76,7 @@ if ($writeFile){
 			if ((file_get_contents("$webDirectory/totalShows.index")) > 0){
 				$fileData .= "<a class='' href='/shows'>";
 				$fileData .= "📺";
-				$fileData .= "<span class='headerText'>";
+				$fileData .= "<span class='footerText'>";
 				$fileData .= " SHOWS";
 				$fileData .= "</span>";
 				$fileData .= "</a> ";
@@ -88,7 +88,7 @@ if ($writeFile){
 			if ((file_get_contents("$webDirectory/totalAlbums.index")) > 0){
 				$fileData .= "<a class='' href='/music'>";
 				$fileData .= "🎧";
-				$fileData .= "<span class='headerText'>";
+				$fileData .= "<span class='footerText'>";
 				$fileData .= " MUSIC";
 				$fileData .= "</span>";
 				$fileData .= "</a> ";
@@ -100,7 +100,7 @@ if ($writeFile){
 			if ((file_get_contents("$webDirectory/totalComics.index")) > 0){
 				$fileData .= "<a class='' href='/comics'>";
 				$fileData .= "📚";
-				$fileData .= "<span class='headerText'>";
+				$fileData .= "<span class='footerText'>";
 				$fileData .= " COMICS";
 				$fileData .= "</span>";
 				$fileData .= "</a> ";
@@ -111,7 +111,7 @@ if ($writeFile){
 		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
 			$fileData .= "<a class='' href='/live'>";
 			$fileData .= "📡";
-			$fileData .= "<span class='headerText'>";
+			$fileData .= "<span class='footerText'>";
 			$fileData .= " LIVE";
 			$fileData .= "</span>";
 			$fileData .= "</a> ";
@@ -129,7 +129,7 @@ if (file_exists("$webDirectory/totalWeatherStations.index")){
 	if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
 		echo "<a class='' href='/weather/'>";
 		echo "🌤️";
-		echo "<span class='headerText'>";
+		echo "<span class='footerText'>";
 		echo " WEATHER";
 		echo "</span>";
 		echo "</a> ";
@@ -138,7 +138,7 @@ if (file_exists("$webDirectory/totalWeatherStations.index")){
 // draw the help button
 echo "<a class='' href='/help.php'>";
 echo "❔ ";
-echo "<span class='headerText'>";
+echo "<span class='footerText'>";
 echo "HELP";
 echo "</span>";
 echo "</a> ";

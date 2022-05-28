@@ -1,6 +1,6 @@
 :root{
 	--solidBackground: cyan;
-	--glassBackground: rgba(0,255,255,0.85);
+	--glassBackground: rgba(0,155,155,0.85);
 	--borderColor: black;
 	--textColor: black;
 	--textShadowColor: white;
@@ -10,6 +10,7 @@
 	--highlightBorder: white;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
+/*
 html{
 	text-shadow: 0.1em 0.1em 3px var(--textShadowColor),
 	-0.1em 0.1em 3px var(--textShadowColor),
@@ -20,3 +21,4 @@ html{
 :hover{
 	text-shadow: none;
 }
+*/

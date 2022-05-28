@@ -260,7 +260,8 @@ ol li{
 	filter: blurr(5px);
 }
 .menuButton{
-	border: 0.01rem solid var(--borderColor);
+	background-color: var(--textColor);
+	border: 0.1rem solid var(--borderColor);
 	display: none !important;
 }
 .enabledSetting{
@@ -292,6 +293,9 @@ ol li{
 */
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
+		.menuButton{
+			display: inline !important;
+		}
 		/*on desktop sites do not have the scroll slide channel list, place the list below the player*/
 		.channelList{
 			display: none !important;
@@ -303,6 +307,9 @@ ol li{
 		}
 		.videoPlayerControls{
 			font-size: 2rem;
+		}
+		.headerText{
+			display: inline !important;
 		}
 	}
 	/* on desktop sites rremove margin gaps so links are clickable */
@@ -316,6 +323,15 @@ ol li{
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.footerText{
+		display: none !important;
+	}
+	.footer .button .footerText:hover{
+		display: inline !important;
+	}
+	.headerText{
+		display: inline !important;
+	}
 	/* if the window is smaller than 800px */
 	.menuButton{
 		display: block !important;
@@ -339,7 +355,7 @@ ol li{
 		*/
 	}
 	.header{
-		height: 3rem;
+		height: 3.3rem;
 		overflow: hidden;
 		/*transition: 5s;*/
 	}
@@ -1239,6 +1255,7 @@ tr{
 	font-size: 0.8rem;
 	white-space: normal;
 	max-height: 15rem;
+	text-align: left;
 }
 .weatherForcast h3{
 	background-color: var(--solidBackground);
@@ -1311,6 +1328,9 @@ tr{
 	/*
 		 For the inbetween state of all and small
 	*/
+	.headerText{
+		display: inline !important;
+	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;
 	}
@@ -1325,6 +1345,7 @@ tr{
 	}
 }
 @media only screen and (max-width: 1100px), (orientation: portrait){
+	/* hide the text in the header links to fit the links on the page */
 	.headerText{
 		display: none !important;
 	}
@@ -1334,7 +1355,7 @@ tr{
 		This is for small portrat mode
 	*/
 	.headerText{
-		display: inline;
+		display: inline !important;
 	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;
@@ -1396,4 +1417,15 @@ pre{
 .viewCounter{
 	font-size: 1rem;
 	border-style: solid;
+}
+.tempIcon{
+	text-align: left;
+	font-style: bold;
+	border-style: solid;
+	border-color: white;
+	width: min-content;
+	float: right;
+}
+.seasonContainer .showPageEpisode h2{
+	display: none !important;
 }

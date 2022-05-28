@@ -246,135 +246,193 @@ function update(){
 							#elif echo "$tempForcast" | grep -q "Highs";then
 							#	echo " HOT'>"
 							#fi
+							tempTemp="?℉"
 							echo "' style='background: linear-gradient(to bottom, "
 							if echo "$tempForcast" | grep -q "lower 0s";then
-								echo "rgba(1,1,255,0.5)"
+								tempTemp="3"
+								tempColor="rgba(1,1,255,0.5)"
 							elif echo "$tempForcast" | grep -q "around 0";then
-								echo "rgba(2,2,255,0.5)"
+								tempTemp="0"
+								tempColor="rgba(2,2,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 0s";then
-								echo "rgba(3,3,255,0.5)"
+								tempTemp="5"
+								tempColor="rgba(3,3,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 0s";then
-								echo "rgba(4,4,255,0.5)"
+								tempTemp="8"
+								tempColor="rgba(4,4,255,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 10s";then
-								echo "rgba(5,5,255,0.5)"
+								tempTemp="13"
+								tempColor="rgba(5,5,255,0.5)"
 							elif echo "$tempForcast" | grep -q "around 10";then
-								echo "rgba(6,6,255,0.5)"
+								tempTemp="10"
+								tempColor="rgba(6,6,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 10s";then
-								echo "rgba(7,7,255,0.5)"
+								tempTemp="15"
+								tempColor="rgba(7,7,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 10s";then
-								echo "rgba(8,8,255,0.5)"
-							elif echo "$tempForcast" | grep -q "mid 10s";then
-								echo "rgba(9,9,255,0.5)"
+								tempTemp="18"
+								tempColor="rgba(8,8,255,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 20s";then
-								echo "rgba(10,10,255,0.5)"
+								tempTemp="23"
+								tempColor="rgba(10,10,255,0.5)"
 							elif echo "$tempForcast" | grep -q "around 20";then
-								echo "rgba(11,11,255,0.5)"
+								tempTemp="20"
+								tempColor="rgba(11,11,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 20s";then
-								echo "rgba(12,12,255,0.5)"
+								tempTemp="25"
+								tempColor="rgba(12,12,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 20s";then
-								echo "rgba(13,13,255,0.5)"
+								tempTemp="28"
+								tempColor="rgba(13,13,255,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 30s";then
-								echo "rgba(14,14,255,0.5)"
+								tempTemp="33"
+								tempColor="rgba(14,14,255,0.5)"
 							elif echo "$tempForcast" | grep -q "around 30";then
-								echo "rgba(15,15,255,0.5)"
+								tempTemp="30"
+								tempColor="rgba(15,15,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 30s";then
-								echo "rgba(16,16,255,0.5)"
+								tempTemp="35"
+								"rgba(16,16,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 30s";then
-								echo "rgba(17,17,255,0.5)"
+								tempTemp="38"
+								tempColor="rgba(17,17,255,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 40s";then
-								echo "rgba(18,18,255,0.5)"
+								tempTemp="43"
+								tempColor="rgba(18,18,255,0.5)"
 							elif echo "$tempForcast" | grep -q "around 40";then
-								echo "rgba(19,19,255,0.5)"
+								tempTemp="40"
+								tempColor="rgba(19,19,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 40s";then
-								echo "rgba(20,20,255,0.5)"
+								tempTemp="45"
+								tempColor="rgba(20,20,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 40s";then
-								echo "rgba(21,21,255,0.45)"
+								tempTemp="48"
+								tempColor="rgba(21,21,255,0.45)"
 							elif echo "$tempForcast" | grep -q "lower 50s";then
-								echo "rgba(22,22,255,0.40)"
+								tempTemp="53"
+								tempColor="rgba(22,22,255,0.40)"
 							elif echo "$tempForcast" | grep -q "around 50";then
-								echo "rgba(23,23,255,0.35)"
+								tempTemp="50"
+								tempColor="rgba(23,23,255,0.35)"
 							elif echo "$tempForcast" | grep -q "mid 50s";then
-								echo "rgba(24,24,255,0.30)"
+								tempTemp="55"
+								tempColor="rgba(24,24,255,0.30)"
 							elif echo "$tempForcast" | grep -q "upper 50s";then
-								echo "rgba(24,24,255,0.25)"
+								tempTemp="58"
+								tempColor="rgba(24,24,255,0.25)"
 							elif echo "$tempForcast" | grep -q "lower 60s";then
-								echo "rgba(25,25,255,0.20)"
+								tempTemp="63"
+								tempColor="rgba(25,25,255,0.20)"
 							elif echo "$tempForcast" | grep -q "around 60";then
-								echo "rgba(26,26,255,0.15)"
+								tempTemp="60"
+								tempColor="rgba(26,26,255,0.15)"
 							elif echo "$tempForcast" | grep -q "mid 60s";then
-								echo "rgba(27,27,255,0.1)"
+								tempTemp="65"
+								tempColor="rgba(27,27,255,0.1)"
 							elif echo "$tempForcast" | grep -q "upper 60s";then
-								echo "var(--glassBackground)"
+								tempTemp="68"
+								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "lower 70s";then
-								echo "var(--glassBackground)"
+								tempTemp="73"
+								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "around 70";then
-								echo "var(--glassBackground)"
+								tempTemp="70"
+								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "mid 70s";then
-								echo "var(--glassBackground)"
+								tempTemp="75"
+								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "upper 70s";then
-								echo "rgba(255,21,21,0.1)"
+								tempTemp="78"
+								tempColor="rgba(255,21,21,0.1)"
 							elif echo "$tempForcast" | grep -q "lower 80s";then
-								echo "rgba(255,20,20,0.15)"
+								tempTemp="83"
+								tempColor="rgba(255,20,20,0.15)"
 							elif echo "$tempForcast" | grep -q "around 80";then
-								echo "rgba(255,19,19,0.20)"
+								tempTemp="80"
+								tempColor="rgba(255,19,19,0.20)"
 							elif echo "$tempForcast" | grep -q "mid 80s";then
-								echo "rgba(255,18,18,0.25)"
+								tempTemp="85"
+								tempColor="rgba(255,18,18,0.25)"
 							elif echo "$tempForcast" | grep -q "upper 80s";then
-								echo "rgba(255,17,17,0.30)"
+								tempTemp="88"
+								tempColor="rgba(255,17,17,0.30)"
 							elif echo "$tempForcast" | grep -q "lower 90s";then
-								echo "rgba(255,16,16,0.35)"
+								tempTemp="93"
+								tempColor="rgba(255,16,16,0.35)"
 							elif echo "$tempForcast" | grep -q "around 90";then
-								echo "rgba(255,15,15,0.40)"
+								tempTemp="90"
+								tempColor="rgba(255,15,15,0.40)"
 							elif echo "$tempForcast" | grep -q "mid 90s";then
-								echo "rgba(255,14,14,0.45)"
+								tempTemp="95"
+								tempColor="rgba(255,14,14,0.45)"
 							elif echo "$tempForcast" | grep -q "upper 90s";then
-								echo "rgba(255,13,13,0.5)"
+								tempTemp="98"
+								tempColor="rgba(255,13,13,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 100s";then
-								echo "rgba(255,12,12,0.5)"
+								tempTemp="103"
+								tempColor="rgba(255,12,12,0.5)"
 							elif echo "$tempForcast" | grep -q "around 100";then
-								echo "rgba(255,11,11,0.5)"
+								tempTemp="100"
+								tempColor="rgba(255,11,11,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 100s";then
-								echo "rgba(255,10,10,0.5)"
+								tempTemp="105"
+								tempColor="rgba(255,10,10,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 100s";then
-								echo "rgba(255,9,9,0.5)"
+								tempTemp="108"
+								tempColor="rgba(255,9,9,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 110s";then
-								echo "rgba(255,8,8,0.5)"
+								tempTemp="113"
+								tempColor="rgba(255,8,8,0.5)"
 							elif echo "$tempForcast" | grep -q "around 110";then
-								echo "rgba(255,7,7,0.5)"
+								tempTemp="110"
+								tempColor="rgba(255,7,7,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 110s";then
-								echo "rgba(255,6,6,0.5)"
+								tempTemp="115"
+								tempColor="rgba(255,6,6,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 110s";then
-								echo "rgba(255,5,5,0.5)"
+								tempTemp="118"
+								tempColor="rgba(255,5,5,0.5)"
 							elif echo "$tempForcast" | grep -q "lower 120s";then
-								echo "rgba(255,4,4,0.5)"
+								tempTemp="123"
+								tempColor="rgba(255,4,4,0.5)"
 							elif echo "$tempForcast" | grep -q "around 120";then
-								echo "rgba(255,3,3,0.5)"
+								tempTemp="120"
+								tempColor="rgba(255,3,3,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 120s";then
-								echo "rgba(255,2,2,0.5)"
+								tempTemp="125"
+								tempColor="rgba(255,2,2,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 120s";then
-								echo "rgba(255,1,1,0.5)"
+								tempTemp="128"
+								tempColor="rgba(255,1,1,0.5)"
 							else
 								# the weather could not be identified
-								echo -n "var(--glassBackground)"
+								tempColor="var(--glassBackground)"
 							fi
+							echo "$tempColor"
+							# add farenheight symbol
+							tempTemp="$tempTemp℉"
 							echo -n ",var(--glassBackground),var(--glassBackground))' >"
 							if echo "$timeOfForcast" | grep -qE "(NIGHT|AFTERNOON|EVENING)";then
 								# nighttime forcast
 								timeOfForcast=$(echo "$timeOfForcast" | sed "s/ NIGHT//g")
-								echo -n "<h3>$timeOfForcast"
+								echo -n "	<h3>$timeOfForcast"
 								echo -n "🌙";
 							else
 								# daytime forcast
-								echo -n "<h3>$timeOfForcast"
+								echo -n "	<h3>$timeOfForcast"
 								echo -n "🌞";
 							fi
 							echo -n "</h3>"
-							echo -n "<div class='weatherIcon'>"
+							# add temperature icon
+							echo -n "	<div class='weatherIcon'>"
 							getWeatherIcon "$tempForcast"
-							echo -n "</div>"
-							echo -n "<div class='weatherDescription'>"
-							echo -n "$tempForcast"
-							echo -n "</div>"
+							echo -n "	</div>"
+							echo -n "	<div class='weatherDescription'>"
+							echo -n "	<div class='tempIcon' style='background-color: $tempColor'>"
+							echo -n "		$tempTemp"
+							echo -n "	</div>"
+							echo -n "		$tempForcast"
+							echo -n "	</div>"
 							echo -n "</div>"
 						} >> "$webDirectory/weather/data/forcast_$locationSum.index"
 					fi

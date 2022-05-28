@@ -484,15 +484,15 @@ processMovie(){
 			echo "<h1>$movieTitle ($movieYear)</h1>"
 			# add outside search links
 			echo "<div class='listCard'>"
-			echo "<a class='button' href='https://www.imdb.com/find?q=$movieTitle ($movieYear)'>🔎 IMDB</a>"
-			echo "<a class='button' href='https://en.wikipedia.org/w/?search=$movieTitle ($movieYear)'>🔎 WIKIPEDIA</a>"
-			echo "<a class='button' href='https://archive.org/details/movies?query=$movieTitle ($movieYear)'>🔎 ARCHIVE.ORG</a>"
-			echo "<a class='button' href='https://www.youtube.com/results?search_query=$movieTitle ($movieYear)'>🔎 YOUTUBE</a>"
-			echo "<a class='button' href='https://odysee.com/$/search?q=$movieTitle ($movieYear)'>🔎 ODYSEE</a>"
-			echo "<a class='button' href='https://rumble.com/search/video?q=$movieTitle ($movieYear)'>🔎 RUMBLE</a>"
-			echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$movieTitle ($movieYear)'>🔎 BITCHUTE</a>"
-			echo "<a class='button' href='https://www.twitch.tv/search?term=$movieTitle ($movieYear)'>🔎 TWITCH</a>"
-			echo "<a class='button' href='https://veoh.com/find/$movieTitle ($movieYear)'>🔎 VEOH</a>"
+			echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$movieTitle ($movieYear)'>🔎 IMDB</a>"
+			echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$movieTitle ($movieYear)'>🔎 WIKIPEDIA</a>"
+			echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$movieTitle ($movieYear)'>🔎 ARCHIVE.ORG</a>"
+			echo "<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$movieTitle ($movieYear)'>🔎 YOUTUBE</a>"
+			echo "<a class='button' target='_new' href='https://odysee.com/$/search?q=$movieTitle ($movieYear)'>🔎 ODYSEE</a>"
+			echo "<a class='button' target='_new' href='https://rumble.com/search/video?q=$movieTitle ($movieYear)'>🔎 RUMBLE</a>"
+			echo "<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$movieTitle ($movieYear)'>🔎 BITCHUTE</a>"
+			echo "<a class='button' target='_new' href='https://www.twitch.tv/search?term=$movieTitle ($movieYear)'>🔎 TWITCH</a>"
+			echo "<a class='button' target='_new' href='https://veoh.com/find/$movieTitle ($movieYear)'>🔎 VEOH</a>"
 			echo "</div>"
 			echo "</div>"
 		} > "$moviePagePath"
@@ -628,7 +628,7 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -646,7 +646,7 @@ processMovie(){
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
 				echo "</a>"
-				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
@@ -674,17 +674,12 @@ processMovie(){
 			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
-		# add the movie to the new list
-		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/movies.index
-		echo "$webDirectory/new/movie_$movieWebPath.index" >> $webDirectory/new/all.index
 
 		# add the movie to the main movie index since it has been updated
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/movies/movies.index"
-
-		# link the new movie data to the new directory
-		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/new/movie_$movieWebPath.index"
 		# add the updated movie to the new movies index
-		echo "$webDirectory/new/movie_$movieWebPath.index" >> "$webDirectory/new/movies.index"
+		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
+		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
 
 		# update the path sum after successfull
 		touch "$webDirectory/movies/$movieWebPath/"
@@ -1010,15 +1005,15 @@ processEpisode(){
 			echo "<h1><a href='/shows/$episodeShowTitle/#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
 			# add outside search links
 			echo "<div class='listCard'>"
-			echo "<a class='button' href='https://www.imdb.com/find?q=$episodeShowTitle $episodeTitle'>🔎 IMDB</a>"
-			echo "<a class='button' href='https://en.wikipedia.org/w/?search=$episodeShowTitle $episodeTitle'>🔎 WIKIPEDIA</a>"
-			echo "<a class='button' href='https://archive.org/details/movies?query=$episodeShowTitle $episodeTitle'>🔎 ARCHIVE.ORG</a>"
-			echo "<a class='button' href='https://www.youtube.com/results?search_query=$episodeShowTitle $episodeTitle'>🔎 YOUTUBE</a>"
-			echo "<a class='button' href='https://odysee.com/$/search?q=$episodeShowTitle $episodeTitle'>🔎 ODYSEE</a>"
-			echo "<a class='button' href='https://rumble.com/search/video?q=$episodeShowTitle $episodeTitle'>🔎 RUMBLE</a>"
-			echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$episodeShowTitle $episodeTitle'>🔎 BITCHUTE</a>"
-			echo "<a class='button' href='https://www.twitch.tv/search?term=$episodeShowTitle $episodeTitle'>🔎 TWITCH</a>"
-			echo "<a class='button' href='https://veoh.com/find/$episodeShowTitle $episodeTitle'>🔎 VEOH</a>"
+			echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$episodeShowTitle $episodeTitle'>🔎 IMDB</a>"
+			echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$episodeShowTitle $episodeTitle'>🔎 WIKIPEDIA</a>"
+			echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$episodeShowTitle $episodeTitle'>🔎 ARCHIVE.ORG</a>"
+			echo "<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$episodeShowTitle $episodeTitle'>🔎 YOUTUBE</a>"
+			echo "<a class='button' target='_new' href='https://odysee.com/$/search?q=$episodeShowTitle $episodeTitle'>🔎 ODYSEE</a>"
+			echo "<a class='button' target='_new' href='https://rumble.com/search/video?q=$episodeShowTitle $episodeTitle'>🔎 RUMBLE</a>"
+			echo "<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$episodeShowTitle $episodeTitle'>🔎 BITCHUTE</a>"
+			echo "<a class='button' target='_new' href='https://www.twitch.tv/search?term=$episodeShowTitle $episodeTitle'>🔎 TWITCH</a>"
+			echo "<a class='button' target='_new' href='https://veoh.com/find/$episodeShowTitle $episodeTitle'>🔎 VEOH</a>"
 			echo "</div>"
 			echo "</div>"
 		} > "$episodePagePath"
@@ -1190,7 +1185,7 @@ processEpisode(){
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -1229,14 +1224,17 @@ processEpisode(){
 			echo "</html>"
 		} >> "$episodePagePath"
 		################################################################################
-		# add the episode to the show page
+		# build the episode link to be included by index pages
 		################################################################################
 		tempEpisodeSeasonThumb="<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<h2 class='title'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n  	$episodeShowTitle"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</h2>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<h3 class='title'>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<div class='title'>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n		$episodeTitle"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</h3>"
+		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</div>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
 
 		if [ "$episodeNumber" -eq 1 ];then
@@ -1246,21 +1244,10 @@ processEpisode(){
 		fi
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
-		# create the episode file in the new index
-		{
-			echo -ne "<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>"
-			echo -ne "\n	<h2 class='title'>"
-			echo -ne "\n  	$episodeShowTitle"
-			echo -ne "\n	</h2>"
-			echo -ne "\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
-			echo -ne "\n	<div class='title'>"
-			echo -ne "\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
-			echo -ne "\n		$episodeTitle"
-			echo -ne "\n	</div>"
-			echo -ne "\n</a>"
-		} > "$webDirectory/new/episode_$episodePath.index"
-		echo "$webDirectory/new/episode_$episodePath.index" >> $webDirectory/new/episodes.index
-		echo "$webDirectory/new/episode_$episodePath.index" >> $webDirectory/new/all.index
+
+		# add episodes to new indexes
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/episodes.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/all.index"
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1484,11 +1471,9 @@ processShow(){
 
 	# add the show to the main show index since it has been updated
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/shows/shows.index"
-
-	# link the new episode data to the new directory
-	linkFile "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/new/show_$showTitle.index"
 	# add the updated show to the new shows index
-	echo "$webDirectory/new/show_$showTitle.index" >> "$webDirectory/new/shows.index"
+	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/shows.index"
+	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/all.index"
 
 	# update the libary sum
 	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
@@ -1772,6 +1757,8 @@ buildHomePage(){
 }
 ########################################################################
 checkDirSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
 	webDirectory=$1
 	directory=$2
 	# check the sum of a directory and compare it to a previously stored sum
@@ -1804,10 +1791,61 @@ checkDirSum(){
 	fi
 }
 ########################################################################
+checkDirDataSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
+	webDirectory=$1
+	directory=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	if ! test -d "$webDirectory/sums/";then
+		mkdir -p "$webDirectory/sums/"
+	fi
+	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	newSum="$(getDirDataSum "$2")"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		return 0
+	fi
+}
+########################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# convert lists into md5sum
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+}
+########################################################################
+getDirDataSum(){
+	line=$1
+	# check the libary sum against the existing one
+	#totalList=$(find "$line" | sort)
+	# read the data from each file
+	totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
 	# add the version to the sum to update old versions
 	# - Disk caching on linux should make this repetative file read
 	#   not destroy the hard drive
@@ -2262,7 +2300,7 @@ main(){
 		# once a month rebuild all custom themes
 		# - a website reset or nuke will reset this timer
 		#if cacheCheck /var/cache/2web/web/themeGen.cfg "30";then
-		if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+		if checkDirDataSum "$webDirectory" "/usr/share/2web/theme-templates/";then
 			themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
 			#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 			themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
@@ -2284,7 +2322,8 @@ main(){
 						tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
 						for themeBase in $themeBases;do
 							tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-							tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
+							#tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
+							tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
 							#ALERT "Building theme at /usr/share/2web/themes/$tempThemeName.css"
 							#addToLog "DEBUG" "Building theme at /usr/share/2web/themes/$tempThemeName.css" "$logPagePath"
 							# build the theme
@@ -2312,7 +2351,8 @@ main(){
 
 		# link the stylesheet based on the chosen theme
 		if ! test -f /etc/2web/theme.cfg;then
-			echo "default.css" > "/etc/2web/theme.cfg"
+			# the default theme is gray
+			echo "Simple-Gray-OpenDyslexic-round.css" > "/etc/2web/theme.cfg"
 			chown www-data:www-data "/etc/2web/theme.cfg"
 		fi
 		# load the chosen theme

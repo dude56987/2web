@@ -1053,6 +1053,8 @@ webUpdate(){
 
 	# link the homepage
 	linkFile "/usr/share/2web/templates/comics.php" "$webDirectory/comics/index.php"
+	linkFile "/usr/share/2web/templates/randomComics.php" "$webDirectory/randomComics.php"
+	linkFile "/usr/share/2web/templates/updatedComics.php" "$webDirectory/updatedComics.php"
 
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/comics/randomPoster.php"
@@ -1118,11 +1120,8 @@ webUpdate(){
 
 					# add the comic to the main comic index since it has been updated
 					echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
-
-					# link the new comic data to the new directory
-					linkFile "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comic_$tempComicName.index"
 					# add the updated show to the new shows index
-					echo "$webDirectory/new/comic_$tempComicName.index" >> "$webDirectory/new/comics.index"
+					echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
 				done
 			done
 			# finish website tag index page

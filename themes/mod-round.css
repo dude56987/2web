@@ -1,0 +1,49 @@
+.button{
+	border-radius: 0.3rem;
+}
+input{
+	border-radius: 0.3rem;
+}
+.indexSeries{
+	border-radius: 0.3rem;
+}
+.titleCard{
+	border-radius: 0.3rem;
+}
+.inputCard{
+	border-radius: 0.3rem;
+}
+.seasonContainer{
+	border-radius: 0.3rem;
+}
+/*
+.titleCard h1,h2,h3{
+	border-radius: 0.3rem;
+}
+*/
+.showPageEpisode{
+	border-radius: 0.3rem;
+}
+.channelList{
+	border-radius: 0.3rem;
+}
+video{
+	border-radius: 0.3rem;
+}
+@media all and (display-mode: fullscreen){
+	video{
+		border-radius: 0rem;
+	}
+}
+.weatherForcast{
+	border-radius: 0.3rem;
+}
+h1, h2, h3{
+	border-radius: 0.3rem 0.3rem 0rem 0rem;
+}
+@media only screen and (max-width: 800px), (orientation: portrait){
+	#topButton{
+		/* Disable the border radius on the top button*/
+		border-radius: 0px;
+	}
+}
