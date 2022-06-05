@@ -1,5 +1,4 @@
 <?php
-# if comics exist exit
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 	$cacheFile="updatedComics.index";
 	if (file_exists($cacheFile)){
@@ -19,10 +18,11 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
 		// get a list of all the genetrated index links for the page
-		$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/2web/web/comics/*/comic.index"));
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/comics.index"));
 		// reverse the time sort
 		$sourceFiles = array_reverse($sourceFiles);
 		$counter=0;
+		$drawBottom=0;
 		foreach($sourceFiles as $sourceFile){
 			$sourceFileName = $sourceFile;
 			if (file_exists($sourceFile)){
@@ -42,12 +42,12 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 					}
 				}
 				if ($counter >= 40){
+					// break the loop
 					break;
 				}
 			}
 		}
 		if ($drawBottom == 1){
-
 			// create a final link to the full new list
 			fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=comics'>");
 			fwrite($fileObj,"Full");
@@ -59,7 +59,6 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 			fwrite($fileObj,"</div>");
 			fwrite($fileObj,"</div>");
 		}
-
 		// close the file
 		fclose($fileObj);
 	}
@@ -70,4 +69,3 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/comics/comics.index")){
 	ob_flush();
 }
 ?>
-

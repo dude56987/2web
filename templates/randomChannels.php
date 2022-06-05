@@ -18,8 +18,6 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalChannels.index")){
 		$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 		// get a list of all the genetrated index links for the page
 		$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/2web/web/live/channel_*.index | shuf"));
-		// reverse the time sort
-		$sourceFiles = array_reverse($sourceFiles);
 		$counter=0;
 		foreach($sourceFiles as $sourceFile){
 			$sourceFileName = $sourceFile;
@@ -55,4 +53,3 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalChannels.index")){
 	ob_flush();
 }
 ?>
-

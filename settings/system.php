@@ -230,7 +230,7 @@ include("settingsHeader.php");
 	<ul>
 		<li>List all available server services found to be active.</li>
 		<li>Not all linux services will be detected.</li>
-		<li>Services list is based off of <a href='https://dietpi.com/phpbb/viewtopic.php?t=5'>DietPI software listings</a></li>
+		<li>Services list is based off of <a href='https://dietpi.com/docs/software/'>DietPI software listings</a></li>
 	</ul>
 	<a class='button' href="/serverServices.php">Active Server Services</a>
 	<hr>

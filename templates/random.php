@@ -22,33 +22,33 @@ if (array_key_exists("filter",$_GET)){
 	$filterType=$_GET['filter'];
 	//echo "<p>filter = $filterType</p>";
 	if ($filterType == 'movies'){
-		echo "<h2>Recently added Movies</h2>";
+		echo "<h2>Random Movies</h2>";
 	}else if ($filterType == 'episodes'){
-		echo "<h2>Recently added Episodes</h2>";
+		echo "<h2>Random Episodes</h2>";
 	}else if ($filterType == 'comics'){
-		echo "<h2>Recently added Comics</h2>";
+		echo "<h2>Random Comics</h2>";
 	}else if ($filterType == 'shows'){
-		echo "<h2>Recently added Shows</h2>";
+		echo "<h2>Random Shows</h2>";
 	}else{
-		echo "<h2>Recently added $filterType</h2>";
+		echo "<h2>Random $filterType</h2>";
 	}
 }else{
 	$filterType="all";
-	echo "<h2>Recently added Media</h2>";
+	echo "<h2>Random Media</h2>";
 }
 ?>
 <div class='listCard'>
 <?PHP
-if (file_exists("$webDirectory/new/shows.index")){
+if (file_exists("$webDirectory/shows/shows.index")){
 	echo "<a class='button' href='?filter=shows'>📺 shows</a>";
 	echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
 }
 
-if (file_exists("$webDirectory/new/movies.index")){
+if (file_exists("$webDirectory/movies/movies.index")){
 	echo "<a class='button' href='?filter=movies'>🎥 Movies</a>";
 }
 
-if (file_exists("$webDirectory/new/comics.index")){
+if (file_exists("$webDirectory/comics/comics.index")){
 	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
 }
 
@@ -63,7 +63,7 @@ if (file_exists("$webDirectory/new/comics.index")){
 flush();
 ob_flush();
 
-$cacheFile="new_$filterType.index";
+$cacheFile="random_$filterType.index";
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 300){
 		// update the cached file
@@ -79,31 +79,37 @@ if (file_exists($cacheFile)){
 # load the cached file or write a new cached fill
 if ($writeFile){
 	ignore_user_abort(true);
-	$fileHandle = fopen("new_$filterType.index",'w');
+	$fileHandle = fopen($_SERVER['DOCUMENT_ROOT']."/random/".$filterType.".index",'w');
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
-	$sourceFiles = array_reverse($sourceFiles);
+	if ( "$filterType" == "all" ){
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index"));
+	}else if ( "$filterType" == "episodes" ){
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index"));
+	}else{
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index"));
+	}
+
+	# remove list duplicates
 	$sourceFiles = array_unique($sourceFiles);
+
+	# randomize the playlist items
+	shuffle($sourceFiles);
+
 	// limit the array to 200 items
 	array_splice($sourceFiles, 200);
+
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
 			if (is_file($sourceFile)){
 				if (strpos($sourceFile,".index")){
 					// read the index entry
-					$indexFileHandle = fopen($sourceFile,'r');
-					while(!feof($indexFileHandle)){
-						// read the index entry
-						$data=fgets($indexFileHandle, 4096);
-						// write the index entry into the page buffer
-						fwrite($fileHandle, "$data");
-						echo $data;
-						# send data wrote to the page to the browser
-						flush();
-						ob_flush();
-					}
-					fclose($indexFileHandle);
+					$data=file_get_contents($sourceFile);
+					// write the index entry
+					echo "$data";
+					fwrite($fileHandle, "$data");
+					flush();
+					ob_flush();
 				}
 			}
 		}
@@ -111,18 +117,8 @@ if ($writeFile){
 	fclose($fileHandle);
 	ignore_user_abort(false);
 }else{
-	//echo file_get_contents("new_$filterType.index");
 	# load the cached file
-	$fileHandle = fopen("new_$filterType.index",'r');
-	while(!feof($fileHandle)){
-		# send a large frame packet of text from the prebuilt page
-		# - this streams the file
-		echo fgets($fileHandle,4096);
-		# send data
-		flush();
-		ob_flush();
-	}
-	fclose($fileHandle);
+	echo file_get_contents($_SERVER['DOCUMENT_ROOT']."/random_$filterType.index");
 }
 ?>
 </div>

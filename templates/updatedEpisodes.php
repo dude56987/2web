@@ -1,5 +1,5 @@
 <?php
-if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalShows.index")){
+if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 	$cacheFile="updatedEpisodes.index";
 	if (file_exists($cacheFile)){
 		if (time()-filemtime($cacheFile) > 2 * 3600){
@@ -18,10 +18,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalShows.index")){
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
 		// get a list of all the genetrated index links for the page
-		$sourceFiles = explode("\n",shell_exec("find '/var/cache/2web/web/new/' -name 'episode_*.index' -printf '%T+ %p\n' | sort | cut -d' ' -f2-"));
-		//$sourceFiles = explode("\n",shell_exec("ls -rt1 /var/cache/nfo2web/web/shows/*/*/episode_*.index"));
-		//$sourceFiles = explode("\n",shell_exec("find '/var/cache/nfo2web/web/shows/' -type 'f' -name '*episode_*.index' | sort"));
-		// reverse the time sort
+		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/episodes.index"));
 		$sourceFiles = array_reverse($sourceFiles);
 		$counter=0;
 		$drawBottom=0;
@@ -51,8 +48,11 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalShows.index")){
 		}
 		if ($drawBottom == 1){
 			// create a final link to the full new list
-			fwrite($fileObj,"<a class='showPageEpisode' href='/new/index.php?filter=episodes'>");
-			fwrite($fileObj,"Full List");
+			fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=episodes'>");
+			fwrite($fileObj,"Full");
+			fwrite($fileObj,"<br>");
+			fwrite($fileObj,"List");
+			fwrite($fileObj,"<br>");
 			fwrite($fileObj,"&#128220;");
 			fwrite($fileObj,"</a>");
 			fwrite($fileObj,"</div>");

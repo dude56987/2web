@@ -628,7 +628,7 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -646,7 +646,7 @@ processMovie(){
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
 				echo "</a>"
-				echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
@@ -1127,7 +1127,8 @@ processEpisode(){
 			} >> "$episodePagePath"
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
 			cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
-			fullRedirect="/ytdl-resolver.php?url=\"$ytLink\""
+			vlcCacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+			fullRedirect="$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1140,7 +1141,7 @@ processEpisode(){
 				echo "	📥Cache Link"
 				echo "</a>"
 
-				echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
+				echo "<a class='button hardLink vlcButton' href='vlc://$vlcCacheRedirect'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 
@@ -1171,6 +1172,7 @@ processEpisode(){
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
 					cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
+					vlcCacheRedirect="$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
@@ -1178,14 +1180,14 @@ processEpisode(){
 					echo "<a class='button hardLink' href='$cacheRedirect'>"
 					echo "	📥Cache Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$cacheRedirect'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$vlcCacheRedirect'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname)/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -1244,6 +1246,9 @@ processEpisode(){
 		fi
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
+
+		#$episodeSum=$(echo "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php" | md5sum | cut -d' ' -f1)
+		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.cfg"
 
 		# add episodes to new indexes
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/episodes.index"
@@ -1310,6 +1315,13 @@ processShow(){
 	# linking tvshow.nfo data
 	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
 	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
+	if ! test -f "$webDirectory/shows/$showTitle/plot.cfg";then
+		# rip the plot from the show metadata so it can be added to the webpage
+		{
+			showPlot=$(ripXmlTagMultiLine "$showMeta" "plot")
+			echo "$showPlot"
+		} > "$webDirectory/shows/$showTitle/plot.cfg"
+	fi
 	# link all images to the kodi path
 	#if ls "$show" | grep -q "\.jpg" ;then
 	#	linkFile "$show"/*.jpg "$webDirectory/kodi/shows/$showTitle/"
@@ -1748,12 +1760,6 @@ buildHomePage(){
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		fi
 	fi
-	if [ $( find /etc/2web/weather/location.d/ -name '*.cfg' | wc -l ) -gt 0 ];then
-		if cacheCheck "$webDirectory/totalWeatherStations.index" "14";then
-			totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
-			echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
-		fi
-	fi
 }
 ########################################################################
 checkDirSum(){
@@ -1826,6 +1832,41 @@ checkDirDataSum(){
 	fi
 }
 ########################################################################
+checkFileDataSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
+	webDirectory=$1
+	filePath=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	if ! test -d "$webDirectory/sums/";then
+		mkdir -p "$webDirectory/sums/"
+	fi
+	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
+	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/_file$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/_file$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+		return 0
+	fi
+}
+########################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
@@ -1887,32 +1928,36 @@ scanForRandomBackgrounds(){
 	#########################################################################
 	# build the show fanart and poster indexes
 	################################################################################
-	if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
-		# create shows only fanart.cfg
-		cd "$webDirectory/shows/"
-		find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
-		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
-	fi
-	if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
-		# create shows only poster.cfg
-		cd "$webDirectory/shows/"
-		find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
-		find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
+	if test -d "$webDirectory/shows/";then
+		if cacheCheck "$webDirectory/shows/fanart.cfg" "$backgroundUpdateDelay";then
+			# create shows only fanart.cfg
+			cd "$webDirectory/shows/"
+			find -L "." -type f -name "fanart.png" > "$webDirectory/shows/fanart.cfg"
+			find -L "." -type f -name "fanart.jpg" >> "$webDirectory/shows/fanart.cfg"
+		fi
+		if cacheCheck "$webDirectory/shows/poster.cfg" "$backgroundUpdateDelay";then
+			# create shows only poster.cfg
+			cd "$webDirectory/shows/"
+			find -L "." -type f -name "poster.png" > "$webDirectory/shows/poster.cfg"
+			find -L "." -type f -name "poster.jpg" >> "$webDirectory/shows/poster.cfg"
+		fi
 	fi
 	################################################################################
 	# build the movie fanart and poster indexes
 	################################################################################
-	if cacheCheck "$webDirectory/movies/fanart.cfg" "$backgroundUpdateDelay";then
-		# create movies only fanart.cfg
-		cd "$webDirectory/movies/"
-		find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
-		find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
-	fi
-	if cacheCheck "$webDirectory/movies/poster.cfg" "$backgroundUpdateDelay";then
-		# create movies only poster.cfg
-		cd "$webDirectory/movies/"
-		find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
-		find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+	if test -d "$webDirectory/movies/";then
+		if cacheCheck "$webDirectory/movies/fanart.cfg" "$backgroundUpdateDelay";then
+			# create movies only fanart.cfg
+			cd "$webDirectory/movies/"
+			find -L "." -type f -name "fanart.png" > "$webDirectory/movies/fanart.cfg"
+			find -L "." -type f -name "fanart.jpg" >> "$webDirectory/movies/fanart.cfg"
+		fi
+		if cacheCheck "$webDirectory/movies/poster.cfg" "$backgroundUpdateDelay";then
+			# create movies only poster.cfg
+			cd "$webDirectory/movies/"
+			find -L "." -type f -name "poster.png" > "$webDirectory/movies/poster.cfg"
+			find -L "." -type f -name "poster.jpg" >> "$webDirectory/movies/poster.cfg"
+		fi
 	fi
 	################################################################################
 	# build the main index by combining all the other indexes
@@ -1920,30 +1965,42 @@ scanForRandomBackgrounds(){
 	if cacheCheck "$webDirectory/poster.cfg" "$backgroundUpdateDelay";then
 		# move into the web directory so paths from below searches are relative
 		cd $webDirectory
-		find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
-		find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-		find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
-		find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
-		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/poster.cfg"
+		if test -d "$webDirectory/shows/";then
+			find -L "shows/" -type f -name "poster.png" > "$webDirectory/poster.cfg"
+			find -L "shows/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		fi
+		if test -d "$webDirectory/movies/";then
+			find -L "movies/" -type f -name "poster.png" >> "$webDirectory/poster.cfg"
+			find -L "movies/" -type f -name "poster.jpg" >> "$webDirectory/poster.cfg"
+		fi
+		if test -d "$webDirectory/comics/";then
+			find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/poster.cfg"
+		fi
 	fi
 	# if the fanart list is older than $backgroundUpdateDelay in days
 	if cacheCheck "$webDirectory/fanart.cfg" "$backgroundUpdateDelay";then
 		# move into the web directory so paths from below searches are relative
 		cd $webDirectory
-		find -L "shows/" -type f -name "fanart.png" > "$webDirectory/fanart.cfg"
-		find -L "shows/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
-		find -L "movies/" -type f -name "fanart.png" >> "$webDirectory/fanart.cfg"
-		find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
-		find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/fanart.cfg"
+		if test -d "$webDirectory/shows/";then
+			find -L "shows/" -type f -name "fanart.png" > "$webDirectory/fanart.cfg"
+			find -L "shows/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
+		fi
+		if test -d "$webDirectory/movies/";then
+			find -L "movies/" -type f -name "fanart.png" >> "$webDirectory/fanart.cfg"
+			find -L "movies/" -type f -name "fanart.jpg" >> "$webDirectory/fanart.cfg"
+		fi
+		if test -d "$webDirectory/comics/";then
+			find -L "comics/" -type f -name "thumb.png" >> "$webDirectory/fanart.cfg"
+		fi
 	fi
 	################################################################################
 	# remove empty lists
 	################################################################################
 	if [ "$( cat "$webDirectory/fanart.cfg" | wc -l )" -lt 2 ];then
-		rm -v "$webDirectory/fanart.cfg"
+		rm "$webDirectory/fanart.cfg"
 	fi
 	if [ "$( cat "$webDirectory/poster.cfg" | wc -l )" -lt 2 ];then
-		rm -v "$webDirectory/poster.cfg"
+		rm "$webDirectory/poster.cfg"
 	fi
 }
 ########################################################################
@@ -2134,7 +2191,7 @@ main(){
 		libaries=$(libaryPaths | tr -s "\n" | shuf )
 		# the webdirectory is a cache where the generated website is stored
 		webDirectory="$(webRoot)"
-		ALERT "Building web directory at '$webDirectory'"
+		INFO "Building web directory at '$webDirectory'"
 		# force overwrite symbolic link to web directory
 		# - link must be used to also use premade apache settings
 		ln -sfn "$webDirectory" "/var/cache/2web/web"
@@ -2148,7 +2205,7 @@ main(){
 			# set the active flag
 			touch /tmp/nfo2web.active
 			# create a trap to remove nfo2web lockfile
-			trap "rm -v /tmp/nfo2web.active" EXIT
+			trap "rm /tmp/nfo2web.active" EXIT
 		fi
 		# make sure the directories exist and have correct permissions, also link stylesheets
 		if ! test -d "$webDirectory/";then
@@ -2158,6 +2215,10 @@ main(){
 		if ! test -d "$webDirectory/new/";then
 			mkdir -p "$webDirectory/new/"
 			chown -R www-data:www-data "$webDirectory/new/"
+		fi
+		if ! test -d "$webDirectory/random/";then
+			mkdir -p "$webDirectory/random/"
+			chown -R www-data:www-data "$webDirectory/random/"
 		fi
 		if ! test -d "$webDirectory/shows/";then
 			mkdir -p "$webDirectory/shows/"
@@ -2242,8 +2303,9 @@ main(){
 		# link the movies and shows index
 		linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
 		linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
-		# add the new index
+		# add the list filter
 		linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
+		linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
 		# link lists these can be built and rebuilt during libary update
 		linkFile "/usr/share/2web/templates/randomMovies.php" "$webDirectory/randomMovies.php"
 		linkFile "/usr/share/2web/templates/randomShows.php" "$webDirectory/randomShows.php"
@@ -2255,13 +2317,15 @@ main(){
 		################################################################################
 		# build the login users file
 		counter=0
-		if [ $(cat /etc/2web/users/*.cfg | wc -l ) -gt 0 ];then
+		if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
 			# if there are any users
 			linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
 			cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 		else
 			# if there are no users set in the cfg remove the .htaccess file
-			rm -v "$webDirectory/.htaccess"
+			if test -f "$webDirectory/.htaccess";then
+				rm "$webDirectory/.htaccess"
+			fi
 		fi
 
 		if ! test -d "$webDirectory/RESOLVER-CACHE/";then
@@ -2300,7 +2364,10 @@ main(){
 		# once a month rebuild all custom themes
 		# - a website reset or nuke will reset this timer
 		#if cacheCheck /var/cache/2web/web/themeGen.cfg "30";then
-		if checkDirDataSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+		#if checkDirDataSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+		# check if files have changed or if this is a unstable version
+		#if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/" || grep -qE "(UNSTABLE|TESTING)" /usr/share/2web/version.txt;then
+		if checkFileDataSum "$webDirectory" "/usr/share/2web/versionDate.cfg";then
 			themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
 			#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 			themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
@@ -2421,7 +2488,7 @@ main(){
 		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
 		addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 		# read each libary from the libary config, single path per line
-		ALERT "LIBARIES: $libaries";
+		#ALERT "LIBARIES: $libaries";
 		#for libary in $libaries;do
 		echo "$libaries" | while read libary;do
 			# check if the libary directory exists
@@ -2441,8 +2508,7 @@ main(){
 					################################################################################
 					# if the show directory contains a nfo file defining the show
 					#INFO "searching for metadata at '$show/tvshow.nfo'"
-					#if test -f "$show/tvshow.nfo";then
-					if grep -q "<tvshow>" "$show"/*.nfo;then
+					if test -f "$show/tvshow.nfo";then
 						#INFO "found metadata at '$show/tvshow.nfo'"
 						# load update the tvshow.nfo file and get the metadata required for
 						showMeta=$(cat "$show/tvshow.nfo")
@@ -2538,7 +2604,9 @@ main(){
 		#echo "$libarySum" > "$webDirectory/state.cfg"
 		#getLibSum > "$webDirectory/state.cfg"
 		# remove active state file
-		rm -v /tmp/nfo2web.active
+		if test -f /tmp/nfo2web.active;then
+			rm /tmp/nfo2web.active
+		fi
 		# read the tvshow.nfo files for each show
 		################################################################################
 		# Create the show link on index.php

@@ -50,7 +50,6 @@ if (file_exists("/var/cache/2web/web/comics/comics.index")){
 	echo "<li>No Comics Have been scanned into the libary!</li>";
 	echo "<li>Add libary paths in the <a href='/comics.php'>comics admin interface</a> to populate this page.</li>";
 	echo "<li>Add download links in <a href='/comicsDL.php'>comics admin interface</a></li>";
-	echo "<li></li>";
 	echo "</ul>";
 }
 ?>

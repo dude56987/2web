@@ -1,129 +1,100 @@
-<div class='inputCard'>
+<div class='titleCard'>
 	<h2>Settings</h2>
-	<!--
-	<h1>Settings</h1>
-	<div class='titleCard settingsTab'>
-	-->
-	<div class='right'>
-	<?PHP
-		$pageURL = $_SERVER['REQUEST_URI'];
-		if (($pageURL == "/tv.php") || ($pageURL == "/radio.php") || ($pageURL == "/iptv_blocked.php")){
-			echo "	<div class='titleCard'>\n";
-			echo "		<h2>Live</h2>\n";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/tv.php#index'>📺TV</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/radio.php#index'>📻Radio</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/iptv_blocked.php#index'>🚫Blocked</a>\n";
-			echo "		</div>\n";
-			echo "	</div>\n";
-		}
-		if (($pageURL == "/nfo.php") || ($pageURL == "/ytdl2nfo.php")){
-			echo "	<div class='titleCard'>\n";
-			echo "		<h2 style='wrap-text: break-word;'>Video On Demand</h2>\n";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/nfo.php#index'>🎞️Libaries</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/ytdl2nfo.php#index'>↓Downloads</a>\n";
-			echo "		</div>\n";
-			echo "	</div>\n";
-		}
-		if (($pageURL == "/comicsDL.php") || ($pageURL == "/comics.php")){
-			echo "	<div class='titleCard'>\n";
-			echo "		<h2>Comics</h2>\n";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/comics.php#index'>📚Libaries</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/comicsDL.php#index'>↓Downloads</a>\n";
-			echo "		</div>\n";
-			echo "	</div>\n";
-		}
-		if (($pageURL == "/system.php") || ($pageURL == "/cache.php") || ($pageURL == "/log.php") || ($pageURL == "/weather.php")){
-			echo "	<div class='titleCard'>\n";
-			echo "		<h2>General</h2>\n";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/system.php#index'>🎛️System</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/cache.php#index'>📥Cache</a>\n";
-			echo "		</div>\n";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/weather.php#index'>🌤️Weather</a>\n";
-			echo "		</div>\n";
-			echo "		<hr>";
-			echo "		<div>\n";
-			echo "			<a class='button' href='/log.php#index'>📋Log</a>\n";
-			echo "		</div>\n";
-			echo "	</div>\n";
-		}
-	?>
-	</div>
-	<div class=''>
-		<ul>
-			<?PHP
-				echo "<li>General";
-				echo "<ul>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/system.php#index'>🎛️ System</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/cache.php#index'>📥 Cache</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/weather.php#index'>🌤️ Weather</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/log.php#index'>📋 Log</a>\n";
-				echo "	</li>\n";
-				echo "</ul>\n";
-				echo "</li>";
-
-				echo "<li>Live";
-				echo "<ul>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/tv.php#index'>📺 TV</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/radio.php#index'>📻 Radio</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/iptv_blocked.php#index'>🚫 Blocked</a>\n";
-				echo "	</li>\n";
-				echo "</ul>\n";
-				echo "</li>";
-
-				echo "<li>Video On Demand";
-				echo "	<ul>\n";
-				echo "		<li>\n";
-				echo "			<a class='' href='/nfo.php#index'>🎞️ Libaries</a>\n";
-				echo "		</li>\n";
-				echo "		<li>\n";
-				echo "			<a class='' href='/ytdl2nfo.php#index'>↓ Downloads</a>\n";
-				echo "		</li>\n";
-				echo "	</ul>\n";
-				echo "</li>";
-
-				echo "<li>Comics";
-				echo "<ul>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/comics.php#index'>📚 Libaries</a>\n";
-				echo "	</li>\n";
-				echo "	<li>\n";
-				echo "		<a class='' href='/comicsDL.php#index'>↓ Downloads</a>\n";
-				echo "	</li>\n";
-				echo "</ul>\n";
-				echo "</li>";
-		?>
-		</ul>
+	<div class='listCard'>
+		<a class='button' href='/system.php'>
+			🎛️
+			<span class='headerText'>
+				General
+			</span>
+		</a>
+		<a class='button' href='/tv.php'>
+			📡
+			<span class='headerText'>
+				Live
+			</span>
+		</a>
+		<a class='button' href='/nfo.php'>
+			🎞️
+			<span class='headerText'>
+				Video On Demand
+			</span>
+		</a>
+		<a class='button' href='/comics.php'>
+			📚
+			<span class='headerText'>
+				Comics
+			</span>
+		</a>
+		<a class='button' href='/weather.php'>
+			🌤️
+			<span class='headerText'>
+				Weather
+			</span>
+		</a>
 	</div>
 </div>
+
+<?PHP
+	$pageURL = $_SERVER['REQUEST_URI'];
+	if (($pageURL == "/tv.php") || ($pageURL == "/radio.php") || ($pageURL == "/iptv_blocked.php")){
+		echo "	<div class='inputCard'>\n";
+		echo "		<h2>Live Settings</h2>\n";
+		echo "		<ul>";
+		echo "			<li>\n";
+		echo "				<a class='' href='/tv.php'>📺TV</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/radio.php'>📻Radio</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/iptv_blocked.php'>🚫Blocked</a>\n";
+		echo "			</li>\n";
+		echo "		</ul>";
+		echo "	</div>\n";
+	}
+	if (($pageURL == "/nfo.php") || ($pageURL == "/ytdl2nfo.php")){
+		echo "	<div class='inputCard'>\n";
+		echo "		<h2>Video On Demand Settings</h2>\n";
+		echo "		<ul>";
+		echo "			<li>\n";
+		echo "				<a class='' href='/nfo.php'>🎞️Libaries</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/ytdl2nfo.php'>↓Downloads</a>\n";
+		echo "			</li>\n";
+		echo "		</ul>";
+		echo "	</div>\n";
+	}
+	if (($pageURL == "/comicsDL.php") || ($pageURL == "/comics.php")){
+		echo "	<div class='inputCard'>\n";
+		echo "		<h2>Comics Settings</h2>\n";
+		echo "		<ul>";
+		echo "			<li>\n";
+		echo "				<a class='' href='/comics.php'>📚Libaries</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/comicsDL.php'>↓Downloads</a>\n";
+		echo "			</li>\n";
+		echo "		</ul>";
+		echo "	</div>\n";
+	}
+	if (($pageURL == "/system.php") || ($pageURL == "/cache.php") || ($pageURL == "/log.php") || ($pageURL == "/weather.php")){
+		echo "	<div class='inputCard'>\n";
+		echo "		<h2>General Settings</h2>\n";
+		echo "		<ul>";
+		echo "			<li>\n";
+		echo "				<a class='' href='/system.php'>🎛️System</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/cache.php'>📥Cache</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/weather.php'>🌤️Weather</a>\n";
+		echo "			</li>\n";
+		echo "			<li>\n";
+		echo "				<a class='' href='/log.php'>📋Log</a>\n";
+		echo "			</li>\n";
+		echo "		</ul>";
+		echo "	</div>\n";
+	}
+?>

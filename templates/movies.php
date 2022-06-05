@@ -47,7 +47,6 @@ if (file_exists("/var/cache/2web/web/movies/movies.index")){
 	echo "<li>No Movies have been scanned into the libary!</li>";
 	echo "<li>Add libary paths in the <a href='/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
 	echo "<li>Add download links in <a href='/ytdl2nfo.php'>video on demand admin interface</a></li>";
-	echo "<li></li>";
 	echo "</ul>";
 }
 

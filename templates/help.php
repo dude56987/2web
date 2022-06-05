@@ -20,6 +20,7 @@ include("header.php")
 		<ul>
 			<li><a href="#android_live">Android Live</a></li>
 			<li><a href="#android_ondemand">Android On-Demand</a></li>
+			<li><a href="#android_VLC">Android VLC Links</a></li>
 		</ul>
 		<li><a href="#kodi">Kodi</a></li>
 		<ul>
@@ -68,6 +69,7 @@ For when you need more than the web interface can handle. This help section defi
 	<ul>
 		<li><a href="#android_live">Android Live</a></li>
 		<li><a href="#android_ondemand">Android On-Demand</a></li>
+		<li><a href="#android_VLC">Android VLC Links</a></li>
 	</ul>
 	</div>
 
@@ -119,6 +121,15 @@ For when you need more than the web interface can handle. This help section defi
 
 	<p>
 		You could install kodi on your android device and link it to the media collection on this server.
+	</p>
+	<h3 id="android_VLC">VLC Links</h3>
+	<p>
+		If you have VLC installed on android you can click the vlc link found on every video media page.
+		<br>
+		<span class='button'>
+			<span id='vlcIcon'>&#9650;</span> VLC
+		</span>
+		<br>
 	</p>
 
 </div>

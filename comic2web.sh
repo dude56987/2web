@@ -852,7 +852,7 @@ renderPage(){
 			echo "<div class='titleCard'>"
 			echo "<h1>$pageComicName</h1>"
 			echo "<a class='button' href='$pageComicName.cbz'>"
-			echo "<span class='downloadIcon'>⮋</span>"
+			echo "<span class='downloadIcon'>↓</span>"
 			echo "Download"
 			# get the file size and list it in the download button
 			echo $(	du -sh "$webDirectory/comics/$pageComicName/$pageComicName.cbz" | cut -f1 );
@@ -1147,16 +1147,8 @@ webUpdate(){
 				echo "</a>"
 			} > "$comicNamePath/comic.index"
 		fi
-		if ! test -f "$webDirectory/new/comic_$tempComicName.index";then
-			{
-				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-				echo "<div>$tempComicName</div>"
-				echo "</a>"
-			} > "$webDirectory/new/comic_$tempComicName.index"
-		fi
 	done
-	# cleanup index
+	# cleanup the comics index
 	if test -f "$webDirectory/comics/comics.index";then
 		tempList=$(cat "$webDirectory/comics/comics.index" )
 		echo "$tempList" | sort -u > "$webDirectory/comics/comics.index"

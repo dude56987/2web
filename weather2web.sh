@@ -161,6 +161,7 @@ function update(){
 	createDir "$webDirectory/weather/data/"
 	# scan the sources
 	ALERT "Weather Locations: $weatherLocations"
+	totalWeatherLocations=$(echo "$weatherLocations" | wc -l)
 	#for comicSource in $comicSources;do
 	weatherLocations=$(echo "$weatherLocations" | tr -s '\n')
 	echo "$weatherLocations" | while read weatherLocation;do
@@ -238,6 +239,7 @@ function update(){
 					if [ $( echo -n "$timeOfForcast" | wc -c) -gt 0 ];then
 						# pull forcast info for time
 						tempForcast=$(echo "$forcast"	| cut -d'.' -f4-)
+						tempForcast=$(echo "$tempForcast"	| tr -d '\t' | tr -s ' ')
 						# check for emergency signals
 						{
 							echo "<div class='weatherForcast"
@@ -246,12 +248,13 @@ function update(){
 							#elif echo "$tempForcast" | grep -q "Highs";then
 							#	echo " HOT'>"
 							#fi
-							tempTemp="?℉"
+							tempTemp="?"
+							goodWeather="false"
 							echo "' style='background: linear-gradient(to bottom, "
 							if echo "$tempForcast" | grep -q "lower 0s";then
 								tempTemp="3"
 								tempColor="rgba(1,1,255,0.5)"
-							elif echo "$tempForcast" | grep -q "around 0";then
+							elif echo "$tempForcast" | grep -q "around 0\.";then
 								tempTemp="0"
 								tempColor="rgba(2,2,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 0s";then
@@ -263,7 +266,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 10s";then
 								tempTemp="13"
 								tempColor="rgba(5,5,255,0.5)"
-							elif echo "$tempForcast" | grep -q "around 10";then
+							elif echo "$tempForcast" | grep -q "around 10\.";then
 								tempTemp="10"
 								tempColor="rgba(6,6,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 10s";then
@@ -275,7 +278,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 20s";then
 								tempTemp="23"
 								tempColor="rgba(10,10,255,0.5)"
-							elif echo "$tempForcast" | grep -q "around 20";then
+							elif echo "$tempForcast" | grep -q "around 20\.";then
 								tempTemp="20"
 								tempColor="rgba(11,11,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 20s";then
@@ -287,7 +290,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 30s";then
 								tempTemp="33"
 								tempColor="rgba(14,14,255,0.5)"
-							elif echo "$tempForcast" | grep -q "around 30";then
+							elif echo "$tempForcast" | grep -q "around 30\.";then
 								tempTemp="30"
 								tempColor="rgba(15,15,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 30s";then
@@ -299,7 +302,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 40s";then
 								tempTemp="43"
 								tempColor="rgba(18,18,255,0.5)"
-							elif echo "$tempForcast" | grep -q "around 40";then
+							elif echo "$tempForcast" | grep -q "around 40\.";then
 								tempTemp="40"
 								tempColor="rgba(19,19,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 40s";then
@@ -311,7 +314,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 50s";then
 								tempTemp="53"
 								tempColor="rgba(22,22,255,0.40)"
-							elif echo "$tempForcast" | grep -q "around 50";then
+							elif echo "$tempForcast" | grep -q "around 50\.";then
 								tempTemp="50"
 								tempColor="rgba(23,23,255,0.35)"
 							elif echo "$tempForcast" | grep -q "mid 50s";then
@@ -323,22 +326,26 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 60s";then
 								tempTemp="63"
 								tempColor="rgba(25,25,255,0.20)"
-							elif echo "$tempForcast" | grep -q "around 60";then
+							elif echo "$tempForcast" | grep -q "around 60\.";then
 								tempTemp="60"
 								tempColor="rgba(26,26,255,0.15)"
 							elif echo "$tempForcast" | grep -q "mid 60s";then
 								tempTemp="65"
 								tempColor="rgba(27,27,255,0.1)"
 							elif echo "$tempForcast" | grep -q "upper 60s";then
+								goodWeather="yes"
 								tempTemp="68"
 								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "lower 70s";then
+								goodWeather="yes"
 								tempTemp="73"
 								tempColor="var(--glassBackground)"
-							elif echo "$tempForcast" | grep -q "around 70";then
+							elif echo "$tempForcast" | grep -q "around 70\.";then
+								goodWeather="yes"
 								tempTemp="70"
 								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "mid 70s";then
+								goodWeather="yes"
 								tempTemp="75"
 								tempColor="var(--glassBackground)"
 							elif echo "$tempForcast" | grep -q "upper 70s";then
@@ -347,7 +354,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 80s";then
 								tempTemp="83"
 								tempColor="rgba(255,20,20,0.15)"
-							elif echo "$tempForcast" | grep -q "around 80";then
+							elif echo "$tempForcast" | grep -q "around 80\.";then
 								tempTemp="80"
 								tempColor="rgba(255,19,19,0.20)"
 							elif echo "$tempForcast" | grep -q "mid 80s";then
@@ -359,7 +366,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 90s";then
 								tempTemp="93"
 								tempColor="rgba(255,16,16,0.35)"
-							elif echo "$tempForcast" | grep -q "around 90";then
+							elif echo "$tempForcast" | grep -q "around 90\.";then
 								tempTemp="90"
 								tempColor="rgba(255,15,15,0.40)"
 							elif echo "$tempForcast" | grep -q "mid 90s";then
@@ -371,7 +378,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 100s";then
 								tempTemp="103"
 								tempColor="rgba(255,12,12,0.5)"
-							elif echo "$tempForcast" | grep -q "around 100";then
+							elif echo "$tempForcast" | grep -q "around 100\.";then
 								tempTemp="100"
 								tempColor="rgba(255,11,11,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 100s";then
@@ -383,7 +390,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 110s";then
 								tempTemp="113"
 								tempColor="rgba(255,8,8,0.5)"
-							elif echo "$tempForcast" | grep -q "around 110";then
+							elif echo "$tempForcast" | grep -q "around 110\.";then
 								tempTemp="110"
 								tempColor="rgba(255,7,7,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 110s";then
@@ -395,7 +402,7 @@ function update(){
 							elif echo "$tempForcast" | grep -q "lower 120s";then
 								tempTemp="123"
 								tempColor="rgba(255,4,4,0.5)"
-							elif echo "$tempForcast" | grep -q "around 120";then
+							elif echo "$tempForcast" | grep -q "around 120\.";then
 								tempTemp="120"
 								tempColor="rgba(255,3,3,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 120s";then
@@ -419,8 +426,13 @@ function update(){
 								echo -n "🌙";
 							else
 								# daytime forcast
-								echo -n "	<h3>$timeOfForcast"
-								echo -n "🌞";
+								if echo "$timeOfForcast" | grep -q "MEMORIAL DAY";then
+									echo -n "	<h3>MEMORIAL <br>DAY"
+									echo -n "🪖";
+								else
+									echo -n "	<h3>$timeOfForcast"
+									echo -n "🌞";
+								fi
 							fi
 							echo -n "</h3>"
 							# add temperature icon
@@ -428,7 +440,11 @@ function update(){
 							getWeatherIcon "$tempForcast"
 							echo -n "	</div>"
 							echo -n "	<div class='weatherDescription'>"
-							echo -n "	<div class='tempIcon' style='background-color: $tempColor'>"
+							if echo "$goodWeather" | grep -q "yes";then
+								echo -n "	<div class='tempIcon goodWeather' style='background-color: $tempColor'>"
+							else
+								echo -n "	<div class='tempIcon' style='background-color: $tempColor'>"
+							fi
 							echo -n "		$tempTemp"
 							echo -n "	</div>"
 							echo -n "		$tempForcast"
@@ -446,13 +462,18 @@ function update(){
 				} > "$webDirectory/weather/data/current_$locationSum.index"
 			fi
 			{
-				echo "</div>"
-				echo -n "<div class='weatherStationInfo'>"
-				echo -n "Found via $locationName weather station."
 				echo -n "</div>"
-				echo -n "<div class='weatherStationInfo'>"
-				echo -n "$locationUpdateTime"
-				echo -n "</div>"
+				echo -n "	<div class='listCard'>"
+				echo -n "		<div class='weatherStationInfo'>"
+				echo -n "		Found via $locationName weather station."
+				echo -n "		<br>"
+				echo -n "		$locationUpdateTime"
+				echo -n "		</div>"
+				# add outside search links
+				echo -n "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$weatherLocation'>🔎 WIKIPEDIA</a>"
+				echo -n "		<a class='button' target='_new' href='https://www.accuweather.com/en/search-locations?query=$weatherLocation'>🔎 AccuWeather</a>"
+				echo -n "		<a class='button' target='_new' href='https://www.duckduckgo.com/?q=weather $weatherLocation'>🔎 DuckDuckGo</a>"
+				echo -n "	</div>"
 				echo -n "</div>"
 			} >> "$webDirectory/weather/data/forcast_$locationSum.index"
 		else
@@ -460,6 +481,15 @@ function update(){
 			ALERT "Check back in 15-20 minutes when the weather station has new info..."
 		fi
 	done
+	# update the stats file
+	#if [ $( find /etc/2web/weather/location.d/ -name '*.cfg' | wc -l ) -gt 0 ];then
+	if [ $( echo "$totalWeatherLocations" | wc -l ) -gt 0 ];then
+		if cacheCheck "$webDirectory/totalWeatherStations.index" "14";then
+			#totalWeatherStations=$(find "$webDirectory"/weather/data/ -name 'forcast_*.index' | wc -l)
+			#echo "$totalWeatherStations" > "$webDirectory/totalWeatherStations.index"
+			echo "$totalWeatherLocations" > "$webDirectory/totalWeatherStations.index"
+		fi
+	fi
 }
 ################################################################################
 function getWeatherIcon(){

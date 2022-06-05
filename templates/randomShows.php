@@ -1,4 +1,5 @@
 <?php
+# if no index exists
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 	$cacheFile="randomShows.index";
 	if (file_exists($cacheFile)){
@@ -18,12 +19,12 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
 		// get a list of all the genetrated index links for the page
-		#$sourceFiles = explode("\n",shell_exec("ls -t1 /var/cache/2web/web/shows/*/shows.index | shuf"));A
 		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/shows/shows.index"));
-		shuffle($sourceFiles);
 		// reverse the time sort
-		$sourceFiles = array_reverse($sourceFiles);
+		$sourceFiles = array_unique($sourceFiles);
+		shuffle($sourceFiles);
 		$counter=0;
+		$drawBottom=0;
 		foreach($sourceFiles as $sourceFile){
 			$sourceFileName = $sourceFile;
 			if (file_exists($sourceFile)){
@@ -34,6 +35,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 							fwrite($fileObj,"<div class='titleCard'>");
 							fwrite($fileObj,"<h1>Random Shows</h1>");
 							fwrite($fileObj,"<div class='listCard'>");
+							$drawBottom = 1;
 						}
 						// read the index entry
 						$data=file_get_contents($sourceFile);
@@ -42,12 +44,23 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/shows/shows.index")){
 					}
 				}
 				if ($counter >= 40){
+					// break the loop
 					break;
 				}
 			}
 		}
-		fwrite($fileObj,"</div>");
-		fwrite($fileObj,"</div>");
+		if ($drawBottom == 1){
+			// create a final link to the full new list
+			fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=shows'>");
+			fwrite($fileObj,"Full");
+			fwrite($fileObj,"<br>");
+			fwrite($fileObj,"List");
+			fwrite($fileObj,"<br>");
+			fwrite($fileObj,"🔀");
+			fwrite($fileObj,"</a>");
+			fwrite($fileObj,"</div>");
+			fwrite($fileObj,"</div>");
+		}
 		// close the file
 		fclose($fileObj);
 	}

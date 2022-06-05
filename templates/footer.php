@@ -27,7 +27,7 @@ echo "</div>";
 $cacheFile=$webDirectory."/footerData.index";
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
-	if (time()-filemtime($cacheFile) > 300){
+	if (time()-filemtime($cacheFile) > 90){
 		// update the cached file
 		$writeFile=true;
 	}else{
@@ -52,10 +52,18 @@ if ($writeFile){
 	$fileData .= " HOME";
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
+
 	$fileData .= "<a class='' href='/new/'>";
 	$fileData .= "📜";
 	$fileData .= "<span class='footerText'>";
 	$fileData .= " NEW";
+	$fileData .= "</span>";
+	$fileData .= "</a> ";
+
+	$fileData .= "<a class='' href='/random/'>";
+	$fileData .= "🔀";
+	$fileData .= "<span class='footerText'>";
+	$fileData .= " RANDOM";
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
 

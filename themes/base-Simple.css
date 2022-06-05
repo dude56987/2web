@@ -820,6 +820,7 @@ input{
 .listCard{
 	white-space: nowrap;
 	overflow-x: auto;
+	padding: 0.5rem;
 }
 .aired{
 	float: left;
@@ -1251,7 +1252,7 @@ tr{
 	margin: 1rem;
 }
 .weatherDescription{
-	overflow-y: scroll;
+	overflow-y: auto;
 	font-size: 0.8rem;
 	white-space: normal;
 	max-height: 15rem;
@@ -1260,12 +1261,18 @@ tr{
 .weatherForcast h3{
 	background-color: var(--solidBackground);
 	margin: 0px;
+	/*
 	height: 2rem;
+	*/
 	font-size: 1rem;
 	vertical-align: center;
 }
 .weatherStationInfo{
 	font-size: 0.6rem;
+	float: left;
+}
+.goodWeather{
+	font-size: 1.2rem;
 }
 .downloadIcon{
 	color: lightgreen;
@@ -1330,6 +1337,7 @@ tr{
 	*/
 	.headerText{
 		display: inline !important;
+		font-size: 0.5rem !important;
 	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;

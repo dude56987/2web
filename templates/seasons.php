@@ -82,16 +82,28 @@ foreach($seasonDirs as $seasonDir){
 ?>
 </div>
 <?PHP
+echo "<div class='titleCard'>";
+echo "<h2 class=''>";
+echo "Plot";
+echo "</h2>";
+echo file_get_contents($activeDir."/plot.cfg");
+echo "</div>";
+
+echo "<div class='titleCard'>";
+echo "<h2 class=''>";
+echo "External Info";
+echo "</h2>";
 echo "<div class='listCard'>";
-echo "<a class='button' href='https://www.imdb.com/find?q=$showTitle'>🔎 IMDB</a>";
-echo "<a class='button' href='https://en.wikipedia.org/w/?search=$showTitle'>🔎 WIKIPEDIA</a>";
-echo "<a class='button' href='https://archive.org/details/movies?query=$showTitle'>🔎 ARCHIVE.ORG</a>";
-echo "<a class='button' href='https://www.youtube.com/results?search_query=$showTitle'>🔎 YOUTUBE</a>";
-echo "<a class='button' href='https://odysee.com/$/search?q=$showTitle'>🔎 ODYSEE</a>";
-echo "<a class='button' href='https://rumble.com/search/video?q=$showTitle'>🔎 RUMBLE</a>";
-echo "<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$showTitle'>🔎 BITCHUTE</a>";
-echo "<a class='button' href='https://www.twitch.tv/search?term=$showTitle'>🔎 TWITCH</a>";
-echo "<a class='button' href='https://veoh.com/find/$showTitle'>🔎 VEOH</a>";
+echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$showTitle'>🔎 IMDB</a>";
+echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$showTitle'>🔎 WIKIPEDIA</a>";
+echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$showTitle'>🔎 ARCHIVE.ORG</a>";
+echo "<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$showTitle'>🔎 YOUTUBE</a>";
+echo "<a class='button' target='_new' href='https://odysee.com/$/search?q=$showTitle'>🔎 ODYSEE</a>";
+echo "<a class='button' target='_new' href='https://rumble.com/search/video?q=$showTitle'>🔎 RUMBLE</a>";
+echo "<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$showTitle'>🔎 BITCHUTE</a>";
+echo "<a class='button' target='_new' href='https://www.twitch.tv/search?term=$showTitle'>🔎 TWITCH</a>";
+echo "<a class='button' target='_new' href='https://veoh.com/find/$showTitle'>🔎 VEOH</a>";
+echo "</div>";
 echo "</div>";
 ?>
 <hr>
