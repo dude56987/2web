@@ -92,6 +92,8 @@ build-deb:
 	mkdir -p debian/etc/2web/users/;
 	mkdir -p debian/etc/2web/nfo/;
 	mkdir -p debian/etc/2web/nfo/libaries.d/;
+	mkdir -p debian/etc/2web/music/;
+	mkdir -p debian/etc/2web/music/libaries.d/;
 	mkdir -p debian/etc/2web/comics/;
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
@@ -131,6 +133,7 @@ build-deb:
 	touch debian/etc/2web/iptv/radioSources.d/.placeholder
 	touch debian/etc/2web/iptv/blockedLinks.d/.placeholder
 	touch debian/etc/2web/nfo/.placeholder
+	touch debian/etc/2web/music/libaries.d/.placeholder
 	touch debian/etc/2web/nfo/libaries.d/.placeholder
 	touch debian/etc/2web/comics/.placeholder
 	touch debian/etc/2web/comics/libaries.d/.placeholder
@@ -154,6 +157,7 @@ build-deb:
 	# copy update scripts to /usr/bin
 	cp 2web.sh debian/usr/bin/2web
 	cp nfo2web.sh debian/usr/bin/nfo2web
+	cp music2web.sh debian/usr/bin/music2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
 	cp weather2web.sh debian/usr/bin/weather2web
@@ -166,6 +170,7 @@ build-deb:
 	pandoc --standalone help/man_comic2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/comic2web.1.gz
 	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1.gz
 	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
+	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1.gz
 	# build the web versions of the man pages
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
 	pandoc help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
@@ -173,6 +178,7 @@ build-deb:
 	pandoc help/man_comic2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/comic2web.html
 	pandoc help/man_weather2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/weather2web.html
 	pandoc help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
+	pandoc help/man_music2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/music2web.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
@@ -180,6 +186,7 @@ build-deb:
 	w3m debian/usr/share/2web/help/comic2web.html > debian/usr/share/2web/help/comic2web.txt
 	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
+	w3m debian/usr/share/2web/help/music2web.html > debian/usr/share/2web/help/music2web.txt
 	# build the readme
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
@@ -188,8 +195,10 @@ build-deb:
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# build the default themes
 	# user themes can be any self contained .css file
-	# copy over javascript libary
+	# copy over the main javascript libary
 	cp 2web.js debian/usr/share/2web/
+	# copy over the main php libary
+	cp 2webLib.php debian/usr/share/2web/
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
 	# copy the resolvers

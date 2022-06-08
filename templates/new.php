@@ -81,33 +81,30 @@ if ($writeFile){
 	ignore_user_abort(true);
 	$fileHandle = fopen("new_$filterType.index",'w');
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
+	//$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
+	$sourceFiles = file("$filterType.index", FILE_IGNORE_NEW_LINES);
+	// reverse the list to make the ordering correct
 	$sourceFiles = array_reverse($sourceFiles);
-	$sourceFiles = array_unique($sourceFiles);
 	// limit the array to 200 items
 	array_splice($sourceFiles, 200);
 	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".index")){
-					// read the index entry
-					$indexFileHandle = fopen($sourceFile,'r');
-					while(!feof($indexFileHandle)){
-						// read the index entry
-						$data=fgets($indexFileHandle, 4096);
-						// write the index entry into the page buffer
-						fwrite($fileHandle, "$data");
-						echo $data;
-						# send data wrote to the page to the browser
-						flush();
-						ob_flush();
-					}
-					fclose($indexFileHandle);
-				}
+			// read the index entry
+			$indexFileHandle = fopen($sourceFile,'r');
+			while(!feof($indexFileHandle)){
+				// read the index entry
+				$data=fgets($indexFileHandle, 4096);
+				// write the index entry into the page buffer
+				fwrite($fileHandle, "$data");
+				echo $data;
+				# send data wrote to the page to the browser
+				flush();
+				ob_flush();
 			}
+			fclose($indexFileHandle);
 		}
 	}
+	//fclose($sourceFiles);
 	fclose($fileHandle);
 	ignore_user_abort(false);
 }else{

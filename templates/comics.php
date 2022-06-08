@@ -8,6 +8,7 @@
 
 <?php
 	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
@@ -15,7 +16,7 @@
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
 <?php
-	include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
+	drawPosterWidget("comics");
 ?>
 
 <hr>
@@ -57,7 +58,7 @@ if (file_exists("/var/cache/2web/web/comics/comics.index")){
 
 <?php
 	// add random comics above the footer
-	include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
+	drawPosterWidget("comics", True);
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

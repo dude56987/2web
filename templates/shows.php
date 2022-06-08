@@ -8,6 +8,8 @@
 <?php
 ################################################################################
 ini_set('display_errors', 1);
+include("/usr/share/2web/2webLib.php");
+# add the header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # add the search box
 ?>
@@ -16,7 +18,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 <?php
 # add the updated shows below the header
-include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
+drawPosterWidget("shows");
 ################################################################################
 ?>
 <div class='settingListCard'>
@@ -53,7 +55,7 @@ if (file_exists("/var/cache/2web/web/shows/shows.index")){
 </div>
 <?php
 // add random shows above the footer
-include($_SERVER['DOCUMENT_ROOT']."/randomShows.php");
+drawPosterWidget("shows", True);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

@@ -82,11 +82,11 @@ if ($writeFile){
 	$fileHandle = fopen($_SERVER['DOCUMENT_ROOT']."/random/".$filterType.".index",'w');
 	// get a list of all the genetrated index links for the page
 	if ( "$filterType" == "all" ){
-		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index"));
+		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else if ( "$filterType" == "episodes" ){
-		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index"));
+		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else{
-		$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index"));
+		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}
 
 	# remove list duplicates

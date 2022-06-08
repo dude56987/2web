@@ -1053,8 +1053,6 @@ webUpdate(){
 
 	# link the homepage
 	linkFile "/usr/share/2web/templates/comics.php" "$webDirectory/comics/index.php"
-	linkFile "/usr/share/2web/templates/randomComics.php" "$webDirectory/randomComics.php"
-	linkFile "/usr/share/2web/templates/updatedComics.php" "$webDirectory/updatedComics.php"
 
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/comics/randomPoster.php"

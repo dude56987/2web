@@ -1,6 +1,7 @@
 <!-- create top jump button -->
 <a href='#' id='topButton' class='button'>&uarr;</a>
 <?php
+$startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/headerData.index";
 # if file is older than 2 hours
@@ -65,18 +66,13 @@ if ($writeFile){
 		$fileData .= "</span>";
 		$fileData .= "</a>";
 	}
-	if (file_exists("$webDirectory/music/")){
-		if (file_exists("$webDirectory/totalAlbums.index")){
-			if ((file_get_contents("$webDirectory/totalAlbums.index")) > 0){
-				$fileData .= "<a class='button' href='/music'>";
-				$fileData .= "🎧";
-				$fileData .= "&#9834;";
-				$fileData .= "<span class='headerText'>";
-				$fileData .= "MUSIC";
-				$fileData .= "</span>";
-				$fileData .= "</a>";
-			}
-		}
+	if (file_exists("$webDirectory/music/music.index")){
+		$fileData .= "<a class='button' href='/music'>";
+		$fileData .= "🎧";
+		$fileData .= "<span class='headerText'>";
+		$fileData .= "MUSIC";
+		$fileData .= "</span>";
+		$fileData .= "</a>";
 	}
 	if (file_exists("$webDirectory/comics/comics.index")){
 		$fileData .= "<a class='button' href='/comics'>";

@@ -9,6 +9,7 @@
 <?php
 	ini_set('display_errors', 1);
 	include("header.php");
+	include("/usr/share/2web/2webLib.php");
 ?>
 
 <?php
@@ -19,37 +20,21 @@
 		include("stats.php");
 	}
 	if (file_exists("shows")){
-		if (file_exists("updatedEpisodes.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedEpisodes.php");
-		}
-		if (file_exists("updatedShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
-		}
+		drawPosterWidget("episodes");
+		drawPosterWidget("shows");
 	}
 	if (file_exists("movies")){
-		if (file_exists("updatedShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
-		}
-	}
-	if (file_exists("movies")){
-		if (file_exists("randomMovies.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
-		}
+		drawPosterWidget("movies");
+		# random movies
+		drawPosterWidget("movies", True);
 	}
 	if (file_exists("shows")){
-		if (file_exists("randomShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomShows.php");
-		}
+		# random
+		drawPosterWidget("shows", True);
 	}
 	if (file_exists("comics")){
-		if (file_exists("updatedComics.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
-		}
-	}
-	if (file_exists("comics")){
-		if (file_exists("randomComics.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
-		}
+		drawPosterWidget("comics");
+		drawPosterWidget("comics", True);
 	}
 	if (file_exists("live")){
 		if (file_exists("updatedChannels.php")){

@@ -677,6 +677,36 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/system.php#webTheme'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addMusicLibary",$_POST)){
+	$link=$_POST['addMusicLibary'];
+	echo "Running addMusicLibary on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/2web/music/libaries.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the libary path to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding libary ".$link."<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/music.php#musicLibaryPaths'>BACK</a><hr>";
+	clear();
+}else if(array_key_exists("removeMusicLibary",$_POST)){
+	$link=$_POST['removeMusicLibary'];
+	echo "Running removeMusicLibary on link ".$link."<br>\n";
+	$sumOfLink=md5($link);
+	$configPath="/etc/2web/music/libaries.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing libary ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	countdown(5);
+	echo "<hr><a class='button' href='/music.php#musicLibaryPaths'>BACK</a><hr>";
+	clear();
 }else{
 	countdown(5);
 	echo "<h1>[ERROR]:UNKNOWN COMMAND SUBMITTED TO API</h1>";
@@ -693,7 +723,7 @@ if (array_key_exists("newUserName",$_POST)){
 </div>
 
 <?php
-include('header.php');
+include('footer.php');
 ?>
 
 </body>

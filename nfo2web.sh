@@ -1686,12 +1686,6 @@ buildHomePage(){
 	INFO "Building home page..."
 	# link homepage
 	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
-	# link lists
-	linkFile "/usr/share/2web/templates/randomMovies.php" "$webDirectory/randomMovies.php"
-	linkFile "/usr/share/2web/templates/randomShows.php" "$webDirectory/randomShows.php"
-	linkFile "/usr/share/2web/templates/updatedShows.php" "$webDirectory/updatedShows.php"
-	linkFile "/usr/share/2web/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
-	linkFile "/usr/share/2web/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 
 	# check and update stats files
 	# - do not generate stats if website is in process of being updated
@@ -1844,8 +1838,8 @@ checkFileDataSum(){
 	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
 	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/_file$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/_file$pathSum.cfg")"
+	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED
@@ -2216,6 +2210,10 @@ main(){
 			mkdir -p "$webDirectory/new/"
 			chown -R www-data:www-data "$webDirectory/new/"
 		fi
+		if ! test -d "$webDirectory/web_cache/";then
+			mkdir -p "$webDirectory/web_cache/"
+			chown -R www-data:www-data "$webDirectory/web_cache/"
+		fi
 		if ! test -d "$webDirectory/random/";then
 			mkdir -p "$webDirectory/random/"
 			chown -R www-data:www-data "$webDirectory/random/"
@@ -2307,11 +2305,6 @@ main(){
 		linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
 		linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
 		# link lists these can be built and rebuilt during libary update
-		linkFile "/usr/share/2web/templates/randomMovies.php" "$webDirectory/randomMovies.php"
-		linkFile "/usr/share/2web/templates/randomShows.php" "$webDirectory/randomShows.php"
-		linkFile "/usr/share/2web/templates/updatedShows.php" "$webDirectory/updatedShows.php"
-		linkFile "/usr/share/2web/templates/updatedMovies.php" "$webDirectory/updatedMovies.php"
-		linkFile "/usr/share/2web/templates/updatedEpisodes.php" "$webDirectory/updatedEpisodes.php"
 		# copy over the favicon
 		linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
 		################################################################################

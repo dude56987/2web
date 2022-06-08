@@ -1,3 +1,4 @@
+<hr>
 <?php
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
@@ -16,10 +17,16 @@ if (file_exists($webDirectory."/views/".$scriptName."_views.cfg")){
 # display the page view
 echo "<div class='viewCounterBox'>";
 echo "<span class='viewCounterHeader'>";
-echo "Views:";
+echo "👁️";
 echo "</span>";
 echo "<span class='viewCounter'>";
 echo file_get_contents($webDirectory."/views/".$scriptName."_views.cfg");
+echo "</span>";
+echo "<span class='executionTimeHeader'>";
+echo "⏱️";
+echo "</span>";
+echo "<span class='executionTime'>";
+echo round((microtime(True) - $startTime), 4);
 echo "</span>";
 echo "</div>";
 
@@ -91,17 +98,13 @@ if ($writeFile){
 			}
 		}
 	}
-	if (file_exists("$webDirectory/music/")){
-		if (file_exists("$webDirectory/totalAlbums.index")){
-			if ((file_get_contents("$webDirectory/totalAlbums.index")) > 0){
-				$fileData .= "<a class='' href='/music'>";
-				$fileData .= "🎧";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " MUSIC";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
+	if (file_exists("$webDirectory/music/music.index")){
+		$fileData .= "<a class='' href='/music'>";
+		$fileData .= "🎧";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " MUSIC";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
 	if (file_exists("$webDirectory/comics/")){
 		if (file_exists("$webDirectory/totalComics.index")){

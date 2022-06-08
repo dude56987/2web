@@ -1415,16 +1415,24 @@ pre{
 	background-color: var(--glassBackground);
 	font-size: 1rem;
 	float: left;
-	border-style: none;
 }
 .viewCounterHeader{
 	background-color: var(--solidBackground);
 	border-style: solid;
 	border-right: none;
 }
+.executionTimeHeader{
+	background-color: var(--solidBackground);
+	border-style: solid;
+	border-left: none;
+}
 .viewCounter{
 	font-size: 1rem;
 	border-style: solid;
+}
+.executionTime{
+	border-style: solid;
+	border-left: none;
 }
 .tempIcon{
 	text-align: left;
@@ -1436,4 +1444,16 @@ pre{
 }
 .seasonContainer .showPageEpisode h2{
 	display: none !important;
+}
+.albumPlayer{
+	background: url("album.png");
+	background-size: 100% 100%;
+	height: auto !important;
+}
+.albumPlayerThumb{
+	float: right;
+	height: 10rem !important;
+}
+.albumPlayerInfo{
+	min-height: 10rem;
 }

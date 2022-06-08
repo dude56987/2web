@@ -8,6 +8,9 @@
 <?php
 ################################################################################
 ini_set('display_errors', 1);
+# add the base php libary
+include("/usr/share/2web/2webLib.php");
+# add the header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # add the search box
 ?>
@@ -15,7 +18,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 <?php
 # add the updated movies below the header
-include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
+drawPosterWidget("movies");
 ################################################################################
 ?>
 <div class='settingListCard'>
@@ -54,7 +57,7 @@ if (file_exists("/var/cache/2web/web/movies/movies.index")){
 </div>
 <?php
 // add random movies above the footer
-include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
+drawPosterWidget("movies", True);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

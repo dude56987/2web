@@ -5,8 +5,7 @@
 </head>
 <body>
 	<?PHP
-		$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-		include($rootServerPath."/header.php");
+		include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	?>
 	<div class='titleCard'>
 		<h2>404</h2>
@@ -46,48 +45,37 @@
 		?>
 		</p>
 	</div>
-	<?PHP
-	if (file_exists("shows")){
-		if (file_exists("updatedShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedShows.php");
+
+	<?php
+		if (file_exists("shows")){
+			drawPosterWidget("episodes");
+			drawPosterWidget("shows");
 		}
-	}
-	if (file_exists("movies")){
-		if (file_exists("updatedShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedMovies.php");
+		if (file_exists("movies")){
+			drawPosterWidget("movies");
+			# random movies
+			drawPosterWidget("movies", True);
 		}
-	}
-	if (file_exists("movies")){
-		if (file_exists("randomMovies.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomMovies.php");
+		if (file_exists("shows")){
+			# random
+			drawPosterWidget("shows", True);
 		}
-	}
-	if (file_exists("shows")){
-		if (file_exists("randomShows.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomShows.php");
+		if (file_exists("comics")){
+			drawPosterWidget("comics");
+			drawPosterWidget("comics", True);
 		}
-	}
-	if (file_exists("comics")){
-		if (file_exists("updatedComics.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedComics.php");
+		if (file_exists("live")){
+			if (file_exists("updatedChannels.php")){
+				include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
+			}
 		}
-	}
-	if (file_exists("comics")){
-		if (file_exists("randomComics.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomComics.php");
+		if (file_exists("live")){
+			if (file_exists("randomChannels.php")){
+				include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
+			}
 		}
-	}
-	if (file_exists("live")){
-		if (file_exists("updatedChannels.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-		}
-	}
-	if (file_exists("live")){
-		if (file_exists("randomChannels.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
-		}
-	}
-	include($rootServerPath."/header.php");
+		// add the footer
+		include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 	?>
 </body>
 </html>
