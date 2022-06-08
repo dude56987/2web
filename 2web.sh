@@ -165,6 +165,7 @@ main(){
 		sleep 10
 		/usr/bin/iptv2web &
 		/usr/bin/comic2web &
+		/usr/bin/music2web &
 		while 1;do
 			if test -f /tmp/comic2web.active;then
 				sleep 1
@@ -173,6 +174,8 @@ main(){
 			elif test -f /tmp/nfo2web.active;then
 				sleep 1
 			elif test -f /tmp/weather2web.active;then
+				sleep 1
+			elif test -f /tmp/music2web.active;then
 				sleep 1
 			else
 				# - run nfo2web after all other modules have finished to make sure
@@ -198,7 +201,11 @@ main(){
 		/usr/bin/comic2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--weather" ] || [ "$1" == "weather" ];then
-		/usr/bin/weather2web reset
+		/usr/bin/weather2web
+		rebootCheck
+	elif [ "$1" == "-m" ] || [ "$1" == "--music" ] || [ "$1" == "music" ];then
+		/usr/bin/music2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2Web
@@ -207,6 +214,7 @@ main(){
 		/usr/bin/iptv2web update
 		/usr/bin/comic2web update
 		/usr/bin/weather2web
+		/usr/bin/music2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
 		# update the website content
@@ -214,18 +222,21 @@ main(){
 		/usr/bin/iptv2web webgen
 		/usr/bin/comic2web webgen
 		/usr/bin/weather2web
+		/usr/bin/music2web webgen
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# upgrade packages related to operation of webserver
 		/usr/bin/nfo2web upgrade
 		/usr/bin/iptv2web upgrade
 		/usr/bin/comic2web upgrade
+		/usr/bin/music2web upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web reset
 		/usr/bin/comic2web reset
 		/usr/bin/iptv2web reset
 		/usr/bin/weather2web reset
+		/usr/bin/music2web reset
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
 		# remove all website content
 		/usr/bin/nfo2web nuke

@@ -18,20 +18,8 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='titleCard'>
 <?php
 if (array_key_exists("filter",$_GET)){
-	//print_r($_GET);
 	$filterType=$_GET['filter'];
-	//echo "<p>filter = $filterType</p>";
-	if ($filterType == 'movies'){
-		echo "<h2>Random Movies</h2>";
-	}else if ($filterType == 'episodes'){
-		echo "<h2>Random Episodes</h2>";
-	}else if ($filterType == 'comics'){
-		echo "<h2>Random Comics</h2>";
-	}else if ($filterType == 'shows'){
-		echo "<h2>Random Shows</h2>";
-	}else{
-		echo "<h2>Random $filterType</h2>";
-	}
+	echo "<h2>Random ".ucfirst($filterType)."</h2>";
 }else{
 	$filterType="all";
 	echo "<h2>Random Media</h2>";
@@ -52,6 +40,10 @@ if (file_exists("$webDirectory/comics/comics.index")){
 	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
 }
 
+if (file_exists("$webDirectory/new/music.index")){
+	echo "<a class='button' href='?filter=music'>🎧 Music</a>";
+	echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
+}
 ?>
 <a class='button' href='?filter=all'>📜 All</a>
 </div>
@@ -84,6 +76,10 @@ if ($writeFile){
 	if ( "$filterType" == "all" ){
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else if ( "$filterType" == "episodes" ){
+		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
+	}else if ( "$filterType" == "albums" ){
+		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
+	}else if ( "$filterType" == "artists" ){
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else{
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index", FILE_IGNORE_NEW_LINES);

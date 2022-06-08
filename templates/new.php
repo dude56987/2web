@@ -18,20 +18,8 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='titleCard'>
 <?php
 if (array_key_exists("filter",$_GET)){
-	//print_r($_GET);
 	$filterType=$_GET['filter'];
-	//echo "<p>filter = $filterType</p>";
-	if ($filterType == 'movies'){
-		echo "<h2>Recently added Movies</h2>";
-	}else if ($filterType == 'episodes'){
-		echo "<h2>Recently added Episodes</h2>";
-	}else if ($filterType == 'comics'){
-		echo "<h2>Recently added Comics</h2>";
-	}else if ($filterType == 'shows'){
-		echo "<h2>Recently added Shows</h2>";
-	}else{
-		echo "<h2>Recently added $filterType</h2>";
-	}
+	echo "<h2>Recently added ".ucfirst($filterType)."</h2>";
 }else{
 	$filterType="all";
 	echo "<h2>Recently added Media</h2>";
@@ -50,6 +38,11 @@ if (file_exists("$webDirectory/new/movies.index")){
 
 if (file_exists("$webDirectory/new/comics.index")){
 	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
+}
+
+if (file_exists("$webDirectory/new/music.index")){
+	echo "<a class='button' href='?filter=music'>🎧 Music</a>";
+	echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
 }
 
 ?>
@@ -81,7 +74,6 @@ if ($writeFile){
 	ignore_user_abort(true);
 	$fileHandle = fopen("new_$filterType.index",'w');
 	// get a list of all the genetrated index links for the page
-	//$sourceFiles = explode("\n",file_get_contents("$filterType.index"));
 	$sourceFiles = file("$filterType.index", FILE_IGNORE_NEW_LINES);
 	// reverse the list to make the ordering correct
 	$sourceFiles = array_reverse($sourceFiles);

@@ -300,10 +300,12 @@ function update(){
 								# remove excess images
 								rm "$webDirectory/music/$artist/poster-"*.png
 							fi
-							convert "$webDirectory/music/$artist/poster.png" -trim -blur 40x40 "$webDirectory/music/$artist/poster.png"
+							convert "$webDirectory/music/$artist/poster.png" -trim -blur 20x20 "$webDirectory/music/$artist/poster.png"
 							convert "$webDirectory/music/$artist/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$artistOG" -composite "$webDirectory/music/$artist/poster.png"
 						fi
-						linkFile "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/album.png"
+						if ! test -f "$webDirectory/kodi/music/$artist/$album/cover.jpg";then
+							convert "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/cover.jpg"
+						fi
 					fi
 					set +x
 					################################################################################

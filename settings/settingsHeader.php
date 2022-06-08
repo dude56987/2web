@@ -31,6 +31,12 @@
 				Weather
 			</span>
 		</a>
+		<a class='button' href='/music.php'>
+			🎧
+			<span class='headerText'>
+				Music
+			</span>
+		</a>
 	</div>
 </div>
 
