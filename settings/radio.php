@@ -155,7 +155,7 @@ echo "</div>";
 //echo "<input type='submit'>\n";
 //echo "</form>\n";
 
-include("header.php");
+include("footer.php");
 ?>
 </body>
 </html>

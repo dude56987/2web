@@ -84,7 +84,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 <?PHP
-	include("header.php");
+	include("footer.php");
 ?>
 </body>
 </html>

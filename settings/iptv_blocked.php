@@ -118,7 +118,7 @@ foreach($sourceFiles as $groupName){
 ?>
 </div>
 <?PHP
-	include("header.php");
+	include("footer.php");
 ?>
 </body>
 </html>

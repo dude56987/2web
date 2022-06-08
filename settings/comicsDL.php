@@ -104,7 +104,7 @@ foreach($extractors as $extractor_name){
 </div>
 
 <?PHP
-	include("header.php");
+	include("footer.php");
 ?>
 </body>
 </html>

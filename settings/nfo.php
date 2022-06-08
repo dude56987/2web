@@ -68,7 +68,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 <?php
-include("header.php");
+include("footer.php");
 ?>
 </body>
 </html>

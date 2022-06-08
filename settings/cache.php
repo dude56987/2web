@@ -198,7 +198,7 @@ include("ytdl-resolver.php");
 ?>
 
 <?PHP
-	include("header.php");
+	include("footer.php");
 ?>
 </body>
 </html>
