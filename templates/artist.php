@@ -1,8 +1,20 @@
-<html id='top' class='randomFanart'>
+<html class='seriesBackground'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<style>
+	<?PHP
+		# get the show name
+		$workingDirectory=getcwd();
+		$workingDirectory=explode('/',$workingDirectory);
+		$workingDirectory=array_pop($workingDirectory);
+		echo ":root{";
+		echo "--backgroundPoster: url('/music/".$workingDirectory."/poster.png');";
+		echo "--backgroundFanart: url('/music/".$workingDirectory."/fanart.png');";
+		echo"}";
+	?>
+	</style>
 </head>
 <body>
 <?php
@@ -12,18 +24,25 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
-# add the search box
+
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 <div class='titleCard'>
-	<?php
-	if (file_exists("artist.cfg")){
-		echo "<h2>".file_get_contents("artist.cfg")."</h2>";
-	}
-	if (file_exists("genre.cfg")){
-		echo "<div>".file_get_contents("genre.cfg")."</div>";
-	}
-	?>
+		<div class='albumPlayerInfo'>
+			<?php
+			if (file_exists("artist.cfg")){
+				echo "<h1>".file_get_contents("artist.cfg")."</h1>";
+			}
+			?>
+			<div>
+				<img class='albumPlayerThumb' src='poster.png' />
+				<?php
+				if (file_exists("genre.cfg")){
+					echo "<div>".file_get_contents("genre.cfg")."</div>";
+				}
+				?>
+		</div>
+	</div>
 </div>
 <div class='settingListCard'>
 <h2>Albums</h2>

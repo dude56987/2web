@@ -43,6 +43,7 @@ if (file_exists("$webDirectory/comics/comics.index")){
 if (file_exists("$webDirectory/new/music.index")){
 	echo "<a class='button' href='?filter=music'>🎧 Music</a>";
 	echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
+	echo "<a class='button' href='?filter=artists'>🎤 Artists</a>";
 }
 ?>
 <a class='button' href='?filter=all'>📜 All</a>
