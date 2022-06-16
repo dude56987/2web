@@ -1,8 +1,23 @@
-<html id='top' class='randomFanart'>
+<html id='top' class='seriesBackground'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<style>
+	<?PHP
+		# get the show name
+		$data=getcwd();
+		$data=explode('/',$data);
+		$album=array_pop($data);
+		$artist=array_pop($data);
+		#$artist= file("artist.cfg", FILE_IGNORE_NEW_LINES)[0];
+		echo ":root{";
+		echo "--backgroundPoster: url('/music/$artist/$album/album.png');";
+		echo "--backgroundFanart: url('/music/$artist/$album/album.png');";
+		//echo "--backgroundFanart: url('/music/$artist/fanart.png');";
+		echo"}";
+	?>
+	</style>
 </head>
 <body>
 <?php

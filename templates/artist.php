@@ -27,13 +27,12 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 ?>
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
-<div class='titleCard'>
-		<div class='albumPlayerInfo'>
+<div class='titleCard artistTitleCard'>
 			<?php
-			if (file_exists("artist.cfg")){
-				echo "<h1>".file_get_contents("artist.cfg")."</h1>";
-			}
+			$artist=file("artist.cfg", FILE_IGNORE_NEW_LINES)[0];
+			echo "<h1>".$artist."</h1>";
 			?>
+			<div class='albumPlayerInfo'>
 			<div>
 				<img class='albumPlayerThumb' src='poster.png' />
 				<?php
@@ -42,6 +41,20 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 				}
 				?>
 		</div>
+	<?PHP
+	echo "<div class='listCard'>";
+	echo "	<a class='button' target='_new' href='https://musicbrainz.org/search?type=artist&query=$artist'>🔎 MUSIC BRAINZ</a>";
+	echo "	<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$artist'>🔎 WIKIPEDIA</a>";
+	echo "	<a class='button' target='_new' href='https://archive.org/details/movies?query=$artist'>🔎 ARCHIVE.ORG</a>";
+	echo "	<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$artist'>🔎 YOUTUBE</a>";
+	echo "	<a class='button' target='_new' href='https://odysee.com/$/search?q=$artist'>🔎 ODYSEE</a>";
+	echo "	<a class='button' target='_new' href='https://rumble.com/search/video?q=$artist'>🔎 RUMBLE</a>";
+	echo "	<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$artist'>🔎 BITCHUTE</a>";
+	echo "	<a class='button' target='_new' href='https://www.twitch.tv/search?term=$artist'>🔎 TWITCH</a>";
+	echo "	<a class='button' target='_new' href='https://veoh.com/find/$artist'>🔎 VEOH</a>";
+	echo "	<a class='button' target='_new' href='https://www.imdb.com/find?q=$artist'>🔎 IMDB</a>";
+	echo "</div>";
+	?>
 	</div>
 </div>
 <div class='settingListCard'>
@@ -49,10 +62,12 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 if (file_exists("albums.index")){
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",file_get_contents("albums.index"));
+	#$sourceFiles = explode("\n",file_get_contents("albums.index"));
+	$sourceFiles = file("albums.index", FILE_IGNORE_NEW_LINES);
 	// reverse the time sort
-	//$sourceFiles = array_reverse($sourceFiles);
 	$sourceFiles = array_unique($sourceFiles);
+	// sort the files by name
+	sort($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){

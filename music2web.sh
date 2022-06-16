@@ -37,6 +37,20 @@ createDir(){
 	chown www-data:www-data "$1"
 }
 ################################################################################
+getDirSum(){
+	line=$1
+	# check the libary sum against the existing one
+	totalList=$(find "$line" | sort)
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# convert lists into md5sum
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+}
+################################################################################
 albumCheckDirSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
@@ -49,8 +63,8 @@ albumCheckDirSum(){
 	pathSum="$(find "$directory" -type f -name "album.png" | sort | md5sum | cut -d' ' -f1 )"
 	newSum="$(getDirSum "$2")"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+	if test -f "$webDirectory/sums/music_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/music_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED
@@ -60,14 +74,14 @@ albumCheckDirSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			echo "$newSum" > "$webDirectory/sums/music_$pathSum.cfg"
 			return 0
 		fi
 	else
 		# CHANGED
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		echo "$newSum" > "$webDirectory/sums/music_$pathSum.cfg"
 		return 0
 	fi
 }
@@ -155,37 +169,50 @@ function update(){
 		#find "$musicSource" -type f -name "*.*" | grep -qE "*.(mp3|wma|ogg|flac)" | shuf | while read musicPath;do
 		#find "$musicSource" -type f | grep -qE "*\.(mp3|wma|ogg|flac)" | shuf | while read musicPath;do
 		#find "$musicSource" -type f -name "*.mp3" | while read musicPath;do
-		ALERT "Scanning Music Source: $musicSource"
+		#ALERT "Scanning Music Source: $musicSource"
 		find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$" | shuf | while read musicPath;do
 			webDirectory=$(webRoot)
 			# check the md5sum of the music file
 			if checkFileDataSum "$webDirectory" "$musicPath";then
 				# get the web root
 				webDirectory=$(webRoot)
-				#if test -f /usr/bin/eyeD3_DEBUG;then
-				## get the music metadata
-				#musicData=$(eyeD3 "$musicPath")
-				#artist=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^artist" | cut -d':' -f2  | cut -c2-)
-				#album=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^album" | cut -d':' -f2 | cut -c2- )
-				#title=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^title" | cut -d':' -f2 | cut -c2-)
-				#track=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^track" | cut -d':' -f2  | cut -d' ' -f2 )
-				#length=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^Time" | cut -d' ' -f2 )
-				#genre=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "genre:" | cut -d':' -f3  | cut -c2-)
 
-				echo "Attempting ffprobe metadata extraction..."
+				INFO "Attempting ffprobe metadata extraction..."
+				# build the blank data in case of bash wierdness with clearing variables
+				artist=""
+				album=""
+				title=""
+				disc=""
+				track=""
+				date=""
+				length=""
+				genre=""
+
 				# get the music metadata
 				musicData=$(ffprobe "$musicPath" |& cat)
+				# build the cleanup pipes
+				set -x
 				artist=$(echo "$musicData" | tr -s ' ' | grep "artist" | tac | tail -n 1 | cut -d':' -f2  | cut -c2- )
 				album=$(echo "$musicData" | tr -s ' ' | grep "album" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
 				title=$(echo "$musicData" | tr -s ' ' | grep "title" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
 				disc=$(echo "$musicData" | tr -s ' ' | grep "disc" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- | cut -d'/' -f1 )
+				#disc=$(echo "$musicData" | tr -s ' ' | grep "disc" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
+				#if echo "$disc" | grep "/";then
+				#	disc=$(echo "$musicData" | cut -d'/' -f1 )
+				#fi
 				track=$(echo "$musicData" | tr -s ' ' | grep "track" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 | cut -d'/' -f1 )
+				#track=$(echo "$musicData" | tr -s ' ' | grep "track" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 )
+				#if echo "$track" | grep "/";then
+				#	track=$(echo "$musicData" | cut -d'/' -f1 )
+				#fi
 				date=$(echo "$musicData" | tr -s ' ' | grep "date" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 )
 				length=$(echo "$musicData" | tr -s ' ' | grep "Duration" | cut -d'.' -f1 | cut -c2- | cut -d' ' -f2 )
 				genre=$(echo "$musicData" | tr -s ' ' | grep "genre" | tac | tail -n 1 | cut -d':' -f3  | cut -c2- )
-				metadataBackup=0
+				set +x
+
 				# check for metadata extraction failure and try other eyeD3
-				if echo "$musicData" | grep "misdetection possible";then
+				metadataBackup=0
+				if echo "$musicData" | grep -q "misdetection possible";then
 					metadataBackup=1
 				elif [ $( echo "$artist" | wc -c ) -le 0 ];then
 					metadataBackup=1
@@ -205,7 +232,7 @@ function update(){
 				fi
 
 				workingFile=0
-				if echo "$musicData" | grep "misdetection possible";then
+				if echo "$musicData" | grep -q "misdetection possible";then
 					workingFile=1
 				elif [ "$artist" == "" ];then
 					workingFile=1
@@ -236,90 +263,127 @@ function update(){
 					fi
 
 					# list the track info
-					echo "################################################################################"
-					echo "================================================================================"
-					echo "Processing file: $musicPath"
-					echo "================================================================================"
-					echo "Processing data: $musicData"
-					echo "================================================================================"
-					echo "---------+---------------------------------------------------------------------+"
-					echo "ArtistOG | $artistOG"
-					echo "Artist   | $artist"
-					echo "Album    | $album"
-					echo "AlbumOG  | $albumOG"
-					echo "Disc     | $disc"
-					echo "Date     | $date"
-					echo "Title    | $title"
-					echo "Track    | $track"
-					echo "Length   | $length"
-					echo "Genre    | $genre"
-					echo "---------+---------------------------------------------------------------------+"
+					processingInfo="🎤:$artistOG | 💿:$albumOG | 🔢:$track | 🗓️:$date | "
+					INFO "$processingInfo"
+					#echo "################################################################################"
+					#echo "================================================================================"
+					#echo "Processing file: $musicPath"
+					#echo "================================================================================"
+					#echo "Processing data: $musicData"
+					#echo "================================================================================"
+					#echo "---------+---------------------------------------------------------------------+"
+					#echo "ArtistOG | $artistOG"
+					#echo "Artist   | $artist"
+					#echo "Album    | $album"
+					#echo "AlbumOG  | $albumOG"
+					#echo "Disc     | $disc"
+					#echo "Date     | $date"
+					#echo "Title    | $title"
+					#echo "Track    | $track"
+					#echo "Length   | $length"
+					#echo "Genre    | $genre"
+					#echo "---------+---------------------------------------------------------------------+"
 
 					# create the directories
 					createDir "$webDirectory/music/$artist/$album/"
 					createDir "$webDirectory/kodi/music/$artist/$album/"
 					# link the file in the web path
-					if echo "$musicPath" | grep ".mp3$";then
+					if echo "$musicPath" | grep -q ".mp3$";then
 						linkFile "$musicPath" "$webDirectory/music/$artist/$album/${track}.mp3"
 					else
 						# convert  all found audio files to mp3 for compatibilty with the html5 player
-						ffmpeg -i "$musicPath" "$webDirectory/music/$artist/$album/${track}.mp3"
+						INFO "${processingInfo}Converting file to MP3..."
+						ffmpeg -loglevel quiet -y -i "$musicPath" "$webDirectory/music/$artist/$album/${track}.mp3"
 					fi
 					linkFile "$webDirectory/music/$artist/$album/${track}.mp3" "$webDirectory/kodi/music/$artist/$album/${track}.mp3"
 
 					################################################################################
 					# get the music path and look for a thumbnail
 					################################################################################
-					set -x
 					if ! test -f "$webDirectory/kodi/music/$artist/$album/album.png";then
 						lookingPath=$(echo "$musicPath" | rev | cut -d'/' -f2- | rev )
 						if test -f "$lookingPath/album.png";then
 							linkFile "$lookingPath/album.png" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/album.jpg";then
-							convert "$lookingPath/album.jpg" "$webDirectory/music/$artist/$album/album.png"
+							convert -quiet "$lookingPath/album.jpg" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/folder.jpg";then
-							convert "$lookingPath/folder.jpg" "$webDirectory/music/$artist/$album/album.png"
+							convert -quiet "$lookingPath/folder.jpg" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/folder.png";then
 							linkFile "$lookingPath/folder.png" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/diskart.jpg";then
-							convert "$lookingPath/diskart.jpg" "$webDirectory/music/$artist/$album/album.png"
+							convert -quiet "$lookingPath/diskart.jpg" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/diskart.png";then
 							linkFile "$lookingPath/diskart.png" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/discart.jpg";then
-							convert "$lookingPath/discart.jpg" "$webDirectory/music/$artist/$album/album.png"
+							convert -quiet "$lookingPath/discart.jpg" "$webDirectory/music/$artist/$album/album.png"
 						elif test -f "$lookingPath/discart.png";then
 							linkFile "$lookingPath/discart.png" "$webDirectory/music/$artist/$album/album.png"
 						fi
 
 						# try to find a album cover inside the mp3 file tags
 						if ! test -f "$webDirectory/music/$artist/$album/album.png";then
-							ffmpeg -i "$musicPath" -an -vcodec copy "$webDirectory/music/$artist/$album/album.png"
+							INFO "${processingInfo}Extracting album cover from file..."
+							ffmpeg -loglevel quiet -i "$musicPath" -an -vcodec copy "$webDirectory/music/$artist/$album/album.png"
+							#ffmpeg -loglevel quiet -y -ss 1 -i "$musicPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/music/$artist/$album/album.png"
 						fi
 
 						# generate a thumbnail for the album
 						if ! test -f "$webDirectory/music/$artist/$album/album.png";then
-							convert -size 800x800 plasma: "$webDirectory/music/$artist/$album/album.png"
-							convert "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 800x800\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 800x800 -gravity center caption:"$albumOG" -composite "$webDirectory/music/$artist/$album/album.png"
+							INFO "${processingInfo}Building Album Cover from file..."
+							convert -quiet -size 800x800 plasma: "$webDirectory/music/$artist/$album/album.png"
+							convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 800x800\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 800x800 -gravity center caption:"$albumOG" -composite "$webDirectory/music/$artist/$album/album.png"
 						fi
-						# create a artist thumbnail from combining all the album coversA
-						if cacheCheck "$webDirectory/music/$artist/fanart.png" "10";then
-							montage "$webDirectory/music/$artist/"*/album.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/music/$artist/fanart.png"
+						# create a artist thumbnail from combining all the album covers
+						if albumCheckDirSum "$webDirectory" "$webDirectory/music/$artist/";then
+							albumCount=$( find "$webDirectory/music/$artist/" -type f -name "album.png" | wc -l )
+							if [ $albumCount -ge 36 ];then
+								tileType="9x4"
+							elif [ $albumCount -ge 32 ];then
+								tileType="8x4"
+							elif [ $albumCount -ge 28 ];then
+								tileType="7x4"
+							elif [ $albumCount -ge 24 ];then
+								tileType="6x4"
+							elif [ $albumCount -ge 18 ];then
+								tileType="6x3"
+							elif [ $albumCount -ge 12 ];then
+								tileType="6x2"
+							elif [ $albumCount -ge 8 ];then
+								tileType="4x2"
+							elif [ $albumCount -ge 6 ];then
+								tileType="3x2"
+							elif [ $albumCount -ge 4 ];then
+								tileType="4x1"
+							elif [ $albumCount -eq 3 ];then
+								tileType="3x1"
+							elif [ $albumCount -eq 2 ];then
+								tileType="2x1"
+							elif [ $albumCount -eq 1 ];then
+								tileType="1x1"
+							fi
+
+							INFO "${processingInfo}Building fanart..."
+							montage "$webDirectory/music/$artist/"*/album.png -background black -geometry 800x600\!+0+0 -tile $tileType "$webDirectory/music/$artist/fanart.png"
 							if test -f "$webDirectory/music/$artist/fanart-0.png";then
 								# to many images exist use only first set
 								cp "$webDirectory/music/$artist/fanart-0.png" "$webDirectory/music/$artist/fanart.png"
 								# remove excess images
-								rm "$webDirectory/music/$artist/poster-"*.png
+								rm "$webDirectory/music/$artist/fanart-"*.png
 							fi
-							convert "$webDirectory/music/$artist/fanart.png" -trim -blur 40x40 "$webDirectory/music/$artist/fanart.png"
-						fi
-						# build a new poster if the discovred albums have changed
-						#if cacheCheck "$webDirectory/music/$artist/poster.png" "10";then
-						if albumCheckDirSum "$webDirectory" "$webDirectory/music/$artist/";then
+							# trim and blur the fanart
+							convert -quiet "$webDirectory/music/$artist/fanart.png" -trim -blur 5x5 "$webDirectory/music/$artist/fanart.png"
+							# copy the artist fanart to the kodi folder
+							convert -quiet "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/fanart.jpg"
+							linkFile "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/landscape.jpg"
+
+							################################################################################
+							# build a new poster if the discovred albums have changed
+							################################################################################
+							INFO "${processingInfo}Building poster..."
 							# figure out the number of albums and build a grid from 2 up to 5 wide
 							# - sizes of 1 or lower are trimmed from the edges
 							# - tiles should be able to fill up half of the square at least
-							albumCount=$( find "$webDirectory/music/$artist/" -type f -name "album.png" | wc -l )
-
+							#albumCount=$( find "$webDirectory/music/$artist/" -type f -name "album.png" | wc -l )
 							if [ $albumCount -ge 81 ];then
 								tileType="9x9"
 							elif [ $albumCount -ge 64 ];then
@@ -343,51 +407,11 @@ function update(){
 							elif [ $albumCount -eq 3 ];then
 								tileType="3x1"
 							elif [ $albumCount -eq 2 ];then
-								tileType="3x1"
+								tileType="2x1"
 							elif [ $albumCount -eq 1 ];then
-								tileType="3x1"
+								tileType="1x1"
 							fi
 
-							#if [ $(( $albumCount % 2 )) -eq 0 ] && [ $albumCount -gt 4 ];then
-							#	tileType="2x2"
-							#elif [ $(( $albumCount % 3 )) -eq 0 ] && [ $albumCount -ge 3 ];then
-							#	tileType="3x3"
-							#elif [ $(( $albumCount % 4 )) -eq 0 ] && [ $albumCount -ge 8 ];then
-							#	tileType="4x4"
-							#elif [ $(( $albumCount % 5 )) -eq 0 ] && [ $albumCount -ge 10 ];then
-							#	tileType="5x5"
-							#elif [ $(( $albumCount % 6 )) -eq 0 ] && [ $albumCount -ge 20 ];then
-							#	tileType="6x6"
-							#elif [ $(( $albumCount % 7 )) -eq 0 ] && [ $albumCount -ge 25 ];then
-							#	tileType="7x7"
-							#elif [ $(( $albumCount % 8 )) -eq 0 ] && [ $albumCount -ge 36 ];then
-							#	tileType="8x8"
-							#elif [ $(( $albumCount % 9 )) -eq 0 ] && [ $albumCount -ge 40 ];then
-							#	tileType="9x9"
-							#else
-							#	tileType="2x2"
-							#fi
-
-							#	if [ $albumCount -le 4 ];then
-							#		tileType="2x2"
-							#	elif [ $albumCount -le 16 ];then
-							#		tileType="4x4"
-							#	elif [ $albumCount -le 36 ];then
-							#		tileType="6x6"
-							#	else
-							#		tileType="2x2"
-							#	fi
-							#elif [ $(( $albumCount % 3 )) -eq 0 ];then
-							#	if [ $albumCount -le 9 ];then
-							#		tileType="3x3"
-							#	elif [ $albumCount -le 25 ];then
-							#		tileType="5x5"
-							#	elif [ $albumCount -le 49 ];then
-							#		tileType="7x7"
-							#	else
-							#		tileType="1x1"
-							#	fi
-							#fi
 							# build the montage
 							montage "$webDirectory/music/$artist/"*/album.png -background black -geometry 800x800\!+0+0 -tile $tileType "$webDirectory/music/$artist/poster.png"
 							if test -f "$webDirectory/music/$artist/poster-0.png";then
@@ -396,17 +420,22 @@ function update(){
 								# remove excess images
 								rm "$webDirectory/music/$artist/poster-"*.png
 							fi
-							convert "$webDirectory/music/$artist/poster.png" -trim -blur 20x20 "$webDirectory/music/$artist/poster.png"
-							convert "$webDirectory/music/$artist/poster.png" -adaptive-resize 800x800\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 800x800 -gravity center caption:"$artistOG" -composite "$webDirectory/music/$artist/poster.png"
-							convert "$webDirectory/music/$artist/poster.png" -adaptive-resize 150x150\! "$webDirectory/music/$artist/poster-web.png"
+							convert -quiet "$webDirectory/music/$artist/poster.png" -trim "$webDirectory/music/$artist/poster.png"
+							# resize the poster to resonable porportions
+							convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 800x800\! "$webDirectory/music/$artist/poster.png"
+							# create the smaller thumbnail
+							convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/poster-web.png"
+							# create the kodi jpg artist poster thumb
+							convert -quiet "$webDirectory/music/$artist/poster.png" "$webDirectory/kodi/music/$artist/folder.jpg"
+							linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearart.jpg"
+							linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearlogo.jpg"
 						fi
 						if ! test -f "$webDirectory/kodi/music/$artist/$album/cover.jpg";then
-							convert "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/cover.jpg"
+							convert -quiet "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/cover.jpg"
 						fi
 						# build the web thumbnail
-						convert "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 150x150\! "$webDirectory/music/$artist/$album/album-web.png"
+						convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/$album/album-web.png"
 					fi
-					set +x
 					################################################################################
 					# create the nfo data
 					################################################################################
@@ -480,12 +509,12 @@ function update(){
 					################################################################################
 					# link .cfg files for webpages
 					################################################################################
-					echo "$artist" > "$webDirectory/music/$artist/artist.cfg"
+					echo "$artistOG" > "$webDirectory/music/$artist/artist.cfg"
 					if [ "$genre" != "" ];then
 						echo "$genre" > "$webDirectory/music/$artist/genre.cfg"
 					fi
 
-					echo "$album" > "$webDirectory/music/$artist/$album/album.cfg"
+					echo "$albumOG" > "$webDirectory/music/$artist/$album/album.cfg"
 					linkFile "$webDirectory/music/$artist/artist.cfg" "$webDirectory/music/$artist/$album/artist.cfg"
 					if [ "$genre" != "" ];then
 						linkFile "$webDirectory/music/$artist/genre.cfg" "$webDirectory/music/$artist/$album/genre.cfg"
@@ -580,7 +609,7 @@ function resetCache(){
 }
 ################################################################################
 function lockCheck(){
-	if test -f "/tmp/musicweb.active";then
+	if test -f "/tmp/music2web.active";then
 		# system is already running exit
 		echo "[INFO]: music2web is already processing data in another process."
 		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/music2web.active'."
@@ -591,6 +620,18 @@ function lockCheck(){
 		# create a trap to remove music2web lockfile
 		trap "rm /tmp/music2web.active" EXIT
 	fi
+}
+################################################################################
+INFO(){
+	width=$(tput cols)
+	# cut the line to make it fit on one line using ncurses tput command
+	buffer="                                                                                "
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# print the line
+	printf "$output\r"
 }
 ################################################################################
 function cacheCheck(){

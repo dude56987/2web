@@ -36,6 +36,11 @@
 		drawPosterWidget("comics");
 		drawPosterWidget("comics", True);
 	}
+	if (file_exists("music")){
+		drawPosterWidget("albums");
+		drawPosterWidget("artists");
+		drawPosterWidget("music", True);
+	}
 	if (file_exists("live")){
 		if (file_exists("updatedChannels.php")){
 			include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");

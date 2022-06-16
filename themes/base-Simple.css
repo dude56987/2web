@@ -897,6 +897,8 @@ input{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	margin: 1rem;
 	padding-bottom: 0.5rem;
+}
+.artistTitleCard{
 	min-height: 14rem;
 }
 .listCard .indexSeries{
