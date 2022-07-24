@@ -40,7 +40,8 @@
 # Please choose only one of the below update schedules for ytdl2nfo
 ################################################################################
 # run update every hour, individual channels have individual delays
-@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+@daily root	/usr/bin/niceload /usr/bin/ytdl2nfo
+#@reboot root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every 4 hours
 #* */4 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
 # run update every 6 hours

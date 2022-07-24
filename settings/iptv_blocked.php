@@ -1,6 +1,6 @@
 <html class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 </head>
 <body>
 <?php
@@ -9,7 +9,7 @@
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
-include("header.php");
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
 
@@ -70,55 +70,56 @@ foreach($sourceFiles as $sourceFile){
 <h1>Active/Blocked Groups</h1>
 <?php
 // find all the groups
-$sourceFiles=scandir("/var/cache/2web/nfo/web/live/groups/");
-$sourceFiles=array_diff($sourceFiles,array('..','.'));
-$groups=array();
-# read the directory name and make a button to block it
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	$groups = array_merge($groups, array($sourceFileName));
-	# if the group has been blocked
-	if(in_array($sourceFile, $blockedGroups)){
+if (file_exists("/var/cache/2web/nfo/web/live/groups/")){
+	$sourceFiles=scandir("/var/cache/2web/nfo/web/live/groups/");
+	$sourceFiles=array_diff($sourceFiles,array('..','.'));
+	$groups=array();
+	# read the directory name and make a button to block it
+	foreach($sourceFiles as $sourceFile){
+		$sourceFileName = $sourceFile;
+		$groups = array_merge($groups, array($sourceFileName));
+		# if the group has been blocked
+		if(in_array($sourceFile, $blockedGroups)){
+			echo "<div class='disabledSetting settingsEntry'>\n";
+		}else{
+			echo "<div class='enabledSetting settingsEntry'>\n";
+		}
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "		<h3>\n";
+		echo "			$sourceFile";
+		echo "		</h3>\n";
+		echo "		<div class='buttonContainer'>\n";
+		# if the group has been blocked
+		if(in_array($sourceFile, $blockedGroups)){
+			echo "			<button class='button' type='submit' name='unblockGroup' value='".$sourceFile."'>UNBLOCK</button>\n";
+		}else{
+			echo "			<button class='button' type='submit' name='blockGroup' value='".$sourceFile."'>BLOCK</button>\n";
+		}
+		echo "		</div>\n";
+		echo "	</form>\n";
+		echo "</div>\n";
+	}
+
+	$sourceFiles=array_diff($blockedGroups,$groups);
+	foreach($sourceFiles as $groupName){
+		# if the group has been blocked
 		echo "<div class='disabledSetting settingsEntry'>\n";
-	}else{
-		echo "<div class='enabledSetting settingsEntry'>\n";
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "		<h3>\n";
+		echo "			$groupName";
+		echo "		</h3>\n";
+		echo "		<div class='buttonContainer'>\n";
+		# if the group has been blocked
+		echo "			<button class='button' type='submit' name='unblockGroup' value='".$groupName."'>UNBLOCK</button>\n";
+		echo "		</div>\n";
+		echo "	</form>\n";
+		echo "</div>\n";
 	}
-	echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-	echo "		<h3>\n";
-	echo "			$sourceFile";
-	echo "		</h3>\n";
-	echo "		<div class='buttonContainer'>\n";
-	# if the group has been blocked
-	if(in_array($sourceFile, $blockedGroups)){
-		echo "			<button class='button' type='submit' name='unblockGroup' value='".$sourceFile."'>UNBLOCK</button>\n";
-	}else{
-		echo "			<button class='button' type='submit' name='blockGroup' value='".$sourceFile."'>BLOCK</button>\n";
-	}
-	echo "		</div>\n";
-	echo "	</form>\n";
-	echo "</div>\n";
 }
-
-$sourceFiles=array_diff($blockedGroups,$groups);
-foreach($sourceFiles as $groupName){
-	# if the group has been blocked
-	echo "<div class='disabledSetting settingsEntry'>\n";
-	echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-	echo "		<h3>\n";
-	echo "			$groupName";
-	echo "		</h3>\n";
-	echo "		<div class='buttonContainer'>\n";
-	# if the group has been blocked
-	echo "			<button class='button' type='submit' name='unblockGroup' value='".$groupName."'>UNBLOCK</button>\n";
-	echo "		</div>\n";
-	echo "	</form>\n";
-	echo "</div>\n";
-}
-
 ?>
 </div>
 <?PHP
-	include("footer.php");
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>
 </html>

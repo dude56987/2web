@@ -458,8 +458,14 @@ function update(){
 						} > "$webDirectory/music/$artist/artist.index"
 						# add artist to the main music index
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/music/music.index"
+
+						# add music to random indexes
+						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/random/music.index"
+						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/random/all.index"
+
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/artists.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/music.index"
+						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/all.index"
 					fi
 					# album data
 					if ! test -f "$webDirectory/kodi/music/$artist/$album/album.nfo";then
@@ -483,8 +489,16 @@ function update(){
 						} > "$webDirectory/music/$artist/$album/album.index"
 						# add album to the artist index
 						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/music/$artist/albums.index"
+
+						# add to new indexes
 						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/albums.index"
 						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/music.index"
+						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/all.index"
+
+						# add to random indexes
+						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/albums.index"
+						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/music.index"
+						echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/all.index"
 					fi
 					# track data
 					if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.index";then
@@ -530,6 +544,11 @@ function update(){
 					echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/music/$artist/$album/tracks.index"
 					# add tracks to the new tracks index
 					echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/new/tracks.index"
+					# random tracks index
+					echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/random/tracks.index"
+					# add to all
+					echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/random/all.index"
+					echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/new/all.index"
 
 					# cleanup the track list for the album
 					if test -f "$webDirectory/music/$artist/$album/tracks.index";then

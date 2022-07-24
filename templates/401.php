@@ -6,24 +6,25 @@
 <body>
 <?PHP
 	// rate limit on response
-	foreach(range(0,20) as $index){
-		sleep(1);
-		echo ".";
-		flush();
-		ob_flush();
-	}
+	#foreach(range(0,2) as $index){
+	#	sleep(1);
+	#	echo ".";
+	#	flush();
+	#	ob_flush();
+	#}
 ?>
 	<div class='titleCard'>
 		<h2>ERROR 401</h2>
 		<p>Login Failed! Unauthorized Access Detected!</p>
 		<ul>
+			<li><a href='/settings/'>Retry Login</a></li>
 			<li><a onclick='window.location.reload(true)'>Reload Login Page</a></li>
 			<li><a href='/'>Return to Homepage</a></li>
 		</ul>
 		<hr>
 		<p>
 			You failed to login or do not have authorization to access this webpage.
-			<a onclick='window.location.reload(true)'>Try Again?</a>
+			<a href='/settings/'>Retry Login</a>
 		</p>
 <?PHP
 // log the failed login

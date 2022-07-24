@@ -1,10 +1,10 @@
-Package: nfo2web
-Version: 0.0.3
+Package: 2web
+Version: 0.0.1
 Section: admin
 Maintainer: Carl J Smith <BM-NBHLt5EUFVEbRCmrbVrfCyaB2c8d24U9>
 Installed-Size: 96
 Priority: optional
 Architecture: all
-Depends: apache2(>=2.4), detox, html-xml-utils, ffmpeg, imagemagick, txt2html, mediainfo, php, libapache2-mod-php, python3-pip, fonts-opendyslexic, jq, parallel, at, ncurses-bin, coreutils, jq, curl, imagemagick, html-xml-utils, cron, wkhtmltopdf, python3-pip, findutils, fonts-opendyslexic, ffmpeg, procps, openssl, poppler-utils, weather-util, weather-util-data
+Depends: apache2(>=2.4), detox, html-xml-utils, ffmpeg, imagemagick, txt2html, mediainfo, php, libapache2-mod-php, python3-pip, fonts-opendyslexic, jq, parallel, at, ncurses-bin, coreutils, jq, curl, imagemagick, html-xml-utils, cron, wkhtmltopdf, python3-pip, findutils, fonts-opendyslexic, ffmpeg, procps, openssl, poppler-utils, weather-util, weather-util-data, fortune, fortunes
 Description: Generate a website from a list of .nfo libary directories
  Generate a website from a list of .nfo libary directories.

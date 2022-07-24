@@ -126,7 +126,7 @@ echo "			Free:$freeSpace";
 echo "		</span>";
 echo "	</div>";
 if ( file_exists("/etc/2web/fortuneStatus.cfg")){
-	echo "<div class='titleCard'>";
+	echo "<div class='inputCard'>";
 	echo "<h3>Fortune</h3>";
 	echo "<div class='fortuneText'>";
 	echo "$todaysFortune";
@@ -134,7 +134,7 @@ if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 	echo "</div>";
 }
 if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-	echo "	<div class='titleCard'>";
+	echo "	<div class='inputCard'>";
 	echo "$todaysWeather";
 	echo "	</div>";
 }

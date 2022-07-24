@@ -128,6 +128,25 @@ if ($writeFile){
 			$fileData .= "</a> ";
 		}
 	}
+	// read the weather info for weather2web
+	if (file_exists("$webDirectory/totalWeatherStations.index")){
+		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+			$fileData .= "<a class='' href='/weather/'>";
+			$fileData .= "🌤️";
+			$fileData .= "<span class='footerText'>";
+			$fileData .= " WEATHER";
+			$fileData .= "</span>";
+			$fileData .= "</a> ";
+		}
+	}
+	if (file_exists("$webDirectory/graphs/")){
+		$fileData .= "<a class='' href='/graphs/'>";
+		$fileData .= "📊";
+		$fileData .= "<span class='headerText'>";
+		$fileData .= " GRAPHS";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
+	}
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
@@ -135,17 +154,6 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
-// read the weather info for weather2web
-if (file_exists("$webDirectory/totalWeatherStations.index")){
-	if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-		echo "<a class='' href='/weather/'>";
-		echo "🌤️";
-		echo "<span class='footerText'>";
-		echo " WEATHER";
-		echo "</span>";
-		echo "</a> ";
-	}
-}
 // draw the help button
 echo "<a class='' href='/help.php'>";
 echo "❔ ";

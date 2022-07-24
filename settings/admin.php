@@ -1,11 +1,11 @@
 <html class='randomFanart'>
 <head>
-	<link rel='stylesheet' href='style.css'>
+	<link rel='stylesheet' href='/style.css'>
 </head>
 <body>
 
 <?php
-include('header.php');
+include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 //include('settingsHeader.php');
 ?>
 
@@ -32,6 +32,26 @@ function countdown($countdownTime){
 	echo "Done!<br>";
 	clear();
 	sleep(1);
+}
+////////////////////////////////////////////////////////////////////////////////
+function outputLog($stringData){
+	echo "$stringData";
+	$index=0;
+	$waitTime=3;
+	while($index < $waitTime){
+		$index += 1;
+		echo ".";
+		clear();
+		if ( ($index % 2) == 0 ){
+			sleep(1);
+		}
+	}
+	# 50/50 shot
+	if ( rand(0,1) == 0 ){
+		sleep(1);
+		clear();
+	}
+	echo "<br>\n";
 }
 ////////////////////////////////////////////////////////////////////////////////
 function checkUsernamePass($userName, $password){
@@ -62,42 +82,42 @@ if (array_key_exists("newUserName",$_POST)){
 		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#addNewUser'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>";
 }else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
 	echo "Removing user $userName from authorization list<br>\n";
 	unlink("/etc/2web/users/$userName");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#removeUser'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#removeUser'>BACK</a><hr>";
 }else if (array_key_exists("all_update",$_POST)){
 	echo "Scheduling 2web update!<br>\n";
 	shell_exec("echo '2web all' | /usr/bin/at -q b now");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("nfo_update",$_POST)){
 	echo "Scheduling nfo update!<br>\n";
 	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("iptv_update",$_POST)){
 	echo "Scheduling iptv2web update!<br>\n";
 	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("comic_update",$_POST)){
 	echo "Scheduling comic2web update!<br>\n";
 	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("weather_update",$_POST)){
 	echo "Scheduling weather2web update!<br>\n";
 	shell_exec("echo 'weather2web' | /usr/bin/at -q b now");
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#update'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addCustomRadioLink",$_POST)){
 	# this will add a custom m3u file with a single entry
@@ -138,7 +158,7 @@ if (array_key_exists("newUserName",$_POST)){
 		echo "[ERROR]: Custom Radio Title not found<br>";
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/radio.php'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/radio.php'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addCustomLink",$_POST)){
 	# this will add a custom m3u file with a single entry
@@ -183,7 +203,7 @@ if (array_key_exists("newUserName",$_POST)){
 		echo "[ERROR]: Custom Title not found<br>";
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/tv.php'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/tv.php'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addRadioLink",$_POST)){
 	$link=$_POST['addRadioLink'];
@@ -199,7 +219,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/radio.php#addRadioLink'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/radio.php#addRadioLink'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheQuality",$_POST)){
 	$cacheQuality=$_POST['cacheQuality'];
@@ -208,7 +228,7 @@ if (array_key_exists("newUserName",$_POST)){
 	# write the config file
 	file_put_contents("cacheQuality.cfg",$cacheQuality);
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheQuality'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheQuality'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheUpgradeQuality",$_POST)){
 	$cacheUpgradeQuality=$_POST['cacheUpgradeQuality'];
@@ -221,7 +241,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
@@ -234,7 +254,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("cacheFramerate.cfg",$cacheFramerate);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheFramerate'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheFramerate'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheResize",$_POST)){
 	$cacheResize=$_POST['cacheResize'];
@@ -247,7 +267,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("cacheResize.cfg",$cacheResize);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheResize'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheResize'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheDelay",$_POST)){
 	$cacheDelay =$_POST['cacheDelay'];
@@ -260,7 +280,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("cacheDelay.cfg",$cacheDelay);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheDelay'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheDelay'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheNewEpisodes",$_POST)){
 	$cacheNewEpisodes=$_POST['cacheNewEpisodes'];
@@ -273,7 +293,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("/etc/2web/cacheNewEpisodes.cfg",$cacheNewEpisodes);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/cache.php#cacheNewEpisodes'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
@@ -289,7 +309,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/tv.php#addLink'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/tv.php#addLink'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("ytdl_add_source",$_POST)){
 	$link=$_POST['ytdl_add_source'];
@@ -305,7 +325,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("ytdl_remove_source",$_POST)){
 	$link=$_POST['ytdl_remove_source'];
@@ -319,7 +339,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("ytdl_add_username_source",$_POST)){
 	$link=$_POST['ytdl_add_username_source'];
@@ -336,7 +356,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("ytdl_remove_username_source",$_POST)){
 	$link=$_POST['ytdl_remove_username_source'];
@@ -350,7 +370,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLibary",$_POST)){
 	$link=$_POST['addLibary'];
@@ -366,7 +386,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
 
 }else if (array_key_exists("addWeatherLocation",$_POST)){
@@ -406,7 +426,7 @@ if (array_key_exists("newUserName",$_POST)){
 		echo "</pre>";
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/weather.php#addWeatherLocation'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/weather.php#addWeatherLocation'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeWeatherLocation",$_POST)){
 	$link=$_POST['removeWeatherLocation'];
@@ -420,7 +440,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/weather.php#currentLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/weather.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("setHomepageWeatherLocation",$_POST)){
 	$link=$_POST['setHomepageWeatherLocation'];
@@ -443,7 +463,7 @@ if (array_key_exists("newUserName",$_POST)){
 		}
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/weather.php#setWeatherHomepageLocation'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/weather.php#setWeatherHomepageLocation'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
 	$link=$_POST['homepageFortuneStatus'];
@@ -464,14 +484,42 @@ if (array_key_exists("newUserName",$_POST)){
 		}
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#homepageFortuneStatus'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("graph2webStatus",$_POST)){
+	$link=$_POST['graph2webStatus'];
+	outputLog("Setting graph2web status to ".$link);
+	# read the link and create a custom config
+	$configPath="/etc/2web/mod_status/graph2web.cfg";
+	outputLog("Checking for Config file ".$configPath);
+	if ( $link == "disabled"){
+		outputLog("Disabled graph2web");
+		# this means to remove the link
+		if (file_get_contents($configPath) == "enabled"){
+			//unlink($configPath);
+			file_put_contents($configPath,$link);
+		}else{
+			outputLog("Status is already set to ".$link);
+		}
+	}else{
+		# write the libary path to a file at the configPath if the path does not already exist
+		outputLog("Enabled graph2web");
+		# enable the graph section
+		if ((file_exists($configPath)) and (file_get_contents($configPath) != "enabled") ){
+			# write the config file
+			file_put_contents($configPath,$link);
+		}else{
+			outputLog("Status is already set to ".$link);
+		}
+	}
+	echo "<hr><a class='button' href='/settings/graphs.php#graph2webStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];
 	echo "Running addComicDownloadLink on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
-	$configPath="/etc/2web/comic/sources.d/".$sumOfLink.".cfg";
+	$configPath="/etc/2web/comics/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
@@ -480,7 +528,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/comicsDL.php#addComicDownloadLink'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comicsDL.php#addComicDownloadLink'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeComicDownloadLink",$_POST)){
 	$link=$_POST['removeComicDownloadLink'];
@@ -494,7 +542,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/comicsDL.php#currentLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comicsDL.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addComicLibary",$_POST)){
 	$link=$_POST['addComicLibary'];
@@ -510,7 +558,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comics.php#comiclibaryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeComicLibary",$_POST)){
 	$link=$_POST['removeComicLibary'];
@@ -524,7 +572,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comics.php#comiclibaryPaths'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
@@ -540,7 +588,7 @@ if (array_key_exists("newUserName",$_POST)){
 		touch($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("moveCustomToBottom",$_POST)){
 	$link=$_POST['moveCustomToBottom'];
@@ -556,7 +604,7 @@ if (array_key_exists("newUserName",$_POST)){
 		touch($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeLink",$_POST)){
 	$link=$_POST['removeLink'];
@@ -570,7 +618,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/tv.php#currentLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeLibary",$_POST)){
 	$link=$_POST['removeLibary'];
@@ -584,7 +632,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/nfo.php#libaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeRadioLink",$_POST)){
 	$link=$_POST['removeRadioLink'];
@@ -598,7 +646,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeCustomLink",$_POST)){
 	$link=$_POST['removeCustomLink'];
@@ -612,7 +660,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("blockLink",$_POST)){
 	$link=$_POST['blockLink'];
@@ -626,7 +674,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/radio.php#radioLinks'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("unblockLink",$_POST)){
 	$link=$_POST['unblockLink'];
@@ -640,7 +688,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("blockGroup",$_POST)){
 	$link=$_POST['blockGroup'];
@@ -654,7 +702,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("unblockGroup",$_POST)){
 	$link=$_POST['unblockGroup'];
@@ -668,14 +716,14 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	echo "Changing theme to ".$theme."<br>\n";
 	file_put_contents("/etc/2web/theme.cfg",$theme);
 	countdown(5);
-	echo "<hr><a class='button' href='/system.php#webTheme'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/system.php#webTheme'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
 	$link=$_POST['addMusicLibary'];
@@ -691,7 +739,7 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/music.php#musicLibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/music.php#musicLibaryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeMusicLibary",$_POST)){
 	$link=$_POST['removeMusicLibary'];
@@ -705,7 +753,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/music.php#musicLibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/music.php#musicLibaryPaths'>BACK</a><hr>";
 	clear();
 }else{
 	countdown(5);
@@ -715,7 +763,7 @@ if (array_key_exists("newUserName",$_POST)){
 	print_r($_POST);
 	echo "</li>";
 	echo "<li>This incident will be logged.</li>";
-	echo "<li>If you are lost <a href='/index.php'>here</a> is a link back to the homepage.</li>";
+	echo "<li>If you are lost <a href='/settings/index.php'>here</a> is a link back to the homepage.</li>";
 	echo "</ul>";
 }
 ?>
@@ -723,7 +771,7 @@ if (array_key_exists("newUserName",$_POST)){
 </div>
 
 <?php
-include('footer.php');
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 
 </body>

@@ -29,7 +29,10 @@ if ($writeFile){
 	$fileData .= "<hr class='menuButton'/>";
 	$fileData .= "<hr class='menuButton'/>";
 	$fileData .= "<hr class='menuButton'/>";
-	$fileData .= "<a class='button' href='/index.php'>";
+
+	$fileData .= "<div class='listCard'>";
+
+	$fileData .= "<a class='button' href='/'>";
 	$fileData .= "&#127968;";
 	$fileData .= "<span class='headerText'>";
 	$fileData .= "HOME";
@@ -105,6 +108,16 @@ if ($writeFile){
 			$fileData .= "</a>";
 		}
 	}
+	if (file_exists("$webDirectory/graphs/")){
+		$fileData .= "<a class='button' href='/graphs/'>";
+		$fileData .= "📊";
+		$fileData .= "<span class='headerText'>";
+		$fileData .= "GRAPHS";
+		$fileData .= "</span>";
+		$fileData .= "</a>";
+	}
+	# close the listcard block
+	echo "</div>";
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
@@ -112,8 +125,8 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
-if (isset($_SERVER['HTTPS'])){
-	echo "<a class='button headerLoginButton' href='/system.php'>";
+if (strpos($_SERVER['REQUEST_URI'], "settings/")){
+	echo "<a class='button headerLoginButton' href='/settings/system.php'>";
 	echo "🛠️";
 	echo "<span class='headerText'>";
 	echo "SETTINGS";
@@ -126,7 +139,7 @@ if (isset($_SERVER['HTTPS'])){
 	echo "</span>";
 	echo "</a>";
 }else{
-	echo "<a class='button headerLoginButton' href='/system.php'>";
+	echo "<a class='button headerLoginButton' href='/settings/system.php'>";
 	echo "🔒";
 	echo "<span class='headerText'>";
 	echo "LOGIN";
@@ -145,10 +158,12 @@ echo "<div class='loginLogoutBoxSpacer'>";
 echo "</div>";
 # close the header bracket
 echo "</div>";
+echo "</div>";
 
-if (isset($_SERVER['HTTPS'])){
+# if the path is in the settings draw the logout button
+if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "<div class='loginLogoutBox'>";
-	echo "		<a class='button' href='/system.php'>";
+	echo "		<a class='button' href='/settings/system.php'>";
 	echo "			🛠️";
 	echo "			<span class='headerText'>";
 	echo "				SETTINGS";
@@ -164,7 +179,7 @@ if (isset($_SERVER['HTTPS'])){
 	echo "</div>";
 }else{
 	echo "<div class='loginLogoutBox'>";
-	echo "<a class='button' href='/system.php'>";
+	echo "<a class='button' href='/settings/system.php'>";
 	echo "🔓";
 	echo "<span class='headerText'>";
 	echo "LOGIN";

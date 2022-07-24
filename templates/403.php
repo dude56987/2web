@@ -11,6 +11,7 @@ function redirect($url,$debug=false){
 		header('Location: '.$url,true,302);
 	}
 }
+// login must be on https
 if (! $_SERVER['HTTPS']){
 	$tempURL=str_replace("http","https",$_SERVER["HTTP_REFERER"]);
 	redirect($tempURL);
@@ -30,7 +31,7 @@ if (! $_SERVER['HTTPS']){
 		<h2>ERROR 403</h2>
 		<p>Access Forbidden! Unauthorized Access Detected!</p>
 		<ul>
-			<li><a onclick='window.location.reload(true)'>Reload Page</a></li>
+			<li><a onclick='window.location.reload(true)'>Retry Login</a></li>
 			<li><a href='/'>Return to Homepage</a></li>
 		</ul>
 		<hr>

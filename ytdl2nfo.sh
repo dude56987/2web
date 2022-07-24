@@ -4,7 +4,7 @@
 ################################################################################
 ytdl2kodi_caption(){
 	# ytdl2kodi_caption "pathToImage" "captionToUse"
-	if ! [ -f /etc/2web/ytdl/captionFont.cfg ];then
+	if ! test -f /etc/2web/ytdl/captionFont.cfg;then
 		# create the defaut font
 		echo "OpenDyslexic-Bold" > /etc/2web/ytdl/captionFont.cfg
 	fi
@@ -31,6 +31,34 @@ getDownloadPath(){
 		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi
 	echo "$downloadPath"
+}
+################################################################################
+function addToLog(){
+	errorType=$1
+	errorDescription=$2
+	errorDetails=$3
+	logPagePath=$4
+	{
+		# add error to log
+		echo -e "<tr class='logEntry $errorType'>"
+		echo -e "<td>"
+		echo -e "$errorType"
+		echo -e "</td>"
+		echo -e "<td>"
+		echo -e "$errorDescription" | txt2html --extract
+		echo -e "</td>"
+		echo -e "<td>"
+		# convert the error details into html
+		echo -e "$errorDetails" | txt2html --extract
+		echo -e "</td>"
+		echo -e "<td>"
+		date "+%D"
+		echo -e "</td>"
+		echo -e "<td>"
+		date "+%R:%S"
+		echo -e "</td>"
+		echo -e "</tr>"
+	} >> "$logPagePath"
 }
 ################################################################################
 ytdl2kodi_channel_extractor(){
@@ -74,7 +102,7 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	# check for a timer on the channel link
 	################################################################################
-	if [ -f /etc/2web/ytdl/channelCacheUpdateDelay.cfg ];then
+	if test -f /etc/2web/ytdl/channelCacheUpdateDelay.cfg;then
 		# load the cache update delay
 		channelCacheUpdateDelay=$(cat /etc/2web/ytdl/channelCacheUpdateDelay.cfg)
 	else
@@ -119,21 +147,22 @@ ytdl2kodi_channel_extractor(){
 		# run the youtube special link playlist extractor
 		linkList=""
 		# try to rip as a playlist
-		if [ -f /usr/local/bin/youtube-dl ];then
+		if test -f /usr/local/bin/yt-dlp;then
+			tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
+		elif test -f /usr/local/bin/youtube-dl;then
 			tempLinkList=$(/usr/local/bin/youtube-dl --flat-playlist -j "$channelLink")
-		elif [ -f /snap/bin/youtube-dl ];then
+		elif test -f /snap/bin/youtube-dl;then
 			tempLinkList=$(/snap/bin/youtube-dl --flat-playlist -j "$channelLink")
-		elif [ -f /usr/bin/youtube-dl ];then
+		elif test -f /usr/bin/youtube-dl;then
 			tempLinkList=$(/usr/bin/youtube-dl --flat-playlist -j "$channelLink")
 		else
 			tempLinkList=$(youtube-dl --flat-playlist -j "$channelLink")
 		fi
 		tempLinkList=$(echo "$tempLinkList" | jq -r ".url" )
-		#IFS="\n"
+		addToLog "Found Links" "Adding links to Linklist" "$tempLinkList" "/var/cache/2web/ytdl2nfo.log"
 		for videoId in $tempLinkList;do
-			linkList=$(echo -en "$linkList\nwatch?v=$videoId")
+			linkList=$(echo -en "$linkList\n$videoId")
 		done
-		#IFS=" \t\n"
 	else
 		echo "[INFO]: Running generic link extractor..."
 		# if no custom extractor exists then run the generic link extractor
@@ -171,11 +200,36 @@ ytdl2kodi_channel_extractor(){
 		# remove links to non webpage content images/javascript/css
 		echo "[INFO]: Removing links to non webpage resources..."
 		linkList=$(echo "$linkList" | sed "s/^.*\.js$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.js\?.*$//g")
 		linkList=$(echo "$linkList" | sed "s/^.*\.css$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.css\?.*$//g")
 		linkList=$(echo "$linkList" | sed "s/^.*\.png$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.png\?.*$//g")
 		linkList=$(echo "$linkList" | sed "s/^.*\.jpg$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.jpg\?.*$//g")
 		linkList=$(echo "$linkList" | sed "s/^.*\.jpeg$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.jpeg\?.*$//g")
 		linkList=$(echo "$linkList" | sed "s/^.*\.svg$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.svg\?.*$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.woff$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.woff\?.*$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.ttf$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\.ttf\?.*$//g")
+		# remove links to common website resource pages
+		linkList=$(echo "$linkList" | sed "s/^.*\/privacy$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\#privacy$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\/help$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\#help$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\/terms$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\#terms$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\/dmca$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\#dmca$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\/feedback$//g")
+		linkList=$(echo "$linkList" | sed "s/^.*\#feedback$//g")
+		# remove links to help.website.com type urls
+		linkList=$(echo "$linkList" | sed "s/^https\:\/\/corp\..*.$//g")
+		linkList=$(echo "$linkList" | sed "s/^https\:\/\/help\..*.$//g")
+		linkList=$(echo "$linkList" | sed "s/^https\:\/\/feedback\..*.$//g")
 	fi
 	################################################################################
 	# sort out duplicate links
@@ -201,10 +255,11 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	# create previous downloads list if it does not already exist
 	mkdir -p /etc/2web/ytdl/previousDownloads/
+	tempSum=$(echo -n "$channelLink" | sha256sum | cut -d' ' -f1)
 	# make list channel specific
-	previousDownloadsPath=/etc/2web/ytdl/previousDownloads/$(echo "$channelLink" | sha256sum | cut -d' ' -f1).cfg
-	touch $previousDownloadsPath
-	previousDownloads=$(cat $previousDownloadsPath)
+	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$tempSum.cfg"
+	touch "$previousDownloadsPath"
+	previousDownloads=$(cat "$previousDownloadsPath")
 	################################################################################
 	# the linklist links must be reformatted to a more standardized format for processing
 	# this prevents strange third party website links (Ads) from being processed into episodes
@@ -222,6 +277,7 @@ ytdl2kodi_channel_extractor(){
 			#echo "[INFO]: Phase 4 : $link"
 		fi
 		link="https://$link"
+		#link="$link"
 		################################################################################
 		# begin checking for problem file types
 		################################################################################
@@ -235,12 +291,10 @@ ytdl2kodi_channel_extractor(){
 			echo "Incorrect format PNG"
 		elif echo "$link" | grep -q ".jpg";then
 			# this is not a video file link its a zip file so ignore it
-			touch /etc/2web/ytdl/previousDownloads.cfg
 			echo "$selection" >> $previousDownloadsPath
 			echo "Incorrect format JPG"
 		elif echo "$link" | grep -q ".ico";then
 			# this is not a video file link its a zip file so ignore it
-			touch /etc/2web/ytdl/previousDownloads.cfg
 			echo "$selection" >> $previousDownloadsPath
 			echo "Incorrect format ICO"
 		elif echo "$previousDownloads" | grep -q "$link";then
@@ -252,7 +306,8 @@ ytdl2kodi_channel_extractor(){
 			tempList=$(echo -e "$tempList\n$link")
 		fi
 	done
-	linkList="$tempList"
+	# cleanup blank lines in the tmp list and rename it to linklist
+	linkList=$(echo "$tempList" | tr -s '\n')
 	echo "[INFO]: Link List = $linkList"
 	# get the number of links
 	echo "[INFO]: Link List entries = $(echo \"$linkList\" | wc -l)"
@@ -263,7 +318,7 @@ ytdl2kodi_channel_extractor(){
 	channelId=$(echo "$channelLink" | sed "s/[[:punct:]]//g")
 	################################################################################
 	# load up the episode processing limit
-	if [ -f /etc/2web/ytdl/episodeProcessingLimit.cfg ];then
+	if test -f /etc/2web/ytdl/episodeProcessingLimit.cfg;then
 		# load the config file
 		episodeProcessingLimit=$(cat /etc/2web/ytdl/episodeProcessingLimit.cfg)
 	else
@@ -291,7 +346,7 @@ ytdl2kodi_channel_extractor(){
 		fi
 		echo "[INFO]: Preprocessing '$link' ..."
 		echo "[INFO]: Running metadata extractor on '$link' ..."
-		if [ "$link" -eq "$channelLink" ];then
+		if [ "$link" == "$channelLink" ];then
 			# this means a link was found to the channel itself, this can cause problems
 			echo "[INFO]: Found link to the channel on the channel page..."
 		else
@@ -329,6 +384,7 @@ ytdl2kodi_channel_extractor(){
 	# write the channel metadata for lastProcessed.cfg in seconds
 	lastProcessed=$(date "+%s")
 }
+################################################################################
 ytdl2kodi_channel_meta_extractor(){
 	################################################################################
 	# META DATA EXTRACTOR
@@ -365,7 +421,7 @@ ytdl2kodi_channel_meta_extractor(){
 	mkdir -p "$downloadPath$showTitle/"
 	# create the tvshow.nfo
 	fileName="$downloadPath$showTitle/tvshow.nfo"
-	if [ -f "$fileName" ];then
+	if test -f "$fileName";then
 		echo "Series file already exists..."
 		echo "Skipping creating series data..."
 		return
@@ -465,7 +521,7 @@ ytdl2kodi_channel_meta_extractor(){
 			echo "<title>$showTitle</title>"
 			echo "<studio>Internet</studio>"
 			echo "<genre>Internet</genre>"
-			echo "<plot>Videos from $channelUrl</plot>"
+			echo "<plot>Source URL: $channelUrl</plot>"
 			echo "<premiered>$(date +%F)</premiered>"
 			echo "<director>$showTitle</director>"
 			echo "</tvshow>"
@@ -485,18 +541,19 @@ ytdl2kodi_channel_meta_extractor(){
 	echo "################################################################################"
 	return
 }
-
+################################################################################
 ytdl2kodi_depends_check(){
 	# Install the most recent version of youtube-dl by using pip3, everything else is too slow to update
 	# install youtube-dl from the latest repo
 	# install the missing package
 	pip3 install --upgrade youtube-dl
+	pip3 install --upgrade yt-dlp
 }
-
+################################################################################
 ytdl2kodi_reset_cache(){
 	echo -n "Would you like to reset the entire video cache and all databases?[y/n]:"
 	read doIt
-	if [ -f /etc/2web/ytdl/downloadPath.cfg ];then
+	if test -f /etc/2web/ytdl/downloadPath.cfg;then
 		if echo "$doIt" | grep -q "y" ;then
 			downloadPath="$(cat /etc/2web/ytdl/downloadPath.cfg)"
 			echo "The paths to be removed are"
@@ -504,20 +561,18 @@ ytdl2kodi_reset_cache(){
 			echo "/etc/2web/ytdl/episodeDatabase/"
 			echo "/etc/2web/ytdl/previousDownloads/*.cfg"
 			echo "/etc/2web/ytdl/foundLinks/*.cfg"
+			echo "/etc/2web/ytdl/processedSums/*.cfg"
 			echo "/etc/2web/ytdl/channelUpdateCache.cfg"
 			echo -n "Would you still like to remove all files and reset the cache?[y/n]:"
 			read doIt
 			if echo "$doIt" | grep -q "y" ;then
-				rm -rv "$downloadPath"
-				# recreate the download path and placeholder
-				mkdir -p "$downloadPath"
-				touch "$downloadPath.placeholder"
 				# empty the databases
 				rm -rv "/etc/2web/ytdl/episodeDatabase/"
 				mkdir -p "/etc/2web/ytdl/episodeDatabase/"
 				touch "/etc/2web/ytdl/episodeDatabase/.placeholder"
 				# remove all previous downloads
 				rm -vr "/etc/2web/ytdl/previousDownloads/" &
+				rm -vr "/etc/2web/ytdl/processedSums/" &
 				rm -vr "/etc/2web/ytdl/foundLinks/" &
 				rm -v "/etc/2web/ytdl/channelUpdateCache.cfg" &
 				# remove lock file
@@ -551,7 +606,7 @@ ytdl2kodi_sleep(){
 	################################################################################
 	# checking sleepTime.cfg to see the max wait time between downloads
 	echo "Loading up sleep config '/etc/2web/ytdl/sleepTime.cfg'"
-	if [ -f /etc/2web/ytdl/sleepTime.cfg ];then
+	if test -f /etc/2web/ytdl/sleepTime.cfg;then
 		# load the config file
 		sleepTime=$(cat /etc/2web/ytdl/sleepTime.cfg)
 	else
@@ -620,7 +675,7 @@ ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
 	# check dependencies to get the latest version of youtube-dl
-	ytdl2kodi_depends_check
+	#ytdl2kodi_depends_check
 	################################################################################
 	# check if system is active
 	if test -f "/tmp/ytdl2nfo.active";then
@@ -638,7 +693,7 @@ ytdl2kodi_update(){
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
 	# be processed every hour it is run
-	if [ -f /etc/2web/ytdl/channelProcessingLimit.cfg ];then
+	if test -f /etc/2web/ytdl/channelProcessingLimit.cfg;then
 		# load the config file
 		channelProcessingLimit=$(cat /etc/2web/ytdl/channelProcessingLimit.cfg)
 	else
@@ -727,6 +782,146 @@ validString(){
 		return 0
 	fi
 }
+########################################################################
+checkDirSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
+	webDirectory=$1
+	directory=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	if ! test -d "$webDirectory/sums/";then
+		mkdir -p "$webDirectory/sums/"
+	fi
+	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	newSum="$(getDirSum "$2")"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/ytdl_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/ytdl_$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/ytdl_$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/ytdl_$pathSum.cfg"
+		return 0
+	fi
+}
+########################################################################
+checkDirDataSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
+	webDirectory=$1
+	directory=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	createDir "$webDirectory/sums/"
+	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	newSum="$(getDirDataSum "$2")"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		return 0
+	fi
+}
+########################################################################
+checkFileDataSum(){
+	# return true if the directory has been updated/changed
+	# store sums in $webdirectory/$sums
+	webDirectory=$1
+	filePath=$2
+	# check the sum of a directory and compare it to a previously stored sum
+	createDir "$webDirectory/sums/"
+	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
+	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
+	# check for a previous sum
+	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
+		# compare the sum of the old path with the new one
+		if [ "$oldSum" == "$newSum" ];then
+			# UNCHANGED
+			# if the sums are the same no change detected, pass false
+			return 1
+		else
+			# CHANGED
+			# the sums are diffrent, pass true
+			# update the sum
+			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+			return 0
+		fi
+	else
+		# CHANGED
+		# no previous file was found, pass true
+		# update the sum
+		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+		return 0
+	fi
+}
+########################################################################
+getDirSum(){
+	line=$1
+	# check the libary sum against the existing one
+	totalList=$(find "$line" | sort)
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# convert lists into md5sum
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+}
+########################################################################
+getDirDataSum(){
+	line=$1
+	# check the libary sum against the existing one
+	#totalList=$(find "$line" | sort)
+	# read the data from each file
+	totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# convert lists into md5sum
+	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
+	# write the md5sum to stdout
+	echo "$tempLibList"
+}
+################################################################################
+addProcessedSum(){
+	selectionSum=$1
+	channelSum=$2
+	# add the selection sum to the list of previously downloaded links, if they are not already present
+	if ! grep -q "$selectionSum" "/etc/2web/ytdl/processedSums/$channelSum.cfg";then
+		echo "$selectionSum" >> "/etc/2web/ytdl/processedSums/$channelSum.cfg"
+	fi
+}
 ################################################################################
 ytdl2kodi_video_extractor(){
 	################################################################################
@@ -744,8 +939,19 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	# create previous downloads list if it does not already exist
 	mkdir -p /etc/2web/ytdl/previousDownloads/
+	mkdir -p /etc/2web/ytdl/processedSums/
 	# make list channel specific
-	previousDownloadsPath=/etc/2web/ytdl/previousDownloads/$channelSum.cfg
+	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$channelSum.cfg"
+	selectionSum=$(echo -n "$selection" | md5sum | cut -d' ' -f1)
+	if test -f /etc/2web/ytdl/previousSums/$channelSum.cfg;then
+		# if a set of linksums was found, check it for the link sum
+		# if the md5sum of the link has already been processed
+		if grep -q "$selectionSum" "/etc/2web/ytdl/processedSums/$channelSum.cfg";then
+			# exit the function because it has already been processed
+			echo "The data for the selection '$selection' has already been processed."
+			return
+		fi
+	fi
 	################################################################################
 	echo "################################################################################"
 	echo "# Now extracting '$selection' #"
@@ -761,7 +967,7 @@ ytdl2kodi_video_extractor(){
 	mkdir -p "$downloadPath"
 	################################################################################
 	echo "Checking for video fetch time limit '/etc/2web/ytdl/videoFetchTimeLimit.cfg'"
-	if ! [ -f "/etc/2web/ytdl/videoFetchTimeLimit.cfg" ];then
+	if ! test -f "/etc/2web/ytdl/videoFetchTimeLimit.cfg";then
 		# if no episodes have bee set create the variable
 		echo "30" > "/etc/2web/ytdl/videoFetchTimeLimit.cfg"
 	fi
@@ -770,18 +976,30 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	echo "Extracting metadata from '$selection'..."
 	# print youtube-dl command for debugging
-	echo "timeout --preserve-status \"$timeLimitSeconds\" youtube-dl -j --no-playlist \"$selection\""
+	addToLog "INFO" "Extracting Metadata" "$selection" "/var/cache/2web/ytdl2nfo.log"
 	# use the pip package if it is available
-	if [ -f /usr/local/bin/youtube-dl ];then
-		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/youtube-dl -j --no-playlist "$selection")
-	elif [ -f /snap/bin/youtube-dl ];then
+	if test -f /usr/local/bin/yt-dlp;then
+		echo "timeout --preserve-status \"$timeLimitSeconds\" /usr/local/bin/yt-dlp -j --abort-on-error --no-playlist \"$selection\""
+		#info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/yt-dlp -j --no-playlist "$selection")
+		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/yt-dlp -j --no-playlist --playlist-end 1 "$selection")
+	elif test -f /usr/local/bin/youtube-dl;then
+		echo "timeout --preserve-status \"$timeLimitSeconds\" /usr/local/bin/youtube-dl -j --no-playlist \"$selection\""
+		#info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/youtube-dl -j --no-playlist "$selection")
+		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/youtube-dl -j --no-playlist --playlist-end 1 "$selection")
+	elif test -f /snap/bin/youtube-dl;then
 		# snap package is second priority
-		info=$(timeout --preserve-status "$timeLimitSeconds" /snap/bin/youtube-dl -j --no-playlist "$selection")
-	elif [ -f /usr/bin/youtube-dl ];then
-		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/bin/youtube-dl -j --no-playlist "$selection")
+		echo "timeout --preserve-status \"$timeLimitSeconds\" /snap/bin/youtube-dl -j --no-playlist \"$selection\""
+		#info=$(timeout --preserve-status "$timeLimitSeconds" /snap/bin/youtube-dl -j --no-playlist "$selection")
+		info=$(timeout --preserve-status "$timeLimitSeconds" /snap/bin/youtube-dl -j --no-playlist --playlist-end 1 "$selection")
+	elif test -f /usr/bin/youtube-dl;then
+		echo "timeout --preserve-status \"$timeLimitSeconds\" /usr/bin/youtube-dl -j --no-playlist \"$selection\""
+		#info=$(timeout --preserve-status "$timeLimitSeconds" /usr/bin/youtube-dl -j --no-playlist "$selection")
+		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/bin/youtube-dl -j --no-playlist --playlist-end 1 "$selection")
 	else
 		# failsave uses whatever is stored in $PATH
-		info=$(timeout --preserve-status "$timeLimitSeconds" youtube-dl -j --no-playlist "$selection")
+		echo "timeout --preserve-status \"$timeLimitSeconds\" youtube-dl -j --no-playlist \"$selection\""
+		#info=$(timeout --preserve-status "$timeLimitSeconds" youtube-dl -j --no-playlist "$selection")
+		info=$(timeout --preserve-status "$timeLimitSeconds" youtube-dl -j --no-playlist --playlist-end 1 "$selection")
 	fi
 	infoCheck=$?
 	if [ $infoCheck -eq 0 ];then
@@ -792,6 +1010,7 @@ ytdl2kodi_video_extractor(){
 		# this means that youtube-dl ran for more than $timeLimitSeconds and was stopped
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
+		addProcessedSum "$selection" "$channelSum"
 		echo "The info extractor timed out after $timeLimitSeconds seconds..."
 		echo "Skipping..."
 		echo
@@ -801,7 +1020,8 @@ ytdl2kodi_video_extractor(){
 		# if the info returns a failure code
 		# add it to the previous downloads to stop rescanning repeated links
 		touch $previousDownloadsPath
-		echo "$selection" >> $previousDownloadsPath
+		echo "$selection" >> "$previousDownloadsPath"
+		addProcessedSum "$selection" "$channelSum"
 		echo "The info extractor failed..."
 		echo "Skipping..."
 		echo
@@ -816,6 +1036,7 @@ ytdl2kodi_video_extractor(){
 		# this is not a video file link so ignore it
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
+		addProcessedSum "$selection" "$channelSum"
 		#check if the link contains a url of any kind as the link to play
 		echo "The url to play this video can not be found."
 		echo "Found URL = '$formatCheck'"
@@ -827,6 +1048,7 @@ ytdl2kodi_video_extractor(){
 		# this is not a video file link its a zip file so ignore it
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
+		addProcessedSum "$selection" "$channelSum"
 		echo "This is a zip file not a video link"
 		echo "Skipping..."
 		echo
@@ -836,6 +1058,7 @@ ytdl2kodi_video_extractor(){
 		# this is not a video file link its a zip file so ignore it
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
+		addProcessedSum "$selection" "$channelSum"
 		echo "This is a swf file not a video link"
 		echo "Skipping..."
 		echo
@@ -880,6 +1103,7 @@ ytdl2kodi_video_extractor(){
 			# if this download is not listed in previousDownloads then add it
 			touch $previousDownloadsPath
 			echo "$selection" >> $previousDownloadsPath
+			addProcessedSum "$selection" "$channelSum"
 			echo "Skipping video..."
 			echo
 			return
@@ -908,16 +1132,17 @@ ytdl2kodi_video_extractor(){
 		fi
 	fi
 	if [ $(expr length "$title") -lt 5 ];then
-		 #this means no viable title could be found or created from the plot
-		 echo "No title was found or created..."
-		 echo
-		 return
+		#this means no viable title could be found or created from the plot
+		echo "No title was found or created..."
+		addProcessedSum "$selection" "$channelSum"
+		echo
+		return
 	fi
 	################################################################################
 	# create the directory for the show data if it does not exist
 	mkdir -p "/etc/2web/ytdl/episodeDatabase/"
 	# the database tracks the episode number based on all previous episodes
-	if ! [ -f "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg" ];then
+	if ! test -f "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg";then
 		# if no episodes exist create the variable
 		echo "0" > "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg"
 	fi
@@ -959,10 +1184,11 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	echo "File path set to $fileName"
 	# check if the file already exists from previous runs
-	if [ -f "$fileName.nfo" ];then
+	if test -f "$fileName.nfo";then
 		echo "The data for $filename.nfo has already been processed."
 		# this is the only failure mode that occurs after episode numbering
 		# so decremnt the episode number to prevent gaps
+		addProcessedSum "$selection" "$channelSum"
 		echo "Skipping..."
 		echo
 		return
@@ -974,9 +1200,11 @@ ytdl2kodi_video_extractor(){
 	if echo "$selection" | grep "youtube\.com";then
 		# for youtube episodes use the built in kodi streaming plugin for .strm files otherwise the
 		# gathered video links expire after a short time
-		tempVar=$(echo "$selection" | sed "s/https\:\/\/youtube\.com//g")
-		tempVar=$(echo "$tempVar" | sed "s/\/watch?v=//g")
-		sourceUrl=$(echo "plugin://plugin.video.youtube/play/?video_id=$tempVar")
+		#tempVar=$(echo "$selection" | sed "s/https\:\/\/youtube\.com//g")
+		#tempVar=$(echo "$tempVar" | sed "s/\/watch?v=//g")
+		#sourceUrl=$(echo "plugin://plugin.video.youtube/play/?video_id=$tempVar")
+		# DEBUG
+		sourceUrl=$selection
 	else
 		# for generic extraction simply get the first format url, this is lowest quality to highest
 		# NOTE: the number of formats is unknown per video but each is assured to have one
@@ -1011,7 +1239,7 @@ ytdl2kodi_video_extractor(){
 	# check the length of the source url is long enough to be a link
 	if [ 5 -lt $(expr length "$sourceUrl") ];then
 		# check if a custom resolver has been specified with a custom url
-		if [ -f /etc/2web/ytdl/customResolverUrl.cfg ];then
+		if test -f /etc/2web/ytdl/customResolverUrl.cfg;then
 			# custom resolver should take presidence over system default resolvers
 			resolverString=$(cat /etc/2web/ytdl/customResolverUrl.cfg)
 			# - This should not affect the $sourceUrl variable since it is
@@ -1025,6 +1253,8 @@ ytdl2kodi_video_extractor(){
 	else
 		touch $foundLinksPath
 		echo "$sourceUrl" >> $foundLinksPath
+		# add the selection sum to the list of previously downloaded links, if they are not already present
+		addProcessedSum "$selection" "$channelSum"
 		echo "[INFO]: There is no video link available!"
 		echo "[INFO]: Skipping..."
 		echo
@@ -1046,6 +1276,7 @@ ytdl2kodi_video_extractor(){
 		echo "[INFO]: Writing video URL to $foundLinksPath"
 		echo "$sourceUrl"
 		echo "$sourceUrl" >> $foundLinksPath
+		addProcessedSum "$selection" "$channelSum"
 	fi
 	################################################################################
 	# get thumbnail data if it is available
@@ -1170,7 +1401,7 @@ ytdl2kodi_video_extractor(){
 	#touch -a -m -d "$airdate" "$fileName.nfo"
 	touch -d "@$tempTime" "$fileName.nfo"
 	touch -d "@$tempTime" "$fileName.strm"
-	if [ -f "$fileName-thumb.png" ];then
+	if test -f "$fileName-thumb.png";then
 		# if a thumbnail image exists change the date on it too
 		touch -d "@$tempTime" "$fileName-thumb.png"
 	fi
@@ -1189,6 +1420,14 @@ ytdl2kodi_video_extractor(){
 		touch $previousDownloadsPath
 		echo "$selection" >> $previousDownloadsPath
 	fi
+
+	# add the selection sum to the list of previously downloaded links, if they are not already present
+	addProcessedSum "$selection" "$channelSum"
+	# add the selection sum to the list of previously downloaded links, if they are not already present
+	#if ! grep -q "$selectionSum" "/etc/2web/ytdl/processedSums/$channelSum.cfg";then
+	#	echo "$selectionSum" >> "/etc/2web/ytdl/processedSums/$channelSum.cfg"
+	#fi
+
 	# The video extraction was successfull, run the channel creator
 	if echo "$@" | grep -q "\-\-username";then
 		ytdl2kodi_channel_meta_extractor "$showTitle" "$selection" "$channelLink" --username
@@ -1205,12 +1444,18 @@ ytdl2kodi_video_extractor(){
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		ytdl2kodi_update
+	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		ytdl2kodi_depends_check
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		ytdl2kodi_reset_cache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		echo "########################################################################"
 		echo "[INFO]: Reseting web cache to blank..."
-		rm -rv $(getDownloadPath)/*
+	rm -rv "$downloadPath"
+		downloadPath=$(getDownloadPath)
+		# recreate the download path and placeholder
+		rm -rv "$downloadPath"/*
+		touch "$downloadPath.placeholder"
 		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 		echo "[SUCCESS]: Site will remain the same until updated."
 		echo "[INFO]: Use 'nfo2web update' to generate a new website..."

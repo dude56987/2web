@@ -1,6 +1,6 @@
 <html class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 </head>
 <body>
 <?php
@@ -10,7 +10,7 @@
 ################################################################################
 ini_set('display_errors', 1);
 ################################################################################
-include("header.php");
+include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 include("settingsHeader.php");
 ?>
 <div class='inputCard'>
@@ -194,11 +194,8 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-include("ytdl-resolver.php");
-?>
-
-<?PHP
-	include("footer.php");
+	include($_SERVER['DOCUMENT_ROOT']."/ytdl-resolver.php");
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>
 </html>

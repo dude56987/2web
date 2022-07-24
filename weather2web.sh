@@ -416,8 +416,12 @@ function update(){
 								tempColor="var(--glassBackground)"
 							fi
 							echo "$tempColor"
-							# add farenheight symbol
-							tempTemp="$tempTemp℉"
+							# add farenheight symbol to the temp, or hide it if a time without a temp
+							if echo "$timeOfForcast" | grep -q --ignore-case "MORNING";then
+								tempTemp=""
+							else
+								tempTemp="$tempTemp℉"
+							fi
 							echo -n ",var(--glassBackground),var(--glassBackground))' >"
 							if echo "$timeOfForcast" | grep -qE "(NIGHT|AFTERNOON|EVENING)";then
 								# nighttime forcast
@@ -426,9 +430,15 @@ function update(){
 								echo -n "🌙";
 							else
 								# daytime forcast
-								if echo "$timeOfForcast" | grep -q "MEMORIAL DAY";then
+								if echo "$timeOfForcast" | grep -q --ignore-case "MEMORIAL DAY";then
 									echo -n "	<h3>MEMORIAL <br>DAY"
 									echo -n "🪖";
+								elif echo "$timeOfForcast" | grep -q --ignore-case "CHRISTMAS";then
+									echo -n "	<h3>CHRISTMAS<br>DAY"
+									echo -n "🎄";
+								elif echo "$timeOfForcast" | grep -q --ignore-case "INDEPENDENCE";then
+									echo -n "	<h3>INDEPENDENCE<br>DAY"
+									echo -n "🎆";
 								else
 									echo -n "	<h3>$timeOfForcast"
 									echo -n "🌞";

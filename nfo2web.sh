@@ -55,6 +55,15 @@ cleanText(){
 	fi
 }
 ########################################################################
+createDir(){
+	if ! test -d "$1";then
+		mkdir -p "$1"
+		# set ownership of directory and subdirectories as www-data
+		chown -R www-data:www-data "$1"
+	fi
+	chown www-data:www-data "$1"
+}
+########################################################################
 function debugCheck(){
 	if test -f /etc/2web/nfo/debug.enabled;then
 		# if debug mode is enabled show execution
@@ -223,7 +232,7 @@ processMovie(){
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo -n "$movieDir" | md5sum | cut -d' ' -f1)
-		addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
+		#addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
 		################################################################################
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
@@ -243,47 +252,57 @@ processMovie(){
 		#INFO "movie web path = '$movieWebPath'"
 		INFO "Processing movie $movieTitle $movieYear at $movieDir"
 		# if the movie is updating a check should be preformed to see if there are multuple  state_*.cfg files inside the movie web directory
-		if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
-			# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
-			addToLog "ERROR" "Multiple Movie Sources" "Movie path '$movieDir' is a duplicate\n\nYou can remove on the server with the command\n\n\trm -rvi '$movieDir'\n\nRemove excess copies to stabilize the library data.\n\nBackups should not be placed in media library paths." "$logPagePath"
-		fi
+		#if [ "$( find "$webDirectory/movies/$movieWebPath/" -type f -name 'state_*.cfg' | wc -l )" -gt 1 ];then
+		#	# there are more than one sources for this same movie in the libaries this will cause a forever update marking the movie as new on every update
+		#	addToLog "ERROR" "Multiple Movie Sources" "Movie path '$movieDir' is a duplicate\n\nYou can remove on the server with the command\n\n\trm -rvi '$movieDir'\n\nRemove excess copies to stabilize the library data.\n\nBackups should not be placed in media library paths." "$logPagePath"
+		#fi
 		################################################################################
 		# check the state now that the movie web path has been determined
 		################################################################################
 		# check movie state as soon as posible processing
 		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
-			# a existing state was found
-			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
-			libarySum=$(getDirSum "$movieDir")
-			# create the info
-			updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
-			#unchangedInfo="$movieTitle\n\n$currentSum == $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
-			unchangedInfo="$movieTitle"
-			# if the current state is the same as the state of the last update
-			if [ "$libarySum" == "$currentSum" ];then
-				# this means they are the same so no update needs run
-				#INFO "State is unchanged for $movieTitle, no update is needed."
-				#ALERT "[DEBUG]: $currentSum == $libarySum"
-				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
-				return
+			if checkDirSum "$webDirectory" "$movieDir";then
+					updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+					addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			else
-				#INFO "States are diffrent, updating $movieTitle..."
-				#ALERT "[DEBUG]: $currentSum != $libarySum"
-				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+					unchangedInfo="$movieTitle"
+					addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+					return
 			fi
 		else
-			#ALERT "No movie state exists for $movieTitle, updating..."
 			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
 		fi
+		#if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
+		#	# a existing state was found
+		#	currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
+		#	libarySum=$(getDirSum "$movieDir")
+		#	# create the info
+		#	updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+		#	#unchangedInfo="$movieTitle\n\n$currentSum == $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+		#	unchangedInfo="$movieTitle"
+		#	# if the current state is the same as the state of the last update
+		#	if [ "$libarySum" == "$currentSum" ];then
+		#		# this means they are the same so no update needs run
+		#		#INFO "State is unchanged for $movieTitle, no update is needed."
+		#		#ALERT "[DEBUG]: $currentSum == $libarySum"
+		#		addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+		#		return
+		#	else
+		#		#INFO "States are diffrent, updating $movieTitle..."
+		#		#ALERT "[DEBUG]: $currentSum != $libarySum"
+		#		addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+		#	fi
+		#else
+		#	#ALERT "No movie state exists for $movieTitle, updating..."
+		#	addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
+		#fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
 		################################################################################
 		moviePagePath="$webDirectory/movies/$movieWebPath/index.php"
 		#INFO "movie page path = '$moviePagePath'"
-		mkdir -p "$webDirectory/movies/$movieWebPath/"
-		chown -R www-data:www-data "$webDirectory/movies/$movieWebPath/"
-		mkdir -p "$webDirectory/kodi/movies/$movieWebPath/"
-		chown -R www-data:www-data "$webDirectory/kodi/movies/$movieWebPath/"
+		createDir "$webDirectory/movies/$movieWebPath/"
+		createDir "$webDirectory/kodi/movies/$movieWebPath/"
 		################################################################################
 		################################################################################
 		# find the videofile refrenced by the nfo file
@@ -628,7 +647,7 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -646,7 +665,7 @@ processMovie(){
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
 				echo "</a>"
-				echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
@@ -681,10 +700,11 @@ processMovie(){
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
 
-		# update the path sum after successfull
-		touch "$webDirectory/movies/$movieWebPath/"
-		touch "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
-		getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
+		# add the path to the list of paths for duplicate checking
+		if ! grep "$movieDir" "$webDirectory/movies/$movieWebPath/sources.cfg";then
+			# if the path is not in the file add it to the file
+			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/sources.cfg"
+		fi
 	else
 		ALERT "[WARNING]: The file '$moviePath' could not be found!"
 	fi
@@ -900,10 +920,8 @@ processEpisode(){
 		fi
 		#INFO "Episode page path = '$episodePagePath'"
 		#INFO "Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
-		mkdir -p "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
-		chown -R www-data:www-data "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
-		mkdir -p "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
-		chown -R www-data:www-data "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
+		createDir "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
+		createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 		# link stylesheet
 		#linkFile "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
 		# find the videofile refrenced by the nfo file
@@ -1187,7 +1205,7 @@ processEpisode(){
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -1270,8 +1288,7 @@ processShow(){
 	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
 	# create directory
 	INFO "creating show directory at '$webDirectory/$showTitle/'"
-	mkdir -p "$webDirectory/shows/$showTitle/"
-	chown -R www-data:www-data "$webDirectory/shows/$showTitle"
+	createDir "$webDirectory/shows/$showTitle/"
 	# link stylesheet
 	linkFile "$webDirectory/style.css" "$webDirectory/shows/$showTitle/style.css"
 	# check show state before processing
@@ -1310,8 +1327,7 @@ processShow(){
 	# same show generally fail in the same way
 	#fdupes --recurse --delete --immediate "$webDirectory/shows/$showTitle/"
 	# create the kodi directory for the show
-	mkdir -p "$webDirectory/kodi/shows/$showTitle/"
-	chown -R www-data:www-data "$webDirectory/kodi/shows/$showTitle"
+	createDir "$webDirectory/kodi/shows/$showTitle/"
 	# linking tvshow.nfo data
 	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
 	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
@@ -1486,6 +1502,19 @@ processShow(){
 	# add the updated show to the new shows index
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/shows.index"
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/all.index"
+	# add the updated show to the random shows index
+	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/random/shows.index"
+	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/random/all.index"
+
+	# add the path to the list of paths for duplicate checking
+	# - this is for a sanity warning, shows spread across multuple devices
+	#   can get extremely messy and episode files will be duplicated
+	# - 2web will still scan these series and display them normally
+	# - duplicates will show in web interface IF metadata is diffrent in any way
+	if ! grep "$show" "$webDirectory/shows/$showTitle/sources.cfg";then
+		# if the path is not in the file add it to the file
+		echo "$show" >> "$webDirectory/shows/$showTitle/sources.cfg"
+	fi
 
 	# update the libary sum
 	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
@@ -1694,25 +1723,25 @@ buildHomePage(){
 	# - update the "last update on" data every run, this is simply to show the freshness of the content since updates are a batch process
 	echo "$(date)" > "$webDirectory/lastUpdate.index"
 	if test -d "$webDirectory/comics/";then
-		if cacheCheck "$webDirectory/totalComics.index" "0";then
+		if cacheCheck "$webDirectory/totalComics.index" "1";then
 			# figure out the stats
-			totalComics=$(find "$webDirectory"/comics/*/ -maxdepth 1 -mindepth 1 -name 'index.php' | wc -l)
+			totalComics=$(cat "$webDirectory/comics/comics.index" | wc -l )
 			# write the stats
 			echo "$totalComics" > "$webDirectory/totalComics.index"
 		fi
 	fi
 	if test -d "$webDirectory/shows/";then
-		if cacheCheck "$webDirectory/totalEpisodes.index" "3";then
+		if cacheCheck "$webDirectory/totalEpisodes.index" "7";then
 			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
 			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
 		fi
-		if cacheCheck "$webDirectory/totalShows.index" "0";then
-			totalShows=$(find "$webDirectory"/shows/*/ -name 'tvshow.nfo' | wc -l)
+		if cacheCheck "$webDirectory/totalShows.index" "1";then
+			totalShows=$(cat "$webDirectory/shows/shows.index" | wc -l )
 			echo "$totalShows" > "$webDirectory/totalShows.index"
 		fi
 	fi
-	if cacheCheck "$webDirectory/totalMovies.index" "0";then
-		totalMovies=$(find "$webDirectory"/movies/*/ -name '*.nfo' | wc -l)
+	if cacheCheck "$webDirectory/totalMovies.index" "1";then
+		totalMovies=$(cat "$webDirectory/movies/movies.index" | wc -l )
 		echo "$totalMovies" > "$webDirectory/totalMovies.index"
 	fi
 	if test -f "$webDirectory/live/channels.m3u";then
@@ -1745,15 +1774,6 @@ buildHomePage(){
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		echo "$freeSpace" > "$webDirectory/freeSpace.index"
 	fi
-	if cacheCheck "$webDirectory/fortune.index" "1";then
-		# write the fortune for this processing run...
-		if test -f /usr/games/fortune;then
-			#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
-			# replace tabs with spaces
-			todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
-			echo "$todaysFortune" > "$webDirectory/fortune.index"
-		fi
-	fi
 }
 ########################################################################
 checkDirSum(){
@@ -1768,8 +1788,8 @@ checkDirSum(){
 	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
 	newSum="$(getDirSum "$2")"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+	if test -f "$webDirectory/sums/nfo_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/nfo_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED
@@ -1779,14 +1799,14 @@ checkDirSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
 			return 0
 		fi
 	else
 		# CHANGED
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
 		return 0
 	fi
 }
@@ -1797,9 +1817,7 @@ checkDirDataSum(){
 	webDirectory=$1
 	directory=$2
 	# check the sum of a directory and compare it to a previously stored sum
-	if ! test -d "$webDirectory/sums/";then
-		mkdir -p "$webDirectory/sums/"
-	fi
+	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
 	newSum="$(getDirDataSum "$2")"
 	# check for a previous sum
@@ -1832,9 +1850,7 @@ checkFileDataSum(){
 	webDirectory=$1
 	filePath=$2
 	# check the sum of a directory and compare it to a previously stored sum
-	if ! test -d "$webDirectory/sums/";then
-		mkdir -p "$webDirectory/sums/"
-	fi
+	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
 	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
 	# check for a previous sum
@@ -2202,46 +2218,16 @@ main(){
 			trap "rm /tmp/nfo2web.active" EXIT
 		fi
 		# make sure the directories exist and have correct permissions, also link stylesheets
-		if ! test -d "$webDirectory/";then
-			mkdir -p "$webDirectory"
-			chown -R www-data:www-data "$webDirectory"
-		fi
-		if ! test -d "$webDirectory/new/";then
-			mkdir -p "$webDirectory/new/"
-			chown -R www-data:www-data "$webDirectory/new/"
-		fi
-		if ! test -d "$webDirectory/web_cache/";then
-			mkdir -p "$webDirectory/web_cache/"
-			chown -R www-data:www-data "$webDirectory/web_cache/"
-		fi
-		if ! test -d "$webDirectory/random/";then
-			mkdir -p "$webDirectory/random/"
-			chown -R www-data:www-data "$webDirectory/random/"
-		fi
-		if ! test -d "$webDirectory/shows/";then
-			mkdir -p "$webDirectory/shows/"
-			chown -R www-data:www-data "$webDirectory/shows/"
-		fi
-		if ! test -d "$webDirectory/movies/";then
-			mkdir -p "$webDirectory/movies/"
-			chown -R www-data:www-data "$webDirectory/movies/"
-		fi
-		if ! test -d "$webDirectory/kodi/";then
-			mkdir -p "$webDirectory/kodi/"
-			chown -R www-data:www-data "$webDirectory/kodi/"
-		fi
-		if ! test -d "$webDirectory/settings/";then
-			mkdir -p "$webDirectory/settings/"
-			chown -R www-data:www-data "$webDirectory/settings/"
-		fi
-		if ! test -d "$webDirectory/sums/";then
-			mkdir -p "$webDirectory/sums/"
-			chown -R www-data:www-data "$webDirectory/sums/"
-		fi
-		if ! test -d "$webDirectory/views/";then
-			mkdir -p "$webDirectory/views/"
-			chown -R www-data:www-data "$webDirectory/views/"
-		fi
+		createDir "$webDirectory"
+		createDir "$webDirectory/new/"
+		createDir "$webDirectory/web_cache/"
+		createDir "$webDirectory/random/"
+		createDir "$webDirectory/shows/"
+		createDir "$webDirectory/movies/"
+		createDir "$webDirectory/kodi/"
+		createDir "$webDirectory/settings/"
+		createDir "$webDirectory/sums/"
+		createDir "$webDirectory/views/"
 
 		# create config files if they do not exist
 		if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
@@ -2266,23 +2252,25 @@ main(){
 		linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
 		linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
 		# admin control file
-		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/admin.php"
+		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
 		# settings interface files
-		linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/serverServices.php"
-		linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/radio.php"
-		linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/tv.php"
-		linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/iptv_blocked.php"
-		linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/nfo.php"
-		linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/comics.php"
-		linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/comicsDL.php"
-		linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/cache.php"
-		linkFile "/usr/share/2web/settings/system.php" "$webDirectory/system.php"
-		linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/weather.php"
-		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/ytdl2nfo.php"
-		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settingsHeader.php"
+		linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
+		linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
+		linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
+		linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/settings/iptv_blocked.php"
+		linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/settings/nfo.php"
+		linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/settings/comics.php"
+		linkFile "/usr/share/2web/settings/graphs.php" "$webDirectory/settings/graphs.php"
+		linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
+		linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
+		linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
+		linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
+		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
+		linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
+		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 		# add the manuals page
-		linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/manuals.php"
+		linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
 		# help/info docs
 		linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
 		# caching resolvers
@@ -2312,7 +2300,7 @@ main(){
 		counter=0
 		if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
 			# if there are any users
-			linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
+			linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
 			cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 		else
 			# if there are no users set in the cfg remove the .htaccess file
@@ -2337,6 +2325,16 @@ main(){
 				# remove www-data from the deny file for scheduler
 				data=$(grep --invert-match "www-data" "/etc/at.deny")
 				echo "$data" > "/etc/at.deny"
+			fi
+		fi
+		# build the fortune if the config is set
+		if cacheCheck "$webDirectory/fortune.index" "1";then
+			# write the fortune for this processing run...
+			if test -f /usr/games/fortune;then
+				#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
+				# replace tabs with spaces
+				todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
+				echo "$todaysFortune" > "$webDirectory/fortune.index"
 			fi
 		fi
 
@@ -2492,9 +2490,9 @@ main(){
 				#INFO "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				#for show in "$libary"/*;do
-				addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
+				#addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
 				find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
-					addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
+					#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
 					#INFO "show path = '$show'"
 					################################################################################
 					# process page metadata
@@ -2557,6 +2555,9 @@ main(){
 		# - cleanup the new indexes by limiting the lists to 200 entries
 		# - only run cleanup if the indexes exist as the indexes trigger header buttons
 		################################################################################
+		# fix permissions in the new and random indexes
+		chown -R www-data:www-data "$webDirectory/new/"
+		chown -R www-data:www-data "$webDirectory/random/"
 		#########
 		# SHOWS #
 		#########
@@ -2574,6 +2575,16 @@ main(){
 			tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
 			echo "$tempList" > "$webDirectory/new/episodes.index"
 		fi
+		if test -f "$webDirectory/random/shows.index";then
+			# new list
+			tempList=$(cat "$webDirectory/random/shows.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/random/shows.index"
+		fi
+		if test -f "$webDirectory/random/episodes.index";then
+			# new episodes
+			tempList=$(cat "$webDirectory/random/episodes.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/random/episodes.index"
+		fi
 		##########
 		# MOVIES #
 		##########
@@ -2585,6 +2596,11 @@ main(){
 			# new movies
 			tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
 			echo "$tempList" > "$webDirectory/new/movies.index"
+		fi
+		if test -f "$webDirectory/random/movies.index";then
+			# new movies
+			tempList=$(cat "$webDirectory/random/movies.index" | uniq | tail -n 200 )
+			echo "$tempList" > "$webDirectory/random/movies.index"
 		fi
 		# create the final index pages, these should not have the progress indicator
 		# build the final version of the homepage without the progress indicator

@@ -13,23 +13,18 @@
 ?>
 
 <!--  add the search box -->
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
-
-<?php
-	drawPosterWidget("comics");
-?>
+<input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
 
 <hr>
 
 <div class='settingListCard'>
 
 <?php
-if (file_exists("/var/cache/2web/web/comics/comics.index")){
+if (file_exists("/var/cache/2web/web/graphs/graphs.index")){
 	// get a list of all the genetrated index links for the page
-	//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
-	$sourceFiles = file("/var/cache/2web/web/comics/comics.index", FILE_IGNORE_NEW_LINES);
+	$sourceFiles = file("/var/cache/2web/web/graphs/graphs.index", FILE_IGNORE_NEW_LINES);
 	// reverse the time sort
-	$sourceFiles = array_reverse($sourceFiles);
+	sort($sourceFiles);
 	$sourceFiles = array_unique($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
@@ -48,9 +43,9 @@ if (file_exists("/var/cache/2web/web/comics/comics.index")){
 	}
 }else{
 	echo "<ul>";
-	echo "<li>No Comics Have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/comics.php'>comics admin interface</a> to populate this page.</li>";
-	echo "<li>Add download links in <a href='/comicsDL.php'>comics admin interface</a></li>";
+	echo "<li>No Munin Graphs have been generated!</li>";
+	echo "<li>Add libary paths in the <a href='/settings/graphs.php'>comics admin interface</a> to populate this page.</li>";
+	echo "<li>Add download links in <a href='/settings/graphs.php'>comics admin interface</a></li>";
 	echo "</ul>";
 }
 ?>
@@ -58,7 +53,7 @@ if (file_exists("/var/cache/2web/web/comics/comics.index")){
 
 <?php
 	// add random comics above the footer
-	drawPosterWidget("comics", True);
+	drawPosterWidget("graphs", True);
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

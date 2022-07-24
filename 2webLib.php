@@ -106,4 +106,17 @@ function drawPosterWidget($filterType, $random=False){
 		ob_flush();
 	}
 }
+function detectEnabledStatus($filePath){
+	# return true if a $filePath exists and contains the text "enabled"
+	if (file_exists($filePath)){
+		if (file_get_contents($filePath) == "enabled"){
+			return True;
+		}else{
+			return False;
+		}
+	}else{
+		// no config exists so mark it as disabled
+		return False;
+	}
+}
 ?>

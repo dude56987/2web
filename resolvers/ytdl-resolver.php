@@ -75,15 +75,14 @@ function cacheUrl($sum,$videoLink){
 	//$command = 'echo "';
 	//$command = 'echo "';
 	// add the download to the cache with the processing queue
-	if (file_exists("/usr/local/bin/youtube-dl")){
+	if (file_exists("/usr/local/bin/yt-dlp")){
+		debug("yt-dlp found<br>");
+		$command = $command."/usr/local/bin/yt-dlp --abort-on-error ";
+	}else if (file_exists("/usr/local/bin/youtube-dl")){
 		debug("PIP version of youtube-dl found<br>");
 		$command = $command."/usr/local/bin/youtube-dl";
-		//$command = $command." '/usr/local/bin/youtube-dl";
-		//$command = "/usr/local/bin/youtube-dl";
 	} else {
 		$command = $command."youtube-dl";
-		//$command = $command." 'youtube-dl";
-		//$command = "youtube-dl";
 	}
 	$quality = getQualityConfig();
 	$cacheMode = getCacheMode();
@@ -319,14 +318,7 @@ if (array_key_exists("url",$_GET)){
 	# create the md5sum of the file
 	$sum = md5($videoLink);
 	debug("[DEBUG]: MD5SUM is ".$sum."<br>");
-	# newgrounds will resolve properly with only the link, so resolve but do not cache
-	if (strpos($videoLink,"newgrounds.com")){
-		# if the link value is already set do NOT override the setting
-		if (!array_key_exists("link",$_GET)){
-			# set the link value to true
-			$_GET['link']=true;
-		}
-	}
+	# libsyn will resolve properly with only the link, so resolve but do not cache
 	if (strpos($videoLink,"libsyn.com")){
 		if (!array_key_exists("link",$_GET)){
 			$_GET['link']=true;
@@ -351,10 +343,10 @@ if (array_key_exists("url",$_GET)){
 				echo "<hr>";
 				echo "<div>".$output."</div>";
 				echo "<hr>";
-				echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
+				echo '<p>ResolvedUrl = <a href="/'.$url.'">'.$url.'</a></p>';
 				exit();
 			}else{
-				redirect($url);
+				redirect("/".$url);
 			}
 		}
 	}else{

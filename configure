@@ -1,0 +1,9 @@
+#! /bin/bash
+echo "Only Debian, Ubuntu, Raspbian, Dietpi builds are currently supported!"
+# install tools for building the manual pages for the package
+apt-get install pandoc
+apt-get install w3m
+# install the zip utilities for building the package in the most compressed format
+apt-get install xz-utils
+# install make if not installed
+apt-get install make

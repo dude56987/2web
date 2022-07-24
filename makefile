@@ -40,6 +40,15 @@ test: install
 	sudo time -v iptv2web update
 	sudo time -v iptv2web webgen
 lint:
+	# check the templates
+	php -l templates/*.php
+	# check the settings
+	php -l settings/*.php
+	# check the transcoders
+	php -l resolvers/*.php
+	# check the shell scripts
+	shellcheck 2web.sh
+	shellcheck *2web.sh
 	# check the package
 	lintian 2web_UNSTABLE.deb
 	# check the package in detail
@@ -160,6 +169,8 @@ build-deb:
 	cp music2web.sh debian/usr/bin/music2web
 	cp iptv2web.sh debian/usr/bin/iptv2web
 	cp comic2web.sh debian/usr/bin/comic2web
+	cp graph2web.sh debian/usr/bin/graph2web
+	cp kodi2web.sh debian/usr/bin/kodi2web
 	cp weather2web.sh debian/usr/bin/weather2web
 	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
 	# build the man pages for the command line tools

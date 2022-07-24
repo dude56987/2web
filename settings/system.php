@@ -1,6 +1,6 @@
 <html class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 </head>
 <body>
 <?php
@@ -9,8 +9,9 @@
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
+error_reporting(E_ALL);
 ################################################################################
-include("header.php");
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
 <div id='index' class='inputCard'>
@@ -265,9 +266,8 @@ include("settingsHeader.php");
 	}
 ?>
 </div>
-
 <?PHP
-	include("header.php");
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>
 </html>

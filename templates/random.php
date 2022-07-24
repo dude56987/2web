@@ -27,23 +27,32 @@ if (array_key_exists("filter",$_GET)){
 ?>
 <div class='listCard'>
 <?PHP
-if (file_exists("$webDirectory/shows/shows.index")){
+if (file_exists("$webDirectory/random/shows.index")){
 	echo "<a class='button' href='?filter=shows'>📺 shows</a>";
+}
+if (file_exists("$webDirectory/random/episodes.index")){
 	echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
 }
-
-if (file_exists("$webDirectory/movies/movies.index")){
+if (file_exists("$webDirectory/random/movies.index")){
 	echo "<a class='button' href='?filter=movies'>🎥 Movies</a>";
 }
-
-if (file_exists("$webDirectory/comics/comics.index")){
+if (file_exists("$webDirectory/random/comics.index")){
 	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
 }
-
-if (file_exists("$webDirectory/new/music.index")){
+if (file_exists("$webDirectory/random/music.index")){
 	echo "<a class='button' href='?filter=music'>🎧 Music</a>";
+}
+if (file_exists("$webDirectory/random/albums.index")){
 	echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
+}
+if (file_exists("$webDirectory/random/artists.index")){
 	echo "<a class='button' href='?filter=artists'>🎤 Artists</a>";
+}
+if (file_exists("$webDirectory/random/tracks.index")){
+	echo "<a class='button' href='?filter=tracks'>🎵 Tracks</a>";
+}
+if (file_exists("$webDirectory/random/graphs.index")){
+	echo "<a class='button' href='?filter=graphs'>📊 Graphs</a>";
 }
 ?>
 <a class='button' href='?filter=all'>📜 All</a>
@@ -77,10 +86,6 @@ if ($writeFile){
 	if ( "$filterType" == "all" ){
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else if ( "$filterType" == "episodes" ){
-		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
-	}else if ( "$filterType" == "albums" ){
-		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
-	}else if ( "$filterType" == "artists" ){
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 	}else{
 		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index", FILE_IGNORE_NEW_LINES);

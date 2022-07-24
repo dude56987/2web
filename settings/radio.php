@@ -1,12 +1,12 @@
 <html class='randomFanart'>
 <head>
-	<link rel='stylesheet' type='text/css' href='style.css'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 </head>
 <body>
 <?php
 
 ini_set('display_errors', 1);
-include("header.php");
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 
 ?>
@@ -155,7 +155,7 @@ echo "</div>";
 //echo "<input type='submit'>\n";
 //echo "</form>\n";
 
-include("footer.php");
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>
 </html>

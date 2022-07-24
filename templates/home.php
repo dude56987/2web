@@ -51,6 +51,9 @@
 			include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
 		}
 	}
+	if (file_exists("graphs")){
+		drawPosterWidget("graphs", True);
+	}
 	// add the footer
 	include("footer.php");
 ?>
