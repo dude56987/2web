@@ -119,6 +119,7 @@ build-deb:
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
+	mkdir -p debian/var/lib/2web/;
 	# write version info
 	/usr/bin/git log --oneline | wc -l > debian/usr/share/2web/version.cfg
 	if /usr/bin/git status| grep "Changes not staged for";then echo "+UNSTABLE-BRANCH" >> debian/usr/share/2web/version.cfg;fi
@@ -163,6 +164,8 @@ build-deb:
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
+	# add the lib
+	cp 2webLib.sh debian/var/lib/2web/common
 	# copy update scripts to /usr/bin
 	cp 2web.sh debian/usr/bin/2web
 	cp nfo2web.sh debian/usr/bin/nfo2web

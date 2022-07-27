@@ -142,7 +142,7 @@ if ($writeFile){
 	if (file_exists("$webDirectory/graphs/")){
 		$fileData .= "<a class='' href='/graphs/'>";
 		$fileData .= "📊";
-		$fileData .= "<span class='headerText'>";
+		$fileData .= "<span class='footerText'>";
 		$fileData .= " GRAPHS";
 		$fileData .= "</span>";
 		$fileData .= "</a> ";

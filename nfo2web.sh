@@ -22,6 +22,8 @@ export PS4='+ ${LINENO}	|	'
 # set tab size to 4 to make output more readable
 tabs 4
 ########################################################################
+source /var/lib/2web/common
+########################################################################
 STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<"
 	read -r
@@ -53,15 +55,6 @@ cleanText(){
 	else
 		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
 	fi
-}
-########################################################################
-createDir(){
-	if ! test -d "$1";then
-		mkdir -p "$1"
-		# set ownership of directory and subdirectories as www-data
-		chown -R www-data:www-data "$1"
-	fi
-	chown www-data:www-data "$1"
 }
 ########################################################################
 function debugCheck(){
@@ -226,7 +219,7 @@ processMovie(){
 	# find the movie nfo in the movie path
 	moviePath=$(find "$moviePath"/*.nfo)
 	# create log path
-	logPagePath="$webDirectory/log.php"
+	logPagePath="$webDirectory/settings/log.php"
 	#INFO "Processing movie $moviePath"
 	# if moviepath exists
 	if test -f "$moviePath";then
@@ -699,6 +692,9 @@ processMovie(){
 		# add the updated movie to the new movies index
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
+		# random
+		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/random/movies.index"
+		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/random/all.index"
 
 		# add the path to the list of paths for duplicate checking
 		if ! grep "$movieDir" "$webDirectory/movies/$movieWebPath/sources.cfg";then
@@ -847,8 +843,7 @@ processEpisode(){
 	showPagePath="$3"
 	webDirectory="$4"
 	# create log path
-	#logPagePath="$webDirectory/log.php"
-	logPagePath="$webDirectory/log.php"
+	logPagePath="$webDirectory/settings/log.php"
 	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
 	#INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
@@ -1271,6 +1266,9 @@ processEpisode(){
 		# add episodes to new indexes
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/episodes.index"
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/all.index"
+		# random indexes
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/random/episodes.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/random/all.index"
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1282,7 +1280,7 @@ processShow(){
 	showMeta=$2
 	showTitle=$3
 	webDirectory=$4
-	logPagePath="$webDirectory/log.php"
+	logPagePath="$webDirectory/settings/log.php"
 	showLogPath="$webDirectory/shows/$showTitle/log.index"
 	# create the path sum for reconizing the libary path
 	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
@@ -1564,13 +1562,6 @@ getLibSum(){
 	echo "$tempLibList"
 }
 ################################################################################
-linkFile(){
-	if ! test -L "$2";then
-		ln -sf "$1" "$2"
-		# DEBUG: log each linked file
-		#echo "ln -sf '$1' '$2'" >> /var/cache/2web/web/linkedFiles.log
-	fi
-}
 ################################################################################
 buildUpdatedShows(){
 	# buildUpdatedShows $webDirectory $numberOfShows
@@ -1708,74 +1699,6 @@ buildRandomComics(){
 	fi
 }
 ########################################################################
-buildHomePage(){
-
-	webDirectory=$1
-
-	INFO "Building home page..."
-	# link homepage
-	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
-
-	# check and update stats files
-	# - do not generate stats if website is in process of being updated
-	# - stats generation is IO intense, so it only needs ran ONCE at the end
-	# - each element in the stats is ran on a diffrent schedule based on its intensity and propensity to lock up the system
-	# - update the "last update on" data every run, this is simply to show the freshness of the content since updates are a batch process
-	echo "$(date)" > "$webDirectory/lastUpdate.index"
-	if test -d "$webDirectory/comics/";then
-		if cacheCheck "$webDirectory/totalComics.index" "1";then
-			# figure out the stats
-			totalComics=$(cat "$webDirectory/comics/comics.index" | wc -l )
-			# write the stats
-			echo "$totalComics" > "$webDirectory/totalComics.index"
-		fi
-	fi
-	if test -d "$webDirectory/shows/";then
-		if cacheCheck "$webDirectory/totalEpisodes.index" "7";then
-			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
-			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
-		fi
-		if cacheCheck "$webDirectory/totalShows.index" "1";then
-			totalShows=$(cat "$webDirectory/shows/shows.index" | wc -l )
-			echo "$totalShows" > "$webDirectory/totalShows.index"
-		fi
-	fi
-	if cacheCheck "$webDirectory/totalMovies.index" "1";then
-		totalMovies=$(cat "$webDirectory/movies/movies.index" | wc -l )
-		echo "$totalMovies" > "$webDirectory/totalMovies.index"
-	fi
-	if test -f "$webDirectory/live/channels.m3u";then
-		if cacheCheck "$webDirectory/totalChannels.index" "7";then
-			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
-			echo "$totalChannels" > "$webDirectory/totalChannels.index"
-		fi
-		if cacheCheck "$webDirectory/totalRadio.index" "7";then
-			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
-			echo "$totalRadio" > "$webDirectory/totalRadio.index"
-		fi
-	fi
-	if cacheCheck "$webDirectory/webSize.index" "7";then
-		# count website size in total ignoring symlinks
-		webSize=$(du -shP "$webDirectory" | cut -f1)
-		echo "$webSize" > "$webDirectory/webSize.index"
-	fi
-	if cacheCheck "$webDirectory/cacheSize.index" "1";then
-		# cache size for resolver-cache
-		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
-		echo "$cacheSize" > "$webDirectory/cacheSize.index"
-	fi
-	if cacheCheck "$webDirectory/mediaSize.index" "7";then
-		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
-		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
-		echo "$mediaSize" > "$webDirectory/mediaSize.index"
-	fi
-	if cacheCheck "$webDirectory/freeSpace.index" "7";then
-		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
-		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
-		echo "$freeSpace" > "$webDirectory/freeSpace.index"
-	fi
-}
-########################################################################
 checkDirSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
@@ -1840,39 +1763,6 @@ checkDirDataSum(){
 		# no previous file was found, pass true
 		# update the sum
 		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
-		return 0
-	fi
-}
-########################################################################
-checkFileDataSum(){
-	# return true if the directory has been updated/changed
-	# store sums in $webdirectory/$sums
-	webDirectory=$1
-	filePath=$2
-	# check the sum of a directory and compare it to a previously stored sum
-	createDir "$webDirectory/sums/"
-	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
-	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
-	# check for a previous sum
-	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
-		# compare the sum of the old path with the new one
-		if [ "$oldSum" == "$newSum" ];then
-			# UNCHANGED
-			# if the sums are the same no change detected, pass false
-			return 1
-		else
-			# CHANGED
-			# the sums are diffrent, pass true
-			# update the sum
-			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
-			return 0
-		fi
-	else
-		# CHANGED
-		# no previous file was found, pass true
-		# update the sum
-		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
 		return 0
 	fi
 }
@@ -2019,51 +1909,6 @@ function buildMovieIndex(){
 	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
 }
 ########################################################################
-function cacheCheck(){
-
-	filePath="$1"
-	cacheDays="$2"
-
-	fileName=$( echo "$filePath" | rev | cut -d'/' -f'1'| rev )
-	fileDir=$( echo "$filePath" | rev | cut -d'/' -f'2-'| rev )
-
-	# return true if cached needs updated
-	if test -f "$filePath";then
-		# check the file date
-		fileFound=$(find "$fileDir" -type f -name "$fileName" -mtime "+$cacheDays" | wc -l)
-		if [ "$fileFound" -gt 0 ] ;then
-			# the file is more than "$cacheDays" days old, it needs updated
-			#INFO "File is to old, update the file $1"
-			return 0
-		else
-			# the file exists and is not old enough in cache to be updated
-			#INFO "File in cache, do not update $1"
-			return 1
-		fi
-	else
-		# the file does not exist, it needs created
-		#INFO "File does not exist, it must be created $1"
-		return 0
-	fi
-}
-########################################################################
-webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/nfo/web.cfg ];then
-		webDirectory=$(cat /etc/2web/nfo/web.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/2web/cache/"
-	fi
-	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
-	fi
-	echo "$webDirectory"
-}
-########################################################################
 function libaryPaths(){
 	# check for server libary config
 	if ! test -f /etc/2web/nfo/libaries.cfg;then
@@ -2091,37 +1936,6 @@ function libaryPaths(){
 		# create a space just in case none exists
 		printf "\n"
 	done
-}
-########################################################################
-function updateCerts(){
-	force=$1
-	genCert='no'
-	# if the cert exists
-	# if the certs are older than 364 days renew recreate a new valid key
-	if cacheCheck /var/cache/2web/ssl-cert.crt "365";then
-		# the cert has expired
-		echo "[INFO]: Updating cert..."
-		# generate a new private key and public cert for the SSL certification
-		genCert='yes'
-	else
-		echo "[INFO]: Cert still active..."
-		return
-	fi
-	if $force;then
-		# force cert generation
-		genCert='yes'
-	fi
-	if [ $genCert == 'yes' ];then
-		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
-		# convert the ssl certificate into the der format
-		# - der format can be copied to other systems at /usr/local/share/ca-certificates/
-		# - linux only updates after update-ca-certificates
-		openssl x509 -in /var/cache/2web/ssl-cert.crt -out /var/cache/2web/ssl-cert.der -outform DER
-		# add the cert to the system cert directory
-		ln -s /var/cache/2web/ssl-cert.crt /usr/share/ca-certificates/2web.crt
-		# update system cert file
-		update-ca-certificates --fresh
-	fi
 }
 ########################################################################
 main(){
@@ -2217,212 +2031,9 @@ main(){
 			# create a trap to remove nfo2web lockfile
 			trap "rm /tmp/nfo2web.active" EXIT
 		fi
-		# make sure the directories exist and have correct permissions, also link stylesheets
-		createDir "$webDirectory"
-		createDir "$webDirectory/new/"
-		createDir "$webDirectory/web_cache/"
-		createDir "$webDirectory/random/"
-		createDir "$webDirectory/shows/"
-		createDir "$webDirectory/movies/"
-		createDir "$webDirectory/kodi/"
-		createDir "$webDirectory/settings/"
-		createDir "$webDirectory/sums/"
-		createDir "$webDirectory/views/"
-
-		# create config files if they do not exist
-		if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
-			# by default disable caching of new episodes
-			echo "no" > /etc/2web/cacheNewEpisodes.cfg
-			chown www-data:www-data /etc/2web/cacheNewEpisodes.cfg
-		fi
-
-		################################################################################
-		# Link website scripts into website directory to build a functional site
-		# - The php web interface
-		#  - These scripts limit libary checking for interface updates to once per 2 hours
-		#  - Adding users to enable password protection of site
-		#  - Is only available from the https version of the website
-		# - The php resolver scripts
-		#  - These scripts allow for kodi to play .strm files though youtube-dl
-		#  - Generate m3u files to allow android phones to share the media to any video player
-		################################################################################
-		# enable the apache config
-		linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
-		linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
-		linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
-		linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
-		# admin control file
-		linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
-		# settings interface files
-		linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
-		linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
-		linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
-		linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/settings/iptv_blocked.php"
-		linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/settings/nfo.php"
-		linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/settings/comics.php"
-		linkFile "/usr/share/2web/settings/graphs.php" "$webDirectory/settings/graphs.php"
-		linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
-		linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
-		linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
-		linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
-		linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
-		linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
-		linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
-		linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
-		# add the manuals page
-		linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
-		# help/info docs
-		linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
-		# caching resolvers
-		linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
-		linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
-		# error documents
-		linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
-		linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
-		linkFile "/usr/share/2web/templates/401.php" "$webDirectory/401.php"
-		# global javascript libary
-		linkFile "/usr/share/2web/2web.js" "$webDirectory/2web.js"
-		# link homepage
-		linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
-		# link stats script
-		linkFile "/usr/share/2web/templates/stats.php" "$webDirectory/stats.php"
-		# link the movies and shows index
-		linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
-		linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
-		# add the list filter
-		linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
-		linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
-		# link lists these can be built and rebuilt during libary update
-		# copy over the favicon
-		linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
-		################################################################################
-		# build the login users file
-		counter=0
-		if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
-			# if there are any users
-			linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
-			cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
-		else
-			# if there are no users set in the cfg remove the .htaccess file
-			if test -f "$webDirectory/.htaccess";then
-				rm "$webDirectory/.htaccess"
-			fi
-		fi
-
-		if ! test -d "$webDirectory/RESOLVER-CACHE/";then
-			# build the cache directory if none exists
-			mkdir -p "$webDirectory/RESOLVER-CACHE/"
-			# set permissions
-			chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-		fi
-		# update the certificates
-		updateCerts
-
-		# check the scheduler and make sure www-data is allowed to use the at command for php resolver
-		if test -f "/etc/at.deny";then
-			# the file exists check for the www-data line
-			if grep -q "www-data" "/etc/at.deny";then
-				# remove www-data from the deny file for scheduler
-				data=$(grep --invert-match "www-data" "/etc/at.deny")
-				echo "$data" > "/etc/at.deny"
-			fi
-		fi
-		# build the fortune if the config is set
-		if cacheCheck "$webDirectory/fortune.index" "1";then
-			# write the fortune for this processing run...
-			if test -f /usr/games/fortune;then
-				#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
-				# replace tabs with spaces
-				todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
-				echo "$todaysFortune" > "$webDirectory/fortune.index"
-			fi
-		fi
-
-		# install the php streaming script
-		#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
-		#linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
-
-		# link the randomFanart.php script
-		linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/randomFanart.php"
-		linkFile "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
-		linkFile "$webDirectory/randomFanart.php" "$webDirectory/movies/randomFanart.php"
-
-		# link randomPoster.php
-		linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/randomPoster.php"
-		linkFile "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
-		linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
-
-		# once a month rebuild all custom themes
-		# - a website reset or nuke will reset this timer
-		#if cacheCheck /var/cache/2web/web/themeGen.cfg "30";then
-		#if checkDirDataSum "$webDirectory" "/usr/share/2web/theme-templates/";then
-		# check if files have changed or if this is a unstable version
-		#if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/" || grep -qE "(UNSTABLE|TESTING)" /usr/share/2web/version.txt;then
-		if checkFileDataSum "$webDirectory" "/usr/share/2web/versionDate.cfg";then
-			themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
-			#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
-			themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
-			themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
-			#themeFonts=$(echo "$themeFonts" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
-			themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
-			themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
-			#themeMods=$(echo "$themeMods" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
-			themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
-			themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
-			#themeBases=$(echo "$themeBases" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
-			themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
-			# build the custom stylesheets if they need to be built
-			for themeColor in $themeColors;do
-				tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
-				for themeFont in $themeFonts;do
-					tempPathFont=$(echo "$themeFont" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/font-//g" )
-					for themeMod in $themeMods;do
-						tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
-						for themeBase in $themeBases;do
-							tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-							#tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
-							tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
-							#ALERT "Building theme at /usr/share/2web/themes/$tempThemeName.css"
-							#addToLog "DEBUG" "Building theme at /usr/share/2web/themes/$tempThemeName.css" "$logPagePath"
-							# build the theme
-							{
-								if test -f "$themeColor";then
-									cat "$themeColor"
-								fi
-								if test -f "$themeFont";then
-									cat "$themeFont"
-								fi
-								if test -f "$themeMod";then
-									cat "$themeMod"
-								fi
-								if test -f "$themeBase";then
-									cat "$themeBase"
-								fi
-							} > "/usr/share/2web/themes/$tempThemeName.css"
-						done
-					done
-				done
-			done
-			# update the timer
-			touch /var/cache/2web/web/themeGen.cfg
-		fi
-
-		# link the stylesheet based on the chosen theme
-		if ! test -f /etc/2web/theme.cfg;then
-			# the default theme is gray
-			echo "Simple-Gray-OpenDyslexic-round.css" > "/etc/2web/theme.cfg"
-			chown www-data:www-data "/etc/2web/theme.cfg"
-		fi
-		# load the chosen theme
-		theme=$(cat "/etc/2web/theme.cfg")
-		# link the theme and overwrite if another theme is chosen
-		ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
-		# link stylesheet
-		linkFile "$webDirectory/style.css" "$webDirectory/movies/style.css"
-		linkFile "$webDirectory/style.css" "$webDirectory/shows/style.css"
 
 		# create the log path
-		logPagePath="$webDirectory/log.php"
+		logPagePath="$webDirectory/settings/log.php"
 		# create the homepage path
 		#homePagePath="$webDirectory/index.php"
 		showIndexPath="$webDirectory/shows/index.php"

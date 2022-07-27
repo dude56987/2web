@@ -30,8 +30,6 @@ if ($writeFile){
 	$fileData .= "<hr class='menuButton'/>";
 	$fileData .= "<hr class='menuButton'/>";
 
-	$fileData .= "<div class='listCard'>";
-
 	$fileData .= "<a class='button' href='/'>";
 	$fileData .= "&#127968;";
 	$fileData .= "<span class='headerText'>";
@@ -157,7 +155,6 @@ echo "</a>";
 echo "<div class='loginLogoutBoxSpacer'>";
 echo "</div>";
 # close the header bracket
-echo "</div>";
 echo "</div>";
 
 # if the path is in the settings draw the logout button

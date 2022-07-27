@@ -233,20 +233,20 @@ include("settingsHeader.php");
 		<li>Not all linux services will be detected.</li>
 		<li>Services list is based off of <a href='https://dietpi.com/docs/software/'>DietPI software listings</a></li>
 	</ul>
-	<a class='button' href="/serverServices.php">Active Server Services</a>
+	<a class='button' href="/settings/serverServices.php">Active Server Services</a>
 	<hr>
 </div>
 
 <div id='CLI_manuals' class='inputCard'>
 <h2>CLI(Command Line Interface) Manual Pages</h2>
 	<ul>
-		<li><a href="/manuals.php#README">README</a></li>
-		<li><a href="/manuals.php#2web">2web</a></li>
-		<li><a href="/manuals.php#nfo2web">nfo2web</a></li>
-		<li><a href="/manuals.php#comic2web">comic2web</a></li>
-		<li><a href="/manuals.php#iptv2web">iptv2web</a></li>
-		<li><a href="/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
-		<li><a href="/manuals.php#weather2web">weather2web</a></li>
+		<li><a href="/settings/manuals.php#README">README</a></li>
+		<li><a href="/settings/manuals.php#2web">2web</a></li>
+		<li><a href="/settings/manuals.php#nfo2web">nfo2web</a></li>
+		<li><a href="/settings/manuals.php#comic2web">comic2web</a></li>
+		<li><a href="/settings/manuals.php#iptv2web">iptv2web</a></li>
+		<li><a href="/settings/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
+		<li><a href="/settings/manuals.php#weather2web">weather2web</a></li>
 	</ul>
 </div>
 

@@ -1088,6 +1088,11 @@ table, th, td{
 	margin-right: auto;
 	text-shadow: none;
 }
+/* Make the markdown generated tables display correctly */
+tr[class='header']{
+	display: table-row;
+
+}
 /*
 table{
 	width: 90vw;
@@ -1338,9 +1343,10 @@ tr{
 	border-color: transparent;
 	border-width: 0.2rem;
 }
-@media only screen and (max-width: 1250px), (orientation: portrait){
+@media only screen and (max-width: 1350px), (orientation: portrait){
 	/*
 		 For the inbetween state of all and small
+		 - this moves the login and settings buttons to the top right of the screen
 	*/
 	.headerText{
 		display: inline !important;
@@ -1360,7 +1366,8 @@ tr{
 	}
 }
 @media only screen and (max-width: 1100px), (orientation: portrait){
-	/* hide the text in the header links to fit the links on the page */
+	/* hide the text in the header links to fit the links on the page
+		- This makes the text beside the header buttons disapear so they only show as icons*/
 	.headerText{
 		display: none !important;
 	}

@@ -170,7 +170,7 @@ function update(){
 			# generate a md5sum for the location
 			locationSum=$(echo -n "$weatherLocation" | md5sum | cut -d' ' -f1)
 			# check the forcast needs to be updated e.g. more than 30 minutes old
-			if cacheCheckMin "$webDirectory/weather/data/forcast_$locationSum.cfg" 20;then
+			if cacheCheckMin "$webDirectory/weather/data/forcast_$locationSum.cfg" 30;then
 				# check for the index link for the station
 				if cacheCheck "$webDirectory/weather/data/station_$locationSum.cfg" 40;then
 					{

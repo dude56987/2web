@@ -1,5 +1,7 @@
 #! /bin/bash
 ########################################################################
+source /var/lib/2web/common
+########################################################################
 STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
 	read -r #DEBUG DELETE ME
@@ -75,27 +77,228 @@ cacheCheck(){
 		return 0
 	fi
 }
-################################################################################
-webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/nfo/web.cfg ];then
-		webDirectory=$(cat /etc/2web/nfo/web.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/2web/cache/"
-	fi
-	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
-	fi
-	echo "$webDirectory"
-}
 ########################################################################
 update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
+	webDirectory="$(webRoot)"
+	# if the build date of the software has changed then update the generated css themes for the site
+	if checkFileDataSum "$webDirectory" "/usr/share/2web/versionDate.cfg";then
+		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
+		#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
+		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
+		#themeFonts=$(echo "$themeFonts" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+		themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
+		themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
+		#themeMods=$(echo "$themeMods" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
+		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
+		#themeBases=$(echo "$themeBases" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
+		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
+		# build the custom stylesheets if they need to be built
+		for themeColor in $themeColors;do
+			tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
+			for themeFont in $themeFonts;do
+				tempPathFont=$(echo "$themeFont" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/font-//g" )
+				for themeMod in $themeMods;do
+					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
+					for themeBase in $themeBases;do
+						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
+						#tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
+						tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
+						#ALERT "Building theme at /usr/share/2web/themes/$tempThemeName.css"
+						#addToLog "DEBUG" "Building theme at /usr/share/2web/themes/$tempThemeName.css" "$logPagePath"
+						# build the theme
+						{
+							if test -f "$themeColor";then
+								cat "$themeColor"
+							fi
+							if test -f "$themeFont";then
+								cat "$themeFont"
+							fi
+							if test -f "$themeMod";then
+								cat "$themeMod"
+							fi
+							if test -f "$themeBase";then
+								cat "$themeBase"
+							fi
+						} > "/usr/share/2web/themes/$tempThemeName.css"
+					done
+				done
+			done
+		done
+		# update the timer
+		touch /var/cache/2web/web/themeGen.cfg
+	fi
+	# make sure the directories exist and have correct permissions, also link stylesheets
+	createDir "$webDirectory"
+	createDir "$webDirectory/new/"
+	createDir "$webDirectory/web_cache/"
+	createDir "$webDirectory/random/"
+	createDir "$webDirectory/shows/"
+	createDir "$webDirectory/movies/"
+	createDir "$webDirectory/kodi/"
+	createDir "$webDirectory/settings/"
+	createDir "$webDirectory/sums/"
+	createDir "$webDirectory/views/"
+
+	# create config files if they do not exist
+	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
+		# by default disable caching of new episodes
+		echo "no" > /etc/2web/cacheNewEpisodes.cfg
+		chown www-data:www-data /etc/2web/cacheNewEpisodes.cfg
+	fi
+
+	################################################################################
+	# Link website scripts into website directory to build a functional site
+	# - The php web interface
+	#  - These scripts limit libary checking for interface updates to once per 2 hours
+	#  - Adding users to enable password protection of site
+	#  - Is only available from the https version of the website
+	# - The php resolver scripts
+	#  - These scripts allow for kodi to play .strm files though youtube-dl
+	#  - Generate m3u files to allow android phones to share the media to any video player
+	################################################################################
+	# enable the apache config
+	linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+	# admin control file
+	linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
+	# settings interface files
+	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
+	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
+	linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
+	linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/settings/iptv_blocked.php"
+	linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/settings/nfo.php"
+	linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/settings/comics.php"
+	linkFile "/usr/share/2web/settings/graphs.php" "$webDirectory/settings/graphs.php"
+	linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
+	linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
+	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
+	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
+	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
+	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
+	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
+	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
+	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
+	# add the manuals page
+	linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
+	# help/info docs
+	linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
+	# caching resolvers
+	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+	linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
+	# error documents
+	linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
+	linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
+	linkFile "/usr/share/2web/templates/401.php" "$webDirectory/401.php"
+	# global javascript libary
+	linkFile "/usr/share/2web/2web.js" "$webDirectory/2web.js"
+	# link homepage
+	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
+	# link stats script
+	linkFile "/usr/share/2web/templates/stats.php" "$webDirectory/stats.php"
+	# link the fortune script
+	linkFile "/usr/share/2web/templates/fortune.php" "$webDirectory/fortune.php"
+	# link the movies and shows index
+	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
+	linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
+	# add the new index
+	linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
+	# add the random index
+	linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
+	# link lists these can be built and rebuilt during libary update
+	# copy over the favicon
+	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
+	################################################################################
+	# build the login users file
+	counter=0
+	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
+		# if there are any users
+		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
+		cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
+	else
+		# if there are no users set in the cfg remove the .htaccess file
+		if test -f "$webDirectory/.htaccess";then
+			rm "$webDirectory/.htaccess"
+		fi
+	fi
+
+	if ! test -d "$webDirectory/RESOLVER-CACHE/";then
+		# build the cache directory if none exists
+		mkdir -p "$webDirectory/RESOLVER-CACHE/"
+		# set permissions
+		chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
+	fi
+	# update the certificates
+	updateCerts
+
+	# check the scheduler and make sure www-data is allowed to use the at command for php resolver
+	if test -f "/etc/at.deny";then
+		# the file exists check for the www-data line
+		if grep -q "www-data" "/etc/at.deny";then
+			# remove www-data from the deny file for scheduler
+			data=$(grep --invert-match "www-data" "/etc/at.deny")
+			echo "$data" > "/etc/at.deny"
+		fi
+	fi
+	# build the fortune if the config is set
+	if cacheCheck "$webDirectory/fortune.index" "1";then
+		# write the fortune for this processing run...
+		if test -f /usr/games/fortune;then
+			#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
+			# replace tabs with spaces
+			todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
+			echo "$todaysFortune" > "$webDirectory/fortune.index"
+		fi
+	fi
+
+	# install the php streaming script
+	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
+	#linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
+
+	# link the randomFanart.php script
+	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/randomFanart.php"
+	linkFile "$webDirectory/randomFanart.php" "$webDirectory/shows/randomFanart.php"
+	linkFile "$webDirectory/randomFanart.php" "$webDirectory/movies/randomFanart.php"
+
+	# link randomPoster.php
+	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/randomPoster.php"
+	linkFile "$webDirectory/randomPoster.php" "$webDirectory/shows/randomPoster.php"
+	linkFile "$webDirectory/randomPoster.php" "$webDirectory/movies/randomPoster.php"
+
+	# link the stylesheet based on the chosen theme
+	if ! test -f /etc/2web/theme.cfg;then
+		# the default theme is gray
+		echo "Simple-Gray-OpenDyslexic-round.css" > "/etc/2web/theme.cfg"
+		chown www-data:www-data "/etc/2web/theme.cfg"
+	fi
+	# load the chosen theme
+	theme=$(cat "/etc/2web/theme.cfg")
+	# link the theme and overwrite if another theme is chosen
+	ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
+	# build the homepage stats and link the homepage
+	buildHomePage "$webDirectory"
+}
+########################################################################
+backupSettings(){
+	# create a compressed backup of the server settings
+	createDir "$(webRoot)/backups/"
+	set -x
+	zip -9 -r "$(webRoot)/backups/$(date).zip" "/etc/2web/"
+	set +x
+}
+########################################################################
+restoreSettings(){
+	# unzip the stored settings file given
+	settingsFile=$1
+	createDir "$(webRoot)/backups/$(date)/"
+	set -x
+	unzip -x "$settingsFile" -d "/etc/2web/"
+	set +x
 }
 ########################################################################
 rebootCheck(){
@@ -142,12 +345,12 @@ main(){
 		# update main components
 		update2web
 		# update the metadata and build webpages for all generators
-		/usr/bin/nfo2web
-		/usr/bin/iptv2web
-		# update nfo2web again to check for stats
-		/usr/bin/nfo2web
+		/usr/bin/weather2web
+		/usr/bin/graph2web
 		/usr/bin/comic2web
 		/usr/bin/nfo2web
+		/usr/bin/music2web
+		/usr/bin/iptv2web
 		rebootCheck
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		# parllelize the processes
@@ -159,14 +362,14 @@ main(){
 		/usr/bin/ytdl2nfo &
 		# update weather
 		/usr/bin/weather2web &
-		sleep 30
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web &
-		sleep 10
+		/usr/bin/graph2web &
 		/usr/bin/iptv2web &
 		/usr/bin/comic2web &
 		/usr/bin/music2web &
 		while 1;do
+			sleep 1
 			if test -f /tmp/comic2web.active;then
 				sleep 1
 			elif test -f /tmp/iptv2web.active;then
@@ -177,11 +380,10 @@ main(){
 				sleep 1
 			elif test -f /tmp/music2web.active;then
 				sleep 1
+			elif test -f /tmp/graph2web.active;then
+				sleep 1
 			else
-				# - run nfo2web after all other modules have finished to make sure
-				#   content is accessable via header checks and stats
-				# TODO: move stats and header checks into individual modules
-				/usr/bin/nfo2web
+				# this means all processes have completed
 				# break the loop and run the reboot check
 				break
 			fi
@@ -206,9 +408,12 @@ main(){
 	elif [ "$1" == "-m" ] || [ "$1" == "--music" ] || [ "$1" == "music" ];then
 		/usr/bin/music2web
 		rebootCheck
+	elif [ "$1" == "-g" ] || [ "$1" == "--graph" ] || [ "$1" == "graph" ];then
+		/usr/bin/graph2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
-		update2Web
+		update2web
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web update
 		/usr/bin/iptv2web update
@@ -221,6 +426,7 @@ main(){
 		/usr/bin/nfo2web webgen
 		/usr/bin/iptv2web webgen
 		/usr/bin/comic2web webgen
+		# weather2web only generates website data
 		/usr/bin/weather2web
 		/usr/bin/music2web webgen
 		rebootCheck
@@ -242,6 +448,10 @@ main(){
 		/usr/bin/nfo2web nuke
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
+	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then
+		backupSettings
+	elif [ "$1" == "-r" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
+		restoreSettings "$2"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		# run the cleanup to remove cached files older than the cache time
 		################################################################################
@@ -276,6 +486,9 @@ main(){
 		echo -n "2web Version Publish Date: "
 		cat /usr/share/2web/versionDate.cfg
 	else
+		# update main components
+		# - this builds the base site without anything enabled
+		update2web
 		# this is the default option to be ran without arguments
 		main --help
 	fi

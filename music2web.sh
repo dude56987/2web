@@ -37,6 +37,14 @@ createDir(){
 	chown www-data:www-data "$1"
 }
 ################################################################################
+touchFile(){
+	if ! test -f "$1";then
+		touch "$1"
+		# set ownership of directory and subdirectories as www-data
+		chown www-data:www-data "$1"
+	fi
+}
+################################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
@@ -457,12 +465,18 @@ function update(){
 							echo "</a>"
 						} > "$webDirectory/music/$artist/artist.index"
 						# add artist to the main music index
+						touchFile "$webDirectory/music/music.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/music/music.index"
 
 						# add music to random indexes
+						touchFile "$webDirectory/random/music.index"
+						touchFile "$webDirectory/random/all.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/random/music.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/random/all.index"
 
+						touchFile "$webDirectory/new/artists.index"
+						touchFile "$webDirectory/new/music.index"
+						touchFile "$webDirectory/new/all.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/artists.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/music.index"
 						echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/all.index"

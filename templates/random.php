@@ -28,31 +28,49 @@ if (array_key_exists("filter",$_GET)){
 <div class='listCard'>
 <?PHP
 if (file_exists("$webDirectory/random/shows.index")){
-	echo "<a class='button' href='?filter=shows'>📺 shows</a>";
+	if (count(file("$webDirectory/random/shows.index")) > 2){
+		echo "<a class='button' href='?filter=shows'>📺 shows</a>";
+	}
 }
 if (file_exists("$webDirectory/random/episodes.index")){
-	echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
+	if (count(file("$webDirectory/random/episodes.index")) > 2){
+		echo "<a class='button' href='?filter=episodes'>🎞️ Episodes</a>";
+	}
 }
 if (file_exists("$webDirectory/random/movies.index")){
-	echo "<a class='button' href='?filter=movies'>🎥 Movies</a>";
+	if (count(file("$webDirectory/random/movies.index")) > 2){
+		echo "<a class='button' href='?filter=movies'>🎥 Movies</a>";
+	}
 }
 if (file_exists("$webDirectory/random/comics.index")){
-	echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
+	if (count(file("$webDirectory/random/comics.index")) > 2){
+		echo "<a class='button' href='?filter=comics'>📚 Comics</a>";
+	}
 }
 if (file_exists("$webDirectory/random/music.index")){
-	echo "<a class='button' href='?filter=music'>🎧 Music</a>";
+	if (count(file("$webDirectory/random/music.index")) > 2){
+		echo "<a class='button' href='?filter=music'>🎧 Music</a>";
+	}
 }
 if (file_exists("$webDirectory/random/albums.index")){
-	echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
+	if (count(file("$webDirectory/random/albums.index")) > 2){
+		echo "<a class='button' href='?filter=albums'>💿 Albums</a>";
+	}
 }
 if (file_exists("$webDirectory/random/artists.index")){
-	echo "<a class='button' href='?filter=artists'>🎤 Artists</a>";
+	if (count(file("$webDirectory/random/artists.index")) > 2){
+		echo "<a class='button' href='?filter=artists'>🎤 Artists</a>";
+	}
 }
 if (file_exists("$webDirectory/random/tracks.index")){
-	echo "<a class='button' href='?filter=tracks'>🎵 Tracks</a>";
+	if (count(file("$webDirectory/random/tracks.index")) > 2){
+		echo "<a class='button' href='?filter=tracks'>🎵 Tracks</a>";
+	}
 }
 if (file_exists("$webDirectory/random/graphs.index")){
-	echo "<a class='button' href='?filter=graphs'>📊 Graphs</a>";
+	if (count(file("$webDirectory/random/graphs.index")) > 2){
+		echo "<a class='button' href='?filter=graphs'>📊 Graphs</a>";
+	}
 }
 ?>
 <a class='button' href='?filter=all'>📜 All</a>
@@ -65,9 +83,9 @@ if (file_exists("$webDirectory/random/graphs.index")){
 flush();
 ob_flush();
 
-$cacheFile="random_$filterType.index";
+$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/random_$filterType.index";
 if (file_exists($cacheFile)){
-	if (time()-filemtime($cacheFile) > 300){
+	if (time()-filemtime($cacheFile) > 30){
 		// update the cached file
 		$writeFile=true;
 	}else{
@@ -81,15 +99,9 @@ if (file_exists($cacheFile)){
 # load the cached file or write a new cached fill
 if ($writeFile){
 	ignore_user_abort(true);
-	$fileHandle = fopen($_SERVER['DOCUMENT_ROOT']."/random/".$filterType.".index",'w');
+	$fileHandle = fopen($cacheFile,'w');
 	// get a list of all the genetrated index links for the page
-	if ( "$filterType" == "all" ){
-		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
-	}else if ( "$filterType" == "episodes" ){
-		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/new/".$filterType.".index", FILE_IGNORE_NEW_LINES);
-	}else{
-		$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/".$filterType."/".$filterType.".index", FILE_IGNORE_NEW_LINES);
-	}
+	$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/random/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 
 	# remove list duplicates
 	$sourceFiles = array_unique($sourceFiles);
@@ -120,7 +132,7 @@ if ($writeFile){
 	ignore_user_abort(false);
 }else{
 	# load the cached file
-	echo file_get_contents($_SERVER['DOCUMENT_ROOT']."/random_$filterType.index");
+	echo file_get_contents($cacheFile);
 }
 ?>
 </div>

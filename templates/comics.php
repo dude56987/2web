@@ -25,12 +25,11 @@
 
 <?php
 if (file_exists("/var/cache/2web/web/comics/comics.index")){
-	// get a list of all the genetrated index links for the page
-	//$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/comics/*/comic.index | sort"));
+	// get a list of all the generated index links for the page
 	$sourceFiles = file("/var/cache/2web/web/comics/comics.index", FILE_IGNORE_NEW_LINES);
-	// reverse the time sort
-	$sourceFiles = array_reverse($sourceFiles);
 	$sourceFiles = array_unique($sourceFiles);
+	# sort everything in alphabetical order
+	sort($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){
