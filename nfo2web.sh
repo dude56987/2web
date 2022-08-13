@@ -871,20 +871,28 @@ processEpisode(){
 		#INFO "Episode season = '$episodeSeason'"
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
 		#INFO "Episode air date = '$episodeAired'"
+		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,4\}//g")
 		if [ "$episodeSeason" -lt 10 ];then
-			if ! echo "$episodeSeason"| grep "^0";then
-				# add a zero to make it format correctly
-				episodeSeason="0$episodeSeason"
-			fi
+			# add a zero to make it format correctly
+			episodeSeason="000$episodeSeason"
+		elif [ "$episodeSeason" -lt 100 ];then
+			# add a zero to make it format correctly
+			episodeSeason="00$episodeSeason"
+		elif [ "$episodeSeason" -lt 1000 ];then
+			episodeSeason="0$episodeSeason"
 		fi
 		episodeSeasonPath="Season $episodeSeason"
 		#INFO "Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
+		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,4\}//g")
 		if [ "$episodeNumber" -lt 10 ];then
-			if ! echo "$episodeNumber"| grep -q "^0";then
-				# add a zero to make it format correctly
-				episodeNumber="0$episodeNumber"
-			fi
+			# add a zero to make it format correctly
+			episodeNumber="000$episodeNumber"
+		elif [ "$episodeNumber" -lt 100 ];then
+			# add a zero to make it format correctly
+			episodeNumber="00$episodeNumber"
+		elif [ "$episodeNumber" -lt 1000 ];then
+			episodeNumber="0$episodeNumber"
 		fi
 		#INFO "Episode number = '$episodeNumber'"
 

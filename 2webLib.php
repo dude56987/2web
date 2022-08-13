@@ -1,7 +1,10 @@
 <?PHP
+################################################################################
 // contains common functions used by 2web php scripts
+################################################################################
+ini_set('display_errors', 1);
+################################################################################
 function drawPosterWidget($filterType, $random=False){
-	ini_set('display_errors', 1);
 	if ($random){
 		$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/$filterType/$filterType.index";
 	}else{
@@ -106,6 +109,7 @@ function drawPosterWidget($filterType, $random=False){
 		ob_flush();
 	}
 }
+################################################################################
 function detectEnabledStatus($filePath){
 	# return true if a $filePath exists and contains the text "enabled"
 	if (file_exists($filePath)){

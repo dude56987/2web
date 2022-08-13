@@ -904,6 +904,7 @@ input{
 .listCard .indexSeries{
 	width: 4rem !important;
 	min-height: 4rem !important;
+	max-height: 6rem !important;
 }
 .listCard .indexSeries div{
 	display: none;
@@ -983,7 +984,9 @@ p:before {
 }
 p{
 	padding: 10px;
+	/*
 	text-indent: 2rem;
+	*/
 }
 dl{
 	text-align: left;
@@ -1473,6 +1476,14 @@ pre{
 }
 .albumArt{
 	height: auto !important;
+	max-height: 6rem;
+}
+.trackWaveform{
+	width: 100%;
+	height:4rem;
+}
+.trackListing .track h2{
+	display: none !important;
 }
 .graphLink{
 	display: inline-block;
@@ -1480,4 +1491,10 @@ pre{
 }
 .graphLink img{
 	width: 100%;
+}
+.homeWeather{
+	text-decoration: none;
+}
+.homeFortune{
+	text-decoration: none;
 }

@@ -37,6 +37,9 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	<img class='albumPlayerThumb' src='album.png' />
 	<div class='albumPlayerInfo'>
 			<?php
+			if (array_key_exists("play",$_GET)){
+				$track=($_GET['play']);
+			}
 			if (file_exists("artist.cfg")){
 				echo "<div>Artist: ";
 				echo "<a href='..'>";
@@ -50,7 +53,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 				echo "</div>";
 			}
 			if (array_key_exists("play",$_GET)){
-				$track=($_GET['play']);
 				if (file_exists("$track.mp3")){
 					echo "<div>Duration: ";
 					echo file_get_contents($track."_length.cfg");
@@ -64,6 +66,11 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 				echo "<div>Genre: ";
 				echo file_get_contents("genre.cfg");
 				echo "</div>";
+			}
+			if (array_key_exists("play",$_GET)){
+				if (file_exists("$track.png")){
+					echo "<img class='trackWaveform' loading='lazy' src='$track.png'>";
+				}
 			}
 			?>
 	</div>
@@ -83,7 +90,7 @@ if (array_key_exists("play",$_GET)){
 }
 ?>
 
-<div class='settingListCard'>
+<div class='settingListCard trackListing'>
 <h2>Tracks</h2>
 <?php
 if (file_exists("tracks.index")){

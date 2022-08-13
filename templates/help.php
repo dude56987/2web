@@ -40,7 +40,7 @@ include("header.php")
 </div>
 
 <p>
-For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics to kodi media centers. This also discusses how to use hard link buttons on media.
+For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics ( comics/books ) to kodi media centers. This also discusses how to use direct link buttons on media and alternative ( desktop/tablet/phone ) software for access.
 </p>
 
 </div>

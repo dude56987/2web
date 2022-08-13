@@ -142,6 +142,7 @@ update2web(){
 	createDir "$webDirectory/settings/"
 	createDir "$webDirectory/sums/"
 	createDir "$webDirectory/views/"
+	createDir "$webDirectory/backups/"
 
 	# create config files if they do not exist
 	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
@@ -218,14 +219,20 @@ update2web(){
 	counter=0
 	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
 		# if there are any users
+		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
 		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
+		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
+		# copy server users to administrator list
 		cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 	else
 		# if there are no users set in the cfg remove the .htaccess file
 		if test -f "$webDirectory/.htaccess";then
-			rm "$webDirectory/.htaccess"
+			#rm "$webDirectory/.htaccess"
+			rm "$webDirectory/settings/.htaccess"
+			rm "$webDirectory/backups/.htaccess"
 		fi
 	fi
+	createDir "$webDirectory/RESOLVER-CACHE/"
 
 	if ! test -d "$webDirectory/RESOLVER-CACHE/";then
 		# build the cache directory if none exists
@@ -366,7 +373,7 @@ main(){
 		/usr/bin/nfo2web &
 		/usr/bin/graph2web &
 		/usr/bin/iptv2web &
-		/usr/bin/comic2web &
+		/usr/bin/comic2web --parallel &
 		/usr/bin/music2web &
 		while 1;do
 			sleep 1
@@ -391,24 +398,31 @@ main(){
 		# run the reboot check after all modules have finished running
 		rebootCheck
 	elif [ "$1" == "-I" ] || [ "$1" == "--iptv" ] || [ "$1" == "iptv" ];then
+		update2web
 		/usr/bin/iptv2web
 		rebootCheck
 	elif [ "$1" == "-Y" ] || [ "$1" == "--ytdl" ] || [ "$1" == "ytdl" ];then
+		update2web
 		/usr/bin/ytdl2nfo
 		rebootCheck
 	elif [ "$1" == "-N" ] || [ "$1" == "--nfo" ] || [ "$1" == "nfo" ];then
+		update2web
 		/usr/bin/nfo2web
 		rebootCheck
 	elif [ "$1" == "-c" ] || [ "$1" == "--comic" ] || [ "$1" == "comic" ];then
+		update2web
 		/usr/bin/comic2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--weather" ] || [ "$1" == "weather" ];then
+		update2web
 		/usr/bin/weather2web
 		rebootCheck
 	elif [ "$1" == "-m" ] || [ "$1" == "--music" ] || [ "$1" == "music" ];then
+		update2web
 		/usr/bin/music2web
 		rebootCheck
 	elif [ "$1" == "-g" ] || [ "$1" == "--graph" ] || [ "$1" == "graph" ];then
+		update2web
 		/usr/bin/graph2web
 		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
@@ -422,6 +436,7 @@ main(){
 		/usr/bin/music2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
+		update2web
 		# update the website content
 		/usr/bin/nfo2web webgen
 		/usr/bin/iptv2web webgen

@@ -412,6 +412,7 @@ createDir(){
 		# set ownership of directory and subdirectories as www-data
 		chown -R www-data:www-data "$1"
 	fi
+	# set ownership of directory and subdirectories as www-data
 	chown www-data:www-data "$1"
 }
 ################################################################################
@@ -441,6 +442,7 @@ scanPages(){
 			# is a chapter based comic
 			tempComicName="$(pickPath "$imagePath" 3)"
 			tempComicName="$(cleanText "$tempComicName")"
+			tempComicName="$(alterArticles "$tempComicName")"
 			#tempComicChapter="$(pickPath "$imagePath" 2)"
 			tempComicChapter=$pageChapter
 			if cacheCheck "$webDirectory/comics/$tempComicName/$tempComicChapter/index.php" 10;then
@@ -483,6 +485,8 @@ scanPages(){
 			# is a single chapter comic
 			tempComicName="$(pickPath "$imagePath" 2)"
 			tempComicName="$(cleanText "$tempComicName")"
+			tempComicName="$(alterArticles "$tempComicName")"
+
 			if cacheCheck "$webDirectory/comics/$tempComicName/index.php" 10;then
 				createDir "$webDirectory/comics/$tempComicName/"
 				# link the image file to the web directory
@@ -503,13 +507,38 @@ scanPages(){
 				linkFile "$imagePath" "$webDirectory/comics/$tempComicName/$pageNumber.jpg"
 				# render the page
 				renderPage "$imagePath" "$webDirectory" $pageNumber single
+				# scan the new comic into the index
+				searchForNewComics "$webDirectory"
 			else
 				# exit scanning pages into the comic because the index was built within the last 10 days
 				return
 			fi
 		fi
 	done
-
+}
+################################################################################
+function alterArticles(){
+	pageComicName=$1
+	# alter the title to make articles(a, an, the) sort correctly
+	if echo "$pageComicName" | grep --ignore-case -q "^the ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[T,t][H,h][E,e] //g")
+		pageComicName="$pageComicName, The"
+	fi
+	if echo "$pageComicName" | grep --ignore-case -q "^a ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a] //g")
+		pageComicName="$pageComicName, A"
+	fi
+	if echo "$pageComicName" | grep --ignore-case -q "^an ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a][N,n] //g")
+		pageComicName="$pageComicName, An"
+	fi
+	# check for id #s
+	if echo "$pageComicName" | grep --ignore-case -q "^[0-9]\{4,\} ";then
+		comicIdNumber=$(echo "$pageComicName" | cut -d' ' -f1)
+		pageComicName=$(echo "$pageComicName" | sed "s/^[0-9]\{4,\} //g")
+		pageComicName="$pageComicName, $comicIdNumber"
+	fi
+	echo "$pageComicName"
 }
 ################################################################################
 renderPage(){
@@ -525,11 +554,14 @@ renderPage(){
 	else
 		isChapter=false
 	fi
+
 	################################################################################
 	pageName=$(popPath "$page")
 	if [ $isChapter = true ];then
 		pageComicName=$(pickPath "$page" 3 | tr -d "'")
 		pageComicName=$(cleanText "$pageComicName")
+		# cleanup (The, A ,An) at start of titles to make sorting work correctly
+		pageComicName=$(alterArticles "$pageComicName")
 		# remove : as it breaks web paths
 		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 		# multi chapter comic
@@ -555,6 +587,7 @@ renderPage(){
 		# single chapter comic
 		pageComicName=$(pickPath "$page" 2)
 		pageComicName=$(cleanText "$pageComicName")
+		pageComicName=$(alterArticles "$pageComicName")
 		# remove : as it breaks web paths
 		#pageComicName=$(echo "$pageComicName" | sed "s/:/~/g" )
 
@@ -801,6 +834,22 @@ renderPage(){
 	# if this is the last page build the index for the comic
 	#if [ $nextPage -ge $totalPages ];then
 	if [ $buildPagesIndex = true ];then
+		if ! test -f "$comicNamePath/comic.index";then
+			{
+				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+				echo "<div>$tempComicName</div>"
+				echo "</a>"
+			} > "$comicNamePath/comics.index"
+		fi
+
+		# add the comic to the main comic index since it has been updated
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
+		# add the updated show to the new shows index
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
+		# random indexes
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/random/comics.index"
+
 		# start building the comic index since this is the last page
 		{
 			echo "<html>"
@@ -1035,6 +1084,33 @@ renderPage(){
 	fi
 }
 ################################################################################
+searchForNewComics(){
+	webDirectory=$1
+	# search for new comics
+	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
+		# create the comic index files here in order to allow dynamic index view during updates
+		tempComicName="$(popPath "$comicNamePath")"
+		tempComicName="$(cleanText "$tempComicName")"
+		tempComicName="$(alterArticles "$tempComicName")"
+
+		if ! test -f "$comicNamePath/comic.index";then
+			{
+				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+				echo "<div>$tempComicName</div>"
+				echo "</a>"
+			} > "$comicNamePath/comics.index"
+		fi
+
+		# add the comic to the main comic index since it has been updated
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
+		# add the updated show to the new shows index
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
+		# random indexes
+		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/random/comics.index"
+	done
+}
+################################################################################
 webUpdate(){
 	# read the download directory and convert comics into webpages
 	# - There are 2 types of directory structures for comics in the download directory
@@ -1076,18 +1152,30 @@ webUpdate(){
 
 				INFO "link the comics to the kodi directory"
 				# link this comic to the kodi directory
-				if test -d "$webDirectory/kodi/comics/";then
-					ln -s "$comicNamePath" "$webDirectory/kodi/comics/"
-				fi
+				createDir "$comicNamePath" "$webDirectory/kodi/comics/"
+
 				INFO "scanning comic path '$comicNamePath'"
 				# add one to the total comics
 				totalComics=$(( $totalComics + 1 ))
+				totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
 				# build the comic index page
 				if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
 					INFO "scanning single chapter comic '$comicNamePath'"
 					# if this directory contains .jpg or .png files then this is a single chapter comic
 					# - build the individual pages for the comic
-					scanPages "$comicNamePath" "$webDirectory" single
+					if echo "$@" | grep -q -e "--parallel";then
+						# pause execution while no cpus are open
+						while true;do
+							if [ $(jobs | wc -l) -ge $totalCPUS ];then
+								sleep 0.5
+							else
+								break
+							fi
+						done
+						scanPages "$comicNamePath" "$webDirectory" single &
+					else
+						scanPages "$comicNamePath" "$webDirectory" single
+					fi
 				else
 					# if this is not a single chapter comic then read the subdirectories containing
 					#   each of the individual chapters
@@ -1100,31 +1188,35 @@ webUpdate(){
 						chapterNumber=$(prefixNumber $chapterNumber)
 						# check if the chapter should be updated before running through all pages
 						# for each chapter build the individual pages
-						scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
+						if echo "$@" | grep -q -e "--parallel";then
+							# pause execution while no cpus are open
+							while true;do
+								if [ $(jobs | wc -l) -ge $totalCPUS ];then
+									sleep 0.5
+								else
+									break
+								fi
+							done
+							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+						else
+							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
+						fi
 					done
 				fi
-				# search for new comics
-				find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
-					# create the comic index files here in order to allow dynamic index view during updates
-					tempComicName="$(popPath "$comicNamePath")"
-					if ! test -f "$comicNamePath/comic.index";then
-						{
-							echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-							echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-							echo "<div>$tempComicName</div>"
-							echo "</a>"
-						} > "$comicNamePath/comics.index"
-					fi
-
-					# add the comic to the main comic index since it has been updated
-					echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
-					# add the updated show to the new shows index
-					echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
-				done
 			done
 			# finish website tag index page
 		done
 	done
+	# block for parallel threads here
+	if echo "$@" | grep -q -e "--parallel";then
+		while 1;do
+			if [ $(jobs | wc -l) -eq 0 ];then
+				break
+			else
+				sleep 1
+			fi
+		done
+	fi
 	INFO "Writing total Comics "
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
 	INFO "Checking for comic index page..."
@@ -1157,6 +1249,12 @@ webUpdate(){
 		tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
+	if test -f "$webDirectory/random/comics.index";then
+		# new comics
+		tempList=$(cat "$webDirectory/random/comics.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/random/comics.index"
+	fi
+
 }
 ################################################################################
 function resetCache(){
@@ -1193,7 +1291,10 @@ lockProc(){
 		# set the active flag
 		touch /tmp/comic2web.active
 		# create a trap to remove nfo2web lockfile
+		# also stop all jobs created in parallel
+		#trap "rm -v /tmp/comic2web.active;kill \$\(jobs -p\)" EXIT
 		trap "rm -v /tmp/comic2web.active" EXIT
+		#trap "rm -v /tmp/comic2web.active && kill \$\(jobs -p\)" EXIT
 	fi
 }
 ################################################################################
@@ -1204,7 +1305,7 @@ main(){
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		# lock the process
 		lockProc
-		webUpdate
+		webUpdate "$@"
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		# lock the process
 		lockProc
@@ -1230,11 +1331,11 @@ main(){
 		# lock the process
 		lockProc
 		# gen prelem website
-		webUpdate
+		webUpdate "$@"
 		# update sources
 		update
 		# update webpages
-		webUpdate
+		webUpdate "$@"
 		# display the help
 		main --help
 		# on default execution show the server links at the bottom of output

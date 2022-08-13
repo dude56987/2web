@@ -235,7 +235,7 @@ function update(){
 				# read each line of the forcast info
 				echo "$todaysForcast" | while read forcast;do
 					# pull forcast time
-					timeOfForcast=$(echo "$forcast"	| cut -d'.' -f1 | sed "s/EARLY THIS //g" | sed "s/LATE THIS //g"  | sed "s/REST OF //g" | sed "s/THIS //g" )
+					timeOfForcast=$(echo "$forcast"	| cut -d'.' -f1 | sed "s/THROUGH EARLY //g" | sed "s/EARLY THIS //g" | sed "s/LATE THIS //g"  | sed "s/REST OF //g" | sed "s/THIS //g" )
 					if [ $( echo -n "$timeOfForcast" | wc -c) -gt 0 ];then
 						# pull forcast info for time
 						tempForcast=$(echo "$forcast"	| cut -d'.' -f4-)

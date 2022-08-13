@@ -70,8 +70,8 @@ foreach($sourceFiles as $sourceFile){
 <h1>Active/Blocked Groups</h1>
 <?php
 // find all the groups
-if (file_exists("/var/cache/2web/nfo/web/live/groups/")){
-	$sourceFiles=scandir("/var/cache/2web/nfo/web/live/groups/");
+if (file_exists("/var/cache/2web/web/live/groups/")){
+	$sourceFiles=scandir("/var/cache/2web/web/live/groups/");
 	$sourceFiles=array_diff($sourceFiles,array('..','.'));
 	$groups=array();
 	# read the directory name and make a button to block it
@@ -85,9 +85,9 @@ if (file_exists("/var/cache/2web/nfo/web/live/groups/")){
 			echo "<div class='enabledSetting settingsEntry'>\n";
 		}
 		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "		<h3>\n";
+		echo "		<h2>\n";
 		echo "			$sourceFile";
-		echo "		</h3>\n";
+		echo "		</h2>\n";
 		echo "		<div class='buttonContainer'>\n";
 		# if the group has been blocked
 		if(in_array($sourceFile, $blockedGroups)){
@@ -105,9 +105,9 @@ if (file_exists("/var/cache/2web/nfo/web/live/groups/")){
 		# if the group has been blocked
 		echo "<div class='disabledSetting settingsEntry'>\n";
 		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "		<h3>\n";
+		echo "		<h2>\n";
 		echo "			$groupName";
-		echo "		</h3>\n";
+		echo "		</h2>\n";
 		echo "		<div class='buttonContainer'>\n";
 		# if the group has been blocked
 		echo "			<button class='button' type='submit' name='unblockGroup' value='".$groupName."'>UNBLOCK</button>\n";
