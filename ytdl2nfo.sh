@@ -1444,10 +1444,10 @@ ytdl2kodi_video_extractor(){
 function nuke(){
 	echo "########################################################################"
 	echo "[INFO]: Reseting web cache to blank..."
-	rm -rv "$downloadPath"
 	downloadPath=$(getDownloadPath)
+	rm -rv "$downloadPath"
 	# recreate the download path and placeholder
-	rm -rv "$downloadPath"/*
+	#rm -rv "$downloadPath"/*
 	touch "$downloadPath.placeholder"
 	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 	echo "[SUCCESS]: Site will remain the same until updated."
