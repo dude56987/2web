@@ -103,6 +103,8 @@ function update(){
 			# the module is enabled
 			echo "Preparing to process graphs..."
 		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/graph2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
 			# the module is not enabled
 			# - remove the files and directory if they exist
 			nuke
@@ -283,10 +285,13 @@ function cacheCheck(){
 }
 ################################################################################
 function nuke(){
-		# remove the kodi and web graph files
-		rm -rv $(webRoot)/graphs/ || echo "No files found in graph web directory..."
-		rm -rv $(webRoot)/graphs/* || echo "No files found in graph web directory..."
-		rm -rv $(webRoot)/new/graphs.index || echo "No graph index..."
+	# remove the kodi and web graph files
+	rm -rv $(webRoot)/graphs/ || echo "No files found in graph web directory..."
+	rm -rv $(webRoot)/graphs/* || echo "No files found in graph web directory..."
+	rm -rv $(webRoot)/new/graphs.index || echo "No graph index..."
+	rm -rv $(webRoot)/random/graphs.index || echo "No graph index..."
+	rm -v $(webRoot)/web_cache/widget_random_graphs.index
+	rm -v $(webRoot)/web_cache/widget_new_graphs.index
 }
 ################################################################################
 main(){

@@ -136,9 +136,14 @@ ALERT(){
 }
 ########################################################################
 processTrack(){
-	musicPath=$1
-	totalProgressString=$2
+	musicPath="$1"
+	totalProgressString="$2"
 	webDirectory=$(webRoot)
+	if ! test -f "$musicPath";then
+		ALERT "FILE PATH DOES NOT EXIST '$musicPath'"
+		# the file path given does not exist so exit the loop
+		return
+	fi
 	# check the md5sum of the music file
 	if checkFileDataSum "$webDirectory" "$musicPath";then
 		# get the web root
@@ -211,8 +216,8 @@ processTrack(){
 			albumOG=$album
 
 			# paths must be cleaned up for compatiblity
-			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | sed "s/'/\`/g" )
-			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | sed "s/'/\`/g" )
+			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
+			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
 
 			# if the track is less than 10 add a preceding zero for sorting
 			if [ "$track" -lt 10 ];then
@@ -220,7 +225,7 @@ processTrack(){
 			fi
 
 			# list the track info
-			processingInfo="🎤:$artistOG | 💿:$albumOG | 🔢:$track | 🗓️:$date | $totalProgressString | "
+			processingInfo="🎤:$artistOG | 💿:$albumOG | 🔢:$track | 🗓️:$date | ⚙️:$totalProgressString | "
 			INFO "$processingInfo"
 			#echo "################################################################################"
 			#echo "================================================================================"
@@ -246,6 +251,7 @@ processTrack(){
 			createDir "$webDirectory/kodi/music/$artist/$album/"
 			# link the file in the web path
 			if echo "$musicPath" | grep -q ".mp3$";then
+				INFO "${processingInfo}Linking mp3 to web directory..."
 				linkFile "$musicPath" "$webDirectory/music/$artist/$album/${track}.mp3"
 			else
 				# convert  all found audio files to mp3 for compatibilty with the html5 player
@@ -259,6 +265,7 @@ processTrack(){
 			################################################################################
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/album.png";then
 				lookingPath=$(echo "$musicPath" | rev | cut -d'/' -f2- | rev )
+
 				if test -f "$lookingPath/album.png";then
 					linkFile "$lookingPath/album.png" "$webDirectory/music/$artist/$album/album.png"
 				elif test -f "$lookingPath/album.jpg";then
@@ -280,7 +287,7 @@ processTrack(){
 				# try to find a album cover inside the mp3 file tags
 				if ! test -f "$webDirectory/music/$artist/$album/album.png";then
 					INFO "${processingInfo}Extracting album cover from file..."
-					ffmpeg -loglevel quiet -i "$musicPath" -an -vcodec copy "$webDirectory/music/$artist/$album/album.png"
+					ffmpeg -loglevel quiet -y -i "$musicPath" -an -vcodec copy "$webDirectory/music/$artist/$album/album.png"
 					#ffmpeg -loglevel quiet -y -ss 1 -i "$musicPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/music/$artist/$album/album.png"
 				fi
 
@@ -552,6 +559,8 @@ function update(){
 	# load sources
 	musicSources=$(grep -v "^#" /etc/2web/music/libaries.cfg)
 	musicSources=$(echo -en "$musicSources\n$(grep --invert-match --no-filename "^#" /etc/2web/music/libaries.d/*.cfg)")
+	musicSources=$(echo "$musicSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -572,21 +581,29 @@ function update(){
 	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
 	totalTracks=0
 	processedTracks=0
+	totalTrackList=""
 	# tally up the total tracks
 	for musicSource in $musicSources;do
 		tempFoundTracks=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | wc -l)
-		echo "incrementing total tracks"
-		echo "totalTracks $totalTracks + tempFoundTracks $tempFoundTracks"
+		#echo -n "totalTracks $totalTracks + tempFoundTracks $tempFoundTracks"
+		#echo -n "+ $tempFoundTracks"
+		totalTrackList="${totalTrackList}${tempFoundTracks}\n"
 		totalTracks=$(( $totalTracks + $tempFoundTracks ))
-		echo "__________________________________________________________"
-		echo "= $totalTracks"
 	done
-	echo "$musicSources" | shuf | while read musicSource;do
+	#echo "_____________"
+	#echo "= $totalTracks"
+	#ALERT "CLI OPTIONS $@"
+	echo "$musicSources" | shuf | while read -r musicSource;do
+		#ALERT "MUSIC SOURCE: $musicSource"
 		# scan inside the music source directories for mp3 files
-		#ALERT "Scanning Music Source: $musicSource"
-		ALERT "CLI OPTIONS $@"
+		musicFiles=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$")
+		musicFiles=$(echo "$musicFiles" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
 		#find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | shuf | while read musicPath;do
-		find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | sort | while read musicPath;do
+		#ALERT "MUSIC FILES : $musicFiles"
+		IFS=$'\n'
+		#echo "$musicFiles\n$musicFiles" | uniq | shuf | while read -r musicPath;do
+		for musicPath in $musicFiles;do
+			#ALERT "MUSIC FILE PATH IN LOOP : $musicPath"
 			# block for parallel threads here if there are more threads than cpus
 			if echo "$@" | grep -q -e "--parallel";then
 				# block adding thread if there are more threads than cpus
@@ -612,7 +629,7 @@ function update(){
 			if [ $(jobs | wc -l) -eq 0 ];then
 				break
 			else
-				sleep 0.1
+				sleep 0.5
 			fi
 		done
 	fi
@@ -706,7 +723,7 @@ function resetCache(){
 	# remove web cache
 	rm -rv "$webDirectory/music/"
 	exit
-	find "$webDirectory/music/" -mindepth 1 -maxdepth 1 -type d | while read musicPath;do
+	find "$webDirectory/music/" -mindepth 1 -maxdepth 1 -type d | while read -r musicPath;do
 		if [ ! "$musicPath" == "$webDirectory/musicCache/" ];then
 			# music
 			echo "rm -rv '$musicPath'"
@@ -768,7 +785,48 @@ function cacheCheck(){
 	fi
 }
 ################################################################################
+function nuke(){
+	# remove the kodi and web music files
+	rm -rv $(webRoot)/music/* || echo "No files found in music web directory..."
+	rm -rv $(webRoot)/kodi/music/* || echo "No files found in kodi directory..."
+	# sum directory
+	rm -rv $(webRoot)/sums/* || echo "No file sums found in kodi directory..."
+	# new indexes
+	rm -rv $(webRoot)/new/music.index || echo "No music index..."
+	rm -rv $(webRoot)/new/albums.index || echo "No album index..."
+	rm -rv $(webRoot)/new/artists.index || echo "No artist index..."
+	rm -rv $(webRoot)/new/tracks.index || echo "No track index..."
+	# random indexes
+	rm -rv $(webRoot)/random/music.index || echo "No music index..."
+	rm -rv $(webRoot)/random/albums.index || echo "No album index..."
+	rm -rv $(webRoot)/random/artists.index || echo "No artist index..."
+	rm -rv $(webRoot)/random/tracks.index || echo "No track index..."
+}
+################################################################################
 main(){
+	# check if the module is enabled
+	if test -f "/etc/2web/mod_status/music2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/music2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process graphs..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/graph2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/music2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/music2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
 	################################################################################
 	webRoot
 	################################################################################
@@ -783,21 +841,7 @@ main(){
 		resetCache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		lockCheck
-		# remove the kodi and web music files
-		rm -rv $(webRoot)/music/* || echo "No files found in music web directory..."
-		rm -rv $(webRoot)/kodi/music/* || echo "No files found in kodi directory..."
-		# sum directory
-		rm -rv $(webRoot)/sums/* || echo "No file sums found in kodi directory..."
-		# new indexes
-		rm -rv $(webRoot)/new/music.index || echo "No music index..."
-		rm -rv $(webRoot)/new/albums.index || echo "No album index..."
-		rm -rv $(webRoot)/new/artists.index || echo "No artist index..."
-		rm -rv $(webRoot)/new/tracks.index || echo "No track index..."
-		# random indexes
-		rm -rv $(webRoot)/random/music.index || echo "No music index..."
-		rm -rv $(webRoot)/random/albums.index || echo "No album index..."
-		rm -rv $(webRoot)/random/artists.index || echo "No artist index..."
-		rm -rv $(webRoot)/random/tracks.index || echo "No track index..."
+		nuke
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
 		pip3 install --upgrade gallery-dl

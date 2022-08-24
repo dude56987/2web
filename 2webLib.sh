@@ -194,3 +194,28 @@ function updateCerts(){
 	fi
 }
 ########################################################################
+function checkModStatus(){
+	configFile="$1"
+	if test -f "/etc/2web/mod_status/$configFile";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/$configFile";then
+			# the module is enabled
+			echo "Preparing to process graphs..."
+		else
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo "enabled" > "/etc/2web/mod_status/$configFile"
+		chown www-data:www-data "/etc/2web/mod_status/$configFile"
+		# exit the script since by default the module is disabled
+		exit
+	fi
+}
+########################################################################
+

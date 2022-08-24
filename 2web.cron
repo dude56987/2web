@@ -5,56 +5,82 @@
 # - Change the commented lines to store logs
 ################################################################################
 # cleanup interrupted updates on reboot
-#@reboot root /bin/rm /tmp/nfo2web.active >> /var/log/nfo2web.log
+#@reboot root /bin/rm /tmp/nfo2web.active >> /var/log/2web_nfo.log
 @reboot root /bin/rm /tmp/nfo2web.active
-#@reboot root /bin/rm /tmp/iptv2web.active >> /var/log/iptv2web.log
+#@reboot root /bin/rm /tmp/iptv2web.active >> /var/log/2web_iptv.log
 @reboot root /bin/rm /tmp/iptv2web.active
-#@reboot root /bin/rm /tmp/comic2web.active >> /var/log/comic2web.log
+#@reboot root /bin/rm /tmp/comic2web.active >> /var/log/2web_comic.log
 @reboot root /bin/rm /tmp/comic2web.active
+#@reboot root /bin/rm /tmp/weather2web.active >> /var/log/2web_weather.log
+@reboot root /bin/rm /tmp/weather2web.active
+#@reboot root /bin/rm /tmp/graph2web.active >> /var/log/2web_graph.log
+@reboot root /bin/rm /tmp/graph2web.active
+
+################################################################################
+# run 2web to build the base website and update the site configuration changes
+#@reboot root /usr/bin/2web > /var/log/2web.log
+#@hourly root /usr/bin/2web > /var/log/2web.log
+@reboot root /usr/bin/2web
+@hourly root /usr/bin/2web
+
 ################################################################################
 # update every 4 hours, if youtube sources are included updates can be frequent
-#0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/nfo2web.log
+#0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/2web_nfo.log
 0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web
+
 ################################################################################
 # update the iptv lists once a week changes to these are more infrequent
 #@weekly root /usr/bin/niceload /usr/bin/iptv2web update > /var/log/iptv2web_update.log
 @weekly root /usr/bin/niceload /usr/bin/iptv2web
+
 ################################################################################
 # update the comic books
+#@monthly root /usr/bin/niceload /usr/bin/comic2web > /var/log/2web_comic.log
 @monthly root /usr/bin/niceload /usr/bin/comic2web
 ################################################################################
-# once a day check for updates to fast moving metadata extraction packages
-#@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade > /var/log/iptv2web_upgrade.log
-@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade
+# A parallel threaded option for comic2web
+# - disable the comic2web option without --parallel
+#@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel > /var/log/2web_comic.log
+#@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel
+
 ################################################################################
-# update the hls.js libary
-#@monthly root /usr/bin/niceload /usr/bin/iptv2web libary > /var/log/iptv2web_libary.log
-@monthly root /usr/bin/niceload /usr/bin/iptv2web libary
+# update the music
+#@monthly root /usr/bin/niceload /usr/bin/music2web > /var/log/2web_music.log
+@monthly root /usr/bin/niceload /usr/bin/music2web
 ################################################################################
-# clean resolver cache daily, remove cached files older than 7 days
-# also run cache cleanup after reboot
-#@daily root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
-@daily root /usr/bin/niceload /usr/bin/2web cleancache
-@reboot root /usr/bin/niceload /usr/bin/2web cleancache
+# A parallel threaded option for music2web
+# - disable the music2web option without --parallel
+#@monthly root /usr/bin/niceload /usr/bin/music2web --parallel > /var/log/2web_music.log
+#@monthly root /usr/bin/niceload /usr/bin/music2web --parallel
+
 ################################################################################
-# Please choose only one of the below update schedules for ytdl2nfo
-################################################################################
-# run update every hour, individual channels have individual delays
-@daily root	/usr/bin/niceload /usr/bin/ytdl2nfo
-#@reboot root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every 4 hours
-#* */4 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every 6 hours
-#* */6 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every 12 hours
-#* */12 * * *	root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every day once
-#@daily	root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every week once
-#@weekly root	/usr/bin/niceload /usr/bin/ytdl2nfo
-# run update every month once
-#@monthly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+# update graph2web
+#@daily root /usr/bin/niceload /usr/bin/graph2web > /var/log/2web_graph.log
+@hourly root	/usr/bin/niceload /usr/bin/graph2web
+
 ################################################################################
 # Update weather info
+#*/15 root /usr/bin/niceload /usr/bin/weather2web > /var/log/2web_weather.log
+*/15 * * * *	root	/usr/bin/niceload /usr/bin/weather2web
+
 ################################################################################
-*/10 * * * *	root	/usr/bin/niceload /usr/bin/weather2web
+# run update every hour, individual channels have individual delays
+#@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
+@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+
+################################################################################
+# Upgrade Components of the Libary, and cleanup cache
+################################################################################
+# update the hls.js libary
+#@monthly root /usr/bin/niceload /usr/bin/iptv2web libary > /var/log/2web_iptv_libary.log
+@monthly root /usr/bin/niceload /usr/bin/iptv2web libary
+################################################################################
+# once a day check for updates to fast moving metadata extraction packages
+#@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade > /var/log/2web_iptv_upgrade.log
+@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade
+################################################################################
+# clean resolver cache daily, remove cached files older than 7 days
+#@daily root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
+@daily root /usr/bin/niceload /usr/bin/2web cleancache
+#@reboot root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
+@reboot root /usr/bin/niceload /usr/bin/2web cleancache

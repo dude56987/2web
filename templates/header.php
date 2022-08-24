@@ -78,32 +78,36 @@ if ($writeFile){
 	if (file_exists("$webDirectory/comics/comics.index")){
 		$fileData .= "<a class='button' href='/comics'>";
 		$fileData .= "📚";
-		#$fileData .= "&#128218;";
 		$fileData .= "<span class='headerText'>";
 		$fileData .= "COMICS";
 		$fileData .= "</span>";
 		$fileData .= "</a>";
 	}
+
 	if (file_exists("$webDirectory/totalChannels.index")){
 		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
-			$fileData .= "<a class='button' href='/live'>";
-			$fileData .= "📡";
-			#$fileData .= "&#128225;";
-			$fileData .= "<span class='headerText'>";
-			$fileData .= "LIVE";
-			$fileData .= "</span>";
-			$fileData .= "</a>";
+			if (file_exists("$webDirectory/live/index.php")){
+				$fileData .= "<a class='button' href='/live'>";
+				$fileData .= "📡";
+				$fileData .= "<span class='headerText'>";
+				$fileData .= "LIVE";
+				$fileData .= "</span>";
+				$fileData .= "</a>";
+			}
 		}
 	}
 	// read the weather info for weather2web
-	if (file_exists("$webDirectory/totalWeatherStations.index")){
-		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-			$fileData .= "<a class='button' href='/weather/'>";
-			$fileData .= "🌤️";
-			$fileData .= "<span class='headerText'>";
-			$fileData .= "WEATHER";
-			$fileData .= "</span>";
-			$fileData .= "</a>";
+	//
+	if (file_exists("$webDirectory/weather/index.php")){
+		if (file_exists("$webDirectory/totalWeatherStations.index")){
+			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+				$fileData .= "<a class='button' href='/weather/'>";
+				$fileData .= "🌤️";
+				$fileData .= "<span class='headerText'>";
+				$fileData .= "WEATHER";
+				$fileData .= "</span>";
+				$fileData .= "</a>";
+			}
 		}
 	}
 	if (file_exists("$webDirectory/graphs/")){
@@ -124,7 +128,7 @@ if ($writeFile){
 // read the file that is cached
 echo file_get_contents($cacheFile);
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
-	echo "<a class='button headerLoginButton' href='/settings/system.php'>";
+	echo "<a class='button headerLoginButton' href='/settings/modules.php'>";
 	echo "🛠️";
 	echo "<span class='headerText'>";
 	echo "SETTINGS";
@@ -137,7 +141,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "</span>";
 	echo "</a>";
 }else{
-	echo "<a class='button headerLoginButton' href='/settings/system.php'>";
+	echo "<a class='button headerLoginButton' href='/settings/modules.php'>";
 	echo "🔒";
 	echo "<span class='headerText'>";
 	echo "LOGIN";
@@ -152,7 +156,7 @@ echo "Help";
 echo "</span>";
 echo "</a>";
 
-echo "<div class='loginLogoutBoxSpacer'>";
+//echo "<div class='loginLogoutBoxSpacer'>";
 echo "</div>";
 # close the header bracket
 echo "</div>";
@@ -160,7 +164,7 @@ echo "</div>";
 # if the path is in the settings draw the logout button
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "<div class='loginLogoutBox'>";
-	echo "		<a class='button' href='/settings/system.php'>";
+	echo "		<a class='button' href='/settings/modules.php'>";
 	echo "			🛠️";
 	echo "			<span class='headerText'>";
 	echo "				SETTINGS";
@@ -176,7 +180,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "</div>";
 }else{
 	echo "<div class='loginLogoutBox'>";
-	echo "<a class='button' href='/settings/system.php'>";
+	echo "<a class='button' href='/settings/modules.php'>";
 	echo "🔓";
 	echo "<span class='headerText'>";
 	echo "LOGIN";

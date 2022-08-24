@@ -347,6 +347,29 @@ rebootCheck(){
 	fi
 }
 ################################################################################
+function waitQueue(){
+	sleepTime=$1
+	totalCPUS=$2
+	while true;do
+		if [ $(jobs | wc -l) -ge $totalCPUS ];then
+			sleep $sleepTime
+		else
+			break
+		fi
+	done
+}
+################################################################################
+function blockQueue(){
+	sleepTime=$1
+	while true;do
+		if [ $(jobs | wc -l) -gt 0 ];then
+			sleep $sleepTime
+		else
+			break
+		fi
+	done
+}
+################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -360,21 +383,33 @@ main(){
 		/usr/bin/iptv2web
 		rebootCheck
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
-		# parllelize the processes
+		ALERT "================================================================================"
+		ALERT "PARALLEL MODE"
+		ALERT "================================================================================"
+		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		# parllelize the update processes
 		###########################
 		# update main components
 		# - all processes are locked so conflicts will not arise from launching this process multuple times
 		update2web
 		# update the on-demand downloads
 		/usr/bin/ytdl2nfo &
+		waitQueue 0.5 "$totalCPUS"
 		# update weather
 		/usr/bin/weather2web &
+		waitQueue 0.5 "$totalCPUS"
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web &
+		waitQueue 0.5 "$totalCPUS"
 		/usr/bin/graph2web &
+		waitQueue 0.5 "$totalCPUS"
 		/usr/bin/iptv2web &
+		waitQueue 0.5 "$totalCPUS"
 		/usr/bin/comic2web --parallel &
-		/usr/bin/music2web &
+		waitQueue 0.5 "$totalCPUS"
+		/usr/bin/music2web --parallel &
+		waitQueue 0.5 "$totalCPUS"
+		blockQueue 1
 		while 1;do
 			sleep 1
 			if test -f /tmp/comic2web.active;then
@@ -388,6 +423,8 @@ main(){
 			elif test -f /tmp/music2web.active;then
 				sleep 1
 			elif test -f /tmp/graph2web.active;then
+				sleep 1
+			elif test -f /tmp/ytdl2nfo.active;then
 				sleep 1
 			else
 				# this means all processes have completed
@@ -481,17 +518,12 @@ main(){
 		# delete files older than x days
 		echo "Checking for cache files in $(webRoot)/RESOLVER-CACHE/"
 		if test -d "$(webRoot)/RESOLVER-CACHE/";then
-			find "$(webRoot)/RESOLVER-CACHE/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
+			find "$(webRoot)/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
 		fi
 		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
 		# delete the m3u cache
 		if test -d "$(webRoot)/M3U-CACHE/";then
 			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
-		fi
-		echo "Checking for cache files in $(webRoot)/new/"
-		# delete the new episodes cache
-		if test -d "$(webRoot)/new/";then
-			find "$(webRoot)/new/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt

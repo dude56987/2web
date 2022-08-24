@@ -761,7 +761,8 @@ renderPage(){
 			echo "		&#8617;"
 			echo "		<br>"
 			echo "		<span class='comicPageNumbers'>"
-			echo "			$((10#$pageNumber))/$totalPages"
+			#echo "			$((10#$pageNumber))/$totalPages"
+			echo "			$previousPage"
 			echo "		</span>"
 			echo "	</a>"
 		fi
@@ -776,7 +777,8 @@ renderPage(){
 			echo "		&#8618;"
 			echo "		<br>"
 			echo "		<span class='comicPageNumbers'>"
-			echo "			$((10#$pageNumber))/$totalPages"
+			#echo "			$((10#$pageNumber))/$totalPages"
+			echo "			$nextPage"
 			echo "		</span>"
 			echo "	</a>"
 		fi
@@ -1222,8 +1224,6 @@ webUpdate(){
 	INFO "Checking for comic index page..."
 	# finish building main index page a-z
 	linkFile "/usr/share/2web/templates/comics.php" "$webDirectory/comics/index.php"
-	linkFile "/usr/share/2web/templates/randomComics.php" "$webDirectory/randomComics.php"
-	linkFile "/usr/share/2web/templates/updatedComics.php" "$webDirectory/updatedComics.php"
 	# build links to each comic in the index page
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 		# multi chapter comic
@@ -1298,7 +1298,38 @@ lockProc(){
 	fi
 }
 ################################################################################
+function nuke(){
+	rm -rv $(webRoot)/comics/*
+	rm -rv $(webRoot)/new/comic_*.index
+	# remove widgets cached
+	rm -v $(webRoot)/web_cache/widget_random_comics.index
+	rm -v $(webRoot)/web_cache/widget_new_comics.index
+}
+################################################################################
 main(){
+	# check the mod status
+	if test -f "/etc/2web/mod_status/comic2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/comic2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process graphs..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/comic2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/comic2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/comic2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
 	################################################################################
 	webRoot
 	################################################################################
@@ -1313,8 +1344,7 @@ main(){
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		# lock the process
 		lockProc
-		rm -rv $(webRoot)/comics/*
-		rm -rv $(webRoot)/new/comic_*.index
+		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		# lock the process
 		lockProc

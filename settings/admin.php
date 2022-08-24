@@ -54,6 +54,33 @@ function outputLog($stringData){
 	echo "<br>\n";
 }
 ////////////////////////////////////////////////////////////////////////////////
+function setModStatus($modName,$modStatus){
+	outputLog("Setting graph2web status to ".$modStatus);
+	# read the link and create a custom config
+	$configPath="/etc/2web/mod_status/".$modName.".cfg";
+	outputLog("Checking for Config file ".$configPath);
+	if ( $modStatus == "disabled"){
+		outputLog("Disabled $modName");
+		# this means to remove the link
+		if (file_get_contents($configPath) == "enabled"){
+			//unlink($configPath);
+			file_put_contents($configPath,$modStatus);
+		}else{
+			outputLog("$modName status is already set to ".$modStatus);
+		}
+	}else{
+		# write the libary path to a file at the configPath if the path does not already exist
+		outputLog("Enabled $modName");
+		# enable the graph section
+		if ((file_exists($configPath)) and (file_get_contents($configPath) != "enabled") ){
+			# write the config file
+			file_put_contents($configPath,$modStatus);
+		}else{
+			outputLog("$modName status is already set to ".$modStatus);
+		}
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
 function checkUsernamePass($userName, $password){
 	$passSum = file_get_contents("/etc/2web/users/".md5($userName));
 	if ( $passSum == md5($password) ){
@@ -487,32 +514,44 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("graph2webStatus",$_POST)){
-	$link=$_POST['graph2webStatus'];
-	outputLog("Setting graph2web status to ".$link);
-	# read the link and create a custom config
-	$configPath="/etc/2web/mod_status/graph2web.cfg";
-	outputLog("Checking for Config file ".$configPath);
-	if ( $link == "disabled"){
-		outputLog("Disabled graph2web");
-		# this means to remove the link
-		if (file_get_contents($configPath) == "enabled"){
-			//unlink($configPath);
-			file_put_contents($configPath,$link);
-		}else{
-			outputLog("Status is already set to ".$link);
-		}
-	}else{
-		# write the libary path to a file at the configPath if the path does not already exist
-		outputLog("Enabled graph2web");
-		# enable the graph section
-		if ((file_exists($configPath)) and (file_get_contents($configPath) != "enabled") ){
-			# write the config file
-			file_put_contents($configPath,$link);
-		}else{
-			outputLog("Status is already set to ".$link);
-		}
-	}
-	echo "<hr><a class='button' href='/settings/graphs.php#graph2webStatus'>BACK</a><hr>";
+	$status=$_POST['graph2webStatus'];
+	setModStatus("graph2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#graph2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("nfo2webStatus",$_POST)){
+	$status=$_POST['nfo2webStatus'];
+	setModStatus("nfo2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#nfo2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("comic2webStatus",$_POST)){
+	$status=$_POST['comic2webStatus'];
+	setModStatus("comic2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#comic2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("music2webStatus",$_POST)){
+	$status=$_POST['music2webStatus'];
+	setModStatus("music2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#music2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("iptv2webStatus",$_POST)){
+	$status=$_POST['iptv2webStatus'];
+	setModStatus("iptv2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#iptv2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("weather2webStatus",$_POST)){
+	$status=$_POST['weather2webStatus'];
+	setModStatus("weather2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#weather2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("kodi2webStatus",$_POST)){
+	$status=$_POST['weather2webStatus'];
+	setModStatus("kodi2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#kodi2webStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("ytdl2nfoStatus",$_POST)){
+	$status=$_POST['ytdl2nfoStatus'];
+	setModStatus("ytdl2nfo",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfoStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];

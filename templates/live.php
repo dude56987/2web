@@ -23,11 +23,11 @@ include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
 
 <?php
 // find all the groups
-if(is_dir("/var/cache/nfo2web/web/live/groups/")){
+if(is_dir("/var/cache/2web/web/live/groups/")){
 	echo "<div class='titleCard'>";
 	echo "<h1>Groups</h1>";
 	echo "<div class='listCard'>";
-	$sourceFiles=scandir("/var/cache/nfo2web/web/live/groups/");
+	$sourceFiles=scandir("/var/cache/2web/web/live/groups/");
 	$sourceFiles=array_diff($sourceFiles,array('..','.'));
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;

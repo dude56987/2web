@@ -360,6 +360,7 @@ if (array_key_exists("url",$_GET)){
 		#	mkdir("$webDirectory/RESOLVER-CACHE/");
 		#}
 		// craft the url to the cache link
+		$storagePath = "$webDirectory/RESOLVER-CACHE/$sum/";
 		$url = "/RESOLVER-CACHE/$sum/$sum.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
@@ -367,6 +368,7 @@ if (array_key_exists("url",$_GET)){
 		if (file_exists("$webDirectory$url")){
 			# touch the file to update the mtime and delay cache removal
 			touch($url);
+			touch($storagePath);
 			redirect($url);
 		}else{
 			debug("No file exists in the cache<br>");

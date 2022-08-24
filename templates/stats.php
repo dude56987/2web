@@ -125,9 +125,24 @@ echo "		<span>";
 echo "			Free:$freeSpace";
 echo "		</span>";
 echo "	</div>";
+# check the status of the fortunes for drawing large or small widgets
+$fortuneEnabled = False;
+if ( file_exists("/etc/2web/fortuneStatus.cfg")){
+	$fortuneEnabled = True;
+}
+$weatherEnabled = False;
+if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
+	if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
+		$weatherEnabled = True;
+	}
+}
 if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 	echo "<a class='homeWeather' href='/fortune.php'>";
-	echo "<div class='inputCard'>";
+	if ($weatherEnabled){
+		echo "<div class='inputCard'>";
+	}else{
+		echo "<div class='listCard'>";
+	}
 	echo "<h3>Fortune</h3>";
 	echo "<div class='fortuneText'>";
 	echo "$todaysFortune";
@@ -136,11 +151,17 @@ if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 	echo "</a>";
 }
 if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-	echo "<a class='homeFortune' href='/weather/#".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
-	echo "<div class='inputCard'>";
-	echo "$todaysWeather";
-	echo "</div>";
-	echo "</a>";
+	if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
+		echo "<a class='homeFortune' href='/weather/#".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
+		if ($fortuneEnabled){
+			echo "<div class='inputCard'>";
+		}else{
+			echo "<div class='listCard'>";
+		}
+		echo "$todaysWeather";
+		echo "</div>";
+		echo "</a>";
+	}
 }
 echo "</div>"
 ?>

@@ -21,6 +21,8 @@
 export PS4='${LINENO} +	|	'
 # set tab size to 4 to make output more readable
 tabs 4
+# add main libary
+source /var/lib/2web/common
 ################################################################################
 function INFO(){
 	width=$(tput cols)
@@ -530,23 +532,6 @@ function processLink(){
 	return 0
 }
 ################################################################################
-webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/nfo/web.cfg ];then
-		webDirectory=$(cat /etc/2web/nfo/web.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/2web/cache/"
-	fi
-	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
-	fi
-	echo "$webDirectory"
-}
-################################################################################
 webUpdateCheck(){
 	# if the update number is divisible by x
 	if echo "$1 % 50" | bc ;then
@@ -568,7 +553,7 @@ fullUpdate(){
 	if ! test -f "/etc/2web/iptv/sources.cfg";then
 		# if no config exists create the default config from the template
 		{
-			cat /usr/share/2web/config_defaults/live_sources.cfg
+			cat /etc/2web/config_default/live_sources.cfg
 		} > /etc/2web/iptv/sources.cfg
 	fi
 	# load the link list
@@ -577,7 +562,7 @@ fullUpdate(){
 	if ! test -f "/etc/2web/iptv/radioSources.cfg";then
 		# if no config exists create the default config from the template
 		{
-			cat /usr/share/2web/templates/live_radioSources.cfg
+			cat /etc/2web/config_default/live_radioSources.cfg
 		} > /etc/2web/iptv/radioSources.cfg
 	fi
 	# load the radio link list
@@ -585,10 +570,10 @@ fullUpdate(){
 	################################################################################
 
 	webDirectory=$(webRoot)
-	if test -d "$webDirectory/live/";then
-		mkdir -p "$webDirectory/live/"
-		chown -R www-data:www-data "$webDirectory/live/"
-	fi
+	createDir "$webDirectory/live/"
+
+	# link the live index
+	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
 
 	# generate the placeholder website
 	webGen
@@ -887,6 +872,7 @@ webGen(){
 		main libary
 	fi
 	################################################################################
+	createDir "$webDirectory/live/"
 	# link the home php page
 	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
 	# lists
@@ -1141,7 +1127,7 @@ resetCache(){
 	find "$(webRoot)/live/" -type f -name '*.index' -exec rm -v {} \;
 }
 ################################################################################
-nukeCache(){
+nuke(){
 	webDirectory=$(webRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.html"
@@ -1151,6 +1137,7 @@ nukeCache(){
 	echo " - $webDirectory/live/*.png"
 	echo " - $webDirectory/live/*.js"
 	echo " - $webDirectory/live/cache/*.index"
+	echo " - $webDirectory/live/*"
 	echo "Starting delete..."
 	rm -v "$webDirectory"/live/*.html
 	rm -rv "$webDirectory"/groups/*/
@@ -1159,6 +1146,7 @@ nukeCache(){
 	rm -v "$webDirectory"/live/*.png
 	rm -v "$webDirectory"/live/*.js
 	rm -v "$webDirectory"/live/cache/*.index
+	rm -rv "$webDirectory"/live/
 }
 ################################################################################
 checkCron(){
@@ -1187,6 +1175,29 @@ checkCron(){
 }
 ################################################################################
 main(){
+	# check if the module is enabled
+	if test -f "/etc/2web/mod_status/iptv2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/iptv2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process iptv..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/iptv2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for iptv2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/iptv2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/iptv2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
 	################################################################################
 	# if --debug flag used activate bash debugging for script
 	if echo "$@" | grep "debug";then
@@ -1216,7 +1227,7 @@ main(){
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		nukeCache
+		nuke
 	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
 		checkCron
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
@@ -1224,9 +1235,12 @@ main(){
 		pip3 install --upgrade streamlink
 		pip3 install --upgrade youtube-dl
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
+		ALERT "Checking if Cached HLS.js is older than 120 days..."
 		if cacheCheck "$(webRoot)/live/hls.js" 120;then
+			ALERT "Updating Cached HLS.js..."
 			# download the latest version of the javascript video player libary
-			curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
+			#curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
+			cat /usr/share/2web/iptv/hls.js > "$(webRoot)/live/hls.js"
 			# check the hls.js downloaded correctly
 			if [ $(wc -l "$(webRoot)/live/hls.js") -le 0 ];then
 				# the downloaded file has 0 lines of text and the download has failed

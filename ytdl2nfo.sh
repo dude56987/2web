@@ -1441,7 +1441,44 @@ ytdl2kodi_video_extractor(){
 	return
 }
 ################################################################################
+function nuke(){
+	echo "########################################################################"
+	echo "[INFO]: Reseting web cache to blank..."
+	rm -rv "$downloadPath"
+	downloadPath=$(getDownloadPath)
+	# recreate the download path and placeholder
+	rm -rv "$downloadPath"/*
+	touch "$downloadPath.placeholder"
+	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
+	echo "[SUCCESS]: Site will remain the same until updated."
+	echo "[INFO]: Use 'ytdl2nfo update' to generate a new website..."
+	echo "########################################################################"
+}
+################################################################################
 main(){
+	if test -f "/etc/2web/mod_status/ytdl2nfo.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/ytdl2nfo.cfg";then
+			# the module is enabled
+			echo "Preparing to process..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/ytdl2nfo.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/ytdl2nfo.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/ytdl2nfo.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
+
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		ytdl2kodi_update
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
@@ -1449,17 +1486,7 @@ main(){
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		ytdl2kodi_reset_cache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		echo "########################################################################"
-		echo "[INFO]: Reseting web cache to blank..."
-	rm -rv "$downloadPath"
-		downloadPath=$(getDownloadPath)
-		# recreate the download path and placeholder
-		rm -rv "$downloadPath"/*
-		touch "$downloadPath.placeholder"
-		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
-		echo "[SUCCESS]: Site will remain the same until updated."
-		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
-		echo "########################################################################"
+		nuke
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/ytdl2nfo.txt"
 	else

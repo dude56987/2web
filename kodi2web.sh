@@ -237,12 +237,33 @@ lockProc(){
 	else
 		# set the active flag
 		touch /tmp/kodi2web.active
-		# create a trap to remove nfo2web lockfile
+		# create a trap to remove kodi2web lockfile
 		trap "rm -v /tmp/kodi2web.active" EXIT
 	fi
 }
 ################################################################################
 main(){
+	if test -f "/etc/2web/mod_status/kodi2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/kodi2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/kodi2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/kodi2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/kodi2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
 	################################################################################
 	webRoot
 	################################################################################

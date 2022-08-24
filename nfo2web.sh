@@ -1912,6 +1912,28 @@ scanForRandomBackgrounds(){
 	fi
 }
 ########################################################################
+function nuke(){
+	echo "[INFO]: Reseting web cache to blank..."
+	rm -rv $(webRoot)/movies/*
+	rm -rv $(webRoot)/random/movies.index
+	rm -rv $(webRoot)/new/movies.index
+	rm -rv $(webRoot)/shows/*
+	rm -rv $(webRoot)/random/shows.index
+	rm -rv $(webRoot)/random/episodes.index
+	rm -rv $(webRoot)/new/shows.index
+	rm -rv $(webRoot)/new/episodes.index
+	# remove widgets cached
+	rm -v $(webRoot)/web_cache/widget_random_movies.index
+	rm -v $(webRoot)/web_cache/widget_random_shows.index
+	rm -v $(webRoot)/web_cache/widget_random_episodes.index
+	rm -v $(webRoot)/web_cache/widget_new_movies.index
+	rm -v $(webRoot)/web_cache/widget_new_shows.index
+	rm -v $(webRoot)/web_cache/widget_new_episodes.index
+	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
+	echo "[SUCCESS]: Site will remain the same until updated."
+	echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+}
+########################################################################
 function buildMovieIndex(){
 	webDirectory=$1
 	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
@@ -1945,9 +1967,297 @@ function libaryPaths(){
 		printf "\n"
 	done
 }
+################################################################################
+function update(){
+	################################################################################
+	# Create website containing info and links to one or more .nfo directories
+	# containing shows
+	################################################################################
+	# GENERATED SITE EXAMPLE
+	################################################################################
+	# - index.php : contains links to health.php,recent.php,and each showTitle.php
+	#   missing data. Links to each show can be found here.
+	#  - health.php : Page contains a list of found issues with nfo libary
+	#   + Use duplicate checker script to generate this page
+	#  - recent.php : Contains links to all episodes added in the past 14 days
+	#   + Use 'find /pathToLibary/ -type f -mtime -14' to find files less than 14
+	#     days old
+	#  - showTitle/index.php : Each show gets its own show page that contains links to
+	#    all available episodes. Sorted Into seasons.
+	#   + seasons are on the show page, not seprate
+	#_NOTES_________________________________________________________________________
+	# - Should allow multuple directories to be set as libaries
+	# - Should create symlinks to pictures and video files
+	# - Downloaded video files should be symlinked into web directory
+	# - Downloaded files should be linked with html5 video player
+	# - Should convert .strm file links to html5 video player pages
+	# - Include download button on episode webpage
+	# - Should convert youtube links from kodi to embeded player links
+	# - Should create its own web directory
+	################################################################################
+	# load the libary directory
+	#libaries=$(libaryPaths | tr -s "\n" | shuf )
+	libaries=$(libaryPaths | tr -s "\n" | shuf )
+	# the webdirectory is a cache where the generated website is stored
+	webDirectory="$(webRoot)"
+
+	INFO "Building web directory at '$webDirectory'"
+	# force overwrite symbolic link to web directory
+	# - link must be used to also use premade apache settings
+	ln -sfn "$webDirectory" "/var/cache/2web/web"
+	# check if system is active
+	if test -f "/tmp/nfo2web.active";then
+		# system is already running exit
+		echo "[INFO]: nfo2web is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
+		exit
+	else
+		# set the active flag
+		touch /tmp/nfo2web.active
+		# create a trap to remove nfo2web lockfile
+		trap "rm /tmp/nfo2web.active" EXIT
+	fi
+
+	# create the log path
+	logPagePath="$webDirectory/settings/log.php"
+	# create the homepage path
+	#homePagePath="$webDirectory/index.php"
+	showIndexPath="$webDirectory/shows/index.php"
+	movieIndexPath="$webDirectory/movies/index.php"
+	#touch "$showIndexPath"
+	#touch "$movieIndexPath"
+	touch "$logPagePath"
+	#touch "$homePagePath"
+	# check for the header
+	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
+	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
+	# build log page
+	{
+		echo "<html id='top' class='randomFanart'>"
+		echo "<head>"
+		echo "<link rel='stylesheet' href='/style.css' />"
+		echo "<style>"
+		echo "</style>"
+		echo "<link rel='icon' type='image/png' href='/favicon.png'>"
+		echo "<script src='/2web.js'></script>"
+		echo "</head>"
+		echo "<body>"
+		echo "<?PHP";
+		echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
+		echo "include('settingsHeader.php');";
+		echo "?>";
+		# add the javascript sorter controls
+		echo "<div class='inputCard'>"
+		echo "<h2>Filter Log Entries</h2>"
+		echo -n "<input type='button' class='button' value='Info'"
+		echo    " onclick='toggleVisibleClass(\"INFO\")'>"
+		echo -n "<input type='button' class='button' value='Error'"
+		echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
+		echo -n "<input type='button' class='button' value='Warning'"
+		echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
+		echo -n "<input type='button' class='button' value='Update'"
+		echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
+		echo -n "<input type='button' class='button' value='New'"
+		echo    " onclick='toggleVisibleClass(\"NEW\")'>"
+		echo -n "<input type='button' class='button' value='Debug'"
+		echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
+		echo -n "<input type='button' class='button' value='Download'"
+		echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
+		echo "</div>"
+		echo "<hr>"
+		echo "<!--  add the search box -->"
+		echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
+		echo "<hr>"
+		echo "<div class='settingsListCard'>"
+		# start the table
+		echo "<div class='settingsTable'>"
+		echo "<table>"
+	} > "$logPagePath"
+	addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
+	addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
+	# read each libary from the libary config, single path per line
+	#ALERT "LIBARIES: $libaries";
+	#for libary in $libaries;do
+	echo "$libaries" | while read libary;do
+		# check if the libary directory exists
+		addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
+		#INFO "Check if directory exists at '$libary'"
+		if test -d "$libary";then
+			addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
+			#INFO "library exists at '$libary'"
+			# read each tvshow directory from the libary
+			#for show in "$libary"/*;do
+			#addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
+			find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
+				#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
+				#INFO "show path = '$show'"
+				################################################################################
+				# process page metadata
+				################################################################################
+				# if the show directory contains a nfo file defining the show
+				#INFO "searching for metadata at '$show/tvshow.nfo'"
+				if test -f "$show/tvshow.nfo";then
+					#INFO "found metadata at '$show/tvshow.nfo'"
+					# load update the tvshow.nfo file and get the metadata required for
+					showMeta=$(cat "$show/tvshow.nfo")
+					showTitle=$(ripXmlTag "$showMeta" "title")
+					#INFO "showTitle = '$showTitle'"
+					showTitle=$(cleanText "$showTitle")
+					#INFO "showTitle after cleanText() = '$showTitle'"
+					if echo "$showMeta" | grep -q "<tvshow>";then
+						# pipe the output to a black hole and cache
+						episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
+						#episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
+						#ls "$show"/*/*.nfo > /dev/null
+						# make sure show has episodes
+						if [ $episodeSearchResults -gt 0 ];then
+							processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+							# write log info from show to the log, this must be done here to keep ordering
+							# of the log and to make log show even when the state of the show is unchanged
+							#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
+							#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
+
+						else
+							echo "[ERROR]: Show has no episodes!"
+							addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
+						fi
+					else
+						echo "[ERROR]: Show nfo file is invalid!"
+						addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
+					fi
+				elif grep -q "<movie>" "$show"/*.nfo;then
+					# this is a move directory not a show
+					processMovie "$show" "$webDirectory"
+				fi
+			done
+		fi
+		# update random backgrounds
+		scanForRandomBackgrounds "$webDirectory"
+	done
+	# add the end to the log, add the jump to top button and finish out the html
+	addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
+	{
+		echo "</table>"
+		echo "</div>"
+		echo "</div>"
+		# add footer
+		echo "<?PHP";
+		echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
+		echo "?>";
+		echo "</body>"
+		echo "</html>"
+	} >> "$logPagePath"
+	################################################################################
+	# - sort and clean main indexes
+	# - cleanup the new indexes by limiting the lists to 200 entries
+	# - only run cleanup if the indexes exist as the indexes trigger header buttons
+	################################################################################
+	# fix permissions in the new and random indexes
+	chown -R www-data:www-data "$webDirectory/new/"
+	chown -R www-data:www-data "$webDirectory/random/"
+	#########
+	# SHOWS #
+	#########
+	if test -f "$webDirectory/shows/shows.index";then
+		tempList=$(cat "$webDirectory/shows/shows.index" )
+		echo "$tempList" | sort -u > "$webDirectory/shows/shows.index"
+	fi
+	if test -f "$webDirectory/new/shows.index";then
+		# new list
+		tempList=$(cat "$webDirectory/new/shows.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/new/shows.index"
+	fi
+	if test -f "$webDirectory/new/episodes.index";then
+		# new episodes
+		tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/new/episodes.index"
+	fi
+	if test -f "$webDirectory/random/shows.index";then
+		# new list
+		tempList=$(cat "$webDirectory/random/shows.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/random/shows.index"
+	fi
+	if test -f "$webDirectory/random/episodes.index";then
+		# new episodes
+		tempList=$(cat "$webDirectory/random/episodes.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/random/episodes.index"
+	fi
+	##########
+	# MOVIES #
+	##########
+	if test -f "$webDirectory/movies/movies.index";then
+		tempList=$(cat "$webDirectory/movies/movies.index" )
+		echo "$tempList" | sort -u > "$webDirectory/movies/movies.index"
+	fi
+	if test -f "$webDirectory/new/movies.index";then
+		# new movies
+		tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/new/movies.index"
+	fi
+	if test -f "$webDirectory/random/movies.index";then
+		# new movies
+		tempList=$(cat "$webDirectory/random/movies.index" | uniq | tail -n 200 )
+		echo "$tempList" > "$webDirectory/random/movies.index"
+	fi
+	# create the final index pages, these should not have the progress indicator
+	# build the final version of the homepage without the progress indicator
+	buildHomePage "$webDirectory"
+	# build the movie index
+	buildMovieIndex "$webDirectory"
+	# build the show index
+	buildShowIndex "$webDirectory"
+	# write the md5sum state of the libary for change checking
+	#echo "$libarySum" > "$webDirectory/state.cfg"
+	#getLibSum > "$webDirectory/state.cfg"
+	# remove active state file
+	if test -f /tmp/nfo2web.active;then
+		rm /tmp/nfo2web.active
+	fi
+	# read the tvshow.nfo files for each show
+	################################################################################
+	# Create the show link on index.php
+	# - read poster.png as show button
+	################################################################################
+	# Create the series page
+	# - While generating the series page, you must generate the episode page in its
+	#   entirity, then proceed with generating the next episode link in the seasons
+	#   page
+	################################################################################
+	# - Create show metadata at the top of the page
+	# - set fanart.png as a static unscrolling background on the show page
+	# load all nfo files in show into a list
+	# find /pathToLibary/ -type f
+	# read show title and remove tags with sed
+	# feed nfo files into generator to extract seasons and episode .nfo data
+	################################################################################
+}
 ########################################################################
 main(){
 	debugCheck
+
+	if test -f "/etc/2web/mod_status/nfo2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/nfo2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/nfo2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/nfo2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/nfo2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
+
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat /usr/share/2web/help/nfo2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
@@ -1986,272 +2296,9 @@ main(){
 		# force update certs
 		updateCerts 'yes'
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		echo "[INFO]: Reseting web cache to blank..."
-		rm -rv $(webRoot)/*
-		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
-		echo "[SUCCESS]: Site will remain the same until updated."
-		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+		nuke
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		################################################################################
-		# Create website containing info and links to one or more .nfo directories
-		# containing shows
-		################################################################################
-		# GENERATED SITE EXAMPLE
-		################################################################################
-		# - index.php : contains links to health.php,recent.php,and each showTitle.php
-		#   missing data. Links to each show can be found here.
-		#  - health.php : Page contains a list of found issues with nfo libary
-		#   + Use duplicate checker script to generate this page
-		#  - recent.php : Contains links to all episodes added in the past 14 days
-		#   + Use 'find /pathToLibary/ -type f -mtime -14' to find files less than 14
-		#     days old
-		#  - showTitle/index.php : Each show gets its own show page that contains links to
-		#    all available episodes. Sorted Into seasons.
-		#   + seasons are on the show page, not seprate
-		#_NOTES_________________________________________________________________________
-		# - Should allow multuple directories to be set as libaries
-		# - Should create symlinks to pictures and video files
-		# - Downloaded video files should be symlinked into web directory
-		# - Downloaded files should be linked with html5 video player
-		# - Should convert .strm file links to html5 video player pages
-		# - Include download button on episode webpage
-		# - Should convert youtube links from kodi to embeded player links
-		# - Should create its own web directory
-		################################################################################
-		# load the libary directory
-		#libaries=$(libaryPaths | tr -s "\n" | shuf )
-		libaries=$(libaryPaths | tr -s "\n" | shuf )
-		# the webdirectory is a cache where the generated website is stored
-		webDirectory="$(webRoot)"
-		INFO "Building web directory at '$webDirectory'"
-		# force overwrite symbolic link to web directory
-		# - link must be used to also use premade apache settings
-		ln -sfn "$webDirectory" "/var/cache/2web/web"
-		# check if system is active
-		if test -f "/tmp/nfo2web.active";then
-			# system is already running exit
-			echo "[INFO]: nfo2web is already processing data in another process."
-			echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
-			exit
-		else
-			# set the active flag
-			touch /tmp/nfo2web.active
-			# create a trap to remove nfo2web lockfile
-			trap "rm /tmp/nfo2web.active" EXIT
-		fi
-
-		# create the log path
-		logPagePath="$webDirectory/settings/log.php"
-		# create the homepage path
-		#homePagePath="$webDirectory/index.php"
-		showIndexPath="$webDirectory/shows/index.php"
-		movieIndexPath="$webDirectory/movies/index.php"
-		#touch "$showIndexPath"
-		#touch "$movieIndexPath"
-		touch "$logPagePath"
-		#touch "$homePagePath"
-		# check for the header
-		linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
-		linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
-		# build log page
-		{
-			echo "<html id='top' class='randomFanart'>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='/style.css' />"
-			echo "<style>"
-			echo "</style>"
-			echo "<link rel='icon' type='image/png' href='/favicon.png'>"
-			echo "<script src='/2web.js'></script>"
-			echo "</head>"
-			echo "<body>"
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
-			echo "include('settingsHeader.php');";
-			echo "?>";
-			# add the javascript sorter controls
-			echo "<div class='inputCard'>"
-			echo "<h2>Filter Log Entries</h2>"
-			echo -n "<input type='button' class='button' value='Info'"
-			echo    " onclick='toggleVisibleClass(\"INFO\")'>"
-			echo -n "<input type='button' class='button' value='Error'"
-			echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
-			echo -n "<input type='button' class='button' value='Warning'"
-			echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
-			echo -n "<input type='button' class='button' value='Update'"
-			echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
-			echo -n "<input type='button' class='button' value='New'"
-			echo    " onclick='toggleVisibleClass(\"NEW\")'>"
-			echo -n "<input type='button' class='button' value='Debug'"
-			echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
-			echo -n "<input type='button' class='button' value='Download'"
-			echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
-			echo "</div>"
-			echo "<hr>"
-			echo "<!--  add the search box -->"
-			echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
-			echo "<hr>"
-			echo "<div class='settingsListCard'>"
-			# start the table
-			echo "<div class='settingsTable'>"
-			echo "<table>"
-		} > "$logPagePath"
-		addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-		addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
-		# read each libary from the libary config, single path per line
-		#ALERT "LIBARIES: $libaries";
-		#for libary in $libaries;do
-		echo "$libaries" | while read libary;do
-			# check if the libary directory exists
-			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
-			#INFO "Check if directory exists at '$libary'"
-			if test -d "$libary";then
-				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
-				#INFO "library exists at '$libary'"
-				# read each tvshow directory from the libary
-				#for show in "$libary"/*;do
-				#addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
-				find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
-					#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
-					#INFO "show path = '$show'"
-					################################################################################
-					# process page metadata
-					################################################################################
-					# if the show directory contains a nfo file defining the show
-					#INFO "searching for metadata at '$show/tvshow.nfo'"
-					if test -f "$show/tvshow.nfo";then
-						#INFO "found metadata at '$show/tvshow.nfo'"
-						# load update the tvshow.nfo file and get the metadata required for
-						showMeta=$(cat "$show/tvshow.nfo")
-						showTitle=$(ripXmlTag "$showMeta" "title")
-						#INFO "showTitle = '$showTitle'"
-						showTitle=$(cleanText "$showTitle")
-						#INFO "showTitle after cleanText() = '$showTitle'"
-						if echo "$showMeta" | grep -q "<tvshow>";then
-							# pipe the output to a black hole and cache
-							episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
-							#episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
-							#ls "$show"/*/*.nfo > /dev/null
-							# make sure show has episodes
-							if [ $episodeSearchResults -gt 0 ];then
-								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
-								# write log info from show to the log, this must be done here to keep ordering
-								# of the log and to make log show even when the state of the show is unchanged
-								#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-								#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
-
-							else
-								echo "[ERROR]: Show has no episodes!"
-								addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
-							fi
-						else
-							echo "[ERROR]: Show nfo file is invalid!"
-							addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
-						fi
-					elif grep -q "<movie>" "$show"/*.nfo;then
-						# this is a move directory not a show
-						processMovie "$show" "$webDirectory"
-					fi
-				done
-			fi
-			# update random backgrounds
-			scanForRandomBackgrounds "$webDirectory"
-		done
-		# add the end to the log, add the jump to top button and finish out the html
-		addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
-		{
-			echo "</table>"
-			echo "</div>"
-			echo "</div>"
-			# add footer
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
-			echo "?>";
-			echo "</body>"
-			echo "</html>"
-		} >> "$logPagePath"
-		################################################################################
-		# - sort and clean main indexes
-		# - cleanup the new indexes by limiting the lists to 200 entries
-		# - only run cleanup if the indexes exist as the indexes trigger header buttons
-		################################################################################
-		# fix permissions in the new and random indexes
-		chown -R www-data:www-data "$webDirectory/new/"
-		chown -R www-data:www-data "$webDirectory/random/"
-		#########
-		# SHOWS #
-		#########
-		if test -f "$webDirectory/shows/shows.index";then
-			tempList=$(cat "$webDirectory/shows/shows.index" )
-			echo "$tempList" | sort -u > "$webDirectory/shows/shows.index"
-		fi
-		if test -f "$webDirectory/new/shows.index";then
-			# new list
-			tempList=$(cat "$webDirectory/new/shows.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/new/shows.index"
-		fi
-		if test -f "$webDirectory/new/episodes.index";then
-			# new episodes
-			tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/new/episodes.index"
-		fi
-		if test -f "$webDirectory/random/shows.index";then
-			# new list
-			tempList=$(cat "$webDirectory/random/shows.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/random/shows.index"
-		fi
-		if test -f "$webDirectory/random/episodes.index";then
-			# new episodes
-			tempList=$(cat "$webDirectory/random/episodes.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/random/episodes.index"
-		fi
-		##########
-		# MOVIES #
-		##########
-		if test -f "$webDirectory/movies/movies.index";then
-			tempList=$(cat "$webDirectory/movies/movies.index" )
-			echo "$tempList" | sort -u > "$webDirectory/movies/movies.index"
-		fi
-		if test -f "$webDirectory/new/movies.index";then
-			# new movies
-			tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/new/movies.index"
-		fi
-		if test -f "$webDirectory/random/movies.index";then
-			# new movies
-			tempList=$(cat "$webDirectory/random/movies.index" | uniq | tail -n 200 )
-			echo "$tempList" > "$webDirectory/random/movies.index"
-		fi
-		# create the final index pages, these should not have the progress indicator
-		# build the final version of the homepage without the progress indicator
-		buildHomePage "$webDirectory"
-		# build the movie index
-		buildMovieIndex "$webDirectory"
-		# build the show index
-		buildShowIndex "$webDirectory"
-		# write the md5sum state of the libary for change checking
-		#echo "$libarySum" > "$webDirectory/state.cfg"
-		#getLibSum > "$webDirectory/state.cfg"
-		# remove active state file
-		if test -f /tmp/nfo2web.active;then
-			rm /tmp/nfo2web.active
-		fi
-		# read the tvshow.nfo files for each show
-		################################################################################
-		# Create the show link on index.php
-		# - read poster.png as show button
-		################################################################################
-		# Create the series page
-		# - While generating the series page, you must generate the episode page in its
-		#   entirity, then proceed with generating the next episode link in the seasons
-		#   page
-		################################################################################
-		# - Create show metadata at the top of the page
-		# - set fanart.png as a static unscrolling background on the show page
-		# load all nfo files in show into a list
-		# find /pathToLibary/ -type f
-		# read show title and remove tags with sed
-		# feed nfo files into generator to extract seasons and episode .nfo data
-		################################################################################
+		update
 	else
 		# if no arguments are given run the update then help commands.
 		main update

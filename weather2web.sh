@@ -643,7 +643,36 @@ lockProc(){
 	fi
 }
 ################################################################################
+function nuke(){
+	rm -rv $(webRoot)/weather/*
+	rm -rv $(webRoot)/weather/data/forcast_*.index
+	rm -rv $(webRoot)/weather/data/current_*.cfg
+	rm -rv $(webRoot)/weather.index
+}
+################################################################################
 main(){
+	if test -f "/etc/2web/mod_status/weather2web.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/weather2web.cfg";then
+			# the module is enabled
+			echo "Preparing to process..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/weather2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for graph2web should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/weather2web.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/weather2web.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
 	################################################################################
 	webRoot
 	################################################################################
@@ -658,9 +687,7 @@ main(){
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		# lock the process
 		lockProc
-		rm -rv $(webRoot)/weather/.
-		rm -rv $(webRoot)/weather/data/forcast_*.index
-		rm -rv $(webRoot)/weather/data/current_*.cfg
+		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		# lock the process
 		lockProc

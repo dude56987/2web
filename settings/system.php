@@ -5,9 +5,6 @@
 <body>
 <?php
 ################################################################################
-// NOTE: Do not write any text to the document, this will break the redirect
-// redirect the given file to the resoved url found with youtube-dl
-################################################################################
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 ################################################################################
@@ -17,7 +14,6 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#update'>Update</a></li>
 		<li><a href='#addNewUser'>Add New Administrator</a></li>
 		<li><a href='#removeUser'>Remove Administrator</a></li>
 		<li><a href='#webTheme'>Change Web Theme</a></li>
@@ -25,21 +21,6 @@ include("settingsHeader.php");
 		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
 		<li><a href='#CLI_manuals'>CLI Manual Pages</a></li>
 	</ul>
-</div>
-
-<div id='update' class='inputCard'>
-	<h2>Update</h2>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<div class=''>
-			<button class='button' type='submit' name='all_update' value='true'>UPDATE ALL</button>
-		</div>
-		<div class=''>
-			<button class='button' type='submit' name='nfo_update' value='true'>UPDATE NFO</button>
-			<button class='button' type='submit' name='iptv_update' value='true'>UPDATE IPTV</button>
-			<button class='button' type='submit' name='comic_update' value='true'>UPDATE COMICS</button>
-			<button class='button' type='submit' name='weather_update' value='true'>UPDATE WEATHER</button>
-		</div>
-	</form>
 </div>
 
 <div id='addNewUser' class='inputCard'>
@@ -57,32 +38,6 @@ include("settingsHeader.php");
 	<button class='button' type='submit'>Add User</button>
 </form>
 </div>
-<!--
-<div id='addComicLibary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Delete User</h2>
-	<ul>
-		<li>New usernames will be added on next scheduled web update.( ~ 24 hours max )</li>
-	</ul>
-	<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME'>
-	<input width='60%' type='text' name='newUserPass' placeholder='NEW USER PASSWORD'>
-	<input class='button' type='submit'>
-</form>
-</div>
-
-
-<div id='addComicLibary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Edit User Password</h2>
-	<input width='60%' type='text' name='editUserName' placeholder='USERNAME'>
-	<input width='60%' type='text' name='orignalUserPass' placeholder='CURRENT PASSWORD'>
-	<input width='60%' type='text' name='editUserPass' placeholder='NEW PASSWORD'>
-	<input width='60%' type='text' name='editUserPassVerify' placeholder='NEW PASSWORD'>
-	<input class='button' type='submit'>
-</form>
-</div>
--->
-
 
 <div id='removeUser' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
@@ -122,12 +77,6 @@ include("settingsHeader.php");
 				}
 			}
 			?>
-			<!--
-			<option value='default.css' selected>Default</option>
-			<option value='red.css' >Red</option>
-			<option value='green.css' >Green</option>
-			<option value='blue.css' >Blue</option>
-			-->
 		</select>
 		<button class='button' type='submit'>Remove User</button>
 	</form>
@@ -175,12 +124,6 @@ include("settingsHeader.php");
 				}
 			}
 			?>
-			<!--
-			<option value='default.css' selected>Default</option>
-			<option value='red.css' >Red</option>
-			<option value='green.css' >Green</option>
-			<option value='blue.css' >Blue</option>
-			-->
 		</select>
 		<button class='button' type='submit'>Change Theme</button>
 	</form>

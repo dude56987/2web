@@ -19,186 +19,105 @@ include("/usr/share/2web/2webLib.php");
 	<ul>
 		<li>Enable/Disable Modules
 			<ul>
-				<li><a href='#live2webStatus'>Live</a></li>
-				<li><a href='#nfo2webStatus'>Video On Demand</a></li>
-				<li><a href='#comic2webStatus'>Comics</a></li>
-				<li><a href='#weather2webStatus'>Weather</a></li>
-				<li><a href='#music2webStatus'>Music</a></li>
-				<li><a href='#graph2webStatus'>Graphs</a></li>
-				<li><a href='#kodi2webStatus'>KODI</a></li>
+<?PHP
+$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web");
+foreach($modules as $module){
+	echo "				<li><a href='#".$module."Status'>$module</a></li>";
+}
+?>
 			</ul>
 		</li>
 	</ul>
 </div>
 
-<div id='iptv2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Live Module Status</h2>
-			<ul>
-				<li>
-					Enable or disable the live iptv channels on the website.
-				</li>
-			</ul>
-			<select name='iptv2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/iptv2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-<div id='nfo2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Video On Demand Module Status</h2>
-			<ul>
-				<li>
-					Enable or disable nfo libaries on the website.
-				</li>
-			</ul>
-			<select name='nfo2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/nfo2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-<div id='comic2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Comics Module Status</h2>
-			<ul>
-				<li>
-					Enable or disable comics section of the website.
-				</li>
-			</ul>
-			<select name='comic2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/comic2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-<div id='weather2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Weather Module Status</h2>
-			<ul>
-				<li>
-					Enable or disable weather on the website.
-				</li>
-			</ul>
-			<select name='weather2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/weather2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-<div id='music2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Music Module Status</h2>
-			<ul>
-				<li>
-					Enable or disable music on the website.
-				</li>
-			</ul>
-			<select name='music2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/music2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-<div id='graph2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Graphs Enabled</h2>
-			<ul>
-				<li>
-					Enable or disable the graphs on the website.
-				</li>
-			</ul>
-			<select name='graph2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/graph2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-<div id='kodi2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>KODI sync Status</h2>
-			<ul>
-				<li>
-					Enable or disable sync of linked kodi instances.
-				</li>
-			</ul>
-			<select name='kodi2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/kodi2web.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
-</div>
-
-
+<hr>
+<?PHP
+foreach($modules as $module){
+	echo "<div id='".$module."Status' class='inputCard'>";
+	echo "	<form action='admin.php' class='buttonForm' method='post'>";
+	echo "		<h2>$module Module Status</h2>";
+	echo "			<ul>";
+	echo "				<li>";
+	echo "					Enable or disable the $module module.";
+	echo "				</li>";
+	# check the current module and show proper description
+	if ($module == "nfo2web"){
+		echo "				<li>";
+		echo "					Will enable On Demand Video Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "						Enable adding local nfo libaries to the website.";
+		echo "				</li>";
+	}elseif ($module == "ytdl2nfo"){
+		echo "				<li>";
+		echo "						Enable or disable downloading metadata from websites hosting video.";
+		echo "				</li>";
+	}elseif ($module == "iptv2web"){
+		echo "				<li>";
+		echo "					Will enable IPTV live channel and IPTV live radio Processing.";
+		echo "				</li>";
+	}elseif ($module == "comic2web"){
+		echo "				<li>";
+		echo "					Will enable comic and book Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable comics section of the website.";
+		echo "				</li>";
+	}elseif ($module == "weather2web"){
+		echo "				<li>";
+		echo "					Will enable Weather Station Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable weather on the website.";
+		echo "				</li>";
+	}elseif ($module == "music2web"){
+		echo "				<li>";
+		echo "					Will enable music Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable music on the website.";
+		echo "				</li>";
+	}elseif ($module == "graph2web"){
+		echo "				<li>";
+		echo "					Will enable graph Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable the graphs on the website.";
+		echo "				</li>";
+	}elseif ($module == "kodi2web"){
+		echo "				<li>";
+		echo "					Will enable graph Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable sync of linked kodi instances.";
+		echo "				</li>";
+	}
+	if (detectEnabledStatus("/etc/2web/mod_status/$module.cfg")){
+		echo "				<li>";
+		echo "					Currently this module is <span class='enabledSetting'>Enabled</span>.";
+		echo "				</li>";
+	}else{
+		echo "				<li>";
+		echo "					Currently this module is <span class='disabledSetting'>Disabled<span>.";
+		echo "				</li>";
+	}
+	echo "			</ul>";
+	echo "			<select name='".$module."Status'>";
+	// check the status of the module
+	if (detectEnabledStatus("/etc/2web/mod_status/$module.cfg")){
+		echo "				<option value='enabled' selected>Enabled</option>";
+		echo "				<option value='disabled' >Disabled</option>";
+	}else{
+		echo "				<option value='disabled' selected>Disabled</option>";
+		echo "				<option value='enabled' >Enabled</option>";
+	}
+	echo "			</select>";
+	echo "			<button class='button' type='submit'>Set Status</button>";
+	echo "	</form>";
+	echo "</div>";
+}
+?>
+<hr>
 
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

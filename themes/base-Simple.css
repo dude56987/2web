@@ -266,7 +266,7 @@ ol li{
 }
 .enabledSetting{
  background-color: #99ff33 !important;
- color: var(--textColor) !important;
+ color: black !important;
 }
 .settingsEntry h3{
 	font-size: 3rem;
@@ -279,7 +279,7 @@ ol li{
 }
 .disabledSetting{
  background-color: #CC0000 !important;
- color: var(--textColor) !important;
+ color: black !important;
 }
 #videoPlayerContainer{
 	display: inline-block;
@@ -760,6 +760,7 @@ input{
 }
 .comicIndexButton{
 	width: 40%;
+	font-size: 3rem;
 }
 .comicPagePopup{
 	position: fixed;
@@ -772,7 +773,9 @@ input{
 	opacity: 0 !important;
 	transition: opacity 1s ease;
 	background-color: var(--glassBackground);
+	/*
 	font-size: 2rem;
+	*/
 	padding-bottom: 2rem;
 }
 .comicPagePopup:hover{
@@ -788,7 +791,9 @@ input{
 	min-height: 50vh;
 	height: -webkit-fill-available;
 	height: -moz-fill;
+	/*
 	font-size: 2rem;
+	*/
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	margin: 0rem;
 	padding: 1rem;
@@ -1353,7 +1358,10 @@ tr{
 	*/
 	.headerText{
 		display: inline !important;
-		font-size: 0.5rem !important;
+		/*
+		display: none !important;
+		*/
+		font-size: 0.2rem !important;
 	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;

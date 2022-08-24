@@ -1,6 +1,12 @@
 <div class='titleCard'>
 	<h2>Settings</h2>
 	<div class='listCard'>
+		<a class='button' href='/settings/modules.php'>
+			🧩
+			<span class='headerText'>
+				Modules
+			</span>
+		</a>
 		<a class='button' href='/settings/system.php'>
 			🎛️
 			<span class='headerText'>

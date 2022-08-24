@@ -34,7 +34,7 @@ echo "</div>";
 $cacheFile=$webDirectory."/footerData.index";
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
-	if (time()-filemtime($cacheFile) > 90){
+	if (time()-filemtime($cacheFile) > 60){
 		// update the cached file
 		$writeFile=true;
 	}else{
@@ -120,23 +120,27 @@ if ($writeFile){
 	}
 	if (file_exists("$webDirectory/totalChannels.index")){
 		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
-			$fileData .= "<a class='' href='/live'>";
-			$fileData .= "📡";
-			$fileData .= "<span class='footerText'>";
-			$fileData .= " LIVE";
-			$fileData .= "</span>";
-			$fileData .= "</a> ";
+			if (file_exists("$webDirectory/live/index.php")){
+				$fileData .= "<a class='' href='/live'>";
+				$fileData .= "📡";
+				$fileData .= "<span class='footerText'>";
+				$fileData .= " LIVE";
+				$fileData .= "</span>";
+				$fileData .= "</a> ";
+			}
 		}
 	}
 	// read the weather info for weather2web
-	if (file_exists("$webDirectory/totalWeatherStations.index")){
-		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-			$fileData .= "<a class='' href='/weather/'>";
-			$fileData .= "🌤️";
-			$fileData .= "<span class='footerText'>";
-			$fileData .= " WEATHER";
-			$fileData .= "</span>";
-			$fileData .= "</a> ";
+	if (file_exists("$webDirectory/weather/index.php")){
+		if (file_exists("$webDirectory/totalWeatherStations.index")){
+			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+				$fileData .= "<a class='' href='/weather/'>";
+				$fileData .= "🌤️";
+				$fileData .= "<span class='footerText'>";
+				$fileData .= " WEATHER";
+				$fileData .= "</span>";
+				$fileData .= "</a> ";
+			}
 		}
 	}
 	if (file_exists("$webDirectory/graphs/")){

@@ -131,7 +131,7 @@ build-deb:
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
 	# copy over default config templates
-	cp -rv config_default/. debian/usr/share/2web/config_default/
+	cp -rv config_default/. debian/etc/2web/config_default/
 	# add icon
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
@@ -207,6 +207,9 @@ build-deb:
 	w3m debian/usr/share/2web/help/README.html > debian/usr/share/2web/help/README.txt
 	# copy over the theme templates
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
+	# get the latest hls.js from npm and include it in the package
+	npm install --save hls.js
+	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/iptv/hls.js
 	# build the default themes
 	# user themes can be any self contained .css file
 	# copy over the main javascript libary
