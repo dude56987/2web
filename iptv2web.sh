@@ -951,6 +951,22 @@ webGen(){
 					echo "<?PHP";
 					echo "include('../header.php')";
 					echo "?>";
+
+					echo "<br>"
+					echo "<div class='descriptionCard'>"
+					echo "	<h1>"
+					echo "		$title"
+					echo "	</h1>"
+					echo "<div class='listCard'>"
+					echo "	<a class='button' href='$link'>"
+					echo "		Hard Link"
+					echo "	</a>"
+					echo "	<a class='button vlcButton' href='vlc://$link'>"
+					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "	</a>"
+					echo "</div>"
+					echo "</div>"
+
 					echo "<div class='listCard'>";
 					echo "<div id='videoPlayerContainer'>";
 					if echo "$lineCaught" | grep -Eq "radio=[\",']true";then
