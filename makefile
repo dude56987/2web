@@ -44,7 +44,7 @@ lint:
 	php -l templates/*.php
 	# check the settings
 	php -l settings/*.php
-	# check the transcoders
+	# check the transcoders/resolvers
 	php -l resolvers/*.php
 	# check the shell scripts
 	shellcheck 2web.sh || echo "Errors Found..."
@@ -241,6 +241,7 @@ build-deb:
 	cp resolvers/m3u-gen.php debian/usr/share/2web/
 	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
 	cp resolvers/transcode.php debian/usr/share/2web/
+	cp resolvers/search.php debian/usr/share/2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root

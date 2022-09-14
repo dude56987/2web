@@ -111,8 +111,7 @@ echo "</div>";
 ?>
 <hr>
 </div>
-<input id='searchBox' class='searchBox' type='text'
- onkeyup='filter("showPageEpisode")' placeholder='Search...' >
+<input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
 <hr>
 <div class='episodeList'>
 <?PHP

@@ -12,9 +12,7 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
-# add the search box
 ?>
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 
 <?php
 drawPosterWidget("music");

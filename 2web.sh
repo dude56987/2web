@@ -231,6 +231,7 @@ function update2web(){
 	# help/info docs
 	linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
 	# caching resolvers
+	linkFile "/usr/share/2web/search.php" "$webDirectory/search.php"
 	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 	linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
 	# error documents

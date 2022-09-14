@@ -890,10 +890,6 @@ renderPage(){
 			echo "include('../../header.php')";
 			echo "?>";
 			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
-			# add the search box
-			echo " <input id='searchBox' class='searchBox' type='text'"
-			echo " onkeyup='filter(\"indexSeries\")' placeholder='Search...' >"
-			echo "<hr>"
 			echo "<div class='titleCard'>"
 			echo "<h1>$pageComicName</h1>"
 			echo "<a class='button' href='$pageComicName.cbz'>"
@@ -1229,12 +1225,8 @@ webUpdate(){
 		tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
-	if test -f "$webDirectory/random/comics.index";then
-		# new comics
-		tempList=$(cat "$webDirectory/random/comics.index" | uniq | tail -n 200 )
-		echo "$tempList" > "$webDirectory/random/comics.index"
-	fi
-
+	# the random index simply uses the main index for comics
+	linkFile "$webDirectory/comics/comics.index" "$webDirectory/random/comics.index"
 }
 ################################################################################
 function resetCache(){

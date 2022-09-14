@@ -238,4 +238,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "</div>";
 }
 ?>
+<form class='searchBoxForm' action='/search.php' method='get'>
+	<input id='searchBox' class='searchBox' type='text' name='q' placeholder='Search...' >
+</form>
 <hr>

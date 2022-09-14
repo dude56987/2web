@@ -26,7 +26,6 @@ include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 ?>
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("indexSeries")' placeholder='Search...' >
 <div class='titleCard artistTitleCard'>
 			<?php
 			$artist=file("artist.cfg", FILE_IGNORE_NEW_LINES)[0];

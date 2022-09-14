@@ -1250,6 +1250,8 @@ table{
 	color: var(--textColor);
 	border-width: 0.2rem;
 	text-align: center;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
 }
 .inputCard{
 	text-align: center;

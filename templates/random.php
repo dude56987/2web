@@ -9,11 +9,7 @@
 ################################################################################
 ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
-# add the search box
 ?>
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
-<hr>
-
 
 <div class='titleCard'>
 <?php

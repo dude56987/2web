@@ -8,8 +8,6 @@
 include("header.php")
 ?>
 
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("titleCard")' placeholder='Search...' >
-
 <div class='titleCard linkInfo'>
 <h1>Help</h1>
 

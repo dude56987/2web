@@ -11,12 +11,6 @@
 	include("/usr/share/2web/2webLib.php");
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
-
-<!--  add the search box -->
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
-
-<hr>
-
 <div class='settingListCard'>
 
 <?php
