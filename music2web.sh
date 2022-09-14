@@ -1,5 +1,21 @@
 #! /bin/bash
-################################################################################
+########################################################################
+# music2web scans music files with tags into the 2web webserver
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
 # enable debug log
 #set -x
 ################################################################################
@@ -809,7 +825,7 @@ main(){
 		# the config exists check the config
 		if grep -q "enabled" "/etc/2web/mod_status/music2web.cfg";then
 			# the module is enabled
-			echo "Preparing to process graphs..."
+			echo "Preparing to process music..."
 		else
 			ALERT "MOD IS DISABLED!"
 			ALERT "Edit /etc/2web/mod_status/graph2web.cfg to contain only the text 'enabled' in order to enable the 2web module."

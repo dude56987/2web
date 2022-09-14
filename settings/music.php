@@ -1,6 +1,7 @@
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
+	<script src='/2web.js'></script>
 </head>
 <body>
 <?php
@@ -46,8 +47,7 @@ echo "</div>";
 echo "<div id='musicLibaryPaths' class='settingListCard'>";
 echo "<h2>Music Libary Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/music/libaries.d/*.cfg"));
-// reverse the time sort
-$sourceFiles = array_reverse($sourceFiles);
+sort($sourceFiles);
 # write each config file as a editable entry
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;

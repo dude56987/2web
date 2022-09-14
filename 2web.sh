@@ -1,13 +1,29 @@
 #! /bin/bash
 ########################################################################
+# 2web is the CLI interface for managing the 2web server
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
 source /var/lib/2web/common
 ########################################################################
-STOP(){
+function STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
 	read -r #DEBUG DELETE ME
 }
 ########################################################################
-INFO(){
+function INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -19,14 +35,14 @@ INFO(){
 	printf "$output\r"
 }
 ################################################################################
-drawLine(){
+function drawLine(){
 	width=$(tput cols)
 	buffer="=========================================================================================================================================="
 	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
 	printf "$output\n"
 }
 ################################################################################
-debugCheck(){
+function debugCheck(){
 	if [ -f /etc/nfo2web/debug.enabled ];then
 		# if debug mode is enabled show execution
 		set -x
@@ -42,7 +58,7 @@ debugCheck(){
 	fi
 }
 ################################################################################
-getDirSum(){
+function getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
@@ -54,7 +70,7 @@ getDirSum(){
 	echo "$tempLibList"
 }
 ################################################################################
-cacheCheck(){
+function cacheCheck(){
 
 	filePath="$1"
 	cacheDays="$2"
@@ -78,12 +94,35 @@ cacheCheck(){
 	fi
 }
 ########################################################################
-update2web(){
+function enableApacheServer(){
+	# enable the apache config
+	linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
+	linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+}
+########################################################################
+function disableApacheServer(){
+	rm -v "/etc/apache2/conf-enabled/0-2web-ports.conf"
+	rm -v "/etc/apache2/sites-enabled/0-2web-website.conf"
+	rm -v "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
+	rm -v "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+}
+########################################################################
+function enableCronJob(){
+	cp -v "/usr/share/2web/cron" "/etc/cron.d/2web"
+}
+########################################################################
+function disableCronJob(){
+	rm -v "/etc/cron.d/2web"
+}
+########################################################################
+function update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(webRoot)"
 	# if the build date of the software has changed then update the generated css themes for the site
-	if checkFileDataSum "$webDirectory" "/usr/share/2web/versionDate.cfg";then
+	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
 		#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
@@ -161,14 +200,17 @@ update2web(){
 	#  - These scripts allow for kodi to play .strm files though youtube-dl
 	#  - Generate m3u files to allow android phones to share the media to any video player
 	################################################################################
-	# enable the apache config
-	linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+
+	enableApacheServer
+
+	enableCronJob
+
 	# admin control file
 	linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
 	# settings interface files
+	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
+
+	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
 	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
 	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
 	linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
@@ -179,7 +221,6 @@ update2web(){
 	linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
 	linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
 	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
-	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
 	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
 	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
@@ -216,7 +257,6 @@ update2web(){
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
 	################################################################################
 	# build the login users file
-	counter=0
 	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
 		# if there are any users
 		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
@@ -227,19 +267,17 @@ update2web(){
 	else
 		# if there are no users set in the cfg remove the .htaccess file
 		if test -f "$webDirectory/.htaccess";then
-			#rm "$webDirectory/.htaccess"
+			rm "$webDirectory/.htaccess"
+		fi
+		if test -f "$webDirectory/settings/.htaccess";then
 			rm "$webDirectory/settings/.htaccess"
+		fi
+		if test -f "$webDirectory/backups/.htaccess";then
 			rm "$webDirectory/backups/.htaccess"
 		fi
 	fi
 	createDir "$webDirectory/RESOLVER-CACHE/"
 
-	if ! test -d "$webDirectory/RESOLVER-CACHE/";then
-		# build the cache directory if none exists
-		mkdir -p "$webDirectory/RESOLVER-CACHE/"
-		# set permissions
-		chown www-data:www-data "$webDirectory/RESOLVER-CACHE/"
-	fi
 	# update the certificates
 	updateCerts
 
@@ -304,7 +342,8 @@ restoreSettings(){
 	settingsFile=$1
 	createDir "$(webRoot)/backups/$(date)/"
 	set -x
-	unzip -x "$settingsFile" -d "/etc/2web/"
+	ALERT "Use the below command to restore a backup of the settings on the server."
+	echo "unzip -x '$settingsFile' -d '/etc/2web/'"
 	set +x
 }
 ########################################################################
@@ -347,29 +386,6 @@ rebootCheck(){
 	fi
 }
 ################################################################################
-function waitQueue(){
-	sleepTime=$1
-	totalCPUS=$2
-	while true;do
-		if [ $(jobs | wc -l) -ge $totalCPUS ];then
-			sleep $sleepTime
-		else
-			break
-		fi
-	done
-}
-################################################################################
-function blockQueue(){
-	sleepTime=$1
-	while true;do
-		if [ $(jobs | wc -l) -gt 0 ];then
-			sleep $sleepTime
-		else
-			break
-		fi
-	done
-}
-################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -399,7 +415,7 @@ main(){
 		/usr/bin/weather2web &
 		waitQueue 0.5 "$totalCPUS"
 		# update the metadata and build webpages for all generators
-		/usr/bin/nfo2web &
+		/usr/bin/nfo2web --parallel &
 		waitQueue 0.5 "$totalCPUS"
 		/usr/bin/graph2web &
 		waitQueue 0.5 "$totalCPUS"
@@ -496,8 +512,10 @@ main(){
 		/usr/bin/weather2web reset
 		/usr/bin/music2web reset
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
-		# remove all website content
-		/usr/bin/nfo2web nuke
+		# remove all website content and disable the website
+		rm -rv /var/cache/2web/web/*
+		disableApacheServer
+		disableCronJob
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then
@@ -537,7 +555,7 @@ main(){
 		# - this builds the base site without anything enabled
 		update2web
 		# this is the default option to be ran without arguments
-		main --help
+		#main --help
 	fi
 	# show the server link at the bottom of the interface
 	drawLine

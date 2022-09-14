@@ -82,10 +82,13 @@ foreach($seasonDirs as $seasonDir){
 ?>
 </div>
 <?PHP
-echo "<div class='titleCard'>";
+echo "<div class='titleCard seriesPlot'>";
 echo "<h2 class=''>";
 echo "Plot";
 echo "</h2>";
+if (file_exists($activeDir."/poster.png")){
+	echo "<img class='right' src='poster-web.png'>";
+}
 echo file_get_contents($activeDir."/plot.cfg");
 echo "</div>";
 

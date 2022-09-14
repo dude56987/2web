@@ -13,7 +13,9 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-This is the 2web administration and update program. With this interface you can launch a update check on all 2web modules. 2web allows you to host multimedia content as a kodi compatible php media server using apache2. This software is designed to run on the latest version of the raspberry pi. Currently supporting a extremely large libary ~20k shows,movies,books, and ~100k channels/radio stations. The '2web_help' manual page contains more usage info.
+Generate a website for use on a LAN(Local Area Network) as a http/https accessible multimedia library. 2web allows you to host multimedia content as a KODI compatible http/https media server using apache2 php and minimal javascript. This software is designed to run on the latest version of the raspberry pi (4 2gig). Currently supporting a library size of ~20k shows, ~20k movies, ~20k books, ~50 weather stations and ~5k channels/radio stations on a raspberry pi 4. This software is also designed to be compatible with any Ubuntu or Debian based system. So if you have more than a raspberry pi applications are multi threaded to be able to completely utilize any amount of hardware.
+
+This is the 2web administration and update program. With this interface you can manage all 2web components simultaneously.
 
 OPTIONS
 =======
@@ -90,7 +92,9 @@ Contains all settings related to 2web and 2web modules. Sever only accessible co
   - /etc/2web/iptv/
     - This is where iptv2web settings are stored
   - /etc/2web/themes/
-    - This is the location of all default and user installed CSS themes. Any files found here with a .css extension will be copied into the theme list in the web interface.
+    - This is the location of all default and user installed CSS themes.
+    - Any files found here with a .css extension will be copied into the theme list in the web interface.
+    - Custom themes can be created with a single .css file and added in this directory.
   - /etc/2web/users/
     - This is where the administrator credentials are kept for users
 
@@ -105,4 +109,17 @@ Contains all settings related to 2web and 2web modules. Sever only accessible co
     - This will cause the new episodes to be cached in the background using a single file queue. Active caching still will work.
   - /etc/2web/weatherLocation.cfg
     - This determines the location used for the weather on the homepage.
+
+### Performance Enhancements
+
+#### RAMDISKS
+
+A ramdisk can be used on the entire website to host the entire generated site in ram, media files will still be loaded from disk. If you load the entire website into ram it will need to be regenerated every time the server is rebooted. In this case if the system is fast enough you can edit /etc/cron.d/2web by adding --parallel to make site components run parallel processing. However some individual directories in the site can be safely symlinked to a ramdisk with little issue.
+
+- /var/cache/2web/web/web_cache/
+  - This directory contains php generated files for caching web requests
+- /var/cache/2web/web/RESOLVER-CACHE/
+  - This directory contains the temporary media files cached for playback from external website videos.
+- /var/cache/2web/web/m3u_cache/
+  - Contains the temporary .m3u playlists generated on web request.
 

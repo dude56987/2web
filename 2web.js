@@ -16,6 +16,27 @@ function toggleVisibleClass( visibleClass ){
   return true
 }
 //-----------------------------------------------------------------------------
+function hideVisibleClass( visibleClass ){
+	var elementArray = document.getElementsByClassName( visibleClass );
+	// make hidden items visible
+	var newVisibility = true;
+  for (var index=0; index < elementArray.length;index++){
+   elementArray[index].hidden = newVisibility;
+  }
+  return true
+}
+//-----------------------------------------------------------------------------
+function setHeaderStartState(){
+	if (window.innerWidth < window.innerHeight || window.innerWidth < 800 ) {
+		console.log("Phone Mode")
+		// this is the phone portrat mode
+		toggleVisibleClass("headerButtons");
+	}else{
+		// this is the desktop mode
+		console.log("Desktop Mode")
+	}
+}
+//-----------------------------------------------------------------------------
 function filterByClass(className,searchText){
   var filter = searchText;
   filter = filter.toLowerCase();

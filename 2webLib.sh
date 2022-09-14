@@ -1,6 +1,6 @@
 #! /bin/bash
 ########################################################################
-createDir(){
+function createDir(){
 	if ! test -d "$1";then
 		mkdir -p "$1"
 		# set ownership of directory and subdirectories as www-data
@@ -9,7 +9,7 @@ createDir(){
 	chown www-data:www-data "$1"
 }
 ########################################################################
-webRoot(){
+function webRoot(){
 	# the webdirectory is a cache where the generated website is stored
 	if [ -f /etc/2web/nfo/web.cfg ];then
 		webDirectory=$(cat /etc/2web/nfo/web.cfg)
@@ -26,28 +26,37 @@ webRoot(){
 	echo "$webDirectory"
 }
 ########################################################################
-checkFileDataSum(){
+function checkFileDataSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
 	filePath=$2
+
 	# check the sum of a directory and compare it to a previously stored sum
 	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
-	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
+
 	# check for a previous sum
 	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
+		# load the old sum
 		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
+
+		# generate the new md5sum for the file
+		newSum="$(cat "$filePath" | md5sum | cut -d' ' -f1 )"
+
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
+			ALERT "Sum is UNCHANGED"
 			# UNCHANGED
 			# if the sums are the same no change detected, pass false
+			# return false
 			return 1
 		else
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
 			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+			# return true
 			return 0
 		fi
 	else
@@ -55,11 +64,12 @@ checkFileDataSum(){
 		# no previous file was found, pass true
 		# update the sum
 		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+		# return true
 		return 0
 	fi
 }
 ########################################################################
-buildHomePage(){
+function buildHomePage(){
 
 	webDirectory=$1
 
@@ -217,5 +227,79 @@ function checkModStatus(){
 		exit
 	fi
 }
-########################################################################
-
+################################################################################
+function alterArticles(){
+	pageComicName=$1
+	# alter the title to make articles(a, an, the) sort correctly
+	if echo "$pageComicName" | grep --ignore-case -q "^the ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[T,t][H,h][E,e] //g")
+		pageComicName="$pageComicName, The"
+	fi
+	if echo "$pageComicName" | grep --ignore-case -q "^a ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a] //g")
+		pageComicName="$pageComicName, A"
+	fi
+	if echo "$pageComicName" | grep --ignore-case -q "^an ";then
+		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a][N,n] //g")
+		pageComicName="$pageComicName, An"
+	fi
+	# check for id #s
+	if echo "$pageComicName" | grep --ignore-case -q "^[0-9]\{4,\} ";then
+		comicIdNumber=$(echo "$pageComicName" | cut -d' ' -f1)
+		pageComicName=$(echo "$pageComicName" | sed "s/^[0-9]\{4,\} //g")
+		pageComicName="$pageComicName, $comicIdNumber"
+	fi
+	echo "$pageComicName"
+}
+################################################################################
+function waitQueue(){
+	# PARALLEL PROCESSING COMMAND
+	# wait for queue to free up for next command
+	sleepTime=$1
+	totalCPUS=$2
+	while true;do
+		# jobs -r only shows running jobs
+		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
+			#ALERT "WAITING FOR QUEUE PLACE TO OPEN"
+			sleep $sleepTime
+		else
+			break
+		fi
+	done
+}
+################################################################################
+function blockQueue(){
+	# PARALLEL PROCESSING COMMAND
+	# wait for all jobs in queue to finish
+	sleepTime=$1
+	while true;do
+		if [ $(jobs -r | wc -l) -gt 0 ];then
+			# jobs -r only shows running jobs
+			#ALERT "BLOCKING QUEUE '$( jobs -r | wc -l )' Remaining Jobs"
+			#ALERT "$(jobs -r)"
+			sleep $sleepTime
+			#sleep 2
+		else
+			break
+		fi
+	done
+}
+################################################################################
+ALERT(){
+	echo
+	echo "$1";
+	echo
+}
+################################################################################
+INFO(){
+	width=$(tput cols)
+	# cut the line to make it fit on one line using ncurses tput command
+	buffer="                                                                                "
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# print the line
+	printf "$output\r"
+}
+################################################################################

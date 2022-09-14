@@ -28,6 +28,8 @@ drawPosterWidget("shows");
 if (file_exists("/var/cache/2web/web/shows/shows.index")){
 	$sourceFiles = file("/var/cache/2web/web/shows/shows.index", FILE_IGNORE_NEW_LINES);
 	$sourceFiles = array_unique($sourceFiles);
+	# sort the array
+	sort($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){

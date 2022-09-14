@@ -1,6 +1,7 @@
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
+	<script src='/2web.js'></script>
 </head>
 <body>
 <?php
@@ -60,6 +61,7 @@ echo "<div id='comicLibaryPaths' class='settingListCard'>";
 echo "<h2>Comic Libary Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/libaries.d/*.cfg"));
 // reverse the time sort
+sort($sourceFiles);
 $sourceFiles = array_reverse($sourceFiles);
 # write each config file as a editable entry
 foreach($sourceFiles as $sourceFile){

@@ -31,7 +31,7 @@ echo "</span>";
 echo "</div>";
 
 # figure out the header data template
-$cacheFile=$webDirectory."/footerData.index";
+$cacheFile=$webDirectory."/web_cache/footerData.index";
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){

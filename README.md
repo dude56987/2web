@@ -1,25 +1,34 @@
 2web
 ====
 
-Generate a website for use on a LAN(Local Area Network) as a http accessable multimedia libary. 2web allows you to host multimedia content as a kodi compatible php media server using apache2 and minimal javascript. This software is designed to run on the latest version of the raspberry pi. Currently supporting a libary size of ~20k shows, ~20k movies, ~20k books, ~100 weather stations and ~100k channels/radio stations on a raspberry pi 4. This software is compatible with any Ubuntu or Debian system as well.
+Generate a website for use on a LAN(Local Area Network) as a http/https accessible multimedia library. 2web allows you to host multimedia content as a KODI compatible http/https media server using apache2 php and minimal javascript. This software is designed to run on the latest version of the raspberry pi (4 2gig). Currently supporting a library size of ~20k shows, ~20k movies, ~20k books, ~50 weather stations and ~5k channels/radio stations on a raspberry pi 4. This software is also designed to be compatible with any Ubuntu or Debian based system. So if you have more than a raspberry pi applications are multi threaded to be able to completely utilize any amount of hardware.
 
 ## Supported Module Content
 
  - Comics
  - Movies
  - Shows
+ - Music
  - Live TV
  - Live Radio
- - Weather Forcasts
+ - Weather Forecasts
  - System Graphs
 
 ## Features
 
- - Add web addresses to include any website or individual channel on sites supported by youtube-dl as a show
- - Add web addreses of online comics to cache them locally in your comics section
- - Light touches of Javascript
- - Mostly PHP and Bash
- - Themes
+ - NO API KEYS REQUIRED
+ - Add web addresses to include any website or individual user channel on sites supported by ([yt-dlp](https://github.com/yt-dlp/yt-dlp)/[youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)) as a show in the media libary
+ - Add web addresses of online comics to cache them locally in your comics section with [gallery-dl](https://github.com/mikf/gallery-dl)
+ - Add book collections containing .cbz .txt .pdf .zip or simple folders containing image files.
+ - Add music collections and music is auto-sorted based on id3 tag information
+ - Add any livestream web address as a live channel using [streamlink](https://streamlink.github.io)
+ - Mostly [PHP](https://www.php.net) and [Bash](https://www.gnu.org/software/bash/)
+ - Light touches of [Javascript](https://en.wikipedia.org/wiki/JavaScript) mostly for html5 live in webpage player
+ - Weather info via [weather-util](http://fungi.yuggoth.org/weather/) WITHOUT NEED FOR AN API KEY thanks to METAR data from the National Oceanic and Atmospheric Administration and forecasts from the National Weather Service.
+ - Lots of included Themes and custom themes can be installed with a single CSS file
+ - Direct Links to hosted media for playback with player of your choice
+ - VLC links to immediately start playback in [VLC](https://www.videolan.org/vlc/) from the webpage on mobile
+ - Command line interface with excessive man pages
  - SOFTWARE DOES NOT TOUCH THE DATA SOURCES, everything is symlinked
 
 ## Access
@@ -27,23 +36,39 @@ To access the local webserver you must have run
 
 	2web
 
-to enable it. Then go to
+as an adminstrator(sudo 2web) to enable it. Then go to
 
 	http://localhost/
+
+Once you login the first time you will probably want to create a adminstrative user to password lock the settings. You can then enable the modules you want to run automatically at
+
+	https://localhost/settings/modules.php
+
+### Apache Settings
 
 2web takes over port 80 and 443 by default but can be changed in
 
 	/etc/apache2/sites-available/0-2web-website.conf
 	/etc/apache2/sites-available/0-2web-website-SSL.conf
 
-
 ### Settings
 
-Web interface contains settings for adding locally stored server paths to content and ways to add remote content metadata and links to the server.
+Nearly everything can be configured via the web interface.
+
+	http://localhost/settings/
+
+
+### Updates
+
+Updates to modules are scheduled via cron and can be only edited at
+
+	/etc/cron.d/2web
+
+by a system administrator. If you want to force a update immediately you must have Command line access to the system and use the update commands in the below CLI section.
 
 ## CLI
 
-The CLI can be used by adminstrators on the server to update various content stacks on the server.
+The CLI can be used by administrators on the server to update various content stacks on the server.
 
 To build the backbone of the webserver run
 
@@ -54,6 +79,10 @@ This will enable the server and place all base webpages to allow access to the w
 The master interface can update all modules in one command.
 
 	2web all
+
+Or to max out the speed
+
+	2web --parallel
 
 Each individual web section has its own CLI interface for running manual generation or a clean reset of a individual module. Resets may be required for missing or removed content. Sometimes after updates the layout will change and the remote metadata will duplicate this can be solved by a section reset. In the worst case if functionality is broken you can run
 

@@ -1250,6 +1250,7 @@ main(){
 		# upgrade streamlink and youtube-dl pip packages
 		pip3 install --upgrade streamlink
 		pip3 install --upgrade youtube-dl
+		pip3 install --upgrade yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		ALERT "Checking if Cached HLS.js is older than 120 days..."
 		if cacheCheck "$(webRoot)/live/hls.js" 120;then

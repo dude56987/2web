@@ -27,8 +27,9 @@ if (file_exists("/var/cache/2web/web/movies/movies.index")){
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",file_get_contents("/var/cache/2web/web/movies/movies.index"));
 	// reverse the time sort
-	//$sourceFiles = array_reverse($sourceFiles);
 	$sourceFiles = array_unique($sourceFiles);
+	# sort the list
+	sort($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
 		if (file_exists($sourceFile)){

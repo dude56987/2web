@@ -26,7 +26,7 @@
 ################################################################################
 # update every 4 hours, if youtube sources are included updates can be frequent
 #0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/2web_nfo.log
-0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web
+0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
 
 ################################################################################
 # update the iptv lists once a week changes to these are more infrequent
@@ -36,7 +36,7 @@
 ################################################################################
 # update the comic books
 #@monthly root /usr/bin/niceload /usr/bin/comic2web > /var/log/2web_comic.log
-@monthly root /usr/bin/niceload /usr/bin/comic2web
+@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel
 ################################################################################
 # A parallel threaded option for comic2web
 # - disable the comic2web option without --parallel
@@ -46,7 +46,7 @@
 ################################################################################
 # update the music
 #@monthly root /usr/bin/niceload /usr/bin/music2web > /var/log/2web_music.log
-@monthly root /usr/bin/niceload /usr/bin/music2web
+@monthly root /usr/bin/niceload /usr/bin/music2web --parallel
 ################################################################################
 # A parallel threaded option for music2web
 # - disable the music2web option without --parallel

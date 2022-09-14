@@ -47,8 +47,8 @@ lint:
 	# check the transcoders
 	php -l resolvers/*.php
 	# check the shell scripts
-	shellcheck 2web.sh
-	shellcheck *2web.sh
+	shellcheck 2web.sh || echo "Errors Found..."
+	shellcheck *2web.sh || echo "Errors Found..."
 	# check the package
 	lintian 2web_UNSTABLE.deb
 	# check the package in detail
@@ -119,15 +119,9 @@ build-deb:
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
+	mkdir -p debian/etc/avahi/;
+	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/var/lib/2web/;
-	# write version info
-	/usr/bin/git log --oneline | wc -l > debian/usr/share/2web/version.cfg
-	if /usr/bin/git status| grep "Changes not staged for";then echo "+UNSTABLE-BRANCH" >> debian/usr/share/2web/version.cfg;fi
-	if /usr/bin/git status| grep "Changes to be committed";then echo "+TESTING" >> debian/usr/share/2web/version.cfg;fi
-	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
-	# version date of creation
-	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg
-	#/usr/bin/git log -1 >> debian/usr/share/2web/versionDate.cfg
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
 	# copy over default config templates
@@ -164,18 +158,39 @@ build-deb:
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
-	# add the lib
-	cp 2webLib.sh debian/var/lib/2web/common
+	# add the base lib used across all modules
+	#cp 2webLib.sh debian/var/lib/2web/common
+	echo "#! /bin/bash" > debian/var/lib/2web/common
+	# remove all comment lines from the code to reduce package size and disk read on execution
+	grep --invert-match "^[[:blank:]]*#" 2webLib.sh | tr -s '\n' >> debian/var/lib/2web/common
 	# copy update scripts to /usr/bin
-	cp 2web.sh debian/usr/bin/2web
-	cp nfo2web.sh debian/usr/bin/nfo2web
-	cp music2web.sh debian/usr/bin/music2web
-	cp iptv2web.sh debian/usr/bin/iptv2web
-	cp comic2web.sh debian/usr/bin/comic2web
-	cp graph2web.sh debian/usr/bin/graph2web
-	cp kodi2web.sh debian/usr/bin/kodi2web
-	cp weather2web.sh debian/usr/bin/weather2web
-	cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
+	#cp 2web.sh debian/usr/bin/2web
+	echo "#! /bin/bash" > debian/usr/bin/2web
+	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
+	#cp nfo2web.sh debian/usr/bin/nfo2web
+	echo "#! /bin/bash" > debian/usr/bin/nfo2web
+	grep --invert-match "^[[:blank:]]*#" nfo2web.sh | tr -s '\n' >> debian/usr/bin/nfo2web
+	#cp music2web.sh debian/usr/bin/music2web
+	echo "#! /bin/bash" > debian/usr/bin/music2web
+	grep --invert-match "^[[:blank:]]*#" music2web.sh | tr -s '\n' >> debian/usr/bin/music2web
+	#cp iptv2web.sh debian/usr/bin/iptv2web
+	echo "#! /bin/bash" > debian/usr/bin/iptv2web
+	grep --invert-match "^[[:blank:]]*#" iptv2web.sh | tr -s '\n' >> debian/usr/bin/iptv2web
+	#cp comic2web.sh debian/usr/bin/comic2web
+	echo "#! /bin/bash" > debian/usr/bin/comic2web
+	grep --invert-match "^[[:blank:]]*#" comic2web.sh | tr -s '\n' >> debian/usr/bin/comic2web
+	#cp graph2web.sh debian/usr/bin/graph2web
+	echo "#! /bin/bash" > debian/usr/bin/graph2web
+	grep --invert-match "^[[:blank:]]*#" graph2web.sh | tr -s '\n' >> debian/usr/bin/graph2web
+	#cp kodi2web.sh debian/usr/bin/kodi2web
+	echo "#! /bin/bash" > debian/usr/bin/kodi2web
+	grep --invert-match "^[[:blank:]]*#" kodi2web.sh | tr -s '\n' >> debian/usr/bin/kodi2web
+	#cp weather2web.sh debian/usr/bin/weather2web
+	echo "#! /bin/bash" > debian/usr/bin/weather2web
+	grep --invert-match "^[[:blank:]]*#" weather2web.sh | tr -s '\n' >> debian/usr/bin/weather2web
+	#cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
+	echo "#! /bin/bash" > debian/usr/bin/ytdl2nfo
+	grep --invert-match "^[[:blank:]]*#" ytdl2nfo.sh | tr -s '\n' >> debian/usr/bin/ytdl2nfo
 	# build the man pages for the command line tools
 	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
 	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1.gz
@@ -219,22 +234,39 @@ build-deb:
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
 	# copy the resolvers
+	#grep --invert-match "^[[:blank:]]*#" ytdl-resolver.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/ytdl-resolver.php
+	#grep --invert-match "^[[:blank:]]*#" iptv-resolver.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/iptv-resolver.php
+	#grep --invert-match "^[[:blank:]]*#" m3u-gen.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/m3u-gen.php
 	cp resolvers/ytdl-resolver.php debian/usr/share/2web/
 	cp resolvers/m3u-gen.php debian/usr/share/2web/
 	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
-	#cp transcode.php debian/usr/share/2web/
+	cp resolvers/transcode.php debian/usr/share/2web/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
 	chmod u+rwx debian/usr/bin/*
 	chmod go-rwx debian/usr/bin/*
 	# copy over the cron job
-	cp 2web.cron debian/etc/cron.d/2web-update
+	cp 2web.cron debian/usr/share/2web/cron
 	# copy over apache configs
 	cp -v apacheConf/0-2web-ports.conf debian/etc/apache2/conf-available/
 	cp -v apacheConf/0-2web-website.conf debian/etc/apache2/sites-available/
 	cp -v apacheConf/0-2web-website-SSL.conf debian/etc/apache2/sites-available/
 	cp -v apacheConf/0-2web-website-compat.conf debian/etc/apache2/sites-available/
+	# copy over the zeroconf configs to anounce the service
+	cp -v apacheConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
+	cp -v apacheConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
+	# write version info last thing before the build process of the package
+	# this also makes the build date time more correct since the package is
+	# built but is now being compressed and converted into a debian package
+	/usr/bin/git log --oneline | wc -l > debian/usr/share/2web/version.cfg
+	if /usr/bin/git status| grep "Changes not staged for";then echo "+UNSTABLE-BRANCH" >> debian/usr/share/2web/version.cfg;fi
+	if /usr/bin/git status| grep "Changes to be committed";then echo "+TESTING" >> debian/usr/share/2web/version.cfg;fi
+	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
+	# version date of creation
+	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg
+	date > debian/usr/share/2web/buildDate.cfg
+	#/usr/bin/git log -1 >> debian/usr/share/2web/versionDate.cfg
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk

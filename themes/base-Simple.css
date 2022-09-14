@@ -259,10 +259,25 @@ ol li{
 	*/
 	filter: blurr(5px);
 }
+.menuButtonBox{
+	width: 3rem;
+	margin: 0px;
+	padding: 0px;
+	margin-bottom: 1rem;
+}
 .menuButton{
-	background-color: var(--textColor);
-	border: 0.1rem solid var(--borderColor);
-	display: none !important;
+	background-color: var(--glassBackground);
+	width: 100%;
+	border: 0.2rem solid var(--borderColor);
+	/* thicken menubuttons */
+	height: 0.6rem;
+	margin: 0px;
+	margin-top: 0.1rem;
+	/*display: none !important;*/
+	display: inline-block !important;
+	/*
+	float: left;
+	*/
 }
 .enabledSetting{
  background-color: #99ff33 !important;
@@ -290,12 +305,17 @@ ol li{
 		font-size: 2rem;
 	}
 }
+.headerButtons{
+	visibility: hidden;
+}
 */
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
+		/*
 		.menuButton{
 			display: inline !important;
 		}
+		*/
 		/*on desktop sites do not have the scroll slide channel list, place the list below the player*/
 		.channelList{
 			display: none !important;
@@ -333,38 +353,41 @@ ol li{
 		display: inline !important;
 	}
 	/* if the window is smaller than 800px */
+	.menuButtonBox{
+		width: 100%;
+	}
 	.menuButton{
 		display: block !important;
 		background-color: var(--glassBackground);
-		height: 0.33rem;
+		height: 0.6rem;
 		margin: 0px;
-		margin-top:0.6rem;
+		margin-top:0.1rem;
 		/*
 		margin-bottom:0.5rem;
 		*/
 	}
-	.header a{
+	.headerButtons a{
 		box-shadow: none;
 		margin-top: 0px;
 		margin-bottom: 0px;
-		text-size: 2rem;
+		font-size: 2rem;
 		/*
 		padding-top: 1rem;
 		padding-bottom: 1rem;
 		transition: 1s;
 		*/
 	}
+	/*
 	.header{
 		height: 3.3rem;
 		overflow: hidden;
-		/*transition: 5s;*/
 	}
 	.header:hover{
 		position: relative;
 		z-index: 1;
 		overflow: visible;
-		/*height: auto;*/
 	}
+	*/
 }
 ol{
 	background-color: var(--glassBackground);
@@ -599,14 +622,22 @@ input{
 	text-decoration: none;
 	text-align: center;
 }
-
+a .inputCard:hover{
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+}
+a .inputCard h3{
+	color: var(--textColor) !important;
+}
 .titlecard .button{
 	white-space: nowrap;
 	font-size: 1rem;
 	line-height: 4rem;
 }
 .header .button{
+	/*
 	white-space: nowrap;
+	*/
 	line-height: 2rem;
 }
 .button:hover{
@@ -921,6 +952,7 @@ input{
 	*/
 }
 .indexSeries{
+	transition: width 2s, height 4s;
 	font-size: 1rem;
 	vertical-align: top;
 	text-decoration: none;
@@ -1315,12 +1347,20 @@ tr{
 	text-decoration: none;
 	text-align: center;
 	color: var(--textColor);
-	display: inline-block;
+	display: block;
+	min-height: 3rem;
+	/*
 	width: 95vw;
-	margin: 2vw;
-/*
+	*/
+	margin: 0px;
+	/*
+	margin-top: 1rem;
+	margin-bottom:1rem;
+	*/
+	transition: height 2s ease-in-out;
+	/*
 	white-space: nowrap;
-*/
+	*/
 }
 /*
 .headerLoginButton{
@@ -1372,6 +1412,9 @@ tr{
 	.loginLogoutBox{
 		display: block;
 	}
+	.headerButtons{
+		text-align: left;
+	}
 	.header{
 		margin-right: 0px;
 	}
@@ -1381,6 +1424,9 @@ tr{
 		- This makes the text beside the header buttons disapear so they only show as icons*/
 	.headerText{
 		display: none !important;
+	}
+	.headerButtons{
+		text-align: center;
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
@@ -1493,9 +1539,18 @@ pre{
 .trackListing .track h2{
 	display: none !important;
 }
+.allGraphLink{
+	display: inline-block;
+	width: 49vw;
+}
 .graphLink{
 	display: inline-block;
-	width: 50vw;
+	/*
+	height: 40rem;
+	width: 80%;
+	*/
+	width: 30rem;
+	max-width: 100%;
 }
 .graphLink img{
 	width: 100%;
@@ -1505,4 +1560,7 @@ pre{
 }
 .homeFortune{
 	text-decoration: none;
+}
+.seriesPlot{
+	min-height: 250px;
 }

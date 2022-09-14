@@ -1,7 +1,25 @@
 #! /bin/bash
 ################################################################################
+# COMIC2WEB generates websites from image filled directories
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
 # enable debug log
 #set -x
+################################################################################
+source /var/lib/2web/common
 ################################################################################
 ALERT(){
 	echo;
@@ -515,30 +533,6 @@ scanPages(){
 			fi
 		fi
 	done
-}
-################################################################################
-function alterArticles(){
-	pageComicName=$1
-	# alter the title to make articles(a, an, the) sort correctly
-	if echo "$pageComicName" | grep --ignore-case -q "^the ";then
-		pageComicName=$(echo "$pageComicName" | sed "s/^[T,t][H,h][E,e] //g")
-		pageComicName="$pageComicName, The"
-	fi
-	if echo "$pageComicName" | grep --ignore-case -q "^a ";then
-		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a] //g")
-		pageComicName="$pageComicName, A"
-	fi
-	if echo "$pageComicName" | grep --ignore-case -q "^an ";then
-		pageComicName=$(echo "$pageComicName" | sed "s/^[A,a][N,n] //g")
-		pageComicName="$pageComicName, An"
-	fi
-	# check for id #s
-	if echo "$pageComicName" | grep --ignore-case -q "^[0-9]\{4,\} ";then
-		comicIdNumber=$(echo "$pageComicName" | cut -d' ' -f1)
-		pageComicName=$(echo "$pageComicName" | sed "s/^[0-9]\{4,\} //g")
-		pageComicName="$pageComicName, $comicIdNumber"
-	fi
-	echo "$pageComicName"
 }
 ################################################################################
 renderPage(){
@@ -1140,6 +1134,10 @@ webUpdate(){
 
 	totalComics=0
 
+	# check for parallel processing and count the cpus
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+	fi
 	ALERT "Scanning libary config '$downloadDirectory'"
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
 		ALERT "Scanning Libary Path... '$comicLibaryPath'"
@@ -1167,13 +1165,7 @@ webUpdate(){
 					# - build the individual pages for the comic
 					if echo "$@" | grep -q -e "--parallel";then
 						# pause execution while no cpus are open
-						while true;do
-							if [ $(jobs | wc -l) -ge $totalCPUS ];then
-								sleep 0.5
-							else
-								break
-							fi
-						done
+						waitQueue 0.5 "$totalCPUS"
 						scanPages "$comicNamePath" "$webDirectory" single &
 					else
 						scanPages "$comicNamePath" "$webDirectory" single
@@ -1192,13 +1184,7 @@ webUpdate(){
 						# for each chapter build the individual pages
 						if echo "$@" | grep -q -e "--parallel";then
 							# pause execution while no cpus are open
-							while true;do
-								if [ $(jobs | wc -l) -ge $totalCPUS ];then
-									sleep 0.5
-								else
-									break
-								fi
-							done
+							waitQueue 0.5 "$totalCPUS"
 							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
 						else
 							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
@@ -1211,13 +1197,7 @@ webUpdate(){
 	done
 	# block for parallel threads here
 	if echo "$@" | grep -q -e "--parallel";then
-		while 1;do
-			if [ $(jobs | wc -l) -eq 0 ];then
-				break
-			else
-				sleep 1
-			fi
-		done
+		blockQueue 1
 	fi
 	INFO "Writing total Comics "
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"

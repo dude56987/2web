@@ -3,7 +3,10 @@
 <?php
 $startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
-$cacheFile=$webDirectory."/headerData.index";
+$cacheFile=$webDirectory."/web_cache/headerData.index";
+
+include("/usr/share/2web/2webLib.php");
+
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
@@ -23,76 +26,82 @@ if ($writeFile){
 	$fileData = "";
 
 	# build the header
-	$fileData .= "<div id='header' class='header'>";
+	$fileData .= formatText("<div id='header' class='header'>");
 
-	$fileData .= "<hr class='menuButton'/>";
-	$fileData .= "<hr class='menuButton'/>";
-	$fileData .= "<hr class='menuButton'/>";
-	$fileData .= "<hr class='menuButton'/>";
+	$fileData .= formatText("<div class='menuButtonBox' onclick='toggleVisibleClass(\"headerButtons\")'>", 1);
+	$fileData .= formatText("<hr class='menuButton'/>",2);
+	$fileData .= formatText("<hr class='menuButton'/>",2);
+	$fileData .= formatText("<hr class='menuButton'/>",2);
+	$fileData .= formatText("</div>",1);
 
-	$fileData .= "<a class='button' href='/'>";
-	$fileData .= "&#127968;";
-	$fileData .= "<span class='headerText'>";
-	$fileData .= "HOME";
-	$fileData .= "</span>";
-	$fileData .= "</a>";
+	//$fileData .= formatText('<div class="headerButtons" onload="hideVisibleClass(\'headerButtons\')">',1);
 
-	$fileData .= "<a class='button' href='/new/'>";
-	$fileData .= "📜";
-	$fileData .= "<span class='headerText'>";
-	$fileData .= "NEW";
-	$fileData .= "</span>";
-	$fileData .= "</a>";
 
-	$fileData .= "<a class='button' href='/random/'>";
-	$fileData .= "🔀";
-	$fileData .= "<span class='headerText'>";
-	$fileData .= "RANDOM";
-	$fileData .= "</span>";
-	$fileData .= "</a>";
+	$fileData .= formatText('<div class="headerButtons">',1);
+
+	$fileData .= formatText("<a class='button' href='/'>",2);
+	$fileData .= formatText("&#127968;",3);
+	$fileData .= formatText("<span class='headerText'>",3);
+	$fileData .= formatText("HOME",4);
+	$fileData .= formatText("</span>",3);
+	$fileData .= formatText("</a>",2);
+
+	$fileData .= formatText("<a class='button' href='/new/'>",2);
+	$fileData .= formatText("📜",3);
+	$fileData .= formatText("<span class='headerText'>",3);
+	$fileData .= formatText("NEW",4);
+	$fileData .= formatText("</span>",3);
+	$fileData .= formatText("</a>",2);
+
+	$fileData .= formatText("<a class='button' href='/random/'>",2);
+	$fileData .= formatText("🔀",3);
+	$fileData .= formatText("<span class='headerText'>",3);
+	$fileData .= formatText("RANDOM",4);
+	$fileData .= formatText("</span>",3);
+	$fileData .= formatText("</a>",2);
 
 	if (file_exists("$webDirectory/movies/movies.index")){
-		$fileData .= "<a class='button' href='/movies'>";
-		$fileData .= "🎥";
-		$fileData .= "<span class='headerText'>";
-		$fileData .= "MOVIES";
-		$fileData .= "</span>";
-		$fileData .= "</a>";
+		$fileData .= formatText("<a class='button' href='/movies'>",2);
+		$fileData .= formatText("🎥",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("MOVIES",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 	if (file_exists("$webDirectory/shows/shows.index")){
-		$fileData .= "<a class='button' href='/shows'>";
-		$fileData .= "📺";
-		$fileData .= "<span class='headerText'>";
-		$fileData .= "SHOWS";
-		$fileData .= "</span>";
-		$fileData .= "</a>";
+		$fileData .= formatText("<a class='button' href='/shows'>",2);
+		$fileData .= formatText("📺",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("SHOWS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 	if (file_exists("$webDirectory/music/music.index")){
-		$fileData .= "<a class='button' href='/music'>";
-		$fileData .= "🎧";
-		$fileData .= "<span class='headerText'>";
-		$fileData .= "MUSIC";
-		$fileData .= "</span>";
-		$fileData .= "</a>";
+		$fileData .= formatText("<a class='button' href='/music'>",2);
+		$fileData .= formatText("🎧",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("MUSIC",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 	if (file_exists("$webDirectory/comics/comics.index")){
-		$fileData .= "<a class='button' href='/comics'>";
-		$fileData .= "📚";
-		$fileData .= "<span class='headerText'>";
-		$fileData .= "COMICS";
-		$fileData .= "</span>";
-		$fileData .= "</a>";
+		$fileData .= formatText("<a class='button' href='/comics'>",2);
+		$fileData .= formatText("📚",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("COMICS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 
 	if (file_exists("$webDirectory/totalChannels.index")){
 		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
 			if (file_exists("$webDirectory/live/index.php")){
-				$fileData .= "<a class='button' href='/live'>";
-				$fileData .= "📡";
-				$fileData .= "<span class='headerText'>";
-				$fileData .= "LIVE";
-				$fileData .= "</span>";
-				$fileData .= "</a>";
+				$fileData .= formatText("<a class='button' href='/live'>",2);
+				$fileData .= formatText("📡",3);
+				$fileData .= formatText("<span class='headerText'>",3);
+				$fileData .= formatText("LIVE",4);
+				$fileData .= formatText("</span>",3);
+				$fileData .= formatText("</a>",2);
 			}
 		}
 	}
@@ -101,25 +110,25 @@ if ($writeFile){
 	if (file_exists("$webDirectory/weather/index.php")){
 		if (file_exists("$webDirectory/totalWeatherStations.index")){
 			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-				$fileData .= "<a class='button' href='/weather/'>";
-				$fileData .= "🌤️";
-				$fileData .= "<span class='headerText'>";
-				$fileData .= "WEATHER";
-				$fileData .= "</span>";
-				$fileData .= "</a>";
+				$fileData .= formatText("<a class='button' href='/weather/'>",2);
+				$fileData .= formatText("🌤️",3);
+				$fileData .= formatText("<span class='headerText'>",3);
+				$fileData .= formatText("WEATHER",4);
+				$fileData .= formatText("</span>",3);
+				$fileData .= formatText("</a>",2);
 			}
 		}
 	}
 	if (file_exists("$webDirectory/graphs/")){
-		$fileData .= "<a class='button' href='/graphs/'>";
-		$fileData .= "📊";
-		$fileData .= "<span class='headerText'>";
-		$fileData .= "GRAPHS";
-		$fileData .= "</span>";
-		$fileData .= "</a>";
+		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
+		$fileData .= formatText("📊",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("GRAPHS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 	# close the listcard block
-	echo "</div>";
+	#echo "</div>";
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
@@ -128,38 +137,62 @@ if ($writeFile){
 // read the file that is cached
 echo file_get_contents($cacheFile);
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
-	echo "<a class='button headerLoginButton' href='/settings/modules.php'>";
-	echo "🛠️";
-	echo "<span class='headerText'>";
-	echo "SETTINGS";
-	echo "</span>";
-	echo "</a>";
-	echo "<a class='button headerLoginButton' href='/logout.php'>";
-	echo "🔒";
-	echo "<span class='headerText'>";
-	echo "LOGOUT";
-	echo "</span>";
-	echo "</a>";
+	formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
+	formatEcho("🛠️",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("SETTINGS",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+
+	formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
+	formatEcho("🔒",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("LOGOUT",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+
+	formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
+	formatEcho( "❔",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Help",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 }else{
-	echo "<a class='button headerLoginButton' href='/settings/modules.php'>";
-	echo "🔒";
-	echo "<span class='headerText'>";
-	echo "LOGIN";
-	echo "</span>";
-	echo "</a>";
+	formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
+	formatEcho("🔒",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("LOGIN",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+
+	formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
+	formatEcho( "❔",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Help",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 }
 // draw the help button
-echo "<a class='button' href='/help.php'>";
-echo "❔";
-echo "<span class='headerText'>";
-echo "Help";
-echo "</span>";
-echo "</a>";
+//formatEcho("<a class='button' href='/help.php'>",2);
+//formatEcho( "❔",3);
+//formatEcho("<span class='headerText'>",3);
+//formatEcho("Help",4);
+//formatEcho("</span>",3);
+//formatEcho("</a>",2);
 
 //echo "<div class='loginLogoutBoxSpacer'>";
-echo "</div>";
+
+# close the header buttons class
+#formatEcho("</div>",2);
+# close the
+formatEcho("</div>",1);
 # close the header bracket
-echo "</div>";
+formatEcho("</div>",0);
+
+formatEcho('<script>',1);
+//$fileData .= formatText('hideVisibleClass(\'headerButtons\');',2);
+formatEcho('setHeaderStartState();',2);
+formatEcho('</script>',1);
 
 # if the path is in the settings draw the logout button
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
@@ -177,6 +210,14 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "				LOGOUT";
 	echo "			</span>";
 	echo "		</a>";
+	// draw the help button
+	echo "	<hr>";
+	formatEcho("<a class='button' href='/help.php'>",2);
+	formatEcho( "❔",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Help",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 	echo "</div>";
 }else{
 	echo "<div class='loginLogoutBox'>";
@@ -186,7 +227,15 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "LOGIN";
 	echo "</span>";
 	echo "</a>";
+	echo "	<hr>";
+	// draw the help button
+	formatEcho("<a class='button' href='/help.php'>",2);
+	formatEcho( "❔",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Help",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 	echo "</div>";
 }
 ?>
-
+<hr>

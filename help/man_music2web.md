@@ -3,7 +3,7 @@
 NAME
 ====
 
-music2web - 2web Music module
+music2web - CLI for administration of music module in 2web server
 
 SYNOPSIS
 ========

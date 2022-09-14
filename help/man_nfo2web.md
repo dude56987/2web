@@ -3,7 +3,7 @@
 NAME
 ====
 
-nfo2web - CLI for administration
+nfo2web - CLI for administration of nfo media libaries in 2web server.
 
 SYNOPSIS
 ========
@@ -53,6 +53,10 @@ OPTIONS
 `-r, --reset, reset`
 
 :   Reset the state of all 2web components without deleting generated data.
+
+`--clean, clean`
+
+:   Clean the generated website of broken media. If you delete media from the source drive and it still exists run this to clean it up immediately. This operation runs automatically once every 10 days since it scans the entire database.
 
 `-w, --webgen, webgen`
 

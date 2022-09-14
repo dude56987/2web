@@ -1,7 +1,7 @@
 #! /bin/bash
 ########################################################################
-# NFO2WEB generates websites from nfo filled directories
-# Copyright (C) 2016  Carl J Smith
+# nfo2web generates websites from nfo filled directories
+# Copyright (C) 2022  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,18 +34,6 @@ drawLine(){
 	buffer="=========================================================================================================================================="
 	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
 	printf "$output\n"
-}
-########################################################################
-INFO(){
-	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
-	# print the line
-	printf "$output\r"
 }
 ########################################################################
 cleanText(){
@@ -157,11 +145,6 @@ cleanXml(){
 	cleanText "$(ripXmlTag "$data" "$tag")"
 }
 ########################################################################
-ALERT(){
-	echo
-	echo "$1";
-	echo
-}
 ########################################################################
 checkMovieThumbPaths(){
 	movieDir=$1
@@ -231,6 +214,7 @@ processMovie(){
 		nfoInfo=$(cat "$moviePath")
 		# rip the movie title
 		movieTitle=$(cleanXml "$nfoInfo" "title")
+		movieTitle=$(alterArticles "$movieTitle" )
 		#INFO "movie title = '$movieTitle'"
 		movieYear=$(cleanXml "$nfoInfo" "year")
 		#INFO "movie year = '$movieYear'"
@@ -483,6 +467,7 @@ processMovie(){
 			echo "<head>"
 			echo "<link rel='stylesheet' href='/style.css' />"
 			echo "<title>$movieTitle ($movieYear)</title>"
+			echo "<script src='/2web.js'></script>"
 			echo "<style>"
 			echo "$tempStyle"
 			echo "</style>"
@@ -854,6 +839,7 @@ processEpisode(){
 		# rip the episode title
 		#INFO "Episode show title = '$episodeShowTitle'"
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
+		episodeShowTitle=$(alterArticles "$episodeShowTitle")
 		#INFO "Episode show title after clean = '$episodeShowTitle'"
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
 		#INFO "Episode title = '$episodeShowTitle'"
@@ -1011,7 +997,9 @@ processEpisode(){
 			#echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
 			echo "<html id='top' class='seriesBackground'>"
 			echo "<head>"
+			echo "<title>$episodeShowTitle - ${episodeSeason}x${episodeNumber}</title>"
 			echo "<link rel='stylesheet' href='/style.css' />"
+			echo "<script src='/2web.js'></script>"
 			echo "<style>"
 			#add the fanart
 			echo "$tempStyle"
@@ -1091,10 +1079,6 @@ processEpisode(){
 						echo "MD5 Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						#timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
-						#'/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
-						#/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o "$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4" -c "$ytLink"
-						#echo "/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | batch
-						#echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | batch
 						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
 						#timeout 20 curl --silent "$resolverUrl" > /dev/null
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
@@ -1948,24 +1932,78 @@ function libaryPaths(){
 			# add the default download directory
 			echo "# Server Default Libaries config/"
 			# add the download directory to the paths
-			#echo "$(downloadDir)"
 			echo "/var/cache/2web/download/"
 		} > "/etc/2web/nfo/libaries.cfg"
 	fi
 	# write path to console
-	cat "/etc/2web/nfo/libaries.cfg" | grep -v "^#"
-	#cat "/etc/2web/nfo/libaries.cfg"
-	#grep -v "^#" "/etc/2web/nfo/libaries.cfg"
+	grep -v "^#" "/etc/2web/nfo/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
 	find "/etc/2web/nfo/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
-		#grep -v "^#" "$libaryConfigPath"
-		#cat "$libaryConfigPath"
-		cat "$libaryConfigPath" | grep -v "^#"
+		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
 	done
+}
+################################################################################
+function cleanMediaSection(){
+	libaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort)
+	IFS=$'\n'
+	# go into each show and movie directory in the website
+	for mediaPath in $libaries;do
+		# look for broken symlinks in the directory
+		if symlinks -r "$mediaPath" | grep -q "^dangling:";then
+			# delete entire directory for show/movie if the show/movie contains broken links
+			# a regular update will re add any shows/movies that were removed because of corrupt data
+			echo "rm -rv $mediaPath" #DEBUG
+			rm -rv "$mediaPath"
+		else
+			# diff lists are identical so no broken links exist
+			echo "NO BROKEN LINKS IN $mediaPath" #DEBUG
+		fi
+	done
+}
+################################################################################
+cleanMediaIndexFile(){
+	webPath=$1
+	webIndexName=$2
+	# read and check individual links in .index files
+	IFS=$'\n'
+	generatedIndexData=$(find "$webPath" -maxdepth 2 -mindepth 2 -type 'f' -name "$webIndexName" | sort)
+	currentIndexData=$(cat "$webPath$webIndexName" | sort)
+
+	#diff <(echo "$generatedIndexData") <(echo "$currentIndexData")
+
+	diffCount=$(diff <(echo "$generatedIndexData") <(echo "$currentIndexData") | wc -l )
+	if [ $diffCount -eq 0 ];then
+		# nothing needs done index data is exactly the same
+		echo "Broken links could not be found in index data at $webPath$webIndexName..."
+	else
+		echo "Broken links found in $webPath$webIndexName"
+		# overwrite the current data with the correct generated one
+		echo "$generatedIndexData" > "$webPath$webIndexName"
+	fi
+}
+################################################################################
+function clean(){
+	# find and delete directories for show/movie if the show/movie contains broken links
+	cleanMediaSection "/var/cache/2web/web/movies/"
+	cleanMediaSection "/var/cache/2web/web/shows/"
+	# clean index files
+	cleanMediaIndexFile "/var/cache/2web/web/shows/" "shows.index"
+	cleanMediaIndexFile "/var/cache/2web/web/movies/" "movies.index"
+
+	# remove the web cached data for widgets
+
+	# updated(new) widgets
+	rm -rv /var/cache/2web/web/web_cache/widget_updated_movies.index
+	rm -rv /var/cache/2web/web/web_cache/widget_updated_shows.index
+	rm -rv /var/cache/2web/web/web_cache/widget_updated_episodes.index
+	# random widgets
+	rm -rv /var/cache/2web/web/web_cache/widget_random_movies.index
+	rm -rv /var/cache/2web/web/web_cache/widget_random_shows.index
+	rm -rv /var/cache/2web/web/web_cache/widget_random_episodes.index
 }
 ################################################################################
 function update(){
@@ -1997,7 +2035,7 @@ function update(){
 	################################################################################
 	# load the libary directory
 	#libaries=$(libaryPaths | tr -s "\n" | shuf )
-	libaries=$(libaryPaths | tr -s "\n" | shuf )
+	libaries=$(libaryPaths | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
 
@@ -2024,6 +2062,10 @@ function update(){
 	#homePagePath="$webDirectory/index.php"
 	showIndexPath="$webDirectory/shows/index.php"
 	movieIndexPath="$webDirectory/movies/index.php"
+	# build the movie index
+	buildMovieIndex "$webDirectory"
+	# build the show index
+	buildShowIndex "$webDirectory"
 	#touch "$showIndexPath"
 	#touch "$movieIndexPath"
 	touch "$logPagePath"
@@ -2075,22 +2117,55 @@ function update(){
 	} > "$logPagePath"
 	addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
 	addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
+	# figure out the total number of CPUS for parallel processing
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+	fi
 	# read each libary from the libary config, single path per line
-	#ALERT "LIBARIES: $libaries";
+	#ALERT "LIBARIES: $libaries"
+	echo -e "LIBARIES: \n$libaries"
 	#for libary in $libaries;do
-	echo "$libaries" | while read libary;do
+
+	#if cacheCheck "/var/cache/2web/web/cleanCheck.cfg" "7";then
+	#	# clean the database of broken entries
+	#	# - this should allow you to delete data from source drives and it automatically remove it from the website.
+	#	clean
+	#fi
+
+	IFS=$'\n'
+	#for libary in $libaries;do
+	#	echo "libary = $libary"
+	#done
+
+	IFS=$'\n'
+	#echo "$libaries" | while read libary;do
+	for libary in $libaries;do
+		echo "libary = $libary"
 		# check if the libary directory exists
 		addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
-		#INFO "Check if directory exists at '$libary'"
+		INFO "Check if directory exists at '$libary'"
+		if test -d "$libary";then
+			echo "library exists at '$libary'"
+		else
+			echo "library does not exist at '$libary'"
+		fi
 		if test -d "$libary";then
 			addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
-			#INFO "library exists at '$libary'"
+			echo "library exists at '$libary'"
 			# read each tvshow directory from the libary
 			#for show in "$libary"/*;do
 			#addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
-			find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
-				#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
-				#INFO "show path = '$show'"
+
+			foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+
+			#find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
+			#for show in $foundLibaryPaths;do
+			#	addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
+			#done
+
+			for show in $foundLibaryPaths;do
+				addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
+				ALERT "show path = '$show'"
 				################################################################################
 				# process page metadata
 				################################################################################
@@ -2103,20 +2178,26 @@ function update(){
 					showTitle=$(ripXmlTag "$showMeta" "title")
 					#INFO "showTitle = '$showTitle'"
 					showTitle=$(cleanText "$showTitle")
+					showTitle=$(alterArticles "$showTitle")
 					#INFO "showTitle after cleanText() = '$showTitle'"
 					if echo "$showMeta" | grep -q "<tvshow>";then
 						# pipe the output to a black hole and cache
-						episodeSearchResults=$(find "$show" -type f -maxdepth 2 -mindepth 2 -name '*.nfo' | wc -l)
-						#episodeSearchResults=$(find "$show" -type f -name '*.nfo' | wc -l)
-						#ls "$show"/*/*.nfo > /dev/null
+						episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
 						# make sure show has episodes
 						if [ $episodeSearchResults -gt 0 ];then
-							processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+							#ALERT "ADDING SHOW $show"
+							if echo "$@" | grep -q -e "--parallel";then
+								#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+								processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
+								# pause execution while no cpus are open
+								waitQueue 0.5 "$totalCPUS"
+							else
+								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+							fi
 							# write log info from show to the log, this must be done here to keep ordering
 							# of the log and to make log show even when the state of the show is unchanged
 							#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
 							#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
-
 						else
 							echo "[ERROR]: Show has no episodes!"
 							addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
@@ -2126,14 +2207,30 @@ function update(){
 						addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
 					fi
 				elif grep -q "<movie>" "$show"/*.nfo;then
-					# this is a move directory not a show
-					processMovie "$show" "$webDirectory"
+					#ALERT "ADDING MOVIE $show"
+					if echo "$@" | grep -q -e "--parallel";then
+						#ALERT "ADDING NEW PROCESS TO QUEUE"
+						#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+						# this is a move directory not a show
+						processMovie "$show" "$webDirectory" &
+						# pause execution while no cpus are open
+						waitQueue 0.5 "$totalCPUS"
+					else
+						# this is a move directory not a show
+						processMovie "$show" "$webDirectory"
+					fi
 				fi
 			done
+		else
+			ALERT "$show does not exist!"
 		fi
 		# update random backgrounds
 		scanForRandomBackgrounds "$webDirectory"
 	done
+	# block for parallel threads here
+	if echo "$@" | grep -q -e "--parallel";then
+		blockQueue 1
+	fi
 	# add the end to the log, add the jump to top button and finish out the html
 	addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
 	{
@@ -2232,6 +2329,10 @@ function update(){
 	################################################################################
 }
 ########################################################################
+showHelp(){
+	cat /usr/share/2web/help/nfo2web.txt
+}
+########################################################################
 main(){
 	debugCheck
 
@@ -2259,7 +2360,7 @@ main(){
 	fi
 
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat /usr/share/2web/help/nfo2web.txt
+		showHelp
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "2web Version: #"
 		cat /usr/share/2web/version.cfg
@@ -2297,12 +2398,14 @@ main(){
 		updateCerts 'yes'
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
+	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
+		clean
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		update
+		update $@
 	else
 		# if no arguments are given run the update then help commands.
-		main update
-		main help
+		update $@
+		showHelp
 		# show the server link at the bottom of the interface
 		drawLine
 		echo "http://$(hostname).local:80/"
@@ -2313,4 +2416,4 @@ main(){
 		drawLine
 	fi
 }
-main "$@"
+main $@

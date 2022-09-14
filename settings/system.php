@@ -1,6 +1,7 @@
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
+	<script src='/2web.js'></script>
 </head>
 <body>
 <?php
@@ -203,6 +204,11 @@ include("settingsHeader.php");
 		if (file_exists("/usr/share/2web/versionDate.cfg")){
 			echo "	<div>";
 			echo "		Version Publish Date: ".file_get_contents("/usr/share/2web/versionDate.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/buildDate.cfg")){
+			echo "	<div>";
+			echo "		Build Date: ".file_get_contents("/usr/share/2web/buildDate.cfg");
 			echo "	</div>";
 		}
 		echo "</div>";

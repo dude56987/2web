@@ -1,4 +1,20 @@
 #! /bin/bash
+########################################################################
+# graph2web creates a web interface to munin graphs on 2web server
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 # enable debug log
 #set -x
@@ -93,7 +109,6 @@ ALERT(){
 }
 ################################################################################
 function update(){
-	set -x
 	# this will launch a processing queue that downloads updates to graph
 	webDirectory=$(webRoot)
 
@@ -131,52 +146,66 @@ function update(){
 		# get the filename and path
 		fileName=$(echo "$graphPath" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/-day//g")
 
-		createDir "$webDirectory/graphs/$fileName/"
-		# read each graph path and build a directory for each set of graphs
-		linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/$fileName-day.png"
-		linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/$fileName-week.png"
-		linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/$fileName-month.png"
-		linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/$fileName-year.png"
+		#if cacheCheck "$webDirectory/graphs/$fileName/index.php" 7;then
+		if test -f "$webDirectory/graphs/$fileName/index.php";then
+			# if the graph has been added to the server already skip this
+			INFO "Already processed $fileName graph..."
+		else
+			# the graph does not exist on the webserver but is enabled in munin so activate it
 
-		# copy over the metadata for the template to use
-		titleClean=$(echo "$fileName" | sed "s/_/ /g" )
-		echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
+			createDir "$webDirectory/graphs/$fileName/"
+			# read each graph path and build a directory for each set of graphs
+			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/$fileName-day.png"
+			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/$fileName-week.png"
+			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/$fileName-month.png"
+			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/$fileName-year.png"
 
-		# build the index entry for the graph on the main index
-		{
-			echo "<a class='showPageEpisode' href='/graphs/$fileName/'>"
-			echo "	<h2 class='title'>"
-			echo "  	$titleClean"
-			echo "	</h2>"
-			echo "	<img loading='lazy' src='/graphs/$fileName/$fileName-day.png'>"
-			echo "</a>"
-		} > "$webDirectory/graphs/$fileName/graphs.index"
+			# copy over the metadata for the template to use
+			titleClean=$(echo "$fileName" | sed "s/_/ /g" )
+			echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
 
-		# copy over the php template for the graphs
-		linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
+			# build the index entry for the graph on the main index
+			{
+				echo "<a class='showPageEpisode' href='/graphs/$fileName/'>"
+				echo "	<h2 class='title'>"
+				echo "  	$titleClean"
+				echo "	</h2>"
+				echo "	<img loading='lazy' src='/graphs/$fileName/$fileName-day.png'>"
+				echo "</a>"
+			} > "$webDirectory/graphs/$fileName/graphs.index"
 
-		# add graphs to graphs.index
-		echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/graphs/graphs.index"
+			# copy over the php template for the graphs
+			linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
 
-		# add to new indexes
-		echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/graphs.index"
-		echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/all.index"
+			# add graphs to graphs.index
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/graphs/graphs.index"
 
-		# add to new indexes
-		echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
-		echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
+			# add to new indexes
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/graphs.index"
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/all.index"
+
+			# add to new indexes
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
+
+		fi
 	done
 	if test -f "$webDirectory/new/graphs.index";then
 		chown www-data:www-data "$webDirectory/new/graphs.index"
 		# limit the new list to 200 entries
 		tempList=$(cat "$webDirectory/new/graphs.index" | uniq | tail -n 200 )
-		echo "$tempList" > "$webDirectory/new/graphs.index"
+		if [ $(diff <(echo "$tempList") <(cat "$webDirectory/new/graphs.index") | wc -l) -eq 0 ];then
+			# the list has not changed do not write to disk
+			echo "No new graph updates..."
+		else
+			echo "$tempList" > "$webDirectory/new/graphs.index"
+		fi
 	fi
 	if test -f "$webDirectory/random/graphs.index";then
+		# random pulls from all graphs so use the main graph index
+		linkFile "$webDirectory/graphs/graphs.index" "$webDirectory/random/graphs.index"
 		# set permission on indexes
 		chown www-data:www-data "$webDirectory/random/graphs.index"
-		tempList=$(cat "$webDirectory/random/graphs.index" | uniq )
-		echo "$tempList" > "$webDirectory/random/graphs.index"
 	fi
 }
 ################################################################################
