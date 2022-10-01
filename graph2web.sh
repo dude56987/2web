@@ -18,6 +18,7 @@
 ################################################################################
 # enable debug log
 #set -x
+source /var/lib/2web/common
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
@@ -111,29 +112,7 @@ ALERT(){
 function update(){
 	# this will launch a processing queue that downloads updates to graph
 	webDirectory=$(webRoot)
-
-	if test -f "/etc/2web/mod_status/graph2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/graph2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process graphs..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/graph2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo "enabled" > "/etc/2web/mod_status/graph2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/graph2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
+	checkModStatus "graph2web"
 
 	createDir "$webDirectory/graphs/"
 
@@ -328,9 +307,11 @@ main(){
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		checkModStatus "graph2web"
 		lockCheck
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		checkModStatus "graph2web"
 		lockCheck
 		update
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
@@ -345,11 +326,22 @@ main(){
 		munin-node-configure --suggest | sh
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/graph2web.txt"
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "graph2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "graph2web"
 	else
 		main --update
 		main --webgen
 		main --help
 	fi
+	showServerLinks
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/graphs/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/graphs.php"
+	drawLine
 }
 ################################################################################
 main "$@"

@@ -57,7 +57,13 @@
 					// read the index entry
 					$data=file_get_contents($sourceFile);
 					// write the index entry
+					echo "<div class='settingsList'>";
 					echo "$data";
+					// write the current condititons at the bottom of the extended forecast
+					echo "<div class='titleCard'>";
+					echo file_get_contents(str_replace("forcast_","current_",$sourceFile));
+					echo "</div>";
+					echo "</div>";
 					flush();
 					ob_flush();
 				}

@@ -13,16 +13,16 @@
 				General
 			</span>
 		</a>
-		<a class='button' href='/settings/tv.php'>
-			📡
-			<span class='headerText'>
-				Live
-			</span>
-		</a>
 		<a class='button' href='/settings/nfo.php'>
 			🎞️
 			<span class='headerText'>
 				Video On Demand
+			</span>
+		</a>
+		<a class='button' href='/settings/music.php'>
+			🎧
+			<span class='headerText'>
+				Music
 			</span>
 		</a>
 		<a class='button' href='/settings/comics.php'>
@@ -31,16 +31,16 @@
 				Comics
 			</span>
 		</a>
+		<a class='button' href='/settings/tv.php'>
+			📡
+			<span class='headerText'>
+				Live
+			</span>
+		</a>
 		<a class='button' href='/settings/weather.php'>
 			🌤️
 			<span class='headerText'>
 				Weather
-			</span>
-		</a>
-		<a class='button' href='/settings/music.php'>
-			🎧
-			<span class='headerText'>
-				Music
 			</span>
 		</a>
 		<a class='button' href='/settings/graphs.php'>

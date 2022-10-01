@@ -22,6 +22,14 @@ OPTIONS
 
 :   Show the help message and exit
 
+`-e, --enable`
+
+:   Enable this module to run automatically as a service.
+
+`-d, --disable`
+
+:   Disable this module from running in the background and remove generated data.
+
 `-u --update or update`
 
 :  This will update the webpages and refresh the database."

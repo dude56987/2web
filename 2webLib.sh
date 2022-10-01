@@ -210,7 +210,7 @@ function checkModStatus(){
 		# the config exists check the config
 		if grep -q "enabled" "/etc/2web/mod_status/$configFile";then
 			# the module is enabled
-			echo "Preparing to process graphs..."
+			echo "Preparing to process $configFile..."
 		else
 			# the module is not enabled
 			# - remove the files and directory if they exist
@@ -301,5 +301,71 @@ INFO(){
 	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
 	# print the line
 	printf "$output\r"
+}
+################################################################################
+checkModStatus(){
+	# check the status of a mod
+	# if the mod is enabled allow the module to keep running
+	# if the mod is disabled run the nuke command within that module
+
+	moduleName=$1
+
+	# check the mod status
+	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
+		# the config exists check the config
+		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
+			# the module is enabled
+			echo "Preparing to process ${moduleName}..."
+		else
+			ALERT "MOD IS DISABLED!"
+			ALERT "Edit /etc/2web/mod_status/${moduleName}.cfg to contain only the text 'enabled' in order to enable the 2web module."
+			# the module is not enabled
+			# - remove the files and directory if they exist
+			nuke
+			exit
+		fi
+	else
+		createDir "/etc/2web/mod_status/"
+		# the config does not exist at all create the default one
+		# - the default status for module should be disabled
+		echo -n "disabled" > "/etc/2web/mod_status/${moduleName}.cfg"
+		chown www-data:www-data "/etc/2web/mod_status/${moduleName}.cfg"
+		# exit the script since by default the module is disabled
+		exit
+	fi
+}
+################################################################################
+enableMod(){
+	# enable a module name
+	moduleName=$1
+	ALERT "Enabling the module $moduleName"
+	echo -n "enabled" > /etc/2web/mod_status/${moduleName}.cfg
+}
+################################################################################
+disableMod(){
+	# disable a module name
+	moduleName=$1
+	ALERT "Disabling the module $moduleName"
+	echo -n "disabled" > /etc/2web/mod_status/${moduleName}.cfg
+}
+################################################################################
+drawLine(){
+	width=$(tput cols)
+	buffer="=========================================================================================================================================="
+	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	printf "$output\n"
+}
+################################################################################
+showServerLinks(){
+	# show the server link at the bottom of the interface
+	drawLine
+	echo "To access the webserver go to the below link."
+	drawLine
+	echo "http://$(hostname).local:80/"
+	drawLine
+	echo "To access the administrative interface go to the below link."
+	drawLine
+	echo "http://$(hostname).local:80/settings/"
+	drawLine
 }
 ################################################################################

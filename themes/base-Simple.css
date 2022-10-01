@@ -299,6 +299,9 @@ ol li{
 #videoPlayerContainer{
 	display: inline-block;
 }
+#videoPlayerContainer iframe{
+	width: 100% !important;
+}
 /*
 @media (hover: none){
 	.videoPlayerControls{
@@ -1121,8 +1124,8 @@ ol{
 }
 /*******************************/
 table, th, td{
-	border: 1px solid white;
-	color: white;
+	border: 1px solid var(--borderColor);
+	color: var(--textColor);
 	border-spacing: 0px;
 	margin-left: auto;
 	margin-right: auto;
@@ -1547,10 +1550,12 @@ pre{
 }
 .graphLink{
 	display: inline-block;
+	margin-top: 1rem;
 	/*
 	height: 40rem;
 	width: 80%;
 	*/
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 	width: 30rem;
 	max-width: 100%;
 }

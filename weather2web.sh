@@ -1,4 +1,22 @@
 #! /bin/bash
+########################################################################
+# weather2web generates weather website content in 2web server
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+source /var/lib/2web/common
 ################################################################################
 # enable debug log
 #set -x
@@ -190,7 +208,16 @@ function update(){
 
 				locationUpdateTime=$( echo "$weatherData" | grep --ignore-case "last updated" )
 
-				todaysWeather=$(echo "$weatherData" | grep -v "\.\.\." )
+				todaysWeather=$(\
+					/usr/bin/weather "$weatherLocation" |\
+					#grep -v "\.\.\." |\
+					grep --invert-match "Searching via name" |\
+					grep --invert-match "using result" |\
+					grep --invert-match "Current conditions at" |\
+					grep --invert-match "Last updated" |\
+					#sed "s/\*\*\*\*\* Zone Forecast.*//g" |\
+					txt2html --extract\
+				)
 
 				todaysForcast=$(echo "$weatherData" | tr -d '\n' | grep --only-matching "   \..*" | sed "s/   \./\n/g" | tr -s '\n')
 
@@ -200,6 +227,16 @@ function update(){
 
 				todaysWeatherAsHtml=$(echo "$todaysWeather" | grep -v "\.\.\." | tr -s '.' | cut -d'.' -f1- | txt2html --extract )
 				todaysForcastAsHtml=""
+				# store the weather info for the current weather at the location
+				{
+					echo "<h3>"
+					echo "$weatherLocation Current"
+					echo "</h3>"
+					echo "<div class='weatherIcon weatherHomepageIcon right'>"
+					getWeatherIcon "$todaysWeather"
+					echo "</div>"
+					echo "$todaysWeather"
+				} > "$webDirectory/weather/data/current_$locationSum.index"
 
 				# if no hompage weather location exists set the first added weather location as the homepage location since this data is gathered here anyway
 				if ! test -f "/etc/2web/weather/homepageLocation.cfg";then
@@ -463,15 +500,13 @@ function update(){
 						} >> "$webDirectory/weather/data/forcast_$locationSum.index"
 					fi
 				done
-				# store the weather info for the current weather at the location
-				{
-					echo "<div class='weatherIcon right'>"
-					getWeatherIcon "$todaysWeather"
-					echo "</div>"
-					echo "$todaysWeather"
-				} > "$webDirectory/weather/data/current_$locationSum.index"
 			fi
 			{
+				#echo "<div class='titleCard'>";
+				# write the current weather forecast data
+				#cat "$webDirectory/weather/data/current_$locationSum.index"
+				#echo "</div>";
+				# write the bottom bar of the weather location data
 				echo -n "</div>"
 				echo -n "	<div class='listCard'>"
 				echo -n "		<div class='weatherStationInfo'>"
@@ -651,36 +686,16 @@ function nuke(){
 }
 ################################################################################
 main(){
-	if test -f "/etc/2web/mod_status/weather2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/weather2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/weather2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/weather2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/weather2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
 	################################################################################
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		checkModStatus "weather2web"
 		# lock the process
 		lockProc
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		checkModStatus "weather2web"
 		# lock the process
 		lockProc
 		update
@@ -695,7 +710,12 @@ main(){
 		rm -rv $(webRoot)/weather/ || INFO "No weather web directory at '$webDirectory/weather/'"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/weather2web.txt"
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "weather2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "weather2web"
 	else
+		checkModStatus "weather2web"
 		# lock the process
 		lockProc
 		# gen prelem website
@@ -706,15 +726,16 @@ main(){
 		webUpdate
 		# display the help
 		main --help
-		# show the server link at the bottom of the interface
-		drawLine
-		echo "http://$(hostname).local:80/"
-		drawLine
-		echo "http://$(hostname).local:80/weather/"
-		drawLine
-		echo "http://$(hostname).local:80/weather.php"
-		drawLine
 	fi
+	showServerLinks
+	# show the server link at the bottom of the interface
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/weather/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/weather.php"
+	drawLine
+
 }
 ################################################################################
 main "$@"

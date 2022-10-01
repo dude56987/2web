@@ -22,6 +22,21 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='downloadPath' class='inputCard'>
+<h2>Download Path</h2>
+<ul>
+	<li>
+		This is where downloaded comics will be stored.
+	</li>
+	<li>
+		Comics generated from other file formats will also be stored here.
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/2web/comics/download.cfg");
+?>
+</div>
+
 <div id='addComicDownloadLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Comic Download Link</h2>

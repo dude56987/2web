@@ -1,0 +1,11 @@
+:root{
+	--solidBackground: #B0B0B0;
+	--glassBackground: rgba(255,255,255,0.85);
+	--borderColor: black;
+	--textColor: black;
+	--shadowColor: black;
+	--highlightText: white;
+	--highlightBackground: lightgray;
+	--highlightBorder: black;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}

@@ -27,13 +27,6 @@ ALERT(){
 	echo;
 }
 ################################################################################
-drawLine(){
-	width=$(tput cols)
-	buffer="=========================================================================================================================================="
-	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
-	printf "$output\n"
-}
-################################################################################
 linkFile(){
 	# link file if it is a link
 	if ! test -L "$2";then
@@ -56,6 +49,30 @@ webRoot(){
 		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
 	fi
 	echo "$webDirectory"
+}
+################################################################################
+function addToIndex(){
+	indexItem="$1"
+	indexPath="$2"
+	if test -f "$indexPath";then
+		# the index file exists
+		if grep -q "$indexItem" "$indexPath";then
+			ALERT "The Index '$indexPath' already contains '$indexItem'"
+		else
+			ALERT "Adding '$indexItem' to '$indexPath'"
+			# the item is not in the index
+			echo "$indexItem" >> "$indexPath"
+		fi
+	else
+		ALERT "No index found, creating one..."
+		ALERT "Adding '$indexItem' to '$indexPath'"
+		# create the index file
+		touch "$indexPath"
+		# set ownership of the newly created index
+		chown www-data:www-data "$indexPath"
+		# the index file does not exist
+		echo "$indexItem" > "$indexPath"
+	fi
 }
 ################################################################################
 function cacheCheck(){
@@ -121,8 +138,9 @@ function downloadDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/comic2web/"
+			echo "/var/cache/2web/download_comics/"
 		} >> "/etc/2web/comics/download.cfg"
+		createDir "/var/cache/2web/download_comics/"
 	fi
 	# write path to console
 	cat "/etc/2web/comics/download.cfg"
@@ -223,13 +241,13 @@ function update(){
 		find "$comicLibaryPath" -type f -name '*.txt' | sort | while read txtFilePath;do
 			txtComicName=$(popPath "$txtFilePath" | sed "s/.txt//g")
 			# only extract the cbz once
-			if ! test -d "${downloadDirectory}txt2comic/$txtComicName/$txtComicName.pdf";then
-				mkdir -p "${downloadDirectory}txt2comic/$txtComicName/"
+			if ! test -d "${downloadDirectory}/txt2comic/$txtComicName/$txtComicName.pdf";then
+				mkdir -p "${downloadDirectory}/txt2comic/$txtComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found txt '$txtComicName', converting to comic book..."
 				# convert epub files into pdf files to be converted below
-				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" | wkhtmltopdf - "${downloadDirectory}txt2comic/$txtComicName/$txtComicName.pdf"
-				chown -R www-data:www-data "${downloadDirectory}txt2comic/$txtComicName/"
+				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" | wkhtmltopdf - "${downloadDirectory}/txt2comic/$txtComicName/$txtComicName.pdf"
+				chown -R www-data:www-data "${downloadDirectory}/txt2comic/$txtComicName/"
 			fi
 		done
 	done
@@ -240,14 +258,14 @@ function update(){
 			find "$comicLibaryPath" -type f -name '*.epub' | sort | while read epubFilePath;do
 				epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
 				# only extract the cbz once
-				if ! test -d "${downloadDirectory}epub2comic/$epubComicName.pdf";then
-					mkdir -p "${downloadDirectory}epub2comic/"
+				if ! test -d "${downloadDirectory}/epub2comic/$epubComicName.pdf";then
+					mkdir -p "${downloadDirectory}/epub2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found epub '$epubComicName', converting to comic book..."
 					# allow ebook convert to run as root
 					# convert epub files into pdf files to be converted below
-					export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox" && ebook-convert "$epubFilePath" "${downloadDirectory}epub2comic/$epubComicName/$epubComicName.pdf"
-					chown -R www-data:www-data "${downloadDirectory}epub2comic/$epubComicName/"
+					export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox" && ebook-convert "$epubFilePath" "${downloadDirectory}/epub2comic/$epubComicName/$epubComicName.pdf"
+					chown -R www-data:www-data "${downloadDirectory}/epub2comic/$epubComicName/"
 				fi
 			done
 		done
@@ -257,21 +275,21 @@ function update(){
 		find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
 			pdfComicName=$(popPath "$pdfFilePath" | sed "s/.pdf//g")
 			# only extract the pdf once
-			if ! test -d "${downloadDirectory}pdf2comic/$pdfComicName/";then
-				mkdir -p "${downloadDirectory}pdf2comic/$pdfComicName/"
+			if ! test -d "${downloadDirectory}/pdf2comic/$pdfComicName/";then
+				createDir "${downloadDirectory}/pdf2comic/$pdfComicName/"
 				# extract the pdf file to the download directory
 				INFO "Found pdf '$pdfComicName', converting to comic book..."
 				# - load the pdf file with its filename as the comic name into the comic download directory
-				pdftoppm "$pdfFilePath" -jpeg -cropbox "${downloadDirectory}pdf2comic/$pdfComicName/$pdfComicName"
+				pdftoppm "$pdfFilePath" -jpeg -cropbox "${downloadDirectory}/pdf2comic/$pdfComicName/$pdfComicName"
 				# change ownership to server
-				chown -R www-data:www-data "${downloadDirectory}pdf2comic/$pdfComicName/"
+				chown -R www-data:www-data "${downloadDirectory}/pdf2comic/$pdfComicName/"
 				# get comic book pages
-				data=$(find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg')
+				data=$(find "${downloadDirectory}/pdf2comic/$pdfComicName/" -type f -name '*.jpg')
 				dataLength=$(echo "$data" | wc -l)
 				counter=0
 				# trim all whitespace from image files
 				#find "$data" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
-				find "${downloadDirectory}pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
+				find "${downloadDirectory}/pdf2comic/$pdfComicName/" -type f -name '*.jpg' | sort | while read pdfImageFilePath;do
 					INFO "Trimming whitespace from $pdfComicName page $counter/$dataLength"
 					# trim the whitespace
 					convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
@@ -287,13 +305,13 @@ function update(){
 		find "$comicLibaryPath" -type f -name '*.cbz' | sort | while read cbzFilePath;do
 			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
 			# only extract the cbz once
-			if ! test -d "$downloadDirectory/cbz2comic/$cbzComicName/";then
-				mkdir -p "$downloadDirectory/cbz2comic/$cbzComicName/"
+			if ! test -d "${downloadDirectory}/cbz2comic/$cbzComicName/";then
+				createDir "${downloadDirectory}/cbz2comic/$cbzComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
-				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
-				chown -R www-data:www-data "${downloadDirectory}cbz2comic/$cbzComicName/"
+				unzip "$cbzFilePath" -d "${downloadDirectory}/cbz2comic/$cbzComicName/"
+				chown -R www-data:www-data "${downloadDirectory}/cbz2comic/$cbzComicName/"
 			fi
 		done
 	done
@@ -302,16 +320,18 @@ function update(){
 		find "$comicLibaryPath" -type f -name '*.zip' | sort | while read cbzFilePath;do
 			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
 			# only extract the cbz once
-			if ! test -d "$downloadDirectory/cbz2comic/$cbzComicName/";then
-				mkdir -p "$downloadDirectory/cbz2comic/$cbzComicName/"
+			if ! test -d "${downloadDirectory}/cbz2comic/$cbzComicName/";then
+				mkdir -p "${downloadDirectory}/cbz2comic/$cbzComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
-				unzip "$cbzFilePath" -d "$downloadDirectory/cbz2comic/$cbzComicName/"
-				chown -R www-data:www-data "${downloadDirectory}cbz2comic/$cbzComicName/"
+				unzip "$cbzFilePath" -d "${downloadDirectory}/cbz2comic/$cbzComicName/"
+				chown -R www-data:www-data "${downloadDirectory}/cbz2comic/$cbzComicName/"
 			fi
 		done
 	done
+	# scan the new comics into the index
+	rebuildComicIndex "$webDirectory"
 }
 ################################################################################
 convertImage(){
@@ -525,8 +545,6 @@ scanPages(){
 				linkFile "$imagePath" "$webDirectory/comics/$tempComicName/$pageNumber.jpg"
 				# render the page
 				renderPage "$imagePath" "$webDirectory" $pageNumber single
-				# scan the new comic into the index
-				searchForNewComics "$webDirectory"
 			else
 				# exit scanning pages into the comic because the index was built within the last 10 days
 				return
@@ -830,7 +848,7 @@ renderPage(){
 	# if this is the last page build the index for the comic
 	#if [ $nextPage -ge $totalPages ];then
 	if [ $buildPagesIndex = true ];then
-		if ! test -f "$comicNamePath/comic.index";then
+		if ! test -f "$comicNamePath/comics.index";then
 			{
 				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
 				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
@@ -840,11 +858,11 @@ renderPage(){
 		fi
 
 		# add the comic to the main comic index since it has been updated
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
-		# add the updated show to the new shows index
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
+		# add the updated show to the new comics index
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
 		# random indexes
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/random/comics.index"
+		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 
 		# start building the comic index since this is the last page
 		{
@@ -1076,7 +1094,7 @@ renderPage(){
 	fi
 }
 ################################################################################
-searchForNewComics(){
+rebuildComicIndex(){
 	webDirectory=$1
 	# search for new comics
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
@@ -1085,7 +1103,7 @@ searchForNewComics(){
 		tempComicName="$(cleanText "$tempComicName")"
 		tempComicName="$(alterArticles "$tempComicName")"
 
-		if ! test -f "$comicNamePath/comic.index";then
+		if ! test -f "$comicNamePath/comics.index";then
 			{
 				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
 				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
@@ -1095,11 +1113,11 @@ searchForNewComics(){
 		fi
 
 		# add the comic to the main comic index since it has been updated
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/comics/comics.index"
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new shows index
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/new/comics.index"
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
 		# random indexes
-		echo "$webDirectory/comics/$tempComicName/comics.index" >> "$webDirectory/random/comics.index"
+		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 	done
 }
 ################################################################################
@@ -1205,13 +1223,13 @@ webUpdate(){
 		# multi chapter comic
 		tempComicName="$(popPath "$comicNamePath")"
 		#	build the index file for this entry if one does not exist
-		if ! test -f "$comicNamePath/comic.index";then
+		if ! test -f "$comicNamePath/comics.index";then
 			{
 				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
 				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 				echo "<div>$tempComicName</div>"
 				echo "</a>"
-			} > "$comicNamePath/comic.index"
+			} > "$comicNamePath/comics.index"
 		fi
 	done
 	# cleanup the comics index
@@ -1230,12 +1248,15 @@ webUpdate(){
 }
 ################################################################################
 function resetCache(){
+	# reset all generated/downloaded content
 	webDirectory=$(webRoot)
 	downloadDirectory="$(downloadDir)"
 	# remove all the index files generated by the website
 	find "$webDirectory/comics/" -name "*.index" -delete
+
 	# remove web cache
 	rm -rv "$webDirectory/comics/" || INFO "No comic web directory at '$webDirectory/comics/'"
+
 	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | while read comicPath;do
 		if [ ! "$comicPath" == "$webDirectory/comicCache/" ];then
 			# comic
@@ -1243,6 +1264,7 @@ function resetCache(){
 			rm -rv "$comicPath" || INFO "No path to remove at '$comicPath'"
 		fi
 	done
+
 	rm -rv "$webDirectory/comicCache/download_"*.index || INFO "No path to remove at '$webDirectory/comicCache/download_*.index'"
 	rm -rv "$downloadDirectory/pdf2comic/" || INFO "No path to remove at '$downloadDirectory/pdf2comic/'"
 	rm -rv "$downloadDirectory/txt2comic/" || INFO "No path to remove at '$downloadDirectory/txt2comic/'"
@@ -1250,6 +1272,7 @@ function resetCache(){
 	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
 	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
 	rm -rv "$webDirectory/new/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
+	rm -rv "$webDirectory/random/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
 }
 ################################################################################
 lockProc(){
@@ -1271,55 +1294,34 @@ lockProc(){
 }
 ################################################################################
 function nuke(){
+	# remove comic directory and indexes
 	rm -rv $(webRoot)/comics/*
 	rm -rv $(webRoot)/new/comic_*.index
+	rm -rv $(webRoot)/random/comic_*.index
 	# remove widgets cached
 	rm -v $(webRoot)/web_cache/widget_random_comics.index
 	rm -v $(webRoot)/web_cache/widget_new_comics.index
 }
 ################################################################################
 main(){
-	# check the mod status
-	if test -f "/etc/2web/mod_status/comic2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/comic2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process graphs..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/comic2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/comic2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/comic2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
 	################################################################################
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		# lock the process
 		lockProc
+		checkModStatus "comic2web"
 		webUpdate "$@"
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		# lock the process
 		lockProc
-		update
+		checkModStatus "comic2web"
+		update "$@"
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "comic2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "comic2web"
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		# lock the process
-		lockProc
 		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		# lock the process
-		lockProc
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
@@ -1329,24 +1331,23 @@ main(){
 		convertImage "$3"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/comic2web.txt"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		/usr/bin/2web --version
 	else
-		# lock the process
 		lockProc
-		# gen prelem website
+		checkModStatus "comic2web"
+		update "$@"
 		webUpdate "$@"
-		# update sources
-		update
-		# update webpages
-		webUpdate "$@"
-		# display the help
-		main --help
-		# on default execution show the server links at the bottom of output
-		drawLine
-		echo "http://$(hostname).local:80/"
-		drawLine
-		echo "http://$(hostname).local:80/comics/"
-		drawLine
+		main --help $@
 	fi
+	# on default execution show the server links at the bottom of output
+	showServerLinks
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/comics/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/comics.php"
+	drawLine
 }
 ################################################################################
 main "$@"

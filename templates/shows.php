@@ -46,8 +46,8 @@ if (file_exists("/var/cache/2web/web/shows/shows.index")){
 	// no shows have been loaded yet
 	echo "<ul>";
 	echo "<li>No Shows Have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
-	echo "<li>Add download links in <a href='/ytdl2nfo.php'>video on demand admin interface</a></li>";
+	echo "<li>Add libary paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
+	echo "<li>Add download links in <a href='/settings/ytdl2nfo.php'>video on demand admin interface</a></li>";
 	echo "</ul>";
 }
 ?>

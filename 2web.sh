@@ -551,6 +551,8 @@ main(){
 		cat /usr/share/2web/version.cfg
 		echo -n "2web Version Publish Date: "
 		cat /usr/share/2web/versionDate.cfg
+		echo -n "2web Build Date: "
+		cat /usr/share/2web/buildDate.cfg
 	else
 		# update main components
 		# - this builds the base site without anything enabled
@@ -558,14 +560,7 @@ main(){
 		# this is the default option to be ran without arguments
 		#main --help
 	fi
-	# show the server link at the bottom of the interface
-	drawLine
-	echo "http://$(hostname).local:80/"
-	drawLine
-	echo "http://$(hostname).local:80/new/"
-	drawLine
-	echo "http://$(hostname).local:80/system.php"
-	drawLine
+	showServerLinks
 }
 ################################################################################
 main "$@"

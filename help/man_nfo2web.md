@@ -22,6 +22,14 @@ OPTIONS
 
 :   Show the help message and exit
 
+`-e, --enable`
+
+:   Enable this module to run automatically as a service.
+
+`-d, --disable`
+
+:   Disable this module from running in the background and remove generated data.
+
 `--cert, cert`
 
 :  Updated he self signed ssl cert if it is older than 365 days"

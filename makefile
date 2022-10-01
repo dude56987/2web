@@ -119,6 +119,7 @@ build-deb:
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
+	mkdir -p debian/etc/bash_completion.d/;
 	mkdir -p debian/etc/avahi/;
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/var/lib/2web/;
@@ -257,6 +258,8 @@ build-deb:
 	# copy over the zeroconf configs to anounce the service
 	cp -v apacheConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
 	cp -v apacheConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
+	# copy over bash tab completion scripts
+	cp -v tab_complete/* debian/etc/bash_completion.d/
 	# write version info last thing before the build process of the package
 	# this also makes the build date time more correct since the package is
 	# built but is now being compressed and converted into a debian package

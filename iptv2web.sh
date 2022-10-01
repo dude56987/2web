@@ -35,8 +35,8 @@ function INFO(){
 	#   - cut one off the width in order to make space for the \r
 	output="$(echo -n "[INFO]: $cleanedText$buffer" | cut -b"1-$(( $width - 1 ))")"
 	# print the line
-	printf "$output\r"
-	#printf "$output\n"
+	#printf "$output\r"
+	printf "$output\n"
 	# DEBUG sleep
 	#sleep 0.2
 }
@@ -118,9 +118,9 @@ examineIconLink(){
 		fi
 		# remove image if fake was created
 		killFakeImage "$localIconPath"
-		# try to download the icon with youtube-dl
+		# try to download the icon with yt-dlp
 		if ! test -f "$localIconPath";then
-			tempIconLink=$(youtube-dl -j "$link" | jq ".thumbnail")
+			tempIconLink=$(yt-dlp -j "$link" | jq ".thumbnail")
 			INFO "Downloading thumbnail '$tempIconLlink'"
 			# if the file does not exist in the cache download it
 			timeout 120 curl --silent "$tempIconLink" > "$localIconPath"
@@ -470,9 +470,9 @@ function processLink(){
 				#hostPath='iptv-resolver.php?url="'$link'"'
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
-				if which youtube-dl && which jq;then
-					INFO "Attempting to get link metadata with youtube-dl ..."
-					tempMeta=$(youtube-dl -j "$link")
+				if which yt-dlp && which jq;then
+					INFO "Attempting to get link metadata with yt-dlp ..."
+					tempMeta=$(yt-dlp -j "$link")
 					if echo -n "$link" | grep -q "youtube.com";then
 						if echo -n "$tempMeta" | grep -q "fulltitle";then
 							fileName=$(echo "$tempMeta" | jq ".fulltitle" | tr -d '"')
@@ -593,8 +593,6 @@ fullUpdate(){
 	echo "#EXTM3U" > "$channelsPath"
 	echo "#EXTM3U" > "$channelsRawPath"
 	################################################################################
-	# read video sources
-	################################################################################
 	if test -f "${webDirectory}live/totalSources.index";then
 		totalSources=$(cat "${webDirectory}live/totalSources.index")
 	else
@@ -602,6 +600,8 @@ fullUpdate(){
 	fi
 	################################################################################
 	processedSources=0
+	################################################################################
+	# read video sources
 	# add user created custom local configs first
 	INFO "Adding m3u sources from /etc/2web/iptv/sources.d/"
 	find "/etc/2web/iptv/sources.d/" -name '*.m3u' -type 'f' | while read configFile;do
@@ -801,7 +801,7 @@ function buildGroupPages(){
 			done
 			{
 				echo "<?PHP";
-				echo "include('../../../header.php')";
+				echo "include('../../../footer.php')";
 				echo "?>";
 				#echo "$headerData"
 				echo "</body>"
@@ -1041,7 +1041,7 @@ webGen(){
 					# add footer
 					echo "<?PHP";
 					echo "include('../randomChannels.php');";
-					echo "include('../header.php');";
+					echo "include('../footer.php');";
 					echo "?>";
 					# add space for jump button when scrolled all the way down
 					echo "<hr class='topButtonSpace'>"
@@ -1191,29 +1191,6 @@ checkCron(){
 }
 ################################################################################
 main(){
-	# check if the module is enabled
-	if test -f "/etc/2web/mod_status/iptv2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/iptv2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process iptv..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/iptv2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for iptv2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/iptv2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/iptv2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
 	################################################################################
 	# if --debug flag used activate bash debugging for script
 	if echo "$@" | grep "debug";then
@@ -1223,8 +1200,16 @@ main(){
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		# check if the module is enabled
+		checkModStatus "iptv2web"
 		webGen
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "iptv2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "iptv2web"
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		# check if the module is enabled
+		checkModStatus "iptv2web"
 		################################################################################
 		# check if system is active
 		if test -f "/tmp/iptv2web.active";then
@@ -1247,9 +1232,9 @@ main(){
 	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
 		checkCron
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade streamlink and youtube-dl pip packages
+		# upgrade streamlink and yt-dlp pip packages
 		pip3 install --upgrade streamlink
-		pip3 install --upgrade youtube-dl
+		#pip3 install --upgrade youtube-dl
 		pip3 install --upgrade yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		ALERT "Checking if Cached HLS.js is older than 120 days..."
@@ -1278,11 +1263,25 @@ main(){
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/iptv2web.txt"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "2web Version: #"
+		cat /usr/share/2web/version.cfg
+		echo -n "2web Version Publish Date: "
+		cat /usr/share/2web/versionDate.cfg
+		echo -n "2web Build Date: "
+		cat /usr/share/2web/buildDate.cfg
 	else
 		main --update
 		main --webgen
 		main --help
 	fi
+	showServerLinks
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/live/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/tv.php"
+	drawLine
 }
 ################################################################################
 main "$@"

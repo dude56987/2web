@@ -44,20 +44,20 @@ function searchIndex($indexPath,$searchQuery){
 			if (stripos($tempPath,$searchQuery)){
 				if (file_exists($tempPath)){
 					$fileData = file_get_contents($tempPath);
-					$tempData=formatText($fileData);
-					$foundData=true;
+					$tempData .= formatText($fileData);
+					$foundData = true;
 				}
 			}
 		}
 	}
 	if ($foundData){
 		//echo "<div class='titleCard'>";
-		echo "$tempData";
+		//echo "$tempData";
 		//echo "</div>";
 
-		return true;
+		return array(true,$tempData);
 	}else{
-		return false;
+		return array(false,$tempData);
 	}
 }
 ################################################################################
@@ -91,26 +91,33 @@ if (array_key_exists("q",$_GET)){
 	$querySum = md5($searchQuery);
 
 	echo "<div class='settingListCard'>";
+
 	$foundResults=false;
-	if (searchIndex("/var/cache/2web/web/movies/movies.index",$searchQuery)){
-		$foundResults=true;
+
+	$indexPaths=Array();
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/movies/movies.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/shows/shows.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/music/music.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/random/albums.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/comics/comics.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
+
+	$totalOutput="";
+
+	foreach( $indexPaths as $indexPath ){
+		$indexInfo=searchIndex($indexPath,$searchQuery);
+		if ( $indexInfo[0] ){
+			$totalOutput .= $indexInfo[1];
+			$foundResults=true;
+			flush();
+			ob_flush();
+		}
 	}
-	if (searchIndex("/var/cache/2web/web/shows/shows.index",$searchQuery)){
-		$foundResults=true;
-	}
-	if (searchIndex("/var/cache/2web/web/comics/comics.index",$searchQuery)){
-		$foundResults=true;
-	}
-	if (searchIndex("/var/cache/2web/web/music/music.index",$searchQuery)){
-		$foundResults=true;
-	}
-	if (searchIndex("/var/cache/2web/web/random/albums.index",$searchQuery)){
-		$foundResults=true;
-	}
-	if (searchIndex("/var/cache/2web/web/graphs/graphs.index",$searchQuery)){
-		$foundResults=true;
-	}
-	if ( ! $foundResults){
+
+	if ($foundResults){
+		echo "<h1>Search Results for '$searchQuery'</h1>";
+		echo $totalOutput;
+	}else{
 		echo "<h1>No Search Results for '$searchQuery'</h1>";
 		// show the homepage
 		if (file_exists("shows")){

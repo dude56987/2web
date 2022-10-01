@@ -1948,10 +1948,10 @@ function libaryPaths(){
 }
 ################################################################################
 function cleanMediaSection(){
-	libaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort)
+	mediaSectionLibaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort)
 	IFS=$'\n'
 	# go into each show and movie directory in the website
-	for mediaPath in $libaries;do
+	for mediaPath in $mediaSectionlibaries;do
 		# look for broken symlinks in the directory
 		if symlinks -r "$mediaPath" | grep -q "^dangling:";then
 			# delete entire directory for show/movie if the show/movie contains broken links
@@ -2006,6 +2006,21 @@ function clean(){
 	rm -rv /var/cache/2web/web/web_cache/widget_random_episodes.index
 }
 ################################################################################
+lockCheck(){
+	# check if system is active
+	if test -f "/tmp/nfo2web.active";then
+		# system is already running exit
+		echo "[INFO]: nfo2web is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
+		exit
+	else
+		# set the active flag
+		touch /tmp/nfo2web.active
+		# create a trap to remove nfo2web lockfile
+		trap "rm /tmp/nfo2web.active" EXIT
+	fi
+}
+################################################################################
 function update(){
 	################################################################################
 	# Create website containing info and links to one or more .nfo directories
@@ -2043,19 +2058,7 @@ function update(){
 	# force overwrite symbolic link to web directory
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
-	# check if system is active
-	if test -f "/tmp/nfo2web.active";then
-		# system is already running exit
-		echo "[INFO]: nfo2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/nfo2web.active
-		# create a trap to remove nfo2web lockfile
-		trap "rm /tmp/nfo2web.active" EXIT
-	fi
-
+	lockCheck
 	# create the log path
 	logPagePath="$webDirectory/settings/log.php"
 	# create the homepage path
@@ -2122,32 +2125,27 @@ function update(){
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
 	fi
 	# read each libary from the libary config, single path per line
-	#ALERT "LIBARIES: $libaries"
-	echo -e "LIBARIES: \n$libaries"
+	ALERT "LIBARIES: $libaries"
+	#echo -e "LIBARIES: \n$libaries"
 	#for libary in $libaries;do
 
-	#if cacheCheck "/var/cache/2web/web/cleanCheck.cfg" "7";then
-	#	# clean the database of broken entries
-	#	# - this should allow you to delete data from source drives and it automatically remove it from the website.
-	#	clean
-	#fi
-
-	IFS=$'\n'
-	#for libary in $libaries;do
-	#	echo "libary = $libary"
-	#done
+	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
+		# clean the database of broken entries
+		# - this should allow you to delete data from source drives and it automatically remove it from the website.
+		clean
+	fi
 
 	IFS=$'\n'
 	#echo "$libaries" | while read libary;do
 	for libary in $libaries;do
-		echo "libary = $libary"
+		ALERT "libary = $libary"
 		# check if the libary directory exists
 		addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
-		INFO "Check if directory exists at '$libary'"
+		ALERT "Check if directory exists at '$libary'"
 		if test -d "$libary";then
-			echo "library exists at '$libary'"
+			ALERT "library exists at '$libary'"
 		else
-			echo "library does not exist at '$libary'"
+			ALERT "library does not exist at '$libary'"
 		fi
 		if test -d "$libary";then
 			addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
@@ -2159,13 +2157,10 @@ function update(){
 			foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
 
 			#find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
-			#for show in $foundLibaryPaths;do
-			#	addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
-			#done
 
 			for show in $foundLibaryPaths;do
 				addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
-				ALERT "show path = '$show'"
+				#ALERT "show path = '$show'"
 				################################################################################
 				# process page metadata
 				################################################################################
@@ -2336,36 +2331,12 @@ showHelp(){
 main(){
 	debugCheck
 
-	if test -f "/etc/2web/mod_status/nfo2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/nfo2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/nfo2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/nfo2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/nfo2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
-
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		showHelp
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "2web Version: #"
-		cat /usr/share/2web/version.cfg
-		echo -n "2web Version Publish Date: "
-		cat /usr/share/2web/versionDate.cfg
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "nfo2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "nfo2web"
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		# verbose removal of found files allows files to be visible as they are removed
 		# remove found .index files as they store web generated data
@@ -2401,18 +2372,24 @@ main(){
 	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 		clean
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		update $@
+		checkModStatus "nfo2web"
+		update "$@"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		/usr/bin/2web --version
 	else
-		# if no arguments are given run the update then help commands.
-		update $@
-		showHelp
+		#checkModStatus "nfo2web"
+		#update "$@"
+		main update "$@"
 		# show the server link at the bottom of the interface
-		drawLine
-		echo "http://$(hostname).local:80/"
+		showServerLinks
+		# show the module links
+		echo "Module Links"
 		drawLine
 		echo "http://$(hostname).local:80/movies/"
 		drawLine
 		echo "http://$(hostname).local:80/shows/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/nfo.php"
 		drawLine
 	fi
 }

@@ -18,6 +18,7 @@
 ########################################################################
 # enable debug log
 #set -x
+source /var/lib/2web/common
 ################################################################################
 webRoot(){
 	# the webdirectory is a cache where the generated website is stored
@@ -582,6 +583,8 @@ function update(){
 	################################################################################
 	#downloadDirectory="$(downloadDir)"
 	################################################################################
+	# make musics directory
+	createDir "$webDirectory/music/"
 	# setup the main index page
 	linkFile "/usr/share/2web/templates/music.php" "$webDirectory/music/index.php"
 	# copy updated movies widget
@@ -590,8 +593,6 @@ function update(){
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/music.php"
 	# make the download directory if is does not exist
 	#createDir "$downloadDirectory"
-	# make musics directory
-	createDir "$webDirectory/music/"
 	# scan the sources
 	ALERT "Scanning Music Sources: $musicSources"
 	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
@@ -820,36 +821,15 @@ function nuke(){
 }
 ################################################################################
 main(){
-	# check if the module is enabled
-	if test -f "/etc/2web/mod_status/music2web.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/music2web.cfg";then
-			# the module is enabled
-			echo "Preparing to process music..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/graph2web.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/music2web.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/music2web.cfg"
-		# exit the script since by default the module is disabled
-		exit
-	fi
 	################################################################################
 	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+		checkModStatus "music2web"
 		lockCheck
 		webUpdate $@
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		checkModStatus "music2web"
 		lockCheck
 		update $@
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
@@ -861,12 +841,25 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
 		pip3 install --upgrade gallery-dl
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "music2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "music2web"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		/usr/bin/2web --version
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/music2web.txt"
 	else
 		main --update $@
 		main --webgen $@
 		main --help $@
+		showServerLinks
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local:80/music/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/music.php"
+		drawLine
 	fi
 }
 ################################################################################

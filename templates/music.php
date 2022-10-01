@@ -45,7 +45,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/music/music.index")){
 	// no shows have been loaded yet
 	echo "<ul>";
 	echo "<li>No Music have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/music.php'>video on demand admin interface</a> to populate this page.</li>";
+	echo "<li>Add libary paths in the <a href='/settings/music.php'>music admin interface</a> to populate this page.</li>";
 	echo "</ul>";
 }
 ?>
