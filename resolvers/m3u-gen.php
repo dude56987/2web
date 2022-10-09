@@ -60,9 +60,139 @@ function redirect($url){
 	}
 }
 ################################################################################
-if (array_key_exists("showTitle",$_GET)){
+function recursiveScan($directoryPath){
+	# scan the directory
+	$foundPaths = scandir($directoryPath);
+	# remove the up and current paths
+	$foundPaths = array_diff($foundPaths,Array('..','.'));
+	$finalFoundLinks = Array();
+	# for each found directory list
+	foreach( $foundPaths as $foundPath){
+		$fullDirPath = $directoryPath.$foundPath."/";
+		if (is_dir($fullDirPath)){
+			$fullFoundPath = $fullDirPath;
+		}else{
+			$fullFoundPath = $directoryPath.$foundPath;
+		}
+		# if it is a directory add / at the end
+		if (is_dir($fullFoundPath)){
+			$finalFoundLinks = recursiveScan($fullFoundPath);
+		}else{
+			$finalFoundLinks = array_merge($finalFoundLinks, Array($fullFoundPath));
+		}
+	}
+	return $finalFoundLinks;
+}
+################################################################################
+function m3u_gen($section,$title){
+	# - section can be music,shows
+	# - title can be a artist
+	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
+	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
+
+	$showTitle = $title;
+	$showTitle = str_replace('"','',$showTitle);
+
+	if($section == 'shows'){
+		$showPath = "$rootPath/shows/$showTitle/";
+	}else if($section == 'artist'){
+		# music artist name is lowercased
+		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
+	}else if($section == 'music'){
+		# music artist name is lowercased
+		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
+	}else{
+		$showPath = "$rootPath/$section/$showTitle/";
+	}
+
+	echo "Checking $showPath is a directory...<br>\n";
+
+	//var_dump(recursiveScan($showPath));
+
+	echo "Show path is a directory...<br>\n";
+	# create the cache if it does not exist
+	if (! is_dir($rootServerPath."/m3u_cache/")){
+		mkdir("$rootServerPath/m3u_cache/");
+	}
+
+	if (array_key_exists("sort",$_GET)){
+		if ($_GET['sort'] == 'random'){
+			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
+			// - currently 20 variations of the randomization pattern can be created
+			$tempRand = rand(0,20);
+			$cacheSum = md5("$tempRand".$showTitle);
+		}else{
+			$cacheSum = md5($showTitle);
+		}
+	}else{
+		// cache sum
+		$cacheSum = md5($showTitle);
+	}
+
+	$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
+
+	$totalFileList=Array();
+
+	// check for existing redirect
+	if (is_file($cacheFile)){
+		# redirect to the built cache file if it exists
+		redirect("/m3u_cache/$cacheSum.m3u");
+	}else{
+		// create the m3u file
+		$data = fopen($cacheFile,'w');
+		fwrite($data, "#EXTM3U\n");
+
+		$foundFiles = recursiveScan($showPath);
+
+		var_dump($foundFile);
+
+		foreach ($foundFiles as $filePath){
+			# cleanup the scan data by removing the site root path, from the file before adding it to the m3u
+			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
+
+			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
+				$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
+				$tempDataEntry = $tempDataEntry."..$filePath\n";
+				array_push($totalFileList,$tempDataEntry);
+			}
+		}
+	}
+	if (array_key_exists("sort",$_GET)){
+		if ($_GET['sort'] == 'random'){
+			# randomize the list before writing it to the file
+			shuffle($totalFileList);
+		}
+	}
+	foreach ($totalFileList as $tempLineData){
+		fwrite($data, $tempLineData);
+	}
+	// close the file
+	fclose($data);
+	// redirect to episode path
+	redirect("/m3u_cache/$cacheSum.m3u");
+}
+################################################################################
+if (array_key_exists("artist",$_GET)){
+	echo "Building Artist...<br>\n";
+
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
 	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi/";
+
+	$showTitle = $_GET['artist'];
+	$showTitle = str_replace('"','',$showTitle);
+
+	$showPath = "$rootPath/music/$showTitle";
+
+	#var_dump(recursiveScan($rootPath."music/".strtolower($showTitle)."/"));
+
+	m3u_gen("music",$showTitle);
+	exit();
+
+}else if (array_key_exists("showTitle",$_GET)){
+	echo "Building ShowTitle...<br>\n";
+
+	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
+	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
 
 	$showTitle = $_GET['showTitle'];
 	//echo "showTitle pre replace=$showTitle<br>\n";
@@ -71,103 +201,9 @@ if (array_key_exists("showTitle",$_GET)){
 
 	$showPath = "$rootPath/shows/$showTitle";
 
-	//echo "showTitle=$showTitle<br>\n";
-	//echo "showPath=$showPath<br>\n";
+	m3u_gen("shows",$showTitle);
+	exit();
 
-		//echo "Checking '$showPath'<br>\n";
-	if (is_dir($showPath)){
-		# create the cache if it does not exist
-		if (! is_dir($rootServerPath."/m3u_cache/")){
-			mkdir("$rootServerPath/m3u_cache/");
-		}
-
-		if (array_key_exists("sort",$_GET)){
-			if ($_GET['sort'] == 'random'){
-				// cache sum must be randomized for random option, duplicated randmizations will use the cached file
-				// - currently 20 variations of the randomization pattern can be created
-				$tempRand = rand(0,20);
-				$cacheSum = md5("$tempRand".$showTitle);
-			}else{
-				$cacheSum = md5($showTitle);
-			}
-		}else{
-			// cache sum
-			$cacheSum = md5($showTitle);
-		}
-
-		$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
-
-		$totalFileList=Array();
-
-		// check for existing redirect
-		if (is_file($cacheFile)){
-			# redirect to the built cache file if it exists
-			redirect("/m3u_cache/$cacheSum.m3u");
-		}else{
-			// create the m3u file
-			$data = fopen($cacheFile,'w');
-			fwrite($data, "#EXTM3U\n");
-			//echo "#EXTM3U<br>\n";
-			$seasonPaths = scandir($showPath);
-			//print_r($seasonPaths);
-			$seasonPaths = array_diff($seasonPaths,array('..','.'));
-			foreach ($seasonPaths as &$seasonPath){
-				//echo "Checking season path '$seasonPath'<br>\n";//DEBUG
-				$fullSeasonPath = "$showPath/$seasonPath";
-				//echo "Checking full season path '$fullSeasonPath'<br>\n";//DEBUG
-				// find directories that are valid season directories
-				if (strpos(strtolower($fullSeasonPath),"season")){
-					if (is_dir($fullSeasonPath)){
-						$episodePaths = scandir($fullSeasonPath);
-						//print_r($episodePaths);
-						$episodePaths = array_diff($episodePaths,array('..','.'));
-						# shuffle the paths if random is selected
-						//if (array_key_exists("sort",$_GET)){
-						//	if ($_GET['sort'] == 'random'){
-						//		# if randomization is chosen then randomize the list to be wrote here
-						//		# - limit to 1000 random entries
-						//		shuffle($episodePaths);
-						//	}
-						//}
-						#
-						foreach ($episodePaths as $episodePath){
-							$fullEpisodePath="$showPath/$episodePath";
-							//echo "Checking episode path '$episodePath'<br>\n";//DEBUG
-							//echo "Checking episode path '$fullEpisodePath'<br>\n";//DEBUG
-							// if a non genrated file it is a media file
-							//if (file_exists($episodePath)){
-							if (strpos($episodePath,".avi") || strpos($episodePath,".strm") || strpos($episodePath,".mkv") || strpos($episodePath,".mp4") || strpos($episodePath,".m4v") || strpos($episodePath,".mpg") || strpos($episodePath,".mpeg") || strpos($episodePath,".ogv") || strpos($episodePath,".mp3") || strpos($episodePath,".ogg")){
-								//echo "episode is correct type of file...<br>\n";//DEBUG
-								//fwrite($data, "http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
-								//fwrite($data, "http://".gethostname().".local:444/kodi/shows/$showTitle/$seasonPath/$episodePath\n");
-								$tempDataEntry = "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n";
-								$tempDataEntry = $tempDataEntry."../kodi/shows/$showTitle/$seasonPath/$episodePath\n";
-								array_push($totalFileList,$tempDataEntry);
-								# fwrite($data, "#EXTINF:-1,$seasonPath - $episodePath - $showTitle \n");
-								# fwrite($data, "../kodi/shows/$showTitle/$seasonPath/$episodePath\n");
-								//echo ("http://".$_SERVER['SERVER_ADDR'].":444/kodi/$showTitle/$seasonPath/$episodePath\n");
-								//echo "../kodi/$showTitle/$seasonPath/$episodePath<br>\n";
-							}
-						//}
-						}
-					}
-				}
-			}
-			if (array_key_exists("sort",$_GET)){
-				if ($_GET['sort'] == 'random'){
-					# randomize the list before writing it to the file
-					shuffle($totalFileList);
-				}
-			}
-			foreach ($totalFileList as $tempLineData){
-				fwrite($data, $tempLineData);
-			}
-			// close the file
-			fclose($data);
-			// redirect to episode path
-			redirect("/m3u_cache/$cacheSum.m3u");
-		}
-	}
 }else{
 	// no url was given at all
 	echo "<html>";

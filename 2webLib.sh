@@ -303,6 +303,21 @@ INFO(){
 	printf "$output\r"
 }
 ################################################################################
+function lockProc(){
+	procName=$1
+	if test -f "/tmp/$procName.active";then
+		# system is already running exit
+		echo "[INFO]: $procName is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/music2web.active'."
+		exit
+	else
+		# set the active flag
+		touch /tmp/music2web.active
+		# create a trap to remove music2web lockfile
+		trap "rm /tmp/music2web.active" EXIT
+	fi
+}
+################################################################################
 checkModStatus(){
 	# check the status of a mod
 	# if the mod is enabled allow the module to keep running

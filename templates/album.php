@@ -27,6 +27,9 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
+if (file_exists("artist.cfg")){
+	$artist = file_get_contents("artist.cfg");
+}
 ?>
 <div class='titleCard'>
 	<?php
@@ -43,7 +46,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 			if (file_exists("artist.cfg")){
 				echo "<div>Artist: ";
 				echo "<a href='..'>";
-				echo file_get_contents("artist.cfg");
+				echo $artist;
 				echo "</a>";
 				echo "</div>";
 			}

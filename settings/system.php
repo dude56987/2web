@@ -199,7 +199,7 @@ include("settingsHeader.php");
 		echo "<div id='version' class='inputCard'>";
 		echo "<h2>2web Version Info</h2>";
 		echo "	<div>";
-		echo "		Version: #".file_get_contents("/usr/share/2web/version.cfg");
+		echo "		Version: ".file_get_contents("/usr/share/2web/version.cfg");
 		echo "	</div>";
 		if (file_exists("/usr/share/2web/versionDate.cfg")){
 			echo "	<div>";
@@ -211,6 +211,42 @@ include("settingsHeader.php");
 			echo "		Build Date: ".file_get_contents("/usr/share/2web/buildDate.cfg");
 			echo "	</div>";
 		}
+		if (file_exists("/usr/share/2web/version_2web.cfg")){
+			echo "	<div>";
+			echo "		2web Version: ".file_get_contents("/usr/share/2web/version_2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_nfo2web.cfg")){
+			echo "	<div>";
+			echo "		nfo2web Version: ".file_get_contents("/usr/share/2web/version_nfo2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_comic2web.cfg")){
+			echo "	<div>";
+			echo "		comic2web Version: ".file_get_contents("/usr/share/2web/version_comic2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_iptv2web.cfg")){
+			echo "	<div>";
+			echo "		iptv2web Version: ".file_get_contents("/usr/share/2web/version_iptv2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_music2web.cfg")){
+			echo "	<div>";
+			echo "		music2web Version: ".file_get_contents("/usr/share/2web/version_music2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_graph2web.cfg")){
+			echo "	<div>";
+			echo "		graph2web Version: ".file_get_contents("/usr/share/2web/version_graph2web.cfg");
+			echo "	</div>";
+		}
+		if (file_exists("/usr/share/2web/version_weather2web.cfg")){
+			echo "	<div>";
+			echo "		weather2web Version: ".file_get_contents("/usr/share/2web/version_weather2web.cfg");
+			echo "	</div>";
+		}
+
 		echo "</div>";
 	}
 ?>

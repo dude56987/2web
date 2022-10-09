@@ -88,13 +88,16 @@ build-deb:
 	mkdir -p debian/usr/share/2web/theme-templates;
 	mkdir -p debian/usr/share/2web/templates;
 	mkdir -p debian/usr/share/2web/settings;
-	#mkdir -p debian/var/cache/web/web;
 	mkdir -p debian/var/cache/2web/cache;
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/themes;
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/config_default/;
+	#mkdir -p debian/etc/2web/search/
+	#mkdir -p debian/etc/2web/search/sources.d/
+	mkdir -p debian/etc/2web/wiki/
+	mkdir -p debian/etc/2web/wiki/sources.d/
 	mkdir -p debian/etc/2web/ytdl/
 	mkdir -p debian/etc/2web/ytdl/sources.d/
 	mkdir -p debian/etc/2web/ytdl/usernameSources.d/
@@ -130,6 +133,8 @@ build-deb:
 	# add icon
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
+	#touch debian/etc/2web/search/sources.d/.placeholder
+	touch debian/etc/2web/wiki/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/usernameSources.d/.placeholder
 	touch debian/etc/2web/iptv/.placeholder
@@ -168,6 +173,12 @@ build-deb:
 	#cp 2web.sh debian/usr/bin/2web
 	echo "#! /bin/bash" > debian/usr/bin/2web
 	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
+	# search
+	#echo "#! /bin/bash" > debian/usr/bin/search2web
+	#grep --invert-match "^[[:blank:]]*#" search2web.sh | tr -s '\n' >> debian/usr/bin/search2web
+	# wiki
+	echo "#! /bin/bash" > debian/usr/bin/wiki2web
+	grep --invert-match "^[[:blank:]]*#" wiki2web.sh | tr -s '\n' >> debian/usr/bin/wiki2web
 	#cp nfo2web.sh debian/usr/bin/nfo2web
 	echo "#! /bin/bash" > debian/usr/bin/nfo2web
 	grep --invert-match "^[[:blank:]]*#" nfo2web.sh | tr -s '\n' >> debian/usr/bin/nfo2web
@@ -263,9 +274,31 @@ build-deb:
 	# write version info last thing before the build process of the package
 	# this also makes the build date time more correct since the package is
 	# built but is now being compressed and converted into a debian package
-	/usr/bin/git log --oneline | wc -l > debian/usr/share/2web/version.cfg
-	if /usr/bin/git status| grep "Changes not staged for";then echo "+UNSTABLE-BRANCH" >> debian/usr/share/2web/version.cfg;fi
-	if /usr/bin/git status| grep "Changes to be committed";then echo "+TESTING" >> debian/usr/share/2web/version.cfg;fi
+	###################
+	# create the 2web version info special flags
+	if /usr/bin/git status| grep "Changes not staged for";then echo -n "+UNSTABLE+ " >> debian/usr/share/2web/version.cfg;fi
+	if /usr/bin/git status| grep "Changes to be committed";then echo -n "+TESTING+ " >> debian/usr/share/2web/version.cfg;fi
+	# add the mark ahead of the version number
+	echo -n "#" >> debian/usr/share/2web/version.cfg
+	# write the version number
+	/usr/bin/git log --oneline | wc -l >> debian/usr/share/2web/version.cfg
+	# create each modules version info
+	echo -n "#" > debian/usr/share/2web/version_2web.cfg
+	/usr/bin/git log --stat | grep "^ 2web.sh" | wc -l >> debian/usr/share/2web/version_2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_nfo2web.cfg
+	/usr/bin/git log --stat | grep "^ nfo2web.sh" | wc -l >> debian/usr/share/2web/version_nfo2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_comic2web.cfg
+	/usr/bin/git log --stat | grep "^ comic2web.sh" | wc -l >> debian/usr/share/2web/version_comic2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_weather2web.cfg
+	/usr/bin/git log --stat | grep "^ weather2web.sh" | wc -l >> debian/usr/share/2web/version_weather2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_music2web.cfg
+	/usr/bin/git log --stat | grep "^ music2web.sh" | wc -l >> debian/usr/share/2web/version_music2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_iptv2web.cfg
+	/usr/bin/git log --stat | grep "^ iptv2web.sh" | wc -l >> debian/usr/share/2web/version_iptv2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_graph2web.cfg
+	/usr/bin/git log --stat | grep "^ graph2web.sh" | wc -l >> debian/usr/share/2web/version_graph2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_ytdl2nfo.cfg
+	/usr/bin/git log --stat | grep "^ ytdl2nfo.sh" | wc -l >> debian/usr/share/2web/version_ytdl2nfo.cfg
 	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg

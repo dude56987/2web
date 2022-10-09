@@ -663,21 +663,6 @@ function resetCache(){
 	rm -rv "$webDirectory/weather/" || INFO "No comic web directory at '$webDirectory/weather/'"
 }
 ################################################################################
-lockProc(){
-	# check if system is active
-	if test -f "/tmp/weather2web.active";then
-		# system is already running exit
-		echo "[INFO]: weather2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/weather2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/weather2web.active
-		# create a trap to remove nfo2web lockfile
-		trap "rm -v /tmp/weather2web.active" EXIT
-	fi
-}
-################################################################################
 function nuke(){
 	rm -rv $(webRoot)/weather/*
 	rm -rv $(webRoot)/weather/data/forcast_*.index
@@ -686,26 +671,23 @@ function nuke(){
 }
 ################################################################################
 main(){
-	################################################################################
-	webRoot
-	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "weather2web"
 		# lock the process
-		lockProc
+		lockProc "weather2web"
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "weather2web"
 		# lock the process
-		lockProc
+		lockProc "weather2web"
 		update
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		# lock the process
-		lockProc
+		lockProc "weather2web"
 		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		# lock the process
-		lockProc
+		lockProc "weather2web"
 		# remove the whole weather directory
 		rm -rv $(webRoot)/weather/ || INFO "No weather web directory at '$webDirectory/weather/'"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
@@ -714,10 +696,15 @@ main(){
 		enableMod "weather2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "weather2web"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "weather2web Version: "
+		cat /usr/share/2web/version_weather2web.cfg
 	else
 		checkModStatus "weather2web"
 		# lock the process
-		lockProc
+		lockProc "weather2web"
 		# gen prelem website
 		webUpdate
 		# update sources
@@ -726,16 +713,15 @@ main(){
 		webUpdate
 		# display the help
 		main --help
+		showServerLinks
+		# show the server link at the bottom of the interface
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local:80/weather/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/weather.php"
+		drawLine
 	fi
-	showServerLinks
-	# show the server link at the bottom of the interface
-	echo "Module Links"
-	drawLine
-	echo "http://$(hostname).local:80/weather/"
-	drawLine
-	echo "http://$(hostname).local:80/settings/weather.php"
-	drawLine
-
 }
 ################################################################################
 main "$@"

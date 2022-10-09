@@ -38,23 +38,28 @@ function searchIndex($indexPath,$searchQuery){
 	$foundData=false;
 	$tempData="";
 	# if the search index exists
-	if (file_exists($indexPath)){
-		$index = file($indexPath, FILE_IGNORE_NEW_LINES);
-		foreach ( $index as $tempPath ){
-			if (stripos($tempPath,$searchQuery)){
-				if (file_exists($tempPath)){
-					$fileData = file_get_contents($tempPath);
-					$tempData .= formatText($fileData);
+	if ( file_exists( $indexPath ) ){
+		$fileHandle = fopen( $indexPath , "r" );
+		while( ! feof( $fileHandle ) ){
+			# read a line of the file
+			$fileData = fgets( $fileHandle );
+			#echo "The file path is '$fileData'<br>\n";
+			#remove newlines from extracted file paths in index
+			$fileData = str_replace( "\n" , "" , $fileData);
+			if ( strpos( $fileData , $searchQuery ) ){
+				if ( file_exists( $fileData ) ){
+					# read the file in peices
+					$linkTextHandle = fopen( $fileData , "r" );
+					while( ! feof( $linkTextHandle ) ){
+						# read each packet of the file
+						$tempData .= fgets( $linkTextHandle , 4096 );
+					}
 					$foundData = true;
 				}
 			}
 		}
 	}
 	if ($foundData){
-		//echo "<div class='titleCard'>";
-		//echo "$tempData";
-		//echo "</div>";
-
 		return array(true,$tempData);
 	}else{
 		return array(false,$tempData);
@@ -108,7 +113,7 @@ if (array_key_exists("q",$_GET)){
 		$indexInfo=searchIndex($indexPath,$searchQuery);
 		if ( $indexInfo[0] ){
 			$totalOutput .= $indexInfo[1];
-			$foundResults=true;
+			$foundResults = true;
 			flush();
 			ob_flush();
 		}

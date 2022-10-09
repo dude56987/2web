@@ -21,27 +21,11 @@
 <div class='settingListCard'>
 
 <?php
-if (file_exists("/var/cache/2web/web/comics/comics.index")){
-	// get a list of all the generated index links for the page
-	$sourceFiles = file("/var/cache/2web/web/comics/comics.index", FILE_IGNORE_NEW_LINES);
-	$sourceFiles = array_unique($sourceFiles);
-	# sort everything in alphabetical order
-	sort($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".index")){
-					// read the index entry
-					$data=file_get_contents($sourceFile);
-					// write the index entry
-					echo "$data";
-					flush();
-					ob_flush();
-				}
-			}
-		}
-	}
+
+$indexData = listAllIndex("/var/cache/2web/web/comics/comics.index");
+if ($indexData[0]){
+	# print the data stored in the index
+	echo $indexData[1];
 }else{
 	echo "<ul>";
 	echo "<li>No Comics Have been scanned into the libary!</li>";

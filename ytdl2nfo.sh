@@ -1,4 +1,22 @@
 #! /bin/bash
+########################################################################
+# ytdl2nfo converts metadata from remote websites into nfo libaries
+# Copyright (C) 2022  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+source /var/lib/2web/common
 ################################################################################
 #set -x
 ################################################################################
@@ -276,7 +294,7 @@ ytdl2kodi_channel_extractor(){
 			link="$(echo "$link" | sed "s/\/\//\//g")"
 			#echo "[INFO]: Phase 4 : $link"
 		fi
-		link="https://$link"
+		#link="https://$link"
 		#link="$link"
 		################################################################################
 		# begin checking for problem file types
@@ -1455,41 +1473,46 @@ function nuke(){
 	echo "########################################################################"
 }
 ################################################################################
-main(){
-	if test -f "/etc/2web/mod_status/ytdl2nfo.cfg";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/ytdl2nfo.cfg";then
-			# the module is enabled
-			echo "Preparing to process..."
-		else
-			ALERT "MOD IS DISABLED!"
-			ALERT "Edit /etc/2web/mod_status/ytdl2nfo.cfg to contain only the text 'enabled' in order to enable the 2web module."
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/ytdl2nfo.cfg"
-		chown www-data:www-data "/etc/2web/mod_status/ytdl2nfo.cfg"
-		# exit the script since by default the module is disabled
+lockCheck(){
+	# check if system is active
+	if test -f "/tmp/ytdl2nfo.active";then
+		# system is already running exit
+		echo "[INFO]: ytdl2nfo is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/ytdl2nfo.active'."
 		exit
+	else
+		# set the active flag
+		touch /tmp/nfo2web.active
+		# create a trap to remove nfo2web lockfile
+		trap "rm /tmp/ytdl2nfo.active" EXIT
 	fi
-
+}
+################################################################################
+main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+		lockCheck
+		checkModStatus "ytdl2nfo"
 		ytdl2kodi_update
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "ytdl2nfo"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "ytdl2nfo"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		ytdl2kodi_depends_check
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		ytdl2kodi_reset_cache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "ytdl2nfo Version: "
+		cat /usr/share/2web/version_ytdl2nfo.cfg
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/ytdl2nfo.txt"
 	else
+		lockCheck
+		checkModStatus "ytdl2nfo"
 		main --update
 		main --help
 	fi

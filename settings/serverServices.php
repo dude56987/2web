@@ -62,8 +62,6 @@ array_push($services,Array('Vault Warden', 8001, 'Unoffical Bitwarden Pass Manag
 <?php // create top jump button ?>
 <a href='#' id='topButton' class='button'>&uarr;</a>
 
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("titleCard")' placeholder='Search...' >
-
 <div class='titleCard linkInfo'>
 	<h1>Server Services</h1>
 

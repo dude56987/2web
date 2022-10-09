@@ -20,27 +20,10 @@ drawPosterWidget("music");
 ?>
 <div class='settingListCard'>
 <?php
-if (file_exists($_SERVER['DOCUMENT_ROOT']."/music/music.index")){
-	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/music/music.index"));
-	// reverse the time sort
-	//$sourceFiles = array_reverse($sourceFiles);
-	$sourceFiles = array_unique($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".index")){
-					// read the index entry
-					$data=file_get_contents($sourceFile);
-					// write the index entry
-					echo "$data";
-					flush();
-					ob_flush();
-				}
-			}
-		}
-	}
+$indexData = listAllIndex("/var/cache/2web/web/music/music.index");
+if ($indexData[0]){
+	# print the data stored in the index
+	echo $indexData[1];
 }else{
 	// no shows have been loaded yet
 	echo "<ul>";

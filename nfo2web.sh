@@ -2375,7 +2375,10 @@ main(){
 		checkModStatus "nfo2web"
 		update "$@"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		/usr/bin/2web --version
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "nfo2web Version: "
+		cat /usr/share/2web/version_nfo2web.cfg
 	else
 		#checkModStatus "nfo2web"
 		#update "$@"

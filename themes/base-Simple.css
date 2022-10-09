@@ -517,7 +517,7 @@ ol{
 }
 @media only screen and (max-width: 400px), (orientation: portrait){
 	html{
-		font-size: 42px;
+		font-size: 2rem;
 		/* Make the scrollbar width thin on small touchscreen devices for FIREFOX */
 		scrollbar-width: thin;
 	}
@@ -649,6 +649,7 @@ a .inputCard h3{
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+	text-shadow: 0px 0px 0.5rem var(--textColor);
 }
 .comicTitleButton{
 	display: inline-block;
@@ -955,7 +956,6 @@ a .inputCard h3{
 	*/
 }
 .indexSeries{
-	transition: width 2s, height 4s;
 	font-size: 1rem;
 	vertical-align: top;
 	text-decoration: none;
@@ -983,6 +983,7 @@ a .inputCard h3{
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+	text-shadow: 0px 0px 0.5rem var(--textColor);
 }
 .indexSeries:hover img{
 	opacity: 0.9;
@@ -1048,6 +1049,7 @@ ol{
 /* EPISODE icons for show page */
 /*******************************/
 .showPageEpisode{
+	color: var(--textColor);
 	font-size: 1rem;
 	border: 4px solid white;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
@@ -1099,12 +1101,17 @@ ol{
 	overflow-x: hidden;
 	*/
 }
+#content{
+	color: var(--textColor) !important;
+	background-color: var(--glassBackground) !important;
+}
 .showPageEpisode:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+	text-shadow: 0px 0px 0.5rem var(--textColor);
 }
 .showPageEpisode img{
 	width: 100%;
@@ -1244,6 +1251,9 @@ table{
 	vertical-align: top;
 	word-break: break-all;
 }
+.searchBoxForm{
+	margin: 1rem;
+}
 .searchBox{
 	width: 80vw;
 	font-size: 2rem;
@@ -1253,8 +1263,10 @@ table{
 	color: var(--textColor);
 	border-width: 0.2rem;
 	text-align: center;
+	/*
 	margin-top: 1rem;
 	margin-bottom: 1rem;
+	*/
 }
 .inputCard{
 	text-align: center;
@@ -1293,6 +1305,7 @@ tr{
 }
 .weatherIcon{
 	font-size: 4rem;
+	text-shadow: 0px 0px 1rem var(--textColor);
 }
 .weatherHomepageIcon{
 	padding: 1rem;
@@ -1362,7 +1375,6 @@ tr{
 	margin-top: 1rem;
 	margin-bottom:1rem;
 	*/
-	transition: height 2s ease-in-out;
 	/*
 	white-space: nowrap;
 	*/
@@ -1405,8 +1417,8 @@ tr{
 		display: inline !important;
 		/*
 		display: none !important;
-		*/
 		font-size: 0.2rem !important;
+		*/
 	}
 	.loginLogoutBoxSpacer{
 		display: inline-block;

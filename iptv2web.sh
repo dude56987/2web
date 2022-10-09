@@ -1197,8 +1197,6 @@ main(){
 		set -x
 	fi
 	################################################################################
-	webRoot
-	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		# check if the module is enabled
 		checkModStatus "iptv2web"
@@ -1264,24 +1262,22 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/iptv2web.txt"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "2web Version: #"
-		cat /usr/share/2web/version.cfg
-		echo -n "2web Version Publish Date: "
-		cat /usr/share/2web/versionDate.cfg
-		echo -n "2web Build Date: "
+		echo -n "Build Date: "
 		cat /usr/share/2web/buildDate.cfg
+		echo -n "iptv2web Version: "
+		cat /usr/share/2web/version_iptv2web.cfg
 	else
 		main --update
 		main --webgen
 		main --help
+		showServerLinks
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local:80/live/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/tv.php"
+		drawLine
 	fi
-	showServerLinks
-	echo "Module Links"
-	drawLine
-	echo "http://$(hostname).local:80/live/"
-	drawLine
-	echo "http://$(hostname).local:80/settings/tv.php"
-	drawLine
 }
 ################################################################################
 main "$@"

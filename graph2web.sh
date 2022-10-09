@@ -166,7 +166,6 @@ function update(){
 			# add to new indexes
 			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
 			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
-
 		fi
 	done
 	if test -f "$webDirectory/new/graphs.index";then
@@ -185,6 +184,11 @@ function update(){
 		linkFile "$webDirectory/graphs/graphs.index" "$webDirectory/random/graphs.index"
 		# set permission on indexes
 		chown www-data:www-data "$webDirectory/random/graphs.index"
+	fi
+	# cleanup the graph index and sort it
+	if test -f "$webDirectory/graphs/graphs.index";then
+		tempList=$(cat "$webDirectory/graphs/graphs.index" | sort -u )
+		echo "$tempList" > "$webDirectory/graphs/graphs.index"
 	fi
 }
 ################################################################################
@@ -303,9 +307,6 @@ function nuke(){
 }
 ################################################################################
 main(){
-	################################################################################
-	webRoot
-	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "graph2web"
 		lockCheck
@@ -330,18 +331,23 @@ main(){
 		enableMod "graph2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "graph2web"
+	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "graph2web Version: "
+		cat /usr/share/2web/version_graph2web.cfg
 	else
 		main --update
 		main --webgen
 		main --help
+		showServerLinks
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local:80/graphs/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/graphs.php"
+		drawLine
 	fi
-	showServerLinks
-	echo "Module Links"
-	drawLine
-	echo "http://$(hostname).local:80/graphs/"
-	drawLine
-	echo "http://$(hostname).local:80/settings/graphs.php"
-	drawLine
 }
 ################################################################################
 main "$@"

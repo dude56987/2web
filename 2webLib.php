@@ -152,4 +152,51 @@ if( ! function_exists("formatEcho")){
 	}
 }
 ################################################################################
+if( ! function_exists("logPrint")){
+	function logPrint($logMessage){
+		echo "<script>";
+		echo "console.log('".$logMessage."');";
+		echo "</script>\n";
+	}
+}
+################################################################################
+if( ! function_exists("listAllIndex")){
+	function listAllIndex($indexPath){
+		$foundData=false;
+		$tempData="";
+		#logPrint("loading index file ".$indexPath);
+		# if the search index exists
+		if ( file_exists( $indexPath ) ){
+			#logPrint("index file '$indexPath' is a file reading");
+			$fileHandle = fopen( $indexPath , "r" );
+			while( ! feof( $fileHandle ) ){
+				#logPrint("reading line of index file");
+				# read a line of the file
+				$fileData = fgets( $fileHandle );
+				#logPrint("line uncleaned = ",$fileData);
+				#remove newlines from extracted file paths in index
+				$fileData = str_replace( "\n" , "" , $fileData);
+				#logPrint("line newline stripped = ",$fileData);
+				if ( file_exists( $fileData ) ){
+					#logPrint("Opening data file ".$fileData." of index file...");
+					# read the file in peices
+					$linkTextHandle = fopen( $fileData , "r" );
+					while( ! feof( $linkTextHandle ) ){
+						$packetData = fgets( $linkTextHandle , 4096 );
+						#logPrint("reading a single line of the file...");
+						# read each packet of the file
+						$tempData .= $packetData;
+					}
+					$foundData = true;
+				}
+			}
+		}
+		if ($foundData){
+			return array(true,$tempData);
+		}else{
+			return array(false,$tempData);
+		}
+	}
+}
+################################################################################
 ?>

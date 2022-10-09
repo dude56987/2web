@@ -587,8 +587,6 @@ function update(){
 	createDir "$webDirectory/music/"
 	# setup the main index page
 	linkFile "/usr/share/2web/templates/music.php" "$webDirectory/music/index.php"
-	# copy updated movies widget
-	linkFile "/usr/share/2web/templates/updatedMusic.php" "$webDirectory/updatedMusic.php"
 	# copy over config page
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/music.php"
 	# make the download directory if is does not exist
@@ -821,9 +819,6 @@ function nuke(){
 }
 ################################################################################
 main(){
-	################################################################################
-	webRoot
-	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "music2web"
 		lockCheck
@@ -846,7 +841,10 @@ main(){
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "music2web"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		/usr/bin/2web --version
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "music2web Version: "
+		cat /usr/share/2web/version_music2web.cfg
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/music2web.txt"
 	else

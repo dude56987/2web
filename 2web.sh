@@ -230,6 +230,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
 	# help/info docs
 	linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
+	linkFile "/usr/share/2web/templates/viewCounter.php" "$webDirectory/views/index.php"
 	# caching resolvers
 	linkFile "/usr/share/2web/search.php" "$webDirectory/search.php"
 	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
@@ -547,20 +548,42 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "2web Version: #"
+		drawLine
+		echo "2web Server Version"
+		drawLine
+		echo -n "Server Version: "
 		cat /usr/share/2web/version.cfg
-		echo -n "2web Version Publish Date: "
+		echo -n "Publish Date: "
 		cat /usr/share/2web/versionDate.cfg
-		echo -n "2web Build Date: "
+		echo -n "Build Date: "
 		cat /usr/share/2web/buildDate.cfg
+		drawLine
+		echo "Module Versions"
+		drawLine
+		echo -n "2web : "
+		cat /usr/share/2web/version_2web.cfg
+		echo -n "nfo2web : "
+		cat /usr/share/2web/version_nfo2web.cfg
+		echo -n "comic2web : "
+		cat /usr/share/2web/version_comic2web.cfg
+		echo -n "iptv2web : "
+		cat /usr/share/2web/version_iptv2web.cfg
+		echo -n "weather2web : "
+		cat /usr/share/2web/version_weather2web.cfg
+		echo -n "graph2web : "
+		cat /usr/share/2web/version_graph2web.cfg
+		echo -n "music2web : "
+		cat /usr/share/2web/version_music2web.cfg
+		echo -n "ytdl2nfo : "
+		cat /usr/share/2web/version_ytdl2nfo.cfg
 	else
 		# update main components
 		# - this builds the base site without anything enabled
 		update2web
 		# this is the default option to be ran without arguments
 		#main --help
+		showServerLinks
 	fi
-	showServerLinks
 }
 ################################################################################
 main "$@"

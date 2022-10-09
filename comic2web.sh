@@ -54,8 +54,10 @@ webRoot(){
 function addToIndex(){
 	indexItem="$1"
 	indexPath="$2"
+	ALERT "Checking if the indexPath '$indexPath' exists"
 	if test -f "$indexPath";then
 		# the index file exists
+		ALERT "Looking for $indexItem in $indexPath"
 		if grep -q "$indexItem" "$indexPath";then
 			ALERT "The Index '$indexPath' already contains '$indexItem'"
 		else
@@ -233,7 +235,7 @@ function update(){
 			#touch "$webDirectory/comicCache/download_$comicSum.index"
 		fi
 	done
-	# check for pdf files in comic libaries
+	# check for txt files and convert them into comics
 	comicLibaries="$(libaryPaths | tr -s '\n' | shuf )"
 	# first convert epub files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
@@ -246,11 +248,59 @@ function update(){
 				# extract the cbz file to the download directory
 				INFO "Found txt '$txtComicName', converting to comic book..."
 				# convert epub files into pdf files to be converted below
-				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" | wkhtmltopdf - "${downloadDirectory}/txt2comic/$txtComicName/$txtComicName.pdf"
+				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" > "${downloadDirectory}/txt2comic/$txtComicName/$txtComicName.html"
 				chown -R www-data:www-data "${downloadDirectory}/txt2comic/$txtComicName/"
 			fi
 		done
 	done
+
+	# convert markdown files to pdf files
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.md' | sort | while read markdownFilePath;do
+			markdownComicName=$(popPath "$markdownFilePath" | sed "s/.md//g")
+			# only extract the cbz once
+			if ! test -d "${downloadDirectory}/markdown2comic/$markdownComicName/$markdownComicName.pdf";then
+				mkdir -p "${downloadDirectory}/markdown2comic/$markdownComicName/"
+				# extract the cbz file to the download directory
+				INFO "Found markdown '$markdownComicName', converting to comic book..."
+				# convert markdown into html
+				{
+					echo "<html>"
+					echo "<head>"
+					# use the currently active theme for the website
+					echo "	<link rel='stylesheet' type='text/css' href='http://localhost/style.css'>"
+					echo "	<script src='/2web.js'></script>"
+					echo "	<link rel='icon' type='image/png' href='/favicon.png'>"
+					echo "</head>"
+					echo "<body>"
+					cat "$markdownFilePath" | markdown
+					echo "</body>"
+					echo "</html>"
+
+				} > "${downloadDirectory}/markdown2comic/$markdownComicName/$markdownComicName.html"
+				chown -R www-data:www-data "${downloadDirectory}/markdown2comic/$markdownComicName/"
+			fi
+		done
+	done
+
+	# convert html files to pdf files
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		# for each cbz file found in the cbz libary locations
+		find "$comicLibaryPath" -type f -name '*.html' | sort | while read htmlFilePath;do
+			htmlComicName=$(popPath "$htmlFilePath" | sed "s/.html//g")
+			# only extract the cbz once
+			if ! test -d "${downloadDirectory}/html2comic/$htmlComicName/$htmlComicName.pdf";then
+				mkdir -p "${downloadDirectory}/html2comic/$htmlComicName/"
+				# extract the cbz file to the download directory
+				INFO "Found html'$htmlComicName', converting to comic book..."
+				# convert epub files into pdf files to be converted below
+				cat "$htmlFilePath" | wkhtmltopdf - "${downloadDirectory}/html2comic/$htmlComicName/$htmlComicName.pdf"
+				chown -R www-data:www-data "${downloadDirectory}/html2comic/$htmlComicName/"
+			fi
+		done
+	done
+
 	if test -f /usr/bin/ebook-convert;then
 		# first convert epub files to pdf files
 		echo "$comicLibaries" | sort | while read comicLibaryPath;do
@@ -331,7 +381,19 @@ function update(){
 		done
 	done
 	# scan the new comics into the index
-	rebuildComicIndex "$webDirectory"
+	#rebuildComicIndex "$webDirectory"
+
+	# cleanup the comics index
+	if test -f "$webDirectory/comics/comics.index";then
+		tempList=$(cat "$webDirectory/comics/comics.index" | sort -u )
+		echo "$tempList" > "$webDirectory/comics/comics.index"
+	fi
+	# cleanup new comic index
+	if test -f "$webDirectory/new/comics.index";then
+		# new comics but preform a fancy sort that does not change the order of the items
+		tempList=$(cat -n "$webDirectory/new/comics.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
+		echo "$tempList" > "$webDirectory/new/comics.index"
+	fi
 }
 ################################################################################
 convertImage(){
@@ -1232,17 +1294,6 @@ webUpdate(){
 			} > "$comicNamePath/comics.index"
 		fi
 	done
-	# cleanup the comics index
-	if test -f "$webDirectory/comics/comics.index";then
-		tempList=$(cat "$webDirectory/comics/comics.index" )
-		echo "$tempList" | sort -u > "$webDirectory/comics/comics.index"
-	fi
-	# cleanup new comic index
-	if test -f "$webDirectory/new/comics.index";then
-		# new comics
-		tempList=$(cat "$webDirectory/new/comics.index" | uniq | tail -n 200 )
-		echo "$tempList" > "$webDirectory/new/comics.index"
-	fi
 	# the random index simply uses the main index for comics
 	linkFile "$webDirectory/comics/comics.index" "$webDirectory/random/comics.index"
 }
@@ -1296,16 +1347,14 @@ lockProc(){
 function nuke(){
 	# remove comic directory and indexes
 	rm -rv $(webRoot)/comics/*
-	rm -rv $(webRoot)/new/comic_*.index
-	rm -rv $(webRoot)/random/comic_*.index
+	rm -rv $(webRoot)/new/comics.index
+	rm -rv $(webRoot)/random/comics.index
 	# remove widgets cached
 	rm -v $(webRoot)/web_cache/widget_random_comics.index
 	rm -v $(webRoot)/web_cache/widget_new_comics.index
 }
 ################################################################################
 main(){
-	################################################################################
-	webRoot
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		lockProc
@@ -1332,22 +1381,25 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/comic2web.txt"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		/usr/bin/2web --version
+		echo -n "Build Date: "
+		cat /usr/share/2web/buildDate.cfg
+		echo -n "comic2web Version: "
+		cat /usr/share/2web/version_comic2web.cfg
 	else
 		lockProc
 		checkModStatus "comic2web"
 		update "$@"
 		webUpdate "$@"
-		main --help $@
+		#main --help $@
+		# on default execution show the server links at the bottom of output
+		showServerLinks
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local:80/comics/"
+		drawLine
+		echo "http://$(hostname).local:80/settings/comics.php"
+		drawLine
 	fi
-	# on default execution show the server links at the bottom of output
-	showServerLinks
-	echo "Module Links"
-	drawLine
-	echo "http://$(hostname).local:80/comics/"
-	drawLine
-	echo "http://$(hostname).local:80/settings/comics.php"
-	drawLine
 }
 ################################################################################
 main "$@"
