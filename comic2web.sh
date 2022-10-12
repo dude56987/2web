@@ -51,32 +51,6 @@ webRoot(){
 	echo "$webDirectory"
 }
 ################################################################################
-function addToIndex(){
-	indexItem="$1"
-	indexPath="$2"
-	ALERT "Checking if the indexPath '$indexPath' exists"
-	if test -f "$indexPath";then
-		# the index file exists
-		ALERT "Looking for $indexItem in $indexPath"
-		if grep -q "$indexItem" "$indexPath";then
-			ALERT "The Index '$indexPath' already contains '$indexItem'"
-		else
-			ALERT "Adding '$indexItem' to '$indexPath'"
-			# the item is not in the index
-			echo "$indexItem" >> "$indexPath"
-		fi
-	else
-		ALERT "No index found, creating one..."
-		ALERT "Adding '$indexItem' to '$indexPath'"
-		# create the index file
-		touch "$indexPath"
-		# set ownership of the newly created index
-		chown www-data:www-data "$indexPath"
-		# the index file does not exist
-		echo "$indexItem" > "$indexPath"
-	fi
-}
-################################################################################
 function cacheCheck(){
 
 	filePath="$1"

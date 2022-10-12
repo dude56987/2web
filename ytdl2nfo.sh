@@ -1473,24 +1473,9 @@ function nuke(){
 	echo "########################################################################"
 }
 ################################################################################
-lockCheck(){
-	# check if system is active
-	if test -f "/tmp/ytdl2nfo.active";then
-		# system is already running exit
-		echo "[INFO]: ytdl2nfo is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/ytdl2nfo.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/nfo2web.active
-		# create a trap to remove nfo2web lockfile
-		trap "rm /tmp/ytdl2nfo.active" EXIT
-	fi
-}
-################################################################################
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		lockCheck
+		lockProc "ytdl2nfo"
 		checkModStatus "ytdl2nfo"
 		ytdl2kodi_update
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
@@ -1511,9 +1496,9 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/ytdl2nfo.txt"
 	else
-		lockCheck
+		lockProc "ytdl2nfo"
 		checkModStatus "ytdl2nfo"
-		main --update
+		ytdl2kodi_update
 		main --help
 	fi
 }

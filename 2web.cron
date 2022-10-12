@@ -18,13 +18,18 @@
 
 ################################################################################
 # run 2web to build the base website and update the site configuration changes
+# this does a lot of important things
+# - builds user auththentication
+# - Updates changed themes across the site
+# - Builds the base website for other modules
+# - Checks if cache directories need cleaned
 #@reboot root /usr/bin/2web > /var/log/2web.log
 #@hourly root /usr/bin/2web > /var/log/2web.log
 @reboot root /usr/bin/2web
-@hourly root /usr/bin/2web
+*/30 * * * * root /usr/bin/2web
 
 ################################################################################
-# update every 4 hours, if youtube sources are included updates can be frequent
+# update every 4 hours, if internet sources are included updates can be frequent
 #0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/2web_nfo.log
 0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
 

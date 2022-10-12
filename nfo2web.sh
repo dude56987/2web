@@ -673,12 +673,13 @@ processMovie(){
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
 
 		# add the movie to the main movie index since it has been updated
-		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/movies/movies.index"
+		addToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/movies.index"
 		# add the updated movie to the new movies index
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
-		# random
-		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/random/movies.index"
+		# link movies to random movies
+		linkFile "$webDirectory/movies/movies.index" "$webDirectory/random/movies.index"
+		# add to random all
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/random/all.index"
 
 		# add the path to the list of paths for duplicate checking
@@ -1488,12 +1489,12 @@ processShow(){
 	} > "$webDirectory/shows/$showTitle/shows.index"
 
 	# add the show to the main show index since it has been updated
-	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/shows/shows.index"
+	addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/shows.index"
 	# add the updated show to the new shows index
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/shows.index"
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/all.index"
 	# add the updated show to the random shows index
-	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/random/shows.index"
+	linkFile "$webDirectory/shows/shows.index" "$webDirectory/random/shows.index"
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/random/all.index"
 
 	# add the path to the list of paths for duplicate checking
@@ -2006,21 +2007,6 @@ function clean(){
 	rm -rv /var/cache/2web/web/web_cache/widget_random_episodes.index
 }
 ################################################################################
-lockCheck(){
-	# check if system is active
-	if test -f "/tmp/nfo2web.active";then
-		# system is already running exit
-		echo "[INFO]: nfo2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/nfo2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/nfo2web.active
-		# create a trap to remove nfo2web lockfile
-		trap "rm /tmp/nfo2web.active" EXIT
-	fi
-}
-################################################################################
 function update(){
 	################################################################################
 	# Create website containing info and links to one or more .nfo directories
@@ -2058,7 +2044,6 @@ function update(){
 	# force overwrite symbolic link to web directory
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
-	lockCheck
 	# create the log path
 	logPagePath="$webDirectory/settings/log.php"
 	# create the homepage path
@@ -2256,12 +2241,12 @@ function update(){
 	fi
 	if test -f "$webDirectory/new/shows.index";then
 		# new list
-		tempList=$(cat "$webDirectory/new/shows.index" | uniq | tail -n 200 )
+		tempList=$(cat -n "$webDirectory/new/shows.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/shows.index"
 	fi
 	if test -f "$webDirectory/new/episodes.index";then
 		# new episodes
-		tempList=$(cat "$webDirectory/new/episodes.index" | uniq | tail -n 200 )
+		tempList=$(cat -n "$webDirectory/new/episodes.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/episodes.index"
 	fi
 	if test -f "$webDirectory/random/shows.index";then
@@ -2283,11 +2268,11 @@ function update(){
 	fi
 	if test -f "$webDirectory/new/movies.index";then
 		# new movies
-		tempList=$(cat "$webDirectory/new/movies.index" | uniq | tail -n 200 )
+		tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/movies.index"
 	fi
 	if test -f "$webDirectory/random/movies.index";then
-		# new movies
+		# random movies
 		tempList=$(cat "$webDirectory/random/movies.index" | uniq | tail -n 200 )
 		echo "$tempList" > "$webDirectory/random/movies.index"
 	fi
@@ -2373,6 +2358,7 @@ main(){
 		clean
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "nfo2web"
+		lockProc "nfo2web"
 		update "$@"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "Build Date: "
@@ -2380,9 +2366,10 @@ main(){
 		echo -n "nfo2web Version: "
 		cat /usr/share/2web/version_nfo2web.cfg
 	else
-		#checkModStatus "nfo2web"
-		#update "$@"
-		main update "$@"
+		checkModStatus "nfo2web"
+		lockProc "nfo2web"
+		update "$@"
+		#main update "$@"
 		# show the server link at the bottom of the interface
 		showServerLinks
 		# show the module links

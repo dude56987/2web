@@ -305,16 +305,19 @@ INFO(){
 ################################################################################
 function lockProc(){
 	procName=$1
-	if test -f "/tmp/$procName.active";then
+	ALERT "/tmp/${procName}.active"
+	if test -f "/tmp/${procName}.active";then
 		# system is already running exit
-		echo "[INFO]: $procName is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/music2web.active'."
+		echo "[INFO]: ${procName} is already processing data in another process."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/${procName}.active'."
 		exit
 	else
+		ALERT "Setting Active Flag /tmp/${procName}.active"
 		# set the active flag
-		touch /tmp/music2web.active
-		# create a trap to remove music2web lockfile
-		trap "rm /tmp/music2web.active" EXIT
+		touch "/tmp/${procName}.active"
+		ALERT "Setting Active Trap /tmp/${procName}.active"
+		# create a trap to remove module lockfile
+		trap "rm /tmp/${procName}.active" EXIT
 	fi
 }
 ################################################################################
@@ -382,5 +385,31 @@ showServerLinks(){
 	drawLine
 	echo "http://$(hostname).local:80/settings/"
 	drawLine
+}
+################################################################################
+function addToIndex(){
+	indexItem="$1"
+	indexPath="$2"
+	INFO "Checking if the indexPath '$indexPath' exists"
+	if test -f "$indexPath";then
+		# the index file exists
+		#ALERT "Looking for $indexItem in $indexPath"
+		if grep -q "$indexItem" "$indexPath";then
+			INFO "The Index '$indexPath' already contains '$indexItem'"
+		else
+			INFO "Adding '$indexItem' to '$indexPath'"
+			# the item is not in the index
+			echo "$indexItem" >> "$indexPath"
+		fi
+	else
+		#ALERT "No index found, creating one..."
+		INFO "Adding '$indexItem' to '$indexPath'"
+		# create the index file
+		touch "$indexPath"
+		# set ownership of the newly created index
+		chown www-data:www-data "$indexPath"
+		# the index file does not exist
+		echo "$indexItem" > "$indexPath"
+	fi
 }
 ################################################################################
