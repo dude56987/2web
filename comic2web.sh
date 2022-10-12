@@ -365,7 +365,8 @@ function update(){
 	# cleanup new comic index
 	if test -f "$webDirectory/new/comics.index";then
 		# new comics but preform a fancy sort that does not change the order of the items
-		tempList=$(cat -n "$webDirectory/new/comics.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
+		#tempList=$(cat -n "$webDirectory/new/comics.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/comics.index" | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
 }

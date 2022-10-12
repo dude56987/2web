@@ -46,7 +46,7 @@ function searchIndex($indexPath,$searchQuery){
 			#echo "The file path is '$fileData'<br>\n";
 			#remove newlines from extracted file paths in index
 			$fileData = str_replace( "\n" , "" , $fileData);
-			if ( strpos( $fileData , $searchQuery ) ){
+			if ( stripos( $fileData , $searchQuery ) ){
 				if ( file_exists( $fileData ) ){
 					# read the file in peices
 					$linkTextHandle = fopen( $fileData , "r" );

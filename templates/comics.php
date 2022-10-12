@@ -22,17 +22,18 @@
 
 <?php
 
-$indexData = listAllIndex("/var/cache/2web/web/comics/comics.index");
-if ($indexData[0]){
-	# print the data stored in the index
-	echo $indexData[1];
-}else{
-	echo "<ul>";
-	echo "<li>No Comics Have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/settings/comics.php'>comics admin interface</a> to populate this page.</li>";
-	echo "<li>Add download links in <a href='/settings/comicsDL.php'>comics admin interface</a></li>";
-	echo "</ul>";
-}
+
+# store the index path
+$indexFilePath="/var/cache/2web/web/comics/comics.index";
+# store the empty message
+$emptyMessage = "<ul>";
+$emptyMessage .= "<li>No Comics Have been scanned into the libary!</li>";
+$emptyMessage .= "<li>Add libary paths in the <a href='/settings/comics.php'>comics admin interface</a> to populate this page.</li>";
+$emptyMessage .= "<li>Add download links in <a href='/settings/comicsDL.php'>comics admin interface</a></li>";
+$emptyMessage .= "</ul>";
+
+displayIndexWithPages($indexFilePath,$emptyMessage);
+
 ?>
 </div>
 

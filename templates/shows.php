@@ -20,18 +20,17 @@ drawPosterWidget("shows");
 ?>
 <div class='settingListCard'>
 <?php
-$indexData = listAllIndex("/var/cache/2web/web/shows/shows.index");
-if ($indexData[0]){
-	# print the data stored in the index
-	echo $indexData[1];
-}else{
-	// no shows have been loaded yet
-	echo "<ul>";
-	echo "<li>No Shows Have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
-	echo "<li>Add download links in <a href='/settings/ytdl2nfo.php'>video on demand admin interface</a></li>";
-	echo "</ul>";
-}
+# store the index path
+$indexFilePath="/var/cache/2web/web/shows/shows.index";
+# store the empty message
+$emptyMessage = "<ul>";
+$emptyMessage .= "<li>No Shows Have been scanned into the libary!</li>";
+$emptyMessage .= "<li>Add libary paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
+$emptyMessage .= "<li>Add download links in <a href='/settings/ytdl2nfo.php'>video on demand admin interface</a></li>";
+$emptyMessage .= "</ul>";
+
+displayIndexWithPages($indexFilePath,$emptyMessage);
+
 ?>
 </div>
 <?php

@@ -2236,46 +2236,43 @@ function update(){
 	# SHOWS #
 	#########
 	if test -f "$webDirectory/shows/shows.index";then
-		tempList=$(cat "$webDirectory/shows/shows.index" )
-		echo "$tempList" | sort -u > "$webDirectory/shows/shows.index"
+		tempList=$(cat "$webDirectory/shows/shows.index" | sort -u )
+		echo "$tempList" > "$webDirectory/shows/shows.index"
 	fi
 	if test -f "$webDirectory/new/shows.index";then
 		# new list
-		tempList=$(cat -n "$webDirectory/new/shows.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
+		#tempList=$(cat -n "$webDirectory/new/shows.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/shows.index" | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/shows.index"
 	fi
 	if test -f "$webDirectory/new/episodes.index";then
 		# new episodes
-		tempList=$(cat -n "$webDirectory/new/episodes.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
+		#tempList=$(cat -n "$webDirectory/new/episodes.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/episodes.index" | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/episodes.index"
 	fi
-	if test -f "$webDirectory/random/shows.index";then
-		# new list
-		tempList=$(cat "$webDirectory/random/shows.index" | uniq | tail -n 200 )
-		echo "$tempList" > "$webDirectory/random/shows.index"
-	fi
+
+	linkFile "$webDirectory/shows/shows.index" "$webDirectory/random/shows.index"
+
 	if test -f "$webDirectory/random/episodes.index";then
 		# new episodes
-		tempList=$(cat "$webDirectory/random/episodes.index" | uniq | tail -n 200 )
+		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 200 )
 		echo "$tempList" > "$webDirectory/random/episodes.index"
 	fi
 	##########
 	# MOVIES #
 	##########
 	if test -f "$webDirectory/movies/movies.index";then
-		tempList=$(cat "$webDirectory/movies/movies.index" )
-		echo "$tempList" | sort -u > "$webDirectory/movies/movies.index"
+		tempList=$(cat "$webDirectory/movies/movies.index" | sort -u )
+		echo "$tempList" > "$webDirectory/movies/movies.index"
 	fi
 	if test -f "$webDirectory/new/movies.index";then
 		# new movies
-		tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1- | tail -n 200 )
+		#tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/movies.index" | tail -n 200 )
 		echo "$tempList" > "$webDirectory/new/movies.index"
 	fi
-	if test -f "$webDirectory/random/movies.index";then
-		# random movies
-		tempList=$(cat "$webDirectory/random/movies.index" | uniq | tail -n 200 )
-		echo "$tempList" > "$webDirectory/random/movies.index"
-	fi
+	linkFile "$webDirectory/movies/movies.index" "$webDirectory/random/movies.index"
 	# create the final index pages, these should not have the progress indicator
 	# build the final version of the homepage without the progress indicator
 	buildHomePage "$webDirectory"

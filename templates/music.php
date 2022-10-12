@@ -20,17 +20,17 @@ drawPosterWidget("music");
 ?>
 <div class='settingListCard'>
 <?php
-$indexData = listAllIndex("/var/cache/2web/web/music/music.index");
-if ($indexData[0]){
-	# print the data stored in the index
-	echo $indexData[1];
-}else{
-	// no shows have been loaded yet
-	echo "<ul>";
-	echo "<li>No Music have been scanned into the libary!</li>";
-	echo "<li>Add libary paths in the <a href='/settings/music.php'>music admin interface</a> to populate this page.</li>";
-	echo "</ul>";
-}
+
+# store the index path
+$indexFilePath="/var/cache/2web/web/music/music.index";
+# store the empty message
+$emptyMessage = "<ul>";
+$emptyMessage .= "<li>No Music have been scanned into the libary!</li>";
+$emptyMessage .= "<li>Add libary paths in the <a href='/settings/music.php'>music admin interface</a> to populate this page.</li>";
+$emptyMessage .= "</ul>";
+
+displayIndexWithPages($indexFilePath,$emptyMessage);
+
 ?>
 </div>
 <?php

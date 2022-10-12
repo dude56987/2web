@@ -185,16 +185,120 @@ if( ! function_exists("listAllIndex")){
 						$packetData = fgets( $linkTextHandle , 4096 );
 						#logPrint("reading a single line of the file...");
 						# read each packet of the file
-						$tempData .= $packetData;
+						# write the packet data to the page as it is found and send read data immediately
+						echo $packetData;
+						flush();
+						ob_flush();
 					}
 					$foundData = true;
 				}
 			}
 		}
+		# blank the data
 		if ($foundData){
-			return array(true,$tempData);
+			return true;
 		}else{
-			return array(false,$tempData);
+			return false;
+		}
+	}
+}
+################################################################################
+if( ! function_exists("listIndexPage")){
+	function listIndexPage($indexPath,$pageNumber=1,$maxPageItems=50){
+		$foundData=false;
+		$tempData="";
+		#logPrint("loading index file ".$indexPath);
+		# if the search index exists
+		if ( file_exists( $indexPath ) ){
+			$pageCounter=1;
+			$pageItemCounter=0;
+			#logPrint("index file '$indexPath' is a file reading");
+			$fileHandle = fopen( $indexPath , "r" );
+			while( ! feof( $fileHandle ) ){
+				$pageItemCounter += 1;
+				# increment the item counter for the page
+				if ($pageItemCounter > $maxPageItems){
+					$pageCounter += 1;
+					$pageItemCounter = 0;
+				}
+				# reset the page item counter
+				#logPrint("reading line of index file");
+				# read a line of the file
+				$fileData = fgets( $fileHandle );
+				#logPrint("line uncleaned = ",$fileData);
+				#remove newlines from extracted file paths in index
+				$fileData = str_replace( "\n" , "" , $fileData);
+				#logPrint("line newline stripped = ",$fileData);
+				if ( $pageCounter == $pageNumber ){
+					if ( file_exists( $fileData ) ){
+						# print the page item
+						#logPrint("Opening data file ".$fileData." of index file...");
+						# read the file in peices
+						$linkTextHandle = fopen( $fileData , "r" );
+						while( ! feof( $linkTextHandle ) ){
+							$packetData = fgets( $linkTextHandle , 4096 );
+							#logPrint("reading a single line of the file...");
+							# read each packet of the file
+							# write the packet data to the page as it is found and send read data immediately
+							echo $packetData;
+							flush();
+							ob_flush();
+						}
+						$foundData = true;
+					}
+				}
+			}
+		}
+		# blank the data
+		if ($foundData){
+			return true;
+		}else{
+			return false;
+		}
+	}
+}
+################################################################################
+if( ! function_exists("displayIndexWithPages")){
+	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=48){
+		if (array_key_exists("page",$_GET)){
+			if (strtolower($_GET['page']) == "all"){
+				if( ! listAllIndex($indexFilePath)){
+					// no shows have been loaded yet
+					echo $emptyMessage;
+				}
+			}else{
+				listIndexPage($indexFilePath,$_GET['page'],$maxItemsPerPage);
+			}
+		}else{
+			// no shows have been loaded yet
+			if( ! listIndexPage($indexFilePath,1,$maxItemsPerPage)){
+				echo $emptyMessage;
+			}
+		}
+		# build the page buttons
+		# get the index size by reading the index file and counting
+		$fileCountHandle=fopen($indexFilePath,'r');
+		$fileItemCount=0;
+		while(! feof($fileCountHandle)){
+			$fileItemCount += 1;
+			fgets($fileCountHandle);
+		}
+
+		$pageCount = floor( $fileItemCount / $maxItemsPerPage ) - 1;
+
+		if ( $pageCount > 1 ){
+			echo "<div class='titleCard'>";
+			echo "<div class='listCard'>";
+			echo "<a class='button' href='?page=all'>";
+			echo "All";
+			echo "</a>";
+			foreach((range(1,$pageCount)) as $currentPageNumber){
+				echo "<a class='button' href='?page=$currentPageNumber'>";
+				echo "$currentPageNumber";
+				echo "</a>";
+			}
+			echo "</div>";
+			echo "</div>";
 		}
 	}
 }
