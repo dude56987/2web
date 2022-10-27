@@ -1209,18 +1209,7 @@ main(){
 		# check if the module is enabled
 		checkModStatus "iptv2web"
 		################################################################################
-		# check if system is active
-		if test -f "/tmp/iptv2web.active";then
-			# system is already running exit
-			ERROR "iptv2web is already processing data in another process."
-			ERROR "IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/iptv2web.active'."
-			exit
-		else
-			# set the active flag
-			touch /tmp/iptv2web.active
-			# create a trap to remove nfo2web
-			trap "rm -v /tmp/iptv2web.active" EXIT
-		fi
+		lockProc "iptv2web"
 		# run full update
 		fullUpdate
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then

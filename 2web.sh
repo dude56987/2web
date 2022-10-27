@@ -181,7 +181,8 @@ function update2web(){
 	createDir "$webDirectory/settings/"
 	createDir "$webDirectory/sums/"
 	createDir "$webDirectory/views/"
-	createDir "$webDirectory/backups/"
+	#createDir "$webDirectory/backups/"
+	createDir "$webDirectory/log/"
 
 	# create config files if they do not exist
 	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
@@ -207,9 +208,12 @@ function update2web(){
 
 	# admin control file
 	linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
+
+	# add the log file
+	linkFile "/usr/share/2web/settings/log.php" "$webDirectory/log/index.php"
+
 	# settings interface files
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
-
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
 	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
 	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
@@ -263,7 +267,8 @@ function update2web(){
 		# if there are any users
 		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
 		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
-		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
+		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
+		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/log/.htaccess"
 		# copy server users to administrator list
 		cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 	else
@@ -274,8 +279,11 @@ function update2web(){
 		if test -f "$webDirectory/settings/.htaccess";then
 			rm "$webDirectory/settings/.htaccess"
 		fi
-		if test -f "$webDirectory/backups/.htaccess";then
-			rm "$webDirectory/backups/.htaccess"
+		#if test -f "$webDirectory/backups/.htaccess";then
+		#	rm "$webDirectory/backups/.htaccess"
+		#fi
+		if test -f "$webDirectory/log/.htaccess";then
+			rm "$webDirectory/log/.htaccess"
 		fi
 	fi
 	createDir "$webDirectory/RESOLVER-CACHE/"
@@ -333,20 +341,34 @@ function update2web(){
 ########################################################################
 backupSettings(){
 	# create a compressed backup of the server settings
-	createDir "$(webRoot)/backups/"
+	createDir "/var/cache/2web/backups/"
+	tempTime=$(date)
 	set -x
-	zip -9 -r "$(webRoot)/backups/$(date).zip" "/etc/2web/"
+	zip -9 -r "/var/cache/2web/backups/$tempTime.zip" "/etc/2web/"
 	set +x
+	drawLine
+	echo "The backup can be found in the backup location"
+	echo "/var/cache/2web/backups/"
+	drawLine
+	echo "This specific backup is stored at"
+	echo "/var/cache/2web/backups/$tempTime.zip"
+	drawLine
 }
 ########################################################################
 restoreSettings(){
 	# unzip the stored settings file given
 	settingsFile=$1
-	createDir "$(webRoot)/backups/$(date)/"
-	set -x
-	ALERT "Use the below command to restore a backup of the settings on the server."
-	echo "unzip -x '$settingsFile' -d '/etc/2web/'"
-	set +x
+	#createDir "$(webRoot)/backups/$(date)/"
+	# the file must exist
+	if test -f "$settingsFile";then
+		set -x
+		ALERT "Use the below command to restore a backup of the settings on the server."
+		unzip -x "$settingsFile" -d '/etc/2web/'
+		set +x
+	else
+		# failed to find file to restore from
+		echo "No file could be found to restore from at the path $settingsFile"
+	fi
 }
 ########################################################################
 rebootCheck(){
@@ -400,11 +422,23 @@ main(){
 		/usr/bin/music2web
 		/usr/bin/iptv2web
 		rebootCheck
+	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
+		webDirectory=$(webRoot)
+		# clean all temp lock files
+		rm -v $webDirectory/nfo2web.active
+		rm -v $webDirectory/iptv2web.active
+		rm -v $webDirectory/graph2web.active
+		rm -v $webDirectory/weather2web.active
+		rm -v $webDirectory/music2web.active
+		rm -v $webDirectory/comic2web.active
+		rm -v $webDirectory/kodi2web.active
+		rm -v $webDirectory/ytdl2nfo.active
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		ALERT "================================================================================"
 		ALERT "PARALLEL MODE"
 		ALERT "================================================================================"
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		webDirectory=$(webRoot)
 		# parllelize the update processes
 		###########################
 		# update main components
@@ -412,37 +446,37 @@ main(){
 		update2web
 		# update the on-demand downloads
 		/usr/bin/ytdl2nfo &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		# update weather
 		/usr/bin/weather2web &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		# update the metadata and build webpages for all generators
 		/usr/bin/nfo2web --parallel &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		/usr/bin/graph2web &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		/usr/bin/iptv2web &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		/usr/bin/comic2web --parallel &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		/usr/bin/music2web --parallel &
-		waitQueue 0.5 "$totalCPUS"
+		waitQueue 1 "$totalCPUS"
 		blockQueue 1
-		while 1;do
+		while true;do
 			sleep 1
-			if test -f /tmp/comic2web.active;then
+			if test -f $webDirectory/comic2web.active;then
 				sleep 1
-			elif test -f /tmp/iptv2web.active;then
+			elif test -f $webDirectory/iptv2web.active;then
 				sleep 1
-			elif test -f /tmp/nfo2web.active;then
+			elif test -f $webDirectory/nfo2web.active;then
 				sleep 1
-			elif test -f /tmp/weather2web.active;then
+			elif test -f $webDirectory/weather2web.active;then
 				sleep 1
-			elif test -f /tmp/music2web.active;then
+			elif test -f $webDirectory/music2web.active;then
 				sleep 1
-			elif test -f /tmp/graph2web.active;then
+			elif test -f $webDirectory/graph2web.active;then
 				sleep 1
-			elif test -f /tmp/ytdl2nfo.active;then
+			elif test -f $webDirectory/ytdl2nfo.active;then
 				sleep 1
 			else
 				# this means all processes have completed
@@ -539,6 +573,11 @@ main(){
 		echo "Checking for cache files in $(webRoot)/RESOLVER-CACHE/"
 		if test -d "$(webRoot)/RESOLVER-CACHE/";then
 			find "$(webRoot)/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
+		fi
+		echo "Checking for cache files in $(webRoot)/log/"
+		if test -d "$(webRoot)/log/";then
+			#find "$(webRoot)/log/" -type d -mtime +"$cacheDelay" -name '*.log' -exec rm -rv {} \;
+			find "$(webRoot)/log/" -type d -mtime +1 -name '*.log' -exec rm -rv {} \;
 		fi
 		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
 		# delete the m3u cache

@@ -1301,24 +1301,6 @@ function resetCache(){
 	rm -rv "$webDirectory/random/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
 }
 ################################################################################
-lockProc(){
-	# check if system is active
-	if test -f "/tmp/comic2web.active";then
-		# system is already running exit
-		echo "[INFO]: comic2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/comic2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/comic2web.active
-		# create a trap to remove nfo2web lockfile
-		# also stop all jobs created in parallel
-		#trap "rm -v /tmp/comic2web.active;kill \$\(jobs -p\)" EXIT
-		trap "rm -v /tmp/comic2web.active" EXIT
-		#trap "rm -v /tmp/comic2web.active && kill \$\(jobs -p\)" EXIT
-	fi
-}
-################################################################################
 function nuke(){
 	# remove comic directory and indexes
 	rm -rv $(webRoot)/comics/*
@@ -1332,11 +1314,11 @@ function nuke(){
 main(){
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		lockProc
+		lockProc "comic2web"
 		checkModStatus "comic2web"
 		webUpdate "$@"
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		lockProc
+		lockProc "comic2web"
 		checkModStatus "comic2web"
 		update "$@"
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
@@ -1361,7 +1343,7 @@ main(){
 		echo -n "comic2web Version: "
 		cat /usr/share/2web/version_comic2web.cfg
 	else
-		lockProc
+		lockProc "comic2web"
 		checkModStatus "comic2web"
 		update "$@"
 		webUpdate "$@"

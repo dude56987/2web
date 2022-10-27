@@ -208,6 +208,7 @@ processMovie(){
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo -n "$movieDir" | md5sum | cut -d' ' -f1)
+		logPagePath="$webDirectory/log/$(date "+%s")_movie_${pathSum}.log"
 		#addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
 		################################################################################
 		# for each episode build a page for the episode
@@ -237,42 +238,42 @@ processMovie(){
 		# check the state now that the movie web path has been determined
 		################################################################################
 		# check movie state as soon as posible processing
-		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
-			if checkDirSum "$webDirectory" "$movieDir";then
-					updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
-					addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
-			else
-					unchangedInfo="$movieTitle"
-					addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
-					return
-			fi
-		else
-			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
-		fi
 		#if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
-		#	# a existing state was found
-		#	currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
-		#	libarySum=$(getDirSum "$movieDir")
-		#	# create the info
-		#	updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
-		#	#unchangedInfo="$movieTitle\n\n$currentSum == $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
-		#	unchangedInfo="$movieTitle"
-		#	# if the current state is the same as the state of the last update
-		#	if [ "$libarySum" == "$currentSum" ];then
-		#		# this means they are the same so no update needs run
-		#		#INFO "State is unchanged for $movieTitle, no update is needed."
-		#		#ALERT "[DEBUG]: $currentSum == $libarySum"
-		#		addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
-		#		return
+		#	if checkDirSum "$webDirectory" "$movieDir";then
+		#			updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+		#			addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 		#	else
-		#		#INFO "States are diffrent, updating $movieTitle..."
-		#		#ALERT "[DEBUG]: $currentSum != $libarySum"
-		#		addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
-		#	fi
+			#		unchangedInfo="$movieTitle"
+			#		addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+			#		return
+			#fi
 		#else
-		#	#ALERT "No movie state exists for $movieTitle, updating..."
 		#	addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
 		#fi
+		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
+			# a existing state was found
+			currentSum=$(cat "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg")
+			libarySum=$(getDirSum "$movieDir")
+			# create the info
+			updateInfo="$movieTitle\n\n$currentSum != $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+			#unchangedInfo="$movieTitle\n\n$currentSum == $libarySum\n\n$(ls "$movieDir")\n\n$moviePath\n\n$1\n\n$movieDir"
+			unchangedInfo="$movieTitle"
+			# if the current state is the same as the state of the last update
+			if [ "$libarySum" == "$currentSum" ];then
+				# this means they are the same so no update needs run
+				#INFO "State is unchanged for $movieTitle, no update is needed."
+				#ALERT "[DEBUG]: $currentSum == $libarySum"
+				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+				return
+			else
+				#INFO "States are diffrent, updating $movieTitle..."
+				#ALERT "[DEBUG]: $currentSum != $libarySum"
+				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+			fi
+		else
+			#ALERT "No movie state exists for $movieTitle, updating..."
+			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
+		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
 		################################################################################
@@ -682,10 +683,13 @@ processMovie(){
 		# add to random all
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/random/all.index"
 
+		# write the sum of the movie as a lock on the scan
+		getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
+
 		# add the path to the list of paths for duplicate checking
-		if ! grep "$movieDir" "$webDirectory/movies/$movieWebPath/sources.cfg";then
+		if ! grep "$movieDir" "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg";then
 			# if the path is not in the file add it to the file
-			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/sources.cfg"
+			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg"
 		fi
 	else
 		ALERT "[WARNING]: The file '$moviePath' could not be found!"
@@ -1277,6 +1281,8 @@ processShow(){
 	showLogPath="$webDirectory/shows/$showTitle/log.index"
 	# create the path sum for reconizing the libary path
 	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
+	# generate the path sum
+	showLogPath="$webDirectory/log/$(date "+%s")_show_${pathSum}.log"
 	# create directory
 	INFO "creating show directory at '$webDirectory/$showTitle/'"
 	createDir "$webDirectory/shows/$showTitle/"
@@ -2045,7 +2051,7 @@ function update(){
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
 	# create the log path
-	logPagePath="$webDirectory/settings/log.php"
+	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# create the homepage path
 	#homePagePath="$webDirectory/index.php"
 	showIndexPath="$webDirectory/shows/index.php"
@@ -2062,49 +2068,53 @@ function update(){
 	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
 	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
 	# build log page
-	{
-		echo "<html id='top' class='randomFanart'>"
-		echo "<head>"
-		echo "<link rel='stylesheet' href='/style.css' />"
-		echo "<style>"
-		echo "</style>"
-		echo "<link rel='icon' type='image/png' href='/favicon.png'>"
-		echo "<script src='/2web.js'></script>"
-		echo "</head>"
-		echo "<body>"
-		echo "<?PHP";
-		echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
-		echo "include('settingsHeader.php');";
-		echo "?>";
-		# add the javascript sorter controls
-		echo "<div class='inputCard'>"
-		echo "<h2>Filter Log Entries</h2>"
-		echo -n "<input type='button' class='button' value='Info'"
-		echo    " onclick='toggleVisibleClass(\"INFO\")'>"
-		echo -n "<input type='button' class='button' value='Error'"
-		echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
-		echo -n "<input type='button' class='button' value='Warning'"
-		echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
-		echo -n "<input type='button' class='button' value='Update'"
-		echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
-		echo -n "<input type='button' class='button' value='New'"
-		echo    " onclick='toggleVisibleClass(\"NEW\")'>"
-		echo -n "<input type='button' class='button' value='Debug'"
-		echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
-		echo -n "<input type='button' class='button' value='Download'"
-		echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
-		echo "</div>"
-		echo "<hr>"
-		echo "<!--  add the search box -->"
-		echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
-		echo "<hr>"
-		echo "<div class='settingsListCard'>"
-		# start the table
-		echo "<div class='settingsTable'>"
-		echo "<table>"
-	} > "$logPagePath"
-	addToLog "INFO" "Started Update" "$(date)" "$logPagePath"
-	addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
+	#{
+	#	echo "<html id='top' class='randomFanart'>"
+	#	echo "<head>"
+	#	echo "<link rel='stylesheet' href='/style.css' />"
+	#	echo "<style>"
+	#	echo "</style>"
+	#	echo "<link rel='icon' type='image/png' href='/favicon.png'>"
+	#	echo "<script src='/2web.js'></script>"
+	#	echo "</head>"
+	#	echo "<body>"
+	#	echo "<?PHP";
+	#	echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
+	#	echo "include('settingsHeader.php');";
+	#	echo "?>";
+	#	# add the javascript sorter controls
+	#	echo "<div class='inputCard'>"
+	#	echo "<h2>Filter Log Entries</h2>"
+	#	echo -n "<input type='button' class='button' value='Info'"
+	#	echo    " onclick='toggleVisibleClass(\"INFO\")'>"
+	#	echo -n "<input type='button' class='button' value='Error'"
+	#	echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
+	#	echo -n "<input type='button' class='button' value='Warning'"
+	#	echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
+	#	echo -n "<input type='button' class='button' value='Update'"
+	#	echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
+	#	echo -n "<input type='button' class='button' value='New'"
+	#	echo    " onclick='toggleVisibleClass(\"NEW\")'>"
+	#	echo -n "<input type='button' class='button' value='Debug'"
+	#	echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
+	#	echo -n "<input type='button' class='button' value='Download'"
+	#	echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
+	#	echo "</div>"
+	#	echo "<hr>"
+	#	echo "<!--  add the search box -->"
+	#	echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
+	#	echo "<hr>"
+	#	echo "<div class='settingsListCard'>"
+	#	# start the table
+	#	echo "<div class='settingsTable'>"
+	#	echo "<table>"
+	#} > "$logPagePath"
+	addToLog "INFO" "STARTED Update" "$(date)" "$webDirectory/log/$(date "+%s").log"
+	# sleep one second to seprate the logs
+	sleep 1
+	# create new log after start so start log message is at start of log
+	logPagePath="$webDirectory/log/$(date "+%s").log"
+	#addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 	# figure out the total number of CPUS for parallel processing
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
@@ -2125,6 +2135,7 @@ function update(){
 	for libary in $libaries;do
 		ALERT "libary = $libary"
 		# check if the libary directory exists
+		logPagePath="$webDirectory/log/$(date "+%s").log"
 		addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
 		ALERT "Check if directory exists at '$libary'"
 		if test -d "$libary";then
@@ -2144,7 +2155,7 @@ function update(){
 			#find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
 
 			for show in $foundLibaryPaths;do
-				addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
+				#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
 				#ALERT "show path = '$show'"
 				################################################################################
 				# process page metadata
@@ -2211,19 +2222,21 @@ function update(){
 	if echo "$@" | grep -q -e "--parallel";then
 		blockQueue 1
 	fi
+
 	# add the end to the log, add the jump to top button and finish out the html
+	logPagePath="$webDirectory/log/$(date "+%s").log"
 	addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
-	{
-		echo "</table>"
-		echo "</div>"
-		echo "</div>"
-		# add footer
-		echo "<?PHP";
-		echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
-		echo "?>";
-		echo "</body>"
-		echo "</html>"
-	} >> "$logPagePath"
+	#{
+	#	echo "</table>"
+	#	echo "</div>"
+	#	echo "</div>"
+	#	# add footer
+	#	echo "<?PHP";
+	#	echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
+	#	echo "?>";
+	#	echo "</body>"
+	#	echo "</html>"
+	#} >> "$logPagePath"
 	################################################################################
 	# - sort and clean main indexes
 	# - cleanup the new indexes by limiting the lists to 200 entries
@@ -2242,13 +2255,13 @@ function update(){
 	if test -f "$webDirectory/new/shows.index";then
 		# new list
 		#tempList=$(cat -n "$webDirectory/new/shows.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/shows.index" | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/shows.index" | tail -n 400 )
 		echo "$tempList" > "$webDirectory/new/shows.index"
 	fi
 	if test -f "$webDirectory/new/episodes.index";then
 		# new episodes
 		#tempList=$(cat -n "$webDirectory/new/episodes.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/episodes.index" | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/episodes.index" | tail -n 400 )
 		echo "$tempList" > "$webDirectory/new/episodes.index"
 	fi
 
@@ -2256,7 +2269,7 @@ function update(){
 
 	if test -f "$webDirectory/random/episodes.index";then
 		# new episodes
-		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 200 )
+		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 400 )
 		echo "$tempList" > "$webDirectory/random/episodes.index"
 	fi
 	##########
@@ -2269,10 +2282,20 @@ function update(){
 	if test -f "$webDirectory/new/movies.index";then
 		# new movies
 		#tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/movies.index" | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/movies.index" | tail -n 400 )
 		echo "$tempList" > "$webDirectory/new/movies.index"
 	fi
 	linkFile "$webDirectory/movies/movies.index" "$webDirectory/random/movies.index"
+	#####################
+	# ALL INDEX CLEANUP #
+	#####################
+	if test -f "$webDirectory/new/all.index";then
+		# new movies
+		#tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/all.index" | tail -n 400 )
+		echo "$tempList" > "$webDirectory/new/all.index"
+	fi
+	##############################################################################
 	# create the final index pages, these should not have the progress indicator
 	# build the final version of the homepage without the progress indicator
 	buildHomePage "$webDirectory"

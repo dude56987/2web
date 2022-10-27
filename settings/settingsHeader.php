@@ -104,7 +104,7 @@
 		echo "				<a class='' href='/settings/cache.php'>📥Cache</a>\n";
 		echo "			</li>\n";
 		echo "			<li>\n";
-		echo "				<a class='' href='/settings/log.php'>📋Log</a>\n";
+		echo "				<a class='' href='/log/'>📋Log</a>\n";
 		echo "			</li>\n";
 		echo "		</ul>";
 		echo "	</div>\n";

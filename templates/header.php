@@ -136,7 +136,7 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
-if (strpos($_SERVER['REQUEST_URI'], "settings/")){
+if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI'], "log/") || strpos($_SERVER['REQUEST_URI'], "backup/")){
 	formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
 	formatEcho("🛠️",3);
 	formatEcho("<span class='headerText'>",3);

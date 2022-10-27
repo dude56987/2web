@@ -75,9 +75,48 @@ echo "<div class='date titleCard'>";
 echo "<h1>";
 echo shell_exec("hostname");
 echo "</h1>";
+
+if ( file_exists("nfo2web.active")){
+	echo "<span>";
+	echo " ⚙️: nfo2web";
+	echo "</span>";
+}
+if ( file_exists("comic2web.active")){
+	echo "<span>";
+	echo " ⚙️: comic2web";
+	echo "</span>";
+}
+if ( file_exists("iptv2web.active")){
+	echo "<span>";
+	echo " ⚙️: iptv2web";
+	echo "</span>";
+}
+if ( file_exists("graph2web.active")){
+	echo "<span>";
+	echo " ⚙️: graph2web";
+	echo "</span>";
+}
+if ( file_exists("music2web.active")){
+	echo "<span>";
+	echo " ⚙️: music2web";
+	echo "</span>";
+}
+if ( file_exists("weather2web.active")){
+	echo "<span>";
+	echo " ⚙️: weather2web";
+	echo "</span>";
+}
+if ( file_exists("ytdl2nfo.active")){
+	echo "<span>";
+	echo " ⚙️: ytdl2nfo";
+	echo "</span>";
+}
+
+
 echo "	<div>";
 echo "		Last updated on $lastUpdate";
 echo "	</div>";
+
 echo "	<div>";
 if ( $totalShows > 0 ){
 	echo "		<span>";

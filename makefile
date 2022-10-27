@@ -69,10 +69,33 @@ build-tools:
 	# for making man files
 	sudo apt-get install pandoc
 	sudo apt-get install w3m
-build:
+build: build-deb
 	# install the build tools
 	sudo make build-deb;
-build-deb:
+upgrade-hls: node_modules/hls.js/dist/hls.js
+	npm install --save hls.js
+screenshots:
+	# create a series of screenshots from the currently installed version
+	mkdir -p screenshots/
+	# create desktop screenshots
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/" "screenshots/home.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/movies/" "screenshots/movies.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/shows/" "screenshots/shows.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/live/" "screenshots/live.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/comics/" "screenshots/comics.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/weather/" "screenshots/weather.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/graphs/" "screenshots/graphs.png"
+	# create phone screenshots
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/" "screenshots/phone-home.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/movies/" "screenshots/phone-movies.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/shows/" "screenshots/phone-shows.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/live/" "screenshots/phone-live.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/comics/" "screenshots/phone-comics.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/weather/" "screenshots/phone-weather.png"
+	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/graphs/" "screenshots/phone-graphs.png"
+	# open created screenshots
+	eom screenshots/home.png &
+build-deb: upgrade-hls
 	# build the directories inside the package
 	mkdir -p debian;
 	mkdir -p debian/DEBIAN;
@@ -235,7 +258,6 @@ build-deb:
 	# copy over the theme templates
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# get the latest hls.js from npm and include it in the package
-	npm install --save hls.js
 	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/iptv/hls.js
 	# build the default themes
 	# user themes can be any self contained .css file

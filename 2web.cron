@@ -4,17 +4,9 @@
 #   recommended.
 # - Change the commented lines to store logs
 ################################################################################
-# cleanup interrupted updates on reboot
-#@reboot root /bin/rm /tmp/nfo2web.active >> /var/log/2web_nfo.log
-@reboot root /bin/rm /tmp/nfo2web.active
-#@reboot root /bin/rm /tmp/iptv2web.active >> /var/log/2web_iptv.log
-@reboot root /bin/rm /tmp/iptv2web.active
-#@reboot root /bin/rm /tmp/comic2web.active >> /var/log/2web_comic.log
-@reboot root /bin/rm /tmp/comic2web.active
-#@reboot root /bin/rm /tmp/weather2web.active >> /var/log/2web_weather.log
-@reboot root /bin/rm /tmp/weather2web.active
-#@reboot root /bin/rm /tmp/graph2web.active >> /var/log/2web_graph.log
-@reboot root /bin/rm /tmp/graph2web.active
+# cleanup interrupted updates on reboot, removes leftover lockfiles from power cycles
+#@reboot root /usr/bin/2web unlock >> /var/log/2web.log
+@reboot root /usr/bin/2web unlock
 
 ################################################################################
 # run 2web to build the base website and update the site configuration changes
@@ -31,7 +23,7 @@
 ################################################################################
 # update every 4 hours, if internet sources are included updates can be frequent
 #0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/2web_nfo.log
-0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
+0 */2 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
 
 ################################################################################
 # update the iptv lists once a week changes to these are more infrequent

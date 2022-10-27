@@ -305,19 +305,20 @@ INFO(){
 ################################################################################
 function lockProc(){
 	procName=$1
-	ALERT "/tmp/${procName}.active"
-	if test -f "/tmp/${procName}.active";then
+	webDirectory=$(webRoot)
+	ALERT "$webDirectory/${procName}.active"
+	if test -f "$webDirectory/${procName}.active";then
 		# system is already running exit
 		echo "[INFO]: ${procName} is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/${procName}.active'."
+		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '$webDirectory/${procName}.active'."
 		exit
 	else
-		ALERT "Setting Active Flag /tmp/${procName}.active"
+		ALERT "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
-		touch "/tmp/${procName}.active"
-		ALERT "Setting Active Trap /tmp/${procName}.active"
+		touch "$webDirectory/${procName}.active"
+		ALERT "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
-		trap "rm /tmp/${procName}.active" EXIT
+		trap "rm $webDirectory/${procName}.active" EXIT
 	fi
 }
 ################################################################################
