@@ -218,21 +218,33 @@ function update(){
 			set -x
 			# extract the zim file to html
 			zimdump dump --dir="$webDirectory/wiki/$wikiSum/" "$zimFilePath"
+
+			mainPageName=$(zimdump info "$zimFilePath" | grep "main page:" | cut -d':' -f2 | tr -s ' ' | sed "s/^ //g")
+			echo "$mainPageName" > "$webDirectory/wiki/$wikiSum/M/MainPage"
+
 			set +x
 
 			addToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/wiki/wikis.index"
 
-			if ! test -f "$webDirectory/wiki/$wikiSum/wiki.index";then
-				{
-					echo "<a href='/wiki/$wikiSum/' class='indexSeries' >"
-					echo "<img loading='lazy' src='/wiki/$wikiSum/thumb.png' />"
-					echo "<div>$wikiName</div>"
-					echo "</a>"
-				} > "$webDirectory/wiki/$wikiSum/wiki.index"
+			if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
+				convert "$webDirectory/wiki/$wikiSum/-/favicon" -adaptive-resize 128x128 "$webDirectory/wiki/$wikiSum/thumb.png"
+				#wkhtmltoimage --width 1920 "http://localhost/wiki/$wikiSum/index.php" "$webDirectory/wiki/$wikiSum/thumb.png"
 			fi
 
-			if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
-				wkhtmltoimage --width 1920 "http://localhost/wiki/$wikiSum/index.php" "$webDirectory/wiki/$wikiSum/thumb.png"
+			if ! test -f "$webDirectory/wiki/$wikiSum/wiki.index";then
+				{
+					echo "<a href='/wiki/$wikiSum/' class='inputCard' >"
+					# write the wiki title
+					echo "<h2>$(cat "$webDirectory/wiki/$wikiSum/M/Title")</h2>"
+					if test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
+						echo "<img loading='lazy' src='/wiki/$wikiSum/thumb.png' />"
+					fi
+					echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Description")</p>"
+					echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Date")</p>"
+					echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Counter"| sed "s/;/\n/g")</p>"
+					#echo "<div>$wikiName</div>"
+					echo "</a>"
+				} > "$webDirectory/wiki/$wikiSum/wiki.index"
 			fi
 
 			linkFile "/usr/share/2web/templates/wiki.php" "$webDirectory/wiki/$wikiSum/index.php"

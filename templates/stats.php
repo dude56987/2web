@@ -77,41 +77,40 @@ echo shell_exec("hostname");
 echo "</h1>";
 
 if ( file_exists("nfo2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: nfo2web";
 	echo "</span>";
 }
 if ( file_exists("comic2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: comic2web";
 	echo "</span>";
 }
 if ( file_exists("iptv2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: iptv2web";
 	echo "</span>";
 }
 if ( file_exists("graph2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: graph2web";
 	echo "</span>";
 }
 if ( file_exists("music2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: music2web";
 	echo "</span>";
 }
 if ( file_exists("weather2web.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: weather2web";
 	echo "</span>";
 }
 if ( file_exists("ytdl2nfo.active")){
-	echo "<span>";
+	echo "<span class='activeProcess'>";
 	echo " ⚙️: ytdl2nfo";
 	echo "</span>";
 }
-
 
 echo "	<div>";
 echo "		Last updated on $lastUpdate";
@@ -182,7 +181,7 @@ if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 	}else{
 		echo "<div class='listCard'>";
 	}
-	echo "<h3>Fortune</h3>";
+	echo "<h3>🔮 Fortune</h3>";
 	echo "<div class='fortuneText'>";
 	echo "$todaysFortune";
 	echo "</div>";

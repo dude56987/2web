@@ -66,6 +66,115 @@ function searchIndex($indexPath,$searchQuery){
 	}
 }
 ################################################################################
+function scan_dir($directory){
+	if (is_dir($directory)){
+		$tempData = scandir($directory);
+		$tempData = array_diff($tempData,Array(".","..","index.php","randomFanart.php"));
+		return $tempData;
+	}else{
+		return false;
+	}
+}
+################################################################################
+function searchAllWiki($wikiPath){
+	# search all wiki content
+	$output = "";
+	$foundData = false;
+	$wikiPaths = scan_dir($_SERVER['DOCUMENT_ROOT']."/wiki/");
+	if ($wikiPaths){
+		foreach($wikiPaths as $wikiPath){
+			# read each wiki and search for content
+			$wikiSearchResults = searchWiki($_SERVER['DOCUMENT_ROOT']."/wiki/".$wikiPath);
+			if ($wikiSearchResults[0]){
+				# if the wiki found search results add them to the output
+				$output .= $wikiSearchResults[1];
+				$foundData = true;
+			}
+		}
+	}
+	if ($foundData){
+		return array(true,$output);
+	}else{
+		return array(false,$output);
+	}
+}
+################################################################################
+function searchWiki($wikiPath){
+	$output = "";
+	$foundData = false;
+	# search though the article files for the search term
+	$foundFiles = scan_dir($wikiPath."/A/");
+	#
+	$wikiName=explode("/",$wikiPath);
+	$wikiName=array_pop($wikiName);
+	if ($foundFiles){
+		foreach($foundFiles as $foundFile){
+			if (stripos($foundFile,$_GET['q'])){
+				# check each filename for the search term
+				$tempOutput = "";
+
+				$tempOutput .= "<div class='titleCard button'>";
+				$tempOutput .= "<h2>";
+				$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>\n";
+				$tempOutput .= "</h2>";
+				$tempOutput .= "<div class='foundSearchContentPreview'>";
+				$tempOutput .= $lineData;
+				$tempOutput .= "</div>";
+				$tempOutput .= "</div>";
+
+				$output .= $tempOutput;
+
+				#echo $tempOutput;
+				#flush();
+				#ob_flush();
+			}else if(is_file($wikiPath."/A/".$foundFile)){
+				# read each file and search line by line
+				$articleHandle = fopen($wikiPath."/A/".$foundFile,'r');
+				while(! feof($articleHandle)){
+					$lineData = fgets($articleHandle, 512);
+					# remove meta lines that contain redirects
+					$lineData = strip_tags($lineData);
+					# highlight found search terms
+					$lineData = str_replace($_GET['q'],("<span class='highlightText'>".$_GET['q']."</span>"),$lineData);
+					$lineData = str_replace(strtoupper($_GET['q']),("<span class='highlightText'>".strtoupper($_GET['q'])."</span>"),$lineData);
+					if(stripos($lineData,$_GET['q'])){
+						$foundData = true;
+						$tempOutput = "";
+						# check each files contents for the search term
+						$tempOutput .= "<div class='titleCard button'>";
+						$tempOutput .= "<h2>";
+						$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>\n";
+						$tempOutput .= "</h2>";
+
+						$tempOutput .= "<div class='foundSearchContentPreview'>";
+						$tempOutput .= $lineData;
+						$tempOutput .= "</div>";
+
+						$tempOutput .= "<div class='wikiPublisher'>";
+						$tempOutput .= "Publisher : ";
+						$tempOutput .= file_get_contents($_SERVER['DOCUMENT_ROOT']."/wiki/$wikiName/M/Title");
+						$tempOutput .= "</div>";
+
+						$tempOutput .= "</div>";
+
+						$output .= $tempOutput;
+
+						#echo $tempOutput;
+						#flush();
+						#ob_flush();
+						#break;
+					}
+				}
+			}
+		}
+	}
+	if ($foundData){
+		return array(true,$output);
+	}else{
+		return array(false,$output);
+	}
+}
+################################################################################
 ?>
 <html class='randomFanart'>
 <head>
@@ -118,49 +227,24 @@ if (array_key_exists("q",$_GET)){
 			ob_flush();
 		}
 	}
+	# search all the wikis
+	$wikiSearchResults = searchAllWiki($_GET['q']);
+	#if ($wikiSearchResults[0]){
+	#	echo $wikiSearchResults[1];
+	#}
 
-	if ($foundResults){
+	#echo $wikiSearchResults[1];
+	#flush();
+	#ob_flush();
+
+	if ($foundResults || ($wikiSearchResults[0] == true)){
 		echo "<h1>Search Results for '$searchQuery'</h1>";
 		echo $totalOutput;
+		echo $wikiSearchResults[1];
 	}else{
 		echo "<h1>No Search Results for '$searchQuery'</h1>";
-		// show the homepage
-		if (file_exists("shows")){
-			drawPosterWidget("episodes");
-			drawPosterWidget("shows");
-		}
-		if (file_exists("movies")){
-			drawPosterWidget("movies");
-			# random movies
-			drawPosterWidget("movies", True);
-		}
-		if (file_exists("shows")){
-			# random
-			drawPosterWidget("shows", True);
-		}
-		if (file_exists("comics")){
-			drawPosterWidget("comics");
-			drawPosterWidget("comics", True);
-		}
-		if (file_exists("music")){
-			drawPosterWidget("albums");
-			drawPosterWidget("artists");
-			drawPosterWidget("music", True);
-		}
-		if (file_exists("live")){
-			if (file_exists("updatedChannels.php")){
-				include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-			}
-		}
-		if (file_exists("live")){
-			if (file_exists("randomChannels.php")){
-				include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
-			}
-		}
-		if (file_exists("graphs")){
-			drawPosterWidget("graphs", True);
-		}
 	}
+
 	formatEcho("<div class='titleCard'>",1);
 	formatEcho("<h2>External Search</h2>",2);
 	formatEcho("<div class='listCard'>",2);

@@ -3,6 +3,13 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+	// set wiki title from metadata
+	if (is_file("M/Title")){
+		$wikiTitle = file_get_contents("M/Title");
+		echo "<title>".$wikiTitle."</title>";
+	}
+	?>
 </head>
 <body>
 <?php
@@ -13,36 +20,172 @@ include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
-
+<a class='button' href='?random'>🎲 Random Article</a>
+<a class='button' href='?index'>📋 Article Index</a>
+<a class='button' href='?home'>⛵ Wiki Homepage</a>
+<hr>
+<form class='searchBoxForm' method='get'>
+	<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Wiki Search...' >
+</form>
+<hr>
 <?php
 echo "<div class='settingListCard' >";
 
-if (array_key_exists("article",$_GET)){
+if (array_key_exists("search",$_GET)){
+	echo "<h1>";
+	echo "Searching ".$wikiTitle." For ".$_GET['search'];
+	echo "</h1>";
+	# search though the article files for the search term
+	$foundFiles=scandir("A/");
+	foreach($foundFiles as $foundFile){
+		if (stripos($foundFile,$_GET['search'])){
+			# check each filename for the search term
+			echo "<div class='titleCard'>";
+			echo "<a href='?article=".$foundFile."'>".$foundFile."</a>\n";
+			echo "</div>";
+			flush();
+			ob_flush();
+		}else if(is_file("A/".$foundFile)){
+			# read each file and search line by line
+			$articleHandle = fopen("A/".$foundFile,'r');
+			while(! feof($articleHandle)){
+				$lineData = fgets($articleHandle, 512);
+				# remove meta lines that contain redirects
+				$lineData = strip_tags($lineData);
+				#$lineData = str_replace("<meta","",$lineData);
+				#$lineData = str_replace("<span","",$lineData);
+				#$lineData = str_replace("<div","",$lineData);
+				#$lineData = str_replace("</","",$lineData);
+				# highlight found search terms
+				$lineData = str_replace($_GET['search'],("<span class='highlightText'>".$_GET['search']."</span>"),$lineData);
+				if(stripos($lineData,$_GET['search'])){
+					# check each files contents for the search term
+					echo "<div class='titleCard button'>";
+					echo "<h2>";
+					echo "<a href='?article=".$foundFile."'>".$foundFile."</a>\n";
+					echo "</h2>";
+					echo "<div class='foundSearchContentPreview'>";
+					echo $lineData;
+					echo "</div>";
+					echo "</div>";
+					flush();
+					ob_flush();
+					break;
+				}
+			}
+		}
+	}
+}else if (array_key_exists("home",$_GET)){
+	# try and load the home page from the /M/MainPage file
+	if(file_exists("M/MainPage")){
+		# find main page in metadata
+		$mainPagePath=file_get_contents("M/MainPage");
+		# remove newlines
+		$mainPagePath=str_replace("\n","",$mainPagePath);
+		if(is_file($mainPagePath)){
+			# redirect to the main page
+			header('Location: ?article='.$mainPagePath,true);
+		}else if(is_file($mainPagePath."/Sandbox")){
+			# redirect to the main page
+			header('Location: ?article='.$mainPagePath."/Sandbox",true);
+		}
+	}else if(is_file("A/Main_Page/Sandbox")){
+		header('Location: ?article=Main_Page/Sandbox',true);
+	}else if (is_file("A/Main_Page")){
+		header('Location: ?article=Main_Page',true);
+	}else{
+		# go to the index if a home page could not be found for the wiki
+		header('Location: ?index',true);
+	}
+}else if (array_key_exists("index",$_GET)){
+		$foundFiles=scandir("A/");
+		echo "<h2>All Articles Index<h2>";
+		echo "<ul>";
+		foreach($foundFiles as $foundFile){
+			echo "<li><a href='?article=".$foundFile."'>?article=".$foundFile."</li>\n";
+		}
+		echo "</ul>";
+}else if (array_key_exists("random",$_GET)){
+	$foundFiles=scandir("A/");
+	# shuffle files to pick a random one from the top of the deck
+	shuffle($foundFiles);
+	echo "<h2>Random Found Article</h2>";
+	echo "<ul>";
+	echo "<li><a href='?article=".$foundFiles[0]."'>?article=".$foundFiles[0]."</li>\n";
+	echo '<meta http-equiv="refresh" content="0;url=?article='.$foundFiles[0].'" />';
+	echo "</ul>";
+}else if (array_key_exists("redirect",$_GET)){
+	echo "<h2>External Redirect<h2>";
+	echo "<ul>";
+	echo "<li>";
+	echo "This link will redirect to a external website.";
+	echo "</li>";
+	echo "<li>";
+	echo "Click the below link to proceed.";
+	echo "</li>";
+	echo "</ul>";
+	# build the link to the extrnal link
+	echo "<a class='button' href=".$_GET['redirect'].">".$_GET['redirect']."</a>";
+}else if (array_key_exists("article",$_GET)){
 	# load the article
 	$article=($_GET['article']);
 
+
+	# build the article index since it will be read over and over in the next 2 loops
+	$articleIndex=scandir("A/");
+
 	# search for the article file based on the article name
-	foreach($articleIndex as $foundFile){
-		if ( strpos($foundFile,$article) ){
-			$lineData="".$foundFile;
-		}else if ( strpos( str_replace("/","_",$foundFile) , str_replace("/","_",$article) ) ){
-			$lineData=str_replace("/","_",$foundFile);
-		}
+	#foreach($articleIndex as $foundFile){
+	#	if ( strpos($foundFile,$article) ){
+	#		$lineData="".$foundFile;
+	#	}else if ( strpos( str_replace("/","_",$foundFile) , str_replace("/","_",$article) ) ){
+	#		$lineData=str_replace("/","_",$foundFile);
+	#	}
+	#}
+
+	#echo "<div>".var_dump(stripos($article,"A/"))."</div>";
+
+	# add the A/ to the front of the article if it does not exist
+	if( ($article[0]=="A") && ($article[1] == "/") ){
+		echo "<!-- Article prefix already exists --!>";
+	}else{
+		$article = "A/".$article;
 	}
 
-	# article
+	#$article = $article;
 
+	# article
+	#echo "<div>".$article."</div>";
+	#echo "<div>".file_get_contents($article)."</div>";
 
 	# read the page name and convert the hyperlinks to load the file here with article directive ?article=
+	#if (is_file("A/".$article)){
 	if (is_file($article)){
 		# load the active article
-		$articleHandle = fopen("A/".$article,'r');
-		# build the article index since it will be read over and over in the next 2 loops
-		$articleIndex=scandir("A/");
+		#$articleHandle = fopen("A/".$article,'r');
+		$articleHandle = fopen($article,'r');
 		while(! feof($articleHandle)){
 			# read the article line by line and send large packets
 			$lineData = fgets($articleHandle);
+			#$lineData = str_replace('style="*"','',$lineData);
 			$lineData = str_replace('../','',$lineData);
+			# remove all style tags from line
+			$lineData = preg_replace('/style=".*"/',"",$lineData);
+			# replace redirect urls
+			$lineData = str_replace('url=','url=?article=',$lineData);
+			$lineData = preg_replace('/<link.*>/',"",$lineData);
+			$lineData = preg_replace('/<script.*<\/script>/',"",$lineData);
+			# check for metadata redirect
+			#if (strpos($lineData,'http-equiv="refresh"')){
+			#	#echo "\nLineData=".$lineData."<br>\n";
+			#	# redirect to the correct page
+			#	$lineData = preg_replace("/^.*?contents=\"0;url=/",'',$lineData);
+			#	#echo "\nLineData=".$lineData."<br>\n";
+			#	$lineData = preg_replace("/\" \/\>.*?\n/",'',$lineData);
+			#	#echo "\nLineData=".$lineData."<br>\n";
+			#
+			#	# redirect to the correct article
+			#	#redirect($lineData);
 			if (strpos($lineData,"http://") || strpos($lineData,"https://")){
 				$lineData = str_replace('href="','href="?redirect=',$lineData);
 			}else if (strpos($lineData,"<link") || strpos($lineData,"<script")){
@@ -50,15 +193,18 @@ if (array_key_exists("article",$_GET)){
 				echo "\n";
 			}else{
 				# search for existing articles in links and
-				foreach($articleIndex as $foundFile){
-					if ( strpos($foundFile,$article) ){
-						$lineData="".$foundFile;
-					}else if ( strpos( str_replace("/","_",$foundFile) , str_replace("/","_",$article) ) ){
-						$lineData=str_replace("/","_",$foundFile);
-					}
-				}
-				if ( strpos($lineData,'href="?article=A/') ){
-					$lineData = str_replace('href="?article=A/','href="?article=',$lineData);
+				#foreach($articleIndex as $foundFile){
+				#	if ( strpos($foundFile,$article) ){
+				#		$lineData="".$foundFile;
+				#	}else if ( strpos( str_replace("/","_",$foundFile) , str_replace("/","_",$article) ) ){
+				#		$lineData=str_replace("/","_",$foundFile);
+				#	}
+				#}
+
+				$lineData = str_replace('../','',$lineData);
+				$lineData = str_replace('href="A/','href="',$lineData);
+				if ( strpos($lineData,'href="?article=') ){
+					$lineData = str_replace('href="?article=','href="?article=',$lineData);
 				}else{
 					$lineData = str_replace('href="','href="?article=',$lineData);
 				}
@@ -104,25 +250,13 @@ if (array_key_exists("article",$_GET)){
 		echo "<h2>All Found Articles</h2>";
 		echo "<ul>";
 		foreach($foundFiles as $foundFile){
-			echo "<li>".$foundFile."</li>\n";
+			echo "<li><a href='?article=".$foundFile."'>?article=".$foundFile."</li>\n";
 		}
 		echo "</ul>";
 	}
-}else if (array_key_exists("redirect",$_GET)){
-	echo "<h2>External Redirect<h2>";
-	echo "<ul>";
-	echo "<li>";
-	echo "This link will redirect to a external website.";
-	echo "</li>";
-	echo "<li>";
-	echo "Click the below link to proceed.";
-	echo "</li>";
-	echo "</ul>";
-	# build the link to the extrnal link
-	echo "<a class='button' href=".$_GET['redirect'].">".$_GET['redirect']."</a>";
 }else{
 	#redirect("?article=A/Main_Page/Sandbox");
-	header('Location: ?article=Main_Page/Sandbox',true);
+	header('Location: ?home',true);
 }
 
 echo "</div>";

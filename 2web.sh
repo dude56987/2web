@@ -577,7 +577,7 @@ main(){
 		echo "Checking for cache files in $(webRoot)/log/"
 		if test -d "$(webRoot)/log/";then
 			#find "$(webRoot)/log/" -type d -mtime +"$cacheDelay" -name '*.log' -exec rm -rv {} \;
-			find "$(webRoot)/log/" -type d -mtime +1 -name '*.log' -exec rm -rv {} \;
+			find "$(webRoot)/log/" -type f -mtime +1 -name '*.log' -exec rm -rv {} \;
 		fi
 		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
 		# delete the m3u cache

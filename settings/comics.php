@@ -17,14 +17,14 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#addComicLibary'>Add Comic Libary Paths</a></li>
-		<li><a href='#comicServerLibaryPaths'>Server Libary Paths Config</a></li>
-		<li><a href='#comicLibaryPaths'>Comic Libary Paths</a></li>
+		<li><a href='#addComicLibrary'>Add Comic Library Paths</a></li>
+		<li><a href='#comicServerLibraryPaths'>Server Library Paths Config</a></li>
+		<li><a href='#comicLibraryPaths'>Comic Library Paths</a></li>
 	</ul>
 </div>
 
 <div id='index' class='inputCard'>
-	<h2>Supported libary file types</h2>
+	<h2>Supported Library file types</h2>
 	<ul>
 		<li>.txt</li>
 		<li>.zip</li>
@@ -41,24 +41,24 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='addComicLibary' class='inputCard'>
+<div id='addComicLibrary' class='inputCard'>
 <form action='admin.php' method='post'>
-	<h2>Add Comic Libary Path</h2>
-	<input width='60%' type='text' name='addComicLibary' placeholder='/absolute/path/to/the/libary'>
+	<h2>Add Comic Library Path</h2>
+	<input width='60%' type='text' name='addComicLibrary' placeholder='/absolute/path/to/the/Library'>
 	<input class='button' type='submit'>
 </form>
 </div>
 
 <?php
-echo "<div id='comicServerLibaryPaths' class='settingListCard'>\n";
-echo "<h2>Comic Server Libary Paths</h2>\n";
+echo "<div id='comicServerLibraryPaths' class='settingListCard'>\n";
+echo "<h2>Comic Server Library Paths</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/comics/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div id='comicLibaryPaths' class='settingListCard'>";
-echo "<h2>Comic Libary Paths</h2>\n";
+echo "<div id='comicLibraryPaths' class='settingListCard'>";
+echo "<h2>Comic Library Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/libaries.d/*.cfg"));
 // reverse the time sort
 sort($sourceFiles);
@@ -74,7 +74,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeComicLibary' value='".$link."'>Remove Libary</button>\n";
+				echo "	<button class='button' type='submit' name='removeComicLibrary' value='".$link."'>Remove Library</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";

@@ -594,6 +594,7 @@ function update(){
 	# scan the sources
 	ALERT "Scanning Music Sources: $musicSources"
 	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+	totalCPUS=$(( $totalCPUS / 2 ))
 	totalTracks=0
 	processedTracks=0
 	totalTrackList=""
@@ -664,15 +665,15 @@ function update(){
 
 	# cleanup new music index
 	if test -f "$webDirectory/new/music.index";then
-		tempList=$(cat "$webDirectory/new/music.index" | uniq | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/music.index" | uniq | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/music.index"
 	fi
 	if test -f "$webDirectory/new/artists.index";then
-		tempList=$(cat "$webDirectory/new/artists.index" | uniq | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/artists.index" | uniq | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/artists.index"
 	fi
 	if test -f "$webDirectory/new/tracks.index";then
-		tempList=$(cat "$webDirectory/new/tracks.index" | uniq | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/tracks.index" | uniq | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/tracks.index"
 	fi
 
@@ -688,6 +689,11 @@ function update(){
 	if test -f "$webDirectory/random/tracks.index";then
 		tempList=$(cat "$webDirectory/random/tracks.index" | sort -u )
 		echo "$tempList" > "$webDirectory/new/tracks.index"
+	fi
+	# update kodi clients
+	if test -f /usr/bin/kodi2web;then
+		# update video libaries on all kodi clients, if no video playback is detected
+		/usr/bin/kodi2web audio
 	fi
 }
 ################################################################################

@@ -56,6 +56,10 @@ OPTIONS
 
 :   Cleanup the web caches based on web cache time setting
 
+`-L, --unlock, unlock`
+
+:   Remove lockfiles leftover from system crashes or reboots.
+
 `-U, --upgrade, upgrade`
 
 :   Upgrade libaries used by modules in the background for operation. This can fix issues with backend resolution issues. Upgrade youtube-dl, gallery-dl, hls.js

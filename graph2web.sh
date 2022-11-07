@@ -171,7 +171,7 @@ function update(){
 	if test -f "$webDirectory/new/graphs.index";then
 		chown www-data:www-data "$webDirectory/new/graphs.index"
 		# limit the new list to 200 entries
-		tempList=$(cat "$webDirectory/new/graphs.index" | uniq | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/graphs.index" | uniq | tail -n 800 )
 		if [ $(diff <(echo "$tempList") <(cat "$webDirectory/new/graphs.index") | wc -l) -eq 0 ];then
 			# the list has not changed do not write to disk
 			echo "No new graph updates..."

@@ -4,23 +4,40 @@ $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
 
 # get the name of the script this script is included in
-$scriptName = str_replace("/","_",explode(".",$_SERVER['SCRIPT_NAME'])[0]);
+$scriptName = str_replace("/","(#)",explode(".",$_SERVER['SCRIPT_NAME'])[0]);
+$scriptName = $scriptName.".php?";
+$totalKeys = count(array_keys($_GET));
+$keyCounter = 0;
+foreach(array_keys($_GET) as $keyName){
+	$keyCounter +=1;
+	$tempKeyValue = $_GET[$keyName];
+	$tempKeyValue = str_replace("/","(#)",$tempKeyValue);
+
+	# do not add the and to the last element in the array
+	if ($keyCounter >= $totalKeys){
+		$scriptName = $scriptName.$keyName."=".$tempKeyValue;
+	}else{
+		$scriptName = $scriptName.$keyName."=".$tempKeyValue."&";
+	}
+}
+
+#$scriptName=$scriptName.implode("_",$_GET);
 #$scriptName = dirname(__FILE__).$scriptName;
 
 # add the page counter
-if (file_exists($webDirectory."/views/".$scriptName."_views.cfg")){
-	$tempViews = (int) file_get_contents($webDirectory."/views/".$scriptName."_views.cfg");
-	file_put_contents(($webDirectory."/views/".$scriptName."_views.cfg"),$tempViews + 1);
+if (file_exists($webDirectory."/views/".$scriptName.".cfg")){
+	$tempViews = (int) file_get_contents($webDirectory."/views/".$scriptName.".cfg");
+	file_put_contents(($webDirectory."/views/".$scriptName.".cfg"),$tempViews + 1);
 }else{
-	file_put_contents(($webDirectory."/views/".$scriptName."_views.cfg"),"1");
+	file_put_contents(($webDirectory."/views/".$scriptName.".cfg"),"1");
 }
 # display the page view
 echo "<div class='viewCounterBox'>";
-echo "<span class='viewCounterHeader'>";
+echo "<a class='viewCounterHeader' href='/views/'>";
 echo "👁️";
-echo "</span>";
+echo "</a>";
 echo "<span class='viewCounter'>";
-echo file_get_contents($webDirectory."/views/".$scriptName."_views.cfg");
+echo file_get_contents($webDirectory."/views/".$scriptName.".cfg");
 echo "</span>";
 echo "<span class='executionTimeHeader'>";
 echo "⏱️";

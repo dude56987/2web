@@ -31,6 +31,18 @@ foreach($modules as $module){
 	</ul>
 </div>
 
+<div id='index' class='inputCard'>
+	<h2>Managing Modules</h2>
+	<ul>
+		<li>Enabled modules will be updated automatically by the CRON scheduler</li>
+		<li>Disabled modules will have cached data removed and no updates will be done</li>
+	</ul>
+</div>
+
+
+
+
+
 <hr>
 <?PHP
 foreach($modules as $module){

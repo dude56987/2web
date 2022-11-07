@@ -20,7 +20,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 if (file_exists("fortune.index")){
 	$todaysFortune = file_get_contents("fortune.index");
 
-	echo "<h3>Fortune</h3>";
+	echo "<h3>🔮 Fortune</h3>";
 	echo "<div class='fortuneText'>";
 	echo "$todaysFortune";
 	echo "</div>";

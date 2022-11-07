@@ -626,7 +626,9 @@ processMovie(){
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+					echo "<?PHP";
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/movies/$movieWebPath/$movieWebPath$sufix'>\";"
+					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				fi
@@ -644,7 +646,9 @@ processMovie(){
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
 				echo "</a>"
-				echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/movies/$movieWebPath/$movieWebPath$sufix'>"
+				echo "<?PHP";
+				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/movies/$movieWebPath/$movieWebPath$sufix'>\";"
+				echo "?>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 				echo "$moviePlot"
@@ -1137,7 +1141,7 @@ processEpisode(){
 			} >> "$episodePagePath"
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
 			cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
-			vlcCacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+			vlcCacheRedirect="/ytdl-resolver.php?url=$ytLink"
 			fullRedirect="$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
@@ -1151,7 +1155,10 @@ processEpisode(){
 				echo "	📥Cache Link"
 				echo "</a>"
 
-				echo "<a class='button hardLink vlcButton' href='vlc://$vlcCacheRedirect'>"
+				echo "<?PHP";
+				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
+				echo "?>";
+
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
 
@@ -1182,7 +1189,7 @@ processEpisode(){
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
 					cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
-					vlcCacheRedirect="$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
+					vlcCacheRedirect="/ytdl-resolver.php?url=$videoPath"
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
@@ -1190,7 +1197,9 @@ processEpisode(){
 					echo "<a class='button hardLink' href='$cacheRedirect'>"
 					echo "	📥Cache Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://$vlcCacheRedirect'>"
+					echo "<?PHP";
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
+					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
 				else
@@ -2118,6 +2127,7 @@ function update(){
 	# figure out the total number of CPUS for parallel processing
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		totalCPUS=$(( $totalCPUS / 2 ))
 	fi
 	# read each libary from the libary config, single path per line
 	ALERT "LIBARIES: $libaries"
@@ -2226,6 +2236,10 @@ function update(){
 	# add the end to the log, add the jump to top button and finish out the html
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
+	if test -f /usr/bin/kodi2web;then
+		# update video libaries on all kodi clients, if no video playback is detected
+		/usr/bin/kodi2web video
+	fi
 	#{
 	#	echo "</table>"
 	#	echo "</div>"
@@ -2255,13 +2269,13 @@ function update(){
 	if test -f "$webDirectory/new/shows.index";then
 		# new list
 		#tempList=$(cat -n "$webDirectory/new/shows.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/shows.index" | tail -n 400 )
+		tempList=$(cat "$webDirectory/new/shows.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/shows.index"
 	fi
 	if test -f "$webDirectory/new/episodes.index";then
 		# new episodes
 		#tempList=$(cat -n "$webDirectory/new/episodes.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/episodes.index" | tail -n 400 )
+		tempList=$(cat "$webDirectory/new/episodes.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/episodes.index"
 	fi
 
@@ -2269,7 +2283,7 @@ function update(){
 
 	if test -f "$webDirectory/random/episodes.index";then
 		# new episodes
-		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 400 )
+		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 800 )
 		echo "$tempList" > "$webDirectory/random/episodes.index"
 	fi
 	##########
@@ -2282,7 +2296,7 @@ function update(){
 	if test -f "$webDirectory/new/movies.index";then
 		# new movies
 		#tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/movies.index" | tail -n 400 )
+		tempList=$(cat "$webDirectory/new/movies.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/movies.index"
 	fi
 	linkFile "$webDirectory/movies/movies.index" "$webDirectory/random/movies.index"
@@ -2292,7 +2306,7 @@ function update(){
 	if test -f "$webDirectory/new/all.index";then
 		# new movies
 		#tempList=$(cat -n "$webDirectory/new/movies.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/all.index" | tail -n 400 )
+		tempList=$(cat "$webDirectory/new/all.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/all.index"
 	fi
 	##############################################################################

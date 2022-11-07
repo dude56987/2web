@@ -20,9 +20,6 @@ select{
 sup{
 	font-size: 0.5rem;
 }
-a:visited {
-	color: inherit;
-}
 .tag{
 	line-height: 1rem;
 	font-size: 1rem;
@@ -346,6 +343,11 @@ ol li{
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
+	/*
+	.button{
+		display: block;
+	}
+	*/
 	.footerText{
 		display: none !important;
 	}
@@ -632,6 +634,9 @@ a .inputCard:hover{
 a .inputCard h3{
 	color: var(--textColor) !important;
 }
+a:visited {
+	color: inherit;
+}
 .titlecard .button{
 	white-space: nowrap;
 	font-size: 1rem;
@@ -642,6 +647,22 @@ a .inputCard h3{
 	white-space: nowrap;
 	*/
 	line-height: 2rem;
+}
+.activeProcess{
+	display: inline;
+}
+.mw-headline{
+	display: block;
+	background-color: var(--solidBackground);
+	font-size: 2rem;
+}
+.highlightText{
+	color: var(--highlightText);
+	background-color: var(--highlightBackground);
+}
+.highlightText:hover{
+	color: var(--textColor);
+	background-color: transparent;
 }
 .activeButton{
 	box-shadow: 0px 0px 0px var(--shadowColor);
@@ -753,6 +774,9 @@ a .inputCard h3{
 		display: inline-block;
 		width: -webkit-fill-available;
 		*/
+	}
+	.activeProcess{
+		display: block;
 	}
 	.comicPane{
 		/*This means the picture is a portrat picture*/
@@ -1519,9 +1543,23 @@ pre{
 		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 	}
 }
+/* WIKI styles*/
 .footer{
 	min-height: 2rem;
 }
+.navbox{
+	background: var(--solidBackground) !important;
+}
+.sidebar{
+	background: var(--solidBackground) !important;
+}
+.wikiPublisher{
+	text-align: right;
+	/*
+	background: var(--glassBackground);
+	*/
+}
+/* END WIKI styles*/
 .viewCounterBox{
 	text-align: left;
 	background-color: var(--glassBackground);
@@ -1532,6 +1570,7 @@ pre{
 	background-color: var(--solidBackground);
 	border-style: solid;
 	border-right: none;
+	text-decoration: none;
 }
 .executionTimeHeader{
 	background-color: var(--solidBackground);

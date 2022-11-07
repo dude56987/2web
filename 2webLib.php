@@ -407,26 +407,325 @@ if( ! function_exists("displayIndexWithPages")){
 
 		if ( $pageCount > 1 ){
 			echo "<div class='titleCard'>";
+
 			echo "<div class='listCard'>";
-			echo "<a class='button' href='?page=all$otherVars'>";
-			echo "All";
-			echo "</a>";
-			foreach((range(1,$pageCount)) as $currentPageNumber){
-				#echo "\n<br>".$currentPageNumber." == ".$_GET['page']."<br>\n";
-				if (array_key_exists("page",$_GET)){
-					if ($currentPageNumber == $_GET['page']){
-						echo "<a class='activeButton' href='?page=$currentPageNumber$otherVars'>";
-					}else{
-						echo "<a class='button' href='?page=$currentPageNumber$otherVars'>";
-					}
-				}else{
-					echo "<a class='button' href='?page=$currentPageNumber$otherVars'>";
-				}
-				echo "$currentPageNumber";
+			if (is_numeric($_GET["page"]) and ( $_GET["page"] > 1 )){
+				# build the left button for pages
+				echo "<a class='button' href='?page=".($_GET["page"] - 1).$otherVars."'>";
+				echo "⇦ Back";
 				echo "</a>";
 			}
+
+			# check status for the special all page
+			echo "<a class='button' href='?page=all$otherVars'>";
+			echo "∞";
+			echo "</a>";
+			$pageDrawCounter=0;
+			foreach((range(1,$pageCount)) as $currentPageNumber){
+				$activePage = False;
+				$drawPage = False;
+				if (array_key_exists("page",$_GET)){
+					# only draw pages within 8 pages of the current page
+					if ($currentPageNumber == 1){
+						# print the first page number always
+						$drawPage = True;
+						$pageDrawCounter += 1;
+					}else if ($currentPageNumber == $pageCount){
+						# print the last page always
+						$drawPage = True;
+						$pageDrawCounter += 1;
+						if ($currentPageNumber == $_GET['page']){
+							$activePage = True;
+						}
+					}else if (($currentPageNumber < ($_GET['page'] + 5)) && ($currentPageNumber > ($_GET['page'] - 5))){
+						$drawPage = True;
+						$pageDrawCounter += 1;
+						if ($currentPageNumber == $_GET['page']){
+							$activePage = True;
+						}
+					}else{
+						if ($currentPageNumber == 2){
+							echo "...";
+						}else if($currentPageNumber == ($pageCount - 1)){
+							echo "...";
+						}
+					}
+				}
+				# check if the page number should be drawn
+				if ($drawPage){
+					# draw the page
+					if ($activePage){
+						# if the page is active set the class
+						echo "<a class='activeButton' href='?page=$currentPageNumber$otherVars'>";
+						echo "$currentPageNumber";
+						echo "</a>";
+					}else{
+						echo "<a class='button' href='?page=$currentPageNumber$otherVars'>";
+						echo "$currentPageNumber";
+						echo "</a>";
+					}
+				}
+			}
+
+			if (is_numeric($_GET["page"]) and ( $_GET["page"] < $pageCount )){
+				# build the next button for pages
+				echo "<a class='button' href='?page=".($_GET["page"] + 1)."$otherVars'>";
+				echo "Next ⇨";
+				echo "</a>";
+			}
+
 			echo "</div>";
 			echo "</div>";
+		}
+	}
+}
+################################################################################
+if( ! function_exists("checkPort")){
+	function checkPort($port){
+		$connection = @fsockopen($_SERVER['SERVER_ADDR'], $port, $errorNum, $errorStr, 30);
+		if (is_resource($connection)){
+			fclose($connection);
+			return true;
+		}else{
+			# no connection could be made
+			return false;
+		}
+	}
+}
+################################################################################
+if( ! function_exists("checkServerPath")){
+	function checkServerPath($subDir){
+		# build the url
+		$url = "http://".$_SERVER['SERVER_ADDR'].$subDir;
+		// initilize curl the the url
+		$http = curl_init($url);
+		# set the return transfer option to prevent output of url data
+		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
+		// execute curl
+		$result = curl_exec($http);
+		# get the http status code
+		$http_status = curl_getinfo($http, CURLINFO_HTTP_CODE);
+		#echo "\n<br>http status<br>\n";
+		#echo "\n<br>".$http_status."<br>\n";
+		#echo "\n<br>http status<br>\n";
+		#echo "\n<br>result<br>\n";
+		#echo "\n<br>".$result."<br>\n";
+		#echo "\n<br>result<br>\n";
+		# read the error code and return true if http return code was "OK"
+		if ($http_status == "200"){
+			return true;
+		}else{
+			return false;
+		}
+	}
+}
+###############################################################################
+if( ! function_exists("availableServicesArray")){
+	function availableServicesArray(){
+		// take port number and service name and generate a index then generate a series of links
+		$services = Array();
+		array_push($services,Array('2WEB', 80, 'This Server'));
+		array_push($services,Array('CUPS', 631, 'Print Server'));
+		array_push($services,Array('TRANSMISSION', 9091, 'Bittorrent Client'));
+		array_push($services,Array('DELUGE', 8112, 'Bittorrent Client'));
+		array_push($services,Array('QBITTORRENT', 1342, 'Bittorrent Client'));
+		array_push($services,Array('MEDUSA', 1340, 'Metadata Tool'));
+		array_push($services,Array('SONARR', 8989, 'Metadata Tool'));
+		array_push($services,Array('RADARR', 7878, 'Metadata Tool'));
+		array_push($services,Array('BAZARR', 6767, 'Subtitle Downloader'));
+		array_push($services,Array('LIDARR', 8686, 'Metadata Tool'));
+		array_push($services,Array('JACKETT', 9117, 'Metadata Tool'));
+		array_push($services,Array('CUBERITE', 1339, 'Minecraft Server'));
+		array_push($services,Array('MINEOS', 8443, 'Minecraft Server'));
+		array_push($services,Array('NETDATA', 19999, 'Realtime Stats'));
+		array_push($services,Array('WEBMIN', 10000, 'Web Administration'));
+		array_push($services,Array('DIETPI-DASHBOARD', 5252, 'Realtime Stats'));
+		array_push($services,Array('AdGuard Home', 8083, 'DNS AdBlock'));
+		array_push($services,Array('RPI-Monitor', 8888, 'Realtime Stats'));
+		array_push($services,Array('GOGS', 3000, 'Self Hosted Git Service'));
+		array_push($services,Array('PaperMC', 25565, 'Minecraft Server'));
+		array_push($services,Array('NZBGet', 6789, 'Metadata Tool'));
+		array_push($services,Array('HTPC Manager', 8085, ''));
+		array_push($services,Array('I2P', 7657, 'P2P Internet'));
+		array_push($services,Array('YACY', 8090, 'P2P Search Engine'));
+		array_push($services,Array('FOLDING@HOME', 7396, 'P2P Protein Folding'));
+		array_push($services,Array('IPFS', 5003, 'P2P File Transfer'));
+		array_push($services,Array('Ur Backup', 55414, 'Backup Server'));
+		array_push($services,Array('GITEA', 3000, 'Git Server'));
+		array_push($services,Array('SYNCTHING', 3000, 'File Sync Server'));
+		array_push($services,Array('Vault Warden', 8001, 'Unoffical Bitwarden Pass Manager'));
+		array_push($services,Array('Ubooquity', 2039, 'Ebook Mediaserver'));
+		array_push($services,Array('Komga', 2037, 'Comic/Manga Mediaserver'));
+		array_push($services,Array('Spotify Connect Web', 4000, 'Spotify Web Player'));
+		array_push($services,Array('Jellyfin', 8097, 'Mediaserver'));
+		array_push($services,Array('NaviDrome', 4533, 'Music Player'));
+		array_push($services,Array('Snapcast', 1780, 'Home Speaker Sync Server'));
+		array_push($services,Array('Koel', 8003, 'Music Player'));
+		array_push($services,Array('Tautulli', 8181, 'Plex Monitoring'));
+		array_push($services,Array('Plex', 32400, 'Mediaserver'));
+		array_push($services,Array('Emby', 8096, 'Mediaserver'));
+		array_push($services,Array('ReadyMedia', 8200, 'DLNA/UPnP'));
+		array_push($services,Array('Logitech Media Server', 9000, 'Media Server'));
+		array_push($services,Array('Mopidy', 6680, 'Music Player'));
+		array_push($services,Array('myMPD', 1333, 'Music Player'));
+		array_push($services,Array('ympd', 1337, 'Music Player'));
+		//array_push($services,Array('Unbound', 53, 'DNS Server'));
+
+		return $services;
+	}
+}
+###############################################################################
+if( ! function_exists("availablePathServicesArray")){
+	function availablePathServicesArray(){
+		// take port number and service name and generate a index then generate a series of links
+		$pathServices = Array();
+		array_push($pathServices,Array('SMOKEPING', '/smokeping/', 'Graph Ping Times'));
+		array_push($pathServices,Array('RPi Cam', '/rpicam/', 'Webcam'));
+		array_push($pathServices,Array('O!MPD', '/ompd/', 'Music Player'));
+		array_push($pathServices,Array('airsonic', '/airsonic/', 'Mediaserver'));
+		array_push($pathServices,Array('Ampache', '/ampache/', 'Mediaserver/Player'));
+		array_push($pathServices,Array('Wordpress', '/wordpress/', 'Blog'));
+		array_push($pathServices,Array('SFPG', '/gallery/', 'Single File PHP Gallery'));
+		array_push($pathServices,Array('BAIKAL', '/baikal/html', 'CalDAV + CardDAV'));
+		array_push($pathServices,Array('PHPBB', '/phpbb/', 'Forum'));
+		array_push($pathServices,Array('FreshRSS', '/freshrss/', 'RSS Reader'));
+		array_push($pathServices,Array('Linux Dash', '/linuxdash/app/', 'System Monitor'));
+		array_push($pathServices,Array('PhpSysInfo', '/phpsysinfo/', 'System Information'));
+
+		return $pathServices;
+	}
+}
+###############################################################################
+if( ! function_exists("serverPathServicesCount")){
+	function serverPathServicesCount(){
+		$totalServiceCount=0;
+		foreach(availablePathServicesArray() as $serviceData){
+			if (is_file($serviceData[1])){
+				$totalServiceCount += 1;
+			}
+		}
+		return $totalServiceCount;
+	}
+}
+###############################################################################
+if( ! function_exists("serverServicesCount")){
+	function serverServicesCount(){
+		$totalServiceCount=0;
+		foreach(availableServicesArray() as $serviceData){
+			if (checkPort($serviceData[1])){
+				$totalServiceCount += 1;
+			}
+		}
+		return $totalServiceCount;
+	}
+}
+###############################################################################
+if( ! function_exists("drawServicesWidget")){
+	function drawServicesWidget(){
+		if (serverServicesCount() <= 0){
+			return false;
+		}
+		// draw services widget
+		echo "<div class='titleCard'>";
+		echo "<h2>Additional Server Services</h2>";
+		echo "<div class='listCard'>";
+
+		foreach(availableServicesArray() as $serviceData){
+			if (checkPort($serviceData[1])){
+				echo "			<a class='showPageEpisode' target='_BLANK' href='http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]'>";
+				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
+				#echo "				http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]";
+				echo "				$serviceData[2]";
+				echo "			</a>";
+			}
+		}
+
+		foreach(availablePathServicesArray() as $serviceData){
+			if (checkServerPath($serviceData[1])){
+				echo "			<a class='showPageEpisode' target='_BLANK' href='http://".$_SERVER['SERVER_ADDR']."$serviceData[1]'>";
+				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
+				echo "				$serviceData[2]";
+				echo "			</a>";
+			}
+		}
+
+		echo "</div>";
+		echo "</div>";
+	}
+}
+###############################################################################
+if( ! function_exists("checkServices")){
+	function checkServices(){
+		$services=availableServicesArray();
+		################################################################################
+		# build the table entries for active ports
+		################################################################################
+		foreach($services as $serviceData){
+			if (checkPort($serviceData[1])){
+				echo "	<tr class='titleCard'>";
+				echo "		<td>$serviceData[0]</td>";
+				echo "		<td>$serviceData[1]</td>";
+				echo "		<td>";
+				echo "			<a id='$serviceData[0]' href='http://".gethostname().".local:$serviceData[1]'>http://".gethostname().".local:$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a id='$serviceData[0]' href='http://".gethostname().":$serviceData[1]'>http://".gethostname().":$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a id='$serviceData[0]' href='http://localhost:$serviceData[1]'>http://localhost:$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a id='$serviceData[0]' href='http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]'>http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>$serviceData[2]</td>";
+				echo "	</tr>";
+			}
+		}
+	}
+}
+################################################################################
+if( ! function_exists("checkPathServices")){
+	function checkPathServices(){
+		$services=availablePathServicesArray();
+		################################################################################
+		# build the table entries for active ports
+		################################################################################
+		foreach($services as $serviceData){
+			if (checkServerPath($serviceData[1])){
+				echo "	<tr id='$serviceData[0]' class='titleCard'>";
+				echo "		<td>$serviceData[0]</td>";
+				echo "		<td>$serviceData[1]</td>";
+				echo "		<td>";
+				echo "			<a href='http://".gethostname().".local$serviceData[1]'>http://".gethostname().".local$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a href='http://".$_SERVER['SERVER_ADDR']."$serviceData[1]'>http://".gethostname()."$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a href='http://localhost$serviceData[1]'>http://localhost$serviceData[1]</a>";
+				echo "		</td>";
+				echo "		<td>";
+				echo "			<a href='http://".$_SERVER['SERVER_ADDR'].$serviceData[1]."'>http://".$_SERVER['SERVER_ADDR'].$serviceData[1]."</a>";
+				echo "		</td>";
+				echo "		<td>$serviceData[2]</td>";
+				echo "	</tr>";
+			}
+		}
+	}
+}
+################################################################################
+if( ! function_exists("drawPlaylistButton")){
+	function drawPlaylistButton($activeFilter,$filterName,$buttonText){
+		# check if the playlist index exists
+		if (file_exists($filterName.".index")){
+			# check the file has more than 2 entries
+			if (count(file("$filterName.index")) > 2){
+				if ($activeFilter == $filterName){
+					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+				}else{
+					echo "<a class='button' href='?filter=$filterName'>$buttonText</a>\n";
+				}
+			}
 		}
 	}
 }

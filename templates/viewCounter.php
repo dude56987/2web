@@ -38,8 +38,18 @@ if (is_dir("/var/cache/2web/web/views/")){
 					// write the index entry
 					echo "<tr>";
 					echo "	<td>";
-					$tempOutputData=str_replace("_","/",$sourceFile);
-					$tempOutputData=str_replace("/views.cfg",".php",$tempOutputData);
+					#$tempOutputData=str_replace("_","/",$sourceFile);
+					$tempOutputData=str_replace("(#)","/",$sourceFile);
+					# after the ? if its in the output data replace / with _
+					$slicePoint=strpos("?",$tempOutputData);
+					if ($slicePoint){
+						$tempSplit=explode("?",$tempOutputData);
+						$frontSide = array_slice($tempOutputData, 0, $slicePoint);
+						$backSide = array_slice($tempOutputData, $slicePoint, count($tempOutputData));
+						# fix formatting of the backside elements, $_GET data
+						$tempOutputData = $frontSide.str_replace("(#)","/",$backside);
+					}
+					$tempOutputData=str_replace(".cfg","",$tempOutputData);
 					echo "		<a href='".$tempOutputData."'>".$tempOutputData."</a>";
 					echo "	</td>";
 					echo "	<td>";

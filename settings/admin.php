@@ -584,9 +584,9 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/comicsDL.php#currentLinks'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("addComicLibary",$_POST)){
-	$link=$_POST['addComicLibary'];
-	echo "Running addComicLibary on link ".$link."<br>\n";
+}else if (array_key_exists("addComicLibrary",$_POST)){
+	$link=$_POST['addComicLibrary'];
+	echo "Running addComicLibrary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
@@ -598,11 +598,11 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents($configPath,$link);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/settings/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comics.php#comiclibraryPaths'>BACK</a><hr>";
 	clear();
-}else if(array_key_exists("removeComicLibary",$_POST)){
-	$link=$_POST['removeComicLibary'];
-	echo "Running removeComicLibary on link ".$link."<br>\n";
+}else if(array_key_exists("removeComicLibrary",$_POST)){
+	$link=$_POST['removeComicLibrary'];
+	echo "Running removeComicLibrary on link ".$link."<br>\n";
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -612,7 +612,7 @@ if (array_key_exists("newUserName",$_POST)){
 		unlink($configPath);
 	}
 	countdown(5);
-	echo "<hr><a class='button' href='/settings/comics.php#comiclibaryPaths'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/comics.php#comiclibraryPaths'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];

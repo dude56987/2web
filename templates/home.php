@@ -54,6 +54,7 @@
 	if (file_exists("graphs")){
 		drawPosterWidget("graphs", True);
 	}
+	drawServicesWidget();
 	// add the footer
 	include("footer.php");
 ?>

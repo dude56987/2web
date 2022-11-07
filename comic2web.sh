@@ -366,7 +366,7 @@ function update(){
 	if test -f "$webDirectory/new/comics.index";then
 		# new comics but preform a fancy sort that does not change the order of the items
 		#tempList=$(cat -n "$webDirectory/new/comics.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
-		tempList=$(cat "$webDirectory/new/comics.index" | tail -n 200 )
+		tempList=$(cat "$webDirectory/new/comics.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
 }
@@ -1188,6 +1188,7 @@ webUpdate(){
 	# check for parallel processing and count the cpus
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		totalCPUS=$(( $totalCPUS / 2 ))
 	fi
 	ALERT "Scanning libary config '$downloadDirectory'"
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do

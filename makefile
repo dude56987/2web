@@ -73,7 +73,7 @@ build: build-deb
 	# install the build tools
 	sudo make build-deb;
 upgrade-hls: node_modules/hls.js/dist/hls.js
-	npm install --save hls.js
+	if ! test -f node_modules/hls.js/dist/hls.js;then npm install --save hls.js;fi
 screenshots:
 	# create a series of screenshots from the currently installed version
 	mkdir -p screenshots/

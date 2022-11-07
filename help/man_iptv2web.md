@@ -24,15 +24,19 @@ OPTIONS
 
 `-u --update or update`
 
-:  This will update the webpages and refresh the database."
+:  This will update the webpages and refresh the database.
+
+`-U --upgrade or upgrade`
+
+:  This upgrades the PIP python packages for yt-dlp and streamlink. HLS.js is compiled in the package build process.
 
 `--reset, reset`
 
-:  This will reset the state of the cache so everything will be updated."
+:  This will reset the state of the cache so everything will be updated.
 
 `--nuke, nuke`
 
-:   This will delete the cached website."
+:   This will delete the cached website.
 
 `-u, --update, update`
 
