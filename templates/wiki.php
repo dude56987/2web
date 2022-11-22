@@ -20,13 +20,22 @@ include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
-<a class='button' href='?random'>🎲 Random Article</a>
-<a class='button' href='?index'>📋 Article Index</a>
-<a class='button' href='?home'>⛵ Wiki Homepage</a>
-<hr>
-<form class='searchBoxForm' method='get'>
-	<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Wiki Search...' >
-</form>
+<div class='titleCard'>
+	<h1>
+		<?php
+			echo $wikiTitle;
+		?>
+	</h1>
+	<div class='listCard'>
+		<a class='button' href='?home'>⛵ Wiki Homepage</a>
+		<a class='button' href='?random'>🎲 Random Article</a>
+		<a class='button' href='?index'>📋 Article Index</a>
+	</div>
+	<hr>
+	<form class='searchBoxForm' method='get'>
+		<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Wiki Search...' >
+	</form>
+</div>
 <hr>
 <?php
 echo "<div class='settingListCard' >";

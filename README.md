@@ -228,8 +228,9 @@ kodi2web is a diffrent module, it is called inside individual modules to trigger
 | nfo     | ✔️        | ✔️            | ✔️          |
 | comic   | ✔️        | ✔️            | ✔️          |
 | iptv    | ✔️        | ✔️            | ✔️          |
+| wiki    | ❌       | ❌           | ✔️          |
 | weather | ✔️        | ✔️            | ✔️          |
-| graph   | ❌       | ✔️            | ✔️          |
+| graph   | ❌       | ❌           | ✔️          |
 | kodi    | ❌       | ❌           | ✔️          |
 
 ### Resolver Components

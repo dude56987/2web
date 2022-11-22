@@ -77,19 +77,12 @@ if ($writeFile){
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
 
-	$fileData .= "<a class='' href='/new/'>";
-	$fileData .= "📜";
-	$fileData .= "<span class='footerText'>";
-	$fileData .= " NEW";
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
-
-	$fileData .= "<a class='' href='/random/'>";
-	$fileData .= "🔀";
-	$fileData .= "<span class='footerText'>";
-	$fileData .= " RANDOM";
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
+	$fileData .= formatText("<a class='' href='/new/'>",2);
+	$fileData .= formatText("📃",3);
+	$fileData .= formatText("<span class='footerText'>",3);
+	$fileData .= formatText("PLAYLISTS",4);
+	$fileData .= formatText("</span>",3);
+	$fileData .= formatText("</a> ",2);
 
 	if (file_exists("$webDirectory/movies/")){
 		if (file_exists("$webDirectory/totalMovies.index")){
@@ -146,6 +139,14 @@ if ($writeFile){
 				$fileData .= "</a> ";
 			}
 		}
+	}
+	if (file_exists("$webDirectory/wiki/")){
+		$fileData .= formatText("<a class='' href='/wiki/'>",2);
+		$fileData .= formatText("⛵",3);
+		$fileData .= formatText("<span class='footerText'>",3);
+		$fileData .= formatText("WIKI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a> ",2);
 	}
 	// read the weather info for weather2web
 	if (file_exists("$webDirectory/weather/index.php")){

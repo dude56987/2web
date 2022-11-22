@@ -98,6 +98,14 @@ if ($writeFile){
 			}
 		}
 	}
+	if (file_exists("$webDirectory/wiki/")){
+		$fileData .= formatText("<a class='button' href='/wiki/'>",2);
+		$fileData .= formatText("⛵",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("WIKI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 	// read the weather info for weather2web
 	//
 	if (file_exists("$webDirectory/weather/index.php")){
@@ -117,14 +125,6 @@ if ($writeFile){
 		$fileData .= formatText("📊",3);
 		$fileData .= formatText("<span class='headerText'>",3);
 		$fileData .= formatText("GRAPHS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (file_exists("$webDirectory/wiki/")){
-		$fileData .= formatText("<a class='button' href='/wiki/'>",2);
-		$fileData .= formatText("⛵",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("WIKI",4);
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}

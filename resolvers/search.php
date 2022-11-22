@@ -51,8 +51,12 @@ function searchIndex($indexPath,$searchQuery){
 					# read the file in peices
 					$linkTextHandle = fopen( $fileData , "r" );
 					while( ! feof( $linkTextHandle ) ){
+						$tempFileData = fgets( $linkTextHandle , 4096 );
 						# read each packet of the file
-						$tempData .= fgets( $linkTextHandle , 4096 );
+						$tempData .= $tempFileData;
+						echo $tempFileData;
+						ob_flush();
+						flush();
 					}
 					$foundData = true;
 				}
@@ -124,9 +128,9 @@ function searchWiki($wikiPath){
 
 				$output .= $tempOutput;
 
-				#echo $tempOutput;
-				#flush();
-				#ob_flush();
+				echo $tempOutput;
+				flush();
+				ob_flush();
 			}else if(is_file($wikiPath."/A/".$foundFile)){
 				# read each file and search line by line
 				$articleHandle = fopen($wikiPath."/A/".$foundFile,'r');
@@ -159,10 +163,10 @@ function searchWiki($wikiPath){
 
 						$output .= $tempOutput;
 
-						#echo $tempOutput;
-						#flush();
-						#ob_flush();
-						#break;
+						echo $tempOutput;
+						flush();
+						ob_flush();
+						break;
 					}
 				}
 			}
@@ -205,6 +209,7 @@ if (array_key_exists("q",$_GET)){
 	$querySum = md5($searchQuery);
 
 	echo "<div class='settingListCard'>";
+	echo "<h1>Searching  for '$searchQuery'</h1>";
 
 	$foundResults=false;
 
@@ -217,32 +222,47 @@ if (array_key_exists("q",$_GET)){
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
 
 	$totalOutput="";
-
-	foreach( $indexPaths as $indexPath ){
-		$indexInfo=searchIndex($indexPath,$searchQuery);
-		if ( $indexInfo[0] ){
-			$totalOutput .= $indexInfo[1];
-			$foundResults = true;
-			flush();
-			ob_flush();
+	$searchCacheFilePath="search/".$querySum.".index";
+	if (file_exists($searchCacheFilePath)){
+		# load the cached search results
+		$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
+		while( ! feof($searchCacheFileHandle)){
+			# send a large frame of data from the cache file at a time
+			echo fgets($searchCacheFileHandle,4096);
 		}
-	}
-	# search all the wikis
-	$wikiSearchResults = searchAllWiki($_GET['q']);
-	#if ($wikiSearchResults[0]){
-	#	echo $wikiSearchResults[1];
-	#}
-
-	#echo $wikiSearchResults[1];
-	#flush();
-	#ob_flush();
-
-	if ($foundResults || ($wikiSearchResults[0] == true)){
-		echo "<h1>Search Results for '$searchQuery'</h1>";
-		echo $totalOutput;
-		echo $wikiSearchResults[1];
 	}else{
-		echo "<h1>No Search Results for '$searchQuery'</h1>";
+		# if the file does not exist cache the search results
+
+		# ignore user aborts after the cacheing has begun
+		ignore_user_abort(true);
+
+		foreach( $indexPaths as $indexPath ){
+			$indexInfo=searchIndex($indexPath,$searchQuery);
+			if ( $indexInfo[0] ){
+				$totalOutput .= $indexInfo[1];
+				$foundResults = true;
+				flush();
+				ob_flush();
+			}
+		}
+		# search all the wikis
+		$wikiSearchResults = searchAllWiki($_GET['q']);
+		#if ($wikiSearchResults[0]){
+		#	echo $wikiSearchResults[1];
+		#}
+
+		#echo $wikiSearchResults[1];
+		#flush();
+		#ob_flush();
+
+		if ($foundResults || ($wikiSearchResults[0] == true)){
+			echo $totalOutput;
+			echo $wikiSearchResults[1];
+			file_put_contents($searchCacheFilePath,($totalOutput.$wikiSearchResults[1]));
+		}else{
+			echo "<h1>No Search Results for '$searchQuery'</h1>";
+			file_put_contents($searchCacheFilePath,("<h1>No Search Results for '$searchQuery'</h1>"));
+		}
 	}
 
 	formatEcho("<div class='titleCard'>",1);
@@ -252,6 +272,8 @@ if (array_key_exists("q",$_GET)){
 	formatEcho("<a class='button' target='_new' href='https://search.brave.com/search?q=$searchQuery'>Brave 🔍</a>",3);
 	formatEcho("<a class='button' target='_new' href='https://www.peekier.com/#!$searchQuery'>Peekier 🔍</a>",3);
 	formatEcho("<a class='button' target='_new' href='https://www.duckduckgo.com/?q=$searchQuery'>DuckDuckGo 🔍</a>",3);
+	formatEcho("<a class='button' target='_new' href='https://www.bing.com/?q=$searchQuery'>Bing 🔍</a>",3);
+	formatEcho("<a class='button' target='_new' href='https://www.google.com/?q=$searchQuery'>Google 🔍</a>",3);
 	formatEcho("</div>",2);
 	formatEcho("</div>",1);
 

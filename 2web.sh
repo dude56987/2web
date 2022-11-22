@@ -183,6 +183,7 @@ function update2web(){
 	createDir "$webDirectory/views/"
 	#createDir "$webDirectory/backups/"
 	createDir "$webDirectory/log/"
+	createDir "$webDirectory/search/"
 
 	# create config files if they do not exist
 	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
@@ -461,6 +462,8 @@ main(){
 		waitQueue 1 "$totalCPUS"
 		/usr/bin/music2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		/usr/bin/wiki2web --parallel &
+		waitQueue 1 "$totalCPUS"
 		blockQueue 1
 		while true;do
 			sleep 1
@@ -514,6 +517,10 @@ main(){
 		update2web
 		/usr/bin/graph2web
 		rebootCheck
+	elif [ "$1" == "-w" ] || [ "$1" == "--wiki" ] || [ "$1" == "wiki" ];then
+		update2web
+		/usr/bin/wiki2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2web
@@ -523,6 +530,7 @@ main(){
 		/usr/bin/comic2web update
 		/usr/bin/weather2web
 		/usr/bin/music2web
+		/usr/bin/wiki2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
 		update2web
@@ -582,7 +590,10 @@ main(){
 		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
 		# delete the m3u cache
 		if test -d "$(webRoot)/M3U-CACHE/";then
-			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
+			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
+		fi
+		if test -d "$(webRoot)/search/";then
+			find "$(webRoot)/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt

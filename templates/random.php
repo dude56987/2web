@@ -13,17 +13,11 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='titleCard'>
 	<h2>Playlists</h2>
 	<div class='listCard'>
-			<a class='button' href='/new/'>
-			📜
-			<span class='headerText'>
-				NEW
-			</span>
+		<a class='button' href='/new/'>
+			📜 NEW
 		</a>
 		<a class='activeButton' href='/random/'>
-			🔀
-			<span class='headerText'>
-				RANDOM
-			</span>
+			🔀 RANDOM
 		</a>
 	</div>
 </div>
