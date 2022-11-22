@@ -21,7 +21,7 @@ include("/usr/share/2web/2webLib.php");
 		<li>Enable/Disable Modules
 			<ul>
 <?PHP
-$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web");
+$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web");
 foreach($modules as $module){
 	echo "				<li><a href='#".$module."Status'>$module</a></li>";
 }
@@ -38,10 +38,6 @@ foreach($modules as $module){
 		<li>Disabled modules will have cached data removed and no updates will be done</li>
 	</ul>
 </div>
-
-
-
-
 
 <hr>
 <?PHP
@@ -104,8 +100,28 @@ foreach($modules as $module){
 		echo "				<li>";
 		echo "					Enable or disable sync of linked kodi instances.";
 		echo "				</li>";
+	}elseif ($module == "wiki2web"){
+		echo "				<li>";
+		echo "					Will enable wiki Processing.";
+		echo "				</li>";
+		if (! is_file("/usr/bin/zimdump")){
+			# if zimdump does not exist zim files can not be extracted correctly
+			echo "				<li>";
+			echo "					<span class='disabledSetting'>wiki2web REQUIRES zimdump from zim-tools package to extract .zim files<span>";
+			echo "				</li>";
+			echo "				<li>";
+			echo "					<span class='disabledSetting'>Install zim-tools or wiki2web does nothing<span>";
+			echo "				</li>";
+		}
+		echo "				<li>";
+		echo "					Will enable wiki Processing.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Enable or disable extraction of .zim files in wiki directory to the website.";
+		echo "				</li>";
 	}
-	if (detectEnabledStatus("/etc/2web/mod_status/$module.cfg")){
+	# check the module status for drawing enabled or disabled onscreen
+	if (detectEnabledStatus($module)){
 		echo "				<li>";
 		echo "					Currently this module is <span class='enabledSetting'>Enabled</span>.";
 		echo "				</li>";
@@ -116,8 +132,8 @@ foreach($modules as $module){
 	}
 	echo "			</ul>";
 	echo "			<select name='".$module."Status'>";
-	// check the status of the module
-	if (detectEnabledStatus("/etc/2web/mod_status/$module.cfg")){
+	// check the status of the module for the dropdown
+	if (detectEnabledStatus($module)){
 		echo "				<option value='enabled' selected>Enabled</option>";
 		echo "				<option value='disabled' >Disabled</option>";
 	}else{

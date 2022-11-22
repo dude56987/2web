@@ -1554,6 +1554,7 @@ pre{
 	background: var(--solidBackground) !important;
 }
 .wikiPublisher{
+	border-top-style: dashed;
 	text-align: right;
 	/*
 	background: var(--glassBackground);

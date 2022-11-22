@@ -22,7 +22,26 @@ source /var/lib/2web/common
 #set -x
 ################################################################################
 function update(){
-	#DEBUG
+	if ! test -f /usr/bin/zimdump;then
+		# without zimdump wiki2web can not do anything so exit with error
+		return 1
+	fi
+
+	webDirectory=$(webRoot)
+
+	# create the kodi directory
+	createDir "$webDirectory/kodi/wiki/"
+
+	# create the web directory
+	createDir "$webDirectory/wiki/"
+
+	# link the homepage
+	linkFile "/usr/share/2web/templates/wikis.php" "$webDirectory/wiki/index.php"
+
+	# link the random poster script
+	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/wiki/randomPoster.php"
+	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/wiki/randomFanart.php"
+
 	# this will launch a processing queue that looks for .zim files in a server path
 	INFO "Loading up sources..."
 	# check for defined sources
@@ -34,6 +53,10 @@ function update(){
 			echo "################################################################################"
 			echo "# - all .zim files found in the paths added here will be extracted and added to"
 			echo "#   the server"
+			echo "# - The .zim format project website"
+			echo "#   - https://wiki.openzim.org/wiki/OpenZIM"
+			echo "# - You can download .zim files from the kiwix project"
+			echo "#   - https://library.kiwix.org/"
 			echo "################################################################################"
 			echo "/var/cache/2web/downloads_wiki/"
 		} > /etc/2web/wiki/sources.cfg
@@ -53,12 +76,41 @@ function update(){
 	totalwikiLocations=$(echo "$wikiLocations" | wc -l)
 	#for comicSource in $comicSources;do
 	wikiLocations=$(echo "$wikiLocations" | tr -s '\n')
+
+	# check for local websites, that are previously extracted directories
+	find "$wikiLocation" -maxdepth 1 -mindepth 1 -type d | sort | while read zimFilePath;do
+		# scan for list of directories containing a local web directories
+		break
+	done
+
 	echo "$wikiLocations" | while read wikiLocation;do
 		# create the default download location
 		createDir "$wikiLocation"
 		ALERT "Scanning location '$wikiLocation'"
 		#if checkDirSum "$wikiLocation";then
+
 		# search for zim files in the location
+		find "$wikiLocation" -type f -name '*.zip' | sort | while read zimFilePath;do
+			# read website compressed as zip file
+
+			# extract the zip file as a wiki
+
+			# run a search and replace for all files inside the extracted zip file
+
+			# replace the <body> tag to include php header
+
+			# replace </body> tage to include php footer
+
+			# replace href= with base wiki path for webserver
+
+			# replace href="http with php http redirect with warning
+
+			# replace .html" in href links with .php
+
+			break
+		done
+
+		#
 		find "$wikiLocation" -type f -name '*.zim' | sort | while read zimFilePath;do
 			# if the md5sum of the wiki file has changed update it
 			#if checkFileDataSum "$zimFilePath";then
@@ -114,23 +166,6 @@ function update(){
 	done
 }
 ################################################################################
-webUpdate(){
-	webDirectory=$(webRoot)
-
-	# create the kodi directory
-	createDir "$webDirectory/kodi/wiki/"
-
-	# create the web directory
-	createDir "$webDirectory/wiki/"
-
-	# link the homepage
-	linkFile "/usr/share/2web/templates/wikis.php" "$webDirectory/wiki/index.php"
-
-	# link the random poster script
-	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/wiki/randomPoster.php"
-	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/wiki/randomFanart.php"
-}
-################################################################################
 function resetCache(){
 	webDirectory=$(webRoot)
 	downloadDirectory="$(downloadDir)"
@@ -139,23 +174,14 @@ function resetCache(){
 }
 ################################################################################
 function nuke(){
-	rm -rv $(webRoot)/wiki/*
-	rm -rv $(webRoot)/sums/*
-	rm -rv $(webRoot)/wiki/data/forcast_*.index
-	rm -rv $(webRoot)/wiki/data/current_*.cfg
-	rm -rv $(webRoot)/wiki.index
+	rm -rv $(webRoot)/wiki/
 }
 ################################################################################
 main(){
 	################################################################################
 	webRoot
 	################################################################################
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		checkModStatus "wiki2web"
-		# lock the process
-		lockProc "wiki2web"
-		webUpdate
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "wiki2web"
 		# lock the process
 		lockProc "wiki2web"
@@ -179,12 +205,8 @@ main(){
 		checkModStatus "wiki2web"
 		# lock the process
 		lockProc "wiki2web"
-		# gen prelem website
-		webUpdate
 		# update sources
 		update
-		# update webpages
-		webUpdate
 		# display the help
 		main --help
 		showServerLinks

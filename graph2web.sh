@@ -20,18 +20,6 @@
 #set -x
 source /var/lib/2web/common
 ################################################################################
-webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/web.cfg ];then
-		webDirectory=$(cat /etc/2web/web.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/web/"
-		echo "/var/cache/2web/web" > /etc/2web/web.cfg
-		webDirectory="/var/cache/2web/web"
-	fi
-	echo "$webDirectory"
-}
-################################################################################
 function loadWithoutComments(){
 	grep -Ev "^#" "$1"
 	return 0

@@ -102,9 +102,25 @@ if (array_key_exists("newUserName",$_POST)){
 		$userPass=strtolower($_POST['newUserPass']);
 		# build the password
 		$passSum=md5($userPass);
-		shell_exec("htpasswd -cb /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		if (array_key_exists("authType",$_POST)){
+			$authType=$_POST['authType'];
+		}else{
+			# by default if a authType is not configured use default method
+			$authType='bcrypt';
+		}
+		if ($authType == "md5"){
+			shell_exec("htpasswd -cb /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		}else if ($authType == "bcrypt"){
+			# default bcrypt encryption for password, -C is 5 by default
+			shell_exec("htpasswd -cb -B /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		}else if ($authType == "bcrypt_weakest"){
+			shell_exec("htpasswd -cb -B -C 4 /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		}else if ($authType == "bcrypt_strongest"){
+			# strongest encryption but takes a long time to verify each page served
+			shell_exec("htpasswd -cb -B -C 17 /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
+		}
 		//echo ( "Writing ".($userName.":".$passSum)." to ".("/etc/2web/users/".md5($userName).".cfg")."<br>" );
-		//file_put_contents( ("/etc/2web/users/".md5($userName).".cfg"), ($userName.":$".$passSum) );
+		//file_put_contents( ("/etc/2web/users/".md5($userName).".cfg"), ($userName.":$".$passSum."\n") );
 
 		# create a new htaccces file
 		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
@@ -254,7 +270,7 @@ if (array_key_exists("newUserName",$_POST)){
 	# change the default cache quality
 	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
 	# write the config file
-	file_put_contents("cacheQuality.cfg",$cacheQuality);
+	file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheQuality.cfg",$cacheQuality);
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheQuality'>BACK</a><hr>";
 	clear();
@@ -264,9 +280,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache upgrade quality to '".$cacheUpgradeQuality."'<br>\n";
 	# write the config file
 	if ($cacheUpgradeQuality == 'no_upgrade'){
-		unlink("cacheUpgradeQuality.cfg");
+		unlink($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg");
 	}else{
-		file_put_contents("cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
+		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
@@ -277,9 +293,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache mode to '".$cacheFramerate."'<br>\n";
 	# write the config file
 	if ($cacheFramerate == ''){
-		unlink("cacheFramerate.cfg");
+		unlink($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg");
 	}else{
-		file_put_contents("cacheFramerate.cfg",$cacheFramerate);
+		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg",$cacheFramerate);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheFramerate'>BACK</a><hr>";
@@ -290,9 +306,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache mode to '".$cacheResize."'<br>\n";
 	# write the config file
 	if ($cacheResize == ''){
-		unlink("cacheResize.cfg");
+		unlink($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg");
 	}else{
-		file_put_contents("cacheResize.cfg",$cacheResize);
+		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg",$cacheResize);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheResize'>BACK</a><hr>";
@@ -303,9 +319,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache delay to '".$cacheDelay."'<br>\n";
 	# write the config file
 	if ($cacheDelay == ''){
-		unlink("cacheDelay.cfg");
+		unlink($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg");
 	}else{
-		file_put_contents("cacheDelay.cfg",$cacheDelay);
+		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg",$cacheDelay);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheDelay'>BACK</a><hr>";

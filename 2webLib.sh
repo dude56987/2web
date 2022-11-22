@@ -11,11 +11,11 @@ function createDir(){
 ########################################################################
 function webRoot(){
 	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/nfo/web.cfg ];then
-		webDirectory=$(cat /etc/2web/nfo/web.cfg)
+	if [ -f /etc/2web/web.cfg ];then
+		webDirectory=$(cat /etc/2web/web.cfg)
 	else
 		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
+		echo "/var/cache/2web/cache/" > /etc/2web/web.cfg
 		webDirectory="/var/cache/2web/cache/"
 	fi
 	# check for a trailing slash appended to the path

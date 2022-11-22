@@ -33,7 +33,7 @@ include("/usr/share/2web/2webLib.php");
 			<select name='graph2webStatus'>
 			<?PHP
 				// check the status of the graph module
-				if (detectEnabledStatus("/etc/2web/mod_status/graph2web.cfg")){
+				if (detectEnabledStatus("graph2web")){
 					echo "<option value='enabled' selected>Enabled</option>";
 					echo "<option value='disabled' >Disabled</option>";
 				}else{

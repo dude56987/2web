@@ -34,20 +34,20 @@ include("settingsHeader.php");
 		<select name='cacheQuality'>
 			<?php
 				// add the cache quality as a option
-				if(file_exists("cacheQuality.cfg")){
-					$cacheQuality = file_get_contents('cacheQuality.cfg');
+				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheQuality.cfg")){
+					$cacheQuality = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheQuality.cfg');
 					echo "<option selected value='".$cacheQuality."'>$cacheQuality</option>";
 				}
 			?>
-			<option value='worst'>worst</option>
 			<option value='best' >best</option>
-			<option value='360p,240p' >360p,240p</option>
-			<option value='720p,360p,240p' >720p,360p,240p</option>
-			<option value='1080p,720p,360p,240p' >1080p,720p,360p,240p</option>
-			<option value='240p,360p,720p,1080p' >240p,360p,720p,1080p</option>
-			<option value='4000p,1080p,720p,360p,240p' >4K</option>
-			<option value='8000p,4000p,1080p,720p,360p,240p' >8K</option>
-			<option value='12000p,8000p,4000p,1080p,720p,360p,240p' >12K</option>
+			<option value='res:12000' >12K</option>
+			<option value='res:8000' >8K</option>
+			<option value='res:4000' >4K</option>
+			<option value='res:1080' >1080p</option>
+			<option value='res:720' >720p</option>
+			<option value='res:360' >360p</option>
+			<option value='res:240' >240p</option>
+			<option value='worst'>worst</option>
 		</select>
 		<button class='button' type='submit'>Change Quality</button>
 	</form>
@@ -58,26 +58,33 @@ include("settingsHeader.php");
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Cache Upgrade Quality</h2>
 		<p>
-			Download a higher quality after the inital stream has been created.
+		<ul>
+			<li>
+				Download a higher quality after the inital stream has been created.
+			</li>
+			<li>
+				Any chosen upgrade quality other than "No Upgrade" will also add chapters to most videos.
+			</li>
+		</ul>
 		</p>
 		<select name='cacheUpgradeQuality'>
 			<?php
 				// add the cache quality as a option
-				if(file_exists("cacheUpgradeQuality.cfg")){
-					$cacheUpgradeQuality = file_get_contents('cacheUpgradeQuality.cfg');
+				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg")){
+					$cacheUpgradeQuality = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheUpgradeQuality.cfg');
 					echo "<option selected value='".$cacheQuality."'>$cacheUpgradeQuality</option>";
 				}
 			?>
 			<option value='no_upgrade'>No Upgrade</option>
-			<option value='worst'>worst</option>
 			<option value='best' >best</option>
-			<option value='360p,240p' >360p,240p</option>
-			<option value='720p,360p,240p' >720p,360p,240p</option>
-			<option value='1080p,720p,360p,240p' >1080p,720p,360p,240p</option>
-			<option value='240p,360p,720p,1080p' >240p,360p,720p,1080p</option>
-			<option value='4000p,1080p,720p,360p,240p' >4K</option>
-			<option value='8000p,4000p,1080p,720p,360p,240p' >8K</option>
-			<option value='12000p,8000p,4000p,1080p,720p,360p,240p' >12K</option>
+			<option value='res:12000' >12K</option>
+			<option value='res:8000' >8K</option>
+			<option value='res:4000' >4K</option>
+			<option value='res:1080' >1080p</option>
+			<option value='res:720' >720p</option>
+			<option value='res:360' >360p</option>
+			<option value='res:240' >240p</option>
+			<option value='worst'>worst</option>
 		</select>
 		<button class='button' type='submit'>Change Quality</button>
 	</form>
@@ -91,8 +98,8 @@ include("settingsHeader.php");
 		<select name='cacheResize'>
 			<?php
 				// add the cache Mode as a option
-				if(file_exists("cacheResize.cfg")){
-					$cacheResize= file_get_contents('cacheResize.cfg');
+				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg")){
+					$cacheResize= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheResize.cfg');
 					echo "<option selected value='".$cacheResize."'>$cacheResize</option>";
 				}
 			?>
@@ -118,8 +125,8 @@ include("settingsHeader.php");
 		<select name='cacheFramerate'>
 			<?php
 				// add the cache Mode as a option
-				if(file_exists("cacheFramerate.cfg")){
-					$cacheFramerate= file_get_contents('cacheFramerate.cfg');
+				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg")){
+					$cacheFramerate= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheFramerate.cfg');
 					echo "<option selected value='$cacheFramerate'>$cacheFramerate FPS</option>";
 				}
 			?>
@@ -145,8 +152,8 @@ include("settingsHeader.php");
 		<select name='cacheDelay'>
 		<?php
 				// add the cache Mode as a option
-				if(file_exists("cacheDelay.cfg")){
-					$cacheDelay= file_get_contents('cacheDelay.cfg');
+				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg")){
+					$cacheDelay= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheDelay.cfg');
 					echo "<option selected value='$cacheDelay'>$cacheDelay Days</option>";
 				}
 		?>

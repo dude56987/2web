@@ -116,6 +116,7 @@ if( ! function_exists("detectEnabledStatus")){
 	function detectEnabledStatus($filePath){
 		# Used for testing module enabled or disabled status
 		# return true if a $filePath exists and contains the text "enabled"
+		$filePath = "/etc/2web/mod_status/".$filePath.".cfg";
 		if (file_exists($filePath)){
 			if (file_get_contents($filePath) == "enabled"){
 				return True;
@@ -359,7 +360,7 @@ if( ! function_exists("readFileInPackets")){
 }
 ################################################################################
 if( ! function_exists("displayIndexWithPages")){
-	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=48,$sortMethod="forward"){
+	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=45,$sortMethod="forward"){
 		# - sort can be forward, reverse, and random
 		# - Default maxItemsPerPage is equilivent to the number of even rows on the default css setting
 		if (array_key_exists("page",$_GET)){
@@ -616,13 +617,18 @@ if( ! function_exists("serverServicesCount")){
 				$totalServiceCount += 1;
 			}
 		}
+		foreach(availablePathServicesArray() as $serviceData){
+			if (checkServerPath($serviceData[1])){
+				$totalServiceCount += 1;
+			}
+		}
 		return $totalServiceCount;
 	}
 }
 ###############################################################################
 if( ! function_exists("drawServicesWidget")){
 	function drawServicesWidget(){
-		if (serverServicesCount() <= 0){
+		if (serverServicesCount() <= 1){
 			return false;
 		}
 		// draw services widget

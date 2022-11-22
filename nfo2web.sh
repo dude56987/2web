@@ -1957,10 +1957,6 @@ function update(){
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
 
-	INFO "Building web directory at '$webDirectory'"
-	# force overwrite symbolic link to web directory
-	# - link must be used to also use premade apache settings
-	ln -sfn "$webDirectory" "/var/cache/2web/web"
 	# create the log path
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# create the homepage path

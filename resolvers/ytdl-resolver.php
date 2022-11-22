@@ -22,12 +22,12 @@ function debug($message){
 	}
 }
 ################################################################################
-function getQualityConfig(){
-	if (file_exists("cacheQuality.cfg")){
+function getQualityConfig($webDirectory){
+	if (file_exists("$webDirectory/cacheQuality.cfg")){
 		debug("Loading the cacheQuality.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheQualityConfig = file_get_contents("cacheQuality.cfg");
+		$cacheQualityConfig = file_get_contents("$webDirectory/cacheQuality.cfg");
 		return $cacheQualityConfig;
 	}else{
 		debug("No cacheQuality.cfg file could be found...");
@@ -35,12 +35,12 @@ function getQualityConfig(){
 	}
 }
 ################################################################################
-function getCacheMode(){
-	if (file_exists("cacheMode.cfg")){
+function getCacheMode($webDirectory){
+	if (file_exists("$webDirectory/cacheMode.cfg")){
 		debug("Loading the cacheMode.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheModeConfig= file_get_contents("cacheMode.cfg");
+		$cacheModeConfig= file_get_contents("$webDirectory/cacheMode.cfg");
 		return $cacheModeConfig;
 	}else{
 		debug("No cacheMode.cfg file could be found...");
@@ -48,12 +48,12 @@ function getCacheMode(){
 	}
 }
 ################################################################################
-function getUpgradeQualityConfig(){
-	if (file_exists("cacheUpgradeQuality.cfg")){
+function getUpgradeQualityConfig($webDirectory){
+	if (file_exists("$webDirectory/cacheUpgradeQuality.cfg")){
 		debug("Loading the cacheUpgradeQuality.cfg file...");
 		# load the cache upgrade quality config
 		# - this will be passed as a upgrade quality option to youtube-dl
-		$cacheUpgradeQualityConfig = file_get_contents("cacheUpgradeQuality.cfg");
+		$cacheUpgradeQualityConfig = file_get_contents("$webDirectory/cacheUpgradeQuality.cfg");
 		return $cacheUpgradeQualityConfig;
 	}else{
 		debug("No cacheUpgradeQuality.cfg file could be found...");
@@ -67,25 +67,19 @@ function cacheUrl($sum,$videoLink){
 	// if the cache flag has been set to true then download the file and play it from the cache
 	debug("Build the command<br>");
 	$command = "";
-	//$command = '/usr/bin/nohup /usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
-	//$command = '/usr/bin/sem --retries 10 --jobs 3 --id downloadQueue ';
-	//$command = '/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue ';
-	//$command = 'echo "/usr/bin/niceload --net ';
-	//$command = 'echo "/usr/bin/niceload ';
-	//$command = 'echo "';
-	//$command = 'echo "';
 	// add the download to the cache with the processing queue
 	if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
-		$command = $command."/usr/local/bin/yt-dlp --abort-on-error ";
+		# add the sponsorblock video bookmarks to the video file when using yt-dlp
+		$command = $command."/usr/local/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/youtube-dl")){
 		debug("PIP version of youtube-dl found<br>");
 		$command = $command."/usr/local/bin/youtube-dl";
 	} else {
 		$command = $command."youtube-dl";
 	}
-	$quality = getQualityConfig();
-	$cacheMode = getCacheMode();
+	$quality = getQualityConfig($webDirectory);
+	$cacheMode = getCacheMode($webDirectory);
 	debug("The web interface set quality is '".$quality."'");
 	// max download file size should be 6 gigs, this is a insane file size for a youtube video
 	// if a way of detecting livestreams is found this is unnessary
@@ -112,35 +106,47 @@ function cacheUrl($sum,$videoLink){
 		}
 	} else {
 		# if no quality is set in url use server settings
-		if (file_exists("cacheUpgradeQuality.cfg")){
-			$upgradeQuality = getUpgradeQualityConfig();
+		if (file_exists("$webDirectory/cacheUpgradeQuality.cfg")){
+			$upgradeQuality = getUpgradeQualityConfig($webDirectory);
 			# update the download command
-			$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
+			if (($upgradeQuality == "best") or ($upgradeQuality == "worst")){
+				$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
+			}else{
+				$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
+			}
 			$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4' -c '".$videoLink."'";
 		}else{
 			# if no server settings are configured use the default
 			# the dl command should simply convert the downloaded m3u file with the m3u file
-			if ( (! file_exists("cacheResize.cfg")) AND (! file_exists("cacheFramerate.cfg")) ){
+			if ( (! file_exists("$webDirectory/cacheResize.cfg")) AND (! file_exists("$webDirectory/cacheFramerate.cfg")) ){
 				# if no upgrade quality is set and no hls rescaling or frame dropping then convert the file to mp4 directly
 				$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4'";
 			}else{
 				# if custom postprocessing is set then the download command should be the same as the input
 				# - This is because postprocessing can only decrease the quality, this is to upgrade from those decreases
-				$dlCommand = $dlCommand." -f '".$quality."'";
+				if (($quality == "best") or ($quality == "worst")){
+					$dlCommand = $dlCommand." -f '".$quality."'";
+				}else{
+					$dlCommand = $dlCommand." -S '".$quality."'";
+				}
 				$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4' -c '".$videoLink."'";
 			}
 		}
 		# by default use the option set in the web interface it it exists
-		$command = $command." -f '".$quality."'";
+		if (($quality == "best") or ($quality == "worst")){
+			$command = $command." -f '".$quality."'";
+		}else{
+			$command = $command." -S '".$quality."'";
+		}
 	}
-	if (file_exists("cacheFramerate.cfg")){
-		$cacheFramerate = " -r ".file_get_contents("cacheFramerate.cfg");
+	if (file_exists("$webDirectory/cacheFramerate.cfg")){
+		$cacheFramerate = " -r ".file_get_contents("$webDirectory/cacheFramerate.cfg");
 	}else{
 		//$cacheFramerate = " -r 30";
 		$cacheFramerate = "";
 	}
-	if (file_exists("cacheResize.cfg")){
-		$cacheResize = " -s ".file_get_contents("cacheResize.cfg");
+	if (file_exists("$webDirectory/cacheResize.cfg")){
+		$cacheResize = " -s ".file_get_contents("$webDirectory/cacheResize.cfg");
 	}else{
 		//$cacheResize = " -s 1920x1080";
 		$cacheResize = "";
@@ -149,39 +155,29 @@ function cacheUrl($sum,$videoLink){
 		$command = $command." -o - -c '".$videoLink."'";
 		$command = 'echo "'.$command.'"';
 	}else{
-		//$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 10 -hls_list_size 0 -f hls 'RESOLVER-CACHE/".$sum."-stream.m3u'";
 		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name ".$sum.".m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/$sum-stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		//$command = 'echo "'.$command." && ".$dlCommand.'"';
-		//
 		$command = 'echo "'.$command.'"';
 		$dlCommand = 'echo "'.$dlCommand.'"';
 	}
 	# - Place the higher quality download or the mp4 conversion in a batch queue
 	#   that adds a new task once every 60 seconds if system load is below 1.5
 	# - This will prevent active downloads from being overwhelmed
-	//$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-	//$dlCommand = "/usr/bin/tsp ".$dlCommand;
 	# allow setting of batch processing of cached links
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
 			$command = $command." | /usr/bin/at -M -q b now";
 			$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-			// add command to the end of the queue
-			//$command = "/usr/bin/tsp ".$command;
 		}else{
 			// add command to next available slot in the queue
 			$command = $command." | /usr/bin/at -M -q a now";
 			$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-			//$command = "/usr/bin/tsp -u ".$command;
 		}
 	}else{
 		// add command to next available slot in the queue
 		$command = $command." | /usr/bin/at -M -q a now";
 		$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-		//$command = "/usr/bin/tsp -u ".$command;
-		//$command = $command." | /usr/bin/at -q b now";
 	}
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -250,14 +246,6 @@ function buildBump($sum){
 		debug("Running command '".$command."'<br>");
 		shell_exec($command);
 	}
-	#if ( ! file_exists("RESOLVER-CACHE/".$sum."-bump.png")){
-	#	################################################################################
-	#	# compose the webpage over the unique pattern  and overwrite the webpage.png
-	#	$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
-	#	//$command = "";
-	#	$command = $command."/usr/bin/composite -dissolve 70 -gravity center 'RESOLVER-CACHE/".$sum.".png' 'RESOLVER-CACHE/baseBump.png' -alpha Set 'RESOLVER-CACHE/".$sum."-bump.png'";
-	#	runShellCommand($command);
-	#}
 	################################################################################
 	# build the loading image if it does not exist yet
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum.".png")){
@@ -267,14 +255,6 @@ function buildBump($sum){
 		$command = $command."/usr/bin/convert '$webDirectory/RESOLVER-CACHE/baseBump.png' -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 300x100 -gravity center caption:'Loading...' -composite '$webDirectory/RESOLVER-CACHE/".$sum.".png'";
 		runShellCommand($command);
 	}
-	/*
-	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."-bump.mp4")){
-		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
-		//$command = "";
-		$command = $command."/usr/bin/ffmpeg -loop 1 -i $webDirectory/RESOLVER-CACHE/".$sum."-bump.png -r 1 -t 10 $webDirectory/RESOLVER-CACHE/".$sum."-bump.mp4";
-		runShellCommand($command);
-	}
- */
 }
 ################################################################################
 function redirect($url){
@@ -351,14 +331,11 @@ if (array_key_exists("url",$_GET)){
 		}
 	}else{
 		################################################################################
-		$cacheMode = getCacheMode();
+		$cacheMode = getCacheMode($webDirectory);
 		################################################################################
 		# By default use the cache for video playback, this works on everything
 		################################################################################
 		debug("Creating resolver cache<br>");
-		#if ( ! file_exists("$webDirectory/RESOLVER-CACHE/")){
-		#	mkdir("$webDirectory/RESOLVER-CACHE/");
-		#}
 		// craft the url to the cache link
 		$storagePath = "$webDirectory/RESOLVER-CACHE/$sum/";
 		$url = "/RESOLVER-CACHE/$sum/$sum.mp4";
@@ -381,50 +358,19 @@ if (array_key_exists("url",$_GET)){
 			# build a m3u playlist that plays the bump and then the video
 			$playlist=fopen("$webDirectory/RESOLVER-CACHE/$sum/master.m3u8", "w");
 			# add the file header
-			//header("Content-Type: application/mpegurl");
-			//header("Content-Disposition: attachment; filename=" . ($sum."_master.m3u"));
-			//print "#EXTM3U\n";
 			fwrite($playlist,"#EXTM3U\n");
 			fwrite($playlist,"#PLAYLIST:$sum\n");
-			# write the fileData
-			# if running in compatibility mode build the symlinks
-			#if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum.".ts")){
-			# build the m3u file before caching the video it is part of the buffering process
-			# build a list of available bumps
-			# iterate though the bumps directory and pick a video file randomly
-			//$tempFiles = glob("bumps/*-bump.mp4");
-			//$bumpFile= $tempFiles[array_rand($tempFiles)];
-			//$skipFile= str_replace("-bump.mp4","-skip.mp4",$bumpFile);
-			//debug("BumpFile : ".$bumpFile);
-			//debug("SkipFile : ".$skipFile);
 			# figure out the absolute server path
-			$serverPath='http://'.gethostname().'.local/';
+			$serverPath='http://'.$_SERVER["SERVER_ADDR"].'/';
 
-			# link the bump file
-			//if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4")){
-				//symlink("../$bumpFile",("$webDirectory/RESOLVER-CACHE/".$sum."/bump.mp4"));
-			//}
-			# link the skip file
-			//if( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4")){
-				//symlink("../$skipFile",("$webDirectory/RESOLVER-CACHE/".$sum."/skip.mp4"));
-			//}
-			# write the bumps to the buffer file to allow managed delay for download and playback
+			# write the first segment repeatedly in order to generate a buffer time for the player
 			for ($index=1;$index <= 30;$index+=1){
 				# write 20 lines of the bump
 				fwrite($playlist,"#EXTINF:1,Loading... $index/30\n");
-				//fwrite($playlist,$sum."-bump.mp4\n");
-				//fwrite($playlist,"$webDirectory/RESOLVER-CACHE/".$sum."-bump.mp4\n");
-				//fwrite($playlist,$serverPath."RESOLVER-CACHE/".$sum."/bump.mp4\n");
 				fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/$sum-stream1.ts\n");
-				//print "#EXTINF:,Loading... $index/30\n";
-				//print "RESOLVER-CACHE/".$sum."-bump.mp4\n";
 			}
-			//fwrite($playlist,"#EXTINF:-1,\n");
-			//fwrite($playlist,"RESOLVER-CACHE/".$sum.".mp4\n");
 			fwrite($playlist,"#EXTINF:1,\n");
 			fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/$sum.m3u\n");
-			//print "#EXTINF:,\n";
-			//print "RESOLVER-CACHE/".$sum.".mp4\n";
 			fclose($playlist);
 			# cache the url if no log has been created, otherwise jump to the redirect
 			if(! file_exists("$webDirectory/RESOLVER-CACHE/$sum/data.log")){
@@ -440,8 +386,6 @@ if (array_key_exists("url",$_GET)){
 				# if 60 seconds of the video has been downloaded then launch the video
 				if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4")){
 					// file is fully downloaded and converted play instantly
-					//header("Content-Type: video/mpeg");
-					//header("Content-Disposition: attachment; filename=".$sum.".mp4");
 					redirect("RESOLVER-CACHE/$sum/$sum.mp4");
 				}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.m3u")){
 					# if the stream has x segments (segments start as 0)
@@ -449,18 +393,9 @@ if (array_key_exists("url",$_GET)){
 					# - force loading of 3 segments before resolution
 					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream2.ts")){
 						# redirect to the stream
-						//header("Content-Type: application/mpegurl");
-						//header("Content-Disposition: attachment; filename=".$sum.".m3u");
 						redirect("RESOLVER-CACHE/$sum/$sum.m3u");
 					}
 				}
-				//}else if(file_exists("$webDirectory/RESOLVER-CACHE/".$sum."/master.m3u8")){
-				//	//header("Content-Type: application/mpegurl");
-				//	//header("Content-Disposition: attachment; filename=".$sum.".m3u");
-				//	if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream1.ts")){
-				//		redirect('RESOLVER-CACHE/'.$sum.'/master.m3u8');
-				//	}
-				//}
 				# if all else fails wait then restart the loop
 				sleep(1);
 			}
@@ -473,7 +408,6 @@ if (array_key_exists("url",$_GET)){
 	echo "<link rel='stylesheet' href='style.css'>";
 	echo "</head>";
 	echo "<body>";
-	//include("header.html");
 	echo "<div class='settingListCard'>";
 	echo "<h2>Manual Video Cache Interface</h2>";
 	echo "No url was specified to the resolver!<br>";
@@ -545,7 +479,6 @@ if (array_key_exists("url",$_GET)){
 		}
 	}
 	echo "</div>";
-	//include("header.html");
 	echo "</body>";
 	echo "</html>";
 }

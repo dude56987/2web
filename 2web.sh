@@ -121,6 +121,12 @@ function update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(webRoot)"
+
+	INFO "Building web directory at '$webDirectory'"
+	# force overwrite symbolic link to web directory
+	# - link must be used to also use premade apache settings
+	ln -sfn "$webDirectory" "/var/cache/2web/web"
+
 	# if the build date of the software has changed then update the generated css themes for the site
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
@@ -432,6 +438,7 @@ main(){
 		rm -v $webDirectory/weather2web.active
 		rm -v $webDirectory/music2web.active
 		rm -v $webDirectory/comic2web.active
+		rm -v $webDirectory/wiki2web.active
 		rm -v $webDirectory/kodi2web.active
 		rm -v $webDirectory/ytdl2nfo.active
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then

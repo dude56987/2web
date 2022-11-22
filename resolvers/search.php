@@ -117,14 +117,11 @@ function searchWiki($wikiPath){
 				# check each filename for the search term
 				$tempOutput = "";
 
-				$tempOutput .= "<div class='titleCard button'>";
+				$tempOutput .= "<div class='inputCard button'>";
 				$tempOutput .= "<h2>";
-				$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>\n";
+				$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>";
 				$tempOutput .= "</h2>";
-				$tempOutput .= "<div class='foundSearchContentPreview'>";
-				$tempOutput .= $lineData;
-				$tempOutput .= "</div>";
-				$tempOutput .= "</div>";
+				$tempOutput .= "</div>\n";
 
 				$output .= $tempOutput;
 
@@ -135,31 +132,51 @@ function searchWiki($wikiPath){
 				# read each file and search line by line
 				$articleHandle = fopen($wikiPath."/A/".$foundFile,'r');
 				while(! feof($articleHandle)){
-					$lineData = fgets($articleHandle, 512);
-					# remove meta lines that contain redirects
+					$lineData = fgets($articleHandle,128);
+					#$lineData = file_get_contents($wikiPath."/A/".$foundFile);
+					# remove html tags
 					$lineData = strip_tags($lineData);
+					# make string all lowercase
+					$lineData = strtolower($lineData);
 					# highlight found search terms
 					$lineData = str_replace($_GET['q'],("<span class='highlightText'>".$_GET['q']."</span>"),$lineData);
-					$lineData = str_replace(strtoupper($_GET['q']),("<span class='highlightText'>".strtoupper($_GET['q'])."</span>"),$lineData);
+					#$lineData = str_replace(strtoupper($_GET['q']),("<span class='highlightText'>".strtoupper($_GET['q'])."</span>"),$lineData);
 					if(stripos($lineData,$_GET['q'])){
+
+						$foundPosition=stripos($lineData,$_GET['q']);
+
+						$startCut=$foundPosition - 10;
+						if ($startCut < 0){
+							$startCut=0;
+						}
+
+						$endCut = $foundPosition + 10;
+						if ($endCut > strlen($lineData)){
+							$endCut=strlen($lineData);
+						}
+
+						$foundStringPreview = substr($lineData,$startCut,$endCut);
+
 						$foundData = true;
 						$tempOutput = "";
 						# check each files contents for the search term
-						$tempOutput .= "<div class='titleCard button'>";
+						#$tempOutput .= "<div class='titleCard button'>";
+						$tempOutput .= "<div class='inputCard button'>";
 						$tempOutput .= "<h2>";
-						$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>\n";
+						$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>";
 						$tempOutput .= "</h2>";
 
 						$tempOutput .= "<div class='foundSearchContentPreview'>";
-						$tempOutput .= $lineData;
+						$tempOutput .= str_replace("\n","",$lineData);
+						#$tempOutput .= $foundStringPreview;
 						$tempOutput .= "</div>";
 
 						$tempOutput .= "<div class='wikiPublisher'>";
 						$tempOutput .= "Publisher : ";
-						$tempOutput .= file_get_contents($_SERVER['DOCUMENT_ROOT']."/wiki/$wikiName/M/Title");
+						$tempOutput .= str_replace("\n","",file_get_contents($_SERVER['DOCUMENT_ROOT']."/wiki/$wikiName/M/Title"));
 						$tempOutput .= "</div>";
 
-						$tempOutput .= "</div>";
+						$tempOutput .= "</div>\n";
 
 						$output .= $tempOutput;
 
@@ -228,7 +245,8 @@ if (array_key_exists("q",$_GET)){
 		$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
 		while( ! feof($searchCacheFileHandle)){
 			# send a large frame of data from the cache file at a time
-			echo fgets($searchCacheFileHandle,4096);
+			//echo fgets($searchCacheFileHandle,4096);
+			echo fgets($searchCacheFileHandle);
 		}
 	}else{
 		# if the file does not exist cache the search results
@@ -256,8 +274,8 @@ if (array_key_exists("q",$_GET)){
 		#ob_flush();
 
 		if ($foundResults || ($wikiSearchResults[0] == true)){
-			echo $totalOutput;
-			echo $wikiSearchResults[1];
+			#echo $totalOutput;
+			#echo $wikiSearchResults[1];
 			file_put_contents($searchCacheFilePath,($totalOutput.$wikiSearchResults[1]));
 		}else{
 			echo "<h1>No Search Results for '$searchQuery'</h1>";

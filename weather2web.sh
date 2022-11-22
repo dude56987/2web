@@ -41,23 +41,6 @@ linkFile(){
 	fi
 }
 ################################################################################
-webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/nfo/web.cfg ];then
-		webDirectory=$(cat /etc/2web/nfo/web.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/nfo/web.cfg
-		webDirectory="/var/cache/2web/cache/"
-	fi
-	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
-	fi
-	echo "$webDirectory"
-}
-################################################################################
 function cacheCheck(){
 
 	filePath="$1"
