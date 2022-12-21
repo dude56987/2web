@@ -5,7 +5,24 @@
 </head>
 <body>
 <?PHP
-include("header.php")
+include("header.php");
+include("/usr/share/2web/2webLib.php");
+
+if (detectEnabledStatus("iptv2web")){
+	$iptv=true;
+}else{
+	$iptv=false;
+}
+if (detectEnabledStatus("nfo2web")){
+	$nfo=true;
+}else{
+	$nfo=false;
+}
+if (detectEnabledStatus("comic2web")){
+	$comic=true;
+}else{
+	$comic=false;
+}
 ?>
 
 <div class='titleCard linkInfo'>
@@ -16,16 +33,31 @@ include("header.php")
 		<li><a href="#hard_linking">Hard Linking</a></li>
 		<li><a href="#android">Android</a></li>
 		<ul>
-			<li><a href="#android_live">Android Live</a></li>
-			<li><a href="#android_ondemand">Android On-Demand</a></li>
-			<li><a href="#android_VLC">Android VLC Links</a></li>
+		<?PHP
+			# this page should only show help for active modules
+			if ($iptv){
+				echo "<li><a href='#android_live'>Android Live</a></li>";
+			}
+			if ($nfo){
+				echo "<li><a href='#android_ondemand'>Android On-Demand</a></li>";
+			}
+			echo "<li><a href='#android_VLC'>Android VLC Links</a></li>";
+		?>
 		</ul>
 		<li><a href="#kodi">Kodi</a></li>
 		<ul>
 			<li><a href="#kodi_TLDR">TLDR</a></li>
-			<li><a href="#kodi_live">Live Channels</a></li>
-			<li><a href="#kodi_ondemand">On-Demand Libary</a></li>
-			<li><a href="#kodi_comics">Comics Libary</a></li>
+			<?PHP
+			if ($iptv){
+				echo "<li><a href='#kodi_live'>Live Channels</a></li>";
+			}
+			if ($nfo){
+				echo "<li><a href='#kodi_ondemand'>On-Demand Libary</a></li>";
+			}
+			if ($comic){
+				echo "<li><a href='#kodi_comics'>Comics Libary</a></li>";
+			}
+			?>
 		</ul>
 		<li><a href="#desktop">Desktop</a></li>
 		<ul>

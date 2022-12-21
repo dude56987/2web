@@ -414,6 +414,47 @@ function addToIndex(){
 	fi
 }
 ################################################################################
+function SQLaddToIndex(){
+	indexItem="$1"
+	indexPath="$2"
+	databaseTable="_$3"
+	# set the default timeout to wait for writing to the database
+	# - time in miliseconds
+	# - 1 minute default
+	timeout=60000
+	#example: /var/cache/2web/new.sql
+	INFO "Checking if the indexPath '$indexPath' exists"
+	# if the database file exists read it
+	if test -f "$indexPath";then
+		# check if the table exists in the database
+		if ! sqlite3 -cmd ".timeout $timeout"  "$indexPath" "select name from sqlite_master where type='table';" | grep -q "$databaseTable";then
+			# create the database if it does not exist
+			# first set the new database into wal mode for better handling of concurrency in the database
+			sqlite3 -cmd ".timeout $timeout" "$indexPath" "PRAGMA journal_mode=WAL;"
+			sqlite3 -cmd ".timeout $timeout" "$indexPath" "PRAGMA wal_autocheckpoint=20;"
+			# create the table
+			sqlite3 -cmd ".timeout $timeout" "$indexPath" "create table $databaseTable(title text primary key);"
+		fi
+		#ALERT "Looking for $indexItem in $indexPath"
+		# if the data is already stored in the database
+		if [ $(sqlite3 -cmd ".timeout $timeout" "$indexPath" "select '$indexItem' from '$databaseTable' where title = '$indexItem';" | wc -l) -gt 0 ];then
+			INFO "The Index '$indexPath' already contains '$indexItem'"
+		else
+			INFO "Adding '$indexItem' to '$indexPath'"
+			sqlite3 -cmd ".timeout $timeout" "$indexPath" "insert into $databaseTable values('$indexItem');"
+		fi
+	else
+		#ALERT "No index found, creating one..."
+		INFO "Adding '$indexItem' to '$indexPath'"
+		# create the sql database
+		sqlite3 -cmd ".timeout $timeout" "$indexPath" "create table $databaseTable(title text primary key);"
+		# add the item to the sql database
+		sqlite3 -cmd ".timeout $timeout" "$indexPath" "insert into $databaseTable values('$indexItem');"
+		# set ownership of the newly created index
+		chown www-data:www-data "$indexPath"
+	fi
+}
+################################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one

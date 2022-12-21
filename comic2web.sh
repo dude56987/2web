@@ -877,6 +877,8 @@ renderPage(){
 			} > "$comicNamePath/comics.index"
 		fi
 
+		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
+
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new comics index
@@ -1132,6 +1134,8 @@ rebuildComicIndex(){
 			} > "$comicNamePath/comics.index"
 		fi
 
+		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
+
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new shows index
@@ -1290,6 +1294,8 @@ function nuke(){
 	rm -rv $(webRoot)/comics/*
 	rm -rv $(webRoot)/new/comics.index
 	rm -rv $(webRoot)/random/comics.index
+	# remove sql data
+	sqlite3 $(webRoot)/data.db "drop table comics;"
 	# remove widgets cached
 	rm -v $(webRoot)/web_cache/widget_random_comics.index
 	rm -v $(webRoot)/web_cache/widget_new_comics.index

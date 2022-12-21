@@ -678,7 +678,12 @@ processMovie(){
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
 
 		# add the movie to the main movie index since it has been updated
+		SQLaddToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/data.db" "movies"
+		SQLaddToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/data.db" "all"
+
+		# add the movie to the main movie index since it has been updated
 		addToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/movies.index"
+
 		# add the updated movie to the new movies index
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
@@ -1270,6 +1275,9 @@ processEpisode(){
 		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.cfg"
 
 		# add episodes to new indexes
+		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" "$webDirectory/data.db" "episodes"
+		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" "$webDirectory/data.db" "all"
+
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/episodes.index"
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/all.index"
 		# random indexes
@@ -1504,7 +1512,12 @@ processShow(){
 	} > "$webDirectory/shows/$showTitle/shows.index"
 
 	# add the show to the main show index since it has been updated
+	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
+	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "all"
+
+	# add the show to the main show index since it has been updated
 	addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/shows.index"
+
 	# add the updated show to the new shows index
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/shows.index"
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/all.index"
@@ -1824,6 +1837,10 @@ function nuke(){
 	rm -rv $(webRoot)/random/episodes.index
 	rm -rv $(webRoot)/new/shows.index
 	rm -rv $(webRoot)/new/episodes.index
+	# remove sql data
+	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table shows;"
+	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table movies;"
+	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table episodes;"
 	# remove widgets cached
 	rm -v $(webRoot)/web_cache/widget_random_movies.index
 	rm -v $(webRoot)/web_cache/widget_random_shows.index

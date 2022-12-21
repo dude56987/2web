@@ -530,6 +530,11 @@ if (array_key_exists("newUserName",$_POST)){
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("wiki2webStatus",$_POST)){
+	$status=$_POST['wiki2webStatus'];
+	setModStatus("wiki2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#wiki2webStatus'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("graph2webStatus",$_POST)){
 	$status=$_POST['graph2webStatus'];
 	setModStatus("graph2web",$status);

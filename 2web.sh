@@ -95,18 +95,18 @@ function cacheCheck(){
 }
 ########################################################################
 function enableApacheServer(){
-	# enable the apache config
-	linkFile "/etc/apache2/conf-available/0-2web-ports.conf" "/etc/apache2/conf-enabled/0-2web-ports.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website.conf" "/etc/apache2/sites-enabled/0-2web-website.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
-	linkFile "/etc/apache2/sites-available/0-2web-website-compat.conf" "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+	# enable the apache config, four zeros are required to overwride the default apache config "000-default.cfg"
+	linkFile "/etc/apache2/conf-available/0000-2web-ports.conf" "/etc/apache2/conf-enabled/0000-2web-ports.conf"
+	linkFile "/etc/apache2/sites-available/0000-2web-website.conf" "/etc/apache2/sites-enabled/0000-2web-website.conf"
+	linkFile "/etc/apache2/sites-available/0000-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
+	linkFile "/etc/apache2/sites-available/0000-2web-website-compat.conf" "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
 }
 ########################################################################
 function disableApacheServer(){
-	rm -v "/etc/apache2/conf-enabled/0-2web-ports.conf"
-	rm -v "/etc/apache2/sites-enabled/0-2web-website.conf"
-	rm -v "/etc/apache2/sites-enabled/0-2web-website-SSL.conf"
-	rm -v "/etc/apache2/sites-enabled/0-2web-website-compat.conf"
+	rm -v "/etc/apache2/conf-enabled/0000-2web-ports.conf"
+	rm -v "/etc/apache2/sites-enabled/0000-2web-website.conf"
+	rm -v "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
+	rm -v "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
 }
 ########################################################################
 function enableCronJob(){
@@ -266,8 +266,20 @@ function update2web(){
 	# add the random index
 	linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
 	# link lists these can be built and rebuilt during libary update
+
 	# copy over the favicon
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
+	# only build a new .ico file if the source favicon.png has changed in contents
+	if checkFileDataSum "$webDirectory" "$webDirectory/favicon.png";then
+		# build the favicon ico file using imagemagick for web compatibility
+		convert "/usr/share/2web/favicon_default.png" \
+			\( -clone 0 -resize 16x16 \) \
+			\( -clone 0 -resize 32x32 \) \
+			\( -clone 0 -resize 48x48 \) \
+			\( -clone 0 -resize 64x64 \) \
+			-delete 0 -alpha off -colors 256 "$webDirectory/favicon.ico"
+	fi
+
 	################################################################################
 	# build the login users file
 	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
@@ -602,6 +614,29 @@ main(){
 		if test -d "$(webRoot)/search/";then
 			find "$(webRoot)/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
+	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
+		# timeout of sql database in miliseconds
+		timeout=60000
+		#verify database to make sure everything is correct
+		#get the list of all tables
+		tables=$(sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "select name from sqlite_master where type='table';")
+		echo "tables='$tables'\n"
+		IFS=$'\n'
+		for tableName in $tables;do
+			echo "Searching table:$tableName"
+			rows=$(sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "select * from \"$tableName\";")
+			# read though each table for the title column
+			for path in $rows;do
+				# for each colum check the path it lists on the disk to make sure the file exists
+				# check the path stored in the table exists on the disk
+				if ! test -f "$path";then
+					echo "Discovered invalid path in $tableName:$path"
+					# the path does not exist so it needs removed from the database
+					sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "delete from \"$tableName\" where title='$path';"
+				fi
+			done
+		done
+		echo "Finished Verifying database."
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then

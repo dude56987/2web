@@ -58,6 +58,7 @@ ob_flush();
 
 $cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/random_$filterType.index";
 if (file_exists($cacheFile)){
+	# set the time the cached results are kept, in seconds
 	if (time()-filemtime($cacheFile) > 30){
 		// update the cached file
 		$writeFile=true;
@@ -72,24 +73,25 @@ if (file_exists($cacheFile)){
 # load the cached file or write a new cached fill
 if ($writeFile){
 	ignore_user_abort(true);
+
+	# load database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(60000);
+
+	# run query to get 800 random
+	$result = $databaseObj->query('select * from "_'.$filterType.'" order by random() limit 100;');
+
+	# open the cache file for writing
 	$fileHandle = fopen($cacheFile,'w');
-	// get a list of all the genetrated index links for the page
-	$sourceFiles = file($_SERVER['DOCUMENT_ROOT']."/random/".$filterType.".index", FILE_IGNORE_NEW_LINES);
 
-	# remove list duplicates
-	$sourceFiles = array_unique($sourceFiles);
-
-	# randomize the playlist items
-	shuffle($sourceFiles);
-
-	// limit the array to 200 items
-	array_splice($sourceFiles, 200);
-
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
+	# fetch each row data individually and display results
+	while($row = $result->fetchArray()){
+		$sourceFile = $row['title'];
 		if (file_exists($sourceFile)){
 			if (is_file($sourceFile)){
 				if (strpos($sourceFile,".index")){
+					//echo "sourceFile = $sourceFile<br>\n";
 					// read the index entry
 					$data=file_get_contents($sourceFile);
 					// write the index entry

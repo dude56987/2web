@@ -141,6 +141,9 @@ function update(){
 				echo "</a>"
 			} > "$webDirectory/graphs/$fileName/graphs.index"
 
+			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "graphs"
+			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "all"
+
 			# copy over the php template for the graphs
 			linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
 
@@ -325,8 +328,10 @@ main(){
 		echo -n "graph2web Version: "
 		cat /usr/share/2web/version_graph2web.cfg
 	else
-		main --update
-		main --webgen
+		checkModStatus "graph2web"
+		lockCheck
+		update
+		webUpdate
 		main --help
 		showServerLinks
 		echo "Module Links"

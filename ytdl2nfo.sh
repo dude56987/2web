@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-source /var/lib/2web/common
+source "/var/lib/2web/common"
 ################################################################################
 #set -x
 ################################################################################
@@ -160,23 +160,34 @@ ytdl2kodi_channel_extractor(){
 	################################################################################
 	# if the file is a playlist from youtube, rip links from the playlist
 	# otherwise run the generic link ripper
-	if echo "$channelLink" | grep -q "youtube.com";then
-		echo "[INFO]: Running youtube.com link extractor..."
-		# run the youtube special link playlist extractor
-		linkList=""
-		# try to rip as a playlist
-		if test -f /usr/local/bin/yt-dlp;then
-			tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-		elif test -f /usr/local/bin/youtube-dl;then
-			tempLinkList=$(/usr/local/bin/youtube-dl --flat-playlist -j "$channelLink")
-		elif test -f /snap/bin/youtube-dl;then
-			tempLinkList=$(/snap/bin/youtube-dl --flat-playlist -j "$channelLink")
-		elif test -f /usr/bin/youtube-dl;then
-			tempLinkList=$(/usr/bin/youtube-dl --flat-playlist -j "$channelLink")
-		else
-			tempLinkList=$(youtube-dl --flat-playlist -j "$channelLink")
-		fi
-		tempLinkList=$(echo "$tempLinkList" | jq -r ".url" )
+	echo "[INFO]: Running playlist link extractor..."
+	# run the youtube special link playlist extractor
+	linkList=""
+	# try to rip as a playlist
+	if test -f /usr/local/bin/yt-dlp;then
+		tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
+		errorCode=$!
+		# list only the urls from the json data retrived
+		tempLinkList=$(echo "$tempLinkList" | jq -r ".webpage_url")
+	elif test -f /usr/local/bin/youtube-dl;then
+		tempLinkList=$(/usr/local/bin/youtube-dl --flat-playlist -j "$channelLink")
+		errorCode=$!
+		tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	elif test -f /snap/bin/youtube-dl;then
+		tempLinkList=$(/snap/bin/youtube-dl --flat-playlist -j "$channelLink")
+		errorCode=$!
+		tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	elif test -f /usr/bin/youtube-dl;then
+		tempLinkList=$(/usr/bin/youtube-dl --flat-playlist -j "$channelLink")
+		errorCode=$!
+		tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	else
+		tempLinkList=$(youtube-dl --flat-playlist -j "$channelLink")
+		errorCode=$!
+		tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	fi
+
+	if $errorCode;then
 		addToLog "Found Links" "Adding links to Linklist" "$tempLinkList" "/var/cache/2web/ytdl2nfo.log"
 		for videoId in $tempLinkList;do
 			linkList=$(echo -en "$linkList\n$videoId")
@@ -194,6 +205,10 @@ ytdl2kodi_channel_extractor(){
 		# remove contents of head tag from page before parsing
 		echo "[INFO]: Looking for links in the webpage..."
 		# use hxwls to list all links contained within the webpage
+		if echo "$linkList" | grep -q "<rss ";then
+			# this is a rss feed so extract the rss enclosures
+			linkList=$(echo "$linkList" | grep "enclosure" | sed "s/^.*url=\"//g" | sed "s/\".*$//g")
+		fi
 		# Some websites use javascript generated html that can not be parsed without removing backslashes
 		linkList=$(echo "$webData" | sed 's/\\//g')
 		# run a quick clean pass on the html
@@ -371,7 +386,7 @@ ytdl2kodi_channel_extractor(){
 			# check links aginst existing stream files to pervent duplicating the work
 			if echo "$@" | grep -q "\-\-username";then
 				echo "[INFO]: Running username video extraction..."
-				ytdl2kodi_video_extractor "$link" "$channelLink" --username
+				ytdl2kodi_video_extractor "$link" "$channelLink" "$showTitle" --username
 			else
 				echo "[INFO]: Running video extraction...."
 				ytdl2kodi_video_extractor "$link" "$channelLink"
@@ -400,7 +415,7 @@ ytdl2kodi_channel_extractor(){
 		echo "$temp" >> /etc/2web/ytdl/channelUpdateCache.cfg
 	fi
 	# write the channel metadata for lastProcessed.cfg in seconds
-	lastProcessed=$(date "+%s")
+	#lastProcessed=$(date "+%s")
 }
 ################################################################################
 ytdl2kodi_channel_meta_extractor(){
@@ -438,8 +453,8 @@ ytdl2kodi_channel_meta_extractor(){
 	# create show directory
 	mkdir -p "$downloadPath$showTitle/"
 	# create the tvshow.nfo
-	fileName="$downloadPath$showTitle/tvshow.nfo"
-	if test -f "$fileName";then
+	seriesFileName="$downloadPath$showTitle/tvshow.nfo"
+	if test -f "$seriesFileName";then
 		echo "Series file already exists..."
 		echo "Skipping creating series data..."
 		return
@@ -543,7 +558,7 @@ ytdl2kodi_channel_meta_extractor(){
 			echo "<premiered>$(date +%F)</premiered>"
 			echo "<director>$showTitle</director>"
 			echo "</tvshow>"
-		} > "$fileName"
+		} > "$seriesFileName"
 		# remove extra image files
 		#if [ -f "$downloadPath$showTitle/webpage.png" ];then
 		#	# remove the webpage.png temp image file
@@ -694,19 +709,6 @@ ytdl2kodi_update(){
 	# import and run the debug check
 	# check dependencies to get the latest version of youtube-dl
 	#ytdl2kodi_depends_check
-	################################################################################
-	# check if system is active
-	if test -f "/tmp/ytdl2nfo.active";then
-		# system is already running exit
-		echo "[INFO]: ytdl2nfo is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/ytdl2nfo.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/ytdl2nfo.active
-		# create a trap to remove nfo2web lockfile
-		trap "rm -v /tmp/ytdl2nfo.active" EXIT
-	fi
 	################################################################################
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
@@ -1117,7 +1119,7 @@ ytdl2kodi_video_extractor(){
 			showTitle="$uploader"
 		else
 			echo "No uploader name was found and use username as showname was selected."
-			echo "Uploader = $uploader"
+			echo "Uploader = '$uploader'"
 			# if this download is not listed in previousDownloads then add it
 			touch $previousDownloadsPath
 			echo "$selection" >> $previousDownloadsPath
@@ -1131,6 +1133,20 @@ ytdl2kodi_video_extractor(){
 		showTitle=$(ytdl2kodi_rip_title "$selection")
 	fi
 	echo "Show Title = $showTitle"
+	if echo "$@" | grep "\-\-username";then
+		# the show title should be the same as the playlist show title
+		if [ "$showTitle" != "$3" ];then
+			# this means this link is invalid
+			echo "Episode processing stopped, This video link is a diffrent username."
+			# if this download is not listed in previousDownloads then add it
+			touch $previousDownloadsPath
+			echo "$selection" >> $previousDownloadsPath
+			addProcessedSum "$selection" "$channelSum"
+			echo "Skipping video..."
+			echo
+			return
+		fi
+	fi
 	################################################################################
 	# create season directory
 	downloadPath="$downloadPath$showTitle/Season $episodeSeason/"
@@ -1410,8 +1426,16 @@ ytdl2kodi_video_extractor(){
 	tempTimeHours=$(date "+%H" | sed "s/^[0]*//g")
 	tempTimeMinutes=$(date "+%M" | sed "s/^[0]*//g")
 	# convert into seconds
-	tempTimeHours=$((10#$tempTimeHours * 60 * 60))
-	tempTimeMinutes=$((10#$tempTimeMinutes * 60))
+	if echo $tempTimeHours | grep -q "[0123456789]";then
+		tempTimeHours=$((10#$tempTimeHours * 60 * 60))
+	else
+		tempTimeHours=$((0 * 60 * 60))
+	fi
+	if echo $tempTimeMinutes | grep -q "[0123456789]";then
+		tempTimeMinutes=$((10#$tempTimeMinutes * 60))
+	else
+		tempTimeMinutes=$((0 * 60))
+	fi
 	# add the current time to the airdate
 	tempTime=$(date -d "$airdate" "+%s")
 	tempTime=$(($tempTime + $tempTimeHours + $tempTimeMinutes))
@@ -1499,7 +1523,9 @@ main(){
 		lockProc "ytdl2nfo"
 		checkModStatus "ytdl2nfo"
 		ytdl2kodi_update
-		main --help
+		drawLine
+		echo "NFO Library generated at $(getDownloadPath)"
+		drawLine
 	fi
 }
 ################################################################################

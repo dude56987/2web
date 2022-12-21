@@ -425,6 +425,12 @@ processTrack(){
 					echo "	</div>"
 					echo "</a>"
 				} > "$webDirectory/music/$artist/artist.index"
+
+				# build the sql database entries
+				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "music"
+				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "artists"
+				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "all"
+
 				# add artist to the main music index
 				touchFile "$webDirectory/music/music.index"
 				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/music/music.index"
@@ -464,6 +470,11 @@ processTrack(){
 					echo "	</div>"
 					echo "</a>"
 				} > "$webDirectory/music/$artist/$album/album.index"
+
+				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "albums"
+				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "music"
+				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "all"
+
 				# add album to the artist index
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/music/$artist/albums.index"
 
@@ -524,6 +535,9 @@ processTrack(){
 			if [ "$genre" != "" ];then
 				linkFile "$webDirectory/music/$artist/genre.cfg" "$webDirectory/music/$artist/$album/${track}_genre.cfg"
 			fi
+
+			SQLaddToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/data.db" "tracks"
+			SQLaddToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/data.db" "all"
 
 			# add track to album track index
 			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/music/$artist/$album/tracks.index"
@@ -798,6 +812,10 @@ function nuke(){
 	# remove the kodi and web music files
 	rm -rv $(webRoot)/music/* || echo "No files found in music web directory..."
 	rm -rv $(webRoot)/kodi/music/* || echo "No files found in kodi directory..."
+	# remove sql data
+	sqlite3 $(webRoot)/data.db "drop table music;"
+	sqlite3 $(webRoot)/data.db "drop table albums;"
+	sqlite3 $(webRoot)/data.db "drop table artists;"
 	# sum directory
 	rm -rv $(webRoot)/sums/* || echo "No file sums found in kodi directory..."
 	# new indexes

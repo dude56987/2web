@@ -246,7 +246,11 @@ include("settingsHeader.php");
 			echo "		weather2web Version: ".file_get_contents("/usr/share/2web/version_weather2web.cfg");
 			echo "	</div>";
 		}
-
+		if (file_exists("/usr/share/2web/version_wiki2web.cfg")){
+			echo "	<div>";
+			echo "		wiki2web Version: ".file_get_contents("/usr/share/2web/version_wiki2web.cfg");
+			echo "	</div>";
+		}
 		echo "</div>";
 	}
 ?>

@@ -244,6 +244,7 @@ build-deb: upgrade-hls
 	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1.gz
 	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
 	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1.gz
+	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1.gz
 	# build the web versions of the man pages
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
 	pandoc help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
@@ -252,6 +253,7 @@ build-deb: upgrade-hls
 	pandoc help/man_weather2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/weather2web.html
 	pandoc help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
 	pandoc help/man_music2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/music2web.html
+	pandoc help/man_graph2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/graph2web.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
@@ -260,6 +262,7 @@ build-deb: upgrade-hls
 	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	w3m debian/usr/share/2web/help/music2web.html > debian/usr/share/2web/help/music2web.txt
+	w3m debian/usr/share/2web/help/graph2web.html > debian/usr/share/2web/help/graph2web.txt
 	# build the readme
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
@@ -293,10 +296,10 @@ build-deb: upgrade-hls
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over apache configs
-	cp -v apacheConf/0-2web-ports.conf debian/etc/apache2/conf-available/
-	cp -v apacheConf/0-2web-website.conf debian/etc/apache2/sites-available/
-	cp -v apacheConf/0-2web-website-SSL.conf debian/etc/apache2/sites-available/
-	cp -v apacheConf/0-2web-website-compat.conf debian/etc/apache2/sites-available/
+	cp -v apacheConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
+	cp -v apacheConf/0000-2web-website.conf debian/etc/apache2/sites-available/
+	cp -v apacheConf/0000-2web-website-SSL.conf debian/etc/apache2/sites-available/
+	cp -v apacheConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
 	# copy over the zeroconf configs to anounce the service
 	cp -v apacheConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
 	cp -v apacheConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
@@ -330,6 +333,8 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ graph2web.sh" | wc -l >> debian/usr/share/2web/version_graph2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_ytdl2nfo.cfg
 	/usr/bin/git log --stat | grep "^ ytdl2nfo.sh" | wc -l >> debian/usr/share/2web/version_ytdl2nfo.cfg
+	echo -n "#" > debian/usr/share/2web/version_wiki2web.cfg
+	/usr/bin/git log --stat | grep "^ wiki2web.sh" | wc -l >> debian/usr/share/2web/version_wiki2web.cfg
 	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg

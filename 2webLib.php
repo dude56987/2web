@@ -727,9 +727,9 @@ if( ! function_exists("drawPlaylistButton")){
 			# check the file has more than 2 entries
 			if (count(file("$filterName.index")) > 2){
 				if ($activeFilter == $filterName){
-					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 				}else{
-					echo "<a class='button' href='?filter=$filterName'>$buttonText</a>\n";
+					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
 				}
 			}
 		}

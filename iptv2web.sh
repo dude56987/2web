@@ -98,9 +98,9 @@ examineIconLink(){
 	iconLength=$(echo -n "$iconLink" | wc -c)
 	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 	INFO "Icon Sum=$sum"
-	localIconPath="$(webRoot)/live/$sum.png"
-	localIconThumbPath="$(webRoot)/live/$sum-thumb.png"
-	localIconThumbMiniPath="$(webRoot)/live/$sum-thumb-mini.png"
+	localIconPath="$(webRoot)/live/icons/$sum.png"
+	localIconThumbPath="$(webRoot)/live/thumbs/$sum-thumb.png"
+	localIconThumbMiniPath="$(webRoot)/live/thumbs/$sum-thumb-mini.png"
 
 	# if the file exists and is not older than 10 days
 	if cacheCheck "$localIconPath" "20";then
@@ -345,7 +345,7 @@ function process_M3U(){
 
 				INFO "Writing channel $title info to disk..."
 				# Write the new version of the lines to the outputFile
-				webIconPath="http://$(hostname).local:444/live/$iconSum.png"
+				webIconPath="http://$(hostname).local:444/live/icons/$iconSum.png"
 				# write the raw channel file
 				{
 					echo "$lineCaught"
@@ -500,8 +500,8 @@ function processLink(){
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
 				ERROR "[DEBUG]: SUM = $sum"
-				webIconPath="http://$(hostname).local:444/live/$sum.png"
-				webIconPathHD="http://$(hostname).local:444/live/$sumHD.png"
+				webIconPath="http://$(hostname).local:444/live/icons/$sum.png"
+				webIconPathHD="http://$(hostname).local:444/live/icons/$sumHD.png"
 				#webIconPath="$sum.png"
 				# check if this link is a radio link
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
@@ -571,6 +571,10 @@ fullUpdate(){
 
 	webDirectory=$(webRoot)
 	createDir "$webDirectory/live/"
+	createDir "$webDirectory/live/thumbs/"
+	createDir "$webDirectory/live/icons/"
+	createDir "$webDirectory/live/channels/"
+	createDir "$webDirectory/live/index/"
 
 	# link the live index
 	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
@@ -927,7 +931,7 @@ webGen(){
 				title=$(echo "$lineCaught" | cut -d',' -f2)
 				link=$(echo -n "$line" | grep ".")
 				iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-				iconLink="$iconSum.png"
+				iconLink="icons/$iconSum.png"
 				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 				# check for group title
 				groupTitle=$(getTVG "$lineCaught" "group-title")
@@ -1051,8 +1055,8 @@ webGen(){
 				################################################################################
 				# pull the link on this line and store it
 				################################################################################
-				iconThumbLink="$iconSum-thumb.png"
-				iconThumbMiniLink="$iconSum-thumb-mini.png"
+				iconThumbLink="thumbs/$iconSum-thumb.png"
+				iconThumbMiniLink="thumbs/$iconSum-thumb-mini.png"
 				iconLength=$(echo "$iconLink" | wc -c)
 				################################################################################
 				# build the .index files for the php index page to render correctly
