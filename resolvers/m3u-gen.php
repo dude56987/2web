@@ -68,16 +68,22 @@ function recursiveScan($directoryPath){
 	$finalFoundLinks = Array();
 	# for each found directory list
 	foreach( $foundPaths as $foundPath){
+		# create the full directory path
 		$fullDirPath = $directoryPath.$foundPath."/";
+
+		# try to fix the full found path
 		if (is_dir($fullDirPath)){
 			$fullFoundPath = $fullDirPath;
 		}else{
 			$fullFoundPath = $directoryPath.$foundPath;
 		}
-		# if it is a directory add / at the end
+
+		# Check if recursion is needed to find search directory
 		if (is_dir($fullFoundPath)){
-			$finalFoundLinks = recursiveScan($fullFoundPath);
+			# add the results of the recursive scan to the output
+			$finalFoundLinks = array_merge($finalFoundLinks, recursiveScan($fullFoundPath));
 		}else{
+			# if a file add the file to the return value
 			$finalFoundLinks = array_merge($finalFoundLinks, Array($fullFoundPath));
 		}
 	}
@@ -144,14 +150,15 @@ function m3u_gen($section,$title){
 
 		$foundFiles = recursiveScan($showPath);
 
-		var_dump($foundFile);
+		#var_dump($foundFiles);
 
 		foreach ($foundFiles as $filePath){
 			# cleanup the scan data by removing the site root path, from the file before adding it to the m3u
 			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
 
 			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
-				$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
+				#$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
+				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
 				$tempDataEntry = $tempDataEntry."..$filePath\n";
 				array_push($totalFileList,$tempDataEntry);
 			}
