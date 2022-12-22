@@ -19,7 +19,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalChannels.index")){
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
 		// get a list of all the genetrated index links for the page
-		$sourceFiles = explode("\n",shell_exec("ls -rt1 ".$_SERVER['DOCUMENT_ROOT']."/live/channel_*.index"));
+		$sourceFiles = explode("\n",shell_exec("ls -rt1 ".$_SERVER['DOCUMENT_ROOT']."/live/index/channel_*.index"));
 		// reverse the time sort
 		$sourceFiles = array_reverse($sourceFiles);
 		$counter=0;

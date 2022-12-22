@@ -50,16 +50,16 @@ if(is_dir("/var/cache/2web/web/live/groups/")){
 <?php
 if(file_exists("channels.m3u")){
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",file_get_contents("channels.m3u"));
+	$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/live/channels.m3u"));
 	// reverse the time sort
 	//$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){
 		if ( ! strpos($sourceFile,"#EXTINF")){
 			$sourceFileName = md5($sourceFile);
-			if (file_exists("channel_".$sourceFileName.".index")){
-				if (is_file("channel_".$sourceFileName.".index")){
+			if (file_exists($_SERVER['DOCUMENT_ROOT']."/live/index/channel_".$sourceFileName.".index")){
+				if (is_file($_SERVER['DOCUMENT_ROOT']."/live/index/channel_".$sourceFileName.".index")){
 					// read the index entry
-					$data=file_get_contents("channel_".$sourceFileName.".index");
+					$data=file_get_contents($_SERVER['DOCUMENT_ROOT']."/live/index/channel_".$sourceFileName.".index");
 					// write the index entry
 					echo "$data";
 					flush();
@@ -70,7 +70,7 @@ if(file_exists("channels.m3u")){
 	}
 }else{
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/nfo2web/web/live/channel_*.index | sort"));
+	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/live/index/channel_*.index | sort"));
 	// reverse the time sort
 	$sourceFiles = array_reverse($sourceFiles);
 	foreach($sourceFiles as $sourceFile){

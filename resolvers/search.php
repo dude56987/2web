@@ -103,6 +103,40 @@ function searchAllWiki($wikiPath){
 	}
 }
 ################################################################################
+function searchChannels(){
+	$output = "";
+	$foundData = false;
+	# search though the article files for the search term
+	$foundFiles = scan_dir($_SERVER['DOCUMENT_ROOT']."/live/index/");
+	#
+	if ($foundFiles){
+		foreach($foundFiles as $foundFile){
+			# open the .index file and search inside it
+			$serverPath=$_SERVER['DOCUMENT_ROOT']."/live/index/";
+			#
+			$foundFileData=file_get_contents($serverPath.$foundFile);
+			#
+			if (stripos($foundFileData,$_GET['q'])){
+				$foundData = true;
+				# check each filename for the search term
+				$tempOutput = "";
+				$tempOutput .= $foundFileData;
+
+				$output .= $tempOutput;
+
+				echo $tempOutput;
+				flush();
+				ob_flush();
+			}
+		}
+	}
+	if ($foundData){
+		return array(true,$output);
+	}else{
+		return array(false,$output);
+	}
+}
+################################################################################
 function searchWiki($wikiPath){
 	$output = "";
 	$foundData = false;
@@ -263,6 +297,9 @@ if (array_key_exists("q",$_GET)){
 				ob_flush();
 			}
 		}
+		# search all the live channel names
+		$channelResults=searchChannels();
+
 		# search all the wikis
 		$wikiSearchResults = searchAllWiki($_GET['q']);
 		#if ($wikiSearchResults[0]){
@@ -273,10 +310,10 @@ if (array_key_exists("q",$_GET)){
 		#flush();
 		#ob_flush();
 
-		if ($foundResults || ($wikiSearchResults[0] == true)){
+		if ($foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) ){
 			#echo $totalOutput;
 			#echo $wikiSearchResults[1];
-			file_put_contents($searchCacheFilePath,($totalOutput.$wikiSearchResults[1]));
+			file_put_contents($searchCacheFilePath,($totalOutput.$wikiSearchResults[1].$channelResults[1]));
 		}else{
 			echo "<h1>No Search Results for '$searchQuery'</h1>";
 			file_put_contents($searchCacheFilePath,("<h1>No Search Results for '$searchQuery'</h1>"));

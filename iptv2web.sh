@@ -332,7 +332,7 @@ function process_M3U(){
 					mkdir -p "$webDirectory/live/groups/$group/"
 					if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
 						# link index files in group directories
-						linkFile "$webDirectory/live/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
+						linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
 					fi
 					addChannel=true
 				fi
@@ -465,8 +465,8 @@ function processLink(){
 			if streamPass --can-handle-url "$link";then
 				INFO "Link can be processed by streamlink..."
 				# determine the local hostname, use it to build the resolver path
-				hostPath='http://'$(hostname)'.local:444/live/iptv-resolver.php?url="'$link'"'
-				hostPathHD='http://'$(hostname)'.local:444/live/iptv-resolver.php?HD="true"&url="'$link'"'
+				hostPath='http://'$(hostname)'.local/live/iptv-resolver.php?url="'$link'"'
+				hostPathHD='http://'$(hostname)'.local/live/iptv-resolver.php?HD="true"&url="'$link'"'
 				#hostPath='iptv-resolver.php?url="'$link'"'
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
@@ -774,12 +774,12 @@ function buildGroupPages(){
 				echo "<html id='top' class='liveBackground'>"
 				echo "<head>"
 				echo "<title></title>"
-				echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
+				echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"
 				echo "	<script src='/2web.js'></script>"
 				echo "</head>"
 				echo "<body>"
 				echo "<?PHP";
-				echo "include('../../../header.php')";
+				echo "include('/var/cache/2web/web/header.php')";
 				echo "?>";
 				echo " <input id='searchBox' class='searchBox' type='text'"
 				echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
@@ -805,7 +805,7 @@ function buildGroupPages(){
 			done
 			{
 				echo "<?PHP";
-				echo "include('../../../footer.php')";
+				echo "include('/var/cache/2web/web/footer.php')";
 				echo "?>";
 				#echo "$headerData"
 				echo "</body>"
@@ -946,14 +946,14 @@ webGen(){
 					# build the page
 					echo "<html onload='forcePlay()'  id='top' class='liveBackground'>"
 					echo "<head>"
-					echo "	<link rel='stylesheet' type='text/css' href='style.css'>"
+					echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"
 					echo " <title>$title</title>"
 					echo "	<script src='/2web.js'></script>"
 					echo "</head>"
 					echo "<body>"
 					# place the header
 					echo "<?PHP";
-					echo "include('../header.php')";
+					echo "include('/var/cache/2web/web/header.php')";
 					echo "?>";
 
 					echo "<br>"
@@ -1019,7 +1019,7 @@ webGen(){
 					echo "	<div class='channelList'>"
 					# create the line that will be replaced by the link list to all the channels
 					echo "		<?PHP";
-					echo "			include('channelList.php')";
+					echo "			include('/var/cache/2web/web/live/channelList.php')";
 					echo "		?>";
 					echo "	</div>"
 
@@ -1029,7 +1029,7 @@ webGen(){
 
 					echo "<br>"
 					echo "<div class='descriptionCard'>"
-					echo "	<a class='channelLink' href='channel_$channelNumber.php#$channelNumber'>"
+					echo "	<a class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 					echo "		$title"
 					echo "	</a>"
 					echo "	<a class='button hardLink' href='$link'>"
@@ -1044,14 +1044,14 @@ webGen(){
 					echo "</div>"
 					# add footer
 					echo "<?PHP";
-					echo "include('../randomChannels.php');";
-					echo "include('../footer.php');";
+					echo "include('/var/cache/2web/web/randomChannels.php');";
+					echo "include('/var/cache/2web/web/footer.php');";
 					echo "?>";
 					# add space for jump button when scrolled all the way down
 					echo "<hr class='topButtonSpace'>"
 					echo "</body>"
 					echo "</html>"
-				} > "$webDirectory/live/channel_$channelNumber.php"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php"
 				################################################################################
 				# pull the link on this line and store it
 				################################################################################
@@ -1064,7 +1064,7 @@ webGen(){
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
 					{
 						# build icon to link to the channel
-						echo -e "<a class='indexLink button radio' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "<a class='indexLink button radio' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
 						echo -e "\t<div class='indexTitle'>"
 						echo -e "\t\t$title"
@@ -1074,11 +1074,11 @@ webGen(){
 						echo -e "\t</div>"
 						echo -e "</a>"
 						# store data in index files in order to allow stats to be created
-					} > "$webDirectory/live/channel_$channelNumber.index"
+					} > "$webDirectory/live/index/channel_$channelNumber.index"
 				else
 					{
 						# build icon to link to the channel
-						echo -e "<a class='indexLink button tv' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "<a class='indexLink button tv' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
 						echo -e "\t<div class='indexTitle'>"
 						echo -e "\t\t$title"
@@ -1087,7 +1087,7 @@ webGen(){
 						echo -e "\t</div>"
 						echo -e "\t</div>"
 						echo -e "</a>"
-					} > "$webDirectory/live/channel_$channelNumber.index"
+					} > "$webDirectory/live/index/channel_$channelNumber.index"
 				fi
 				################################################################################
 				# add links to channel list, this is for the channel list used on individual pages
@@ -1096,7 +1096,7 @@ webGen(){
 					# if the link is a radio station
 					{
 						#echo -e "<div id='$channelNumber'>"
-						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"
@@ -1108,7 +1108,7 @@ webGen(){
 				else
 					{
 						#echo -e "<div id='$channelNumber'>"
-						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<a id='$channelNumber' class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 						echo -e "\t\t<img loading='lazy' class='channelIcon' src='/live/$iconThumbMiniLink'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"

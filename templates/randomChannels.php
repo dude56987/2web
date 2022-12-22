@@ -17,7 +17,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalChannels.index")){
 	if ($writeFile){
 		$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 		// get a list of all the genetrated index links for the page
-		$sourceFiles = explode("\n",shell_exec("ls -t1 ".$_SERVER['DOCUMENT_ROOT']."/live/channel_*.index | shuf"));
+		$sourceFiles = explode("\n",shell_exec("ls -t1 ".$_SERVER['DOCUMENT_ROOT']."/live/index/channel_*.index | shuf"));
 		$counter=0;
 		foreach($sourceFiles as $sourceFile){
 			$sourceFileName = $sourceFile;
