@@ -99,6 +99,7 @@ function m3u_gen($section,$title){
 	$showTitle = $title;
 	$showTitle = str_replace('"','',$showTitle);
 
+
 	if($section == 'shows'){
 		$showPath = "$rootPath/shows/$showTitle/";
 	}else if($section == 'artist'){
@@ -131,8 +132,13 @@ function m3u_gen($section,$title){
 			$cacheSum = md5($showTitle);
 		}
 	}else{
-		// cache sum
-		$cacheSum = md5($showTitle);
+		if (array_key_exists("playAt",$_GET)){
+			# the sum should be unique for each playAt argument
+			$cacheSum = md5($_GET['playAt'].$showTitle);
+		}else{
+			// cache sum
+			$cacheSum = md5($showTitle);
+		}
 	}
 
 	$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
@@ -164,14 +170,40 @@ function m3u_gen($section,$title){
 			}
 		}
 	}
+
+	#var_dump($totalFileList);
+	# check for playAt and concat array
+	#if (array_key_exists("playAt",$_GET)){
+	#	# if the playAt is set start the playlist at this discovered file cut the file paths array at that filename
+	#	$searchResults=array_search($_GET["playAt"], array_keys($totalFileList));
+	#	var_dump($searchResults);
+	#	if($searchResults != false){
+	#		$totalFileList = array_slice($totalFileList,$searchResults);
+	#	}
+	#}
+
 	if (array_key_exists("sort",$_GET)){
 		if ($_GET['sort'] == 'random'){
 			# randomize the list before writing it to the file
 			shuffle($totalFileList);
 		}
 	}
-	foreach ($totalFileList as $tempLineData){
-		fwrite($data, $tempLineData);
+	if (array_key_exists("playAt",$_GET)){
+		$playAtFound=False;
+		# write playlist lines only after playAt entry is found
+		foreach ($totalFileList as $tempLineData){
+			if (stripos($tempLineData,$_GET['playAt'])){
+				$playAtFound=true;
+			}
+			if ($playAtFound){
+				fwrite($data, $tempLineData);
+			}
+		}
+	}else{
+		# write all lines of the playlist
+		foreach ($totalFileList as $tempLineData){
+			fwrite($data, $tempLineData);
+		}
 	}
 	// close the file
 	fclose($data);

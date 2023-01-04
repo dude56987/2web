@@ -627,7 +627,9 @@ processMovie(){
 					echo "🔗Direct Link"
 					echo "</a>"
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/movies/$movieWebPath/$movieWebPath$sufix'>\";"
+					tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
+					tempMoviePath=$(echo "$tempMoviePath" | sed"s/ /%20/g")
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempMoviePath'>\";"
 					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
@@ -1181,9 +1183,9 @@ processEpisode(){
 				# redirect mkv files to the transcoder to cache the video file for the webplayer
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then
 					fullRedirect="/transcode.php?link=\"$videoPath\""
-					#echo "<source src='$fullRedirect' type='video/mp4'>"
+					echo "<source src='$fullRedirect' type='video/mp4'>"
 					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
-					echo "<source src='$videoPath' type='$mimeType'>"
+					#echo "<source src='$videoPath' type='$mimeType'>"
 				else
 					echo "<source src='$videoPath' type='$mimeType'>"
 				fi
@@ -1211,9 +1213,35 @@ processEpisode(){
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
-					echo "<a class='button hardLink vlcButton' href='vlc://http://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+					# build the vlc direct link
+					#tempEpisodePath="vlc://http://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
+
+
+					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+					epNum="s${episodeSeason}e${episodeNumber}"
+
+					# replace blank spaces since it will break vlc:// links
+					tempEpisodePath=$(echo "$tempEpisodePath" | sed "s/ /%20/g")
+
+					echo "<?PHP";
+					echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
+					echo "?>"
+					echo "	🔗Play All"
+					echo "</a>"
+
+					echo "<?PHP";
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempEpisodePath'>\";"
+					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
+
+
+					echo "<?PHP";
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
+					echo "?>"
+					echo "<span id='vlcIcon'>&#9650;</span> VLC Play All"
+					echo "</a>"
+
 				fi
 
 				echo "<div class='aired'>"
