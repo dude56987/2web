@@ -262,6 +262,10 @@ if (array_key_exists("q",$_GET)){
 	echo "<div class='settingListCard'>";
 	echo "<h1>Searching  for '$searchQuery'</h1>";
 
+	# draw the top of the search results to prevent long searches from timing out
+	flush();
+	ob_flush();
+
 	$foundResults=false;
 
 	$indexPaths=Array();
@@ -307,8 +311,8 @@ if (array_key_exists("q",$_GET)){
 		#}
 
 		#echo $wikiSearchResults[1];
-		#flush();
-		#ob_flush();
+		flush();
+		ob_flush();
 
 		if ($foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) ){
 			#echo $totalOutput;
