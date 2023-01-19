@@ -316,7 +316,7 @@ function update(){
 								tempColor="rgba(15,15,255,0.5)"
 							elif echo "$tempForcast" | grep -q "mid 30s";then
 								tempTemp="35"
-								"rgba(16,16,255,0.5)"
+								tempColor="rgba(16,16,255,0.5)"
 							elif echo "$tempForcast" | grep -q "upper 30s";then
 								tempTemp="38"
 								tempColor="rgba(17,17,255,0.5)"
@@ -460,6 +460,9 @@ function update(){
 								elif echo "$timeOfForcast" | grep -q --ignore-case "INDEPENDENCE";then
 									echo -n "	<h3>INDEPENDENCE<br>DAY"
 									echo -n "🎆";
+								elif echo "$timeOfForcast" | grep -q --ignore-case "NEW YEARS DAY";then
+									echo -n "	<h3>NEW YEARS<br>DAY"
+									echo -n "🍎";
 								else
 									echo -n "	<h3>$timeOfForcast"
 									echo -n "🌞";
