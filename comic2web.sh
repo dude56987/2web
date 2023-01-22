@@ -1294,6 +1294,7 @@ function nuke(){
 	rm -rv $(webRoot)/comics/*
 	rm -rv $(webRoot)/new/comics.index
 	rm -rv $(webRoot)/random/comics.index
+	rm -rv $(webRoot)/sums/comic2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 $(webRoot)/data.db "drop table comics;"
 	# remove widgets cached

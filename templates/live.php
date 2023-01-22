@@ -21,21 +21,27 @@ include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
 
 <?php
 // find all the groups
-if(is_dir("/var/cache/2web/web/live/groups/")){
-	echo "<div class='titleCard'>";
-	echo "<h1>Groups</h1>";
-	echo "<div class='listCard'>";
-	$sourceFiles=scandir("/var/cache/2web/web/live/groups/");
-	$sourceFiles=array_diff($sourceFiles,array('..','.'));
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		# read the directory name
-		echo "	<a class='button tag' href='/live/groups/$sourceFile/'>";
-		echo "		$sourceFile";
-		echo "	</a>";
-	}
-	echo "</div>";
+echo "<div class='titleCard'>\n";
+echo "<h1>Groups</h1>\n";
+echo "<div class='listCard'>\n";
+echo "	<a id='all' class='button tag' href='/live/#all'>\n";
+echo "		All\n";
+echo "	</a>\n";
+# load database
+$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/live/groups.db");
+# set the timeout to 1 minute since most webbrowsers timeout loading before this
+$databaseObj->busyTimeout(60000);
+# run query to get the table names
+$result = $databaseObj->query("select name from sqlite_master where type='table' order by name ASC;");
+# fetch each row data individually and display results
+while($row = $result->fetchArray()){
+	$cleanName=str_replace("_","",$row['name']);
+	# read the directory name
+	echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
+	echo "		".$cleanName."\n";
+	echo "	</a>\n";
 }
+echo "</div>\n";
 ?>
 	<hr>
 	<div class="filterButtonBox">
@@ -48,7 +54,27 @@ if(is_dir("/var/cache/2web/web/live/groups/")){
 
 <div class='settingListCard'>
 <?php
-if(file_exists("channels.m3u")){
+if (array_key_exists("filter",$_GET)){
+	$filterType=$_GET['filter'];
+	# draw the header to identify the filter applied
+	echo "<h2>$filterType</h2>";
+
+	$result = $databaseObj->query('select * from "_'.$filterType.'";');
+
+	# fetch each row data individually and display results
+	while($row = $result->fetchArray()){
+		$sourceFile = $row['title'];
+		//echo $sourceFile;
+		if (file_exists($sourceFile)){
+			// read the index entry
+			$data=file_get_contents($sourceFile);
+			// write the index entry
+			echo "$data";
+			flush();
+			ob_flush();
+		}
+	}
+}else if(file_exists("channels.m3u")){
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/live/channels.m3u"));
 	// reverse the time sort

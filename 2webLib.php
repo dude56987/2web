@@ -633,14 +633,23 @@ if( ! function_exists("drawServicesWidget")){
 		}
 		// draw services widget
 		echo "<div class='titleCard'>";
-		echo "<h2>Additional Server Services</h2>";
+		echo "<h2>Server Services</h2>";
 		echo "<div class='listCard'>";
 
 		foreach(availableServicesArray() as $serviceData){
 			if (checkPort($serviceData[1])){
-				echo "			<a class='showPageEpisode' target='_BLANK' href='http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]'>";
+				$serviceLink="http://".$_SERVER['SERVER_ADDR'].":".$serviceData[1];
+				$qrSum=md5($serviceLink);
+				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+					# set qr code to be generated
+					file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+				}
+				#draw link
+				echo "			<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>";
+				if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
+					echo "				<img src='/thumbnails/$qrSum-qr.png' />";
+				}
 				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
-				#echo "				http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]";
 				echo "				$serviceData[2]";
 				echo "			</a>";
 			}
@@ -648,7 +657,16 @@ if( ! function_exists("drawServicesWidget")){
 
 		foreach(availablePathServicesArray() as $serviceData){
 			if (checkServerPath($serviceData[1])){
-				echo "			<a class='showPageEpisode' target='_BLANK' href='http://".$_SERVER['SERVER_ADDR']."$serviceData[1]'>";
+				$serviceLink="http://".$_SERVER['SERVER_ADDR'].$serviceData[1];
+				$qrSum=md5($serviceLink);
+				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+					# set qr code to be generated
+					file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+				}
+				echo "			<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>";
+				if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
+					echo "				<img src='/thumbnails/$qrSum-qr.png' />";
+				}
 				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
 				echo "				$serviceData[2]";
 				echo "			</a>";
@@ -726,6 +744,33 @@ if( ! function_exists("drawPlaylistButton")){
 		if (file_exists($filterName.".index")){
 			# check the file has more than 2 entries
 			if (count(file("$filterName.index")) > 2){
+				if ($activeFilter == $filterName){
+					echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+				}else{
+					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+				}
+			}
+		}
+	}
+}
+################################################################################
+if( ! function_exists("SQLdrawPlaylistButton")){
+	function SQLdrawPlaylistButton($activeFilter,$filterName,$buttonText){
+		if (file_exists($_SERVER['DOCUMENT_ROOT']."/data.db")){
+			# load database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(60000);
+			# get the list of tables in the sql database
+			$result = $databaseObj->query("select name from sqlite_master where type='table';");
+			$dataResults=Array();
+			# check if the table exists in the sql database
+			while($row = $result->fetchArray()){
+				# add each row to the array
+				array_push($dataResults,$row['name']);
+			}
+			if (in_array("_".$filterName, $dataResults)){
+				# if the button is the active filter change the css
 				if ($activeFilter == $filterName){
 					echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 				}else{

@@ -33,8 +33,9 @@ if (file_exists("artist.cfg")){
 ?>
 <div class='titleCard'>
 	<?php
+	$albumTitle=file_get_contents("album.cfg");
 	if (file_exists("album.cfg")){
-		echo "<h1>".file_get_contents("album.cfg")."</h1>";
+		echo "<h1>".$albumTitle."</h1>";
 	}
 	?>
 	<img class='albumPlayerThumb' src='album.png' />
@@ -76,6 +77,34 @@ if (file_exists("artist.cfg")){
 				}
 			}
 			?>
+	</div>
+	<div class='listCard'>
+
+		<?PHP
+		echo "<a class='button' href='/m3u-gen.php?artist=\"$artist/$albumTitle\"'>";
+		?>
+			▶️ Play All<sup>(External)<sup>
+		</a>
+
+		<?PHP
+		echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"'>";
+		?>
+			<span id='vlcIcon'>&#9650;</span> VLC
+			Play All<sup>(External)<sup>
+		</a>
+
+		<?PHP
+		echo "<a class='button' href='/m3u-gen.php?artist=\"$artist/$albumTitle\"&sort=random'>";
+		?>
+			▶️ Play Random<sup>(External)<sup>
+		</a>
+
+		<?PHP
+		echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"&sort=random'>";
+		?>
+			<span id='vlcIcon'>&#9650;</span> VLC
+			Play Random<sup>(External)<sup>
+		</a>
 	</div>
 </div>
 

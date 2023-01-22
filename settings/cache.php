@@ -34,8 +34,8 @@ include("settingsHeader.php");
 		<select name='cacheQuality'>
 			<?php
 				// add the cache quality as a option
-				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheQuality.cfg")){
-					$cacheQuality = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheQuality.cfg');
+				if(file_exists("/etc/2web/cache/cacheQuality.cfg")){
+					$cacheQuality = file_get_contents('/etc/2web/cache/cacheQuality.cfg');
 					echo "<option selected value='".$cacheQuality."'>$cacheQuality</option>";
 				}
 			?>
@@ -70,8 +70,8 @@ include("settingsHeader.php");
 		<select name='cacheUpgradeQuality'>
 			<?php
 				// add the cache quality as a option
-				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg")){
-					$cacheUpgradeQuality = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheUpgradeQuality.cfg');
+				if(file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
+					$cacheUpgradeQuality = file_get_contents('/etc/2web/cache/cacheUpgradeQuality.cfg');
 					echo "<option selected value='".$cacheQuality."'>$cacheUpgradeQuality</option>";
 				}
 			?>
@@ -98,8 +98,8 @@ include("settingsHeader.php");
 		<select name='cacheResize'>
 			<?php
 				// add the cache Mode as a option
-				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg")){
-					$cacheResize= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheResize.cfg');
+				if(file_exists("/etc/2web/cache/cacheResize.cfg")){
+					$cacheResize= file_get_contents('/etc/2web/cache/cacheResize.cfg');
 					echo "<option selected value='".$cacheResize."'>$cacheResize</option>";
 				}
 			?>
@@ -125,8 +125,8 @@ include("settingsHeader.php");
 		<select name='cacheFramerate'>
 			<?php
 				// add the cache Mode as a option
-				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg")){
-					$cacheFramerate= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheFramerate.cfg');
+				if(file_exists("/etc/2web/cache/cacheFramerate.cfg")){
+					$cacheFramerate= file_get_contents('/etc/2web/cache/cacheFramerate.cfg');
 					echo "<option selected value='$cacheFramerate'>$cacheFramerate FPS</option>";
 				}
 			?>
@@ -152,8 +152,8 @@ include("settingsHeader.php");
 		<select name='cacheDelay'>
 		<?php
 				// add the cache Mode as a option
-				if(file_exists($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg")){
-					$cacheDelay= file_get_contents($_SERVER['DOCUMENT_ROOT'].'/cacheDelay.cfg');
+				if(file_exists("/etc/2web/cache/cacheDelay.cfg")){
+					$cacheDelay= file_get_contents('/etc/2web/cache/cacheDelay.cfg');
 					echo "<option selected value='$cacheDelay'>$cacheDelay Days</option>";
 				}
 		?>

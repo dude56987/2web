@@ -56,7 +56,15 @@ OPTIONS
 
 `-u, --update, update`
 
-:   Update all 2web components.
+:   Update all nfo libaries.
+
+`--parallel`
+
+:   Run update using half of the cores in the cpu.
+
+`--fullspeed`
+
+:   When used with parallel will use all cores for update processing. This may cause intruptions to the hosted services on 2web.
 
 `-r, --reset, reset`
 
@@ -65,6 +73,10 @@ OPTIONS
 `--clean, clean`
 
 :   Clean the generated website of broken media. If you delete media from the source drive and it still exists run this to clean it up immediately. This operation runs automatically once every 10 days since it scans the entire database.
+
+`--thumbnail-clean, thumbnail-clean`
+
+:   Delete all downloaded thumbnails. This can break the website image links if ran in isolation.
 
 `-w, --webgen, webgen`
 

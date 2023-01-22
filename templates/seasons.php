@@ -87,7 +87,9 @@ echo "<h2 class=''>";
 echo "Plot";
 echo "</h2>";
 if (file_exists($activeDir."/poster.png")){
+	echo "<a href='poster.png'>";
 	echo "<img class='right' src='poster-web.png'>";
+	echo "</a>";
 }
 echo file_get_contents($activeDir."/plot.cfg");
 echo "</div>";

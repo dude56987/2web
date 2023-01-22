@@ -270,7 +270,7 @@ if (array_key_exists("newUserName",$_POST)){
 	# change the default cache quality
 	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
 	# write the config file
-	file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheQuality.cfg",$cacheQuality);
+	file_put_contents("/etc/2web/cache/cacheQuality.cfg",$cacheQuality);
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheQuality'>BACK</a><hr>";
 	clear();
@@ -280,9 +280,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache upgrade quality to '".$cacheUpgradeQuality."'<br>\n";
 	# write the config file
 	if ($cacheUpgradeQuality == 'no_upgrade'){
-		unlink($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg");
+		unlink("/etc/2web/cache/cacheUpgradeQuality.cfg");
 	}else{
-		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
+		file_put_contents("/etc/2web/cache/cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
@@ -293,9 +293,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache mode to '".$cacheFramerate."'<br>\n";
 	# write the config file
 	if ($cacheFramerate == ''){
-		unlink($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg");
+		unlink("/etc/2web/cache/cacheFramerate.cfg");
 	}else{
-		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheFramerate.cfg",$cacheFramerate);
+		file_put_contents("/etc/2web/cache/cacheFramerate.cfg",$cacheFramerate);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheFramerate'>BACK</a><hr>";
@@ -306,9 +306,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache mode to '".$cacheResize."'<br>\n";
 	# write the config file
 	if ($cacheResize == ''){
-		unlink($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg");
+		unlink("/etc/2web/cache/cacheResize.cfg");
 	}else{
-		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheResize.cfg",$cacheResize);
+		file_put_contents("/etc/2web/cache/cacheResize.cfg",$cacheResize);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheResize'>BACK</a><hr>";
@@ -319,9 +319,9 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Changing cache delay to '".$cacheDelay."'<br>\n";
 	# write the config file
 	if ($cacheDelay == ''){
-		unlink($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg");
+		unlink("/etc/2web/cache/cacheDelay.cfg");
 	}else{
-		file_put_contents($_SERVER['DOCUMENT_ROOT']."/cacheDelay.cfg",$cacheDelay);
+		file_put_contents("/etc/2web/cache/cacheDelay.cfg",$cacheDelay);
 	}
 	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheDelay'>BACK</a><hr>";

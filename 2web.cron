@@ -34,21 +34,12 @@
 # update the comic books
 #@monthly root /usr/bin/niceload /usr/bin/comic2web > /var/log/2web_comic.log
 @monthly root /usr/bin/niceload /usr/bin/comic2web --parallel
-################################################################################
-# A parallel threaded option for comic2web
-# - disable the comic2web option without --parallel
-#@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel > /var/log/2web_comic.log
-#@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel
 
 ################################################################################
 # update the music
-#@monthly root /usr/bin/niceload /usr/bin/music2web > /var/log/2web_music.log
-@monthly root /usr/bin/niceload /usr/bin/music2web --parallel
-################################################################################
-# A parallel threaded option for music2web
-# - disable the music2web option without --parallel
-#@monthly root /usr/bin/niceload /usr/bin/music2web --parallel > /var/log/2web_music.log
-#@monthly root /usr/bin/niceload /usr/bin/music2web --parallel
+# - You can remove --parallel and processing will use only one thread
+#@daily root /usr/bin/niceload /usr/bin/music2web > /var/log/2web_music.log
+@daily root /usr/bin/niceload /usr/bin/music2web --parallel
 
 ################################################################################
 # update graph2web
@@ -66,17 +57,14 @@
 @hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
 
 ################################################################################
-# Upgrade Components of the Libary, and cleanup cache
-################################################################################
-# update the hls.js libary
-#@monthly root /usr/bin/niceload /usr/bin/iptv2web libary > /var/log/2web_iptv_libary.log
-@monthly root /usr/bin/niceload /usr/bin/iptv2web libary
-################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-#@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade > /var/log/2web_iptv_upgrade.log
-@daily root /usr/bin/niceload /usr/bin/iptv2web upgrade
+#@daily root /usr/bin/niceload /usr/bin/2web upgrade > /var/log/2web_upgrade.log
+@daily root /usr/bin/niceload /usr/bin/2web upgrade
+
 ################################################################################
-# clean resolver cache daily, remove cached files older than 7 days
+# Check once a day to see if the cache need cleaned, files are removed on a time delay
+#  set in '/etc/2web/cache/cacheDelay.cfg'. This delay can be changed in the web
+#  administrator interface.
 #@daily root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
 @daily root /usr/bin/niceload /usr/bin/2web cleancache
 #@reboot root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log

@@ -242,6 +242,8 @@ function searchWiki($wikiPath){
 <?PHP
 include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
+flush();
+ob_flush();
 ?>
 <!--
 <div class='titleCard'>
@@ -260,7 +262,10 @@ if (array_key_exists("q",$_GET)){
 	$querySum = md5($searchQuery);
 
 	echo "<div class='settingListCard'>";
-	echo "<h1>Searching  for '$searchQuery'</h1>";
+	echo "<h1>";
+	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "Searching  for '$searchQuery'";
+	echo "</h1>";
 
 	# draw the top of the search results to prevent long searches from timing out
 	flush();
@@ -337,6 +342,12 @@ if (array_key_exists("q",$_GET)){
 	formatEcho("</div>",1);
 
 	echo "</div>";
+
+	echo "<style>";
+	echo "	#spinner {";
+	echo "		display: none;";
+	echo "	}";
+	echo "</style>";
 
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

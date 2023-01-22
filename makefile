@@ -123,6 +123,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/var/cache/2web/cache;
 	mkdir -p debian/etc;
 	mkdir -p debian/etc/2web/;
+	mkdir -p debian/etc/2web/cache;
 	mkdir -p debian/etc/2web/themes;
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/config_default/;
@@ -166,6 +167,7 @@ build-deb: upgrade-hls
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
 	# make placeholder
 	#touch debian/etc/2web/search/sources.d/.placeholder
+	touch debian/etc/2web/cache/.placeholder
 	touch debian/etc/2web/wiki/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/usernameSources.d/.placeholder

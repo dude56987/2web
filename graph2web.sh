@@ -233,20 +233,6 @@ function resetCache(){
 	exit
 }
 ################################################################################
-function lockCheck(){
-	if test -f "/tmp/graph2web.active";then
-		# system is already running exit
-		echo "[INFO]: graph2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/graph2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/graph2web.active
-		# create a trap to remove graph2web lockfile
-		trap "rm /tmp/graph2web.active" EXIT
-	fi
-}
-################################################################################
 INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
@@ -300,17 +286,17 @@ function nuke(){
 main(){
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "graph2web"
-		lockCheck
+		lockProc "graph2web"
 		webUpdate
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "graph2web"
-		lockCheck
+		lockProc "graph2web"
 		update
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockCheck
+		lockProc "graph2web"
 		resetCache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockCheck
+		lockProc "graph2web"
 		# remove the kodi and web graph files
 		nuke
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
@@ -329,9 +315,9 @@ main(){
 		cat /usr/share/2web/version_graph2web.cfg
 	else
 		checkModStatus "graph2web"
-		lockCheck
-		update
-		webUpdate
+		lockProc "graph2web"
+		update $@
+		webUpdate $@
 		main --help
 		showServerLinks
 		echo "Module Links"

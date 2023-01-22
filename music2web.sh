@@ -25,24 +25,7 @@ function loadWithoutComments(){
 	return 0
 }
 ################################################################################
-linkFile(){
-	if ! test -L "$2";then
-		ln -sf "$1" "$2"
-		# DEBUG: log each linked file
-		#echo "ln -sf '$1' '$2'" >> /var/cache/2web/web/linkedFiles.log
-	fi
-}
-################################################################################
-createDir(){
-	if ! test -d "$1";then
-		mkdir -p "$1"
-		# set ownership of directory and subdirectories as www-data
-		chown -R www-data:www-data "$1"
-	fi
-	chown www-data:www-data "$1"
-}
-################################################################################
-touchFile(){
+function touchFile(){
 	if ! test -f "$1";then
 		touch "$1"
 		# set ownership of directory and subdirectories as www-data
@@ -50,21 +33,7 @@ touchFile(){
 	fi
 }
 ################################################################################
-getDirSum(){
-	line=$1
-	# check the libary sum against the existing one
-	totalList=$(find "$line" | sort)
-	# add the version to the sum to update old versions
-	# - Disk caching on linux should make this repetative file read
-	#   not destroy the hard drive
-	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
-	echo "$tempLibList"
-}
-################################################################################
-albumCheckDirSum(){
+function albumCheckDirSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
@@ -98,49 +67,8 @@ albumCheckDirSum(){
 		return 0
 	fi
 }
-################################################################################
-checkFileDataSum(){
-	# return true if the directory has been updated/changed
-	# store sums in $webdirectory/$sums
-	webDirectory=$1
-	filePath=$2
-	# check the sum of a directory and compare it to a previously stored sum
-	if ! test -d "$webDirectory/sums/";then
-		mkdir -p "$webDirectory/sums/"
-	fi
-	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
-	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
-	# check for a previous sum
-	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
-		# compare the sum of the old path with the new one
-		if [ "$oldSum" == "$newSum" ];then
-			# UNCHANGED
-			# if the sums are the same no change detected, pass false
-			return 1
-		else
-			# CHANGED
-			# the sums are diffrent, pass true
-			# update the sum
-			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
-			return 0
-		fi
-	else
-		# CHANGED
-		# no previous file was found, pass true
-		# update the sum
-		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
-		return 0
-	fi
-}
 ########################################################################
-ALERT(){
-	echo
-	echo "$1";
-	echo
-}
-########################################################################
-processTrack(){
+function processTrack(){
 	musicPath="$1"
 	totalProgressString="$2"
 	webDirectory=$(webRoot)
@@ -611,6 +539,8 @@ function update(){
 	#echo "_____________"
 	#echo "= $totalTracks"
 	#ALERT "CLI OPTIONS $@"
+	#echo "$musicSources" | sort | while read -r musicSource;do
+	# musicSources need to be shuffled since some music files crash the processing
 	echo "$musicSources" | shuf | while read -r musicSource;do
 		#ALERT "MUSIC SOURCE: $musicSource"
 		# scan inside the music source directories for mp3 files
@@ -699,7 +629,7 @@ function update(){
 	fi
 }
 ################################################################################
-cleanText(){
+function cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	if [ -f /usr/bin/inline-detox ];then
 		echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g" | tr -d '#'
@@ -708,7 +638,7 @@ cleanText(){
 	fi
 }
 ################################################################################
-getJson(){
+function getJson(){
 	# load the json string value
 	jsonData=$1
 	valueToGrab=$2
@@ -722,18 +652,18 @@ getJson(){
 	return 0
 }
 ################################################################################
-popPath(){
+function popPath(){
 	# pop the path name from the end of a absolute path
 	# e.g. popPath "/path/to/your/file/test.jpg"
 	echo "$1" | rev | cut -d'/' -f1 | rev
 }
 ################################################################################
-pickPath(){
+function pickPath(){
 	# pop a element from the end of the path, $2 is how far back in the path is pulled
 	echo "$1" | rev | cut -d'/' -f$2 | rev
 }
 ################################################################################
-webUpdate(){
+function webUpdate(){
 	webDirectory=$(webRoot)
 	#downloadDirectory="$(downloadDir)"
 
@@ -754,21 +684,7 @@ function resetCache(){
 	done
 }
 ################################################################################
-function lockCheck(){
-	if test -f "/tmp/music2web.active";then
-		# system is already running exit
-		echo "[INFO]: music2web is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '/tmp/music2web.active'."
-		exit
-	else
-		# set the active flag
-		touch /tmp/music2web.active
-		# create a trap to remove music2web lockfile
-		trap "rm /tmp/music2web.active" EXIT
-	fi
-}
-################################################################################
-INFO(){
+function INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -780,44 +696,16 @@ INFO(){
 	printf "$output\r"
 }
 ################################################################################
-function cacheCheck(){
-
-	filePath="$1"
-	cacheDays="$2"
-
-	fileName=$( echo "$filePath" | rev | cut -d'/' -f'1'| rev )
-	fileDir=$( echo "$filePath" | rev | cut -d'/' -f'2-'| rev )
-
-	# return true if cached needs updated
-	if test -f "$filePath";then
-		# check the file date
-		fileFound=$(find "$fileDir" -type f -name "$fileName" -mtime "+$cacheDays" | wc -l)
-		if [ "$fileFound" -gt 0 ] ;then
-			# the file is more than "$cacheDays" days old, it needs updated
-			#INFO "File is to old, update the file $1"
-			return 0
-		else
-			# the file exists and is not old enough in cache to be updated
-			#INFO "File in cache, do not update $1"
-			return 1
-		fi
-	else
-		# the file does not exist, it needs created
-		#INFO "File does not exist, it must be created $1"
-		return 0
-	fi
-}
-################################################################################
 function nuke(){
 	# remove the kodi and web music files
 	rm -rv $(webRoot)/music/* || echo "No files found in music web directory..."
 	rm -rv $(webRoot)/kodi/music/* || echo "No files found in kodi directory..."
+	rm -rv $(webRoot)/sums/music2web_*.cfg || echo "No file sums found..."
+	databasePath=$($(webRoot)/data.db)
 	# remove sql data
-	sqlite3 $(webRoot)/data.db "drop table music;"
-	sqlite3 $(webRoot)/data.db "drop table albums;"
-	sqlite3 $(webRoot)/data.db "drop table artists;"
-	# sum directory
-	rm -rv $(webRoot)/sums/* || echo "No file sums found in kodi directory..."
+	SQLremoveTable "$databasePath" "_music"
+	SQLremoveTable "$databasePath" "_albums"
+	SQLremoveTable "$databasePath" "_artists"
 	# new indexes
 	rm -rv $(webRoot)/new/music.index || echo "No music index..."
 	rm -rv $(webRoot)/new/albums.index || echo "No album index..."
@@ -830,20 +718,20 @@ function nuke(){
 	rm -rv $(webRoot)/random/tracks.index || echo "No track index..."
 }
 ################################################################################
-main(){
+function main(){
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "music2web"
-		lockCheck
+		lockProc "music2web"
 		webUpdate $@
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "music2web"
-		lockCheck
+		lockProc "music2web"
 		update $@
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockCheck
+		lockProc "music2web"
 		resetCache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockCheck
+		lockProc "music2web"
 		nuke
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade gallery-dl pip packages
@@ -860,9 +748,11 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/music2web.txt"
 	else
-		main --update $@
-		main --webgen $@
-		main --help $@
+		checkModStatus "music2web"
+		lockProc "music2web"
+		update $@
+		webUpdate $@
+		#main --help $@
 		showServerLinks
 		echo "Module Links"
 		drawLine

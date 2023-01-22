@@ -23,11 +23,11 @@ function debug($message){
 }
 ################################################################################
 function getQualityConfig($webDirectory){
-	if (file_exists("$webDirectory/cacheQuality.cfg")){
+	if (file_exists("/etc/2web/cache/cacheQuality.cfg")){
 		debug("Loading the cacheQuality.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheQualityConfig = file_get_contents("$webDirectory/cacheQuality.cfg");
+		$cacheQualityConfig = file_get_contents("/etc/2web/cache/cacheQuality.cfg");
 		return $cacheQualityConfig;
 	}else{
 		debug("No cacheQuality.cfg file could be found...");
@@ -36,11 +36,11 @@ function getQualityConfig($webDirectory){
 }
 ################################################################################
 function getCacheMode($webDirectory){
-	if (file_exists("$webDirectory/cacheMode.cfg")){
+	if (file_exists("/etc/2web/cache/cacheMode.cfg")){
 		debug("Loading the cacheMode.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheModeConfig= file_get_contents("$webDirectory/cacheMode.cfg");
+		$cacheModeConfig= file_get_contents("/etc/2web/cache/cacheMode.cfg");
 		return $cacheModeConfig;
 	}else{
 		debug("No cacheMode.cfg file could be found...");
@@ -49,11 +49,11 @@ function getCacheMode($webDirectory){
 }
 ################################################################################
 function getUpgradeQualityConfig($webDirectory){
-	if (file_exists("$webDirectory/cacheUpgradeQuality.cfg")){
+	if (file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
 		debug("Loading the cacheUpgradeQuality.cfg file...");
 		# load the cache upgrade quality config
 		# - this will be passed as a upgrade quality option to youtube-dl
-		$cacheUpgradeQualityConfig = file_get_contents("$webDirectory/cacheUpgradeQuality.cfg");
+		$cacheUpgradeQualityConfig = file_get_contents("/etc/2web/cache/cacheUpgradeQuality.cfg");
 		return $cacheUpgradeQualityConfig;
 	}else{
 		debug("No cacheUpgradeQuality.cfg file could be found...");
@@ -106,7 +106,7 @@ function cacheUrl($sum,$videoLink){
 		}
 	} else {
 		# if no quality is set in url use server settings
-		if (file_exists("$webDirectory/cacheUpgradeQuality.cfg")){
+		if (file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
 			$upgradeQuality = getUpgradeQualityConfig($webDirectory);
 			# update the download command
 			if (($upgradeQuality == "best") or ($upgradeQuality == "worst")){
@@ -118,7 +118,7 @@ function cacheUrl($sum,$videoLink){
 		}else{
 			# if no server settings are configured use the default
 			# the dl command should simply convert the downloaded m3u file with the m3u file
-			if ( (! file_exists("$webDirectory/cacheResize.cfg")) AND (! file_exists("$webDirectory/cacheFramerate.cfg")) ){
+			if ( (! file_exists("/etc/2web/cache/cacheResize.cfg")) AND (! file_exists("/etc/2web/cache/cacheFramerate.cfg")) ){
 				# if no upgrade quality is set and no hls rescaling or frame dropping then convert the file to mp4 directly
 				$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4'";
 			}else{
@@ -139,14 +139,14 @@ function cacheUrl($sum,$videoLink){
 			$command = $command." -S '".$quality."'";
 		}
 	}
-	if (file_exists("$webDirectory/cacheFramerate.cfg")){
-		$cacheFramerate = " -r ".file_get_contents("$webDirectory/cacheFramerate.cfg");
+	if (file_exists("/etc/2web/cache/cacheFramerate.cfg")){
+		$cacheFramerate = " -r ".file_get_contents("/etc/2web/cache/cacheFramerate.cfg");
 	}else{
 		//$cacheFramerate = " -r 30";
 		$cacheFramerate = "";
 	}
-	if (file_exists("$webDirectory/cacheResize.cfg")){
-		$cacheResize = " -s ".file_get_contents("$webDirectory/cacheResize.cfg");
+	if (file_exists("/etc/2web/cache/cacheResize.cfg")){
+		$cacheResize = " -s ".file_get_contents("/etc/2web/cache/cacheResize.cfg");
 	}else{
 		//$cacheResize = " -s 1920x1080";
 		$cacheResize = "";

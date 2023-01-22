@@ -198,7 +198,7 @@ formatEcho('</script>',1);
 # if the path is in the settings draw the logout button
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "<div class='loginLogoutBox'>";
-	echo "		<a class='button' href='/settings/modules.php'>";
+	echo "		<a class='button' href='/settings/'>";
 	echo "			🛠️";
 	echo "			<span class='headerText'>";
 	echo "				SETTINGS";
@@ -222,7 +222,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "</div>";
 }else{
 	echo "<div class='loginLogoutBox'>";
-	echo "<a class='button' href='/settings/modules.php'>";
+	echo "<a class='button' href='/settings/'>";
 	echo "🔓";
 	echo "<span class='headerText'>";
 	echo "LOGIN";

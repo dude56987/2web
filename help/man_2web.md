@@ -56,6 +56,10 @@ OPTIONS
 
 :   Cleanup the web caches based on web cache time setting
 
+`-V, --verify, verify`
+
+:   Check all database entries to remove false entries.
+
 `-L, --unlock, unlock`
 
 :   Remove lockfiles leftover from system crashes or reboots.
@@ -70,7 +74,7 @@ OPTIONS
 
 `-r, --reset, reset`
 
-:   Reset the state of all 2web components without deleting generated data.
+:   Reset the state of all 2web components without deleting downloaded metadata.
 
 `-w, --webgen, webgen`
 

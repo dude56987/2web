@@ -31,22 +31,24 @@ function checkFileDataSum(){
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
 	filePath=$2
+	# module name
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 
-	# check the sum of a directory and compare it to a previously stored sum
+	# check the sum of a file and compare it to a previously stored sum
 	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
 
 	# check for a previous sum
-	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
+	if test -f "$webDirectory/sums/${moduleName}_$pathSum.cfg";then
 		# load the old sum
-		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
+		oldSum="$(cat "$webDirectory/sums/${moduleName}_$pathSum.cfg")"
 
 		# generate the new md5sum for the file
 		newSum="$(cat "$filePath" | md5sum | cut -d' ' -f1 )"
 
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
-			ALERT "Sum is UNCHANGED"
+			#ALERT "Sum is UNCHANGED"
 			# UNCHANGED
 			# if the sums are the same no change detected, pass false
 			# return false
@@ -55,7 +57,7 @@ function checkFileDataSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+			echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 			# return true
 			return 0
 		fi
@@ -63,7 +65,7 @@ function checkFileDataSum(){
 		# CHANGED, new file
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
+		echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 		# return true
 		return 0
 	fi
@@ -83,8 +85,11 @@ function buildHomePage(){
 	# - each element in the stats is ran on a diffrent schedule based on its intensity and propensity to lock up the system
 	# - update the "last update on" data every run, this is simply to show the freshness of the content since updates are a batch process
 	echo "$(date)" > "$webDirectory/lastUpdate.index"
+	# set the timeout
+	timeout=60000
 	if test -d "$webDirectory/comics/";then
 		if cacheCheck "$webDirectory/totalComics.index" "1";then
+			#totalComics=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _comics;")
 			# figure out the stats
 			totalComics=$(cat "$webDirectory/comics/comics.index" | wc -l )
 			# write the stats
@@ -93,15 +98,18 @@ function buildHomePage(){
 	fi
 	if test -d "$webDirectory/shows/";then
 		if cacheCheck "$webDirectory/totalEpisodes.index" "7";then
+			#totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _episodes;")
 			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
 			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
 		fi
 		if cacheCheck "$webDirectory/totalShows.index" "1";then
+			#totalShows=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _shows;")
 			totalShows=$(cat "$webDirectory/shows/shows.index" | wc -l )
 			echo "$totalShows" > "$webDirectory/totalShows.index"
 		fi
 	fi
 	if cacheCheck "$webDirectory/totalMovies.index" "1";then
+		#totalMovies=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _movies;")
 		totalMovies=$(cat "$webDirectory/movies/movies.index" | wc -l )
 		echo "$totalMovies" > "$webDirectory/totalMovies.index"
 	fi
@@ -285,13 +293,12 @@ function blockQueue(){
 	done
 }
 ################################################################################
-ALERT(){
-	echo
+function ALERT(){
 	echo "$1";
 	echo
 }
 ################################################################################
-INFO(){
+function INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -322,7 +329,7 @@ function lockProc(){
 	fi
 }
 ################################################################################
-checkModStatus(){
+function checkModStatus(){
 	# check the status of a mod
 	# if the mod is enabled allow the module to keep running
 	# if the mod is disabled run the nuke command within that module
@@ -354,28 +361,28 @@ checkModStatus(){
 	fi
 }
 ################################################################################
-enableMod(){
+function enableMod(){
 	# enable a module name
 	moduleName=$1
 	ALERT "Enabling the module $moduleName"
 	echo -n "enabled" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
-disableMod(){
+function disableMod(){
 	# disable a module name
 	moduleName=$1
 	ALERT "Disabling the module $moduleName"
 	echo -n "disabled" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
-drawLine(){
+function drawLine(){
 	width=$(tput cols)
 	buffer="=========================================================================================================================================="
 	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
 	printf "$output\n"
 }
 ################################################################################
-showServerLinks(){
+function showServerLinks(){
 	# show the server link at the bottom of the interface
 	drawLine
 	echo "To access the webserver go to the below link."
@@ -455,7 +462,35 @@ function SQLaddToIndex(){
 	fi
 }
 ################################################################################
-getDirSum(){
+function SQLremoveTable(){
+	databasePath=$1
+	tableName=$2
+	if test -f "$databasePath";then
+		# check if the table exists in the database
+		timeout=60000
+		if ! sqlite3 -cmd ".timeout $timeout"  "$databasePath" "select name from sqlite_master where type='table';" | grep -q "$tableName";then
+			# remove the table that has been found
+			sqlite3 -cmd ".timeout $timeout"  "$databasePath" "drop table $tableName;"
+		fi
+	fi
+}
+################################################################################
+function SQLtableLength(){
+	databasePath=$1
+	tableName=$2
+	totalCount=0
+	if test -f "$databasePath";then
+		# check if the table exists in the database
+		timeout=60000
+		if ! sqlite3 -cmd ".timeout $timeout"  "$databasePath" "select name from sqlite_master where type='table';" | grep -q "$tableName";then
+			# remove the table that has been found
+			totalCount=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in $tableName;")
+		fi
+	fi
+	echo "$totalCount"
+}
+################################################################################
+function getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
@@ -469,7 +504,7 @@ getDirSum(){
 	echo "$tempLibList"
 }
 ################################################################################
-checkDirDataSum(){
+function checkDirDataSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
@@ -502,7 +537,7 @@ checkDirDataSum(){
 	fi
 }
 ########################################################################
-getDirDataSum(){
+function getDirDataSum(){
 	line=$1
 	# check the libary sum against the existing one
 	#totalList=$(find "$line" | sort)
@@ -518,7 +553,7 @@ getDirDataSum(){
 	echo "$tempLibList"
 }
 ########################################################################
-checkDirSum(){
+function checkDirSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
@@ -551,5 +586,33 @@ checkDirSum(){
 		echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
 		return 0
 	fi
+}
+########################################################################
+downloadThumbnail(){
+	thumbnailLink=$1
+	thumbnailPath=$2
+	thumbnailExt=$3
+	sumName=$(echo -n "$thumbnailLink" | md5sum | cut -d' ' -f1)
+	# if the link has already been downloaded then dont download it
+	webDirectory=$(webRoot)
+	# if it dont exist download it
+	if ! test -f "$webDirectory/thumbnails/$sumName$thumbnailExt";then
+		# generated the sum for the thumbnail name
+		timeout 120 curl --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
+		# sleep for one second after each thumbnail download
+		#sleep 1
+	fi
+	if ! test -f "$thumbnailPath$thumbnailExt";then
+		linkFile "$webDirectory/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
+
+		# save the thumbnail to a download path, and link to that downloaded thumbnail
+		#curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"
+	fi
+}
+########################################################################
+popPath(){
+	# pop the path name from the end of a absolute path
+	# e.g. popPath "/path/to/your/file/test.jpg" gives you "test.jpg"
+	echo "$1" | rev | cut -d'/' -f1 | rev
 }
 ########################################################################

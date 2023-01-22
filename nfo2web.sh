@@ -580,10 +580,15 @@ processMovie(){
 				done
 			fi
 		fi
+		thumbSum=$(echo -n "$thumbnailPath" | md5sum | cut -d' ' -f1)
 		# create the web thumbnail if it does not exist and a thumbnail path was found
-		if ! test -f "$thumbnailPath-web.png";then
+		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
 			# convert the thumbnail into a web thumbnail
-			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize "300x200" "$webDirectory/movies/$movieWebPath/poster-web.png"
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize "300x200" "$webDirectory/thumbnails/$thumbSum-web.png"
+		fi
+		if ! test -f "$webDirectory/movies/$movieWebPath/poster-web.png";then
+			# link thumb to web directory
+			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$webDirectory/movies/$movieWebPath/poster-web.png"
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
@@ -726,10 +731,21 @@ downloadThumbnail(){
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
+	sumName=$(echo -n "$thumbnailLink" | md5sum | cut -d' ' -f1)
 	# if the link has already been downloaded then dont download it
+	webDirectory=$(webRoot)
+	# if it dont exist download it
+	if ! test -f "$webDirectory/thumbnails/$sumName$thumbnailExt";then
+		# generated the sum for the thumbnail name
+		curl --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
+		# sleep for one second after each thumbnail download
+		#sleep 1
+	fi
 	if ! test -f "$thumbnailPath$thumbnailExt";then
-		# if it dont exist download it
-		curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"
+		linkFile "$webDirectory/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
+
+		# save the thumbnail to a download path, and link to that downloaded thumbnail
+		#curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"
 	fi
 }
 ########################################################################
@@ -1128,8 +1144,14 @@ processEpisode(){
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		# convert the found episode thumbnail into a web thumb
 		#INFO "building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
+		thumbSum=$(echo -n "$thumbnailPath" | md5sum | cut -d' ' -f1)
+		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
+			# store the thumbnail inside the thumbnails directory
+			convert -quiet "$thumbnailPath$thumbnailExt" -resize "300x200" "$webDirectory/thumbnails/$thumbSum-web.png"
+		fi
 		if ! test -f "$thumbnailPath-web.png";then
-			convert -quiet "$thumbnailPath$thumbnailExt" -resize "300x200" "$thumbnailPath-web.png"
+			# link the thumbnail into the web directory
+			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$thumbnailPath-web.png"
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
@@ -1865,6 +1887,7 @@ function nuke(){
 	rm -rv $(webRoot)/random/episodes.index
 	rm -rv $(webRoot)/new/shows.index
 	rm -rv $(webRoot)/new/episodes.index
+	rm -rv $(webRoot)/sums/nfo2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table shows;"
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table movies;"
@@ -1996,12 +2019,12 @@ function update(){
 	# - Should convert youtube links from kodi to embeded player links
 	# - Should create its own web directory
 	################################################################################
+	# run 2web to build the default website if it does not exist
+	/usr/bin/2web
 	# load the libary directory
-	#libaries=$(libaryPaths | tr -s "\n" | shuf )
 	libaries=$(libaryPaths | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
-
 	# create the log path
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# create the homepage path
@@ -2016,9 +2039,6 @@ function update(){
 	#touch "$movieIndexPath"
 	touch "$logPagePath"
 	#touch "$homePagePath"
-	# check for the header
-	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
-	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
 	# build log page
 	#{
 	#	echo "<html id='top' class='randomFanart'>"
@@ -2070,7 +2090,10 @@ function update(){
 	# figure out the total number of CPUS for parallel processing
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		totalCPUS=$(( $totalCPUS / 2 ))
+		# if the fullspeed command has not been given split speed in half to avoid server service interruptions
+		if ! echo "$@" | grep -q -e "--fullspeed";then
+			totalCPUS=$(( $totalCPUS / 2 ))
+		fi
 	fi
 	# read each libary from the libary config, single path per line
 	ALERT "LIBARIES: $libaries"

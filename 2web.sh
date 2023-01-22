@@ -190,6 +190,7 @@ function update2web(){
 	#createDir "$webDirectory/backups/"
 	createDir "$webDirectory/log/"
 	createDir "$webDirectory/search/"
+	createDir "$webDirectory/thumbnails/"
 
 	# create config files if they do not exist
 	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
@@ -219,6 +220,9 @@ function update2web(){
 	# add the log file
 	linkFile "/usr/share/2web/settings/log.php" "$webDirectory/log/index.php"
 
+	# Link the header and footer of the website
+	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
+	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
 	# settings interface files
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
@@ -277,9 +281,24 @@ function update2web(){
 			\( -clone 0 -resize 32x32 \) \
 			\( -clone 0 -resize 48x48 \) \
 			\( -clone 0 -resize 64x64 \) \
-			-delete 0 -alpha off -colors 256 "$webDirectory/favicon.ico"
+			-delete 0 -alpha on -colors 256 "$webDirectory/favicon.ico"
+			#-delete 0 -alpha off -colors 256 "$webDirectory/favicon.ico"
+	fi
+	# build the spinner
+	if ! test -f /var/cache/2web/spinner.gif;then
+		buildSpinnerGif
+	fi
+	# link the spinner into the web directory
+	if ! test -f $webDirectory/spinner.gif;then
+		linkFile "/var/cache/2web/spinner.gif" "$webDirectory/spinner.gif"
 	fi
 
+	createDir /var/cache/2web/qrCodes/
+	# build qr codes
+	for qrCode in /var/cache/2web/qrCodes/*.cfg;do
+		# for each qr code config write a qr code to thumbnails
+		qrencode -m 1 -l H -o "/var/cache/2web/web/thumbnails/$(popPath "$qrCode" | cut -d'.' -f1)-qr.png" "$(cat "$qrCode")"
+	done
 	################################################################################
 	# build the login users file
 	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
@@ -429,6 +448,90 @@ rebootCheck(){
 	fi
 }
 ################################################################################
+function verifyDatabasePaths(){
+	databasePath=$1
+	# timeout of sql database in miliseconds
+	timeout=60000
+	# check live groups database
+	tables=$(sqlite3 --cmd ".timeout $timeout" "$databasePath" "select name from sqlite_master where type='table';")
+	#INFO "tables='$tables'\n"
+	IFS=$'\n'
+	for tableName in $tables;do
+		ALERT "Searching $databasePath table:$tableName"
+		rows=$(sqlite3 --cmd ".timeout $timeout" "$databasePath" "select * from \"$tableName\";")
+		# read though each table for the title column
+		for path in $rows;do
+			# for each colum check the path it lists on the disk to make sure the file exists
+			# check the path stored in the table exists on the disk
+			if ! test -f "$path";then
+				INFO "Discovered invalid path in $tableName:$path"
+				# the path does not exist so it needs removed from the database
+				sqlite3 --cmd ".timeout $timeout" "$databasePath" "delete from \"$tableName\" where title='$path';"
+			fi
+		done
+	done
+}
+################################################################################
+function waitForIdleServer(){
+	webDirectory=$1
+	loopCounter=0
+	while true;do
+		# make the loop spinner spin
+		loopCounter=$(( $loopCounter + 1 ))
+		# modulus the counter to make it loop
+		loopCounter=$(( $loopCounter % 5 ))
+		outputTail=""
+		for ((i=1; i<=loopCounter; i++));do
+			outputTail="$outputTail."
+		done
+		#tempLoopSpinner=$(echo "$tempRotate" | cut -c$(( $loopCounter + 1 )) )
+		#infoPrefix="Waiting for server to become Idle. $tempLoopSpinner Active Service:"
+		infoPrefix="Waiting for server to become Idle. Active Service:"
+		if test -f "$webDirectory/comic2web.active";then
+			INFO "$infoPrefix comic2web$outputTail"
+		elif test -f "$webDirectory/iptv2web.active";then
+			INFO "$infoPrefix iptv2web$outputTail"
+		elif test -f "$webDirectory/nfo2web.active";then
+			INFO "$infoPrefix nfo2web$outputTail"
+		elif test -f "$webDirectory/weather2web.active";then
+			INFO "$infoPrefix weather2web$outputTail"
+		elif test -f "$webDirectory/music2web.active";then
+			INFO "$infoPrefix music2web$outputTail"
+		elif test -f "$webDirectory/graph2web.active";then
+			INFO "$infoPrefix graph2web$outputTail"
+		elif test -f "$webDirectory/ytdl2nfo.active";then
+			INFO "$infoPrefix ytdl2nfo$outputTail"
+		elif test -f "$webDirectory/wiki2web.active";then
+			INFO "$infoPrefix wiki2web$outputTail"
+		else
+			INFO "Web server is now idle..."
+			# this means all processes have completed
+			# break the loop and run the reboot check
+			break
+		fi
+		sleep 0.5
+	done
+}
+################################################################################
+function buildSpinnerGif(){
+	mkdir -p /tmp/2web/
+	backgroundColor="transparent"
+	foregroundColor="white"
+	outputPathPrefix="/tmp/2web/frame"
+	newSize="32x32"
+	# draw all the frames of the gif
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize ${outputPathPrefix}_08.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,1' -scale $newSize ${outputPathPrefix}_07.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,2' -scale $newSize ${outputPathPrefix}_06.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,2' -scale $newSize ${outputPathPrefix}_05.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,2' -scale $newSize ${outputPathPrefix}_04.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,1' -scale $newSize ${outputPathPrefix}_03.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize ${outputPathPrefix}_02.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize ${outputPathPrefix}_01.jpg
+	# convert frames into gif
+	ffmpeg -framerate 6 -i ${outputPathPrefix}_%02d.jpg /var/cache/2web/spinner.gif
+}
+################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -441,6 +544,21 @@ main(){
 		/usr/bin/music2web
 		/usr/bin/iptv2web
 		rebootCheck
+	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
+		# wait for all background services to stop
+		waitForIdleServer "$(webRoot)"
+		# parallel and regular processing is available for --verify
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+			verifyDatabasePaths "$(webRoot)/data.db"
+			waitQueue 0.5 "$totalCPUS"
+			verifyDatabasePaths "$(webRoot)/live/groups.db"
+			blockQueue 1
+		else
+			verifyDatabasePaths "$(webRoot)/data.db"
+			verifyDatabasePaths "$(webRoot)/live/groups.db"
+		fi
+		echo "Finished Verifying database."
 	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
 		webDirectory=$(webRoot)
 		# clean all temp lock files
@@ -465,47 +583,36 @@ main(){
 		# - all processes are locked so conflicts will not arise from launching this process multuple times
 		update2web
 		# update the on-demand downloads
+		ALERT "Launching ytdl2nfo..."
 		/usr/bin/ytdl2nfo &
 		waitQueue 1 "$totalCPUS"
 		# update weather
+		ALERT "Launching weather2web..."
 		/usr/bin/weather2web &
 		waitQueue 1 "$totalCPUS"
 		# update the metadata and build webpages for all generators
+		ALERT "Launching nfo2web..."
 		/usr/bin/nfo2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		ALERT "Launching graph2web..."
 		/usr/bin/graph2web &
 		waitQueue 1 "$totalCPUS"
+		ALERT "Launching iptv2web..."
 		/usr/bin/iptv2web &
 		waitQueue 1 "$totalCPUS"
+		ALERT "Launching comic2web..."
 		/usr/bin/comic2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		ALERT "Launching music2web..."
 		/usr/bin/music2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		ALERT "Launching wiki2web..."
 		/usr/bin/wiki2web --parallel &
 		waitQueue 1 "$totalCPUS"
 		blockQueue 1
-		while true;do
-			sleep 1
-			if test -f $webDirectory/comic2web.active;then
-				sleep 1
-			elif test -f $webDirectory/iptv2web.active;then
-				sleep 1
-			elif test -f $webDirectory/nfo2web.active;then
-				sleep 1
-			elif test -f $webDirectory/weather2web.active;then
-				sleep 1
-			elif test -f $webDirectory/music2web.active;then
-				sleep 1
-			elif test -f $webDirectory/graph2web.active;then
-				sleep 1
-			elif test -f $webDirectory/ytdl2nfo.active;then
-				sleep 1
-			else
-				# this means all processes have completed
-				# break the loop and run the reboot check
-				break
-			fi
-		done
+		# wait for all background services to stop
+		waitForIdleServer "$(webRoot)"
+		ALERT "Finished Parallel Processing..."
 		# run the reboot check after all modules have finished running
 		rebootCheck
 	elif [ "$1" == "-I" ] || [ "$1" == "--iptv" ] || [ "$1" == "iptv" ];then
@@ -550,30 +657,27 @@ main(){
 		/usr/bin/weather2web
 		/usr/bin/music2web
 		/usr/bin/wiki2web
-		rebootCheck
-	elif [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ];then
-		update2web
-		# update the website content
-		/usr/bin/nfo2web webgen
-		/usr/bin/iptv2web webgen
-		/usr/bin/comic2web webgen
-		# weather2web only generates website data
-		/usr/bin/weather2web
-		/usr/bin/music2web webgen
+		/usr/bin/graph2web
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
-		# upgrade packages related to operation of webserver
-		/usr/bin/nfo2web upgrade
-		/usr/bin/iptv2web upgrade
-		/usr/bin/comic2web upgrade
-		/usr/bin/music2web upgrade
+		# upgrade streamlink and yt-dlp and gallery-dl pip packages
+		# - All fast moving software is included here for upgrade in a single command
+		# - yt-dlp is used for stream translation and metadata conversion
+		# - streamlink is used for translation of livestreams
+		# - gallery-dl is used for comic2web
+		pip3 install --upgrade yt-dlp
+		pip3 install --upgrade streamlink
+		pip3 install --upgrade gallery-dl
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
-		/usr/bin/nfo2web reset
-		/usr/bin/comic2web reset
-		/usr/bin/iptv2web reset
-		/usr/bin/weather2web reset
-		/usr/bin/music2web reset
+		/usr/bin/nfo2web nuke
+		/usr/bin/comic2web nuke
+		/usr/bin/iptv2web nuke
+		/usr/bin/weather2web nuke
+		/usr/bin/music2web nuke
+		/usr/bin/wiki2web nuke
+		/usr/bin/weather2web nuke
+		/usr/bin/graph2web nuke
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
 		# remove all website content and disable the website
 		rm -rv /var/cache/2web/web/*
@@ -614,29 +718,6 @@ main(){
 		if test -d "$(webRoot)/search/";then
 			find "$(webRoot)/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 		fi
-	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
-		# timeout of sql database in miliseconds
-		timeout=60000
-		#verify database to make sure everything is correct
-		#get the list of all tables
-		tables=$(sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "select name from sqlite_master where type='table';")
-		echo "tables='$tables'\n"
-		IFS=$'\n'
-		for tableName in $tables;do
-			echo "Searching table:$tableName"
-			rows=$(sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "select * from \"$tableName\";")
-			# read though each table for the title column
-			for path in $rows;do
-				# for each colum check the path it lists on the disk to make sure the file exists
-				# check the path stored in the table exists on the disk
-				if ! test -f "$path";then
-					echo "Discovered invalid path in $tableName:$path"
-					# the path does not exist so it needs removed from the database
-					sqlite3 --cmd ".timeout $timeout" "$(webRoot)/data.db" "delete from \"$tableName\" where title='$path';"
-				fi
-			done
-		done
-		echo "Finished Verifying database."
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then

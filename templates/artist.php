@@ -33,7 +33,9 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 			?>
 			<div class='albumPlayerInfo'>
 			<div>
-				<img class='albumPlayerThumb' src='poster.png' />
+				<a href='poster.png'>
+					<img class='albumPlayerThumb' src='poster.png' />
+				</a>
 				<?php
 				if (file_exists("genre.cfg")){
 					echo "<div>".file_get_contents("genre.cfg")."</div>";

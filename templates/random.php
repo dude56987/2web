@@ -36,15 +36,16 @@ if (array_key_exists("filter",$_GET)){
 <a class='button' href='?filter=all'>📜 All</a>
 <?PHP
 
-drawPlaylistButton($filterType,"episodes","🎞️ Episodes");
-drawPlaylistButton($filterType,"shows","📺 shows");
-drawPlaylistButton($filterType,"movies","🎥 Movies");
-drawPlaylistButton($filterType,"comics","📚 Comics");
-drawPlaylistButton($filterType,"music","🎧 Music");
-drawPlaylistButton($filterType,"albums","💿 Albums");
-drawPlaylistButton($filterType,"artists","🎤 Artists");
-drawPlaylistButton($filterType,"tracks","🎵 Tracks");
-drawPlaylistButton($filterType,"graphs","📊 Graphs");
+SQLdrawPlaylistButton($filterType,"episodes","🎞️ Episodes");
+SQLdrawPlaylistButton($filterType,"shows","📺 shows");
+SQLdrawPlaylistButton($filterType,"movies","🎥 Movies");
+SQLdrawPlaylistButton($filterType,"comics","📚 Comics");
+SQLdrawPlaylistButton($filterType,"music","🎧 Music");
+SQLdrawPlaylistButton($filterType,"channels","📡 Channels");
+SQLdrawPlaylistButton($filterType,"albums","💿 Albums");
+SQLdrawPlaylistButton($filterType,"artists","🎤 Artists");
+SQLdrawPlaylistButton($filterType,"tracks","🎵 Tracks");
+SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
 
 ?>
 </div>

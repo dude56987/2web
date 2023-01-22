@@ -122,10 +122,9 @@ examineIconLink(){
 		if ! test -f "$localIconPath";then
 			tempIconLink=$(yt-dlp -j "$link" | jq ".thumbnail")
 			INFO "Downloading thumbnail '$tempIconLlink'"
-			# if the file does not exist in the cache download it
-			timeout 120 curl --silent "$tempIconLink" > "$localIconPath"
-			# resize the icon to standard size
-			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
+			downloadThumbnail "$tempIconLink" "$localIconPath" ".png"
+			# resize default image to size that fits best in kodi interface
+			#timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 		fi
 		# remove image if fake was created
 		killFakeImage "$localIconPath"
@@ -302,7 +301,8 @@ function process_M3U(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			INFO "Icon MD5 = $iconSum"
 			# check for group title
-			groupTitle=$(getTVG "$lineCaught" "group-title")
+			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/;/ /g")
+
 			#IFS=$IFS_NORMAL
 			#echo "$groupTitle" | while read -r group;do
 			# during the building of the m3u file split out blocked items
@@ -335,6 +335,8 @@ function process_M3U(){
 						linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
 					fi
 					addChannel=true
+					# add the sql index database entry for the groups database
+					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
 				fi
 			done
 			# if the channel was not blocked
@@ -456,7 +458,6 @@ function processLink(){
 			fi
 
 			# if it is a playlist file add it to the list by download
-			#downloadedM3U=$(curl "$link" | grep -v "#EXTM3U")
 			downloadedM3U=$(cat "$webDirectory/live/cache/$linkSum.index")
 			process_M3U "$downloadedM3U" "$webDirectory" "$radioFile"
 		else
@@ -515,13 +516,20 @@ function processLink(){
 					INFO "Found generated video entry set radio to false"
 					radio="false"
 				fi
+				# add the info to the database
+				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/data.db" "channels"
+				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/data.db" "channels"
+
 				ERROR "[DEBUG]: WebIconPath = $webIconPath"
 				{
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"iptv2web\",$fileName HD"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"2web\",$fileName HD"
 					echo "$hostPathHD"
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"iptv2web\",$fileName"
+					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"2web\",$fileName"
 					echo "$hostPath"
 				} >> "$channelsPath"
+				# add the channels to the 2web group
+				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/groups.db" "2web"
+				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/groups.db" "2web"
 			else
 				ERROR "Custom url creation failed for '$link'"
 				return 1
@@ -575,6 +583,7 @@ fullUpdate(){
 	createDir "$webDirectory/live/icons/"
 	createDir "$webDirectory/live/channels/"
 	createDir "$webDirectory/live/index/"
+	createDir "$webDirectory/live/groups/"
 
 	# link the live index
 	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
@@ -605,7 +614,10 @@ fullUpdate(){
 	################################################################################
 	processedSources=0
 	################################################################################
-	# read video sources
+	# add hdhomerun devices found on the network, if any
+	ALERT "Adding m3u from HDhomerun device, if found..."
+	processLink "http://hdhomerun.local/lineup.m3u" "$channelsPath"
+	# read user added video sources
 	# add user created custom local configs first
 	INFO "Adding m3u sources from /etc/2web/iptv/sources.d/"
 	find "/etc/2web/iptv/sources.d/" -name '*.m3u' -type 'f' | while read configFile;do
@@ -861,11 +873,6 @@ append(){
 	echo "$1$2"
 }
 ################################################################################
-popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
 ################################################################################
 webGen(){
 	webDirectory=$(webRoot)
@@ -931,7 +938,7 @@ webGen(){
 				title=$(echo "$lineCaught" | cut -d',' -f2)
 				link=$(echo -n "$line" | grep ".")
 				iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-				iconLink="icons/$iconSum.png"
+				iconLink="/live/icons/$iconSum.png"
 				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 				# check for group title
 				groupTitle=$(getTVG "$lineCaught" "group-title")
@@ -1039,7 +1046,7 @@ webGen(){
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "	</a>"
 					for group in $groupTitle;do
-						echo "	<a class='button groupButton tag' href='groups/$group/'>$group</a>"
+						echo "	<a class='button groupButton tag' href='/live/?filter=$group'>$group</a>"
 					done
 					echo "</div>"
 					# add footer
@@ -1118,6 +1125,8 @@ webGen(){
 						#echo -e "</div>"
 					} >> "$channelListPath"
 				fi
+				# add the info to the database
+				SQLaddToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/data.db" "channels"
 			fi
 		fi
 		# if the line is a info line
@@ -1167,6 +1176,7 @@ nuke(){
 	rm -v "$webDirectory"/live/*.js
 	rm -v "$webDirectory"/live/cache/*.index
 	rm -rv "$webDirectory"/live/
+	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
 checkCron(){
