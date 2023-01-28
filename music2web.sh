@@ -1,7 +1,7 @@
 #! /bin/bash
 ########################################################################
 # music2web scans music files with tags into the 2web webserver
-# Copyright (C) 2022  Carl J Smith
+# Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

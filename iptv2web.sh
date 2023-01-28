@@ -1,7 +1,7 @@
 #! /bin/bash
 ########################################################################
 # Merge many iptv sources into a single source
-# Copyright (C) 2020  Carl J Smith
+# Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -1,7 +1,7 @@
 #! /bin/bash
 ########################################################################
 # kodi2web allows synchronizing server updates with external KODI clients
-# Copyright (C) 2022  Carl J Smith
+# Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
