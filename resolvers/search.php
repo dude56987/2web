@@ -263,8 +263,8 @@ if (array_key_exists("q",$_GET)){
 
 	echo "<div class='settingListCard'>";
 	echo "<h1>";
+	echo "Searching  for '$searchQuery' ";
 	echo "<img id='spinner' src='/spinner.gif' />";
-	echo "Searching  for '$searchQuery'";
 	echo "</h1>";
 
 	# draw the top of the search results to prevent long searches from timing out

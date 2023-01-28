@@ -273,16 +273,26 @@ function update2web(){
 
 	# copy over the favicon
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
+	rebuildFavIcon="no"
 	# only build a new .ico file if the source favicon.png has changed in contents
-	if checkFileDataSum "$webDirectory" "$webDirectory/favicon.png";then
+	if ! test -f "$webDirectory/favicon.ico";then
+		rebuildFavIcon="yes"
+	elif checkFileDataSum "$webDirectory" "$webDirectory/favicon.png";then
+		rebuildFavIcon="yes"
+	else
+		ALERT "A favicon already exists..."
+	fi
+	ALERT "Build Favicon: $rebuildFavIcon"
+	if [ $rebuildFavIcon == "yes" ];then
+		ALERT "Building a new favicon.ico for the website..."
 		# build the favicon ico file using imagemagick for web compatibility
 		convert "/usr/share/2web/favicon_default.png" \
 			\( -clone 0 -resize 16x16 \) \
 			\( -clone 0 -resize 32x32 \) \
 			\( -clone 0 -resize 48x48 \) \
 			\( -clone 0 -resize 64x64 \) \
-			-delete 0 -alpha on -colors 256 "$webDirectory/favicon.ico"
-			#-delete 0 -alpha off -colors 256 "$webDirectory/favicon.ico"
+			\( -clone 0 -resize 128x128 \) \
+			-delete 0 -channel Alpha "$webDirectory/favicon.ico"
 	fi
 	# build the spinner
 	if ! test -f /var/cache/2web/spinner.gif;then
@@ -515,19 +525,21 @@ function waitForIdleServer(){
 ################################################################################
 function buildSpinnerGif(){
 	mkdir -p /tmp/2web/
-	backgroundColor="transparent"
+	backgroundColor="none"
 	foregroundColor="white"
 	outputPathPrefix="/tmp/2web/frame"
-	newSize="32x32"
+	newSize="16x16"
 	# draw all the frames of the gif
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize ${outputPathPrefix}_08.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,1' -scale $newSize ${outputPathPrefix}_07.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,2' -scale $newSize ${outputPathPrefix}_06.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,2' -scale $newSize ${outputPathPrefix}_05.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,2' -scale $newSize ${outputPathPrefix}_04.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,1' -scale $newSize ${outputPathPrefix}_03.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize ${outputPathPrefix}_02.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize ${outputPathPrefix}_01.jpg
+
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,0' -scale $newSize ${outputPathPrefix}_08.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,1' -scale $newSize ${outputPathPrefix}_07.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,2' -scale $newSize ${outputPathPrefix}_06.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 1,2' -scale $newSize ${outputPathPrefix}_05.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,2' -scale $newSize ${outputPathPrefix}_04.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,1' -scale $newSize ${outputPathPrefix}_03.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,0' -scale $newSize ${outputPathPrefix}_02.jpg
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 1,0' -scale $newSize ${outputPathPrefix}_01.jpg
+
 	# convert frames into gif
 	ffmpeg -framerate 6 -i ${outputPathPrefix}_%02d.jpg /var/cache/2web/spinner.gif
 }
@@ -692,9 +704,9 @@ main(){
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		# run the cleanup to remove cached files older than the cache time
 		################################################################################
-		if test -f "$(webRoot)/cacheDelay.cfg";then
+		if test -f "/etc/2web/cache/cacheDelay.cfg";then
 			echo "Loading cache settings..."
-			cacheDelay=$(cat "$(webRoot)/cacheDelay.cfg")
+			cacheDelay=$(cat "/etc/2web/cache/cacheDelay.cfg")
 		else
 			echo "Using default cache settings..."
 			cacheDelay="14"

@@ -1649,5 +1649,6 @@ pre{
 }
 #spinner{
 	height: 2rem;
-	float: left;
+	display: inline-block;
+	vertical-align: middle;
 }
