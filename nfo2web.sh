@@ -207,7 +207,7 @@ processMovie(){
 	# if moviepath exists
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
-		pathSum=$(echo -n "$movieDir" | md5sum | cut -d' ' -f1)
+		pathSum=$(echo -n "$movieDir" | sha512sum | cut -d' ' -f1)
 		logPagePath="$webDirectory/log/$(date "+%s")_movie_${pathSum}.log"
 		#addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
 		################################################################################
@@ -580,7 +580,7 @@ processMovie(){
 				done
 			fi
 		fi
-		thumbSum=$(echo -n "$thumbnailPath" | md5sum | cut -d' ' -f1)
+		thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
 		# create the web thumbnail if it does not exist and a thumbnail path was found
 		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
 			# convert the thumbnail into a web thumbnail
@@ -633,7 +633,7 @@ processMovie(){
 					echo "</a>"
 					echo "<?PHP";
 					tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
-					tempMoviePath=$(echo "$tempMoviePath" | sed"s/ /%20/g")
+					tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempMoviePath'>\";"
 					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
@@ -654,7 +654,9 @@ processMovie(){
 				echo "🔗Direct Link"
 				echo "</a>"
 				echo "<?PHP";
-				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/movies/$movieWebPath/$movieWebPath$sufix'>\";"
+				tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
+				tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
+				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempMoviePath'>\";"
 				echo "?>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
@@ -731,7 +733,7 @@ downloadThumbnail(){
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
-	sumName=$(echo -n "$thumbnailLink" | md5sum | cut -d' ' -f1)
+	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
 	# if the link has already been downloaded then dont download it
 	webDirectory=$(webRoot)
 	# if it dont exist download it
@@ -889,7 +891,7 @@ processEpisode(){
 		#INFO "Episode season = '$episodeSeason'"
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
 		#INFO "Episode air date = '$episodeAired'"
-		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,4\}//g")
+		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,3\}//g")
 		if [ "$episodeSeason" -lt 10 ];then
 			# add a zero to make it format correctly
 			episodeSeason="000$episodeSeason"
@@ -898,11 +900,16 @@ processEpisode(){
 			episodeSeason="00$episodeSeason"
 		elif [ "$episodeSeason" -lt 1000 ];then
 			episodeSeason="0$episodeSeason"
+		elif [ "$episodeSeason" -le 0 ];then
+			episodeSeason="0000"
+		else
+			episodeSeason="0000"
 		fi
 		episodeSeasonPath="Season $episodeSeason"
 		#INFO "Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
-		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,4\}//g")
+		# remove leading zeros
+		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,3\}//g")
 		if [ "$episodeNumber" -lt 10 ];then
 			# add a zero to make it format correctly
 			episodeNumber="000$episodeNumber"
@@ -911,6 +918,10 @@ processEpisode(){
 			episodeNumber="00$episodeNumber"
 		elif [ "$episodeNumber" -lt 1000 ];then
 			episodeNumber="0$episodeNumber"
+		elif [ "$episodeNumber" -le 0 ];then
+			episodeNumber="0000"
+		else
+			episodeNumber="0000"
 		fi
 		#INFO "Episode number = '$episodeNumber'"
 
@@ -1101,17 +1112,17 @@ processEpisode(){
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
 						#ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
-						#tempSum=$(echo -n "$ytLink" | tr -d '"' | tr -d "'" | md5sum | cut -d' ' -f1)
-						tempSum=$(echo -n "\"$ytLink\"" | md5sum | cut -d' ' -f1)
+						#tempSum=$(echo -n "$ytLink" | tr -d '"' | tr -d "'" | sha512sum | cut -d' ' -f1)
+						tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
 						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						echo "Video link cached with nfo2web" > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						echo "Orignal Link = '$videoPath'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						echo "Youtube Link = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "MD5 Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "MD5 Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "SHA Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						echo "SHA Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						#timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
-						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/youtube-dl --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
+						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
 						#timeout 20 curl --silent "$resolverUrl" > /dev/null
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 					fi
@@ -1144,7 +1155,7 @@ processEpisode(){
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		# convert the found episode thumbnail into a web thumb
 		#INFO "building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
-		thumbSum=$(echo -n "$thumbnailPath" | md5sum | cut -d' ' -f1)
+		thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
 		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
 			# store the thumbnail inside the thumbnails directory
 			convert -quiet "$thumbnailPath$thumbnailExt" -resize "300x200" "$webDirectory/thumbnails/$thumbSum-web.png"
@@ -1169,8 +1180,9 @@ processEpisode(){
 				echo "</iframe>"
 			} >> "$episodePagePath"
 			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
-			cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
-			vlcCacheRedirect="/ytdl-resolver.php?url=$ytLink"
+			#cacheRedirect="http://<?PHP echo \$_SERVER[]"/ytdl-resolver.php?url=\"$ytLink\""
+			cacheRedirect="/ytdl-resolver.php?url=\"$ytLink\""
+			vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$ytLink\\\""
 			fullRedirect="$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
@@ -1180,6 +1192,7 @@ processEpisode(){
 				echo "	🔗Direct Link"
 				echo "</a>"
 
+				#echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
 				echo "<a class='button hardLink' href='$cacheRedirect'>"
 				echo "	📥Cache Link"
 				echo "</a>"
@@ -1217,8 +1230,8 @@ processEpisode(){
 				echo "<h2>$episodeTitle</h2>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
-					cacheRedirect="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
-					vlcCacheRedirect="/ytdl-resolver.php?url=$videoPath"
+					cacheRedirect="/ytdl-resolver.php?url=\"$videoPath\""
+					vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$videoPath\\\""
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
@@ -1321,7 +1334,7 @@ processEpisode(){
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
 
-		#$episodeSum=$(echo "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php" | md5sum | cut -d' ' -f1)
+		#$episodeSum=$(echo "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php" | sha512sum | cut -d' ' -f1)
 		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.cfg"
 
 		# add episodes to new indexes
@@ -1347,7 +1360,7 @@ processShow(){
 	logPagePath="$webDirectory/settings/log.php"
 	showLogPath="$webDirectory/shows/$showTitle/log.index"
 	# create the path sum for reconizing the libary path
-	pathSum=$(echo -n "$show" | md5sum | cut -d' ' -f1)
+	pathSum=$(echo -n "$show" | sha512sum | cut -d' ' -f1)
 	# generate the path sum
 	showLogPath="$webDirectory/log/$(date "+%s")_show_${pathSum}.log"
 	# create directory
@@ -1476,7 +1489,7 @@ processShow(){
 		if test -d "$season";then
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
-			seasonSum=$(echo -n "$season" | md5sum | cut -d' ' -f1)
+			seasonSum=$(echo -n "$season" | sha512sum | cut -d' ' -f1)
 
 			# get the season folder sum, youtube channels can have 2k + episodes a season
 			if test -f "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg";then
@@ -1619,7 +1632,7 @@ function addToLog(){
 }
 ########################################################################
 getLibSum(){
-	# find all state md5sums for shows and create a collective sum
+	# find all state sums for shows and create a collective sum
 	totalList=""
 	while read -r line;do
 		# read each line and load the file
@@ -1627,9 +1640,9 @@ getLibSum(){
 		# add value to list
 		totalList="$totalList$tempList"
 	done < /etc/2web/nfo/libaries.cfg
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
+	# convert lists into sum
+	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	# write the sum to stdout
 	echo "$tempLibList"
 }
 ################################################################################
@@ -1779,9 +1792,9 @@ getDirSumByTime(){
 	line=$1
 	# get the sum of the directory modification time
 	totalList=$(stat --format="%Y" "$line")
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
+	# convert lists into sum
+	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	# write the sum to stdout
 	echo "$tempLibList"
 }
 ########################################################################
@@ -1880,9 +1893,11 @@ scanForRandomBackgrounds(){
 function nuke(){
 	echo "[INFO]: Reseting web cache to blank..."
 	rm -rv $(webRoot)/movies/*
+	rm -rv $(webRoot)/kodi/movies/
 	rm -rv $(webRoot)/random/movies.index
 	rm -rv $(webRoot)/new/movies.index
 	rm -rv $(webRoot)/shows/*
+	rm -rv $(webRoot)/kodi/shows/
 	rm -rv $(webRoot)/random/shows.index
 	rm -rv $(webRoot)/random/episodes.index
 	rm -rv $(webRoot)/new/shows.index
@@ -1914,11 +1929,7 @@ function libaryPaths(){
 	if ! test -f /etc/2web/nfo/libaries.cfg;then
 		# if no config exists create the default config
 		{
-			# write the new config from the path variable
-			# add the default download directory
-			echo "# Server Default Libaries config/"
-			# add the download directory to the paths
-			echo "/var/cache/2web/download/"
+			cat /etc/2web/config_default/nfo2web_libaries.cfg
 		} > "/etc/2web/nfo/libaries.cfg"
 	fi
 	# write path to console
@@ -2283,7 +2294,7 @@ function update(){
 	buildMovieIndex "$webDirectory"
 	# build the show index
 	buildShowIndex "$webDirectory"
-	# write the md5sum state of the libary for change checking
+	# write the sum state of the libary for change checking
 	#echo "$libarySum" > "$webDirectory/state.cfg"
 	#getLibSum > "$webDirectory/state.cfg"
 	# remove active state file

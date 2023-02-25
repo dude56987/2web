@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web 403 error page
 # Copyright (C) 2023  Carl J Smith
@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+-->
+<?PHP
 function redirect($url,$debug=false){
 	if ($debug){
 		echo "<hr>";

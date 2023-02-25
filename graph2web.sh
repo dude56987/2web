@@ -20,6 +20,76 @@
 #set -x
 source /var/lib/2web/common
 ################################################################################
+function buildVnstatDevice(){
+	device=$1
+
+	# generate vnstat graphs for graph section from the vnstat sqlite database
+	vnstati -i "$device" -hg -o "/var/cache/2web/generated_graphs/vnstat_${device}-day.png"
+	if ! test -f "/var/cache/2web/generated_graphs/vnstat_${device}-day.png";then
+		# this is for compatiblity with older versions of vnstat, -hg is only in new versions
+		vnstati -i "$device" -h -o "/var/cache/2web/generated_graphs/vnstat_${device}-day.png"
+	fi
+	vnstati -i "$device" -d 7 -o "/var/cache/2web/generated_graphs/vnstat_${device}-week.png"
+	vnstati -i "$device" -m -o "/var/cache/2web/generated_graphs/vnstat_${device}-month.png"
+	vnstati -i "$device" -y -o "/var/cache/2web/generated_graphs/vnstat_${device}-year.png"
+	# generate additional summary graphs for vnstat
+	vnstati -i "$device" -s -o "/var/cache/2web/generated_graphs/vnstat_${device}-summary.png"
+	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-week.png"
+	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-month.png"
+	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-year.png"
+	# generate top activity months of all time
+	vnstati -i "$device" -t -o "/var/cache/2web/generated_graphs/vnstat_${device}-top.png"
+	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-week.png"
+	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-month.png"
+	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-year.png"
+
+}
+################################################################################
+function vnstatGen(){
+	# generate vnstat graphs for old and new versions of vnstat
+
+	# create a path to store generated graphs for each device
+	mkdir -p /var/cache/2web/generated_graphs/
+	# check for the sqlite database from new versions of vnstat
+	if test -f /var/lib/vnstat/vnstat.db;then
+		# read vnstat database for interface entries
+		sqlite3 /var/lib/vnstat/vnstat.db "select name from interface" | while read device;do
+			buildVnstatDevice "$device"
+		done
+	else
+		# read older versions of vnstat database
+		for device in /var/lib/vnstat/*;do
+			# get the device name based on the file name of the databases
+			device=$(echo "$device" | rev | cut -d'/' -f1 | rev)
+			# vnstat lists the devices in a directory
+			buildVnstatDevice "$device"
+		done
+	fi
+}
+################################################################################
+function smokepingGen(){
+	set -x
+	# generate smokeping graphs
+	find "/var/cache/smokeping/images/" -type d | while read smokepingSection;do
+		ALERT "smokeping section = $smokepingSection"
+		find "$smokepingSection" -type f -name "*_mini.png" | while read graphPath;do
+			ALERT "graph path = $graphPath"
+			# get the base file name of the graph to get the graph variations, remove the extension
+			graphBaseName=$(echo "$graphPath" | rev | cut -d'/' -f1 | rev | sed "s/_mini\.png//g")
+			# pull the path of the graph from the file path
+			graphPath=$(echo "$graphPath" | rev | cut -d'/' -f2- | rev)
+
+			# build the smokeping graphs that have been found
+			linkFile "${graphPath}/${graphBaseName}_mini.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-summary.png"
+			linkFile "${graphPath}/${graphBaseName}_last_10800.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-hour.png"
+			linkFile "${graphPath}/${graphBaseName}_last_108000.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-day.png"
+			linkFile "${graphPath}/${graphBaseName}_last_864000.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-week.png"
+			linkFile "${graphPath}/${graphBaseName}_last_31104000.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-year.png"
+		done
+	done
+	set +x
+}
+################################################################################
 function loadWithoutComments(){
 	grep -Ev "^#" "$1"
 	return 0
@@ -107,6 +177,70 @@ function update(){
 	# copy over the php files for the graph
 	linkFile "/usr/share/2web/templates/graphs.php" "$webDirectory/graphs/index.php"
 
+	searchPath="/var/cache/2web/generated_graphs"
+	# build vnstat graphs
+	if test -f /usr/bin/vnstati;then
+		vnstatGen
+	fi
+	# build smokeping graphs if smokeping is installed
+	if test -f "/usr/sbin/smokeping";then
+		smokepingGen
+	fi
+	# find all custom generated graphs
+	find "$searchPath/" -maxdepth 1 -mindepth 1 -name "*-day.png" | while read graphPath;do
+		# get the filename and path
+		fileName=$(echo "$graphPath" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/-day//g")
+		if test -f "$webDirectory/graphs/$fileName/index.php";then
+			# if the graph has been added to the server already skip this
+			INFO "Already processed $fileName graph..."
+		else
+			# copy over the metadata for the template to use
+			titleClean=$(echo "$fileName" | sed "s/_/ /g")
+
+			# the graph does not exist on the webserver but is enabled in munin so activate it
+			createDir "$webDirectory/graphs/$fileName/"
+
+			# add the title config file for the php page
+			echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
+
+			# read each graph path and build a directory for each set of graphs
+			linkFile "$searchPath/$fileName-top.png" "$webDirectory/graphs/$fileName/top.png"
+			linkFile "$searchPath/$fileName-summary.png" "$webDirectory/graphs/$fileName/summary.png"
+			linkFile "$searchPath/$fileName-hour.png" "$webDirectory/graphs/$fileName/hour.png"
+			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/day.png"
+			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
+			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
+			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
+
+			# build the index entry for the graph on the main index
+			{
+				echo "<a class='showPageEpisode' href='/graphs/$fileName/'>"
+				echo "	<h2 class='title'>"
+				echo "  	$titleClean"
+				echo "	</h2>"
+				echo "	<img class='graphLinkThumbnail' loading='lazy' src='/graphs/$fileName/day.png'>"
+				echo "</a>"
+			} > "$webDirectory/graphs/$fileName/graphs.index"
+
+			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "graphs"
+			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "all"
+
+			# copy over the php template for the graphs
+			linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
+
+			# add graphs to graphs.index
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/graphs/graphs.index"
+
+			# add to new indexes
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/graphs.index"
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/all.index"
+
+			# add to new indexes
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
+			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
+		fi
+	done
+	###################################################################################################
 	# find each of the graphs provided by munin
 	searchPath="/var/cache/munin/www/localdomain/localhost.localdomain"
 	find "$searchPath/" -maxdepth 1 -mindepth 1 -type f -name "*-day.png" | while read graphPath;do
@@ -122,10 +256,10 @@ function update(){
 
 			createDir "$webDirectory/graphs/$fileName/"
 			# read each graph path and build a directory for each set of graphs
-			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/$fileName-day.png"
-			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/$fileName-week.png"
-			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/$fileName-month.png"
-			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/$fileName-year.png"
+			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/day.png"
+			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
+			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
+			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
 
 			# copy over the metadata for the template to use
 			titleClean=$(echo "$fileName" | sed "s/_/ /g" )
@@ -137,7 +271,7 @@ function update(){
 				echo "	<h2 class='title'>"
 				echo "  	$titleClean"
 				echo "	</h2>"
-				echo "	<img loading='lazy' src='/graphs/$fileName/$fileName-day.png'>"
+				echo "	<img class='graphLinkThumbnail' loading='lazy' src='/graphs/$fileName/day.png'>"
 				echo "</a>"
 			} > "$webDirectory/graphs/$fileName/graphs.index"
 
@@ -281,6 +415,8 @@ function nuke(){
 	rm -rv $(webRoot)/random/graphs.index || echo "No graph index..."
 	rm -v $(webRoot)/web_cache/widget_random_graphs.index
 	rm -v $(webRoot)/web_cache/widget_new_graphs.index
+	# remove graphs generated by graph2web
+	rm -rv /var/cache/2web/generated_graphs/
 }
 ################################################################################
 main(){
@@ -318,7 +454,6 @@ main(){
 		lockProc "graph2web"
 		update $@
 		webUpdate $@
-		main --help
 		showServerLinks
 		echo "Module Links"
 		drawLine

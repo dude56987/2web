@@ -325,7 +325,7 @@ function process_M3U(){
 						echo "	</div>"
 						echo "</div>"
 					} > "$webDirectory/live/blocked/$iconSum.index"
-					addChannel=false
+					addChannel="false"
 				else
 					# if the channel is not blocked, add the .index file for the group
 					INFO "The channel $title was added in group $group"
@@ -334,20 +334,20 @@ function process_M3U(){
 						# link index files in group directories
 						linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
 					fi
-					addChannel=true
+					addChannel="true"
 					# add the sql index database entry for the groups database
 					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
 				fi
 			done
 			# if the channel was not blocked
-			if $addChannel;then
+			if [ $addChannel == "true" ];then
 				INFO "Building channel $title thumbnail..."
 				# try to download or create the thumbnail
 				examineIconLink "$iconLink" "$link" "$title" "$radio"
 
 				INFO "Writing channel $title info to disk..."
 				# Write the new version of the lines to the outputFile
-				webIconPath="http://$(hostname).local:444/live/icons/$iconSum.png"
+				webIconPath="http://$(hostname).local/live/icons/$iconSum.png"
 				# write the raw channel file
 				{
 					echo "$lineCaught"
@@ -501,8 +501,8 @@ function processLink(){
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
 				ERROR "[DEBUG]: SUM = $sum"
-				webIconPath="http://$(hostname).local:444/live/icons/$sum.png"
-				webIconPathHD="http://$(hostname).local:444/live/icons/$sumHD.png"
+				webIconPath="http://$(hostname).local/live/icons/$sum.png"
+				webIconPathHD="http://$(hostname).local/live/icons/$sumHD.png"
 				#webIconPath="$sum.png"
 				# check if this link is a radio link
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
@@ -710,7 +710,7 @@ function buildPage(){
 	poster=$3
 	tabs=$4
 	################################################################################
-	localLinkSig="http://$(hostname).local:444/live/"
+	localLinkSig="http://$(hostname).local/live/"
 	################################################################################
 	# check for .local domain indicating a local link
 	if echo -n "$link" | grep -q --ignore-case ".local";then
@@ -835,7 +835,7 @@ function buildRadioPage(){
 	poster=$3
 	tabs=$4
 	################################################################################
-	localLinkSig="http://$(hostname).local:444/live/"
+	localLinkSig="http://$(hostname).local/live/"
 	################################################################################
 	# check for .local domain indicating a local link
 	if echo "$link" | grep -q --ignore-case ".local";then
@@ -967,10 +967,11 @@ webGen(){
 					echo "<div class='descriptionCard'>"
 					echo "	<h1>"
 					echo "		$title"
+					echo "		<img id='spinner' src='/spinner.gif' />";
 					echo "	</h1>"
 					echo "<div class='listCard'>"
 					echo "	<a class='button' href='$link'>"
-					echo "		Hard Link"
+					echo "		Direct Link"
 					echo "	</a>"
 					echo "	<a class='button vlcButton' href='vlc://$link'>"
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
@@ -1038,9 +1039,10 @@ webGen(){
 					echo "<div class='descriptionCard'>"
 					echo "	<a class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
 					echo "		$title"
+					echo "		<img id='spinner' src='/spinner.gif' />";
 					echo "	</a>"
 					echo "	<a class='button hardLink' href='$link'>"
-					echo "		Hard Link"
+					echo "		Direct Link"
 					echo "	</a>"
 					echo "	<a class='button hardLink vlcButton' href='vlc://$link'>"
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"

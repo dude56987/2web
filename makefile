@@ -142,6 +142,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/comics/;
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
+	mkdir -p debian/etc/2web/comics/webSources.d/;
 	mkdir -p debian/etc/2web/iptv/;
 	mkdir -p debian/etc/2web/iptv/sources.d/;
 	mkdir -p debian/etc/2web/iptv/blockedGroups.d/;
@@ -298,10 +299,10 @@ build-deb: upgrade-hls
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over apache configs
-	cp -v apacheConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
+	#cp -v apacheConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
 	cp -v apacheConf/0000-2web-website.conf debian/etc/apache2/sites-available/
 	cp -v apacheConf/0000-2web-website-SSL.conf debian/etc/apache2/sites-available/
-	cp -v apacheConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
+	#cp -v apacheConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
 	# copy over the zeroconf configs to anounce the service
 	cp -v apacheConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
 	#cp -v apacheConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
@@ -317,7 +318,10 @@ build-deb: upgrade-hls
 	# add the mark ahead of the version number
 	echo -n "#" >> debian/usr/share/2web/version.cfg
 	# write the version number
-	/usr/bin/git log --oneline | wc -l >> debian/usr/share/2web/version.cfg
+	/usr/bin/git log --oneline | wc -l | cut -f1 >> debian/usr/share/2web/simple_version.cfg
+	/usr/bin/git log --oneline | wc -l | cut -f1 > simple_version.txt
+	# Write the simple version number to the complex version name, it includes unstable and testing flags
+	cat debian/usr/share/2web/simple_version.cfg >> debian/usr/share/2web/version.cfg
 	# create each modules version info
 	echo -n "#" > debian/usr/share/2web/version_2web.cfg
 	/usr/bin/git log --stat | grep "^ 2web.sh" | wc -l >> debian/usr/share/2web/version_2web.cfg
@@ -349,10 +353,26 @@ build-deb: upgrade-hls
 	sed -i.bak 's/\\n*DEBIAN*\\n//g' ./debian/DEBIAN/md5sums
 	sed -i.bak 's/\\n*DEBIAN*//g' ./debian/DEBIAN/md5sums
 	rm -v ./debian/DEBIAN/md5sums.bak
-	# figure out the package size
-	du -sx --exclude DEBIAN ./debian/ > Installed-Size.txt
+	# figure out the package size, cut off the filename
+	du -sx --exclude DEBIAN ./debian/ | cut -f1 > Installed-Size.txt
+	#SIZE="$(shell du -sx --exclude DEBIAN ./debian/ | cut -d' ' -f1)"
+	#INSTALL_SIZE := $(SHELL cat Installed-Size.txt)
 	# copy over package data
 	cp -rv debdata/. debian/DEBIAN/
+	# modify the control data to set the installed size and the version number
+	#sed "s/<INSTALLED_SIZE>/$(shell cat Installed-Size.txt)/g" debian/DEBIAN/control
+	sed -i "s/<INSTALLED_SIZE>/$(shell cat Installed-Size.txt)/g" debian/DEBIAN/control
+	# read the simple version
+	# V1
+	#cat simple_version.txt
+	#sed "s/<VERSION_NUMBER>/$(shell cat simple_version.txt)/g" debian/DEBIAN/control
+	sed -i "s/<VERSION_NUMBER>/$(shell cat simple_version.txt)/g" debian/DEBIAN/control
+	# V2
+	#cat debian/usr/share/2web/simple_version.cfg
+	#echo "$(shell cat 'debian/usr/share/2web/simple_version.cfg')"
+	#echo "$(shell cat debian/usr/share/2web/simple_version.cfg)"
+	#sed "s/<VERSION_NUMBER>/$(shell cat debian/usr/share/2web/simple_version.cfg)/g" debian/DEBIAN/control
+	#sed -i "s/<VERSION_NUMBER>/$(shell cat debian/usr/share/2web/simple_version.cfg)/g" debian/DEBIAN/control
 	# write the changelog
 	/usr/bin/git log --date short > ./debian/DEBIAN/changelog
 	# fix permissions in package
@@ -364,4 +384,15 @@ build-deb: upgrade-hls
 	dpkg-deb -Z xz --build debian
 	cp -v debian.deb 2web_UNSTABLE.deb
 	rm -v debian.deb
+	# remove the DEBIAN control directory for the .deb package
+	rm -rv debian/DEBIAN
+	# compress and save the tarball
+	cd debian && tar -czvf ../2web_UNSTABLE.tar.gz etc/ usr/ var/
+	# remove the build directory
+	rm -rv debian
+	# fix permissions on install files
+	chmod 777 2web_UNSTABLE.deb
+	chmod 777 2web_UNSTABLE.tar.gz
+clean:
+	# remove temp debian build directory
 	rm -rv debian

@@ -52,15 +52,15 @@ function checkFileDataSum(){
 
 	# check the sum of a file and compare it to a previously stored sum
 	createDir "$webDirectory/sums/"
-	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
+	pathSum="$(echo "$filePath" | sha512sum | cut -d' ' -f1 )"
 
 	# check for a previous sum
 	if test -f "$webDirectory/sums/${moduleName}_$pathSum.cfg";then
 		# load the old sum
 		oldSum="$(cat "$webDirectory/sums/${moduleName}_$pathSum.cfg")"
 
-		# generate the new md5sum for the file
-		newSum="$(cat "$filePath" | md5sum | cut -d' ' -f1 )"
+		# generate the new sum for the file
+		newSum="$(cat "$filePath" | sha512sum | cut -d' ' -f1 )"
 
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
@@ -514,9 +514,9 @@ function getDirSum(){
 	# - Disk caching on linux should make this repetative file read
 	#   not destroy the hard drive
 	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
+	# convert lists into sum
+	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	# write the sum to stdout
 	echo "$tempLibList"
 }
 ################################################################################
@@ -527,7 +527,7 @@ function checkDirDataSum(){
 	directory=$2
 	# check the sum of a directory and compare it to a previously stored sum
 	createDir "$webDirectory/sums/"
-	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
 	newSum="$(getDirDataSum "$2")"
 	# check for a previous sum
 	if test -f "$webDirectory/sums/$pathSum.cfg";then
@@ -563,9 +563,9 @@ function getDirDataSum(){
 	# - Disk caching on linux should make this repetative file read
 	#   not destroy the hard drive
 	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
+	# convert lists into sum
+	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	# write the sum to stdout
 	echo "$tempLibList"
 }
 ########################################################################
@@ -578,7 +578,7 @@ function checkDirSum(){
 	if ! test -d "$webDirectory/sums/";then
 		mkdir -p "$webDirectory/sums/"
 	fi
-	pathSum="$(echo "$directory" | md5sum | cut -d' ' -f1 )"
+	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
 	newSum="$(getDirSum "$2")"
 	# check for a previous sum
 	if test -f "$webDirectory/sums/nfo_$pathSum.cfg";then
@@ -608,7 +608,7 @@ downloadThumbnail(){
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
-	sumName=$(echo -n "$thumbnailLink" | md5sum | cut -d' ' -f1)
+	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
 	# if the link has already been downloaded then dont download it
 	webDirectory=$(webRoot)
 	# if it dont exist download it

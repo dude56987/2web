@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web wiki viewer
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -44,6 +44,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		<?php
 			echo $wikiTitle;
 		?>
+		<img id='spinner' src='/spinner.gif' />
 	</h1>
 	<div class='listCard'>
 		<a class='button' href='?home'>⛵ Wiki Homepage</a>

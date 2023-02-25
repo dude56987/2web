@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web live tv settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -120,18 +120,36 @@ foreach($sourceFiles as $sourceFile){
 <div id='addLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Link</h2>
-<input width='60%' type='text' name='addLink' placeholder='Link'>
-<input class='button' type='submit'>
+<ul>
+	<li>Add a link directly to a livestream webpage</li>
+	<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
+</ul>
+<input width='60%' type='text' name='addLink' placeholder='http://example.com/playlist.m3u'>
+<button class='button' type='submit'>Add Link</button>
 </form>
 </div>
 
 <div id='addCustomLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Custom Link</h2>
-<input width='60%' type='text' name='addCustomLink' placeholder='Link'>
-<input width='60%' type='text' name='addCustomTitle' placeholder='Title'>
-<input width='60%' type='text' name='addCustomIcon' placeholder='Icon Link'>
-<input class='button' type='submit'>
+<ul>
+	<li>Add the direct path to the remote video stream
+		<ul>
+			<li><input width='60%' type='text' name='addCustomLink' placeholder='http://example.com/player?stream=example'></li>
+		</ul>
+	</li>
+	<li>Add the title of this channel
+		<ul>
+			<li><input width='60%' type='text' name='addCustomTitle' placeholder='Channel Title'></li>
+		</ul>
+	</li>
+	<li>Add the remote link path to the custom channel icon
+		<ul>
+			<li><input width='60%' type='text' name='addCustomIcon' placeholder='http://example.com/Link.png'></li>
+		</ul>
+	</li>
+</ul>
+<button class='button' type='submit'>Add Channel</button>
 </form>
 </div>
 

@@ -606,6 +606,8 @@ if( ! function_exists("availablePathServicesArray")){
 		array_push($pathServices,Array('FreshRSS', '/freshrss/', 'RSS Reader'));
 		array_push($pathServices,Array('Linux Dash', '/linuxdash/app/', 'System Monitor'));
 		array_push($pathServices,Array('PhpSysInfo', '/phpsysinfo/', 'System Information'));
+		# pi hole uses a generic /admin/ path which may be used by other stuff
+		array_push($pathServices,Array('Pi-hole', '/admin/', 'System Information'));
 
 		return $pathServices;
 	}
@@ -759,7 +761,8 @@ if( ! function_exists("drawPlaylistButton")){
 			# check the file has more than 2 entries
 			if (count(file("$filterName.index")) > 2){
 				if ($activeFilter == $filterName){
-					echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 				}else{
 					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
 				}
@@ -786,12 +789,20 @@ if( ! function_exists("SQLdrawPlaylistButton")){
 			if (in_array("_".$filterName, $dataResults)){
 				# if the button is the active filter change the css
 				if ($activeFilter == $filterName){
-					echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 				}else{
 					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
 				}
 			}
 		}
+	}
+}
+################################################################################
+if( ! function_exists("appendFile")){
+	function appendFile($filePath,$data){
+		$fileObject=fopen($filePath,"a");
+		fwrite($fileObject,$data);
 	}
 }
 ################################################################################

@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web CLI manual pages for website
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link href="/style.css" rel="stylesheet">
@@ -24,9 +24,9 @@
 </head>
 <body>
 <?PHP
-include("header.php")
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 ?>
-
 <div class='titleCard linkInfo'>
 	<h1>Manuals</h1>
 
@@ -57,6 +57,7 @@ include("header.php")
 <?PHP
 	foreach($readmeList as $readmeTitle){
 		echo "<div id='".$readmeTitle."' class='titleCard'>";
+		echo "<h1>$readmeTitle</h1>";
 		include("/usr/share/2web/help/".$readmeTitle.".html");
 		echo "</div>";
 	}

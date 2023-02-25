@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web graph index
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -30,10 +30,13 @@
 	include("/usr/share/2web/2webLib.php");
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	// add random comics below the header
-	drawPosterWidget("graphs", True);
+	drawPosterWidget("graphs");
 ?>
 <div class='settingListCard'>
-
+<h1>
+	Graphs
+	<img id='spinner' src='/spinner.gif' />
+</h1>
 <?php
 # store the index path
 $indexFilePath="/var/cache/2web/web/graphs/graphs.index";

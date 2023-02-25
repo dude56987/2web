@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web series seasons view
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='seriesBackground'>
 <head>
 <link rel='stylesheet' href='/style.css' />
@@ -91,7 +91,11 @@ foreach($seasonDirs as $seasonDir){
 			$seasonName = str_replace('/season.index','',$seasonDir);
 			$seasonName = str_replace($activeDir.'/','',$seasonName);
 			echo "	<a href='#$seasonName' class='button'>";
-			echo "		📁 $seasonName";
+			if ($seasonName == "Season 0000"){
+				echo "		📁 Specials";
+			}else{
+				echo "		📁 $seasonName";
+			}
 			echo "	</a>";
 			flush();
 			ob_flush();
@@ -142,7 +146,11 @@ foreach($seasonDirs as $seasonDir){
 		$seasonName = str_replace($activeDir.'/','',$seasonDir);
 		echo "<div class='seasonContainer'>";
 		echo "<div class='seasonHeader'>";
-		echo "<h2 id='$seasonName'>$seasonName</h2>";
+		if ($seasonName == "Season 0000"){
+			echo "<h2 id='$seasonName'>Specials</h2>";
+		}else{
+			echo "<h2 id='$seasonName'>$seasonName</h2>";
+		}
 		echo "</div>";
 		echo "<hr>";
 		// set so script keeps running even if user cancels it

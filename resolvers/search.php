@@ -1,7 +1,25 @@
+<!--
+########################################################################
+# 2web search interface
+# Copyright (C) 2023  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+-->
 <?PHP
 // NOTE: Do not write any text to the document, this will break the redirect
-// redirect the given file to the resoved url found with youtube-dl
-################################################################################
+// redirect the given file to the resoved url found with yt-dlp
 ################################################################################
 # force debugging
 #$_GET['debug']='true';
@@ -34,7 +52,7 @@ function runShellCommand($command){
 	debug("OUTPUT=".$output."<br>");
 }
 ################################################################################
-function searchIndex($indexPath,$searchQuery){
+function searchIndex($indexPath,$searchQuery,$cacheFilePath){
 	$foundData=false;
 	$tempData="";
 	# if the search index exists
@@ -51,8 +69,8 @@ function searchIndex($indexPath,$searchQuery){
 					# read the file in peices
 					$linkTextHandle = fopen( $fileData , "r" );
 					while( ! feof( $linkTextHandle ) ){
-						$tempFileData = fgets( $linkTextHandle , 4096 );
-						# read each packet of the file
+						$tempFileData = fgets( $linkTextHandle);
+						# read each line of the file
 						$tempData .= $tempFileData;
 						echo $tempFileData;
 						ob_flush();
@@ -64,6 +82,7 @@ function searchIndex($indexPath,$searchQuery){
 		}
 	}
 	if ($foundData){
+		appendFile($cacheFilePath,$tempData);
 		return array(true,$tempData);
 	}else{
 		return array(false,$tempData);
@@ -80,7 +99,56 @@ function scan_dir($directory){
 	}
 }
 ################################################################################
-function searchAllWiki($wikiPath){
+function searchWeather($cacheFilePath){
+	$weatherData=scanDir("/var/cache/2web/web/weather/data/");
+	$foundData=False;
+	$output="";
+	# search weather data and forecasts
+	foreach($weatherData as $weatherPath){
+		$fullWeatherPath="/var/cache/2web/web/weather/data/".$weatherPath;
+		#echo "$fullWeatherPath<br>";
+		# read the weather data from the file
+		if (stripos($fullWeatherPath,".index")){
+			if (file_exists($fullWeatherPath)){
+				if (is_file($fullWeatherPath)){
+					#echo "File is file...<br>";
+					$weatherFileData=file_get_contents($fullWeatherPath);
+					#echo $weatherFileData."<br>";
+					if (stripos($weatherFileData,$_GET['q'])){
+						if (stripos($fullWeatherPath,"current_")){
+							# check current weather conditions
+							$tempOutput="<div class='titleCard'>";
+							$tempOutput.=$weatherFileData;
+							$tempOutput.="</div>"."\n";
+							$output.=$tempOutput;
+							echo $tempOutput;
+							flush();
+							ob_flush();
+							$foundData=True;
+							#appendFile($cacheFilePath,$tempOutput);
+						}else if(stripos($fullWeatherPath,"forcast_")){
+							# check forcast
+							$tempOutput=$weatherFileData;
+							$output.=$tempOutput."\n";
+							echo $tempOutput;
+							flush();
+							ob_flush();
+							$foundData=True;
+							#appendFile($cacheFilePath,$tempOutput);
+						}
+					}
+				}
+			}
+		}
+	}
+	if ($foundData){
+		return array(true,$output);
+	}else{
+		return array(false,$output);
+	}
+}
+################################################################################
+function searchAllWiki($wikiPath,$cacheFilePath){
 	# search all wiki content
 	$output = "";
 	$foundData = false;
@@ -88,7 +156,7 @@ function searchAllWiki($wikiPath){
 	if ($wikiPaths){
 		foreach($wikiPaths as $wikiPath){
 			# read each wiki and search for content
-			$wikiSearchResults = searchWiki($_SERVER['DOCUMENT_ROOT']."/wiki/".$wikiPath);
+			$wikiSearchResults = searchWiki($_SERVER['DOCUMENT_ROOT']."/wiki/".$wikiPath,$cacheFilePath);
 			if ($wikiSearchResults[0]){
 				# if the wiki found search results add them to the output
 				$output .= $wikiSearchResults[1];
@@ -103,7 +171,7 @@ function searchAllWiki($wikiPath){
 	}
 }
 ################################################################################
-function searchChannels(){
+function searchChannels($cacheFilePath){
 	$output = "";
 	$foundData = false;
 	# search though the article files for the search term
@@ -124,6 +192,8 @@ function searchChannels(){
 
 				$output .= $tempOutput;
 
+				appendFile($cacheFilePath,$tempOutput);
+
 				echo $tempOutput;
 				flush();
 				ob_flush();
@@ -137,7 +207,7 @@ function searchChannels(){
 	}
 }
 ################################################################################
-function searchWiki($wikiPath){
+function searchWiki($wikiPath,$cacheFilePath){
 	$output = "";
 	$foundData = false;
 	# search though the article files for the search term
@@ -158,6 +228,8 @@ function searchWiki($wikiPath){
 				$tempOutput .= "</div>\n";
 
 				$output .= $tempOutput;
+
+				appendFile($cacheFilePath,$tempOutput);
 
 				echo $tempOutput;
 				flush();
@@ -214,6 +286,8 @@ function searchWiki($wikiPath){
 
 						$output .= $tempOutput;
 
+						appendFile($cacheFilePath,$tempOutput);
+
 						echo $tempOutput;
 						flush();
 						ob_flush();
@@ -230,6 +304,11 @@ function searchWiki($wikiPath){
 	}
 }
 ################################################################################
+function printDateTime(){
+	$date = new DateTimeImmutable();
+	echo $date->format("y-m-d H:i:s");
+}
+################################################################################
 ?>
 <html class='randomFanart'>
 <head>
@@ -242,30 +321,18 @@ function searchWiki($wikiPath){
 <?PHP
 include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
-flush();
-ob_flush();
-?>
-<!--
-<div class='titleCard'>
-	<form action='/search.php' method='get'>
-		<h2>2web Search</h2>
-		<input class='searchBox' width='60%' type='text' name='q' placeholder='SEARCH...' required>
-		<button class='button' type='submit'>🔍</button>
-	</form>
-</div>
--->
-<?PHP
+
 ################################################################################
 if (array_key_exists("q",$_GET)){
 	$searchQuery = $_GET["q"];
 	# create md5sum for the query to store output
 	$querySum = md5($searchQuery);
 
-	echo "<div class='settingListCard'>";
+	echo "<div class='settingListCard'>\n";
 	echo "<h1>";
-	echo "Searching  for '$searchQuery' ";
+	echo "Searching  for '$searchQuery'";
 	echo "<img id='spinner' src='/spinner.gif' />";
-	echo "</h1>";
+	echo "</h1>\n";
 
 	# draw the top of the search results to prevent long searches from timing out
 	flush();
@@ -280,52 +347,68 @@ if (array_key_exists("q",$_GET)){
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/random/albums.index"));
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/comics/comics.index"));
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/episodes.index"));
 
-	$totalOutput="";
 	$searchCacheFilePath="search/".$querySum.".index";
+
+	# search weather stations first
+	# - weather results can not be cached because they update every 15 minutes
+	$weatherResults=searchWeather($searchCacheFilePath);
+
 	if (file_exists($searchCacheFilePath)){
 		# load the cached search results
 		$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
 		while( ! feof($searchCacheFileHandle)){
-			# send a large frame of data from the cache file at a time
-			//echo fgets($searchCacheFileHandle,4096);
+			# send a line of the cache file
 			echo fgets($searchCacheFileHandle);
 		}
 	}else{
 		# if the file does not exist cache the search results
-
 		# ignore user aborts after the cacheing has begun
 		ignore_user_abort(true);
 
+		$startSearchTime=microtime(True);
+		# tell apache to not compress search results so streaming search results will work
+		#apache_setenv("no-gzip", "1");
+
+		# write the cache file as a lock file
+		appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
+		# set the max execution time to 15 minutes
+		# additional searches will display the results found by this running process
+		set_time_limit(900);
+
 		foreach( $indexPaths as $indexPath ){
-			$indexInfo=searchIndex($indexPath,$searchQuery);
+			$indexInfo=searchIndex($indexPath,$searchQuery,$searchCacheFilePath);
 			if ( $indexInfo[0] ){
-				$totalOutput .= $indexInfo[1];
+				echo "<hr>";
+				appendFile($searchCacheFilePath,"<hr>");
 				$foundResults = true;
-				flush();
-				ob_flush();
 			}
 		}
 		# search all the live channel names
-		$channelResults=searchChannels();
+		$channelResults=searchChannels($searchCacheFilePath);
+		if ($channelResults[0]){
+			echo "<hr>";
+			appendFile($searchCacheFilePath,"<hr>");
+		}
 
 		# search all the wikis
-		$wikiSearchResults = searchAllWiki($_GET['q']);
-		#if ($wikiSearchResults[0]){
-		#	echo $wikiSearchResults[1];
-		#}
+		$wikiSearchResults = searchAllWiki($_GET['q'],$searchCacheFilePath);
+		if ($wikiSearchResults[0]){
+			echo "<hr>";
+			appendFile($searchCacheFilePath,"<hr>");
+		}
 
-		#echo $wikiSearchResults[1];
-		flush();
-		ob_flush();
-
-		if ($foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) ){
-			#echo $totalOutput;
-			#echo $wikiSearchResults[1];
-			file_put_contents($searchCacheFilePath,($totalOutput.$wikiSearchResults[1].$channelResults[1]));
+		# calc the total search time
+		$totalSearchTime= round((microtime(True) - $startSearchTime), 4);
+		if ( $foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) || ($weatherResults[0] == true) ){
+			$tempEndString="<h1>Search Complete in $totalSearchTime seconds</h1>";
+			echo $tempEndString;
+			appendFile($searchCacheFilePath,$tempEndString);
 		}else{
-			echo "<h1>No Search Results for '$searchQuery'</h1>";
-			file_put_contents($searchCacheFilePath,("<h1>No Search Results for '$searchQuery'</h1>"));
+			$tempEndString="<h1>No Search Results for '$searchQuery' after search time of $totalSearchTime seconds</h1>";
+			echo $tempEndString;
+			appendFile($searchCacheFilePath,$tempEndString);
 		}
 	}
 
@@ -336,18 +419,10 @@ if (array_key_exists("q",$_GET)){
 	formatEcho("<a class='button' target='_new' href='https://search.brave.com/search?q=$searchQuery'>Brave 🔍</a>",3);
 	formatEcho("<a class='button' target='_new' href='https://www.peekier.com/#!$searchQuery'>Peekier 🔍</a>",3);
 	formatEcho("<a class='button' target='_new' href='https://www.duckduckgo.com/?q=$searchQuery'>DuckDuckGo 🔍</a>",3);
-	formatEcho("<a class='button' target='_new' href='https://www.bing.com/?q=$searchQuery'>Bing 🔍</a>",3);
-	formatEcho("<a class='button' target='_new' href='https://www.google.com/?q=$searchQuery'>Google 🔍</a>",3);
 	formatEcho("</div>",2);
 	formatEcho("</div>",1);
 
 	echo "</div>";
-
-	echo "<style>";
-	echo "	#spinner {";
-	echo "		display: none;";
-	echo "	}";
-	echo "</style>";
 
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

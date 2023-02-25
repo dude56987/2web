@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web comic index webpage
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -38,10 +38,13 @@
 <hr>
 
 <div class='settingListCard'>
-
+<h1>
+	Comics
+	<img id='spinner' src='/spinner.gif' />
+</h1>
 <?php
-
-
+flush();
+ob_flush();
 # store the index path
 $indexFilePath="/var/cache/2web/web/comics/comics.index";
 # store the empty message

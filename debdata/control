@@ -1,10 +1,10 @@
 Package: 2web
-Version: 0.0.1
+Version: <VERSION_NUMBER>.0.0.0
 Section: admin
-Maintainer: Carl J Smith <BM-NBHLt5EUFVEbRCmrbVrfCyaB2c8d24U9>
-Installed-Size: 96
+Maintainer: Carl J Smith
+Installed-Size: <INSTALLED_SIZE>
 Priority: optional
 Architecture: all
-Depends: apache2(>=2.4), detox, html-xml-utils, ffmpeg, imagemagick, txt2html, mediainfo, php, libapache2-mod-php, python3-pip, fonts-opendyslexic, jq, parallel, at, ncurses-bin, coreutils, jq, curl, imagemagick, html-xml-utils, cron, wkhtmltopdf, python3-pip, findutils, fonts-opendyslexic, ffmpeg, procps, openssl, poppler-utils, weather-util, weather-util-data, fortune, fortunes, symlinks, php-curl, sqlite3
-Description: Generate a website from a list of .nfo libary directories
- Generate a website from a list of .nfo libary directories.
+Depends: apache2(>=2.4), detox, html-xml-utils, ffmpeg, imagemagick, txt2html, mediainfo, php, libapache2-mod-php, python3-pip, fonts-opendyslexic, jq, parallel, at, ncurses-bin, coreutils, jq, curl, imagemagick, html-xml-utils, cron, wkhtmltopdf, python3-pip, findutils, fonts-opendyslexic, ffmpeg, procps, openssl, poppler-utils, weather-util, weather-util-data, fortune, fortunes, symlinks, php-curl, sqlite3, qrencode, vnstati
+Description: Generate a website for use on the LAN
+ Generate a website for your multimedia collection compatible with tablets,phones, and all desktop computers. Host movies,shows,music,books,iptv,wikis,weather and system graphs on a single machine. NO API KEYS REQUIRED! Think of 2web as a bookshelf in your home for your local network. 2web was originally created for a raspberry pi 2 and works with Dietpi, Raspbian, Debian, and Ubuntu derivatives.

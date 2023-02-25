@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web footer webpage
+# 2web website footer
 # Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -68,7 +68,7 @@ echo "</div>";
 
 # figure out the header data template
 $cacheFile=$webDirectory."/web_cache/footerData.index";
-# if file is older than 2 hours
+# if file is older than 1 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
 		// update the cached file
@@ -85,49 +85,79 @@ if (file_exists($cacheFile)){
 echo "<div id='footer' class=''>";
 if ($writeFile){
 	ignore_user_abort(true);
+	# if any of the variables exist then the checks do not need to be re-run
+	if (! ($graphsFound || $moviesFound || $showsFound || $musicFound || $comicsFound || $channelsFound)){
+		# check for section indexes to determine if buttons need drawn
+		$graphsFound=False;
+		$moviesFound=False;
+		$showsFound=False;
+		$musicFound=False;
+		$comicsFound=False;
+		$channelsFound=False;
+
+		if (file_exists("$webDirectory/graphs/")){
+			$graphsFound=True;
+		}
+		if (file_exists("$webDirectory/movies/movies.index")){
+			$moviesFound=True;
+		}
+		if (file_exists("$webDirectory/shows/shows.index")){
+			$showsFound=True;
+		}
+		if (file_exists("$webDirectory/music/music.index")){
+			$musicFound=True;
+		}
+		if (file_exists("$webDirectory/comics/comics.index")){
+			$comicsFound=True;
+		}
+		if (file_exists("$webDirectory/totalChannels.index")){
+			if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
+				if (file_exists("$webDirectory/live/index.php")){
+					$channelsFound=True;
+				}
+			}
+		}
+	}
+
+
+
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	$fileData = "";
 
 	# build the header
-	$fileData .= "<a class='' href='/index.php'>";
-	$fileData .= "🏠";
-	$fileData .= "<span class='footerText'>";
-	$fileData .= " HOME";
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
+	#$fileData .= "<a class='' href='/index.php'>";
+	#$fileData .= "🏠";
+	#$fileData .= "<span class='footerText'>";
+	#$fileData .= " HOME";
+	#$fileData .= "</span>";
+	#$fileData .= "</a> ";
 
-	$fileData .= formatText("<a class='' href='/new/'>",2);
-	$fileData .= formatText("📃",3);
-	$fileData .= formatText("<span class='footerText'>",3);
-	$fileData .= formatText("PLAYLISTS",4);
-	$fileData .= formatText("</span>",3);
-	$fileData .= formatText("</a> ",2);
+	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
+		$fileData .= "<a class='' href='/new/'>";
+		$fileData .= "📃";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " PLAYLISTS";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
+	}
 
-	if (file_exists("$webDirectory/movies/")){
-		if (file_exists("$webDirectory/totalMovies.index")){
-			if ((file_get_contents("$webDirectory/totalMovies.index")) > 0){
-				$fileData .= "<a class='' href='/movies'>";
-				$fileData .= "🎥";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " MOVIES";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
+	if ($moviesFound){
+		$fileData .= "<a class='' href='/movies'>";
+		$fileData .= "🎥";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " MOVIES";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
-	if (file_exists("$webDirectory/shows/")){
-		if (file_exists("$webDirectory/totalShows.index")){
-			if ((file_get_contents("$webDirectory/totalShows.index")) > 0){
-				$fileData .= "<a class='' href='/shows'>";
-				$fileData .= "📺";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " SHOWS";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
+	if ($showsFound){
+		$fileData .= "<a class='' href='/shows'>";
+		$fileData .= "📺";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " SHOWS";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
-	if (file_exists("$webDirectory/music/music.index")){
+	if ($musicFound){
 		$fileData .= "<a class='' href='/music'>";
 		$fileData .= "🎧";
 		$fileData .= "<span class='footerText'>";
@@ -135,37 +165,29 @@ if ($writeFile){
 		$fileData .= "</span>";
 		$fileData .= "</a> ";
 	}
-	if (file_exists("$webDirectory/comics/")){
-		if (file_exists("$webDirectory/totalComics.index")){
-			if ((file_get_contents("$webDirectory/totalComics.index")) > 0){
-				$fileData .= "<a class='' href='/comics'>";
-				$fileData .= "📚";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " COMICS";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
+	if ($comicsFound){
+		$fileData .= "<a class='' href='/comics'>";
+		$fileData .= "📚";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " COMICS";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
-	if (file_exists("$webDirectory/totalChannels.index")){
-		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
-			if (file_exists("$webDirectory/live/index.php")){
-				$fileData .= "<a class='' href='/live'>";
-				$fileData .= "📡";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " LIVE";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
+	if ($channelsFound){
+		$fileData .= "<a class='' href='/live'>";
+		$fileData .= "📡";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " LIVE";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
 	if (file_exists("$webDirectory/wiki/")){
-		$fileData .= formatText("<a class='' href='/wiki/'>",2);
-		$fileData .= formatText("⛵",3);
-		$fileData .= formatText("<span class='footerText'>",3);
-		$fileData .= formatText("WIKI",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a> ",2);
+		$fileData .= "<a class='' href='/wiki/'>";
+		$fileData .= "⛵";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " WIKI";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
 	}
 	// read the weather info for weather2web
 	if (file_exists("$webDirectory/weather/index.php")){
@@ -180,7 +202,7 @@ if ($writeFile){
 			}
 		}
 	}
-	if (file_exists("$webDirectory/graphs/")){
+	if ($graphsFound){
 		$fileData .= "<a class='' href='/graphs/'>";
 		$fileData .= "📊";
 		$fileData .= "<span class='footerText'>";
@@ -188,6 +210,34 @@ if ($writeFile){
 		$fileData .= "</span>";
 		$fileData .= "</a> ";
 	}
+	#$fileData .= "<a class='' href='/kodi/'>";
+	#$fileData .= "🇰";
+	#$fileData .= "<span class='footerText'>";
+	#$fileData .= " KODI";
+	#$fileData .= "</span>";
+	#$fileData .= "</a> ";
+
+	// draw the help button
+	$fileData .= "<a class='' href='/help.php'>";
+	$fileData .= "❔";
+	$fileData .= "<span class='footerText'>";
+	$fileData .= " HELP";
+	$fileData .= "</span>";
+	$fileData .= "</a> ";
+
+	$fileData .= "<a class='' href='/support.php'>";
+	$fileData .= "🫀";
+	$fileData .= "<span class='footerText'>";
+	$fileData .= " SUPPORT";
+	$fileData .= "</span>";
+	$fileData .= "</a> ";
+
+	$fileData .= "</div>";
+
+	$fileData .= "<div class='topButtonSpace'>";
+	$fileData .= "<hr>";
+	$fileData .= "</div>";
+
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
@@ -195,17 +245,10 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
-// draw the help button
-echo "<a class='' href='/help.php'>";
-echo "❔ ";
-echo "<span class='footerText'>";
-echo "HELP";
-echo "</span>";
-echo "</a> ";
-
-echo "</div>";
-
-echo "<div class='topButtonSpace'>";
-echo "<hr>";
-echo "</div>";
+// remove the spinners after the footer is loaded
+echo "<style>";
+echo "	#spinner {";
+echo "		display: none;";
+echo "	}";
+echo "</style>";
 ?>

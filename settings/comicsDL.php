@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web comic downloder settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -38,6 +38,8 @@ include("settingsHeader.php");
 		<li><a href='#addComicDownloadLink'>Add Comic Download Link</a></li>
 		<li><a href='#serverDownloadLinkConfig'>Server Download Link Config</a></li>
 		<li><a href='#currentLinks'>Current Links</a></li>
+		<li><a href='#gallery-dl_links'>Gallery-dl Support</a></li>
+		<li><a href='#dosage_links'>Dosage Support</a></li>
 	</ul>
 </div>
 
@@ -59,8 +61,11 @@ include("settingsHeader.php");
 <div id='addComicDownloadLink' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Comic Download Link</h2>
+<ul>
+	<li>Add webpage links from <a href='#gallery-dl_links'>supported websites</a></li>
+</ul>
 <input width='60%' type='text' name='addComicDownloadLink' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
+<button class='button' type='submit'>Add Link</button>
 </form>
 </div>
 
@@ -103,14 +108,65 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
-
-
-
 ?>
 </div>
 
-<div id='currentLinks' class='settingListCard'>
-<h2>Supported Websites</h2>
+
+<div id='addComicDownloadLink' class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Add WebComic By Name</h2>
+<ul>
+	<li>Add a webcomic by name path from <a href='#dosage_links'>supported comics</a>.</li>
+</ul>
+<input width='60%' type='text' name='addWebComicDownload' placeholder='xkcd'>
+<button class='button' type='submit'>Add Link</button>
+</form>
+</div>
+
+<?PHP
+echo "<div id='serverWebDownloadLinkConfig' class='settingListCard'>\n";
+echo "<h2>Server WebComic Download Link Config</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/2web/comics/webSources.cfg");
+echo "</pre>\n";
+echo "</div>";
+
+echo "<div id='currentLinks' class='settingListCard'>";
+echo "<h2>Current Webcomic links</h2>\n";
+$sourceFiles = scandir("/etc/2web/comics/webSources.d/");
+//print_r($sourceFiles);
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/webSources.d/*.cfg"));
+// reverse the time sort
+$sourceFiles = array_reverse($sourceFiles);
+//print_r($sourceFiles);
+//echo "<table class='settingsTable'>";
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
+	if (file_exists($sourceFile)){
+		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				//echo "<hr>\n";
+				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
+				$link=file_get_contents($sourceFile);
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "		<button class='button' type='submit' name='removeWebComicDownload' value='".$link."'>Remove Link</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+			}
+		}
+	}
+}
+?>
+</div>
+
+<div id='gallery-dl_links' class='settingListCard'>
+<h2>Gallery-dl Supported Websites</h2>
 <table>
 	<tr>
 		<th>Extractor</th>
@@ -118,7 +174,7 @@ foreach($sourceFiles as $sourceFile){
 		<th>HTTP</th>
 	</tr>
 <?PHP
-	$extractors = explode("\n", shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq"));
+$extractors = explode("\n", shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq"));
 foreach($extractors as $extractor_name){
 	if ($extractor_name != ''){
 		echo "<tr>";
@@ -132,12 +188,35 @@ foreach($extractors as $extractor_name){
 		echo "<a href='http://$extractor_name'>http://$extractor_name</a>";
 		echo "</td>";
 		echo "</tr>";
+		flush();
+		ob_flush();
 	}
 }
 ?>
 </table>
 </div>
 
+<?PHP
+$cacheFilePath="/var/cache/2web/web/web_cache/comic2web_dosageList.index";
+if (file_exists($cacheFilePath)){
+	echo "<div id='dosage_links' class='settingListCard'>";
+	echo "<h2>Dosage Supported Webcomics</h2>";
+	echo "<table>";
+	echo "	<tr>";
+	echo "		<th>Comic Name</th>";
+	echo "		<th>Link</th>";
+	echo "		<th>Language</th>";
+	echo "	</tr>";
+	# load the cached search results
+	$cacheFileHandle = fopen($cacheFilePath,"r");
+	while( ! feof($cacheFileHandle)){
+		# send a line of the cache file
+		echo fgets($cacheFileHandle);
+	}
+	echo "</table>";
+	echo "</div>";
+}
+?>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

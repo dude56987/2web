@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web module settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -113,9 +113,6 @@ foreach($modules as $module){
 		echo "					Enable or disable the graphs on the website.";
 		echo "				</li>";
 	}elseif ($module == "kodi2web"){
-		echo "				<li>";
-		echo "					Will enable graph Processing.";
-		echo "				</li>";
 		echo "				<li>";
 		echo "					Enable or disable sync of linked kodi instances.";
 		echo "				</li>";

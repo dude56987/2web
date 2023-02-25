@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web update log
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' href='/style.css' />

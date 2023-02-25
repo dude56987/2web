@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web weather settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -59,7 +59,7 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 	<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
-	<input class='button' type='submit'>
+	<button class='button' type='submit'>Add Location</button>
 </form>
 </div>
 
@@ -151,11 +151,11 @@ foreach($sourceFiles as $sourceFile){
 				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
 				echo "	<h2>".$link."</h2>";
-				echo "<div class='buttonContainer'>\n";
+				//echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeWeatherLocation' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeWeatherLocation' value='".$link."'>Remove</button>\n";
 				echo "	</form>\n";
-				echo "</div>\n";
+				//echo "</div>\n";
 				echo "</div>\n";
 			}
 		}

@@ -41,8 +41,41 @@ if (file_exists($cacheFile)){
 }
 if ($writeFile){
 	ignore_user_abort(true);
+
+	# open the file for writing
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	$fileData = "";
+
+	# check for section indexes to determine if buttons need drawn
+	$graphsFound=False;
+	$moviesFound=False;
+	$showsFound=False;
+	$musicFound=False;
+	$comicsFound=False;
+	$channelsFound=False;
+
+	if (file_exists("$webDirectory/graphs/")){
+		$graphsFound=True;
+	}
+	if (file_exists("$webDirectory/movies/movies.index")){
+		$moviesFound=True;
+	}
+	if (file_exists("$webDirectory/shows/shows.index")){
+		$showsFound=True;
+	}
+	if (file_exists("$webDirectory/music/music.index")){
+		$musicFound=True;
+	}
+	if (file_exists("$webDirectory/comics/comics.index")){
+		$comicsFound=True;
+	}
+	if (file_exists("$webDirectory/totalChannels.index")){
+		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
+			if (file_exists("$webDirectory/live/index.php")){
+				$channelsFound=True;
+			}
+		}
+	}
 
 	# build the header
 	$fileData .= formatText("<div id='header' class='header'>");
@@ -65,14 +98,16 @@ if ($writeFile){
 	$fileData .= formatText("</span>",3);
 	$fileData .= formatText("</a>",2);
 
-	$fileData .= formatText("<a class='button' href='/new/'>",2);
-	$fileData .= formatText("📃",3);
-	$fileData .= formatText("<span class='headerText'>",3);
-	$fileData .= formatText("PLAYLISTS",4);
-	$fileData .= formatText("</span>",3);
-	$fileData .= formatText("</a>",2);
+	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
+		$fileData .= formatText("<a class='button' href='/new/'>",2);
+		$fileData .= formatText("📃",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("PLAYLISTS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 
-	if (file_exists("$webDirectory/movies/movies.index")){
+	if ($moviesFound){
 		$fileData .= formatText("<a class='button' href='/movies'>",2);
 		$fileData .= formatText("🎥",3);
 		$fileData .= formatText("<span class='headerText'>",3);
@@ -80,7 +115,7 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
-	if (file_exists("$webDirectory/shows/shows.index")){
+	if ($showsFound){
 		$fileData .= formatText("<a class='button' href='/shows'>",2);
 		$fileData .= formatText("📺",3);
 		$fileData .= formatText("<span class='headerText'>",3);
@@ -88,7 +123,7 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
-	if (file_exists("$webDirectory/music/music.index")){
+	if ($musicFound){
 		$fileData .= formatText("<a class='button' href='/music'>",2);
 		$fileData .= formatText("🎧",3);
 		$fileData .= formatText("<span class='headerText'>",3);
@@ -96,7 +131,7 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
-	if (file_exists("$webDirectory/comics/comics.index")){
+	if ($comicsFound){
 		$fileData .= formatText("<a class='button' href='/comics'>",2);
 		$fileData .= formatText("📚",3);
 		$fileData .= formatText("<span class='headerText'>",3);
@@ -105,17 +140,13 @@ if ($writeFile){
 		$fileData .= formatText("</a>",2);
 	}
 
-	if (file_exists("$webDirectory/totalChannels.index")){
-		if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
-			if (file_exists("$webDirectory/live/index.php")){
-				$fileData .= formatText("<a class='button' href='/live'>",2);
-				$fileData .= formatText("📡",3);
-				$fileData .= formatText("<span class='headerText'>",3);
-				$fileData .= formatText("LIVE",4);
-				$fileData .= formatText("</span>",3);
-				$fileData .= formatText("</a>",2);
-			}
-		}
+	if ($channelsFound){
+		$fileData .= formatText("<a class='button' href='/live'>",2);
+		$fileData .= formatText("📡",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("LIVE",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
 	}
 	if (file_exists("$webDirectory/wiki/")){
 		$fileData .= formatText("<a class='button' href='/wiki/'>",2);
@@ -139,7 +170,7 @@ if ($writeFile){
 			}
 		}
 	}
-	if (file_exists("$webDirectory/graphs/")){
+	if ($graphsFound){
 		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
 		$fileData .= formatText("📊",3);
 		$fileData .= formatText("<span class='headerText'>",3);
@@ -172,7 +203,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI
 	formatEcho("</a>",2);
 
 	formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
-	formatEcho( "❔",3);
+	formatEcho( "❓",3);
 	formatEcho("<span class='headerText'>",3);
 	formatEcho("Help",4);
 	formatEcho("</span>",3);
@@ -186,7 +217,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI
 	formatEcho("</a>",2);
 
 	formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
-	formatEcho( "❔",3);
+	formatEcho( "❓",3);
 	formatEcho("<span class='headerText'>",3);
 	formatEcho("Help",4);
 	formatEcho("</span>",3);

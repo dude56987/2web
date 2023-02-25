@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web public help document
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -30,22 +30,23 @@ ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
-
 <?php
 # add the updated movies below the header
 #include("../randomChannels.index");
 ################################################################################
 include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-?>
-
-<?php
 // find all the groups
-echo "<div class='titleCard'>\n";
-echo "<h1>Groups</h1>\n";
-echo "<div class='listCard'>\n";
-echo "	<a id='all' class='button tag' href='/live/#all'>\n";
-echo "		All\n";
-echo "	</a>\n";
+?>
+<div class='titleCard'>
+<h1>
+	Groups
+	<img id='spinner' src='/spinner.gif' />
+</h1>
+<div class='listCard'>
+	<a id='all' class='button tag' href='/live/#all'>
+		All
+	</a>
+<?php
 # load database
 $databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/live/groups.db");
 # set the timeout to 1 minute since most webbrowsers timeout loading before this
@@ -56,7 +57,17 @@ $result = $databaseObj->query("select name from sqlite_master where type='table'
 while($row = $result->fetchArray()){
 	$cleanName=str_replace("_","",$row['name']);
 	# read the directory name
-	echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
+	if (array_key_exists("filter",$_GET)){
+		$filterType=$_GET['filter'];
+		if ($filterType == $cleanName){
+			echo "	<a id='".$cleanName."' class='button tag activeButton' href='?filter=".$cleanName."#".$cleanName."'>\n";
+		}else{
+			echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
+		}
+	}else{
+		echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
+	}
+	//echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
 	echo "		".$cleanName."\n";
 	echo "	</a>\n";
 }
@@ -76,7 +87,10 @@ echo "</div>\n";
 if (array_key_exists("filter",$_GET)){
 	$filterType=$_GET['filter'];
 	# draw the header to identify the filter applied
-	echo "<h2>$filterType</h2>";
+	echo "<h2>";
+	echo "$filterType";
+	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "</h2>";
 
 	$result = $databaseObj->query('select * from "_'.$filterType.'";');
 
@@ -94,6 +108,12 @@ if (array_key_exists("filter",$_GET)){
 		}
 	}
 }else if(file_exists("channels.m3u")){
+	# draw the header to identify the filter applied
+	echo "<h2>";
+	echo "All Channels";
+	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "</h2>";
+
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",file_get_contents($_SERVER['DOCUMENT_ROOT']."/live/channels.m3u"));
 	// reverse the time sort
@@ -114,6 +134,11 @@ if (array_key_exists("filter",$_GET)){
 		}
 	}
 }else{
+	# draw the header to identify the filter applied
+	echo "<h2>";
+	echo "All Found Channels";
+	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "</h2>";
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/live/index/channel_*.index | sort"));
 	// reverse the time sort

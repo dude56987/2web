@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web comic settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -64,7 +64,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 	<h2>Add Comic Library Path</h2>
 	<input width='60%' type='text' name='addComicLibrary' placeholder='/absolute/path/to/the/Library'>
-	<input class='button' type='submit'>
+	<button class='button' type='submit'>Add Path</button>
 </form>
 </div>
 

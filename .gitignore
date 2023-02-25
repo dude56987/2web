@@ -1,5 +1,6 @@
 Installed-Size.txt
 *.deb
+*.tar.gz
 test/
 Test/
 TEST/

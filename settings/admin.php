@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web administrative API
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' href='/style.css'>
@@ -144,42 +144,35 @@ if (array_key_exists("newUserName",$_POST)){
 		# create a new htaccces file
 		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
 	}
-	countdown(5);
-	echo "<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>";
+	outputLog("<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>");
 }else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
-	echo "Removing user $userName from authorization list<br>\n";
+	outputLog("Removing user $userName from authorization list");
 	unlink("/etc/2web/users/$userName");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#removeUser'>BACK</a><hr>";
 }else if (array_key_exists("all_update",$_POST)){
-	echo "Scheduling 2web update!<br>\n";
+	outputLog("Scheduling 2web update!");
 	shell_exec("echo '2web all' | /usr/bin/at -q b now");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("nfo_update",$_POST)){
-	echo "Scheduling nfo update!<br>\n";
+	outputLog("Scheduling nfo update!");
 	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("iptv_update",$_POST)){
-	echo "Scheduling iptv2web update!<br>\n";
+	outputLog("Scheduling iptv2web update!");
 	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("comic_update",$_POST)){
-	echo "Scheduling comic2web update!<br>\n";
+	outputLog("Scheduling comic2web update!");
 	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("weather_update",$_POST)){
-	echo "Scheduling weather2web update!<br>\n";
+	outputLog("Scheduling weather2web update!");
 	shell_exec("echo 'weather2web' | /usr/bin/at -q b now");
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addCustomRadioLink",$_POST)){
@@ -201,26 +194,25 @@ if (array_key_exists("newUserName",$_POST)){
 			# create the custom link content
 			#$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
 			$content='#EXTM3U\n'.'#EXTINF:-1 radio="true" tvg-logo="'.$linkIcon.'",'.$linkTitle;
-			echo "Checking for Config file ".$configPath."<br>\n";
+			outputLog("Checking for Config file ".$configPath);
 			# write the link to a file at the configPath if the path does not already exist
 			$fileObject=fopen($configPath,'w');
 			if ( ! file_exists($configPath)){
-				echo "Adding link ".$link."<br>\n";
+				outputLog("Adding link ".$link);
 				# write the config file
-			//file_put_contents($configPath,$content);
+				//file_put_contents($configPath,$content);
 				fwrite($fileObject,$content);
 				fwrite($fileObject,$link);
 				fclose($fileObject);
 			}else{
-				echo "[ERROR]: Custom Radio link creation failed '".$link."'<br>\n";
+				outputLog("[ERROR]: Custom Radio link creation failed '".$link."'");
 			}
 		}else{
-			echo "[ERROR]: Custom Radio Icon not found<br>";
+			outputLog("[ERROR]: Custom Radio Icon not found");
 		}
 	}else{
-		echo "[ERROR]: Custom Radio Title not found<br>";
+		outputLog("[ERROR]: Custom Radio Title not found");
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/radio.php'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addCustomLink",$_POST)){
@@ -241,7 +233,7 @@ if (array_key_exists("newUserName",$_POST)){
 			$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 			# create the custom link content
 			$content='#EXTM3U\n'.'#EXTINF:-1 tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
-			echo "Checking for Config file ".$configPath."<br>\n";
+			outputLog("Checking for Config file ".$configPath);
 			# write the link to a file at the configPath if the path does not already exist
 			/*
 			if ( ! file_exists($configPath)){
@@ -251,210 +243,195 @@ if (array_key_exists("newUserName",$_POST)){
 			*/
 			$fileObject=fopen($configPath,'w');
 			if ( ! file_exists($configPath)){
-				echo "Adding link ".$link."<br>\n";
+				outputLog("Adding link ".$link);
 				# write the config file
 				fwrite($fileObject,$content);
 				fwrite($fileObject,$link);
 				fclose($fileObject);
 			}else{
-				echo "[ERROR]: Custom link creation failed '".$link."'<br>\n";
+				outputLog("[ERROR]: Custom link creation failed '".$link."'");
 			}
 		}else{
-			echo "[ERROR]: Custom Icon not found<br>";
+			outputLog("[ERROR]: Custom Icon not found");
 		}
 	}else{
-		echo "[ERROR]: Custom Title not found<br>";
+		outputLog("[ERROR]: Custom Title not found");
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/tv.php'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addRadioLink",$_POST)){
 	$link=$_POST['addRadioLink'];
-	echo "Running addRadioLink on link ".$link."<br>\n";
+	outputLog("Running addRadioLink on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/iptv/radioSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		echo "Adding link ".$link."<br>\n";
+		outputLog("Adding link ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/radio.php#addRadioLink'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheQuality",$_POST)){
 	$cacheQuality=$_POST['cacheQuality'];
 	# change the default cache quality
-	echo "Changing cache quality to '".$cacheQuality."'<br>\n";
+	outputLog("Changing cache quality to '".$cacheQuality."'");
 	# write the config file
 	file_put_contents("/etc/2web/cache/cacheQuality.cfg",$cacheQuality);
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheQuality'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheUpgradeQuality",$_POST)){
 	$cacheUpgradeQuality=$_POST['cacheUpgradeQuality'];
 	# change the default cache quality
-	echo "Changing cache upgrade quality to '".$cacheUpgradeQuality."'<br>\n";
+	outputLog("Changing cache upgrade quality to '".$cacheUpgradeQuality."'");
 	# write the config file
 	if ($cacheUpgradeQuality == 'no_upgrade'){
 		unlink("/etc/2web/cache/cacheUpgradeQuality.cfg");
 	}else{
 		file_put_contents("/etc/2web/cache/cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheUpgradeQuality'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
 	# change the default cache quality
-	echo "Changing cache mode to '".$cacheFramerate."'<br>\n";
+	outputLog("Changing cache mode to '".$cacheFramerate."'");
 	# write the config file
 	if ($cacheFramerate == ''){
 		unlink("/etc/2web/cache/cacheFramerate.cfg");
 	}else{
 		file_put_contents("/etc/2web/cache/cacheFramerate.cfg",$cacheFramerate);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheFramerate'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheResize",$_POST)){
 	$cacheResize=$_POST['cacheResize'];
 	# change the default cache quality
-	echo "Changing cache mode to '".$cacheResize."'<br>\n";
+	outputLog("Changing cache mode to '".$cacheResize."'");
 	# write the config file
 	if ($cacheResize == ''){
 		unlink("/etc/2web/cache/cacheResize.cfg");
 	}else{
 		file_put_contents("/etc/2web/cache/cacheResize.cfg",$cacheResize);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheResize'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheDelay",$_POST)){
 	$cacheDelay =$_POST['cacheDelay'];
 	# change the default cache quality
-	echo "Changing cache delay to '".$cacheDelay."'<br>\n";
+	outputLog("Changing cache delay to '".$cacheDelay."'");
 	# write the config file
 	if ($cacheDelay == ''){
 		unlink("/etc/2web/cache/cacheDelay.cfg");
 	}else{
 		file_put_contents("/etc/2web/cache/cacheDelay.cfg",$cacheDelay);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheDelay'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("cacheNewEpisodes",$_POST)){
 	$cacheNewEpisodes=$_POST['cacheNewEpisodes'];
 	# change the default cache quality
-	echo "Changing cache new episodes option to '".$cacheNewEpisodes."'<br>\n";
+	outputLog("Changing cache new episodes option to '".$cacheNewEpisodes."'");
 	# write the config file
 	if ($cacheNewEpisodes == ''){
 		unlink("/etc/2web/cacheNewEpisodes.cfg");
 	}else{
 		file_put_contents("/etc/2web/cacheNewEpisodes.cfg",$cacheNewEpisodes);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
-	echo "Running addLink on link ".$link."<br>\n";
+	outputLog("Running addLink on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		echo "Adding link ".$link."<br>\n";
+		outputLog("Adding link ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/tv.php#addLink'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("ytdl_add_source",$_POST)){
 	$link=$_POST['ytdl_add_source'];
-	echo "Running ytdl_add_source on link ".$link."<br>\n";
+	outputLog("Running ytdl_add_source on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/ytdl/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		echo "Adding ytdl source ".$link."<br>\n";
+		outputLog("Adding ytdl source ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("ytdl_remove_source",$_POST)){
 	$link=$_POST['ytdl_remove_source'];
-	echo "Running ytdl_remove_source on link ".$link."<br>\n";
+	outputLog("Running ytdl_remove_source on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/ytdl/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
-		echo "Removing ytdl source ".$link."<br>\n";
+		outputLog("Removing ytdl source ".$link);
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#websiteSources'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("ytdl_add_username_source",$_POST)){
 	$link=$_POST['ytdl_add_username_source'];
-	echo "Running ytdl_add_username_source on link ".$link."<br>\n";
+	outputLog("Running ytdl_add_username_source on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/ytdl/usernameSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the link to a file at the configPath if the path does not already exist
-	#
 	if ( ! file_exists($configPath)){
-		echo "Adding ytdl username source ".$link."<br>\n";
+		outputLog("Adding ytdl username source ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("ytdl_remove_username_source",$_POST)){
 	$link=$_POST['ytdl_remove_username_source'];
-	echo "Running ytdl_remove_username_source on link ".$link."<br>\n";
+	outputLog("Running ytdl_remove_username_source on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/ytdl/usernameSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
-		echo "Removing ytdl username source ".$link."<br>\n";
+		outputLog("Removing ytdl username source ".$link);
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/ytdl2nfo.php#usernameSources'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLibary",$_POST)){
 	$link=$_POST['addLibary'];
-	echo "Running addLibary on link ".$link."<br>\n";
+	outputLog("Running addLibary on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/nfo/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		echo "Adding link ".$link."<br>\n";
+		outputLog("Adding link ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
 
 }else if (array_key_exists("addWeatherLocation",$_POST)){
 	$link=$_POST['addWeatherLocation'];
-	echo "Running addWeatherLocation on link ".$link."<br>\n";
+	outputLog("Running addWeatherLocation on link ".$link);
 	$sumOfLink=md5($link);
 	# run the weather command as a search command and check that the location has a result
 	$weatherTest=shell_exec("weather '".$_POST['addWeatherLocation']."'");
@@ -471,7 +448,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else if(strpos($weatherTest, "Current conditions")){
 		# read the link and create a custom config
 		$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
-		echo "Checking for Config file ".$configPath."<br>\n";
+		outputLog("Checking for Config file ".$configPath);
 		# write the libary path to a file at the configPath if the path does not already exist
 		if ( ! file_exists($configPath)){
 			echo "Adding ".$link." to weather stations...<br>\n";
@@ -488,26 +465,24 @@ if (array_key_exists("newUserName",$_POST)){
 		echo $weatherTest;
 		echo "</pre>";
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/weather.php#addWeatherLocation'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeWeatherLocation",$_POST)){
 	$link=$_POST['removeWeatherLocation'];
-	echo "Running removeWeatherLocation on link ".$link."<br>\n";
+	outputLog("Running removeWeatherLocation on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
-		echo "Removing weather location ".$link."<br>\n";
+		outputLog("Removing weather location ".$link);
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/weather.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("setHomepageWeatherLocation",$_POST)){
 	$link=$_POST['setHomepageWeatherLocation'];
-	echo "Running setHomepageWeatherLocation on location ".$link."<br>\n";
+	outputLog("Running setHomepageWeatherLocation on location ".$link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/weather/homepageLocation.cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -520,12 +495,11 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		# write the libary path to a file at the configPath if the path does not already exist
 		if ( ! file_exists($configPath)){
-			echo "Setting homepage weather location to ".$link."...<br>\n";
+			outputLog("Setting homepage weather location to ".$link);
 			# write the config file
 			file_put_contents($configPath,$link);
 		}
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/weather.php#setWeatherHomepageLocation'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
@@ -533,20 +507,19 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "Running homepageFortuneStatus on location ".$link."<br>\n";
 	# read the link and create a custom config
 	$configPath="/etc/2web/fortuneStatus.cfg";
-	echo "Checking for Config file ".$configPath."<br>\n";
+	outputLog("Checking for Config file ".$configPath);
 	if ( $link == "disabled"){
-		echo "Disabled Homepage fortune<br>\n";
+		outputLog("Disabled Homepage fortune");
 		# this means to remove the link
 		unlink($configPath);
 	}else{
 		# write the libary path to a file at the configPath if the path does not already exist
 		if ( ! file_exists($configPath)){
-			echo "Setting homepage fortune to ".$link."...<br>\n";
+			outputLog("Setting homepage fortune to ".$link);
 			# write the config file
 			file_put_contents($configPath,$link);
 		}
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("wiki2webStatus",$_POST)){
@@ -596,7 +569,7 @@ if (array_key_exists("newUserName",$_POST)){
 	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];
-	echo "Running addComicDownloadLink on link ".$link."<br>\n";
+	outputLog("Running addComicDownloadLink on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/comics/sources.d/".$sumOfLink.".cfg";
@@ -607,42 +580,67 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/comicsDL.php#addComicDownloadLink'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("addWebComicDownload",$_POST)){
+	$link=$_POST['addWebComicDownload'];
+	outputLog("Running addWebComicDownload on comic ".$link);
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/2web/comics/webSources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the libary path to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding ".$link." to comic downloader...<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+	echo "<hr><a class='button' href='/settings/comicsDL.php#addWebComicDownload'>BACK</a><hr>";
+	clear();
+}else if(array_key_exists("removeWebComicDownload",$_POST)){
+	$link=$_POST['removeWebComicDownload'];
+	outputLog("Running removeWebComicDownload on link ".$link);
+	$sumOfLink=md5($link);
+	$configPath="/etc/2web/comics/webSources.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		outputLog("Removing webComicDownloadLink ".$link);
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	echo "<hr><a class='button' href='/settings/comicsDL.php#removeWebComicDownload'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeComicDownloadLink",$_POST)){
 	$link=$_POST['removeComicDownloadLink'];
-	echo "Running removeComicDownloadLink on link ".$link."<br>\n";
+	outputLog("Running removeComicDownloadLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/comics/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	if (file_exists($configPath)){
-		echo "Removing comicDownloadLink ".$link."<br>\n";
+		outputLog("Removing comicDownloadLink ".$link);
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/comicsDL.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addComicLibrary",$_POST)){
 	$link=$_POST['addComicLibrary'];
-	echo "Running addComicLibrary on link ".$link."<br>\n";
+	outputLog("Running addComicLibrary on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
 	# write the libary path to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		echo "Adding libary ".$link."<br>\n";
+		outputLog("Adding libary ".$link);
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/comics.php#comiclibraryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeComicLibrary",$_POST)){
 	$link=$_POST['removeComicLibrary'];
-	echo "Running removeComicLibrary on link ".$link."<br>\n";
+	outputLog("Running removeComicLibrary on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/comics/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -651,12 +649,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/comics.php#comiclibraryPaths'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
-	echo "Running moveToBottom on link ".$link."<br>\n";
+	outputLog("Running moveToBottom on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
@@ -667,12 +664,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("moveCustomToBottom",$_POST)){
 	$link=$_POST['moveCustomToBottom'];
-	echo "Running moveCustomToBottom on link ".$link."<br>\n";
+	outputLog("Running moveCustomToBottom on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
@@ -683,12 +679,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeLink",$_POST)){
 	$link=$_POST['removeLink'];
-	echo "Running removeLink on link ".$link."<br>\n";
+	outputLog("Running removeLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -697,12 +692,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeLibary",$_POST)){
 	$link=$_POST['removeLibary'];
-	echo "Running removeLibary on link ".$link."<br>\n";
+	outputLog("Running removeLibary on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/nfo/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -711,12 +705,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/nfo.php#libaryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeRadioLink",$_POST)){
 	$link=$_POST['removeRadioLink'];
-	echo "Running removeRadioLink on link ".$link."<br>\n";
+	outputLog("Running removeRadioLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/radioSources.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -725,12 +718,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeCustomLink",$_POST)){
 	$link=$_POST['removeCustomLink'];
-	echo "Running removeCustomLink on link ".$link."<br>\n";
+	outputLog("Running removeCustomLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -739,12 +731,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("blockLink",$_POST)){
 	$link=$_POST['blockLink'];
-	echo "Running blockLink on link ".$link."<br>\n";
+	outputLog("Running blockLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/blockedLinks.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -753,12 +744,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# create the blocked link file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/radio.php#radioLinks'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("unblockLink",$_POST)){
 	$link=$_POST['unblockLink'];
-	echo "Running unblockLink on link ".$link."<br>\n";
+	outputLog("Running unblockLink on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/blockedLinks.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -767,12 +757,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("blockGroup",$_POST)){
 	$link=$_POST['blockGroup'];
-	echo "Running blockGroup on link ".$link."<br>\n";
+	outputLog("Running blockGroup on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/blockedGroups.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -781,12 +770,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# create the blocked link file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("unblockGroup",$_POST)){
 	$link=$_POST['unblockGroup'];
-	echo "Running unblockGroup on link ".$link."<br>\n";
+	outputLog("Running unblockGroup on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/iptv/blockedGroups.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -795,19 +783,17 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/iptv_blocked.php#ActiveBlockedGroups'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
-	echo "Changing theme to ".$theme."<br>\n";
+	outputLog("Changing theme to ".$theme);
 	file_put_contents("/etc/2web/theme.cfg",$theme);
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/system.php#webTheme'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
 	$link=$_POST['addMusicLibary'];
-	echo "Running addMusicLibary on link ".$link."<br>\n";
+	outputLog("Running addMusicLibary on link ".$link);
 	$sumOfLink=md5($link);
 	# read the link and create a custom config
 	$configPath="/etc/2web/music/libaries.d/".$sumOfLink.".cfg";
@@ -818,12 +804,11 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/music.php#musicLibaryPaths'>BACK</a><hr>";
 	clear();
 }else if(array_key_exists("removeMusicLibary",$_POST)){
 	$link=$_POST['removeMusicLibary'];
-	echo "Running removeMusicLibary on link ".$link."<br>\n";
+	outputLog("Running removeMusicLibary on link ".$link);
 	$sumOfLink=md5($link);
 	$configPath="/etc/2web/music/libaries.d/".$sumOfLink.".cfg";
 	echo "Checking for Config file ".$configPath."<br>\n";
@@ -832,7 +817,6 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	countdown(5);
 	echo "<hr><a class='button' href='/settings/music.php#musicLibaryPaths'>BACK</a><hr>";
 	clear();
 }else{

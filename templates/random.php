@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web random playlists
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -30,9 +30,19 @@ ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <div class='titleCard'>
-	<h2>Playlists</h2>
+	<h2>
+		Playlists
+		<img id='spinner' src='/spinner.gif' />
+	</h2>
 	<div class='listCard'>
-		<a class='button' href='/new/'>
+		<?PHP
+		if (array_key_exists("filter",$_GET)){
+			$filterType=$_GET['filter'];
+			echo "<a class='button' href='/new/?filter=$filterType'>";
+		}else{
+			echo "<a class='button' href='/new/'>";
+		}
+		?>
 			📜 NEW
 		</a>
 		<a class='activeButton' href='/random/'>
@@ -134,6 +144,11 @@ if ($writeFile){
 <?php
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+echo "<style>";
+echo "	#spinner {";
+echo "		display: none;";
+echo "	}";
+echo "</style>";
 ?>
 </body>
 </html>

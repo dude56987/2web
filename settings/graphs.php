@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web graph settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -38,9 +38,11 @@ include("/usr/share/2web/2webLib.php");
 	<h2>Index</h2>
 	<ul>
 		<li><a href='#graph2webStatus'>Enable or Disable Graphs</a></li>
+		<li><a href='#vnstat'>Vnstat</a></li>
+		<li><a href='#munin'>Munin</a></li>
+		<li><a href='#smokeping'>Smokeping</a></li>
 	</ul>
 </div>
-
 <div id='graph2webStatus' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Graphs Enabled</h2>
@@ -64,7 +66,63 @@ include("/usr/share/2web/2webLib.php");
 			<button class='button' type='submit'>Set Status</button>
 	</form>
 </div>
-
+<div id='vnstat' class='inputCard'>
+	<h2>Vnstat</h2>
+	<ul>
+		<li>
+			<?PHP
+			if(file_exists("/usr/bin/vnstati")){
+				echo "<span class='enabledSetting'>Vnstati Enabled</span>";
+			}else{
+				echo "<span class='disabledSetting'>Vnstati Disabled</span> ";
+				echo "Install the vnstati package in order to include graphs.";
+			}
+			?>
+		</li>
+		<li>Graphs are added from vnstat via vnstati package
+			<ul>
+				<li>If vnstat and vnstati package is installed these graphs will be automatically generated.</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+<div id='smokeping' class='inputCard'>
+	<h2>Smokeping</h2>
+	<ul>
+		<li>
+			<?PHP
+			if(file_exists("/usr/sbin/smokeping")){
+				echo "<span class='enabledSetting'>Smokeping Enabled</span>";
+			}else{
+				echo "<span class='disabledSetting'>Smokeping Disabled</span> ";
+				echo "Install the smokeping package in order to include graphs.";
+			}
+			?>
+		</li>
+		<li>Graphs are added from smokeping
+			<ul>
+				<li>Smokeping targets can be added in the smokeping config file</li>
+				<li>/etc/smokeping/config.d/Targets</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+<div id='munin' class='titleCard'>
+	<h2>Munin</h2>
+	<ul>
+		<li>
+			Graphs are added from local munin instance
+			<ul>
+				<li>To add remove graphs, Add or remove them from munin</li>
+				<li>Link plugins in /usr/share/munin/plugins/ to /etc/munin/plugins/ in order to enable plugins.</li>
+			</ul>
+		</li>
+	</ul>
+	<p>
+		Replace the plugin name in the below example to enable the munin plugin.
+	</p>
+	<pre>ln -s /usr/share/munin/plugins/pluginName /etc/munin/plugins/</pre>
+</div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

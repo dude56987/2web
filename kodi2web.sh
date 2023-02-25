@@ -36,18 +36,7 @@ function update(){
 	if ! test -f /etc/2web/kodi/location.cfg;then
 		# if no config exists create the default config
 		{
-			echo "################################################################################"
-			echo "# Example Config"
-			echo "################################################################################"
-			echo "# - Any line starting with # will be a comment and is ignored"
-			echo "# - List user:pass hostname and port for kodi remote access."
-			echo "# - Each client must only be one line in this config"
-			echo "# - Kodi default port is 8080"
-			echo "# - Kodi will warn you but does not requre a password"
-			echo "#  ex."
-			echo "#    user:pass@localhost:8080"
-			echo "################################################################################"
-			echo "# user:pass@localhost:8080"
+			cat /etc/2web/config_default/kodi2web_location.cfg
 		} > /etc/2web/kodi/location.cfg
 	fi
 
@@ -110,23 +99,6 @@ pickPath(){
 	echo "$1" | rev | cut -d'/' -f$2 | rev
 }
 ################################################################################
-webUpdate(){
-	webDirectory=$(webRoot)
-
-	# create the kodi directory
-	createDir "$webDirectory/kodi/kodi/"
-
-	# create the web directory
-	createDir "$webDirectory/kodi/"
-
-	# link the homepage
-	linkFile "/usr/share/2web/templates/kodi.php" "$webDirectory/kodi/index.php"
-
-	# link the random poster script
-	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/kodi/randomPoster.php"
-	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/kodi/randomFanart.php"
-}
-################################################################################
 main(){
 	################################################################################
 	webRoot
@@ -148,12 +120,8 @@ main(){
 		checkModStatus "kodi2web"
 		# lock the process
 		lockProc "kodi2web"
-		# gen prelem website
-		webUpdate
 		# update sources
 		update "$@"
-		# update webpages
-		webUpdate
 		# display the help
 		main --help
 		# show the server link at the bottom of the interface

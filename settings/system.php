@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web system settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -37,9 +37,7 @@ include("settingsHeader.php");
 		<li><a href='#addNewUser'>Add New Administrator</a></li>
 		<li><a href='#removeUser'>Remove Administrator</a></li>
 		<li><a href='#webTheme'>Change Web Theme</a></li>
-		<li><a href='#firewall'>Firewall</a></li>
 		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
-		<li><a href='#CLI_manuals'>CLI Manual Pages</a></li>
 	</ul>
 </div>
 
@@ -148,23 +146,6 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Theme</button>
 	</form>
 </div>
-
-
-<div id='firewall' class='inputCard'>
-<h2>Firewall</h2>
-	<ul>
-		<li>
-			Unlock port 80 for the public interface
-		</li>
-		<li>
-			Unlock port 443 to login to the admin interface
-		</li>
-		<li>
-			Unlock port 444 for compatibility mode
-		</li>
-	</ul>
-</div>
-
 <div id='homepageFortuneStatus' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Fortune</h2>
@@ -188,92 +169,8 @@ include("settingsHeader.php");
 			<button class='button' type='submit'>Set Status</button>
 	</form>
 </div>
-
-<div id='CLI_manuals' class='inputCard'>
-<h2>Server Services</h2>
-	<ul>
-		<li>List all available server services found to be active.</li>
-		<li>Not all linux services will be detected.</li>
-		<li>Services list is based off of <a href='https://dietpi.com/docs/software/'>DietPI software listings</a></li>
-	</ul>
-	<a class='button' href="/settings/serverServices.php">Active Server Services</a>
-	<hr>
 </div>
 
-<div id='CLI_manuals' class='inputCard'>
-<h2>CLI(Command Line Interface) Manual Pages</h2>
-	<ul>
-		<li><a href="/settings/manuals.php#README">README</a></li>
-		<li><a href="/settings/manuals.php#2web">2web</a></li>
-		<li><a href="/settings/manuals.php#nfo2web">nfo2web</a></li>
-		<li><a href="/settings/manuals.php#comic2web">comic2web</a></li>
-		<li><a href="/settings/manuals.php#iptv2web">iptv2web</a></li>
-		<li><a href="/settings/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
-		<li><a href="/settings/manuals.php#weather2web">weather2web</a></li>
-	</ul>
-</div>
-
-<?PHP
-	if (file_exists("/usr/share/2web/version.cfg")){
-		echo "<div id='version' class='inputCard'>";
-		echo "<h2>2web Version Info</h2>";
-		echo "	<div>";
-		echo "		Version: ".file_get_contents("/usr/share/2web/version.cfg");
-		echo "	</div>";
-		if (file_exists("/usr/share/2web/versionDate.cfg")){
-			echo "	<div>";
-			echo "		Version Publish Date: ".file_get_contents("/usr/share/2web/versionDate.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/buildDate.cfg")){
-			echo "	<div>";
-			echo "		Build Date: ".file_get_contents("/usr/share/2web/buildDate.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_2web.cfg")){
-			echo "	<div>";
-			echo "		2web Version: ".file_get_contents("/usr/share/2web/version_2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_nfo2web.cfg")){
-			echo "	<div>";
-			echo "		nfo2web Version: ".file_get_contents("/usr/share/2web/version_nfo2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_comic2web.cfg")){
-			echo "	<div>";
-			echo "		comic2web Version: ".file_get_contents("/usr/share/2web/version_comic2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_iptv2web.cfg")){
-			echo "	<div>";
-			echo "		iptv2web Version: ".file_get_contents("/usr/share/2web/version_iptv2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_music2web.cfg")){
-			echo "	<div>";
-			echo "		music2web Version: ".file_get_contents("/usr/share/2web/version_music2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_graph2web.cfg")){
-			echo "	<div>";
-			echo "		graph2web Version: ".file_get_contents("/usr/share/2web/version_graph2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_weather2web.cfg")){
-			echo "	<div>";
-			echo "		weather2web Version: ".file_get_contents("/usr/share/2web/version_weather2web.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_wiki2web.cfg")){
-			echo "	<div>";
-			echo "		wiki2web Version: ".file_get_contents("/usr/share/2web/version_wiki2web.cfg");
-			echo "	</div>";
-		}
-		echo "</div>";
-	}
-?>
-</div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

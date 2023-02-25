@@ -93,6 +93,7 @@ if (file_exists("lastUpdate.index")){
 echo "<div class='date titleCard'>";
 echo "<h1>";
 echo shell_exec("hostname");
+echo "<img id='spinner' src='/spinner.gif' />";
 echo "</h1>";
 
 if ( file_exists("nfo2web.active")){

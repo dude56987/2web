@@ -96,10 +96,17 @@ function cacheCheck(){
 ########################################################################
 function enableApacheServer(){
 	# enable the apache config, four zeros are required to overwride the default apache config "000-default.cfg"
-	linkFile "/etc/apache2/conf-available/0000-2web-ports.conf" "/etc/apache2/conf-enabled/0000-2web-ports.conf"
+	rm -v "/etc/apache2/conf-enabled/0000-default.conf"
+	rm -v "/etc/apache2/conf-enabled/000-default.conf"
+	rm -v "/etc/apache2/conf-enabled/00-default.conf"
+	rm -v "/etc/apache2/conf-enabled/0-default.conf"
+	# copy over the config files
+	#linkFile "/etc/apache2/conf-available/0000-2web-ports.conf" "/etc/apache2/conf-enabled/0000-2web-ports.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website.conf" "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
-	linkFile "/etc/apache2/sites-available/0000-2web-website-compat.conf" "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
+	#linkFile "/etc/apache2/sites-available/0000-2web-website-compat.conf" "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
+	# restart apache to apply changes
+	apache2ctl restart
 }
 ########################################################################
 function disableApacheServer(){
@@ -107,6 +114,8 @@ function disableApacheServer(){
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
+	# restart apache to apply changes
+	apache2ctl restart
 }
 ########################################################################
 function enableCronJob(){
@@ -223,9 +232,13 @@ function update2web(){
 	# Link the header and footer of the website
 	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
 	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
+	# copy the indexHeader template
+	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/kodi/indexHeader.html"
+	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/indexHeader.html"
 	# settings interface files
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
+	linkFile "/usr/share/2web/settings/about.php" "$webDirectory/settings/about.php"
 	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
 	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
 	linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
@@ -245,6 +258,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
 	# help/info docs
 	linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
+	linkFile "/usr/share/2web/templates/support.php" "$webDirectory/support.php"
 	linkFile "/usr/share/2web/templates/viewCounter.php" "$webDirectory/views/index.php"
 	# caching resolvers
 	linkFile "/usr/share/2web/search.php" "$webDirectory/search.php"
@@ -525,23 +539,31 @@ function waitForIdleServer(){
 ################################################################################
 function buildSpinnerGif(){
 	mkdir -p /tmp/2web/
-	backgroundColor="none"
+	backgroundColor="transparent"
 	foregroundColor="white"
 	outputPathPrefix="/tmp/2web/frame"
-	newSize="16x16"
+	newSize="32x32"
 	# draw all the frames of the gif
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_08.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,1' -scale $newSize "${outputPathPrefix}_07.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,2' -scale $newSize "${outputPathPrefix}_06.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,2' -scale $newSize "${outputPathPrefix}_05.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,2' -scale $newSize "${outputPathPrefix}_04.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,1' -scale $newSize "${outputPathPrefix}_03.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_02.gif"
+	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_01.gif"
 
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,0' -scale $newSize ${outputPathPrefix}_08.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,1' -scale $newSize ${outputPathPrefix}_07.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 0,2' -scale $newSize ${outputPathPrefix}_06.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 1,2' -scale $newSize ${outputPathPrefix}_05.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,2' -scale $newSize ${outputPathPrefix}_04.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,1' -scale $newSize ${outputPathPrefix}_03.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 2,0' -scale $newSize ${outputPathPrefix}_02.jpg
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -transparent black -draw 'point 1,0' -scale $newSize ${outputPathPrefix}_01.jpg
-
-	# convert frames into gif
-	ffmpeg -framerate 6 -i ${outputPathPrefix}_%02d.jpg /var/cache/2web/spinner.gif
+	# convert frames into transparent gif
+	convert -delay 16 -dispose Background \
+		-page +0+0 "${outputPathPrefix}_01.gif" \
+		-page +0+0 "${outputPathPrefix}_02.gif" \
+		-page +0+0 "${outputPathPrefix}_03.gif" \
+		-page +0+0 "${outputPathPrefix}_04.gif" \
+		-page +0+0 "${outputPathPrefix}_05.gif" \
+		-page +0+0 "${outputPathPrefix}_06.gif" \
+		-page +0+0 "${outputPathPrefix}_07.gif" \
+		-page +0+0 "${outputPathPrefix}_08.gif" \
+		-loop 0 "/var/cache/2web/spinner.gif"
 }
 ################################################################################
 main(){
@@ -680,6 +702,7 @@ main(){
 		pip3 install --upgrade yt-dlp
 		pip3 install --upgrade streamlink
 		pip3 install --upgrade gallery-dl
+		pip3 install --upgrade dosage
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web nuke

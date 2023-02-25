@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web public help document
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link href="/style.css" rel="stylesheet">
@@ -49,7 +49,7 @@ if (detectEnabledStatus("comic2web")){
 
 <div class="titleCard">
 	<ul>
-		<li><a href="#hard_linking">Hard Linking</a></li>
+		<li><a href="#direct_linking">Direct Linking</a></li>
 		<li><a href="#android">Android</a></li>
 		<ul>
 		<?PHP
@@ -81,7 +81,7 @@ if (detectEnabledStatus("comic2web")){
 		<li><a href="#desktop">Desktop</a></li>
 		<ul>
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
-			<li><a href="#desktop_hard_links">Hard links</a></li>
+			<li><a href="#desktop_direct_links">Direct links</a></li>
 			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
 			<li><a href="#desktop_install_VLC">Install VLC</a></li>
 		</ul>
@@ -91,15 +91,21 @@ if (detectEnabledStatus("comic2web")){
 <p>
 For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics ( comics/books ) to kodi media centers. This also discusses how to use direct link buttons on media and alternative ( desktop/tablet/phone ) software for access.
 </p>
+<p>
+	TLDR below is a link to the kodi directory for direct links to media content.
+</p>
+<a class='button' href='/kodi/'>
+	🇰 KODI
+</a>
 
 </div>
 
 <div class='titleCard linkInfo'>
-	<h2 id="hard_linking">Hard Linking</h2>
+	<h2 id="direct_linking">Direct Linking</h2>
 	<p>
 	On all pages containing the web player there will be a
 	</p>
-	<span class='button'>Hard Link</span>
+	<span class='button'>Direct Link</span>
 	<p>
 	button. This links directly to the source content on the server. Clicking this link on most any platform will open a appropriate player. This is the simplest way to view any content that the webplayer can't handle in your browser.
 	</p>
@@ -133,7 +139,7 @@ For when you need more than the web interface can handle. This help section defi
 	<?PHP
 	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
 	$tempPath='http://'.gethostname().'.local/kodi/channels.m3u';
-	echo '<p>The hard link is <a href='.$tempPath.'>'.$tempPath.'</a></p>';
+	echo '<p>The Direct link is <a href='.$tempPath.'>'.$tempPath.'</a></p>';
 	?>
 	<p>
 	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
@@ -300,7 +306,7 @@ For when you need more than the web interface can handle. This help section defi
 	<div class="titleCard">
 		<ul>
 			<li><a href="#desktop_web_interface">Web Interface</a></li>
-			<li><a href="#desktop_hard_links">Hard links</a></li>
+			<li><a href="#desktop_direct_links">Direct links</a></li>
 			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
 			<li><a href="#desktop_install_VLC">Install VLC</a></li>
 		</ul>
@@ -309,11 +315,11 @@ For when you need more than the web interface can handle. This help section defi
 	<h3 id="desktop_web_interface">Web Interface</h3>
 
 	<p>
-		Give it a try, if the web player gives you any trouble use the hard link button. This should serve most needs and should become more compatible as web standards improve. The web interface has filtering for ondemand content and channels. You can bookmark any part of the media collection in your browser.
+		Give it a try, if the web player gives you any trouble use the direct link button. This should serve most needs and should become more compatible as web standards improve. The web interface has filtering for ondemand content and channels. You can bookmark any part of the media collection in your browser.
 	</p>
-	<h3 id="desktop_hard_links">Hard Links</h3>
+	<h3 id="desktop_direct_links">Direct Links</h3>
 	<p>
-		All media pages generated contain a hard link to the content they contain. This is a direct link to the file so you can save the file. You can paste the hard link in a video player that can stream links.
+		All media pages generated contain a direct link to the content they contain. This is a direct link to the file so you can save the file. You can paste the direct link in a video player that can stream links.
 	</p>
 	<h3 id="desktop_install_kodi">Install Kodi</h3>
 	<p>
@@ -325,10 +331,11 @@ For when you need more than the web interface can handle. This help section defi
 			Install VLC for your desktop computer.
 		</a>
 		<p>
-			If you need a desktop player that will play any of the "Hard Link" buttons on the website.
+			If you need a desktop player that will play any of the "Direct Link" buttons on the website.
 		</p>
 	</div>
 </div>
+
 <?PHP
 include("footer.php")
 ?>

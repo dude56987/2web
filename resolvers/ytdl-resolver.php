@@ -1,3 +1,22 @@
+<!--
+########################################################################
+# 2web resolver for caching and playback of video links using yt-dlp
+# Copyright (C) 2023  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+-->
 <?PHP
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
@@ -295,9 +314,10 @@ if (array_key_exists("url",$_GET)){
 	debug("Cleaning link ".$videoLink."<br>");
 	//$videoLink = '"'.$videoLink.'"';
 	debug("Cleaning link ".$videoLink."<br>");
-	# create the md5sum of the file
-	$sum = md5($videoLink);
-	debug("[DEBUG]: MD5SUM is ".$sum."<br>");
+	# create the sum of the file
+	#$sum = md5($videoLink);
+	$sum = hash("sha512",$videoLink,false);
+	debug("[DEBUG]: SUM is ".$sum."<br>");
 	# libsyn will resolve properly with only the link, so resolve but do not cache
 	if (strpos($videoLink,"libsyn.com")){
 		if (!array_key_exists("link",$_GET)){
@@ -413,7 +433,7 @@ if (array_key_exists("url",$_GET)){
 	echo "No url was specified to the resolver!<br>";
 	echo "To Cache a video and play it from here you can use the below form.<br>";
 	echo "<form method='get'>";
-	echo "	<input class='button' width='60%' type='text' name='url'>";
+	echo "	<input width='60%' type='text' name='url'>";
 	echo "	<input class='button' type='submit' value='Cache Url'>";
 	echo "	<div>";
 	echo "		<span>Enable Debug Output<span>";

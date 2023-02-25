@@ -493,14 +493,7 @@ function update(){
 	if ! test -f /etc/2web/music/libaries.cfg;then
 		# if no config exists create the default config
 		{
-		echo "##################################################"
-		echo "# Example Config"
-		echo "##################################################"
-		echo "# - Directories on the server to be deep scanned "
-		echo "#   for .mp3 files"
-		echo "#  ex."
-		echo "#    /var/cache/2web/music/"
-		echo "##################################################"
+			cat /etc/2web/config_default/music2web_libaries.cfg
 		} > /etc/2web/music/libaries.cfg
 	fi
 	# load sources

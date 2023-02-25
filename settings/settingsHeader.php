@@ -68,6 +68,12 @@
 				Graphs
 			</span>
 		</a>
+		<a class='button' href='/settings/about.php'>
+			❓
+			<span class='headerText'>
+				About
+			</span>
+		</a>
 	</div>
 </div>
 

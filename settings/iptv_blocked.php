@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web iptv group block settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -47,7 +47,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 <h2>Block Group</h2>
 <input width='60%' class='inputText' type='text' name='blockGroup' placeholder='GroupName...'>
-<input class='button' type='submit'>
+<button class='button' type='submit'>Block</button>
 </form>
 </div>
 
@@ -55,7 +55,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 <h2>Unblock Group</h2>
 <input width='60%' class='inputText' type='text' name='unblockGroup' placeholder='GroupName...'>
-<input class='button' type='submit'>
+<button class='button' type='submit'>Unblock</button>
 </form>
 </div>
 

@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web live radio settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -147,34 +147,45 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
-
 //echo "</table>";
 echo "</div>";
+?>
 
-echo "<div id='addRadioLink' class='inputCard'>";
-echo "<form action='admin.php' method='post'>\n";
-echo "<h2>Add Radio Link</h2>\n";
-echo "<input width='60%' type='text' name='addRadioLink' placeholder='Link'>\n";
-echo "<input class='button' type='submit'>\n";
-echo "</form>\n";
-echo "</div>";
+<div id='addRadioLink' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Radio Link</h2>
+		<ul>
+			<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
+		</ul>
+		<input width='60%' type='text' name='addRadioLink' placeholder='http://example.com/playlist.m3u'>
+		<button class='button' type='submit'>Add Link</button>
+	</form>
+</div>
 
-echo "<div id='addRadioStation' class='inputCard'>";
-echo "<form action='admin.php' method='post'>\n";
-echo "<h2>Add Radio Station</h2>\n";
-echo "<input width='60%' type='text' name='addCustomRadioLink' placeholder='Link'>\n";
-echo "<input width='60%' type='text' name='addCustomRadioTitle' placeholder='Title'>\n";
-echo "<input width='60%' type='text' name='addCustomRadioIcon' placeholder='Icon Link'>\n";
-echo "<input class='button' type='submit'>\n";
-echo "</form>\n";
-echo "</div>";
-
-//echo "<form method='get'>\n";
-//echo "<h2>Remove Link</h2>\n";
-//echo "<input width='60%' type='text' name='removeLink' placeholder='Link'>\n";
-//echo "<input type='submit'>\n";
-//echo "</form>\n";
-
+<div id='addRadioStation' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Radio Station</h2>
+		<ul>
+			<li>Add the direct path to the remote audio stream
+				<ul>
+					<li><input width='60%' type='text' name='addCustomRadioLink' placeholder='http://example.com/player?stream=example'></li>
+				</ul>
+			</li>
+			<li>Add the title of this channel
+				<ul>
+					<li><input width='60%' type='text' name='addCustomRadioTitle' placeholder='Channel Title'></li>
+				</ul>
+			</li>
+			<li>Add the remote link path to the custom channel icon
+				<ul>
+					<li><input width='60%' type='text' name='addCustomRadioIcon' placeholder='http://example.com/Link.png'></li>
+				</ul>
+			</li>
+		</ul>
+		<button class='button' type='submit'>Add Channel</button>
+	</form>
+</div>
+<?PHP
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>

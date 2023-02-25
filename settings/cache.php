@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web cache settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -169,13 +169,13 @@ include("settingsHeader.php");
 			Change the number of days that the cache will retain videos.
 		</p>
 		<select name='cacheDelay'>
-		<?php
+			<?php
 				// add the cache Mode as a option
 				if(file_exists("/etc/2web/cache/cacheDelay.cfg")){
 					$cacheDelay= file_get_contents('/etc/2web/cache/cacheDelay.cfg');
 					echo "<option selected value='$cacheDelay'>$cacheDelay Days</option>";
 				}
-		?>
+			?>
 			<option value='1'>1 Days</option>
 			<option value='3'>3 Days</option>
 			<option value='7' selected>7 Days</option>

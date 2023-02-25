@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web ondemand settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -55,7 +55,7 @@ echo "</div>";
 	<form action='admin.php' method='post'>
 		<h2>Add Libary Path</h2>
 		<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
-		<input class='button' type='submit'>
+		<button class='button' type='submit'>Add Path</button>
 	</form>
 </div>
 

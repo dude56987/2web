@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web music album webpage
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html id='top' class='seriesBackground'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -57,7 +57,9 @@ if (file_exists("artist.cfg")){
 		echo "<h1>".$albumTitle."</h1>";
 	}
 	?>
-	<img class='albumPlayerThumb' src='album.png' />
+	<a href='album.png'>
+		<img class='albumPlayerThumb' src='album.png' />
+	</a>
 	<div class='albumPlayerInfo'>
 			<?php
 			if (array_key_exists("play",$_GET)){

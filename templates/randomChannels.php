@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web random channels widget
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <?php
 # if no channel index exists exit
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/totalChannels.index")){

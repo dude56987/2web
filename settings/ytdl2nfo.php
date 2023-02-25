@@ -1,4 +1,4 @@
-<?PHP
+<!--
 ########################################################################
 # 2web ytdl2nfo settings
 # Copyright (C) 2023  Carl J Smith
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-?>
+-->
 <html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
@@ -87,7 +87,7 @@ echo "</div>";
 	</li>
 </ul>
 <input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
+<button class='button' type='submit'>Add Source</button>
 </form>
 </div>
 
@@ -151,7 +151,7 @@ echo "</div>";
 	</li>
 </ul>
 <input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
-<input class='button' type='submit'>
+<button class='button' type='submit'>Add User</button>
 </form>
 </div>
 
