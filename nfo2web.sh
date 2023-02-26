@@ -411,7 +411,7 @@ processMovie(){
 			# generate a fanart if no fanart could be found
 			ALERT "[WARNING]: could not find fanart '$movieDir/fanart.[png/jpg]'"
 			ffmpeg -y -ss 1 -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/movies/$movieWebPath/fanart.png"
-			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -blur 40x40 "$webDirectory/movies/$movieWebPath/fanart.png"
+			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -blur 1x1 "$webDirectory/movies/$movieWebPath/fanart.png"
 			# add the title to the poster
 			convert -quiet "$webDirectory/movies/$movieWebPath/fanart.png" -adaptive-resize  1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/fanart.png"
 		fi
@@ -441,7 +441,7 @@ processMovie(){
 			# generate a thumbnail at the first second
 			ffmpeg -y -ss 1 -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$webDirectory/movies/$movieWebPath/poster.png"
 			# blur the thumbnail
-			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -blur 40x40 "$webDirectory/movies/$movieWebPath/poster.png"
+			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -blur 1x1 "$webDirectory/movies/$movieWebPath/poster.png"
 			# add the title to the poster
 			convert -quiet "$webDirectory/movies/$movieWebPath/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$movieTitle" -composite "$webDirectory/movies/$movieWebPath/poster.png"
 		fi
@@ -596,7 +596,7 @@ processMovie(){
 			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
 			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
 			#yt_id=${videoPath//^.*\?video_id\=/}
-			yt_id=${videoPath//*video_id=}
+			#yt_id=${videoPath//*video_id=}
 			#INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			{
@@ -892,7 +892,9 @@ processEpisode(){
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
 		#INFO "Episode air date = '$episodeAired'"
 		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,3\}//g")
-		if [ "$episodeSeason" -lt 10 ];then
+		if [ "$episodeSeason" -le 0 ];then
+			episodeSeason="0000"
+		elif [ "$episodeSeason" -lt 10 ];then
 			# add a zero to make it format correctly
 			episodeSeason="000$episodeSeason"
 		elif [ "$episodeSeason" -lt 100 ];then
@@ -900,8 +902,8 @@ processEpisode(){
 			episodeSeason="00$episodeSeason"
 		elif [ "$episodeSeason" -lt 1000 ];then
 			episodeSeason="0$episodeSeason"
-		elif [ "$episodeSeason" -le 0 ];then
-			episodeSeason="0000"
+		elif [ "$episodeSeason" -ge 1000 ];then
+			episodeSeason="$episodeSeason"
 		else
 			episodeSeason="0000"
 		fi
@@ -910,7 +912,9 @@ processEpisode(){
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
 		# remove leading zeros
 		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,3\}//g")
-		if [ "$episodeNumber" -lt 10 ];then
+		if [ "$episodeNumber" -le 0 ];then
+			episodeNumber="0000"
+		elif [ "$episodeNumber" -lt 10 ];then
 			# add a zero to make it format correctly
 			episodeNumber="000$episodeNumber"
 		elif [ "$episodeNumber" -lt 100 ];then
@@ -918,8 +922,8 @@ processEpisode(){
 			episodeNumber="00$episodeNumber"
 		elif [ "$episodeNumber" -lt 1000 ];then
 			episodeNumber="0$episodeNumber"
-		elif [ "$episodeNumber" -le 0 ];then
-			episodeNumber="0000"
+		elif [ "$episodeNumber" -ge 1000 ];then
+			episodeNumber="$episodeNumber"
 		else
 			episodeNumber="0000"
 		fi
@@ -1085,9 +1089,10 @@ processEpisode(){
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
 			# change the video path into a video id to make it embedable
-			yt_id=${videoPath//*video_id=}
+			#yt_id=${videoPath//*video_id=}
 			#INFO "yt-id = $yt_id"
-			ytLink="https://youtube.com/watch?v=$yt_id"
+			#ytLink="https://youtube.com/watch?v=$yt_id"
+			ytLink="$videoPath"
 
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
@@ -1538,7 +1543,7 @@ processShow(){
 			cp "$webDirectory/shows/$showTitle/fanart-0.png" "$webDirectory/shows/$showTitle/fanart.png"
 			rm "$webDirectory/shows/$showTitle/fanart-"*.png
 		fi
-		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 40x40 "$webDirectory/shows/$showTitle/fanart.png"
+		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 1x1 "$webDirectory/shows/$showTitle/fanart.png"
 		echo "Creating the fanart image from webpage..."
 		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
 		# error log
@@ -1554,7 +1559,7 @@ processShow(){
 			# remove excess images
 			rm "$webDirectory/shows/$showTitle/poster-"*.png
 		fi
-		convert "$webDirectory/shows/$showTitle/poster.png" -trim -blur 40x40 "$webDirectory/shows/$showTitle/poster.png"
+		convert "$webDirectory/shows/$showTitle/poster.png" -trim -blur 1x1 "$webDirectory/shows/$showTitle/poster.png"
 		echo "Creating the poster image from webpage..."
 		convert "$webDirectory/shows/$showTitle/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/poster.png"
 		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
@@ -2371,6 +2376,10 @@ main(){
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"
 		update "$@"
+	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
+		checkModStatus "nfo2web"
+		lockProc "nfo2web"
+		update "$@" --parallel
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "Build Date: "
 		cat /usr/share/2web/buildDate.cfg

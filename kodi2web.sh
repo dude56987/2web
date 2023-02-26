@@ -50,7 +50,7 @@ function update(){
 	createDir "$downloadDirectory"
 	# make comics directory
 	createDir "$webDirectory/kodi/"
-	createDir "$webDirectory/kodi/data/"
+	#createDir "$webDirectory/kodi/data/"
 	# scan the sources
 	ALERT "kodi Locations: $kodiLocations"
 	scanAudio="false"
