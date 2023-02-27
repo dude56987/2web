@@ -152,8 +152,7 @@ ytdl2kodi_channel_extractor(){
 			echo "[INFO]: The reset time has passed, Processing link..."
 		fi
 	fi
-	################################################################################
-	showTitle=$(ytdl2kodi_rip_title "$channelLink")
+
 	# create show directory
 	#mkdir -p "$downloadPath$showTitle/"
 	# download the newgrounds page
@@ -174,18 +173,13 @@ ytdl2kodi_channel_extractor(){
 		# try to rip as a playlist
 		if test -f /usr/local/bin/yt-dlp;then
 			tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-			errorCode=$!
+			errorCode=$?
 			echo "[INFO]: tempLinkList = $tempLinkList"
-			# list only the urls from the json data retrived
-			tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
 		else
 			tempLinkList=$(yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-			errorCode=$!
+			errorCode=$?
 			echo "[INFO]: tempLinkList = $tempLinkList"
-			# list only the urls from the json data retrived
-			tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
 		fi
-		echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
 		# cache the playlist download
 		echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
 	else
@@ -196,15 +190,29 @@ ytdl2kodi_channel_extractor(){
 		# add the error code for reading the file so the cache will load, mark true
 		errorCode=0
 	fi
-	#set +x
+	# get uploader from the json data and set it as the show title
+	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
+	echo "[INFO]: Channel show title found = $showTitle"
+
+	# list only the urls from the json data retrived
+	tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
+	################################################################################
+
+	# the templinklist is the formatted list since the generic link extractor is disabled
+	#linkList=$tempLinkList
+
+	echo "[INFO]: error code = '$errorCode'"
 	# check if the error code is true
-	#if [ $errorCode -eq 0 ];then
-	if $errorCode;then
+	#if [[ $errorCode -eq 0 ]];then
+	if [ $errorCode -eq 0 ];then
 		addToLog "Found Links" "Adding links to Linklist" "$tempLinkList" "/var/cache/2web/ytdl2nfo.log"
 		for videoId in $tempLinkList;do
 			linkList=$(echo -en "$linkList\n$videoId")
 		done
 	else
+		# set the show title for the generic link extractor based on the domain name
+		showTitle=$(ytdl2kodi_rip_title "$channelLink")
 		# if no custom extractor exists then run the generic link extractor
 		echo "[INFO]: Running generic link extractor..."
 		################################################################################
@@ -284,6 +292,54 @@ ytdl2kodi_channel_extractor(){
 			linkList=$(echo "$linkList" | sed "s/^https\:\/\/help\..*.$//g")
 			linkList=$(echo "$linkList" | sed "s/^https\:\/\/feedback\..*.$//g")
 		#fi
+		################################################################################
+		# the linklist links must be reformatted to a more standardized format for processing
+		# this prevents strange third party website links (Ads) from being processed into episodes
+		tempList=""
+		for link in $linkList;do
+			# if the base url is not in the link found try adding it to the start
+			# without absolute paths the processing wont work
+			if ! echo "$link" | grep -q "$baseUrl";then
+				#echo "[INFO]: Phase 1 : $link"
+				link="$(echo "$baseUrl/$link")"
+				#echo "[INFO]: Phase 2 : $link"
+				link="$(echo "$link" | sed "s/\/\/\//\//g")"
+				#echo "[INFO]: Phase 3 : $link"
+				link="$(echo "$link" | sed "s/\/\//\//g")"
+				#echo "[INFO]: Phase 4 : $link"
+			fi
+			#link="https://$link"
+			#link="$link"
+			################################################################################
+			# begin checking for problem file types
+			################################################################################
+			if echo "$link" | grep -q ".css";then
+				# this is not a video file link its a zip file so ignore it
+				echo "$selection" >> $previousDownloadsPath
+				echo "Incorrect format CSS"
+			elif echo "$link" | grep -q ".png";then
+				# this is not a video file link its a zip file so ignore it
+				echo "$selection" >> $previousDownloadsPath
+				echo "Incorrect format PNG"
+			elif echo "$link" | grep -q ".jpg";then
+				# this is not a video file link its a zip file so ignore it
+				echo "$selection" >> $previousDownloadsPath
+				echo "Incorrect format JPG"
+			elif echo "$link" | grep -q ".ico";then
+				# this is not a video file link its a zip file so ignore it
+				echo "$selection" >> $previousDownloadsPath
+				echo "Incorrect format ICO"
+			elif echo "$previousDownloads" | grep -q "$link";then
+				# if download was found to already have been processed
+				echo "'$link' was found in $previousDownloadsPath"
+				echo "This download has already been processed..."
+			else
+				# if all tests have been passed add the link
+				tempList=$(echo -e "$tempList\n$link")
+			fi
+		done
+		# cleanup blank lines in the tmp list and rename it to linklist
+		linkList=$(echo "$tempList" | tr -s '\n')
 	fi
 	################################################################################
 	# sort out duplicate links
@@ -315,54 +371,6 @@ ytdl2kodi_channel_extractor(){
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$tempSum.cfg"
 	touch "$previousDownloadsPath"
 	previousDownloads=$(cat "$previousDownloadsPath")
-	################################################################################
-	# the linklist links must be reformatted to a more standardized format for processing
-	# this prevents strange third party website links (Ads) from being processed into episodes
-	tempList=""
-	for link in $linkList;do
-		# if the base url is not in the link found try adding it to the start
-		# without absolute paths the processing wont work
-		if ! echo "$link" | grep -q "$baseUrl";then
-			#echo "[INFO]: Phase 1 : $link"
-			link="$(echo "$baseUrl/$link")"
-			#echo "[INFO]: Phase 2 : $link"
-			link="$(echo "$link" | sed "s/\/\/\//\//g")"
-			#echo "[INFO]: Phase 3 : $link"
-			link="$(echo "$link" | sed "s/\/\//\//g")"
-			#echo "[INFO]: Phase 4 : $link"
-		fi
-		#link="https://$link"
-		#link="$link"
-		################################################################################
-		# begin checking for problem file types
-		################################################################################
-		if echo "$link" | grep -q ".css";then
-			# this is not a video file link its a zip file so ignore it
-			echo "$selection" >> $previousDownloadsPath
-			echo "Incorrect format CSS"
-		elif echo "$link" | grep -q ".png";then
-			# this is not a video file link its a zip file so ignore it
-			echo "$selection" >> $previousDownloadsPath
-			echo "Incorrect format PNG"
-		elif echo "$link" | grep -q ".jpg";then
-			# this is not a video file link its a zip file so ignore it
-			echo "$selection" >> $previousDownloadsPath
-			echo "Incorrect format JPG"
-		elif echo "$link" | grep -q ".ico";then
-			# this is not a video file link its a zip file so ignore it
-			echo "$selection" >> $previousDownloadsPath
-			echo "Incorrect format ICO"
-		elif echo "$previousDownloads" | grep -q "$link";then
-			# if download was found to already have been processed
-			echo "'$link' was found in $previousDownloadsPath"
-			echo "This download has already been processed..."
-		else
-			# if all tests have been passed add the link
-			tempList=$(echo -e "$tempList\n$link")
-		fi
-	done
-	# cleanup blank lines in the tmp list and rename it to linklist
-	linkList=$(echo "$tempList" | tr -s '\n')
 	echo "[INFO]: Link List = $linkList"
 	# get the number of links
 	echo "[INFO]: Link List entries = $(echo \"$linkList\" | wc -l)"
@@ -882,7 +890,6 @@ ytdl2kodi_video_extractor(){
 	# write the webpage as the plot
 	#plot=$(echo "$info" | jq -r ".webpage_url")
 	plot=$(echo "$info" | jq -r ".description" | xargs -0)
-	uploader=$(echo "$info" | jq -r ".uploader" | xargs -0 | cut -d$'\n' -f1 )
 	# figure out airdate
 	airdate=$(echo "$info" | jq -r ".upload_date")
 	# extract the date "20200101" year,month,day
@@ -898,6 +905,8 @@ ytdl2kodi_video_extractor(){
 	fi
 	# figure out the episode season
 	episodeSeason=$(date -d "$airdate" "+%Y")
+	# get uploader
+	uploader=$(echo "$info" | jq -r ".uploader" | xargs -0 | cut -d$'\n' -f1 )
 	################################################################################
 	# create the show title
 	if echo "$@" | grep "\-\-username";then
@@ -1305,8 +1314,10 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		ytdl2kodi_depends_check
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+		lockProc "ytdl2nfo"
 		ytdl2kodi_reset_cache
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		lockProc "ytdl2nfo"
 		nuke
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "Build Date: "

@@ -1989,12 +1989,13 @@ cleanMediaIndexFile(){
 }
 ################################################################################
 function clean(){
+	webDirectory=$(webRoot)
 	# find and delete directories for show/movie if the show/movie contains broken links
-	cleanMediaSection "/var/cache/2web/web/movies/"
-	cleanMediaSection "/var/cache/2web/web/shows/"
+	cleanMediaSection "$webDirectory/movies/"
+	cleanMediaSection "$webDirectory/web/shows/"
 	# clean index files
-	cleanMediaIndexFile "/var/cache/2web/web/shows/" "shows.index"
-	cleanMediaIndexFile "/var/cache/2web/web/movies/" "movies.index"
+	cleanMediaIndexFile "$webDirectory/shows/" "shows.index"
+	cleanMediaIndexFile "$webDirectory/movies/" "movies.index"
 
 	# remove the web cached data for widgets
 

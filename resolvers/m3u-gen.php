@@ -127,6 +127,10 @@ function m3u_gen($section,$title){
 	}else if($section == 'music'){
 		# music artist name is lowercased
 		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
+	}else if($section == 'movies'){
+		$showPath = "$rootPath/movies/";
+	#}else if($section == 'music'){
+	#	$showPath = "$rootPath/music/";
 	}else{
 		$showPath = "$rootPath/$section/$showTitle/";
 	}
@@ -146,17 +150,17 @@ function m3u_gen($section,$title){
 			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
 			// - currently 20 variations of the randomization pattern can be created
 			$tempRand = rand(0,20);
-			$cacheSum = md5("$tempRand".$showTitle);
+			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["SERVER_ADDR"]);
 		}else{
-			$cacheSum = md5($showTitle);
+			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
 		}
 	}else{
 		if (array_key_exists("playAt",$_GET)){
 			# the sum should be unique for each playAt argument
-			$cacheSum = md5($_GET['playAt'].$showTitle);
+			$cacheSum = md5($_GET['playAt'].$showTitle.$_SERVER["SERVER_ADDR"]);
 		}else{
 			// cache sum
-			$cacheSum = md5($showTitle);
+			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
 		}
 	}
 
@@ -184,7 +188,8 @@ function m3u_gen($section,$title){
 			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
 				#$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
 				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
-				$tempDataEntry = $tempDataEntry."..$filePath\n";
+				#$tempDataEntry = $tempDataEntry."..$filePath\n";
+				$tempDataEntry .= "http://".$_SERVER["SERVER_ADDR"]."$filePath\n";
 				array_push($totalFileList,$tempDataEntry);
 			}
 		}
@@ -261,7 +266,15 @@ if (array_key_exists("artist",$_GET)){
 
 	m3u_gen("shows",$showTitle);
 	exit();
-
+}else if (array_key_exists("movies",$_GET)){
+	echo "Building Movies...<br>\n";
+	m3u_gen("movies","all");
+	exit();
+#}else if (array_key_exists("music",$_GET)){
+#	echo "Building Music...<br>\n";
+#	m3u_gen("music","all");
+#	exit();
+#
 }else{
 	// no url was given at all
 	echo "<html>";

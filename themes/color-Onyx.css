@@ -1,6 +1,6 @@
 /*
 ########################################################################
-# 2web round theme mod
+# 2web onyx theme
 # Copyright (C) 2023 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,55 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-.button{
-	border-radius: 0.3rem;
-}
-.searchButton{
-	border-radius: 0.3rem;
-}
-input{
-	border-radius: 0.3rem;
-}
-.indexSeries{
-	border-radius: 0.3rem;
-}
-.titleCard{
-	border-radius: 0.3rem;
-}
-.inputCard{
-	border-radius: 0.3rem;
-}
-.seasonContainer{
-	border-radius: 0.3rem;
-}
-/*
-.titleCard h1,h2,h3{
-	border-radius: 0.3rem;
-}
-*/
-.showPageEpisode{
-	border-radius: 0.3rem;
-}
-.channelList{
-	border-radius: 0.3rem;
-}
-video{
-	border-radius: 0.3rem;
-}
-@media all and (display-mode: fullscreen){
-	video{
-		border-radius: 0rem;
-	}
-}
-.weatherForcast{
-	border-radius: 0.3rem;
-}
-h1, h2, h3{
-	border-radius: 0.3rem 0.3rem 0rem 0rem;
-}
-@media only screen and (max-width: 800px), (orientation: portrait){
-	#topButton{
-		/* Disable the border radius on the top button*/
-		border-radius: 0px;
-	}
+:root{
+	--solidBackground: #282828;
+	--glassBackground: rgba(40,40,40,0.85);
+	--borderColor: black;
+	--textColor: #c1c1c1;
+	--shadowColor: black;
+	--highlightText: white;
+	--highlightBackground: lightgray;
+	--highlightBorder: black;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
