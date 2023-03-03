@@ -189,6 +189,30 @@ function cacheCheck(){
 	fi
 }
 ########################################################################
+function cacheCheckMin(){
+
+	filePath="$1"
+	cacheMinutes="$2"
+
+	# return true if cached needs updated
+	if [ -f "$filePath" ];then
+		# the file exists
+		if [[ $(find "$1" -cmin "+$cacheMinutes") ]];then
+			# the file is more than "$2" minutes old, it needs updated
+			INFO "File is to old, update the file $1"
+			return 0
+		else
+			# the file exists and is not old enough in cache to be updated
+			INFO "File in cache, do not update $1"
+			return 1
+		fi
+	else
+		# the file does not exist, it needs created
+		INFO "File does not exist, it must be created $1"
+		return 0
+	fi
+}
+########################################################################
 function linkFile(){
 	if ! test -L "$2";then
 		ln -sf "$1" "$2"
@@ -314,6 +338,24 @@ function ALERT(){
 	echo
 }
 ################################################################################
+function startDebug(){
+	echo
+	echo "################################################################################"
+	echo "#                              START DEBUG BLOCK                               #"
+	echo "################################################################################"
+	echo
+	set -x
+}
+################################################################################
+function stopDebug(){
+	set +x
+	echo
+	echo "################################################################################"
+	echo "#                               STOP DEBUG BLOCK                               #"
+	echo "################################################################################"
+	echo
+}
+################################################################################
 function INFO(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
@@ -414,20 +456,20 @@ function showServerLinks(){
 function addToIndex(){
 	indexItem="$1"
 	indexPath="$2"
-	INFO "Checking if the indexPath '$indexPath' exists"
+	#INFO "Checking if the indexPath '$indexPath' exists"
 	if test -f "$indexPath";then
 		# the index file exists
 		#ALERT "Looking for $indexItem in $indexPath"
 		if grep -q "$indexItem" "$indexPath";then
-			INFO "The Index '$indexPath' already contains '$indexItem'"
+			ALERT "The Index '$indexPath' already contains '$indexItem'"
 		else
-			INFO "Adding '$indexItem' to '$indexPath'"
+			#ALERT "Adding '$indexItem' to '$indexPath'"
 			# the item is not in the index
 			echo "$indexItem" >> "$indexPath"
 		fi
 	else
 		#ALERT "No index found, creating one..."
-		INFO "Adding '$indexItem' to '$indexPath'"
+		#ALERT "Adding '$indexItem' to '$indexPath'"
 		# create the index file
 		touch "$indexPath"
 		# set ownership of the newly created index
@@ -446,7 +488,7 @@ function SQLaddToIndex(){
 	# - 1 minute default
 	timeout=60000
 	#example: /var/cache/2web/new.sql
-	INFO "Checking if the indexPath '$indexPath' exists"
+	#INFO "Checking if the indexPath '$indexPath' exists"
 	# if the database file exists read it
 	if test -f "$indexPath";then
 		# check if the table exists in the database
@@ -461,14 +503,14 @@ function SQLaddToIndex(){
 		#ALERT "Looking for $indexItem in $indexPath"
 		# if the data is already stored in the database
 		if [ $(sqlite3 -cmd ".timeout $timeout" "$indexPath" "select '$indexItem' from '$databaseTable' where title = '$indexItem';" | wc -l) -gt 0 ];then
-			INFO "The Index '$indexPath' already contains '$indexItem'"
+			ALERT "The Index '$indexPath' already contains '$indexItem'"
 		else
-			INFO "Adding '$indexItem' to '$indexPath'"
+			#INFO "Adding '$indexItem' to '$indexPath'"
 			sqlite3 -cmd ".timeout $timeout" "$indexPath" "insert into $databaseTable values('$indexItem');"
 		fi
 	else
 		#ALERT "No index found, creating one..."
-		INFO "Adding '$indexItem' to '$indexPath'"
+		#INFO "Adding '$indexItem' to '$indexPath'"
 		# create the sql database
 		sqlite3 -cmd ".timeout $timeout" "$indexPath" "create table $databaseTable(title text primary key);"
 		# add the item to the sql database
@@ -614,7 +656,7 @@ downloadThumbnail(){
 	# if it dont exist download it
 	if ! test -f "$webDirectory/thumbnails/$sumName$thumbnailExt";then
 		# generated the sum for the thumbnail name
-		timeout 120 curl --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
+		timeout 120 curl -L --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
 		# sleep for one second after each thumbnail download
 		#sleep 1
 	fi

@@ -28,7 +28,7 @@
 ################################################################################
 # update the iptv lists once a week changes to these are more infrequent
 #@weekly root /usr/bin/niceload /usr/bin/iptv2web update > /var/log/iptv2web_update.log
-@weekly root /usr/bin/niceload /usr/bin/iptv2web
+0 */2 * * * root /usr/bin/niceload /usr/bin/iptv2web
 
 ################################################################################
 # update the comic books

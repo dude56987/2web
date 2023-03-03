@@ -329,8 +329,9 @@ function update2web(){
 		# if there are any users
 		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
 		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
-		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
+		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
 		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/log/.htaccess"
+		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/views/.htaccess"
 		# copy server users to administrator list
 		cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
 	else
@@ -341,11 +342,14 @@ function update2web(){
 		if test -f "$webDirectory/settings/.htaccess";then
 			rm "$webDirectory/settings/.htaccess"
 		fi
-		#if test -f "$webDirectory/backups/.htaccess";then
-		#	rm "$webDirectory/backups/.htaccess"
-		#fi
+		if test -f "$webDirectory/backups/.htaccess";then
+			rm "$webDirectory/backups/.htaccess"
+		fi
 		if test -f "$webDirectory/log/.htaccess";then
 			rm "$webDirectory/log/.htaccess"
+		fi
+		if test -f "$webDirectory/views/.htaccess";then
+			rm "$webDirectory/views/.htaccess"
 		fi
 	fi
 	createDir "$webDirectory/RESOLVER-CACHE/"
@@ -404,17 +408,64 @@ function update2web(){
 backupSettings(){
 	# create a compressed backup of the server settings
 	createDir "/var/cache/2web/backups/"
-	tempTime=$(date)
-	set -x
-	zip -9 -r "/var/cache/2web/backups/$tempTime.zip" "/etc/2web/"
-	set +x
-	drawLine
-	echo "The backup can be found in the backup location"
-	echo "/var/cache/2web/backups/"
-	drawLine
-	echo "This specific backup is stored at"
-	echo "/var/cache/2web/backups/$tempTime.zip"
-	drawLine
+	tempTime=$1
+	zip -9 -r "/var/cache/2web/backups/settings_$tempTime.zip" "/etc/2web/"
+}
+########################################################################
+backupMetadata(){
+	tempTime=$1
+	# backup thumbnail cache
+	# backup show and movie metadata from content
+	# TVshows
+	# - shows/*
+	#  + tvshow.nfo
+	#  + poster.png
+	#  + fanart.png
+	# Movies
+	# - movies/*
+	#  + movie.nfo
+	#  + poster.png
+	#  + fanart.png
+	# - music/*
+	#  + artist.nfo
+	#  + folder.jpg
+	#  + fanart.jpg
+	#  + album/
+	#   * album.nfo
+	#   * cover.jpg
+	IFS=$'\n'
+	# use find command to search and get paths to all relevent metadata from the /kodi/ directory
+	########################################################################
+	# need relative directory for kodi backup to create proper pathnames
+	cd "/var/cache/2web/web/kodi/"
+	# search for shows
+	files=$(find "shows" -maxdepth 2 -name '*.nfo' -o -name '*.png' -o -name '*.jpg' )
+	for filePath in $files;do
+		# compress all found files into a backup
+		zip -9 --grow "/var/cache/2web/backups/content_$tempTime.zip" "$filePath"
+	done
+	########################################################################
+	# search for movies
+	files=$(find "movies" -maxdepth 2 -name '*.nfo' -o -name '*.png' -o -name '*.jpg' )
+	for filePath in $files;do
+		# remove leading path
+		zip -9 --grow "/var/cache/2web/backups/content_$tempTime.zip" "$filePath"
+	done
+	########################################################################
+	# music
+	files=$(find "music" -name '*.nfo' -o -name '*.png' -o -name '*.jpg' )
+	for filePath in $files;do
+		zip -9 --grow "/var/cache/2web/backups/content_$tempTime.zip" "$filePath"
+	done
+	########################################################################
+	# search for channels raw list, this can be re imported into a new 2web instance
+	channelsPathRaw="/var/cache/2web/web/kodi/channels_raw.m3u"
+	if test -f $channelsPathRaw;then
+		zip -9 -j --grow "/var/cache/2web/backups/content_$tempTime.zip" "$channelsPathRaw"
+	fi
+	# Comics
+	# - comics/*
+	#  + Get comic title from filenames and store comic titles as subfolders
 }
 ########################################################################
 restoreSettings(){
@@ -579,18 +630,26 @@ main(){
 		/usr/bin/iptv2web
 		rebootCheck
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
+		webDirectory=$(webRoot)
 		# wait for all background services to stop
-		waitForIdleServer "$(webRoot)"
+		if echo "$@" | grep -q -e "--force";then
+			ALERT "[WARNING]:Skipping wait for idle server..."
+			ALERT "[WARNING]:Forcing database verify while running active updates..."
+			ALERT "[WARNING]:This can corrupt the database until the next update..."
+			ALERT "[WARNING]:Use --verify without --force to avoid this..."
+		else
+			waitForIdleServer "$webDirectory"
+		fi
 		# parallel and regular processing is available for --verify
 		if echo "$@" | grep -q -e "--parallel";then
 			totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-			verifyDatabasePaths "$(webRoot)/data.db"
+			verifyDatabasePaths "$webDirectory/data.db"
 			waitQueue 0.5 "$totalCPUS"
-			verifyDatabasePaths "$(webRoot)/live/groups.db"
+			verifyDatabasePaths "$webDirectory/live/groups.db"
 			blockQueue 1
 		else
-			verifyDatabasePaths "$(webRoot)/data.db"
-			verifyDatabasePaths "$(webRoot)/live/groups.db"
+			verifyDatabasePaths "$webDirectory/data.db"
+			verifyDatabasePaths "$webDirectory/live/groups.db"
 		fi
 		echo "Finished Verifying database."
 	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
@@ -645,7 +704,7 @@ main(){
 		waitQueue 1 "$totalCPUS"
 		blockQueue 1
 		# wait for all background services to stop
-		waitForIdleServer "$(webRoot)"
+		waitForIdleServer "$webDirectory"
 		ALERT "Finished Parallel Processing..."
 		# run the reboot check after all modules have finished running
 		rebootCheck
@@ -721,7 +780,17 @@ main(){
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then
-		backupSettings
+		backupTime=$(date)
+		backupSettings "$backupTime"
+		backupMetadata "$backupTime"
+		drawLine
+		echo "The backup can be found in the backup location"
+		echo "/var/cache/2web/backups/"
+		drawLine
+		echo "This specific backup is stored at"
+		echo "/var/cache/2web/backups/settings_$backupTime.zip"
+		echo "/var/cache/2web/backups/content_$backupTime.zip"
+		drawLine
 	elif [ "$1" == "-r" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
 		restoreSettings "$2"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then

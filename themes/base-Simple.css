@@ -51,7 +51,7 @@ hr{
 /* fix the scrollbars */
 /* MOZILLA SCROLLBAR */
 html{
-	scrollbar-color: var(--solidBackground) var(--glassBackground);
+	scrollbar-color: var(--textColor) var(--glassBackground);
 	scrollbar-width: auto;
 }
 /* WEBKIT SCROLLBAR*/

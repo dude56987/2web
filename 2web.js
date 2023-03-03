@@ -54,7 +54,7 @@ function filterByClass(className,searchText){
     console.log(elements[elementIndex]);//debug
 
     tempContent = elements[elementIndex].textContent;
-    tempContent = tempContent.toLowerCase();
+    tempContent.toLowerCase();
 
     console.log(tempContent);//debug
 

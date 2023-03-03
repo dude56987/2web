@@ -1,9 +1,31 @@
 #! /bin/bash
-echo "Only Debian, Ubuntu, Raspbian, Dietpi builds are currently supported!"
-# install tools for building the manual pages for the package
-apt-get install pandoc
-apt-get install w3m
-# install the zip utilities for building the package in the most compressed format
-apt-get install xz-utils
-# install make if not installed
-apt-get install make
+if test -f /etc/os-release;then
+	if grep -q "ubuntu" /etc/os-release;then
+		keepBuilding="true"
+	elif grep -q "raspbian" /etc/os-release;then
+		keepBuilding="true"
+	elif grep -q "debian" /etc/os-release;then
+		keepBuilding="true"
+	elif grep -q "dietpi" /etc/os-release;then
+		keepBuilding="true"
+	else
+		keepBuilding="false"
+	fi
+else
+	keepBuilding="false"
+fi
+if echo "$@" | grep -q -e "--force";then
+	keepBuilding="true"
+fi
+if [ "$keepBuilding" == "true" ];then
+	# install tools for building the manual pages for the package
+	apt-get install pandoc
+	apt-get install w3m
+	# install the zip utilities for building the package in the most compressed format
+	apt-get install xz-utils
+	# install make if not installed
+	apt-get install make
+else
+	echo "Only Debian, Ubuntu, Raspbian, and Dietpi builds are currently supported!"
+	echo "You can force configure to run if you add --force"
+fi

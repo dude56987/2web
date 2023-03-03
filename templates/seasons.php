@@ -45,7 +45,10 @@ include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 ?>
 <div class='titleCard'>
 <?PHP
-echo "<h1>$showTitle</h1>";
+echo "<h1>";
+echo "$showTitle";
+echo "<img id='spinner' src='/spinner.gif' />";
+echo "</h1>";
 ?>
 <hr>
 <div class='listCard'>
@@ -57,23 +60,21 @@ echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"'>";
 </a>
 
 <?PHP
-echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?showTitle=\"$showTitle\"'>";
+echo "<a class='button vlcButton' href='vlc://".$_SERVER['SERVER_ADDR']."/m3u-gen.php?showTitle=\"$showTitle\"'>";
 ?>
-	<span id='vlcIcon'>&#9650;</span> VLC
-	Play All<sup>(External)<sup>
+	▶️ Play All<sup>(<span id='vlcIcon'>&#9650;</span>VLC)<sup>
 </a>
 
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
 ?>
-	▶️ Play Random<sup>(External)<sup>
+	🔀 Play Random<sup>(External)<sup>
 </a>
 
 <?PHP
-echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
+echo "<a class='button vlcButton' href='vlc://".$_SERVER['SERVER_ADDR']."/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
 ?>
-	<span id='vlcIcon'>&#9650;</span> VLC
-	Play Random<sup>(External)<sup>
+	🔀 Play Random<sup>(<span id='vlcIcon'>&#9650;</span>VLC)<sup>
 </a>
 </div>
 
@@ -136,10 +137,20 @@ echo "</div>";
 ?>
 <hr>
 </div>
+<!--
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
+-->
+<form class='searchBoxForm' action="#seriesSearchBox" method='get'>
+	<input id='seriesSearchBox' class='searchBox' type='text' name='search' placeholder='Series Episode Search...' >
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+	<a class='searchButton' href='?#seriesSearchBox'>❌</a>
+</form>
 <hr>
 <div class='episodeList'>
 <?PHP
+if (array_key_exists("search",$_GET)){
+	$searchTerm=$_GET['search'];
+}
 $seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
 foreach($seasonDirs as $seasonDir){
 	if (is_dir($seasonDir)){
@@ -156,11 +167,27 @@ foreach($seasonDirs as $seasonDir){
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
 		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name 'episode_*.index' | sort"));
-		foreach($episodeFiles as $episodeFile){
-			if (is_file($episodeFile)){
-				echo file_get_contents($episodeFile);
-				flush();
-				ob_flush();
+
+		if (array_key_exists("search",$_GET)){
+			foreach($episodeFiles as $episodeFile){
+				if (is_file($episodeFile)){
+					$tempData=file_get_contents($episodeFile);
+					# filter by search term
+					if (stripos($tempData,$searchTerm)){
+						# write the data
+						echo $tempData;
+						flush();
+						ob_flush();
+					}
+				}
+			}
+		}else{
+			foreach($episodeFiles as $episodeFile){
+				if (is_file($episodeFile)){
+					echo file_get_contents($episodeFile);
+					flush();
+					ob_flush();
+				}
 			}
 		}
 		echo "</div>";

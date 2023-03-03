@@ -8,3 +8,5 @@ node_modules/
 package.json
 package-lock.json
 .todo
+simple_version.txt
+screenshots/

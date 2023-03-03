@@ -20,7 +20,7 @@
 :root{
 	--solidBackground: #282828;
 	--glassBackground: rgba(40,40,40,0.85);
-	--borderColor: black;
+	--borderColor: #c1c1c1;
 	--textColor: #c1c1c1;
 	--shadowColor: black;
 	--highlightText: white;

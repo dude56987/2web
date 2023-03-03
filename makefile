@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+all: build
+	echo "Build the package for use with auto tools (configure,make,make install)"
 show:
 	echo 'Run "make install" as root to install program!'
 test-comics: install
@@ -65,10 +67,6 @@ debugOn:
 	sudo mv /etc/2web/nfo/debug.disabled /etc/2web/nfo/debug.enabled
 debugOff:
 	sudo mv /etc/2web/nfo/debug.enabled /etc/2web/nfo/debug.disabled
-build-tools:
-	# for making man files
-	sudo apt-get install pandoc
-	sudo apt-get install w3m
 build: build-deb
 	# install the build tools
 	sudo make build-deb;

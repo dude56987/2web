@@ -24,23 +24,6 @@ tabs 4
 # add main libary
 source /var/lib/2web/common
 ################################################################################
-function INFO(){
-	width=$(tput cols)
-	cleanedText=$(cleanText "$1")
-	#cleanedText="$1"
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $cleanedText$buffer" | cut -b"1-$(( $width - 1 ))")"
-	# print the line
-	#printf "$output\r"
-	printf "$output\n"
-	# DEBUG sleep
-	#sleep 0.2
-}
-################################################################################
 function ERROR(){
 	output=$1
 	printf "[ERROR]: $output\n"
@@ -109,11 +92,8 @@ examineIconLink(){
 			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
 			if ! test -f "$localIconPath";then
 				INFO "Downloading thumbnail '$iconLink'"
-				#timeout 600 curl "$iconLink" | convert - -adaptive-resize 128x200\! "$localIconPath"
 				# if the file does not exist in the cache download it
-				timeout 120 curl --silent "$iconLink" > "$localIconPath"
-				# resize the icon to standard size
-				timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
+				downloadThumbnail "$iconLink" "$localIconPath" ".png"
 			fi
 		fi
 		# remove image if fake was created
@@ -134,7 +114,7 @@ examineIconLink(){
 			# check if the link is a twitch link, they preload ads in the first 15 seconds
 			# so take the thumbnail from after this 15 seconds
 			if echo -n "$link" | grep -q "twitch.tv";then
-				tempTimeout=20
+				tempTimeout=25
 			else
 				tempTimeout=0
 			fi
@@ -156,7 +136,6 @@ examineIconLink(){
 			# resize the icon to standard size
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
 			# add text over retrieved thumbnail
-			ALERT "timeout 600 convert '$localIconPath' -adaptive-resize 200x200\! -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -size 200x200 -gravity center caption:'$title' -composite '$localIconPath'"
 			timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -size 200x200 -gravity center caption:"$title" -composite "$localIconPath"
 		fi
 		killFakeImage "$localIconPath"
@@ -301,8 +280,7 @@ function process_M3U(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			INFO "Icon MD5 = $iconSum"
 			# check for group title
-			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/;/ /g")
-
+			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | tr -s ' ')
 			#IFS=$IFS_NORMAL
 			#echo "$groupTitle" | while read -r group;do
 			# during the building of the m3u file split out blocked items
@@ -311,7 +289,7 @@ function process_M3U(){
 				if echo -n "$blockedGroups" | grep -q --ignore-case "$group";then
 					# this channel should be blocked from being added to the list
 					INFO "The channel $title has been blocked, it contained blocked group $group"
-					mkdir -p "$webDirectory/live/blocked/"
+					createDir "$webDirectory/live/blocked/"
 					{
 						echo "<div class='blockedLink'>"
 						echo "	<div class='blockedLinkTitle'>"
@@ -329,11 +307,11 @@ function process_M3U(){
 				else
 					# if the channel is not blocked, add the .index file for the group
 					INFO "The channel $title was added in group $group"
-					mkdir -p "$webDirectory/live/groups/$group/"
-					if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
-						# link index files in group directories
-						linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
-					fi
+					#createDir "$webDirectory/live/groups/$group/"
+					#if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
+					#	# link index files in group directories
+					#	linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
+					#fi
 					addChannel="true"
 					# add the sql index database entry for the groups database
 					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
@@ -443,18 +421,28 @@ function processLink(){
 		# if the link is a web address
 		#INFO "Link is a web url..."
 		# if the link is a link to a playlist download the playlist
-		if echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
+		if echo -n "$link" | grep -Eq "\.xml$";then
+			# convert multuple epg files into a master epg.xml on the server
+			# convert .tar.gz and .xml EPG files into a single master EPGA
+			tempEPGsum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			# epg data updates once every 90 minutes per epg link
+			if cacheCheckMin "$webDirectory/live/epg_cache/$tempEPGsum.index" "90";then
+				createDir "$webDirectory/live/epg_cache/"
+				timeout 120 curl -L --silent "$link" > $webDirectory/live/epg_cache/$tempEPGsum.index
+			fi
+			# epg files should be combined at end of processing
+		elif echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
 			#INFO "Link is a m3u playlist..."
 
 			# generate a md5 from the url for the cache
 			linkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-
+			# update the cached playlist every 10 days
 			if cacheCheck "$webDirectory/live/cache/$linkSum.index" "10";then
 				# create the cache directory if it does not exist
-				mkdir -p "$webDirectory/live/cache/"
+				createDir "$webDirectory/live/cache/"
 				# if no cached file exists
 				# if downloaded file is older than 10 days update it
-				timeout 120 curl --silent "$link" > "$webDirectory/live/cache/$linkSum.index"
+				timeout 120 curl -L --silent "$link" > "$webDirectory/live/cache/$linkSum.index"
 			fi
 
 			# if it is a playlist file add it to the list by download
@@ -473,7 +461,14 @@ function processLink(){
 				thumbnailLink="0"
 				if which yt-dlp && which jq;then
 					INFO "Attempting to get link metadata with yt-dlp ..."
-					tempMeta=$(yt-dlp -j "$link")
+					streamLinkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
+					# cache the yt-dlp json data 10 days
+					if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinksum.index" "10";then
+						#mkdir -p "$webDirectory/live/ytdlp_cache/"
+						yt-dlp -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinksum.index"
+					fi
+					# load the cached data
+					tempMeta=$(cat "$webDirectory/live/ytdlp_cache/$streamLinksum.index")
 					if echo -n "$link" | grep -q "youtube.com";then
 						if echo -n "$tempMeta" | grep -q "fulltitle";then
 							fileName=$(echo "$tempMeta" | jq ".fulltitle" | tr -d '"')
@@ -488,19 +483,19 @@ function processLink(){
 						INFO "link title  from display_id = $fileName"
 					fi
 				fi
-				ERROR "[DEBUG]: checking filename length '$fileName'"
+				#ERROR "[DEBUG]: checking filename length '$fileName'"
 				tempFileName=$(echo -n "$fileName" | wc -c )
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
-					ERROR "[DEBUG]: filename too short ripping end of url '$fileName'"
+					#ERROR "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
-				ERROR "[DEBUG]: FileName = $fileName"
+				#ERROR "[DEBUG]: FileName = $fileName"
 				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
 				examineIconLink "$thumbnailLink" "$hostPath" "$fileName" "$radio"
 				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
 				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
-				ERROR "[DEBUG]: SUM = $sum"
+				#ERROR "[DEBUG]: SUM = $sum"
 				webIconPath="http://$(hostname).local/live/icons/$sum.png"
 				webIconPathHD="http://$(hostname).local/live/icons/$sumHD.png"
 				#webIconPath="$sum.png"
@@ -520,7 +515,7 @@ function processLink(){
 				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/data.db" "channels"
 				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/data.db" "channels"
 
-				ERROR "[DEBUG]: WebIconPath = $webIconPath"
+				#ERROR "[DEBUG]: WebIconPath = $webIconPath"
 				{
 					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"2web\",$fileName HD"
 					echo "$hostPathHD"
@@ -584,6 +579,7 @@ fullUpdate(){
 	createDir "$webDirectory/live/channels/"
 	createDir "$webDirectory/live/index/"
 	createDir "$webDirectory/live/groups/"
+	createDir "$webDirectory/live/ytdlp_cache/"
 
 	# link the live index
 	linkFile  "/usr/share/2web/templates/live.php" "$webDirectory/live/index.php"
@@ -769,64 +765,29 @@ function buildPage(){
 	fi
 }
 ################################################################################
-function buildGroupPages(){
+function buildEPG(){
 	webDirectory=$1
 	################################################################################
-	find "$webDirectory/live/groups/" -type 'd' | while read groupPath;do
-		if ! [ "$groupPath" == "$webDirectory/live/groups/" ];then
-			INFO "Building group pages for (groupPath = '$groupPath')"
-			# link assets
-			linkFile "$webDirectory/style.css" "$groupPath/style.css"
-			linkFile "$webDirectory/randomFanart.php" "$groupPath/randomFanart.php"
-			linkFile "$webDirectory/randomPoster.php" "$groupPath/randomPoster.php"
-			linkFile "$webDirectory/fanart.cfg" "$groupPath/fanart.cfg"
-			linkFile "$webDirectory/poster.cfg" "$groupPath/poster.cfg"
-			# build the group index that lists all the groups
-			{
-				echo "<html id='top' class='liveBackground'>"
-				echo "<head>"
-				echo "<title></title>"
-				echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"
-				echo "	<script src='/2web.js'></script>"
-				echo "</head>"
-				echo "<body>"
-				echo "<?PHP";
-				echo "include('/var/cache/2web/web/header.php')";
-				echo "?>";
-				echo " <input id='searchBox' class='searchBox' type='text'"
-				echo " onkeyup='filter(\"indexLink\")' placeholder='Search...' >"
-				echo "<hr>"
-			} > "$groupPath/index.index"
-			# build the groups
-			groupList=$(find "$groupPath" -maxdepth 1 -type 'd')
-			find -L "$groupPath" -type 'f' | while read groupIndex;do
-				# the .index file is found
-				if echo "$groupIndex" | grep -Eq ".index";then
-					# not index.index
-					if ! echo "$groupIndex" | grep -Eq "index.index";then
-						if ! echo "$groupIndex" | grep -Eq "index.php";then
-							groupTitle=$(echo "$groupPath" | rev | cut -d'/' -f1 | rev)
-							INFO "(groupTitle = $groupTitle )"
-							INFO "Adding (groupindex = $groupIndex ) to (group = $groupPath )"
-							{
-								cat "$groupIndex"
-							} >> "$groupPath/index.index"
-						fi
-					fi
-				fi
-			done
-			{
-				echo "<?PHP";
-				echo "include('/var/cache/2web/web/footer.php')";
-				echo "?>";
-				#echo "$headerData"
-				echo "</body>"
-				echo "</html>"
-			} >> "$groupPath/index.index"
-			cp -v "$groupPath/index.index" "$groupPath/index.php"
-		fi
+	# build the combined epg header
+	{
+		echo "<?xml version='1.0' encoding='UTF-8'?>"
+		echo "<!DOCTYPE tv SYSTEM 'xmltv.dtd'>"
+		echo "<tv generator-info-name='2web combined epg from $(hostname).local'>"
+	} > "$webDirectory/kodi/epg.xml"
+	# read each downloaded epg file and combine them
+	find "$webDirectory/live/epg_cache/" -type 'f' | while read epgPath;do
+		# load the cached epg
+		tempEPG=$(cat "$epgPath")
+		# cleaup header and footer tags to make combining epgs possible
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<?xml")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<!doctype")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<tv")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "</tv")
+		# write the cleaned epg data to the combined epg
+		echo "$tempEPG" >> $webDirectory/kodi/epg.xml
 	done
-	INFO "Finished building all group pages."
+	# add end tag to epg
+	echo "</tv>" >> $webDirectory/kodi/epg.xml
 }
 ################################################################################
 function buildRadioPage(){
@@ -962,8 +923,6 @@ webGen(){
 					echo "<?PHP";
 					echo "include('/var/cache/2web/web/header.php')";
 					echo "?>";
-
-					echo "<br>"
 					echo "<div class='descriptionCard'>"
 					echo "	<h1>"
 					echo "		$title"
@@ -1141,8 +1100,8 @@ webGen(){
 		fi
 	done
 
-	# build the group pages
-	buildGroupPages "$webDirectory"
+	# combine all the epg files
+	buildEPG "$webDirectory"
 
 	# copy over the new versions of the generated webpages
 	cp -v "$channelListPath" "$channelOutputPath"

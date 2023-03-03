@@ -87,7 +87,13 @@ if (array_key_exists("timespan",$_GET)){
 		?>
 	</div>
 </div>
-
+<?PHP
+# print the current server time
+echo "<div class='titleCard'>Server Time: ";
+# munin date format for last update
+echo date('l M d H:i:s Y');
+echo "</div>";
+?>
 </div>
 <?php
 	// add random comics above the footer

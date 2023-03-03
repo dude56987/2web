@@ -65,30 +65,6 @@ function cacheCheck(){
 	fi
 }
 ################################################################################
-function cacheCheckMin(){
-
-	filePath="$1"
-	cacheMinutes="$2"
-
-	# return true if cached needs updated
-	if [ -f "$filePath" ];then
-		# the file exists
-		if [[ $(find "$1" -cmin "+$cacheMinutes") ]];then
-			# the file is more than "$2" minutes old, it needs updated
-			INFO "File is to old, update the file $1"
-			return 0
-		else
-			# the file exists and is not old enough in cache to be updated
-			INFO "File in cache, do not update $1"
-			return 1
-		fi
-	else
-		# the file does not exist, it needs created
-		INFO "File does not exist, it must be created $1"
-		return 0
-	fi
-}
-################################################################################
 getDirSum(){
 	line=$1
 	# check the libary sum against the existing one

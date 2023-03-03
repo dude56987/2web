@@ -1247,7 +1247,8 @@ processEpisode(){
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
 					echo "?>"
-					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					#echo "<span id='vlcIcon'>&#9650;</span>"
+					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
@@ -1255,7 +1256,6 @@ processEpisode(){
 					echo "</a>"
 					# build the vlc direct link
 					#tempEpisodePath="vlc://http://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
-
 
 					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 					epNum="s${episodeSeason}e${episodeNumber}"
@@ -1266,22 +1266,22 @@ processEpisode(){
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
-					echo "	🔗Play All"
+					echo "	🔁 Continue<sup>(External)</sup>"
 					echo "</a>"
 
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempEpisodePath'>\";"
 					echo "?>"
-					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					#echo "<span id='vlcIcon'>&#9650;</span>"
+					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 					echo "</a>"
-
 
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
-					echo "<span id='vlcIcon'>&#9650;</span> VLC Play All"
+					#echo "<span id='vlcIcon'>&#9650;</span>"
+					echo "	🔁 Continue<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 					echo "</a>"
-
 				fi
 
 				echo "<div class='aired'>"
@@ -1437,6 +1437,13 @@ processShow(){
 	fi
 	#INFO "Creating showPagePath = $showPagePath"
 	#touch "$showPagePath"
+
+	# remove existing fanart and posters
+	# - this will refresh generated posters and fanart
+	# - this code block only runs if the series has changed and the contents of the poster and fanart might have changed too
+	rm -v "$webDirectory/shows/$showTitle/poster.png"
+	rm -v "$webDirectory/shows/$showTitle/fanart.png"
+	rm -v "$webDirectory/shows/$showTitle/poster-web.png"
 	################################################################################
 	# begin building the html of the page
 	################################################################################
@@ -1496,7 +1503,7 @@ processShow(){
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
 			seasonSum=$(echo -n "$season" | sha512sum | cut -d' ' -f1)
 
-			# get the season folder sum, youtube channels can have 2k + episodes a season
+			# get the season folder sum, youtube channels can have 9999 max episodes a season
 			if test -f "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg";then
 				currentSeasonSum=$(cat "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg")
 			else
@@ -1537,7 +1544,10 @@ processShow(){
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | tail -n 24 | sed "s/^/'/g" | sed "s/$/'/g" | sed -z "s/\n/ /g" )
 		# get the list of image files
 		# create the failsafe background by combining all the thumbnails of episodes into a image
-		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
+		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 24 | shuf |sed "s/ /\ /g"| sed -z "s/\n/ /g" )
+		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
+		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
+		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
 			cp "$webDirectory/shows/$showTitle/fanart-0.png" "$webDirectory/shows/$showTitle/fanart.png"
@@ -1550,8 +1560,10 @@ processShow(){
 		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg], Generating one at <a href='/$show/fanart.png'>$show/fanart.png</a>" "$logPagePath"
 	fi
 	if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
-		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | tail -n 8 | sed "s/^/'/g" | sed "s/$/'/g" | sed -z "s/\n/ /g" )
-		montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
+		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 8 | shuf |sed "s/ / /g"| sed -z "s/\n/ /g" )
+		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
+		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
+		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		if test -f "$webDirectory/shows/$showTitle/poster-0.png";then
 			# to many images exist use only first set

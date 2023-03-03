@@ -115,12 +115,30 @@ include("settingsHeader.php");
 	<ul>
 		<li>
 			Unlock port 80 for the public interface
+			<ul>
+				<li>
+					ufw allow port 80
+				</li>
+			</ul>
 		</li>
 		<li>
 			Unlock port 443 to login to the admin interface
+			<ul>
+				<li>
+					ufw allow port 443
+				</li>
+			</ul>
 		</li>
 		<li>
-			Unlock port 444 for compatibility mode
+			Unlock port 5353 zeroconf/bonjour/avahi
+			<ul>
+				<li>
+					ufw allow bonjour
+				</li>
+				<li>
+					ufw allow port 5353
+				</li>
+			</ul>
 		</li>
 	</ul>
 </div>

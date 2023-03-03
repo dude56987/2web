@@ -290,8 +290,6 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 }
 ?>
 <form class='searchBoxForm' action='/search.php' method='get'>
-	<table>
-		<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >
-		<button id='searchButton' class='searchButton' type='submit'>🔎</button>
-	</table>
+	<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
