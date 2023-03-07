@@ -27,20 +27,12 @@ test-live: install
 test-update-live: install
 	sudo time -v iptv2web update
 test-ondemand: install
-	sudo time -v nfo2web reset || echo "no reset needed..."
-	sudo time -v nfo2web update
+	sudo time -v 2web reset || echo "no reset needed..."
+	sudo time -v 2web update
 test-update-ondemand: install
-	sudo time -v nfo2web update
-test-update: install
-	sudo time -v nfo2web update
-	sudo time -v iptv2web update
+	sudo time -v 2web update
 test: install
-	sudo time -v nfo2web reset || echo "no reset needed..."
-	sudo time -v nfo2web update
-	sudo time -v iptv2web reset || echo "no reset needed..."
-	sudo time -v iptv2web webgen
-	sudo time -v iptv2web update
-	sudo time -v iptv2web webgen
+	sudo time -v 2web --parallel
 lint:
 	# check the templates
 	php -l templates/*.php
@@ -58,9 +50,9 @@ lint:
 install: build
 	sudo gdebi -n 2web_UNSTABLE.deb
 uninstall:
-	sudo apt-get purge nfo2web
+	sudo apt-get purge 2web
 uninstall-broken:
-	sudo dpkg --remove --force-remove-reinstreq nfo2web
+	sudo dpkg --remove --force-remove-reinstreq 2web
 installed-size:
 	du -sx --exclude DEBIAN ./debian/
 debugOn:
@@ -141,6 +133,9 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
 	mkdir -p debian/etc/2web/comics/webSources.d/;
+	mkdir -p debian/etc/2web/repos/;
+	mkdir -p debian/etc/2web/repos/sources.d/;
+	mkdir -p debian/etc/2web/repos/libaries.d/;
 	mkdir -p debian/etc/2web/iptv/;
 	mkdir -p debian/etc/2web/iptv/sources.d/;
 	mkdir -p debian/etc/2web/iptv/blockedGroups.d/;
@@ -167,6 +162,8 @@ build-deb: upgrade-hls
 	# make placeholder
 	#touch debian/etc/2web/search/sources.d/.placeholder
 	touch debian/etc/2web/cache/.placeholder
+	touch debian/etc/2web/repos/sources.d/.placeholder
+	touch debian/etc/2web/repos/libaries.d/.placeholder
 	touch debian/etc/2web/wiki/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/usernameSources.d/.placeholder
@@ -215,25 +212,20 @@ build-deb: upgrade-hls
 	#cp nfo2web.sh debian/usr/bin/nfo2web
 	echo "#! /bin/bash" > debian/usr/bin/nfo2web
 	grep --invert-match "^[[:blank:]]*#" nfo2web.sh | tr -s '\n' >> debian/usr/bin/nfo2web
-	#cp music2web.sh debian/usr/bin/music2web
+	echo "#! /bin/bash" > debian/usr/bin/git2web
+	grep --invert-match "^[[:blank:]]*#" git2web.sh | tr -s '\n' >> debian/usr/bin/git2web
 	echo "#! /bin/bash" > debian/usr/bin/music2web
 	grep --invert-match "^[[:blank:]]*#" music2web.sh | tr -s '\n' >> debian/usr/bin/music2web
-	#cp iptv2web.sh debian/usr/bin/iptv2web
 	echo "#! /bin/bash" > debian/usr/bin/iptv2web
 	grep --invert-match "^[[:blank:]]*#" iptv2web.sh | tr -s '\n' >> debian/usr/bin/iptv2web
-	#cp comic2web.sh debian/usr/bin/comic2web
 	echo "#! /bin/bash" > debian/usr/bin/comic2web
 	grep --invert-match "^[[:blank:]]*#" comic2web.sh | tr -s '\n' >> debian/usr/bin/comic2web
-	#cp graph2web.sh debian/usr/bin/graph2web
 	echo "#! /bin/bash" > debian/usr/bin/graph2web
 	grep --invert-match "^[[:blank:]]*#" graph2web.sh | tr -s '\n' >> debian/usr/bin/graph2web
-	#cp kodi2web.sh debian/usr/bin/kodi2web
 	echo "#! /bin/bash" > debian/usr/bin/kodi2web
 	grep --invert-match "^[[:blank:]]*#" kodi2web.sh | tr -s '\n' >> debian/usr/bin/kodi2web
-	#cp weather2web.sh debian/usr/bin/weather2web
 	echo "#! /bin/bash" > debian/usr/bin/weather2web
 	grep --invert-match "^[[:blank:]]*#" weather2web.sh | tr -s '\n' >> debian/usr/bin/weather2web
-	#cp ytdl2nfo.sh debian/usr/bin/ytdl2nfo
 	echo "#! /bin/bash" > debian/usr/bin/ytdl2nfo
 	grep --invert-match "^[[:blank:]]*#" ytdl2nfo.sh | tr -s '\n' >> debian/usr/bin/ytdl2nfo
 	# build the man pages for the command line tools

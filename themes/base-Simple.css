@@ -674,10 +674,11 @@ a:visited {
 	line-height: 4rem;
 }
 .header .button{
-	/*
 	white-space: nowrap;
-	*/
 	line-height: 2rem;
+	display: inline-block;
+	margin-right: 0px;
+	margin-left: 0px;
 }
 .activeProcess{
 	display: inline;
@@ -1216,6 +1217,7 @@ table, th, td{
 	margin-left: auto;
 	margin-right: auto;
 	text-shadow: none;
+	text-align: center;
 }
 /* Make the markdown generated tables display correctly */
 tr[class='header']{
@@ -1460,7 +1462,7 @@ tr{
 	color: lightgreen;
 }
 .loginLogoutBox{
-	display: none;
+	display: block;
 	text-align: right;
 	line-height: 3rem;
 	position: absolute;
@@ -1543,6 +1545,7 @@ tr{
 	}
 	.headerButtons{
 		text-align: left;
+		width: 90vw;
 	}
 	.header{
 		margin-right: 0px;
@@ -1560,6 +1563,9 @@ tr{
 
 	.headerButtons{
 		text-align: center;
+	}
+	.gitEmailRow{
+		display: none !important;
 	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
@@ -1580,6 +1586,9 @@ tr{
 	}
 	.header{
 		margin-right: 0px;
+	}
+	.headerButtons{
+		width: 100%;
 	}
 }
 .fortuneText{

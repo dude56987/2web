@@ -53,6 +53,7 @@ if ($writeFile){
 	$musicFound=False;
 	$comicsFound=False;
 	$channelsFound=False;
+	$reposFound=False;
 
 	if (file_exists("$webDirectory/graphs/")){
 		$graphsFound=True;
@@ -75,6 +76,9 @@ if ($writeFile){
 				$channelsFound=True;
 			}
 		}
+	}
+	if (file_exists("$webDirectory/repos/repos.index")){
+		$reposFound=True;
 	}
 
 	# build the header
@@ -178,6 +182,15 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
+	if ($reposFound){
+		$fileData .= formatText("<a class='button' href='/repos/'>",2);
+		$fileData .= formatText("💾",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("REPOS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+
 	# close the listcard block
 	#echo "</div>";
 	fwrite($fileObj,"$fileData");
@@ -187,6 +200,7 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+/*
 if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI'], "log/") || strpos($_SERVER['REQUEST_URI'], "backup/")){
 	formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
 	formatEcho("🛠️",3);
@@ -223,6 +237,8 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }
+*/
+
 // draw the help button
 //formatEcho("<a class='button' href='/help.php'>",2);
 //formatEcho( "❔",3);
@@ -246,7 +262,8 @@ formatEcho('setHeaderStartState();',2);
 formatEcho('</script>',1);
 
 # if the path is in the settings draw the logout button
-if (strpos($_SERVER['REQUEST_URI'], "settings/")){
+#if (strpos($_SERVER['REQUEST_URI'], "settings/")){
+if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI'], "log/") || strpos($_SERVER['REQUEST_URI'], "backup/") || strpos($_SERVER['REQUEST_URI'], "views/")){
 	echo "<div class='loginLogoutBox'>";
 	echo "		<a class='button' href='/settings/'>";
 	echo "			🛠️";
@@ -264,7 +281,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	// draw the help button
 	echo "	<hr>";
 	formatEcho("<a class='button' href='/help.php'>",2);
-	formatEcho( "❔",3);
+	formatEcho( "❓",3);
 	formatEcho("<span class='headerText'>",3);
 	formatEcho("Help",4);
 	formatEcho("</span>",3);
@@ -281,7 +298,7 @@ if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	echo "	<hr>";
 	// draw the help button
 	formatEcho("<a class='button' href='/help.php'>",2);
-	formatEcho( "❔",3);
+	formatEcho( "❓",3);
 	formatEcho("<span class='headerText'>",3);
 	formatEcho("Help",4);
 	formatEcho("</span>",3);
