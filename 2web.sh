@@ -264,6 +264,7 @@ function update2web(){
 	linkFile "/usr/share/2web/search.php" "$webDirectory/search.php"
 	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 	linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
+	linkFile "/usr/share/2web/zip-gen.php" "$webDirectory/zip-gen.php"
 	# error documents
 	linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
 	linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
@@ -753,15 +754,20 @@ main(){
 		/usr/bin/graph2web
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
-		# upgrade streamlink and yt-dlp and gallery-dl pip packages
-		# - All fast moving software is included here for upgrade in a single command
-		# - yt-dlp is used for stream translation and metadata conversion
-		# - streamlink is used for translation of livestreams
-		# - gallery-dl is used for comic2web
-		pip3 install --upgrade yt-dlp
-		pip3 install --upgrade streamlink
-		pip3 install --upgrade gallery-dl
-		pip3 install --upgrade dosage
+		# - upgrade streamlink and yt-dlp and gallery-dl pip packages
+		#  * All fast moving software is included here for upgrade in a single command
+		#  * yt-dlp is used for stream translation and metadata conversion
+		#  * streamlink is used for translation of livestreams
+		#  * gallery-dl is used for comic2web
+		#  * jslint is used by git2web for javascript linting
+		# - upgrade all the pip packages used
+		# - This command is called in 2web.cron
+		# - each module has its own upgrade method for its individual packages so that
+		#   only enabled modules will upgrade
+		ytdl2nfo --upgrade
+		iptv2web --upgrade
+		comic2web --upgrade
+		git2web --upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web nuke
@@ -794,6 +800,7 @@ main(){
 	elif [ "$1" == "-r" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
 		restoreSettings "$2"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
+		webDirectory=$(webRoot);
 		# run the cleanup to remove cached files older than the cache time
 		################################################################################
 		if test -f "/etc/2web/cache/cacheDelay.cfg";then
@@ -805,22 +812,25 @@ main(){
 		fi
 		echo "Checking cache for files older than ${cacheDelay} Days"
 		# delete files older than x days
-		echo "Checking for cache files in $(webRoot)/RESOLVER-CACHE/"
-		if test -d "$(webRoot)/RESOLVER-CACHE/";then
-			find "$(webRoot)/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
+		echo "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
+		if test -d "$webDirectory/RESOLVER-CACHE/";then
+			find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
 		fi
-		echo "Checking for cache files in $(webRoot)/log/"
-		if test -d "$(webRoot)/log/";then
-			#find "$(webRoot)/log/" -type d -mtime +"$cacheDelay" -name '*.log' -exec rm -rv {} \;
-			find "$(webRoot)/log/" -type f -mtime +1 -name '*.log' -exec rm -rv {} \;
+		echo "Checking for cache files in $webDirectory/log/"
+		if test -d "$webDirectory/log/";then
+			#find "$webDirectory/log/" -type d -mtime +"$cacheDelay" -name '*.log' -exec rm -rv {} \;
+			find "$webDirectory/log/" -type f -mtime +1 -name '*.log' -exec rm -rv {} \;
 		fi
-		echo "Checking for cache files in $(webRoot)/M3U-CACHE/"
+		echo "Checking for cache files in $webDirectory/M3U-CACHE/"
 		# delete the m3u cache
-		if test -d "$(webRoot)/M3U-CACHE/";then
-			find "$(webRoot)/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
+		if test -d "$webDirectory/M3U-CACHE/";then
+			find "$webDirectory/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
 		fi
-		if test -d "$(webRoot)/search/";then
-			find "$(webRoot)/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
+		if test -d "$webDirectory/search/";then
+			find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
+		fi
+		if test -d "$webDirectory/zip_cache/";then
+			find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt

@@ -1194,6 +1194,7 @@ main(){
 	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
 		checkCron
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		checkModStatus "iptv2web"
 		# upgrade streamlink and yt-dlp pip packages
 		pip3 install --upgrade streamlink
 		#pip3 install --upgrade youtube-dl

@@ -1493,11 +1493,9 @@ tr{
 	white-space: nowrap;
 	*/
 }
-/*
 .headerLoginButton{
-	display: none;
+	display: none !important;
 }
-*/
 /*
 @media (hover: none){
 	.header{
@@ -1579,7 +1577,7 @@ tr{
 		display: inline-block;
 	}
 	.headerLoginButton{
-		display: block;
+		display: block !important;
 	}
 	.loginLogoutBox{
 		display: none;
@@ -1736,4 +1734,10 @@ pre{
 	display: inline-block;
 	vertical-align: middle;
 	float: right;
+}
+.gitRepoGraph{
+	border: solid var(--borderColor) 0.1rem;
+	border-radius: 0.2rem;
+	width: 98%;
+	height: 3rem;
 }

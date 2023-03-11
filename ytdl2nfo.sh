@@ -511,13 +511,6 @@ ytdl2kodi_channel_meta_extractor(){
 	return
 }
 ################################################################################
-ytdl2kodi_depends_check(){
-	# Install the most recent version of youtube-dl by using pip3, everything else is too slow to update
-	# install youtube-dl from the latest repo
-	# install the missing package
-	pip3 install --upgrade yt-dlp
-}
-################################################################################
 ytdl2kodi_reset_cache(){
 	if test -f /etc/2web/ytdl/downloadPath.cfg;then
 		downloadPath="$(cat /etc/2web/ytdl/downloadPath.cfg)"
@@ -628,7 +621,6 @@ ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
 	# check dependencies to get the latest version of youtube-dl
-	#ytdl2kodi_depends_check
 	################################################################################
 	# create a limit to set the number of channels that can be processed at once
 	# running ytdl2kodi_update every hour with a limit of one means only one channel
@@ -1312,7 +1304,8 @@ main(){
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "ytdl2nfo"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		ytdl2kodi_depends_check
+		checkModStatus "ytdl2nfo"
+		pip3 install --upgrade yt-dlp
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "ytdl2nfo"
 		ytdl2kodi_reset_cache

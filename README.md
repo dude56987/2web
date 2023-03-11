@@ -13,23 +13,26 @@ Generate a website for use on a LAN(Local Area Network) as a http/https accessib
  - Live Radio
  - Weather Forecasts
  - System Graphs
+ - Git Repositories
 
 ## Features
 
  - NO API KEYS REQUIRED
+ - Local Search
+ - WEB Interface compatible with DESKTOP, PHONES, and TABLETS
  - Add web addresses to include any website or individual user channel on sites supported by ([yt-dlp](https://github.com/yt-dlp/yt-dlp)/[youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)) as a show in the media libary
  - Add web addresses of online comics to cache them locally in your comics section with [gallery-dl](https://github.com/mikf/gallery-dl)
  - Add book collections containing .cbz .txt .pdf .zip or simple folders containing image files.
  - Add music collections and music is auto-sorted based on id3 tag information
  - Add any livestream web address as a live channel using [streamlink](https://streamlink.github.io)
- - Mostly [PHP](https://www.php.net) and [Bash](https://www.gnu.org/software/bash/)
+ - Written in [PHP](https://www.php.net),[Bash](https://www.gnu.org/software/bash/),and [Javascript](https://en.wikipedia.org/wiki/JavaScript/)
  - Light touches of [Javascript](https://en.wikipedia.org/wiki/JavaScript) mostly for html5 live in webpage player
  - Weather info via [weather-util](http://fungi.yuggoth.org/weather/) WITHOUT NEED FOR AN API KEY thanks to METAR data from the National Oceanic and Atmospheric Administration and forecasts from the National Weather Service.
  - Lots of included Themes and custom themes can be installed with a single CSS file
  - Direct Links to hosted media for playback with player of your choice
  - VLC links to immediately start playback in [VLC](https://www.videolan.org/vlc/) from the webpage on mobile
  - Chapter support for videos with sponsorblock [https://sponsor.ajay.app/](https://sponsor.ajay.app/)
- - Command line interface with excessive man pages
+ - Command line interface with man pages
  - Lock the settings interface by adding at least one administrative user
  - SOFTWARE DOES NOT TOUCH THE DATA SOURCES, everything is symlinked
 

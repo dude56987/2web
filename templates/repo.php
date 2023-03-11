@@ -19,7 +19,7 @@
 -->
 <?PHP
 ################################################################################
-function buildCommitTable($onlyOne=False){
+function buildCommitTable($entriesToRead=-1){
 	if (file_exists("commits.index")){
 		echo "	<table>\n";
 		// get a list of all the genetrated index links for the page
@@ -53,8 +53,11 @@ function buildCommitTable($onlyOne=False){
 			echo "	</tr>\n";
 			flush();
 			ob_flush();
-			if ($onlyOne){
+			# loop is -1 by default to allow infinite looping
+			if ($entriesToRead == 0){
 				break;
+			}else{
+				$entriesToRead -= 1;
 			}
 		}
 		echo "	</table>\n";
@@ -68,8 +71,35 @@ function drawHeader(){
 	echo "			<a class='button' href='?all'>🗂️ Repository Overview</a>\n";
 	echo "			<a class='button' href='?list'>💼 All Commits</a>\n";
 	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
+	echo "			<a class='button' href='?listLint'>🧹 Lint Data</a>\n";
 	echo "		</div>\n";
 	echo "	</div>\n";
+}
+################################################################################
+function drawLint(){
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Lint</h2>\n";
+	echo "	<table>\n";
+	echo "	<tr>\n";
+	echo "		<th>File</th>\n";
+	echo "		<th>Date</th>\n";
+	echo "	</tr>\n";
+	#foreach(scanDir("lint/") as $sourceFile){
+	foreach(recursiveScan("lint/") as $sourceFile){
+		echo "	<tr>\n";
+		$fileName = explode("/",$sourceFile);
+		$fileName = array_reverse($fileName);
+		$fileName = $fileName[0];
+		$fileTime = str_replace(".index","",$fileName);
+		$fileTime = "lint_time/".$fileTime.".index";
+		$fileTitle= str_replace(".index","",$fileName);
+		// read the index entry
+		echo "	<td><a href='?lint=$fileName'>$fileTitle</a></td>\n";
+		echo "	<td>".file_get_contents($fileTime)."</td>\n";
+		echo "	</tr>\n";
+	}
+	echo "</table>\n";
+	echo "</div>\n";
 }
 ################################################################################
 ?>
@@ -107,6 +137,20 @@ if (array_key_exists("inspector",$_GET)){
 	# build the commit table
 	buildCommitTable();
 	echo "</div>\n";
+}else if (array_key_exists("listLint",$_GET)){
+	drawHeader();
+	drawLint();
+}else if (array_key_exists("lint",$_GET)){
+	$lintFileName=$_GET['lint'];
+	$cleanLintFileName=str_replace(".index","",$lintFileName);
+	drawHeader();
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Lint Output for '$cleanLintFileName'</h2>\n";
+	echo "	<pre>";
+	echo file_get_contents("lint/".$lintFileName);
+	echo "	</pre>";
+	echo "</div>\n";
+	drawLint();
 }else if (array_key_exists("commit",$_GET)){
 	$commitName=$_GET['commit'];
 	drawHeader();
@@ -166,16 +210,18 @@ if (array_key_exists("inspector",$_GET)){
 	drawHeader();
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Repo</h2>\n";
-	buildCommitTable(True);
-	#echo "<img src='graph.svg' />";
+	# draw first commit
+	buildCommitTable(0);
 	echo "<div>";
-	include("graph.svg");
+	echo "<a href='graph.png'><img class='gitRepoGraph' src='graph.png' /></a>";
+	#include("graph.svg");
 	echo "</div>";
 	echo "	<video controls>\n";
 	echo "	<source src='repoHistory.mp4' type='video/mp4'>\n";
 	echo "	</video>\n";
 	echo 		file_get_contents("readme.index");
 	echo "</div>\n";
+
 	/*
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Commits</h2>\n";

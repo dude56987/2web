@@ -125,12 +125,12 @@ if ($writeFile){
 	$fileData = "";
 
 	# build the header
-	#$fileData .= "<a class='' href='/index.php'>";
-	#$fileData .= "🏠";
+	$fileData .= "<a class='' href='/index.php'>";
+	$fileData .= "🏠";
 	#$fileData .= "<span class='footerText'>";
 	#$fileData .= " HOME";
 	#$fileData .= "</span>";
-	#$fileData .= "</a> ";
+	$fileData .= "</a> ";
 
 	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
 		$fileData .= "<a class='' href='/new/'>";

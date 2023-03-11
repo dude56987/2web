@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 -->
-<html id='top' class='randomFanart'>
+<html class='randomFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>

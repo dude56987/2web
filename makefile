@@ -278,6 +278,7 @@ build-deb: upgrade-hls
 	#grep --invert-match "^[[:blank:]]*#" m3u-gen.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/m3u-gen.php
 	cp resolvers/ytdl-resolver.php debian/usr/share/2web/
 	cp resolvers/m3u-gen.php debian/usr/share/2web/
+	cp resolvers/zip-gen.php debian/usr/share/2web/
 	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
 	cp resolvers/transcode.php debian/usr/share/2web/
 	cp resolvers/search.php debian/usr/share/2web/

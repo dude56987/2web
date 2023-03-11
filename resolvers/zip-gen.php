@@ -1,6 +1,6 @@
 <!--
 ########################################################################
-# 2web m3u generator to create and cache playlists on-demand
+# 2web zip generator to create and cache playlists on-demand
 # Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -80,172 +80,123 @@ function redirect($url){
 	}
 }
 ################################################################################
-function m3u_gen($section,$title){
+function zip_gen($title){
 	# - section can be music,shows
 	# - title can be a artist
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
 	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
 
-	$showTitle = $title;
-	$showTitle = str_replace('"','',$showTitle);
 
+	$title = str_replace('"','',$title);
 
-	if($section == 'shows'){
-		$showPath = "$rootPath/shows/$showTitle/";
-	}else if($section == 'artist'){
-		# music artist name is lowercased
-		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
-	}else if($section == 'music'){
-		# music artist name is lowercased
-		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
-	}else if($section == 'movies'){
-		$showPath = "$rootPath/movies/";
-	#}else if($section == 'music'){
-	#	$showPath = "$rootPath/music/";
-	}else{
-		$showPath = "$rootPath/$section/$showTitle/";
+	if (array_key_exists("comic",$_GET)){
+		if (array_key_exists("chapter",$_GET)){
+			$comicPath = "$rootPath/comics/$title/".$_GET['chapter']."/";
+		}else{
+			$comicPath = "$rootPath/comics_tank/$title/";
+		}
+	}else if (array_key_exists("repo",$_GET)){
+		$comicPath = file_get_contents("$rootPath/repo/$title/source.index");
 	}
 
-	echo "Checking $showPath is a directory...<br>\n";
+	if (array_key_exists("debug",$_GET)){
+		echo "Checking $comicPath is a directory...<br>\n";
+	}
 
-	//var_dump(recursiveScan($showPath));
-
-	echo "Show path is a directory...<br>\n";
 	# create the cache if it does not exist
-	if (! is_dir($rootServerPath."/m3u_cache/")){
-		mkdir("$rootServerPath/m3u_cache/");
+	if (! is_dir($rootServerPath."/zip_cache/")){
+		mkdir("$rootServerPath/zip_cache/");
 	}
 
-	if (array_key_exists("sort",$_GET)){
-		if ($_GET['sort'] == 'random'){
-			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
-			// - currently 20 variations of the randomization pattern can be created
-			$tempRand = rand(0,20);
-			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["SERVER_ADDR"]);
-		}else{
-			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
-		}
+	$cacheSum = md5($title);
+
+	# build zip file path
+	if (array_key_exists("cbz",$_GET)){
+		$tempExt="cbz";
 	}else{
-		if (array_key_exists("playAt",$_GET)){
-			# the sum should be unique for each playAt argument
-			$cacheSum = md5($_GET['playAt'].$showTitle.$_SERVER["SERVER_ADDR"]);
-		}else{
-			// cache sum
-			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
-		}
+		$tempExt="zip";
+	}
+	if (array_key_exists("chapter",$_GET)){
+		$chapter=" - Chapter - ".$_GET['chapter'];
+	}else{
+		$chapter="";
 	}
 
-	$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
+	$cacheFilePath = "/zip_cache/".$title.$chapter.".".$tempExt;
+	$fullCacheFilePath = $rootServerPath."/zip_cache/".$title.$chapter.".".$tempExt;
 
 	$totalFileList=Array();
 
 	// check for existing redirect
-	if (is_file($cacheFile)){
+	if (is_file($fullCacheFilePath)){
 		# redirect to the built cache file if it exists
-		redirect("/m3u_cache/$cacheSum.m3u");
+		redirect($cacheFilePath);
 	}else{
-		// create the m3u file
-		$data = fopen($cacheFile,'w');
-		fwrite($data, "#EXTM3U\n");
-
-		$foundFiles = recursiveScan($showPath);
-
-		#var_dump($foundFiles);
+		if (array_key_exists("debug",$_GET)){
+			echo "Creating zipfile at: $fullCacheFilePath<br>\n";
+		}
+		// create the zip file
+		$data = new ZipArchive();
+		$data->open($fullCacheFilePath, ZipArchive::CREATE);
+		// recursive scan comic path for image files
+		$foundFiles = recursiveScan($comicPath);
 
 		foreach ($foundFiles as $filePath){
-			# cleanup the scan data by removing the site root path, from the file before adding it to the m3u
+			# cleanup the scan data by removing the site root path, from the file before adding it to the zip
 			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
 
-			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
-				#$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
-				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
-				#$tempDataEntry = $tempDataEntry."..$filePath\n";
-				$tempDataEntry .= "http://".$_SERVER["SERVER_ADDR"]."$filePath\n";
-				array_push($totalFileList,$tempDataEntry);
+
+
+			if (strpos($filePath,".jpg") || strpos($filePath,".png") || strpos($filePath,".jpeg") || strpos($filePath,".webm") || strpos($filePath,".gif")){
+				if (array_key_exists("debug",$_GET)){
+					echo "full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n";
+				}
+				if (file_exists($_SERVER['DOCUMENT_ROOT'].$filePath)){
+					if (array_key_exists("debug",$_GET)){
+						echo"File exists adding file...<br>\n";
+					}
+					$fileName=explode("/",$filePath);
+					$fileName=array_pop($fileName);
+					if (array_key_exists("debug",$_GET)){
+						echo"Storing file in $title/$fileName<br>\n";
+					}
+					# write each file to the zip archive on disk individually
+					if (array_key_exists("chapter",$_GET)){
+						$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$chapter."/".$fileName);
+					}else{
+						$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title."/".$fileName);
+					}
+				}else{
+					if (array_key_exists("debug",$_GET)){
+						echo"File does not exist...<br>\n";
+					}
+				}
 			}
 		}
+		$data->close();
+		#$data->close();
 	}
 
-	#var_dump($totalFileList);
-	# check for playAt and concat array
-	#if (array_key_exists("playAt",$_GET)){
-	#	# if the playAt is set start the playlist at this discovered file cut the file paths array at that filename
-	#	$searchResults=array_search($_GET["playAt"], array_keys($totalFileList));
-	#	var_dump($searchResults);
-	#	if($searchResults != false){
-	#		$totalFileList = array_slice($totalFileList,$searchResults);
-	#	}
-	#}
-
-	if (array_key_exists("sort",$_GET)){
-		if ($_GET['sort'] == 'random'){
-			# randomize the list before writing it to the file
-			shuffle($totalFileList);
-		}
-	}
-	if (array_key_exists("playAt",$_GET)){
-		$playAtFound=False;
-		# write playlist lines only after playAt entry is found
-		foreach ($totalFileList as $tempLineData){
-			if (stripos($tempLineData,$_GET['playAt'])){
-				$playAtFound=true;
-			}
-			if ($playAtFound){
-				fwrite($data, $tempLineData);
-			}
-		}
-	}else{
-		# write all lines of the playlist
-		foreach ($totalFileList as $tempLineData){
-			fwrite($data, $tempLineData);
-		}
-	}
 	// close the file
-	fclose($data);
+	#fclose($data);
 	// redirect to episode path
-	redirect("/m3u_cache/$cacheSum.m3u");
+	redirect($cacheFilePath);
 }
 ################################################################################
-if (array_key_exists("artist",$_GET)){
-	echo "Building Artist...<br>\n";
+if (array_key_exists("comic",$_GET)){
+	echo "Building Comic Zipfile...<br>\n";
 
-	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi/";
+	$comicTitle = $_GET['comic'];
 
-	$showTitle = $_GET['artist'];
-	$showTitle = str_replace('"','',$showTitle);
-
-	$showPath = "$rootPath/music/$showTitle";
-
-	#var_dump(recursiveScan($rootPath."music/".strtolower($showTitle)."/"));
-
-	m3u_gen("music",$showTitle);
+	zip_gen($comicTitle);
 	exit();
+}else if (array_key_exists("repo",$_GET)){
+	echo "Building Repo Zipfile...<br>\n";
 
-}else if (array_key_exists("showTitle",$_GET)){
-	echo "Building ShowTitle...<br>\n";
+	$repoTitle = $_GET['repo'];
 
-	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
-
-	$showTitle = $_GET['showTitle'];
-	//echo "showTitle pre replace=$showTitle<br>\n";
-	$showTitle = str_replace('"','',$showTitle);
-	//echo "showTitle=$showTitle<br>\n";
-
-	$showPath = "$rootPath/shows/$showTitle";
-
-	m3u_gen("shows",$showTitle);
+	zip_gen($repoTitle);
 	exit();
-}else if (array_key_exists("movies",$_GET)){
-	echo "Building Movies...<br>\n";
-	m3u_gen("movies","all");
-	exit();
-#}else if (array_key_exists("music",$_GET)){
-#	echo "Building Music...<br>\n";
-#	m3u_gen("music","all");
-#	exit();
-#
 }else{
 	// no url was given at all
 	echo "<html>";
@@ -276,13 +227,13 @@ if (array_key_exists("artist",$_GET)){
 	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local:444/m3u-gen.php?showTitle="showTitle"';
+	echo '		http://'.gethostname().'.local/zip-gen.php?comic="comicName"';
 	echo '	</li>';
 	echo "</ul>";
 	echo "</div>";
 	echo "<div class='settingListCard'>";
 	echo "<h2>Random Cached Playlists</h2>";
-	$sourceFiles = explode("\n",shell_exec("ls -t1 m3u_gen/*.m3u"));
+	$sourceFiles = explode("\n",shell_exec("ls -t1 zip_gen/*.zip"));
 	// reverse the time sort
 	# build the video index
 	foreach($sourceFiles as $sourceFile){

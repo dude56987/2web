@@ -806,4 +806,36 @@ if( ! function_exists("appendFile")){
 	}
 }
 ################################################################################
+if( ! function_exists("recursiveScan")){
+	function recursiveScan($directoryPath){
+		# scan the directory
+		$foundPaths = scandir($directoryPath);
+		# remove the up and current paths
+		$foundPaths = array_diff($foundPaths,Array('..','.'));
+		$finalFoundLinks = Array();
+		# for each found directory list
+		foreach( $foundPaths as $foundPath){
+			# create the full directory path
+			$fullDirPath = $directoryPath.$foundPath."/";
+
+			# try to fix the full found path
+			if (is_dir($fullDirPath)){
+				$fullFoundPath = $fullDirPath;
+			}else{
+				$fullFoundPath = $directoryPath.$foundPath;
+			}
+
+			# Check if recursion is needed to find search directory
+			if (is_dir($fullFoundPath)){
+				# add the results of the recursive scan to the output
+				$finalFoundLinks = array_merge($finalFoundLinks, recursiveScan($fullFoundPath));
+			}else{
+				# if a file add the file to the return value
+				$finalFoundLinks = array_merge($finalFoundLinks, Array($fullFoundPath));
+			}
+		}
+		return $finalFoundLinks;
+	}
+}
+################################################################################
 ?>

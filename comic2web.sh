@@ -1028,13 +1028,15 @@ renderPage(){
 			echo "?>";
 			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
 			echo "<div class='titleCard'>"
-			echo "<h1>$pageComicName</h1>"
-			echo "<a class='button' href='$pageComicName.cbz'>"
-			echo "<span class='downloadIcon'>↓</span>"
-			echo "Download"
-			# get the file size and list it in the download button
-			echo $(	du -sh "$webDirectory/comics/$pageComicName/$pageComicName.cbz" | cut -f1 );
-			echo "</a>"
+			echo "	<h1>$pageComicName</h1>"
+			echo "	<a class='button' href='/zip-gen.php?comic=$pageComicName'>"
+			echo "		<span class='downloadIcon'>↓</span>"
+			echo "		Download ZIP"
+			echo "	</a>"
+			echo "	<a class='button' href='/zip-gen.php?comic=$pageComicName&cbz'>"
+			echo "		<span class='downloadIcon'>↓</span>"
+			echo "		Download CBZ"
+			echo "	</a>"
 			# get the total comic book pages, pages are jpg files, thumbnails are png files
 			totalComicBookPages=0
 			if [ $isChapter = true ];then
@@ -1147,6 +1149,14 @@ renderPage(){
 					echo "<div>"
 					echo "	<a class='button comicTitleButton' href='..'>$pageComicName</a>"
 					echo "	<h2>Chapter $(( 10#$tempChapterName ))/$totalChapters</h2>"
+					echo "	<a class='button' href='/zip-gen.php?comic=$pageComicName&chapter=$tempChapterName'>"
+					echo "		<span class='downloadIcon'>↓</span>"
+					echo "		Download ZIP"
+					echo "	</a>"
+					echo "	<a class='button' href='/zip-gen.php?comic=$pageComicName&chapter=$tempChapterName&cbz'>"
+					echo "		<span class='downloadIcon'>↓</span>"
+					echo "		Download CBZ"
+					echo "	</a>"
 					echo "<div class='chapterTitleBox'>"
 					if echo "$trueChapterTitle" | grep -q "[[:alpha:]]";then
 						echo "$trueChapterTitle"
@@ -1515,6 +1525,7 @@ main(){
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		checkModStatus "comic2web"
 		# upgrade gallery-dl pip packages
 		pip3 install --upgrade gallery-dl
 		pip3 install --upgrade dosage
