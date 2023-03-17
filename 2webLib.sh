@@ -461,7 +461,7 @@ function addToIndex(){
 		# the index file exists
 		#ALERT "Looking for $indexItem in $indexPath"
 		if grep -q "$indexItem" "$indexPath";then
-			ALERT "The Index '$indexPath' already contains '$indexItem'"
+			INFO "The Index '$indexPath' already contains '$indexItem'"
 		else
 			#ALERT "Adding '$indexItem' to '$indexPath'"
 			# the item is not in the index
@@ -503,7 +503,7 @@ function SQLaddToIndex(){
 		#ALERT "Looking for $indexItem in $indexPath"
 		# if the data is already stored in the database
 		if [ $(sqlite3 -cmd ".timeout $timeout" "$indexPath" "select '$indexItem' from '$databaseTable' where title = '$indexItem';" | wc -l) -gt 0 ];then
-			ALERT "The Index '$indexPath' already contains '$indexItem'"
+			INFO "The Index '$indexPath' already contains '$indexItem'"
 		else
 			#INFO "Adding '$indexItem' to '$indexPath'"
 			sqlite3 -cmd ".timeout $timeout" "$indexPath" "insert into $databaseTable values('$indexItem');"

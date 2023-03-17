@@ -178,6 +178,10 @@ html{
 	font-size: 0.9rem;
 	float: right;
 }
+.indexIconLink{
+	height: 4rem;
+	display: inline-block;
+}
 .indexIcon{
 	background-image: var(--staticBackground);
 	width: 5rem;
@@ -1021,7 +1025,9 @@ a:visited {
 }
 .listCard .indexSeries{
 	width: 4rem !important;
+	/*
 	min-height: 7rem !important;
+	*/
 	max-height: 6rem !important;
 }
 .listCard .indexSeries div{
@@ -1029,13 +1035,16 @@ a:visited {
 }
 .listCard .indexSeries img{
 	width: 100%;
+	/*
 	min-height: 7rem;
+	*/
 	max-height: 6rem;
 	/*
 	height: 100%;
 	*/
 }
 .indexSeries{
+	line-height: 2rem;
 	font-size: 1rem;
 	vertical-align: top;
 	text-decoration: none;
@@ -1406,6 +1415,12 @@ table{
 tr{
 	width: 100%;
 }
+th{
+	background-color: var(--solidBackground);
+}
+.evenTableRow{
+	background-color: var(--solidBackground);
+}
 .settingsTable{
 	/*
 	overflow: scroll;
@@ -1740,4 +1755,8 @@ pre{
 	border-radius: 0.2rem;
 	width: 98%;
 	height: 3rem;
+}
+.gitCommitListMonthGraph{
+	width: 98%;
+	max-height: 35rem;
 }

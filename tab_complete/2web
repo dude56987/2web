@@ -1,7 +1,11 @@
 #! /bin/bash
-complete -W "all parallel nuke enable disable" 2web
-complete -W "update parallel nuke enable disable" graph2web
-complete -W "update parallel nuke enable disable" weather2web
-complete -W "update parallel nuke enable disable" music2web
-complete -W "update parallel nuke enable disable" comic2web
-complete -W "update parallel nuke enable disable" nfo2web
+completionList="--update --webgen --parallel --nuke --reset --enable --disable --help"
+complete -W "--all $completionList --upgrade" 2web
+complete -W "$completionList" graph2web
+complete -W "$completionList" weather2web
+complete -W "$completionList" music2web
+complete -W "$completionList --upgrade" iptv2web
+complete -W "$completionList --upgrade" comic2web
+complete -W "$completionList" nfo2web
+complete -W "$completionList --upgrade" gitweb
+complete -W "$completionList" wiki2web

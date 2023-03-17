@@ -88,12 +88,13 @@ if ($writeFile){
 	# if any of the variables exist then the checks do not need to be re-run
 	if (! ($graphsFound || $moviesFound || $showsFound || $musicFound || $comicsFound || $channelsFound)){
 		# check for section indexes to determine if buttons need drawn
-		$graphsFound=False;
 		$moviesFound=False;
 		$showsFound=False;
 		$musicFound=False;
 		$comicsFound=False;
 		$channelsFound=False;
+		$graphsFound=False;
+		$reposFound=False;
 
 		if (file_exists("$webDirectory/graphs/")){
 			$graphsFound=True;
@@ -109,6 +110,9 @@ if ($writeFile){
 		}
 		if (file_exists("$webDirectory/comics/comics.index")){
 			$comicsFound=True;
+		}
+		if (file_exists("$webDirectory/repos/repos.index")){
+			$reposFound=True;
 		}
 		if (file_exists("$webDirectory/totalChannels.index")){
 			if ((file_get_contents("$webDirectory/totalChannels.index")) > 0){
@@ -210,6 +214,15 @@ if ($writeFile){
 		$fileData .= "</span>";
 		$fileData .= "</a> ";
 	}
+	if ($reposFound){
+		$fileData .= formatText("<a class='' href='/repos/'>",2);
+		$fileData .= formatText("💾",3);
+		$fileData .= formatText("<span class='footerText'>",3);
+		$fileData .= formatText("REPOS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+
 	#$fileData .= "<a class='' href='/kodi/'>";
 	#$fileData .= "🇰";
 	#$fileData .= "<span class='footerText'>";

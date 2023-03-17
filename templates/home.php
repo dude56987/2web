@@ -56,16 +56,13 @@
 		drawPosterWidget("comics", True);
 	}
 	if (file_exists("music")){
-		drawPosterWidget("albums");
-		drawPosterWidget("artists");
-		drawPosterWidget("music", True);
+		drawPosterWidget("albums",False,True);
+		drawPosterWidget("artists",False,True);
+		drawPosterWidget("music",True,True);
 	}
 	if (file_exists("live")){
-		if (file_exists("updatedChannels.php")){
-			include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-		}
-	}
-	if (file_exists("live")){
+		drawPosterWidget("channels",False,True);
+		drawPosterWidget("channels",True,True);
 		if (file_exists("randomChannels.php")){
 			include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
 		}
@@ -73,6 +70,10 @@
 	if (file_exists("graphs")){
 		drawPosterWidget("graphs");
 		drawPosterWidget("graphs", True);
+	}
+	if (file_exists("repos")){
+		drawPosterWidget("repos");
+		drawPosterWidget("repos", True);
 	}
 	drawServicesWidget();
 	// add the footer

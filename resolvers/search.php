@@ -26,19 +26,9 @@
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
+include("/usr/share/2web/2webLib.php");
 ################################################################################
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
-################################################################################
-function debug($message){
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: ".$message."<br>";
-		ob_flush();
-		flush();
-		return true;
-	}else{
-		return false;
-	}
-}
 ################################################################################
 function runShellCommand($command){
 	if (array_key_exists("debug",$_GET)){

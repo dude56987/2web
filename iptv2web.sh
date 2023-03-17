@@ -512,6 +512,15 @@ function processLink(){
 					radio="false"
 				fi
 				# add the info to the database
+				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/channels.index"
+				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/channels.index"
+
+				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/new/channels.index"
+				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/new/channels.index"
+
+				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/random/channels.index"
+				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/random/channels.index"
+
 				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/data.db" "channels"
 				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/data.db" "channels"
 
@@ -1087,6 +1096,9 @@ webGen(){
 					} >> "$channelListPath"
 				fi
 				# add the info to the database
+				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/live/channels.index"
+				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/new/channels.index"
+				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/random/channels.index"
 				SQLaddToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/data.db" "channels"
 			fi
 		fi
@@ -1099,6 +1111,22 @@ webGen(){
 			lineCaught=""
 		fi
 	done
+
+	# cleanup indexes
+	if test -f "$webDirectory/live/channels.index";then
+		# remove duplicates in main index
+		tempList=$(cat "$webDirectory/live/channels.index" | sort -u )
+		echo "$tempList" > "$webDirectory/live/channels.index"
+	fi
+	if test -f "$webDirectory/new/channels.index";then
+		# new list is limited to 800
+		tempList=$(cat "$webDirectory/new/channels.index" | tail -n 800 )
+		echo "$tempList" > "$webDirectory/new/channels.index"
+	fi
+	if test -f "$webDirectory/random/channels.index";then
+		tempList=$(cat "$webDirectory/random/channels.index" | sort -u )
+		echo "$tempList" > "$webDirectory/random/channels.index"
+	fi
 
 	# combine all the epg files
 	buildEPG "$webDirectory"

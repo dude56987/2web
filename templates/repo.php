@@ -39,20 +39,26 @@ function buildCommitTable($entriesToRead=-1){
 		echo "		<th>Diff</th>\n";
 		echo "		<th>Date</th>\n";
 		echo "	</tr>\n";
+		$totalFilesScanned=0;
 		foreach($sourceFiles as $sourceFile){
-			echo "	<tr>";
+			if (($totalFilesScanned % 2) == 1){
+				echo "	<tr class='evenTableRow'>\n";
+			}else{
+				echo "	<tr>\n";
+			}
 			// read the index entry
 			echo "		<td><a href='?commit=$sourceFile'>$sourceFile</a></td>\n";
 			echo "		<td>".file_get_contents("author/$sourceFile.index")."</td>\n";
 			echo "		<td class='gitEmailRow'>".file_get_contents("email/$sourceFile.index")."</td>\n";
 			echo "		<td>".file_get_contents("msg/$sourceFile.index")."</td>\n";
-			echo "		<td><a href='?commit=$sourceFile#log'>LOG</a></td>\n";
-			echo "		<td><a href='?commit=$sourceFile#diff'>DIFF</a></td>\n";
+			echo "		<td><a href='?commit=$sourceFile#log'>🧾 LOG</a></td>\n";
+			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ DIFF</a></td>\n";
 			echo "		<td>".file_get_contents("date/$sourceFile.index")."</td>\n";
 			// write the index entry
 			echo "	</tr>\n";
 			flush();
 			ob_flush();
+			$totalFilesScanned += 1;
 			# loop is -1 by default to allow infinite looping
 			if ($entriesToRead == 0){
 				break;
@@ -71,7 +77,15 @@ function drawHeader(){
 	echo "			<a class='button' href='?all'>🗂️ Repository Overview</a>\n";
 	echo "			<a class='button' href='?list'>💼 All Commits</a>\n";
 	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
+	echo "			<a class='button' href='?graph'>📈 Graphs</a>\n";
 	echo "			<a class='button' href='?listLint'>🧹 Lint Data</a>\n";
+	#$fileName = popPath(file_get_contents("source.index"));
+	#$fileName = str_replace(".index","",$fileName);
+	#echo "			<a class='button' href='/zip-gen?repo=".$fileName."'>\n";
+	echo "			<a class='button' href='/zip-gen.php?repo=".file_get_contents("title.index")."'>\n";
+	echo "				<span class='downloadIcon'>↓</span>\n";
+	echo "				Download Source\n";
+	echo "			</a>\n";
 	echo "		</div>\n";
 	echo "	</div>\n";
 }
@@ -82,23 +96,61 @@ function drawLint(){
 	echo "	<table>\n";
 	echo "	<tr>\n";
 	echo "		<th>File</th>\n";
+	echo "		<th>Report Length</th>\n";
+	echo "		<th>File Type</th>\n";
 	echo "		<th>Date</th>\n";
 	echo "	</tr>\n";
 	#foreach(scanDir("lint/") as $sourceFile){
+	$totalFilesScanned=0;
+	$totalReportLines=0;
 	foreach(recursiveScan("lint/") as $sourceFile){
-		echo "	<tr>\n";
-		$fileName = explode("/",$sourceFile);
-		$fileName = array_reverse($fileName);
-		$fileName = $fileName[0];
+		if (($totalFilesScanned % 2) == 1){
+			echo "	<tr class='evenTableRow'>\n";
+		}else{
+			echo "	<tr>\n";
+		}
+		$fileName = popPath($sourceFile);
 		$fileTime = str_replace(".index","",$fileName);
 		$fileTime = "lint_time/".$fileTime.".index";
-		$fileTitle= str_replace(".index","",$fileName);
+		$fileTitle = str_replace(".index","",$fileName);
+		$fileExt = explode(".",$fileName)[1];
+		$tempLineCount=count(file($sourceFile));
+		# get the number of lines in the lint file
 		// read the index entry
 		echo "	<td><a href='?lint=$fileName'>$fileTitle</a></td>\n";
+		echo "	<td>".$tempLineCount."</td>";
+		if ($fileExt == "sh"){
+			echo "	<td>ShellScript</td>";
+		}else if ($fileExt == "js"){
+			echo "	<td>Javascript</td>";
+		}else if ($fileExt == "php"){
+			echo "	<td>PHP</td>";
+		}else if ($fileExt == "html"){
+			echo "	<td>HTML</td>";
+		}else{
+			echo "	<td>Unknown</td>";
+		}
 		echo "	<td>".file_get_contents($fileTime)."</td>\n";
 		echo "	</tr>\n";
+		$totalReportLines += $tempLineCount;
+		$totalFilesScanned += 1;
 	}
 	echo "</table>\n";
+	echo "</div>\n";
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Totals</h2>\n";
+	echo "	<table>\n";
+	echo "		<tr>\n";
+	echo "			<th>Total Files Scanned</th>\n";
+	echo "			<th>Total Report Warnings</th>\n";
+	echo "			<th>Warning Ratio</th>\n";
+	echo "		</tr>\n";
+	echo "		<tr>\n";
+	echo "			<td>".$totalFilesScanned."</td>";
+	echo "			<td>".$totalReportLines."</td>";
+	echo "			<td>".($totalReportLines / $totalFilesScanned)."%</td>";
+	echo "		</tr>\n";
+	echo "	</table>\n";
 	echo "</div>\n";
 }
 ################################################################################
@@ -130,10 +182,48 @@ if (array_key_exists("inspector",$_GET)){
 	include("inspector.html");
 	echo "</pre>";
 	echo "</div>\n";
+}else if (array_key_exists("graph",$_GET)){
+	drawHeader();
+	$graphName=$_GET['graph'];
+	$graphTitles=Array("day","week","month","year","365_day","diff_day","diff_week","diff_month","diff_year");
+	if (in_array($graphName,$graphTitles)){
+		$graphName=$_GET['graph'];
+	}else{
+		$graphName="week";
+	}
+	echo "<div class='settingListCard'>";
+	echo "<div class='listCard'>";
+	foreach($graphTitles as $graphTitle){
+		echo "	<a href='?graph=$graphTitle' class='showPageEpisode'>";
+		echo "		<img class='gitCommitListMonthGraph' src='graph_$graphTitle.png' />";
+		echo "		<div class='indexTitle'>";
+		echo ucfirst(str_replace("_"," ",$graphTitle));
+		echo "		</div>";
+		echo "	</a>";
+	}
+	echo "</div>";
+	echo "</div>";
+	if (in_array($graphName,$graphTitles)){
+		echo "<div class='titleCard'>\n";
+		echo "	<h2>".ucfirst($graphName)."</h2>\n";
+		echo "	<a href='graph_long_$graphName.png' class=''>";
+		echo "		<img class='gitCommitListMonthGraph' src='graph_long_$graphName.png' />";
+		echo "	</a>";
+		echo "</div>\n";
+	}
 }else if (array_key_exists("list",$_GET)){
 	drawHeader();
+
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Commits By Month</h2>\n";
+	echo "	<a href='graph_long_month.png' class=''>";
+	echo "		<img class='gitCommitListMonthGraph' src='graph_long_month.png' />";
+	echo "	</a>";
+	echo "</div>\n";
+
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Commits</h2>\n";
+	echo "	<hr>";
 	# build the commit table
 	buildCommitTable();
 	echo "</div>\n";
@@ -172,8 +262,8 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<td>".file_get_contents("author/$commitName.index")."</td>\n";
 	echo "		<td class='gitEmailRow'>".file_get_contents("email/$commitName.index")."</td>\n";
 	echo "		<td>".file_get_contents("msg/$commitName.index")."</td>\n";
-	echo "		<td><a href='?commit=$commitName#log'>LOG</a></td>\n";
-	echo "		<td><a href='?commit=$commitName#diff'>DIFF</a></td>\n";
+	echo "		<td><a href='?commit=$commitName#log'>🧾LOG</a></td>\n";
+	echo "		<td><a href='?commit=$commitName#diff'>↔️ DIFF</a></td>\n";
 	echo "		<td>".file_get_contents("date/$commitName.index")."</td>\n";
 	echo "	</tr>\n";
 	echo "</table>\n";
@@ -213,12 +303,18 @@ if (array_key_exists("inspector",$_GET)){
 	# draw first commit
 	buildCommitTable(0);
 	echo "<div>";
-	echo "<a href='graph.png'><img class='gitRepoGraph' src='graph.png' /></a>";
+	echo "<a href='?graph=365_day'><img class='gitRepoGraph' src='graph_long_365.png' /></a>";
 	#include("graph.svg");
 	echo "</div>";
-	echo "	<video controls>\n";
-	echo "	<source src='repoHistory.mp4' type='video/mp4'>\n";
+	echo "	<video controls poster='graph_month.png'>\n";
+	echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
 	echo "	</video>\n";
+	#echo "	<a href='graph_month.png' class='indexSeries right'>";
+	#echo "		<img class='gitRepoGraphMonth' src='graph_month.png' />";
+	#echo "		<div>";
+	#echo "			Commits Monthly";
+	#echo "		</div>";
+	#echo "	</a>";
 	echo 		file_get_contents("readme.index");
 	echo "</div>\n";
 

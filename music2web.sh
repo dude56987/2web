@@ -346,9 +346,9 @@ function processTrack(){
 				} > "$webDirectory/kodi/music/$artist/artist.nfo"
 				# Create the artist index link
 				{
-					echo "<a class='indexSeries' href='/music/$artist'>"
-					echo "	<img class='albumArt' loading='lazy' src='/music/$artist/poster-web.png'>"
-					echo "	<div class='title'>"
+					echo "<a class='indexLink button' href='/music/$artist'>"
+					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/poster-web.png'>"
+					echo "	<div class='indexTitle'>"
 					echo "		$artistOG"
 					echo "	</div>"
 					echo "</a>"
@@ -390,10 +390,10 @@ function processTrack(){
 				} > "$webDirectory/kodi/music/$artist/$album/album.nfo"
 				# add the album to the artist index
 				{
-					echo "<a class='indexSeries' href='/music/$artist/$album'>"
+					echo "<a class='indexLink button' href='/music/$artist/$album'>"
 					#echo "	<h2>$date</h2>"
-					echo "	<img class='albumArt' loading='lazy' src='/music/$artist/$album/album-web.png'>"
-					echo "	<div class='title'>"
+					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/$album/album-web.png'>"
+					echo "	<div class='indexTitle'>"
 					echo "		$albumOG"
 					echo "	</div>"
 					echo "</a>"
@@ -428,8 +428,8 @@ function processTrack(){
 				{
 					echo "<a class='showPageEpisode track' href='/music/$artist/$album/?play=$track'>"
 					echo "	<h2>$artist <hr> $album</h2>";
-					echo "	<img class='albumArt' loading='lazy' src='/music/$artist/$album/web-$track.png'>"
-					echo "	<div class='title'>"
+					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/$album/web-$track.png'>"
+					echo "	<div class='indexTitle'>"
 					echo "		$track $title"
 					echo "	</div>"
 					echo "</a>"

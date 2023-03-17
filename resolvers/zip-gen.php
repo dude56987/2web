@@ -29,17 +29,6 @@ ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
-function debug($message){
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: ".$message."<br>";
-		ob_flush();
-		flush();
-		return true;
-	}else{
-		return false;
-	}
-}
-################################################################################
 function runExternalProc($command){
 	$client= new GearmanClient();
 	$client->addServer();
@@ -84,8 +73,11 @@ function zip_gen($title){
 	# - section can be music,shows
 	# - title can be a artist
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
-
+	if (array_key_exists("comic",$_GET)){
+		$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
+	}else if (array_key_exists("repo",$_GET)){
+		$rootPath = $_SERVER['DOCUMENT_ROOT'];
+	}
 
 	$title = str_replace('"','',$title);
 
@@ -96,12 +88,11 @@ function zip_gen($title){
 			$comicPath = "$rootPath/comics_tank/$title/";
 		}
 	}else if (array_key_exists("repo",$_GET)){
-		$comicPath = file_get_contents("$rootPath/repo/$title/source.index");
+		#$comicPath = file_get_contents("$rootPath/repos/$title/source.index");
+		$comicPath = "$rootPath/repos/$title/source/";
 	}
 
-	if (array_key_exists("debug",$_GET)){
-		echo "Checking $comicPath is a directory...<br>\n";
-	}
+	debug("Checking $comicPath is a directory...<br>\n");
 
 	# create the cache if it does not exist
 	if (! is_dir($rootServerPath."/zip_cache/")){
@@ -132,9 +123,12 @@ function zip_gen($title){
 		# redirect to the built cache file if it exists
 		redirect($cacheFilePath);
 	}else{
-		if (array_key_exists("debug",$_GET)){
-			echo "Creating zipfile at: $fullCacheFilePath<br>\n";
-		}
+		# ignore user abort of connection
+		ignore_user_abort(true);
+		# set execution time limit to 15 minutes
+		set_time_limit(900);
+
+		debug("Creating zipfile at: $fullCacheFilePath<br>\n");
 		// create the zip file
 		$data = new ZipArchive();
 		$data->open($fullCacheFilePath, ZipArchive::CREATE);
@@ -145,32 +139,34 @@ function zip_gen($title){
 			# cleanup the scan data by removing the site root path, from the file before adding it to the zip
 			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
 
+			debug("File exists adding file...<br>\n");
+			$fileName=popPath($filePath);
+			debug("Storing file in $title/$fileName<br>\n");
 
-
-			if (strpos($filePath,".jpg") || strpos($filePath,".png") || strpos($filePath,".jpeg") || strpos($filePath,".webm") || strpos($filePath,".gif")){
-				if (array_key_exists("debug",$_GET)){
-					echo "full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n";
-				}
-				if (file_exists($_SERVER['DOCUMENT_ROOT'].$filePath)){
-					if (array_key_exists("debug",$_GET)){
-						echo"File exists adding file...<br>\n";
-					}
-					$fileName=explode("/",$filePath);
-					$fileName=array_pop($fileName);
-					if (array_key_exists("debug",$_GET)){
-						echo"Storing file in $title/$fileName<br>\n";
-					}
-					# write each file to the zip archive on disk individually
-					if (array_key_exists("chapter",$_GET)){
-						$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$chapter."/".$fileName);
+			if (array_key_exists("comic",$_GET)){
+				if (strpos($filePath,".jpg") || strpos($filePath,".png") || strpos($filePath,".jpeg") || strpos($filePath,".webm") || strpos($filePath,".gif")){
+					debug("full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n");
+					if (file_exists($_SERVER['DOCUMENT_ROOT'].$filePath)){
+						# write each file to the zip archive on disk individually
+						if (array_key_exists("chapter",$_GET)){
+							$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$chapter."/".$fileName);
+						}else{
+							$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title."/".$fileName);
+						}
 					}else{
+						debug("File does not exist...<br>\n");
+						# write each file to the zip archive on disk individually
 						$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title."/".$fileName);
 					}
-				}else{
-					if (array_key_exists("debug",$_GET)){
-						echo"File does not exist...<br>\n";
-					}
 				}
+			}else if (array_key_exists("repo",$_GET)){
+				#$internalFilePath=$filePath;
+				$internalFilePath=str_replace("/repos/$title/source","",$filePath);
+				#$internalFilePath=str_replace("/repos/$title","",$filePath);
+				debug("file path: $filePath<br>\n");
+				debug("full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n");
+				debug("internal file path: $internalFilePath<br>\n");
+				$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$internalFilePath);
 			}
 		}
 		$data->close();

@@ -29,17 +29,6 @@ ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
-function debug($message){
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: ".$message."<br>";
-		ob_flush();
-		flush();
-		return true;
-	}else{
-		return false;
-	}
-}
-################################################################################
 function runExternalProc($command){
 	$client= new GearmanClient();
 	$client->addServer();
@@ -144,6 +133,11 @@ function m3u_gen($section,$title){
 		# redirect to the built cache file if it exists
 		redirect("/m3u_cache/$cacheSum.m3u");
 	}else{
+		# ignore user abort of connection
+		ignore_user_abort(true);
+		# set execution time limit to 15 minutes
+		set_time_limit(900);
+
 		// create the m3u file
 		$data = fopen($cacheFile,'w');
 		fwrite($data, "#EXTM3U\n");

@@ -27,19 +27,9 @@
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
+include("/usr/share/2web/2webLib.php");
 ################################################################################
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
-################################################################################
-function debug($message){
-	if (array_key_exists("debug",$_GET)){
-		echo "[DEBUG]: ".$message."<br>";
-		ob_flush();
-		flush();
-		return true;
-	}else{
-		return false;
-	}
-}
 ################################################################################
 function getQualityConfig($webDirectory){
 	if (file_exists("/etc/2web/cache/cacheQuality.cfg")){
@@ -368,6 +358,11 @@ if (array_key_exists("url",$_GET)){
 			touch($storagePath);
 			redirect($url);
 		}else{
+			# ignore user abort of connection
+			ignore_user_abort(true);
+			# set execution time limit to 15 minutes
+			set_time_limit(900);
+
 			debug("No file exists in the cache<br>");
 			debug("cache is set<br>");
 			// create the directory to hold the video files within the resolver cache

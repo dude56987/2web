@@ -19,7 +19,7 @@
 ini_set('display_errors', 1);
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
-	function drawPosterWidget($filterType, $random=False){
+	function drawPosterWidget($filterType, $random=False, $icons=False){
 		if ($random){
 			$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/$filterType/$filterType.index";
 		}else{
@@ -90,30 +90,46 @@ if( ! function_exists("drawPosterWidget")){
 					}
 				}
 				if ($drawBottom == 1){
-					if ($random){
-						// create a final link to the full new list
-						fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=$filterType'>");
-						fwrite($fileObj,"Full");
-						fwrite($fileObj,"<br>");
-						fwrite($fileObj,"List");
-						fwrite($fileObj,"<br>");
-						fwrite($fileObj,"🔀");
-						fwrite($fileObj,"</a>");
-						fwrite($fileObj,"</div>");
-						fwrite($fileObj,"</div>");
+					if ($icons == True){
+						if ($random){
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='button indexIconLink' href='/random/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List ");
+							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</a>");
+						}else{
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='button indexIconLink' href='/new/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List ");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</a>");
+						}
 					}else{
-						// create a final link to the full new list
-						fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=$filterType'>");
-						fwrite($fileObj,"Full");
-						fwrite($fileObj,"<br>");
-						fwrite($fileObj,"List");
-						fwrite($fileObj,"<br>");
-						fwrite($fileObj,"📜");
-						fwrite($fileObj,"</a>");
-						fwrite($fileObj,"</div>");
-						fwrite($fileObj,"</div>");
+						if ($random){
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"List");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</a>");
+						}else{
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"List");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</a>");
+						}
 					}
 				}
+				fwrite($fileObj,"</div>");
+				fwrite($fileObj,"</div>");
 				// close the file
 				fclose($fileObj);
 			}
@@ -835,6 +851,28 @@ if( ! function_exists("recursiveScan")){
 			}
 		}
 		return $finalFoundLinks;
+	}
+}
+################################################################################
+if( ! function_exists("popPath")){
+	function popPath($sourceFile){
+		$fileName = explode("/",$sourceFile);
+		$fileName = array_reverse($fileName);
+		$fileName = $fileName[0];
+		return $fileName;
+	}
+}
+################################################################################
+if( ! function_exists("debug")){
+	function debug($message){
+		if (array_key_exists("debug",$_GET)){
+			echo "[DEBUG]: ".$message."<br>";
+			ob_flush();
+			flush();
+			return true;
+		}else{
+			return false;
+		}
 	}
 }
 ################################################################################
