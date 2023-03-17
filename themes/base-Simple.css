@@ -1577,7 +1577,7 @@ th{
 	.headerButtons{
 		text-align: center;
 	}
-	.gitEmailRow{
+	.tableShrink{
 		display: none !important;
 	}
 }
@@ -1759,4 +1759,13 @@ pre{
 .gitCommitListMonthGraph{
 	width: 98%;
 	max-height: 35rem;
+}
+svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.moreEpisodesLink{
+	height: 11rem;
+	line-height: 4rem;
 }

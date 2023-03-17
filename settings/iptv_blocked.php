@@ -91,9 +91,23 @@ foreach($sourceFiles as $sourceFile){
 <?php
 // find all the groups
 if (file_exists("/var/cache/2web/web/live/groups/")){
-	$sourceFiles=scandir("/var/cache/2web/web/live/groups/");
-	$sourceFiles=array_diff($sourceFiles,array('..','.'));
+	# create groups array
 	$groups=array();
+
+
+	# load database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/live/groups.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(60000);
+	# get the list of tables in the sql database
+	$result = $databaseObj->query("select name from sqlite_master where type='table';");
+	$sourceFiles=Array();
+	# check if the table exists in the sql database
+	while($row = $result->fetchArray()){
+		# add each row to the array
+		array_push($sourceFiles,str_replace("_","",$row['name']));
+	}
+
 	# read the directory name and make a button to block it
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;

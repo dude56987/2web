@@ -35,7 +35,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 <?php
 # add the updated repos below the header
-drawPosterWidget("repos");
+drawPosterWidget("repos",False,True);
 ################################################################################
 ?>
 <div class='settingListCard'>
@@ -61,7 +61,7 @@ displayIndexWithPages($indexFilePath,$emptyMessage);
 
 <?php
 // add random repos above the footer
-drawPosterWidget("repos", True);
+drawPosterWidget("repos", True, True);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

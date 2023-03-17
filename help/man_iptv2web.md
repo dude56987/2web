@@ -22,6 +22,14 @@ OPTIONS
 
 :   Show the help message and exit
 
+`-e --enable or enable`
+
+:  Enable this module and schedule it to run in the background.
+
+`-d --disable or disable`
+
+:  Disable this module, delete cached data, and unschedule from running in the background.
+
 `-u --update or update`
 
 :  This will update the webpages and refresh the database.
@@ -40,7 +48,7 @@ OPTIONS
 
 `-u, --update, update`
 
-:   Download links and scan libaries.
+:   Download links and rebuild web data.
 
 `-r, --reset, reset`
 
@@ -48,4 +56,8 @@ OPTIONS
 
 `-w, --webgen, webgen`
 
-:   Generate comic website components.
+:   Generate iptv website from currently processed links.
+
+`-E, --epg, epg`
+
+:   Download and recombine the epg.xml from all external EPG sources. This option processes only EPG files. The regular --update option will process everything including EPG files.

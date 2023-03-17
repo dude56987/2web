@@ -43,17 +43,17 @@ function drawLine(){
 }
 ################################################################################
 function debugCheck(){
-	if [ -f /etc/nfo2web/debug.enabled ];then
+	if [ -f /etc/2web/debug.enabled ];then
 		# if debug mode is enabled show execution
 		set -x
 	else
-		if ! [ -d /etc/nfo2web/ ];then
+		if ! [ -d /etc/2web/ ];then
 			# create dir if one does not exist
-			mkdir -p /etc/nfo2web/
+			mkdir -p /etc/2web/
 		fi
-		if ! [ -f /etc/nfo2web/debug.disabled ];then
+		if ! [ -f /etc/2web/debug.disabled ];then
 			# create debug flag file disabed, if it does not exist
-			touch /etc/nfo2web/debug.disabled
+			touch /etc/2web/debug.disabled
 		fi
 	fi
 }
@@ -629,6 +629,8 @@ main(){
 		/usr/bin/nfo2web
 		/usr/bin/music2web
 		/usr/bin/iptv2web
+		/usr/bin/wiki2web
+		/usr/bin/git2web
 		rebootCheck
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
@@ -705,6 +707,9 @@ main(){
 		/usr/bin/wiki2web --parallel &
 		waitQueue 1 "$totalCPUS"
 		blockQueue 1
+		ALERT "Launching git2web..."
+		/usr/bin/git2web --parallel &
+		waitQueue 1 "$totalCPUS"
 		# wait for all background services to stop
 		waitForIdleServer "$webDirectory"
 		ALERT "Finished Parallel Processing..."
@@ -737,6 +742,10 @@ main(){
 	elif [ "$1" == "-g" ] || [ "$1" == "--graph" ] || [ "$1" == "graph" ];then
 		update2web
 		/usr/bin/graph2web
+		rebootCheck
+	elif [ "$1" == "-G" ] || [ "$1" == "--git" ] || [ "$1" == "git" ];then
+		update2web
+		/usr/bin/git2web
 		rebootCheck
 	elif [ "$1" == "-w" ] || [ "$1" == "--wiki" ] || [ "$1" == "wiki" ];then
 		update2web
@@ -798,7 +807,7 @@ main(){
 		echo "/var/cache/2web/backups/settings_$backupTime.zip"
 		echo "/var/cache/2web/backups/content_$backupTime.zip"
 		drawLine
-	elif [ "$1" == "-r" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
+	elif [ "$1" == "-re" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
 		restoreSettings "$2"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		webDirectory=$(webRoot);

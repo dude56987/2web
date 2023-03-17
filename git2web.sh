@@ -79,9 +79,10 @@ function buildDiffGraph(){
 	repoName=$4
 	# - build a svg graph by building a single bar for each month for the past 30 months
 	# - each commit on a day should make the bar 1px higher
+	textGap=100
 	barWidth=20
 	#graphHeight=$(( 50 + $barWidth ))
-	graphHeight=$(( 50 + $barWidth ))
+	graphHeight=$(( $textGap + $barWidth ))
 	graphData=""
 	graphWidth=$(($timeLength * $barWidth ))
 	for index in $( seq $timeLength );do
@@ -92,8 +93,12 @@ function buildDiffGraph(){
 		# read each of those commit diffs to build the added and removed lines numbers
 		for commitName in $commits;do
 			# get the numbers
-			tempAddedLines=$(git diff -U0 "$commitName" | grep "^+" | wc -l)
-			tempRemovedLines=$(git diff -U0 "$commitName" | grep "^-" | wc -l)
+			#tempAddedLines=$(git diff -U0 "$commitName" | grep "^+" | wc -l)
+			#tempRemovedLines=$(git diff -U0 "$commitName" | grep "^-" | wc -l)
+
+			tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
+			tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
+
 			# add the commits diff values to the values used to generate the graph
 			addedLines=$(( addedLines + tempAddedLines ))
 			removedLines=$(( removedLines + tempRemovedLines ))
@@ -101,41 +106,45 @@ function buildDiffGraph(){
 
 		# set modifier for removed and added lines
 		modifier=10
+		orignalRemovedLines=$(( removedLines ))
+		orignalAddedLines=$(( addedLines ))
 		# adjust the height based on the modifier
 		removedLines=$(( removedLines / modifier ))
-		addedLines=$(( removedLines / modifier ))
+		addedLines=$(( addedLines / modifier ))
 
-		#if [ $(( ( ( removedLines + addedLines ) ) + barWidth + 50 )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( removedLines + addedLines ) ) + barWidth + 50 ))
+		#if [ $(( ( ( removedLines + addedLines ) ) + barWidth + textGap )) -gt $graphHeight ];then
+		#	graphHeight=$(( ( ( removedLines + addedLines ) ) + barWidth + textGap ))
 		#fi
 
-		#if [ $(( ( ( removedLines ) * barWidth ) + barWidth + 50 )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( removedLines ) * barWidth ) + barWidth + 50 ))
+		#if [ $(( ( ( removedLines ) * barWidth ) + barWidth + textGap )) -gt $graphHeight ];then
+		#	graphHeight=$(( ( ( removedLines ) * barWidth ) + barWidth + textGap ))
 		#fi
-		#if [ $(( ( ( addedLines ) * barWidth ) + barWidth + 50 )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( addedLines ) * barWidth ) + barWidth + 50 ))
+		#if [ $(( ( ( addedLines ) * barWidth ) + barWidth + textGap )) -gt $graphHeight ];then
+		#	graphHeight=$(( ( ( addedLines ) * barWidth ) + barWidth + textGap ))
 		#fi
 
-		if [ $(( ( ( removedLines ) ) + 50 )) -gt $graphHeight ];then
-			graphHeight=$(( ( ( removedLines ) ) + 50 ))
+		if [ $(( ( ( removedLines ) ) + textGap )) -gt $graphHeight ];then
+			graphHeight=$(( ( ( removedLines ) ) + textGap ))
 		fi
-		if [ $(( ( ( addedLines ) ) + 50 )) -gt $graphHeight ];then
-			graphHeight=$(( ( ( addedLines ) ) + 50 ))
+		if [ $(( ( ( addedLines ) ) + textGap )) -gt $graphHeight ];then
+			graphHeight=$(( ( ( addedLines ) ) + textGap ))
 		fi
 
-
+		#ALERT "Removed Lines: $removedLines"
+		#ALERT "Added Lines: $addedLines"
 		graphX=$(( ( $index * $barWidth ) - $barWidth ))
 		# draw the base bar
-		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 1 ) ) ))\" y=\"50\" width=\"$(( barWidth / 4 ))\" height=\"$(( addedLines ))\" style=\"fill:green;stroke:gray;stroke-width:1\" />"
-		#graphData="$graphData<rect x=\"$(( graphX + ( ( barWidth / 4 ) * 1 ) ))\" y=\"50\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines + addedLines ))\" style=\"fill:gray;stroke:gray;stroke-width:1\" />"
-		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 3 ) ) ))\" y=\"50\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines ))\" style=\"fill:red;stroke:gray;stroke-width:1\" />"
+		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 1 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( addedLines ))\" style=\"fill:green;stroke:gray;stroke-width:1\" />"
+		#graphData="$graphData<rect x=\"$(( graphX + ( ( barWidth / 4 ) * 1 ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines + addedLines ))\" style=\"fill:gray;stroke:gray;stroke-width:1\" />"
+		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 3 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines ))\" style=\"fill:red;stroke:gray;stroke-width:1\" />"
 
 		# draw text number of changed lines
-		#graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"50\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),50)\" style=\"fill:black;stroke:white;\" >$(( addedLines + removedLines ))</text>"
-		graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"50\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),50)\" style=\"fill:black;stroke:white;\" >$(( addedLines + removedLines ))</text>"
+		#graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"$textGap\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),$textGap)\" style=\"fill:black;stroke:white;\" >$(( addedLines + removedLines ))</text>"
+		graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"$textGap\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),$textGap)\" style=\"fill:black;stroke:white;\" >$(( orignalAddedLines + orignalRemovedLines ))</text>"
 	done
 	{
-		echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
+		echo "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 $graphWidth $graphHeight\" >"
+		#echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
 		#echo "<svg height=\"auto\" width=\"auto\">"
 		#echo "<defs>"
 		#echo '<filter id="dropShadow" x="0" y="0" width="200%" height="200%">'
@@ -148,6 +157,8 @@ function buildDiffGraph(){
 	} > "$webDirectory/repos/$repoName/$outputFilename.svg"
 
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
+	#convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 10x10 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 }
 ################################################################################
 function buildCommitGraph(){
@@ -178,7 +189,8 @@ function buildCommitGraph(){
 		graphData="$graphData<text x=\"$(( $graphX + $barWidth ))\" y=\"50\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( $graphX + $barWidth )),50)\" style=\"fill:black;stroke:white;\" >$commits</text>"
 	done
 	{
-		echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
+		echo "<svg height=\"$graphHeight\" width=\"$graphWidth\" viewbox=\"0 0 $graphWidth $graphHeight\">"
+		#echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
 		#echo "<defs>"
 		#echo '<filter id="dropShadow" x="0" y="0" width="200%" height="200%">'
 		#echo '<feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />'
@@ -190,6 +202,7 @@ function buildCommitGraph(){
 	} > "$webDirectory/repos/$repoName/$outputFilename.svg"
 
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
+	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 }
 ################################################################################
 function update(){
@@ -229,10 +242,11 @@ function update(){
 		createDir "/var/cache/2web/download_repos/"
 		# do not process the git if it is still in the cache
 		# - Cache removes files older than x days
-		if cacheCheck "$webDirectory/gitCache/download_$repoSum.index" "10";then
+		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.index" "10";then
 			# clone and update remote git repositories on the server
 			#cd $webDirectory/repos/$repoSum/
 			git clone "$repoSource" "$downloadDirectory"
+			touch "$webDirectory/sums/git2web_download_$repoSum.index"
 		fi
 	done
 	# cleanup the repos index
@@ -255,360 +269,333 @@ function processRepo(){
 	repoSum=$(echo "$repoSource" | md5sum | cut -d' ' -f1)
 	repoName=$(echo "$repoSource" | rev | cut -d'/' -f2 | rev)
 	INFO "$repoName : Creating a clone of the repo: $repoName"
-	# clone the repo into the web directory
-	git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
-	# move into the cloned repo, so all work is done on the cloned repo
-	cd "$webDirectory/repos/$repoName/source/"
-	# create data directories inside the web directory
-	createDir "$webDirectory/repos/$repoName/"
-	createDir "$webDirectory/repos/$repoName/lint/"
-	createDir "$webDirectory/repos/$repoName/lint_time/"
-	createDir "$webDirectory/repos/$repoName/diff/"
-	createDir "$webDirectory/repos/$repoName/log/"
-	createDir "$webDirectory/repos/$repoName/date/"
-	createDir "$webDirectory/repos/$repoName/author/"
-	createDir "$webDirectory/repos/$repoName/email/"
-	createDir "$webDirectory/repos/$repoName/msg/"
-	# link to /kodi/
-	linkFile "$webDirectory/repos/$repoName/source/" "$webDirectory/kodi/$repoName/"
-	echo "$repoSource" > "$webDirectory/repos/$repoName/source.index"
-	echo "$repoName" > "$webDirectory/repos/$repoName/title.index"
-	# link the repo page
-	linkFile "/usr/share/2web/templates/repo.php" "$webDirectory/repos/${repoName}/index.php"
-	INFO "$repoName : Building inspector data for $repoName"
-	# generate the website content
-	#gitinspector --format=htmlembedded -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
-	gitinspector --format=text -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
-	grep --invert-match --ignore-case "<html" |\
-	grep --invert-match --ignore-case "</html" |\
-	grep --invert-match --ignore-case "<head" |\
-	grep --invert-match --ignore-case "</head" |\
-	grep --invert-match --ignore-case "<body" |\
-	grep --invert-match --ignore-case "</body" |\
-	grep --invert-match --ignore-case "<meta" |\
-	grep --invert-match --ignore-case "<title" |\
-	grep --invert-match --ignore-case "<?xml" \
-	> "$webDirectory/repos/$repoName/inspector.html"
 
-	# get the latest commit time
-	git show --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/origin.index"
-	# get the origin
-	git remote show origin > "$webDirectory/repos/$repoName/origin.index"
-	INFO "$repoName : Rendering gource video for $repoName"
-	# build history video in 720p
-	if echo "$@" | grep -q -e "--parallel";then
-		gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-		ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
-		"$webDirectory/repos/$repoName/repoHistory.mp4"
-	else
-		gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-		ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -bf 0 \
-		"$webDirectory/repos/$repoName/repoHistory.mp4"
-	fi
+	# update only once every 10 days
+	if cacheCheck "$webDirectory/repos/$repoName/repos.index" 10;then
+		# clone the repo into the web directory
+		git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
 
-	commitAddresses=$(git log --oneline | cut -d' ' -f1)
+		# set ownership to root of the source code directory, in order to avoid git security errors in metadata generation
+		chown -R root:www-data "$webDirectory/repos/$repoName/source/"
 
-	echo "$commitAddresses" > "$webDirectory/repos/$repoName/commits.index"
+		# move into the cloned repo, so all work is done on the cloned repo
+		cd "$webDirectory/repos/$repoName/source/"
 
-	#IFS=$'\n'
-	#for commitAddress in $commitAddresses;do
-	#git log --oneline | cut -d' ' -f1 | while read commitAddress;do
+		# create data directories inside the web directory
+		createDir "$webDirectory/repos/$repoName/"
+		createDir "$webDirectory/repos/$repoName/lint/"
+		createDir "$webDirectory/repos/$repoName/lint_time/"
+		createDir "$webDirectory/repos/$repoName/diff/"
+		createDir "$webDirectory/repos/$repoName/log/"
+		createDir "$webDirectory/repos/$repoName/date/"
+		createDir "$webDirectory/repos/$repoName/author/"
+		createDir "$webDirectory/repos/$repoName/email/"
+		createDir "$webDirectory/repos/$repoName/msg/"
+		# link to /kodi/
+		linkFile "$webDirectory/repos/$repoName/source/" "$webDirectory/kodi/$repoName/"
+		echo "$repoSource" > "$webDirectory/repos/$repoName/source.index"
+		echo "$repoName" > "$webDirectory/repos/$repoName/title.index"
+		# link the repo page
+		linkFile "/usr/share/2web/templates/repo.php" "$webDirectory/repos/${repoName}/index.php"
+		INFO "$repoName : Building inspector data for $repoName"
+		# generate the website content
+		#gitinspector --format=htmlembedded -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
+		gitinspector --format=text -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
+		grep --invert-match --ignore-case "<html" |\
+		grep --invert-match --ignore-case "</html" |\
+		grep --invert-match --ignore-case "<head" |\
+		grep --invert-match --ignore-case "</head" |\
+		grep --invert-match --ignore-case "<body" |\
+		grep --invert-match --ignore-case "</body" |\
+		grep --invert-match --ignore-case "<meta" |\
+		grep --invert-match --ignore-case "<title" |\
+		grep --invert-match --ignore-case "<?xml" \
+		> "$webDirectory/repos/$repoName/inspector.html"
 
-	if echo "$@" | grep -q -e "--parallel";then
-		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		totalCPUS=$(( $totalCPUS - 1 ))
-	fi
-	echo "$commitAddresses" | while read commitAddress;do
-		INFO "$repoName : Building commit page for $commitAddress"
-		#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
+		# get the latest commit time
+		git show --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/origin.index"
+		# get the origin
+		git remote show origin > "$webDirectory/repos/$repoName/origin.index"
+		INFO "$repoName : Rendering gource video for $repoName"
+		# build history video in 720p
 		if echo "$@" | grep -q -e "--parallel";then
-			git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+			gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+			ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
+			"$webDirectory/repos/$repoName/repoHistory.mp4"
+		else
+			gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+			ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -bf 0 \
+			"$webDirectory/repos/$repoName/repoHistory.mp4"
+		fi
+
+		commitAddresses=$(git log --oneline | cut -d' ' -f1)
+
+		echo "$commitAddresses" > "$webDirectory/repos/$repoName/commits.index"
+
+		#IFS=$'\n'
+		#for commitAddress in $commitAddresses;do
+		#git log --oneline | cut -d' ' -f1 | while read commitAddress;do
+
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+			totalCPUS=$(( $totalCPUS - 1 ))
+		fi
+		echo "$commitAddresses" | while read commitAddress;do
+			INFO "$repoName : Building commit page for $commitAddress"
+			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
+			if echo "$@" | grep -q -e "--parallel";then
+				git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+				git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+				waitQueue 0.5 "$totalCPUS"
+			else
+				git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
+				git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
+				git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
+			fi
+		done
+		INFO "$repoName : Building README.md"
+		# generate html from README.md if found in repo
+		if test -f "$repoSource/README.md";then
+			if test -f /usr/bin/pandoc;then
+				pandoc "$repoSource/README.md" -t html -o "$webDirectory/repos/$repoName/readme.index"
+			elif test -f /usr/bin/markdown;then
+				markdown "$repoSource/README.md" > "$webDirectory/repos/$repoName/readme.index"
+			fi
+		fi
+		INFO "$repoName : Rendering Graphs"
+		if echo "$@" | grep -q -e "--parallel";then
+			buildCommitGraph "days" 365 "graph" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
-			git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+
+			buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+			buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+			buildCommitGraph "days" 365 "graph_commit_365" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+			buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+			buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildCommitGraph "months" 90 "graph_commit_month" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildDiffGraph "months" 90 "graph_diff_month" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildCommitGraph "years" 90 "graph_commit_year" "$repoName" &
+			waitQueue 0.5 "$totalCPUS"
+			buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
 			waitQueue 0.5 "$totalCPUS"
 		else
-			git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
-			git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
-			git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
+			buildCommitGraph "days" 365 "graph" "$repoName"
+			buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName"
+			buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName"
+			buildCommitGraph "days" 365 "graph_commit_365" "$repoName"
+			buildDiffGraph "days" 365 "graph_diff_365" "$repoName"
+			buildCommitGraph "days" 90 "graph_commit_day" "$repoName"
+			buildDiffGraph "days" 90 "graph_diff_day" "$repoName"
+			buildCommitGraph "months" 90 "graph_commit_month" "$repoName"
+			buildDiffGraph "months" 90 "graph_diff_month" "$repoName"
+			buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName"
+			buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName"
+			buildCommitGraph "years" 90 "graph_commit_year" "$repoName"
+			buildDiffGraph "years" 90 "graph_diff_year" "$repoName"
 		fi
-	done
-	INFO "$repoName : Building README.md"
-	# generate html from README.md if found in repo
-	if test -f "$repoSource/README.md";then
-		if test -f /usr/bin/pandoc;then
-			pandoc "$repoSource/README.md" -t html -o "$webDirectory/repos/$repoName/readme.index"
-		elif test -f /usr/bin/markdown;then
-			markdown "$repoSource/README.md" > "$webDirectory/repos/$repoName/readme.index"
-		fi
-	fi
-	INFO "$repoName : Rendering Graphs"
-	if echo "$@" | grep -q -e "--parallel";then
-		buildCommitGraph "days" 365 "graph" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
 
-		buildCommitGraph "days" 365 "graph_365" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "days" 365 "graph_365_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-
-		buildCommitGraph "days" 365 "graph_long_365_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		#buildDiffGraph "days" 365 "graph_long_diff_365_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "days" 365 "graph_long_365" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		#buildDiffGraph "days" 365 "graph_long_diff_365" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-
-		buildCommitGraph "days" 30 "graph_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "days" 30 "graph_diff_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "months" 30 "graph_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "months" 30 "graph_diff_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "weeks" 30 "graph_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "weeks" 30 "graph_diff_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "years" 30 "graph_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "years" 30 "graph_diff_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-
-		buildCommitGraph "days" 90 "graph_long_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "days" 90 "graph_long_diff_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "months" 90 "graph_long_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "months" 90 "graph_long_diff_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "weeks" 90 "graph_long_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "weeks" 90 "graph_long_diff_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "years" 90 "graph_long_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "years" 90 "graph_long_diff_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-	else
-		buildCommitGraph "days" 365 "graph" "$repoName"
-		buildCommitGraph "days" 365 "graph_365" "$repoName"
-		buildCommitGraph "days" 365 "graph_365_day" "$repoName"
-		buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName"
-		buildCommitGraph "days" 365 "graph_long_365" "$repoName"
-		#buildDiffGraph "days" 365 "graph_long_diff_365" "$repoName"
-		buildCommitGraph "days" 365 "graph_long_365_day" "$repoName"
-		#buildDiffGraph "days" 365 "graph_long_diff_365_day" "$repoName"
-
-		buildCommitGraph "days" 30 "graph_day" "$repoName"
-		buildDiffGraph "days" 30 "graph_diff_day" "$repoName"
-		buildCommitGraph "months" 30 "graph_month" "$repoName"
-		buildDiffGraph "months" 30 "graph_diff_month" "$repoName"
-		buildCommitGraph "weeks" 30 "graph_week" "$repoName"
-		buildDiffGraph "weeks" 30 "graph_diff_week" "$repoName"
-		buildCommitGraph "years" 30 "graph_year" "$repoName"
-		buildDiffGraph "years" 30 "graph_diff_year" "$repoName"
-
-		buildCommitGraph "days" 90 "graph_long_day" "$repoName"
-		buildDiffGraph "days" 90 "graph_long_diff_day" "$repoName"
-		buildCommitGraph "months" 90 "graph_long_month" "$repoName"
-		buildDiffGraph "months" 90 "graph_long_diff_month" "$repoName"
-		buildCommitGraph "weeks" 90 "graph_long_week" "$repoName"
-		buildDiffGraph "weeks" 90 "graph_long_diff_week" "$repoName"
-		buildCommitGraph "years" 90 "graph_long_year" "$repoName"
-		buildDiffGraph "years" 90 "graph_long_diff_year" "$repoName"
-	fi
-
-	INFO "$repoName : Building lint data for shellscripts"
-	# run lint on all the existing files that support it
-	#find "$repoSource" -type f -name "*.sh" | sort | while read sourceFilePath;do
-	if test -f "/usr/bin/shellcheck";then
-		find "." -type f -name "*.sh" | sort | while read sourceFilePath;do
-			tempSourceSum=$(popPath "$sourceFilePath")
-			git log -1 --pretty="format:%ci" "$sourceFilePath" > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-			if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-				if echo "$@" | grep -q -e "--parallel";then
-					shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-					waitQueue 0.5 "$totalCPUS"
-				else
-					shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-				fi
-			fi
-		done
-	else
-		{
-			echo "################################################################################"
-			echo "You need to install shellcheck to get lint output for this filetype."
-			echo "################################################################################"
-			echo "You can run"
-			echo ""
-			echo "	apt-get install shellcheck"
-			echo ""
-			echo "to install the package. "
-			echo "################################################################################"
-		} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-	fi
-
-	INFO "$repoName : Building lint data for hypertext"
-	#find "$repoSource" -type f -name "*.php" -o -name "*.html" | sort | while read sourceFilePath;do
-	if test -f "/usr/bin/weblint";then
-		find "." -type f -name "*.html" -o -name "*.htm" | sort | while read sourceFilePath;do
-			tempSourceSum=$(popPath "$sourceFilePath")
-			git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-			if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-				if echo "$@" | grep -q -e "--parallel";then
-					weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-					waitQueue 0.5 "$totalCPUS"
-				else
-					weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-				fi
-			fi
-		done
-	else
-		{
-			echo "################################################################################"
-			echo "You need to install weblint to get lint output for this filetype."
-			echo "################################################################################"
-			echo "You can run"
-			echo ""
-			echo "	apt-get install weblint"
-			echo ""
-			echo "to install the package. "
-			echo "################################################################################"
-		} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-	fi
-
-	#if test -f "/usr/bin/cpplint";then
-	#	find "." -type f -name "*.php" -o -name "*.html" | sort | while read sourceFilePath;do
-	#		tempSourceSum=$(popPath "$sourceFilePath")
-	#		git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-	#		if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-	#			cpplint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-	#		fi
-	#	done
-	#fi
-
-	INFO "$repoName : Building lint data for Javascript"
-	# check for javascript files to run lint on
-	if test -f "/usr/local/bin/jslint";then
-		find "." -type f -name "*.js" | sort | while read sourceFilePath;do
-			tempSourceSum=$(popPath "$sourceFilePath")
-			git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-			if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-				#eslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-				if echo "$@" | grep -q -e "--parallel";then
-					/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-					waitQueue 0.5 "$totalCPUS"
-				else
-					/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-				fi
-			fi
-		done
-	else
-		{
-			echo "################################################################################"
-			echo "You need to install jslint to get lint output for this filetype."
-			echo "################################################################################"
-			echo "You can run"
-			echo ""
-			echo "	git2web upgrade"
-			echo ""
-			echo "or"
-			echo ""
-			echo "	pip3 install jslint"
-			echo ""
-			echo "to install the package. "
-			echo "################################################################################"
-		} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-	fi
-
-	INFO "$repoName : Building lint data for Python"
-	if test -f "/usr/bin/pylint";then
-		find "." -type f -name "*.py" | sort | while read sourceFilePath;do
-			tempSourceSum=$(popPath "$sourceFilePath")
-			git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-			if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-				if echo "$@" | grep -q -e "--parallel";then
-					pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-					waitQueue 0.5 "$totalCPUS"
-				else
-					pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-				fi
-			fi
-		done
-	else
-		{
-			echo "################################################################################"
-			echo "You need to install pylint to get lint output for this filetype."
-			echo "################################################################################"
-			echo "You can run"
-			echo ""
-			echo "	apt-get install pylint"
-			echo ""
-			echo "to install the package. "
-			echo "################################################################################"
-		} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-	fi
-
-	INFO "$repoName : Building lint data for PHP"
-	if test -f "/usr/bin/php";then
-		find "." -type f -name "*.php" | sort | while read sourceFilePath;do
-			tempSourceSum=$(popPath "$sourceFilePath")
-			git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
-			if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-				{
-					php --syntax-check "$sourceFilePath" | txt2html --extract --escape_HTML_chars
-					if test -f "/usr/bin/weblint";then
-						if echo "$@" | grep -q -e "--parallel";then
-							weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars &
-							waitQueue 0.5 "$totalCPUS"
-						else
-							weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars
-						fi
+		INFO "$repoName : Building lint data for shellscripts"
+		# run lint on all the existing files that support it
+		#find "$repoSource" -type f -name "*.sh" | sort | while read sourceFilePath;do
+		if test -f "/usr/bin/shellcheck";then
+			find "." -type f -name "*.sh" | sort | while read sourceFilePath;do
+				tempSourceSum=$(popPath "$sourceFilePath")
+				git log -1 --pretty="format:%ci" "$sourceFilePath" > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+					if echo "$@" | grep -q -e "--parallel";then
+						shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+						waitQueue 0.5 "$totalCPUS"
+					else
+						shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
 					fi
-				} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-			fi
-		done
+				fi
+			done
+		else
+			{
+				echo "################################################################################"
+				echo "You need to install shellcheck to get lint output for this filetype."
+				echo "################################################################################"
+				echo "You can run"
+				echo ""
+				echo "	apt-get install shellcheck"
+				echo ""
+				echo "to install the package. "
+				echo "################################################################################"
+			} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+		fi
+
+		INFO "$repoName : Building lint data for hypertext"
+		#find "$repoSource" -type f -name "*.php" -o -name "*.html" | sort | while read sourceFilePath;do
+		if test -f "/usr/bin/weblint";then
+			find "." -type f -name "*.html" -o -name "*.htm" | sort | while read sourceFilePath;do
+				tempSourceSum=$(popPath "$sourceFilePath")
+				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+					if echo "$@" | grep -q -e "--parallel";then
+						weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+						waitQueue 0.5 "$totalCPUS"
+					else
+						weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+					fi
+				fi
+			done
+		else
+			{
+				echo "################################################################################"
+				echo "You need to install weblint to get lint output for this filetype."
+				echo "################################################################################"
+				echo "You can run"
+				echo ""
+				echo "	apt-get install weblint"
+				echo ""
+				echo "to install the package. "
+				echo "################################################################################"
+			} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+		fi
+
+		#if test -f "/usr/bin/cpplint";then
+		#	find "." -type f -name "*.php" -o -name "*.html" | sort | while read sourceFilePath;do
+		#		tempSourceSum=$(popPath "$sourceFilePath")
+		#		git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+		#		if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+		#			cpplint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+		#		fi
+		#	done
+		#fi
+
+		INFO "$repoName : Building lint data for Javascript"
+		# check for javascript files to run lint on
+		if test -f "/usr/local/bin/jslint";then
+			find "." -type f -name "*.js" | sort | while read sourceFilePath;do
+				tempSourceSum=$(popPath "$sourceFilePath")
+				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+					#eslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+					if echo "$@" | grep -q -e "--parallel";then
+						/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+						waitQueue 0.5 "$totalCPUS"
+					else
+						/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+					fi
+				fi
+			done
+		else
+			{
+				echo "################################################################################"
+				echo "You need to install jslint to get lint output for this filetype."
+				echo "################################################################################"
+				echo "You can run"
+				echo ""
+				echo "	git2web upgrade"
+				echo ""
+				echo "or"
+				echo ""
+				echo "	pip3 install jslint"
+				echo ""
+				echo "to install the package. "
+				echo "################################################################################"
+			} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+		fi
+
+		INFO "$repoName : Building lint data for Python"
+		if test -f "/usr/bin/pylint";then
+			find "." -type f -name "*.py" | sort | while read sourceFilePath;do
+				tempSourceSum=$(popPath "$sourceFilePath")
+				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+					if echo "$@" | grep -q -e "--parallel";then
+						pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+						waitQueue 0.5 "$totalCPUS"
+					else
+						pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+					fi
+				fi
+			done
+		else
+			{
+				echo "################################################################################"
+				echo "You need to install pylint to get lint output for this filetype."
+				echo "################################################################################"
+				echo "You can run"
+				echo ""
+				echo "	apt-get install pylint"
+				echo ""
+				echo "to install the package. "
+				echo "################################################################################"
+			} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+		fi
+
+		INFO "$repoName : Building lint data for PHP"
+		if test -f "/usr/bin/php";then
+			find "." -type f -name "*.php" | sort | while read sourceFilePath;do
+				tempSourceSum=$(popPath "$sourceFilePath")
+				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
+					{
+						php --syntax-check "$sourceFilePath" | txt2html --extract --escape_HTML_chars
+						if test -f "/usr/bin/weblint";then
+							if echo "$@" | grep -q -e "--parallel";then
+								weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars &
+								waitQueue 0.5 "$totalCPUS"
+							else
+								weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars
+							fi
+						fi
+					} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+				fi
+			done
+		fi
+		INFO "$repoName : Building QR code"
+		startDebug
+		# build a qr code for the icon link
+		qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
+		waitQueue 0.5 "$totalCPUS"
+		#tempVideoPath="$webDirectory/repos/$repoName/repoHistory.mp4"
+		#timeStamp=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$tempVideoPath")
+		#ffmpeg -y -ss $timeStamp -i "$tempVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "/var/cache/2web/web/repos/$repoName/thumb.png"
+
+		INFO "$repoName : Waiting for parallel processing to end"
+		blockQueue 1
+		INFO "$repoName : Adding to indexes"
+		#	build the index file for this entry if one does not exist
+		#if ! test -f "$gitNamePath/repo.index";then
+			{
+				echo "<a href='/repos/$repoName/' class='indexSeries' >"
+				echo "<img loading='lazy' src='/repos/$repoName/graph_commit_month-thumb.png' />"
+				echo "<div>$repoName</div>"
+				echo "</a>"
+			} > "$webDirectory/repos/$repoName/repos.index"
+		#fi
+
+		# add to the system indexes
+		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
+		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 	fi
-	INFO "$repoName : Building QR code"
-	startDebug
-	# build a qr code for the icon link
-	qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
-	waitQueue 0.5 "$totalCPUS"
-	#tempVideoPath="$webDirectory/repos/$repoName/repoHistory.mp4"
-	#timeStamp=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$tempVideoPath")
-	#ffmpeg -y -ss $timeStamp -i "$tempVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "/var/cache/2web/web/repos/$repoName/thumb.png"
-
-	INFO "$repoName : Waiting for parallel processing to end"
-	blockQueue 1
-	INFO "$repoName : Adding to indexes"
-	#	build the index file for this entry if one does not exist
-	#if ! test -f "$gitNamePath/repo.index";then
-		{
-			echo "<a href='/repos/$repoName/' class='indexSeries' >"
-			echo "<img loading='lazy' src='/repos/$repoName/graph_month.png' />"
-			echo "<div>$repoName</div>"
-			echo "</a>"
-		} > "$webDirectory/repos/$repoName/repos.index"
-	#fi
-
-	# add to the system indexes
-	SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
-	addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 	stopDebug
 }
 ################################################################################

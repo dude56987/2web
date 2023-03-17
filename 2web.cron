@@ -26,9 +26,10 @@
 0 */2 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
 
 ################################################################################
-# update the iptv lists once a week changes to these are more infrequent
-#@weekly root /usr/bin/niceload /usr/bin/iptv2web update > /var/log/iptv2web_update.log
-0 */2 * * * root /usr/bin/niceload /usr/bin/iptv2web
+# check if the iptv lists need updated once every 6 hours
+0 */6 * * * root /usr/bin/niceload /usr/bin/iptv2web
+# Check if the epg guide info needs updated every 30 minutes
+*/30 * * * * root /usr/bin/niceload /usr/bin/iptv2web --epg
 
 ################################################################################
 # update the comic books
@@ -55,6 +56,10 @@
 # run update every hour, individual channels have individual delays
 #@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
 @hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+
+################################################################################
+# every 4 hours check for changes to git repos
+* */4 * * * root	/usr/bin/niceload /usr/bin/git2web
 
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages

@@ -45,10 +45,10 @@ function killFakeImage(){
 	# if the file exists
 	if test -f "$localIconPath";then
 		# check it is not a empty file
-		if file "$localIconPath" | grep -q "empty";then
+		if file -L "$localIconPath" | grep -q "empty";then
 			# remove the empty file
 			rm -v "$localIconPath"
-		elif file "$localIconPath" | grep -q "text";then
+		elif file -L "$localIconPath" | grep -q "text";then
 			# remove remote downloaded http redirect, 404, etc.
 			rm -v "$localIconPath"
 		fi
@@ -92,6 +92,10 @@ examineIconLink(){
 			#sum=$(echo "$iconLink" | md5sum | cut -d' ' -f1)
 			if ! test -f "$localIconPath";then
 				INFO "Downloading thumbnail '$iconLink'"
+				timeout 120 curl --silent "$iconLink" > "$localIconPath"
+				# resize the icon to standard size
+				timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
+
 				# if the file does not exist in the cache download it
 				downloadThumbnail "$iconLink" "$localIconPath" ".png"
 			fi
@@ -100,11 +104,16 @@ examineIconLink(){
 		killFakeImage "$localIconPath"
 		# try to download the icon with yt-dlp
 		if ! test -f "$localIconPath";then
-			tempIconLink=$(yt-dlp -j "$link" | jq ".thumbnail")
-			INFO "Downloading thumbnail '$tempIconLlink'"
-			downloadThumbnail "$tempIconLink" "$localIconPath" ".png"
-			# resize default image to size that fits best in kodi interface
-			#timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
+			tempIconLink=$(yt-dlp --abort-on-error -j "$link")
+			if [ $? -eq 0 ];then
+				tempIconLink=$(echo $tempIconLink | jq ".thumbnail")
+				INFO "Downloading thumbnail '$tempIconLlink'"
+				downloadThumbnail "$tempIconLink" "$localIconPath" ".png"
+				# resize default image to size that fits best in kodi interface
+				#timeout 600 convert "$localIconPath" -adaptive-resize 200x200\! "$localIconPath"
+			else
+				ALERT "Icon Download Failed : '$tempIconLink'"
+			fi
 		fi
 		# remove image if fake was created
 		killFakeImage "$localIconPath"
@@ -280,7 +289,11 @@ function process_M3U(){
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			INFO "Icon MD5 = $iconSum"
 			# check for group title
-			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | tr -s ' ')
+			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/.com/ /g" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | sed "s/\./ /g"| tr -s ' ')
+
+			ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
+			ALERT "'$title' contains groups '$groupTitle'"
+
 			#IFS=$IFS_NORMAL
 			#echo "$groupTitle" | while read -r group;do
 			# during the building of the m3u file split out blocked items
@@ -317,13 +330,14 @@ function process_M3U(){
 					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
 				fi
 			done
+			ALERT "addChannel='$addChannel'..."
 			# if the channel was not blocked
-			if [ $addChannel == "true" ];then
+			if [ "$addChannel" == "true" ];then
 				INFO "Building channel $title thumbnail..."
 				# try to download or create the thumbnail
 				examineIconLink "$iconLink" "$link" "$title" "$radio"
 
-				INFO "Writing channel $title info to disk..."
+				ALERT "Writing channel $title info to disk..."
 				# Write the new version of the lines to the outputFile
 				webIconPath="http://$(hostname).local/live/icons/$iconSum.png"
 				# write the raw channel file
@@ -339,6 +353,8 @@ function process_M3U(){
 					echo    "group-title=\"$groupTitle\",$title"
 					echo "$link"
 				} >> "$webDirectory/live/channels.index"
+			else
+				ALERT "Channel $title is blocked, addChannel=$addChannel..."
 			fi
 			################################################################################
 			# increment the channel number
@@ -348,7 +364,7 @@ function process_M3U(){
 		fi
 		# if the line is a info line
 		if echo -n "$line" | grep -q "#EXTINF";then
-			INFO "Found info line '$line'"
+			#INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
 			# reset the line caught variable
@@ -405,13 +421,18 @@ function processLink(){
 		radioFile="false"
 	fi
 	################################################################################
-	INFO "Processing Link '$link'"
+	ALERT "Processing Link '$link'"
 	INFO "Channels Path '$channelsPath'"
 	# check if link is a comment
 	if echo -n "$link" | grep -Eq "^#";then
 		# this link is a comment
 		return 0
 	elif test -f "$link";then
+		if echo "$@" | grep -q -e "--epg-only";then
+			ALERT "Link is not EPG and EPG only is enabled skipping non epg '$link'"
+			# only process epg links so ignore this one
+			return
+		fi
 		# if the link is a local address
 		#INFO "Link is a local address. Adding local file..."
 		# add local files
@@ -428,10 +449,16 @@ function processLink(){
 			# epg data updates once every 90 minutes per epg link
 			if cacheCheckMin "$webDirectory/live/epg_cache/$tempEPGsum.index" "90";then
 				createDir "$webDirectory/live/epg_cache/"
-				timeout 120 curl -L --silent "$link" > $webDirectory/live/epg_cache/$tempEPGsum.index
+				timeout 120 curl -L --silent "$link" > "$webDirectory/live/epg_cache/$tempEPGsum.index"
 			fi
-			# epg files should be combined at end of processing
-		elif echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
+		fi
+		if echo "$@" | grep -q -e "--epg-only";then
+			ALERT "Link is not EPG and EPG only is enabled skipping non epg '$link'"
+			# only search for epg links so stop function here
+			return
+		fi
+		# epg files should be combined at end of processing
+		if echo -n "$link" | grep -Eq "\.m3u$|\.m3u8$|\.m3u8\?|\.m3u\?";then
 			#INFO "Link is a m3u playlist..."
 
 			# generate a md5 from the url for the cache
@@ -463,24 +490,24 @@ function processLink(){
 					INFO "Attempting to get link metadata with yt-dlp ..."
 					streamLinkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 					# cache the yt-dlp json data 10 days
-					if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinksum.index" "10";then
+					if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" "10";then
 						#mkdir -p "$webDirectory/live/ytdlp_cache/"
-						yt-dlp -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinksum.index"
+						yt-dlp -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
 					fi
 					# load the cached data
-					tempMeta=$(cat "$webDirectory/live/ytdlp_cache/$streamLinksum.index")
+					tempMeta=$(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index")
 					if echo -n "$link" | grep -q "youtube.com";then
 						if echo -n "$tempMeta" | grep -q "fulltitle";then
-							fileName=$(echo "$tempMeta" | jq ".fulltitle" | tr -d '"')
-							INFO "link title = $fileName"
+							fileName=$(echo "$tempMeta" | jq -r ".fulltitle" )
+							#ALERT "link title = $fileName"
 						fi
 						if echo -n "$tempMeta" | grep -q "thumbnail";then
-							thumbnailLink=$(echo "$tempMeta" | jq ".thumbnail" | tr -d '"')
-							INFO "thumbnailLink = $thumbnailLink"
+							thumbnailLink=$(echo "$tempMeta" | jq -r ".thumbnail" )
+							#ALERT "thumbnailLink = $thumbnailLink"
 						fi
 					else
-						fileName=$(echo -n "$tempMeta" | jq ".display_id"| tr -d '"')
-						INFO "link title  from display_id = $fileName"
+						fileName=$(echo -n "$tempMeta" | jq -r ".display_id" )
+						#ALERT "link title  from display_id = $fileName"
 					fi
 				fi
 				#ERROR "[DEBUG]: checking filename length '$fileName'"
@@ -488,7 +515,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
-					#ERROR "[DEBUG]: filename too short ripping end of url '$fileName'"
+					#ALERT "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
 				#ERROR "[DEBUG]: FileName = $fileName"
 				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
@@ -511,9 +538,10 @@ function processLink(){
 					INFO "Found generated video entry set radio to false"
 					radio="false"
 				fi
+				ALERT "Adding channel '$fileName' to m3u..."
 				# add the info to the database
-				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/channels.index"
-				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/channels.index"
+				#addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/channels.index"
+				#addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/channels.index"
 
 				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/new/channels.index"
 				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/new/channels.index"
@@ -551,16 +579,7 @@ webUpdateCheck(){
 	fi
 }
 ################################################################################
-ALERT(){
-	echo "$1";
-}
-################################################################################
-fullUpdate(){
-	################################################################################
-	# scan sources config file and fetch each source
-	################################################################################
-	# enable debug
-	INFO "Loading up sources..."
+loadSources(){
 	# check for defined sources
 	if ! test -f "/etc/2web/iptv/sources.cfg";then
 		# if no config exists create the default config from the template
@@ -569,7 +588,10 @@ fullUpdate(){
 		} > /etc/2web/iptv/sources.cfg
 	fi
 	# load the link list
-	linkList="$(loadWithoutComments /etc/2web/iptv/sources.cfg)"
+	echo "$(loadWithoutComments /etc/2web/iptv/sources.cfg)"
+}
+################################################################################
+loadRadioSources(){
 	# build the radio sources cfg file if it does not exist
 	if ! test -f "/etc/2web/iptv/radioSources.cfg";then
 		# if no config exists create the default config from the template
@@ -578,9 +600,66 @@ fullUpdate(){
 		} > /etc/2web/iptv/radioSources.cfg
 	fi
 	# load the radio link list
-	radioLinkList="$(loadWithoutComments /etc/2web/iptv/radioSources.cfg)"
+	echo "$(loadWithoutComments /etc/2web/iptv/radioSources.cfg)"
+}
+################################################################################
+function updateEPG(){
+	webDirectory=$1
+	channelsPath="$webDirectory/live/channels.index"
+	ALERT "Adding /etc/2web/iptv/sources.cfg"
+	# read main config m3u sources and merge them
+	loadWithoutComments "/etc/2web/iptv/sources.cfg" | while read link;do
+		ALERT "Adding EPG web source from $link"
+		processLink "$link" "$channelsPath" --epg-only
+	done
+	# add external sources last
+	ALERT "Adding generated sources from /etc/2web/iptv/sources.d/*.cfg"
+	# load the config file list
+	find "/etc/2web/iptv/sources.d/" -name '*.cfg' -type 'f' | while read configFile;do
+		# read each config file
+		loadWithoutComments "$configFile" | while read link;do
+			ALERT "Adding EPG web source from $link"
+			processLink "$link" "$channelsPath" --epg-only
+		done
+	done
+}
+################################################################################
+function buildEPG(){
+	webDirectory=$1
+	################################################################################
+	# build the combined epg header
+	{
+		echo "<?xml version='1.0' encoding='UTF-8'?>"
+		echo "<!DOCTYPE tv SYSTEM 'xmltv.dtd'>"
+		echo "<tv generator-info-name='2web combined epg from $(hostname).local'>"
+	} > "$webDirectory/kodi/epg.xml"
+	# read each downloaded epg file and combine them
+	find "$webDirectory/live/epg_cache/" -type 'f' | while read epgPath;do
+		# load the cached epg
+		tempEPG=$(cat "$epgPath")
+		# cleaup header and footer tags to make combining epgs possible
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<?xml")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<!doctype")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<tv")
+		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "</tv")
+		# write the cleaned epg data to the combined epg
+		echo "$tempEPG" >> $webDirectory/kodi/epg.xml
+	done
+	# add end tag to epg
+	echo "</tv>" >> $webDirectory/kodi/epg.xml
+}
+################################################################################
+fullUpdate(){
+	################################################################################
+	# scan sources config file and fetch each source
+	################################################################################
+	INFO "Loading up sources..."
+	linkList="$(loadSources)"
+	INFO "Loading up radio sources..."
+	radioLinkList="$(loadRadioSources)"
 	################################################################################
 
+	INFO "Building Web Root directories"
 	webDirectory=$(webRoot)
 	createDir "$webDirectory/live/"
 	createDir "$webDirectory/live/thumbs/"
@@ -596,6 +675,7 @@ fullUpdate(){
 	# generate the placeholder website
 	webGen
 
+	# create default paths
 	channelsPath="$webDirectory/live/channels.index"
 	channelsOutputPath="$webDirectory/live/channels.m3u"
 	channelsRawPath="$webDirectory/live/channels_raw.index"
@@ -605,12 +685,12 @@ fullUpdate(){
 	linkFile "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
 	linkFile "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
 
-	# for each link in the sources
+	# build the base new versions of the m3u files
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
-	echo "#EXTM3U" > "$channelsPath"
+	echo "#EXTM3U x-tvg-url=\"epg.xml\"" > "$channelsPath"
 	echo "#EXTM3U" > "$channelsRawPath"
-	################################################################################
+	# load the total sources
 	if test -f "${webDirectory}live/totalSources.index";then
 		totalSources=$(cat "${webDirectory}live/totalSources.index")
 	else
@@ -668,7 +748,7 @@ fullUpdate(){
 	# process radio sources
 	################################################################################
 	# read main radio config
-	echo -n "$radioLinkList" | while read link;do
+	loadWithoutComments "/etc/2web/iptv/radioSources.cfg" | while read link;do
 		ALERT "Adding radio source from $link"
 		# process radio link
 		processLink "$link" "$channelsPath" "true"
@@ -703,8 +783,24 @@ fullUpdate(){
 	cp -v "$channelsPath" "$channelsOutputPath"
 	cp -v "$channelsRawPath" "$channelsRawOutputPath"
 
+	# cleanup indexes
+	# - do not cleanup /live/channels.index as it is a placeholder for channels.m3u not a index
+	if test -f "$webDirectory/new/channels.index";then
+		# new list is limited to 800
+		tempList=$(cat "$webDirectory/new/channels.index" | tail -n 800 )
+		echo "$tempList" > "$webDirectory/new/channels.index"
+	fi
+	if test -f "$webDirectory/random/channels.index";then
+		tempList=$(cat "$webDirectory/random/channels.index" | sort -u )
+		echo "$tempList" > "$webDirectory/random/channels.index"
+	fi
+
+	# combine all the epg files
+	buildEPG "$webDirectory"
+
 	# generate the finished website
 	webGen
+
 	# fix any permission errors in the website
 	chown -R www-data:www-data "/var/cache/2web/web/"
 }
@@ -774,31 +870,6 @@ function buildPage(){
 	fi
 }
 ################################################################################
-function buildEPG(){
-	webDirectory=$1
-	################################################################################
-	# build the combined epg header
-	{
-		echo "<?xml version='1.0' encoding='UTF-8'?>"
-		echo "<!DOCTYPE tv SYSTEM 'xmltv.dtd'>"
-		echo "<tv generator-info-name='2web combined epg from $(hostname).local'>"
-	} > "$webDirectory/kodi/epg.xml"
-	# read each downloaded epg file and combine them
-	find "$webDirectory/live/epg_cache/" -type 'f' | while read epgPath;do
-		# load the cached epg
-		tempEPG=$(cat "$epgPath")
-		# cleaup header and footer tags to make combining epgs possible
-		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<?xml")
-		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<!doctype")
-		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<tv")
-		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "</tv")
-		# write the cleaned epg data to the combined epg
-		echo "$tempEPG" >> $webDirectory/kodi/epg.xml
-	done
-	# add end tag to epg
-	echo "</tv>" >> $webDirectory/kodi/epg.xml
-}
-################################################################################
 function buildRadioPage(){
 	title=$1
 	link=$2
@@ -832,7 +903,7 @@ function buildRadioPage(){
 		# piped into a file
 		# make the background for the audio player the poster of the audio stream
 		customStyle="background-image: url(\"$poster\");"
-		echo -e "$tabs<audio id='video' class='livePlayer' style='$customStyle' poster='$poster' autoplay muted>"
+		echo -e "$tabs<audio id='video' class='livePlayer' style='$customStyle' poster='$poster' controls='controls' autoplay muted>"
 		echo -e "$tabs<source src='$link' type='audio/mpeg'>"
 		echo -e "$tabs</audio>"
 	fi
@@ -896,8 +967,8 @@ webGen(){
 	################################################################################
 	echo "$channels" | while read line;do
 		# if a info line was detected on the last line
-		INFO "building channel page for line = $line"
-		INFO "Line Caught = $line"
+		#INFO "building channel page for line = $line"
+		#INFO "Line Caught = $line"
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
 		if [ "$caughtLength" -gt 1 ];then
@@ -912,10 +983,10 @@ webGen(){
 				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 				# check for group title
 				groupTitle=$(getTVG "$lineCaught" "group-title")
-				INFO "Found Title = $title"
-				INFO "Found Link = $link"
-				INFO "Icon Link = $iconLink"
-				INFO "Icon MD5 = $iconLink"
+				#INFO "Found Title = $title"
+				#INFO "Found Link = $link"
+				#INFO "Icon Link = $iconLink"
+				#INFO "Icon MD5 = $iconLink"
 				################################################################################
 				# build individual channel webpage
 				################################################################################
@@ -1096,7 +1167,7 @@ webGen(){
 					} >> "$channelListPath"
 				fi
 				# add the info to the database
-				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/live/channels.index"
+				#addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/live/channels.index"
 				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/new/channels.index"
 				addToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/random/channels.index"
 				SQLaddToIndex "$webDirectory/live/index/channel_$channelNumber.index" "$webDirectory/data.db" "channels"
@@ -1104,32 +1175,13 @@ webGen(){
 		fi
 		# if the line is a info line
 		if echo "$line" | grep -q "#EXTINF";then
-			INFO "Found info line '$line'"
+			#INFO "Found info line '$line'"
 			lineCaught="$line"
 		else
 			# reset the line caught variable
 			lineCaught=""
 		fi
 	done
-
-	# cleanup indexes
-	if test -f "$webDirectory/live/channels.index";then
-		# remove duplicates in main index
-		tempList=$(cat "$webDirectory/live/channels.index" | sort -u )
-		echo "$tempList" > "$webDirectory/live/channels.index"
-	fi
-	if test -f "$webDirectory/new/channels.index";then
-		# new list is limited to 800
-		tempList=$(cat "$webDirectory/new/channels.index" | tail -n 800 )
-		echo "$tempList" > "$webDirectory/new/channels.index"
-	fi
-	if test -f "$webDirectory/random/channels.index";then
-		tempList=$(cat "$webDirectory/random/channels.index" | sort -u )
-		echo "$tempList" > "$webDirectory/random/channels.index"
-	fi
-
-	# combine all the epg files
-	buildEPG "$webDirectory"
 
 	# copy over the new versions of the generated webpages
 	cp -v "$channelListPath" "$channelOutputPath"
@@ -1208,6 +1260,14 @@ main(){
 		enableMod "iptv2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "iptv2web"
+	elif [ "$1" == "-E" ] || [ "$1" == "--epg" ] || [ "$1" == "epg" ] ;then
+		ALERT "This will download and build a updated combined EPG file"
+		checkModStatus "iptv2web"
+		lockProc "iptv2web"
+		webDirectory=$(webRoot)
+		updateEPG "$webDirectory"
+		buildEPG "$webDirectory"
+		ALERT "EPG processing is complete your iptv clients should update automatically"
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		# check if the module is enabled
 		checkModStatus "iptv2web"

@@ -19,7 +19,7 @@
 ini_set('display_errors', 1);
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
-	function drawPosterWidget($filterType, $random=False, $icons=False){
+	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
 		if ($random){
 			$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/$filterType/$filterType.index";
 		}else{
@@ -90,7 +90,20 @@ if( ! function_exists("drawPosterWidget")){
 					}
 				}
 				if ($drawBottom == 1){
-					if ($icons == True){
+					if ($filterType == "music"){
+						$linkType="icon";
+					}else if ($filterType == "music"){
+						$linkType="icon";
+					}else if ($filterType == "albums"){
+						$linkType="icon";
+					}else if ($filterType == "artists"){
+						$linkType="icon";
+					}else if ($filterType == "episodes"){
+						$linkType="episode";
+					}else{
+						$linkType="poster";
+					}
+					if ($linkType == "icon"){
 						if ($random){
 							// create a final link to the full new list
 							fwrite($fileObj,"<a class='button indexIconLink' href='/random/index.php?filter=$filterType'>");
@@ -103,6 +116,27 @@ if( ! function_exists("drawPosterWidget")){
 							fwrite($fileObj,"<a class='button indexIconLink' href='/new/index.php?filter=$filterType'>");
 							fwrite($fileObj,"Full ");
 							fwrite($fileObj,"List ");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</a>");
+						}
+					}else if ($linkType == "episode"){
+						# show page episode
+						if ($random){
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='showPageEpisode moreEpisodesLink' href='/random/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"List ");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</a>");
+						}else{
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='showPageEpisode moreEpisodesLink' href='/new/index.php?filter=$filterType'>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"List ");
+							fwrite($fileObj,"<br>");
 							fwrite($fileObj,"📜");
 							fwrite($fileObj,"</a>");
 						}

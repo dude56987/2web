@@ -382,13 +382,44 @@ if (array_key_exists("q",$_GET)){
 			appendFile($searchCacheFilePath,"<hr>");
 		}
 
+		# sql episode search
+		# load database
+		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+		# set the timeout to 1 minute since most webbrowsers timeout loading before this
+		$databaseObj->busyTimeout(60000);
+
+		# run query to get 800 random
+		$result = $databaseObj->query('select * from "_episodes";');
+
+		# fetch each row data individually and display results
+		while($row = $result->fetchArray()){
+			$sourceFile = $row['title'];
+			# search each episode file
+			if (file_exists($sourceFile)){
+				if (is_file($sourceFile)){
+					if (stripos($sourceFile,".index")){
+						// read the index entry
+						$data=file_get_contents($sourceFile);
+						if (stripos($data,$searchQuery)){
+							#$data=str_ireplace($searchQuery,"<bold>$searchQuery</bold>",$data);
+							// write the index entry
+							appendFile($searchCacheFilePath, $data);
+							echo $data;
+							flush();
+							ob_flush();
+						}
+					}
+				}
+			}
+		}
+		echo "<hr>";
+
 		# search all the wikis
 		$wikiSearchResults = searchAllWiki($_GET['q'],$searchCacheFilePath);
 		if ($wikiSearchResults[0]){
 			echo "<hr>";
 			appendFile($searchCacheFilePath,"<hr>");
 		}
-
 		# calc the total search time
 		$totalSearchTime= round((microtime(True) - $startSearchTime), 4);
 		if ( $foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) || ($weatherResults[0] == true) ){

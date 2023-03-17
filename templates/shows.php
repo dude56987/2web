@@ -34,7 +34,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 <?php
 # add the updated shows below the header
-drawPosterWidget("shows");
+drawPosterWidget("shows",False);
 ################################################################################
 ?>
 <div class='settingListCard'>

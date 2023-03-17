@@ -1058,7 +1058,7 @@ processEpisode(){
 			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
 			echo "?>";
 			echo "<div class='titleCard'>"
-			echo "<h1><a href='/shows/$episodeShowTitle/#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
+			echo "<h1><a href='/shows/$episodeShowTitle/?search=${episodeSeason}#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
 			# add outside search links
 			echo "<div class='listCard'>"
 			echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$episodeShowTitle $episodeTitle'>🔎 IMDB</a>"
@@ -1086,6 +1086,7 @@ processEpisode(){
 
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
 		if echo "$sufix" | grep -q --ignore-case "strm";then
+			createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
 			# change the video path into a video id to make it embedable

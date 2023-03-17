@@ -33,7 +33,7 @@ function buildCommitTable($entriesToRead=-1){
 		echo "	<tr>\n";
 		echo "		<th>Commit</th>\n";
 		echo "		<th>Author</th>\n";
-		echo "		<th class='gitEmailRow'>Email</th>\n";
+		echo "		<th>Email</th>\n";
 		echo "		<th>Message</th>\n";
 		echo "		<th>Log</th>\n";
 		echo "		<th>Diff</th>\n";
@@ -48,12 +48,13 @@ function buildCommitTable($entriesToRead=-1){
 			}
 			// read the index entry
 			echo "		<td><a href='?commit=$sourceFile'>$sourceFile</a></td>\n";
-			echo "		<td>".file_get_contents("author/$sourceFile.index")."</td>\n";
-			echo "		<td class='gitEmailRow'>".file_get_contents("email/$sourceFile.index")."</td>\n";
+			echo "		<td><a href='?commit=$sourceFile#author'>📮 <span class='tableShrink'>".file_get_contents("author/$sourceFile.index")."</span></a></td>\n";
+			$tempEmail=file_get_contents("email/$sourceFile.index");
+			echo "		<td><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
 			echo "		<td>".file_get_contents("msg/$sourceFile.index")."</td>\n";
-			echo "		<td><a href='?commit=$sourceFile#log'>🧾 LOG</a></td>\n";
-			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ DIFF</a></td>\n";
-			echo "		<td>".file_get_contents("date/$sourceFile.index")."</td>\n";
+			echo "		<td><a href='?commit=$sourceFile#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
+			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
+			echo "		<td><span class='tableShrink'>📅 </span>".file_get_contents("date/$sourceFile.index")."</td>\n";
 			// write the index entry
 			echo "	</tr>\n";
 			flush();
@@ -76,8 +77,8 @@ function drawHeader(){
 	echo "		<div class='listCard'>\n";
 	echo "			<a class='button' href='?all'>🗂️ Repository Overview</a>\n";
 	echo "			<a class='button' href='?list'>💼 All Commits</a>\n";
-	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
 	echo "			<a class='button' href='?graph'>📈 Graphs</a>\n";
+	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
 	echo "			<a class='button' href='?listLint'>🧹 Lint Data</a>\n";
 	#$fileName = popPath(file_get_contents("source.index"));
 	#$fileName = str_replace(".index","",$fileName);
@@ -185,7 +186,8 @@ if (array_key_exists("inspector",$_GET)){
 }else if (array_key_exists("graph",$_GET)){
 	drawHeader();
 	$graphName=$_GET['graph'];
-	$graphTitles=Array("day","week","month","year","365_day","diff_day","diff_week","diff_month","diff_year");
+	#$graphTitles=Array("day","week","month","year","365_day","diff_365_day","diff_day","diff_week","diff_month","diff_year");
+	$graphTitles=Array("commit_day","commit_week","commit_month","commit_year","commit_365_day","diff_day","diff_week","diff_month","diff_year");
 	if (in_array($graphName,$graphTitles)){
 		$graphName=$_GET['graph'];
 	}else{
@@ -195,9 +197,10 @@ if (array_key_exists("inspector",$_GET)){
 	echo "<div class='listCard'>";
 	foreach($graphTitles as $graphTitle){
 		echo "	<a href='?graph=$graphTitle' class='showPageEpisode'>";
-		echo "		<img class='gitCommitListMonthGraph' src='graph_$graphTitle.png' />";
+		#include("graph_$graphTitle.svg");
+		echo "		<img class='gitCommitListMonthGraph' src='graph_$graphTitle-thumb.png' />";
 		echo "		<div class='indexTitle'>";
-		echo ucfirst(str_replace("_"," ",$graphTitle));
+		echo ucwords(str_replace("_"," ",$graphTitle));
 		echo "		</div>";
 		echo "	</a>";
 	}
@@ -205,9 +208,12 @@ if (array_key_exists("inspector",$_GET)){
 	echo "</div>";
 	if (in_array($graphName,$graphTitles)){
 		echo "<div class='titleCard'>\n";
-		echo "	<h2>".ucfirst($graphName)."</h2>\n";
-		echo "	<a href='graph_long_$graphName.png' class=''>";
-		echo "		<img class='gitCommitListMonthGraph' src='graph_long_$graphName.png' />";
+		echo "	<h2>".ucwords(str_replace("_"," ",$graphName))."</h2>\n";
+		echo "	<a href='graph_$graphName.png' class=''>";
+		echo "		<div class='gitCommitListMonthGraph'>";
+		#include("graph_$graphName.svg");
+		echo "		</div>\n";
+		echo "		<img class='gitCommitListMonthGraph' src='graph_$graphName.png' />";
 		echo "	</a>";
 		echo "</div>\n";
 	}
@@ -216,8 +222,8 @@ if (array_key_exists("inspector",$_GET)){
 
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Commits By Month</h2>\n";
-	echo "	<a href='graph_long_month.png' class=''>";
-	echo "		<img class='gitCommitListMonthGraph' src='graph_long_month.png' />";
+	echo "	<a href='graph_commit_month.png' class=''>";
+	echo "		<img class='gitCommitListMonthGraph' src='graph_commit_month.png' />";
 	echo "	</a>";
 	echo "</div>\n";
 
@@ -251,7 +257,7 @@ if (array_key_exists("inspector",$_GET)){
 	echo "	<tr>\n";
 	echo "		<th>Commit</th>\n";
 	echo "		<th>Author</th>\n";
-	echo "		<th class='gitEmailRow'>Email</th>\n";
+	echo "		<th>Email</th>\n";
 	echo "		<th>Message</th>\n";
 	echo "		<th>Log</th>\n";
 	echo "		<th>Diff</th>\n";
@@ -259,12 +265,13 @@ if (array_key_exists("inspector",$_GET)){
 	echo "	</tr>\n";
 	echo "	<tr>\n";
 	echo "		<td><a href='?commit=$commitName'>$commitName</a></td>\n";
-	echo "		<td>".file_get_contents("author/$commitName.index")."</td>\n";
-	echo "		<td class='gitEmailRow'>".file_get_contents("email/$commitName.index")."</td>\n";
+	echo "		<td><a href='?commit=$commitName#author'>📮 <span class='tableShrink'>".file_get_contents("author/$commitName.index")."</span></a></td>\n";
+	$tempEmail=file_get_contents("email/$commitName.index");
+	echo "		<td><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
 	echo "		<td>".file_get_contents("msg/$commitName.index")."</td>\n";
-	echo "		<td><a href='?commit=$commitName#log'>🧾LOG</a></td>\n";
-	echo "		<td><a href='?commit=$commitName#diff'>↔️ DIFF</a></td>\n";
-	echo "		<td>".file_get_contents("date/$commitName.index")."</td>\n";
+	echo "		<td><a href='?commit=$commitName#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
+	echo "		<td><a href='?commit=$commitName#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
+	echo "		<td>📅 ".file_get_contents("date/$commitName.index")."</td>\n";
 	echo "	</tr>\n";
 	echo "</table>\n";
 
@@ -279,7 +286,8 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<h2>Commit Metadata</h2>\n";
 	echo "		<ul>\n";
 	echo "			<li>Author: ".file_get_contents("author/$commitName.index")."</li>\n";
-	echo "			<li>Email: ".file_get_contents("email/$commitName.index")."</li>\n";
+	$tempEmail=file_get_contents("email/$commitName.index");
+	echo "			<li>Email: <a href='mailto:".$tempEmail."'>".$tempEmail."</a></li>\n";
 	echo "			<li>Commit Date: ".file_get_contents("date/$commitName.index")."</li>\n";
 	echo "		</ul>\n";
 	echo "	</div>\n";
@@ -303,19 +311,23 @@ if (array_key_exists("inspector",$_GET)){
 	# draw first commit
 	buildCommitTable(0);
 	echo "<div>";
-	echo "<a href='?graph=365_day'><img class='gitRepoGraph' src='graph_long_365.png' /></a>";
+	echo "<a href='?graph=commit_365_day'><img class='gitRepoGraph' src='graph_commit_365.png' /></a>";
 	#include("graph.svg");
 	echo "</div>";
-	echo "	<video controls poster='graph_month.png'>\n";
-	echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
-	echo "	</video>\n";
+	if (file_exists("repoHistory.mp4")){
+		echo "	<video controls poster='graph_commit_month.png'>\n";
+		echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
+		echo "	</video>\n";
+	}
 	#echo "	<a href='graph_month.png' class='indexSeries right'>";
 	#echo "		<img class='gitRepoGraphMonth' src='graph_month.png' />";
 	#echo "		<div>";
 	#echo "			Commits Monthly";
 	#echo "		</div>";
 	#echo "	</a>";
-	echo 		file_get_contents("readme.index");
+	if (file_exists("readme.index")){
+		echo 		file_get_contents("readme.index");
+	}
 	echo "</div>\n";
 
 	/*

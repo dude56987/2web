@@ -34,7 +34,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # add the updated movies below the header
 #include("../randomChannels.index");
 ################################################################################
-drawPosterWidget("channels",False,True);
+drawPosterWidget("channels",False);
 
 // find all the groups
 ?>

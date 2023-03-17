@@ -40,7 +40,7 @@ include("/usr/share/2web/2webLib.php");
 		<li>Enable/Disable Modules
 			<ul>
 <?PHP
-$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web");
+$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web","git2web");
 foreach($modules as $module){
 	echo "				<li><a href='#".$module."Status'>$module</a></li>";
 }
@@ -117,9 +117,6 @@ foreach($modules as $module){
 		echo "					Enable or disable sync of linked kodi instances.";
 		echo "				</li>";
 	}elseif ($module == "wiki2web"){
-		echo "				<li>";
-		echo "					Will enable wiki Processing.";
-		echo "				</li>";
 		if (! is_file("/usr/bin/zimdump")){
 			# if zimdump does not exist zim files can not be extracted correctly
 			echo "				<li>";
@@ -130,10 +127,14 @@ foreach($modules as $module){
 			echo "				</li>";
 		}
 		echo "				<li>";
-		echo "					Will enable wiki Processing.";
+		echo "					Enable or disable extraction of .zim files in wiki directory to the website.";
+		echo "				</li>";
+	}elseif ($module == "kodi2web"){
+		echo "				<li>";
+		echo "					Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.";
 		echo "				</li>";
 		echo "				<li>";
-		echo "					Enable or disable extraction of .zim files in wiki directory to the website.";
+		echo "					";
 		echo "				</li>";
 	}
 	# check the module status for drawing enabled or disabled onscreen
