@@ -26,22 +26,6 @@
 <?PHP
 include("header.php");
 include("/usr/share/2web/2webLib.php");
-
-if (detectEnabledStatus("iptv2web")){
-	$iptv=true;
-}else{
-	$iptv=false;
-}
-if (detectEnabledStatus("nfo2web")){
-	$nfo=true;
-}else{
-	$nfo=false;
-}
-if (detectEnabledStatus("comic2web")){
-	$comic=true;
-}else{
-	$comic=false;
-}
 ?>
 
 <div class='titleCard linkInfo'>
@@ -49,63 +33,53 @@ if (detectEnabledStatus("comic2web")){
 
 <div class="titleCard">
 	<ul>
-		<li><a href="#direct_linking">Direct Linking</a></li>
-		<li><a href="#android">Android</a></li>
+		<li><a href="#link_index">⛓️ Link Index</a></li>
+		<li><a href="#direct_linking">🔗 Direct Linking</a></li>
+		<li><a href="#kodi">🇰 Kodi</a></li>
 		<ul>
-		<?PHP
-			# this page should only show help for active modules
-			if ($iptv){
-				echo "<li><a href='#android_live'>Android Live</a></li>";
-			}
-			if ($nfo){
-				echo "<li><a href='#android_ondemand'>Android On-Demand</a></li>";
-			}
-			echo "<li><a href='#android_VLC'>Android VLC Links</a></li>";
-		?>
+			<li><a href="#kodi_TLDR">🏃 TLDR</a></li>
+			<li><a href='#kodi_live'>📡 Live</a></li>
+			<li><a href='#kodi_ondemand'>📺 On-Demand</a></li>
+			<li><a href='#kodi_comics'>📚 Comics</a></li>
 		</ul>
-		<li><a href="#kodi">Kodi</a></li>
+		<li><a href="#desktop">🖥️ Desktop</a></li>
 		<ul>
-			<li><a href="#kodi_TLDR">TLDR</a></li>
-			<?PHP
-			if ($iptv){
-				echo "<li><a href='#kodi_live'>Live Channels</a></li>";
-			}
-			if ($nfo){
-				echo "<li><a href='#kodi_ondemand'>On-Demand Libary</a></li>";
-			}
-			if ($comic){
-				echo "<li><a href='#kodi_comics'>Comics Libary</a></li>";
-			}
-			?>
+			<li><a href="#desktop_web_interface">🌐 Web Interface</a></li>
+			<li><a href="#desktop_direct_links">🔗 Direct links</a></li>
+			<li><a href="#desktop_install_kodi">🇰 Install Kodi</a></li>
+			<li><a href="#desktop_install_VLC"><span id='vlcIcon'>▲</span> Install VLC</a></li>
 		</ul>
-		<li><a href="#desktop">Desktop</a></li>
+		<li><a href="#android">📱 Mobile/Tablet</a></li>
 		<ul>
-			<li><a href="#desktop_web_interface">Web Interface</a></li>
-			<li><a href="#desktop_direct_links">Direct links</a></li>
-			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
-			<li><a href="#desktop_install_VLC">Install VLC</a></li>
+			<li><a href='#mobile_live'>📡 Live</a></li>
+			<li><a href='#mobile_ondemand'>📺 On-Demand</a></li>
+			<li><a href='#mobile_VLC'><span id='vlcIcon'>▲</span>VLC Links</a></li>
+			<li><a href='#mobile_comic'>📚 Comic Viewer</a></li>
 		</ul>
 	</ul>
 </div>
 
 <p>
-For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics ( comics/books ) to kodi media centers. This also discusses how to use direct link buttons on media and alternative ( desktop/tablet/phone ) software for access.
+For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics ( comics/books ) to 🇰 kodi media centers. This also discusses how to use direct link buttons on media and alternative ( desktop/tablet/phone ) software for access.
 </p>
-<p>
-	TLDR below is a link to the kodi directory for direct links to media content.
-</p>
-<a class='button' href='/kodi/'>
-	🇰 KODI
-</a>
-
 </div>
 
 <div class='titleCard linkInfo'>
-	<h2 id="direct_linking">Direct Linking</h2>
+	<h2 id="link_index">⛓️ Link Index</h2>
+	<p>
+		The below link will take you to the generated link index. This contains a organized hierarchy of links to all multimedia content on the server. This is used by 🇰 kodi to add content from the server to client machines.
+	</p>
+	<a class='button' href='/kodi/'>
+		🇰 KODI
+	</a>
+</div>
+
+<div class='titleCard linkInfo'>
+	<h2 id="direct_linking">🔗 Direct Linking</h2>
 	<p>
 	On all pages containing the web player there will be a
 	</p>
-	<span class='button'>Direct Link</span>
+	<span class='button'>🔗 Direct Link</span>
 	<p>
 	button. This links directly to the source content on the server. Clicking this link on most any platform will open a appropriate player. This is the simplest way to view any content that the webplayer can't handle in your browser.
 	</p>
@@ -117,96 +91,29 @@ For when you need more than the web interface can handle. This help section defi
 	Some content can still not be played with current web browsers by default, so if anything refuses to play this generally gets around it.
 	</p>
 </div>
+
 <div class='titleCard linkInfo'>
-	<h2 id="android">Android</h2>
-
-	<div class="titleCard">
-	<ul>
-		<li><a href="#android_live">Android Live</a></li>
-		<li><a href="#android_ondemand">Android On-Demand</a></li>
-		<li><a href="#android_VLC">Android VLC Links</a></li>
-	</ul>
-	</div>
-
-	<h3 id="android_live">Android Live</h3>
-	<p>
-	There are lots of apps that would allow you to use iptv on android. Simplest is
-	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
-	Open the Link below to with
-	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
-	to view all live channels as a playlist.
-	</p>
-	<?PHP
-	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
-	$tempPath='http://'.gethostname().'.local/kodi/channels.m3u';
-	echo '<p>The Direct link is <a href='.$tempPath.'>'.$tempPath.'</a></p>';
-	?>
-	<p>
-	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
-	</p>
-	<?PHP
-		echo '<a class="button" href="http://'.gethostname().'.local/kodi/channels_raw.m3u">';
-		echo 'channels_raw.m3u';
-		echo '</a>';
-	?>
-	<p>
-	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
-	<a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>VLC</a>.
-	in android locally it will play the feeds directly from the internet to you phone. Even if this server is unreachable by your phone as long as you are connected to the internet you can play the channels_raw.m3u file.
-	</p>
-
-	<h3 id="android_ondemand">Android On-Demand</h3>
-	<p>
-		Install Kodi
-	</p>
-	<h3 id="android_install_kodi">Android Install Kodi</h3>
-
-	<ul>
-		<li>
-			<a class='' href='https://kodi.wiki/view/HOW-TO:Install_Kodi_for_Android'>
-				Kodi WIKI: How to install kodi for android
-			</a>
-		</li>
-		<li>
-			<a class='' href='https://play.google.com/store/apps/details?id=org.xbmc.kodi'>
-				Click here for the google play store link
-			</a>
-		</li>
-	</ul>
-
-	<p>
-		You could install kodi on your android device and link it to the media collection on this server.
-	</p>
-	<h3 id="android_VLC">VLC Links</h3>
-	<p>
-		If you have VLC installed on android you can click the vlc link found on every video media page.
-		<br>
-		<span class='button'>
-			<span id='vlcIcon'>&#9650;</span> VLC
-		</span>
-		<br>
-	</p>
-
-</div>
-<div class='titleCard linkInfo'>
-	<h2 id="kodi">Kodi</h2>
+	<h2 id="kodi">🇰 Kodi</h2>
 
 	<div class="titleCard">
 		<ul>
-			<li><a href="#kodi_TLDR">TLDR</a></li>
-			<li><a href="#kodi_live">Live Channels</a></li>
-			<li><a href="#kodi_ondemand">On-Demand Libary</a></li>
-			<li><a href="#kodi_comics">Comics Libary</a></li>
+			<li><a href="#kodi_TLDR">🏃 TLDR</a></li>
+			<li><a href="#kodi_live">📡 Live</a></li>
+			<li><a href="#kodi_ondemand">📺 On-Demand Libary</a></li>
+			<li><a href="#kodi_comics">📚 Comics Libary</a></li>
 		</ul>
 	</div>
-	<h3 id="kodi_TLDR" >TLDR</h3>
+	<h3 id="kodi_TLDR" >🏃 TLDR</h3>
 	<p>
 		<?PHP
 		echo "The http://".gethostname().".local/kodi/ directory contains";
-		echo " http directories that can be used to link content into kodi.";
+		echo " basic http indexes that can be used to link content into kodi.";
 		?>
 	</p>
-	<h3 id="kodi_live">Kodi Live</h3>
+	<a class='button' href='/kodi/'>
+		🇰 KODI
+	</a>
+	<h3 id="kodi_live">📡 Live</h3>
 	<p>
 		To copy the live libary to be used on kodi you must have the iptv simple Client installed
 	</p>
@@ -214,18 +121,21 @@ For when you need more than the web interface can handle. This help section defi
 	<p>
 		To install the client in kodi from the home menu go to
 	</p>
-	<ol class='titleCard'>
-	<li>in kodi go to home</li>
-	<li>settings</li>
-	<li>addons</li>
-	<li>install from repository</li>
-	<li>all repositories</li>
-	<li>PVR clients</li>
-	<li>PVR IPTV Simple Client</li>
-	<li>Install</li>
-	</ol>
+	<div class='titleCard'>
+		<h4>🔢 Step-By-Step<h4>
+		<ol>
+			<li>in kodi go to home</li>
+			<li>settings</li>
+			<li>addons</li>
+			<li>install from repository</li>
+			<li>all repositories</li>
+			<li>PVR clients</li>
+			<li>PVR IPTV Simple Client</li>
+			<li>Install</li>
+		</ol>
+	</div>
 	<p>
-		NOTE: on UBUNTU linux you must install "kodi-pvr-iptvsimple" package with apt
+		NOTE: on UBUNTU 🐧 Linux you must install "kodi-pvr-iptvsimple" package with apt
 	</p>
 
 	<p>
@@ -236,17 +146,18 @@ For when you need more than the web interface can handle. This help section defi
 	<?PHP
 		$channelLink="/kodi/channels.m3u";
 		echo '<div>';
-		echo '<a class="button" href="'.$channelLink.'">Link</a>';
+		echo '	<a class="button" href="'.$channelLink.'">Link</a>';
 		echo '</div>';
 		echo '<p>';
-		echo '<a href="'.$channelLink.'">'.$channelLink.'</a>';
+		echo '	<a href="'.$channelLink.'">'.$channelLink.'</a>';
 		echo '</p>';
 	?>
 	</div>
-	<h3 id="kodi_ondemand">Kodi On-Demand</h3>
-		To add the OnDemand content of this server to a kodi libary you would go to
-		<h4>Step-By-Step<h4>
-		<ol class='titleCard'>
+	<h3 id="kodi_ondemand">📺 On-Demand</h3>
+	To add the OnDemand content of this server to a kodi libary you would go to
+	<div class='titleCard'>
+		<h4>🔢 Step-By-Step<h4>
+		<ol>
 			<li>in kodi go to home</li>
 			<li>settings</li>
 			<li>media</li>
@@ -271,13 +182,15 @@ For when you need more than the web interface can handle. This help section defi
 			<li>Set "Scan recursively" to "False"</li>
 			<li>Repeat the process of adding the shows repository as well but set "scan recursively" to "True"</li>
 		</ol>
+	</div>
 
-		<h3 id="kodi_comics" >Kodi Comics</h3>
-		<p>
-			Kodi can be linked to this servers comic collection by using the kodi pictures interface.
-		</p>
-		<h4>Step-By-Step<h4>
-		<ol class='titleCard'>
+	<h3 id="kodi_comics" >📚 Comics</h3>
+	<p>
+		Kodi can be linked to this servers comic collection by using the kodi pictures interface.
+	</p>
+	<div class='titleCard'>
+		<h4>🔢 Step-By-Step<h4>
+		<ol>
 			<li>in kodi go to home</li>
 			<li>settings</li>
 			<li>media</li>
@@ -299,33 +212,35 @@ For when you need more than the web interface can handle. This help section defi
 			<li>Select OK again</li>
 			<li>Your done, you can now access comics on this server from kodi's pictures interface.</li>
 		</ol>
+	</div>
 </div>
 <div class='titleCard linkInfo'>
-	<h2 id="desktop">Desktop</h2>
+	<h2 id="desktop">🖥️ Desktop</h2>
 
 	<div class="titleCard">
 		<ul>
-			<li><a href="#desktop_web_interface">Web Interface</a></li>
-			<li><a href="#desktop_direct_links">Direct links</a></li>
-			<li><a href="#desktop_install_kodi">Install Kodi</a></li>
-			<li><a href="#desktop_install_VLC">Install VLC</a></li>
+			<li><a href="#desktop_web_interface">🌐 Web Interface</a></li>
+			<li><a href="#desktop_direct_links">🔗 Direct links</a></li>
+			<li><a href="#desktop_install_kodi">🇰 Install Kodi</a></li>
+			<li><a href="#desktop_install_VLC"><span id='vlcIcon'>▲</span> Install VLC</a></li>
+			<li><a href="#desktop_comics">📚 Comic Book Viewer</a></li>
 		</ul>
 	</div>
 
-	<h3 id="desktop_web_interface">Web Interface</h3>
+	<h3 id="desktop_web_interface">🌐 Web Interface</h3>
 
 	<p>
 		Give it a try, if the web player gives you any trouble use the direct link button. This should serve most needs and should become more compatible as web standards improve. The web interface has filtering for ondemand content and channels. You can bookmark any part of the media collection in your browser.
 	</p>
-	<h3 id="desktop_direct_links">Direct Links</h3>
+	<h3 id="desktop_direct_links">🔗 Direct Links</h3>
 	<p>
 		All media pages generated contain a direct link to the content they contain. This is a direct link to the file so you can save the file. You can paste the direct link in a video player that can stream links.
 	</p>
-	<h3 id="desktop_install_kodi">Install Kodi</h3>
+	<h3 id="desktop_install_kodi">🇰 Install Kodi</h3>
 	<p>
 		You could install kodi on your desktop computer and link it to the media collection on this server.
 	</p>
-	<h3 id="desktop_install_VLC">Install VLC</h3>
+	<h3 id="desktop_install_VLC"><span id='vlcIcon'>▲</span> Install VLC</h3>
 	<div>
 		<a class='' href='https://www.videolan.org/vlc/'>
 			Install VLC for your desktop computer.
@@ -334,6 +249,105 @@ For when you need more than the web interface can handle. This help section defi
 			If you need a desktop player that will play any of the "Direct Link" buttons on the website.
 		</p>
 	</div>
+	<h3 id="desktop_comics">📚 Comic Book Viewer</h3>
+	<p>
+		You can download any comic book from the website from the CBZ link on the comic book page.
+	</p>
+	<a class='button'>
+		<span class='downloadIcon'>↓</span>
+		Download CBZ
+	</a>
+	<p>
+		<a href='https://sourceforge.net/projects/mcomix/'>Mcomix</a> is a comic book viewer for 🐧 Linux. Mcomix should be available in your package manager.
+	</p>
+	<p>
+		If you run 🪟 windows, <a href='https://www.sumatrapdfreader.org/'>SumatraPDF</a> is a comic book viewer for 🪟 windows.
+	</p>
+</div>
+<div class='titleCard linkInfo'>
+	<h2 id="android">📱 Mobile/Tablet</h2>
+
+	<div class="titleCard">
+	<ul>
+		<li><a href="#mobile_live">📡 Live</a></li>
+		<li><a href="#mobile_ondemand">📺 On-Demand</a></li>
+		<li><a href="#mobile_VLC"><span id='vlcIcon'>▲</span> VLC Links</a></li>
+		<li><a href="#mobile_comic">📚 Comic Viewer</a></li>
+	</ul>
+	</div>
+
+	<h3 id="mobile_live">📡 Live</h3>
+	<p>
+	There are lots of apps that would allow you to use iptv on android. Simplest is
+	<a href='#mobile_VLC'>VLC</a>.
+	Open the Link below to with
+	<a href='#mobile_VLC'>VLC</a>.
+	to view all live channels as a playlist.
+	</p>
+	<?PHP
+	echo '<a class="button" href="/kodi/channels.m3u">channels.m3u</a>';
+	$tempPath='http://'.gethostname().'.local/kodi/channels.m3u';
+	echo '<p>The Direct link is <a href='.$tempPath.'>'.$tempPath.'</a></p>';
+	?>
+	<p>
+	In order to bypass icon caching and disable link translation done by this server. You can use the below link.
+	</p>
+	<?PHP
+		echo '<a class="button" href="http://'.gethostname().'.local/kodi/channels_raw.m3u">';
+		echo 'channels_raw.m3u';
+		echo '</a>';
+	?>
+	<p>
+	If you Save the raw link from above to you android device you can watch any of the channels on the playlist by launching the playlist with
+	<a href='#mobile_VLC'>VLC</a>.
+	in android locally it will play the feeds directly from the internet to you phone. Even if this server is unreachable by your phone as long as you are connected to the internet you can play the channels_raw.m3u file.
+	</p>
+
+	<h3 id="mobile_ondemand">📺 On-Demand</h3>
+	<p>
+		Install Kodi
+	</p>
+	<h3 id="mobile_install_kodi">🇰 Android Install Kodi</h3>
+
+	<ul>
+		<li>
+			<a class='' href='https://kodi.wiki/view/HOW-TO:Install_Kodi_for_Android'>
+				Kodi WIKI: How to install kodi for android
+			</a>
+		</li>
+		<li>
+			<a class='' href='https://play.google.com/store/apps/details?id=org.xbmc.kodi'>
+				Click here for the google play store link
+			</a>
+		</li>
+	</ul>
+
+	<p>
+		You could install kodi on your android device and link it to the media collection on this server.
+	</p>
+	<h3 id="mobile_VLC"><span id='vlcIcon'>▲</span> VLC Links</h3>
+	<p>
+		If you have VLC installed on android you can click the VLC link found on every video media page.
+		<br>
+		<div class='button'>
+			<span id='vlcIcon'>&#9650;</span> VLC
+		</div>
+		<br>
+		You can install VLC from the play store on 🤖 android by clicking <a href='https://play.google.com/store/apps/details?id=org.videolan.vlc'>here</a>.
+		VLC is also available for 🍏 IOS <a href='https://itunes.apple.com/app/apple-store/id650377962?pt=454758&ct=vodownloadpage&mt=8'>here</a>.
+		If you need VLC for another platform you can go to VLC's main website <a href='https://www.videolan.org/'>here</a>.
+	</p>
+	<h3 id="mobile_comic">📚 Comic Viewer</h3>
+	<p>
+		Each comic page	will have a button to download the CBZ file.
+	</p>
+	<a class='button'>
+		<span class='downloadIcon'>↓</span>
+		Download CBZ
+	</a>
+	<p>
+	This will download the comic book as a CBZ<sup>(Comic Book Zip)</sup> file. You can read this CBZ file with any comic book viewer that supports CBZ comic book files. A simple open source viewer is <a href='https://en.wikipedia.org/wiki/MuPDF'>MuPDF</a>. You can install MuPDF for 🤖 android from the play store <a href='https://play.google.com/store/apps/details?id=com.artifex.mupdf.viewer.app&hl=en_US&gl=US'>here</a>. You can install MuPDF for 🍏 IOS from the app store <a href='https://itunes.apple.com/us/app/mupdf/id482941798?mt=8&uo=4'>here</a>.
+	</p>
 </div>
 
 <?PHP
