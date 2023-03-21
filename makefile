@@ -64,36 +64,6 @@ build: build-deb
 	sudo make build-deb;
 upgrade-hls: node_modules/hls.js/dist/hls.js
 	if ! test -f node_modules/hls.js/dist/hls.js;then npm install --save hls.js;fi
-screenshots:
-	# create a series of screenshots from the currently installed version
-	mkdir -p screenshots/
-	# create desktop screenshots
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/" "screenshots/home.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/new/" "screenshots/new.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/random/" "screenshots/random.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/movies/" "screenshots/movies.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/shows/" "screenshots/shows.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/live/" "screenshots/live.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/comics/" "screenshots/comics.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/weather/" "screenshots/weather.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/graphs/" "screenshots/graphs.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/wiki/" "screenshots/wiki.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "http://localhost/views/" "screenshots/views.png"
-	# create phone screenshots
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/" "screenshots/phone-home.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/new/" "screenshots/phone-new.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/random/" "screenshots/phone-random.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/movies/" "screenshots/phone-movies.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/movies/" "screenshots/phone-movies.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/shows/" "screenshots/phone-shows.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/live/" "screenshots/phone-live.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/comics/" "screenshots/phone-comics.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/weather/" "screenshots/phone-weather.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/graphs/" "screenshots/phone-graphs.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/wiki/" "screenshots/phone-wiki.png"
-	wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 800 --disable-smart-width --height 2000 "http://localhost/views/" "screenshots/phone-views.png"
-	# open created screenshots
-	eom screenshots/home.png &
 build-deb: upgrade-hls
 	# build the directories inside the package
 	mkdir -p debian;

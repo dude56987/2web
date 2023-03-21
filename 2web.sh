@@ -618,6 +618,18 @@ function buildSpinnerGif(){
 		-loop 0 "/var/cache/2web/spinner.gif"
 }
 ################################################################################
+function screenshot(){
+	webPath=$1
+	localPath=$2
+	mkdir -p "/var/cache/2web/downloads_comics/generated/2web Screenshots/"
+	# make desktop screenshot
+	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 1920 --disable-smart-width --height 1080 \
+		"$webPath" "/var/cache/2web/downloads_comics/generated/2web Screenshots/desktop_$localPath"
+	# make phone screenshot
+	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 800 --disable-smart-width --height 2000 \
+		"$webPath" "/var/cache/2web/downloads_comics/generated/2web Screenshots/phone_$localPath"
+}
+################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -809,6 +821,114 @@ main(){
 		drawLine
 	elif [ "$1" == "-re" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
 		restoreSettings "$2"
+	elif [ "$1" == "-S" ] || [ "$1" == "--screenshots" ] || [ "$1" == "screenshots" ] ;then
+		totalCPUs=$(cpuCount)
+		################################################################################
+		screenshot  "http://localhost/" "01_home.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot  "http://localhost/help.php" "02_help.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# playlists new
+		screenshot "http://localhost/new/" "02_playlist_new.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# playlists random
+		screenshot "http://localhost/random/" "02_playlist_random.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# nfo2web movies index
+		screenshot "http://localhost/movies/" "03_index_movies.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# nfo2web shows index
+		screenshot "http://localhost/shows/" "03_index_shows.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# iptv index
+		screenshot "http://localhost/live/" "03_index_live.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# comic index
+		screenshot "http://localhost/comics/" "03_index_comics.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# weather index
+		screenshot "http://localhost/weather/" "03_index_weather.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# graph index
+		screenshot "http://localhost/graphs/" "03_index_graphs.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# wiki index
+		screenshot "http://localhost/wiki/" "03_index_wiki.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# music2web index
+		# need example of a music artist and a album, and a track playing
+		screenshot "http://localhost/music/" "05_index_music.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# search
+		################################################################################
+		screenshot "http://localhost/search.php?q=the" "06_search_the.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/search.php?q=a" "06_search_a.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/search.php?q=cpu" "06_search_cpu.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/search.php?q=2web" "06_search_2web.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# git2web index
+		################################################################################
+		screenshot "http://localhost/repos/" "07_index_repos.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# test repo view
+		screenshot "http://localhost/repos/2web/" "07_repos_2web_overview.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# all commits
+		screenshot "http://localhost/repos/2web/?list" "08_repos_2web_commits.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# lint lists
+		screenshot "http://localhost/repos/2web/?listLint" "08_repos_2web_lint.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# inspector
+		screenshot "http://localhost/repos/2web/?inspector" "08_repos_2web_inspector.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# graph view diff
+		screenshot "http://localhost/repos/2web/?graph=diff_month" "08_repos_2web_graph_diff.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# graph view commit
+		screenshot "http://localhost/repos/2web/?graph=commit_month" "08_repos_2web_graph_commit.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# settings screenshots, 2web must be in passwordless mode, e.g. no admin users
+		# settings required https
+		################################################################################
+		screenshot "https://localhost/views/" "10_settings_views.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/modules.php" "10_settings_modules.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/system.php" "10_settings_system.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/nfo.php" "10_settings_nfo2web.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/ytdl2nfo.php" "10_settings_ytdl2web.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/music.php" "10_settings_music.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/comics.php" "10_settings_comics.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/comicsDL.php" "10_settings_comics_downloads.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/tv.php" "10_settings_iptv_tv.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/radio.php" "10_settings_iptv_radio.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/iptv_blocked.php" "10_settings_iptv_blocked.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/weather.php" "10_settings_weather.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/graphs.php" "10_settings_graphs.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/about.php" "10_settings_about.jpg" &
+		blockQueue 1
+		chown -R www-data:www-data "/var/cache/2web/downloads_comics/generated/2web Screenshots/"
+		ALERT "Finished building the 2web screenshots"
+		ALERT "Screenshots are stored in /var/cache/2web/downloads_comics/generated/2web Screenshots/"
+		ALERT "Run 'comic2web' in order to add the screenshots to the comic section of 2web"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		webDirectory=$(webRoot);
 		# run the cleanup to remove cached files older than the cache time

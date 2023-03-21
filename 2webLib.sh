@@ -300,6 +300,19 @@ function alterArticles(){
 	echo "$pageComicName"
 }
 ################################################################################
+function cpuCount(){
+		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		# if the fullspeed command has not been given split speed in half to avoid server service interruptions
+		if ! echo "$@" | grep -q -e "--fullspeed";then
+			totalCPUS=$(( $totalCPUS - 1 ))
+			if [ $totalCPUS -lt 2 ];then
+				totalCPUS=1
+			fi
+		fi
+		# output the cpu count
+		echo $totalCPUS
+}
+################################################################################
 function waitQueue(){
 	# PARALLEL PROCESSING COMMAND
 	# wait for queue to free up for next command
