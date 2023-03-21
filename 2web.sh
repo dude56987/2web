@@ -119,7 +119,7 @@ function disableApacheServer(){
 }
 ########################################################################
 function enableCronJob(){
-	cp -v "/usr/share/2web/cron" "/etc/cron.d/2web"
+	linkFile "/usr/share/2web/cron" "/etc/cron.d/2web"
 }
 ########################################################################
 function disableCronJob(){
