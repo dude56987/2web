@@ -290,13 +290,13 @@ build-deb: upgrade-hls
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over apache configs
-	#cp -v apacheConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
-	cp -v apacheConf/0000-2web-website.conf debian/etc/apache2/sites-available/
-	cp -v apacheConf/0000-2web-website-SSL.conf debian/etc/apache2/sites-available/
-	#cp -v apacheConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
+	#cp -v systemConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
+	cp -v systemConf/0000-2web-website.conf debian/etc/apache2/sites-available/
+	cp -v systemConf/0000-2web-website-SSL.conf debian/etc/apache2/sites-available/
+	#cp -v systemConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
 	# copy over the zeroconf configs to anounce the service
-	cp -v apacheConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
-	#cp -v apacheConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
+	cp -v systemConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
+	#cp -v systemConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
 	# copy over bash tab completion scripts
 	cp -v tab_complete/* debian/etc/bash_completion.d/
 	# write version info last thing before the build process of the package
