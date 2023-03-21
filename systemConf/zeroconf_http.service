@@ -20,7 +20,7 @@
 ########################################################################
 -->
 <service-group>
-	<name replace-wildcards="yes">2web http on %h</name>
+	<name replace-wildcards="yes">2web on %h</name>
 	<service>
 		<type>_http._tcp</type>
 		<port>80</port>
