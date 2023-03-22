@@ -979,6 +979,10 @@ a:visited {
 	margin: 0px;
 	background-color: var(--solidBackground);
 }
+.titleCard h4{
+	margin: 0px;
+	background-color: var(--solidBackground);
+}
 .descriptionCard h1{
 	margin: 0px;
 	background-color: var(--solidBackground);
