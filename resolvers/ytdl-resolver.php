@@ -376,7 +376,7 @@ if (array_key_exists("url",$_GET)){
 			fwrite($playlist,"#EXTM3U\n");
 			fwrite($playlist,"#PLAYLIST:$sum\n");
 			# figure out the absolute server path
-			$serverPath='http://'.$_SERVER["SERVER_ADDR"].'/';
+			$serverPath='http://'.$_SERVER["HTTP_HOST"].'/';
 
 			# write the first segment repeatedly in order to generate a buffer time for the player
 			for ($index=1;$index <= 30;$index+=1){
@@ -446,22 +446,22 @@ if (array_key_exists("url",$_GET)){
 	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local/ytdl-resolver.php?url="http://videoUrl/videoid/"';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'l/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'/ytdl-resolver.php?url="http://videoUrl/videoid/"';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo "</ul>";
 	echo "</div>";

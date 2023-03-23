@@ -76,7 +76,7 @@ foreach($sourceFiles as $sourceFile){
 				$link=file_get_contents($sourceFile);
 				/*
 				# try to find a icon for the link
-				$iconLink=md5("http://".gethostname().".local:444/iptv-resolver.php?url=\"".$link."\"");
+				$iconLink=md5("http://".$_SERVER["HTTP_HOST"]."/iptv-resolver.php?url=\"".$link."\"");
 
 				if (file_exists(md5($link).".png")){
 					# if the link is direct

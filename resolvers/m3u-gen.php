@@ -110,17 +110,17 @@ function m3u_gen($section,$title){
 			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
 			// - currently 20 variations of the randomization pattern can be created
 			$tempRand = rand(0,20);
-			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["SERVER_ADDR"]);
+			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["HTTP_HOST"]);
 		}else{
-			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
+			$cacheSum = md5($showTitle.$_SERVER["HTTP_HOST"]);
 		}
 	}else{
 		if (array_key_exists("playAt",$_GET)){
 			# the sum should be unique for each playAt argument
-			$cacheSum = md5($_GET['playAt'].$showTitle.$_SERVER["SERVER_ADDR"]);
+			$cacheSum = md5($_GET['playAt'].$showTitle.$_SERVER["HTTP_HOST"]);
 		}else{
 			// cache sum
-			$cacheSum = md5($showTitle.$_SERVER["SERVER_ADDR"]);
+			$cacheSum = md5($showTitle.$_SERVER["HTTP_HOST"]);
 		}
 	}
 
@@ -154,7 +154,7 @@ function m3u_gen($section,$title){
 				#$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
 				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
 				#$tempDataEntry = $tempDataEntry."..$filePath\n";
-				$tempDataEntry .= "http://".$_SERVER["SERVER_ADDR"]."$filePath\n";
+				$tempDataEntry .= "http://".$_SERVER["HTTP_HOST"]."$filePath\n";
 				array_push($totalFileList,$tempDataEntry);
 			}
 		}
@@ -270,7 +270,7 @@ if (array_key_exists("artist",$_GET)){
 	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local:444/m3u-gen.php?showTitle="showTitle"';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?showTitle="showTitle"';
 	echo '	</li>';
 	echo "</ul>";
 	echo "</div>";

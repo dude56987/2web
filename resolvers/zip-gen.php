@@ -51,11 +51,6 @@ function redirect($url){
 	if (array_key_exists("debug",$_GET)){
 		echo "<hr>";
 		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo '<div>';
-		echo '<video controls>';
-		echo '<source src="'.$url.'" type="video/mp4">';
-		echo '</video>';
-		echo '</div>';
 		echo "<hr>";
 		ob_flush();
 		flush();
@@ -198,6 +193,7 @@ if (array_key_exists("comic",$_GET)){
 	echo "<html>";
 	echo "<head>";
 	echo "<link rel='stylesheet' href='style.css'>";
+	echo "<title>2web Zip Generator</title>";
 	echo "</head>";
 	echo "<body>";
 	echo "<div class='settingListCard'>";
@@ -208,11 +204,10 @@ if (array_key_exists("comic",$_GET)){
 	echo "	<input class='button' width='60%' type='text' name='url'>";
 	echo "	<input class='button' type='submit' value='Cache Url'>";
 	echo "	<div>";
-	echo "		<span>Enable Debug Output<span>";
+	echo "		<span>Enable Debug Output</span>";
 	echo "		<input class='button' width='10%' type='checkbox' name='debug'>";
 	echo "	</div>";
 	echo "</form>";
-	echo '</a>';
 	echo "</div>";
 	echo "<hr>";
 	echo "<div class='settingListCard'>";
@@ -223,7 +218,7 @@ if (array_key_exists("comic",$_GET)){
 	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local/zip-gen.php?comic="comicName"';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/zip-gen.php?comic="comicName"';
 	echo '	</li>';
 	echo "</ul>";
 	echo "</div>";

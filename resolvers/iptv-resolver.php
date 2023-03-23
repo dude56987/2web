@@ -162,7 +162,7 @@ if (array_key_exists("url",$_GET)){
 	echo "<input width='60%' type='text' name='url'>";
 	echo "<input type='submit'>";
 	echo "</form>";
-	echo '<a href=\'http://'.gethostname().'.local:121/iptv-resolver.php?url="NONSENSE"\'>';
+	echo '<a href=\'http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="NONSENSE"\'>';
 	echo 'Play Failed Video';
 	echo '</a>';
 	echo "php.ini output_buffering=".ini_get("output_buffering");
@@ -170,13 +170,13 @@ if (array_key_exists("url",$_GET)){
 	echo "<h2>EXAMPLES</h2>";
 	echo "<ul>";
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local:121/iptv-resolver.php?url="http://videoUrl/videoid/"';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="http://videoUrl/videoid/"';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local:121/iptv-resolver.php?url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.gethostname().'.local:121/iptv-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo "</ul>";
 }
