@@ -86,7 +86,7 @@ echo "<div id='footer' class=''>";
 if ($writeFile){
 	ignore_user_abort(true);
 	# if any of the variables exist then the checks do not need to be re-run
-	if (! ($graphsFound || $moviesFound || $showsFound || $musicFound || $comicsFound || $channelsFound)){
+	if ( ! (isset($graphsFound) || isset($moviesFound) || isset($showsFound) || isset($musicFound) || isset($comicsFound) || isset($channelsFound))){
 		# check for section indexes to determine if buttons need drawn
 		$moviesFound=False;
 		$showsFound=False;

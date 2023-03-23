@@ -34,9 +34,9 @@ function redirect($url,$debug=false){
 # first run logout the user, then redirect them to the homepage
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	# redirect after logout and strip url of login infomation
-	redirect("https://logout:logout@".$_SERVER["SERVER_ADDR"]."/logout.php");
+	redirect("https://logout:logout@".$_SERVER["HTTP_HOST"]."/logout.php");
 }else{
-	redirect("http://".$_SERVER["SERVER_ADDR"]."/");
+	redirect("http://".$_SERVER["HTTP_HOST"]."/");
 }
 # redirect to http version of page to logout, this can not be done on the settings menu
 #if ($_SERVER['HTTPS']){

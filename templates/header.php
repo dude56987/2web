@@ -226,17 +226,17 @@ if ($_SERVER['SERVER_PORT'] == 443){
 		formatEcho("</a>",2);
 	}
 }else if ($_SERVER['SERVER_PORT'] == 443){
-	formatEcho("<a class='button headerLoginButton' href='/'>",2);
-	formatEcho("🔒",3);
+	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"]."/'>",2);
+	formatEcho("🔑",3);
 	formatEcho("<span class='headerText'>",3);
-	formatEcho("ENCRYPT CONNECTION",4);
+	formatEcho("ENCRYPT",4);
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }else{
-	formatEcho("<a class='button headerLoginButton' href='/'>",2);
-	formatEcho("🔒",3);
+	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"]."/'>",2);
+	formatEcho("🔑",3);
 	formatEcho("<span class='headerText'>",3);
-	formatEcho("ENCRYPT CONNECTION",4);
+	formatEcho("ENCRYPT",4);
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }
@@ -317,7 +317,7 @@ if ($_SERVER['SERVER_PORT'] == 443){
 	}
 }else{
 	echo "<div class='loginLogoutBox'>";
-	echo "<a class='button' href='/settings/'>";
+	echo "<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>";
 	echo "🔑";
 	echo "<span class='headerText'>";
 	echo " ENCRYPT";
