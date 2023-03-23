@@ -323,6 +323,11 @@ if (array_key_exists("q",$_GET)){
 	echo "Searching  for '$searchQuery'";
 	echo "<img id='spinner' src='/spinner.gif' />";
 	echo "</h1>\n";
+	# write blank space to bypass buffering and start loading of the search results
+	# if this is not done page will hang on a difficult search
+	for($index=0; $index<5000; $index++){
+		echo " ";
+	}
 
 	# draw the top of the search results to prevent long searches from timing out
 	flush();
@@ -382,6 +387,7 @@ if (array_key_exists("q",$_GET)){
 			appendFile($searchCacheFilePath,"<hr>");
 		}
 
+		echo "<hr>";
 		# sql episode search
 		# load database
 		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
@@ -412,7 +418,6 @@ if (array_key_exists("q",$_GET)){
 				}
 			}
 		}
-		echo "<hr>";
 
 		# search all the wikis
 		$wikiSearchResults = searchAllWiki($_GET['q'],$searchCacheFilePath);
