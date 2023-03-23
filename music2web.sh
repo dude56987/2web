@@ -516,8 +516,13 @@ function update(){
 	#createDir "$downloadDirectory"
 	# scan the sources
 	ALERT "Scanning Music Sources: $musicSources"
-	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-	totalCPUS=$(( $totalCPUS / 2 ))
+
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
+	fi
+
 	totalTracks=0
 	processedTracks=0
 	totalTrackList=""
@@ -546,34 +551,15 @@ function update(){
 		for musicPath in $musicFiles;do
 			#ALERT "MUSIC FILE PATH IN LOOP : $musicPath"
 			# block for parallel threads here if there are more threads than cpus
-			if echo "$@" | grep -q -e "--parallel";then
-				# block adding thread if there are more threads than cpus
-				while true;do
-					if [ $(jobs | wc -l) -ge $totalCPUS ];then
-						sleep 0.1
-					else
-						break
-					fi
-				done
-				#ALERT "Processing Track $musicPath"
-				processTrack "$musicPath" "$processedTracks/$totalTracks" "$@" &
-				processedTracks=$(( $processedTracks + 1 ))
-			else
-				processTrack "$musicPath" "$processedTracks/$totalTracks"
-				processedTracks=$(( $processedTracks + 1 ))
-			fi
+			# block adding thread if there are more threads than cpus
+			#ALERT "Processing Track $musicPath"
+			processTrack "$musicPath" "$processedTracks/$totalTracks" "$@" &
+			processedTracks=$(( $processedTracks + 1 ))
+			waitQueue 0.5 "$totalCPUS"
 		done
 	done
 	# block for parallel threads here
-	if echo "$@" | grep -q -e "--parallel";then
-		while true;do
-			if [ $(jobs | wc -l) -eq 0 ];then
-				break
-			else
-				sleep 0.5
-			fi
-		done
-	fi
+	blockQueue 1
 	# cleanup the music index
 	if test -f "$webDirectory/music/music.index";then
 		tempList=$(cat "$webDirectory/music/music.index" | sort -u )

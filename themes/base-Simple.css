@@ -1773,3 +1773,11 @@ svg {
 	height: 11rem;
 	line-height: 4rem;
 }
+.homeActivityGraph{
+	/*
+	border: solid var(--borderColor) 0.2rem;
+	*/
+	border-radius: 0.2rem;
+	max-width: 98%;
+	max-height: 9rem;
+}

@@ -965,14 +965,12 @@ renderPage(){
 	# if this is the last page build the index for the comic
 	#if [ $nextPage -ge $totalPages ];then
 	if [ $buildPagesIndex = true ];then
-		if ! test -f "$comicNamePath/comics.index";then
-			{
-				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-				echo "<div>$tempComicName</div>"
-				echo "</a>"
-			} > "$comicNamePath/comics.index"
-		fi
+		{
+			echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
+			echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+			echo "<div>$tempComicName</div>"
+			echo "</a>"
+		} > "$webDirectory/comics/$tempComicName/comics.index"
 
 		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
 
@@ -1346,8 +1344,9 @@ webUpdate(){
 
 	# check for parallel processing and count the cpus
 	if echo "$@" | grep -q -e "--parallel";then
-		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		totalCPUS=$(( $totalCPUS / 2 ))
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
 	fi
 
 	if echo "$@" | grep -q -e "--parallel";then
@@ -1377,19 +1376,14 @@ webUpdate(){
 				INFO "scanning comic path '$comicNamePath'"
 				# add one to the total comics
 				totalComics=$(( $totalComics + 1 ))
-				totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
 				# build the comic index page
 				if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
 					INFO "scanning single chapter comic '$comicNamePath'"
 					# if this directory contains .jpg or .png files then this is a single chapter comic
 					# - build the individual pages for the comic
-					if echo "$@" | grep -q -e "--parallel";then
-						# pause execution while no cpus are open
-						waitQueue 0.5 "$totalCPUS"
-						scanPages "$comicNamePath" "$webDirectory" single &
-					else
-						scanPages "$comicNamePath" "$webDirectory" single
-					fi
+					# pause execution while no cpus are open
+					scanPages "$comicNamePath" "$webDirectory" single &
+					waitQueue 0.5 "$totalCPUS"
 				else
 					# if this is not a single chapter comic then read the subdirectories containing
 					#   each of the individual chapters
@@ -1402,13 +1396,9 @@ webUpdate(){
 						chapterNumber=$(prefixNumber $chapterNumber)
 						# check if the chapter should be updated before running through all pages
 						# for each chapter build the individual pages
-						if echo "$@" | grep -q -e "--parallel";then
-							# pause execution while no cpus are open
-							waitQueue 0.5 "$totalCPUS"
-							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
-						else
-							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
-						fi
+						# pause execution while no cpus are open
+						scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+						waitQueue 0.5 "$totalCPUS"
 					done
 				fi
 			done
@@ -1416,9 +1406,7 @@ webUpdate(){
 		done
 	done
 	# block for parallel threads here
-	if echo "$@" | grep -q -e "--parallel";then
-		blockQueue 1
-	fi
+	blockQueue 1
 	INFO "Writing total Comics "
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
 	INFO "Checking for comic index page..."

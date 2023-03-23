@@ -634,7 +634,7 @@ processMovie(){
 					echo "<?PHP";
 					tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
 					tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempMoviePath'>\";"
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 					echo "?>"
 					echo "<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "</a>"
@@ -656,7 +656,7 @@ processMovie(){
 				echo "<?PHP";
 				tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
 				tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
-				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempMoviePath'>\";"
+				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 				echo "?>"
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
 				echo "</a>"
@@ -1185,11 +1185,8 @@ processEpisode(){
 				echo "allowfullscreen>"
 				echo "</iframe>"
 			} >> "$episodePagePath"
-			#fullRedirect="http://$(hostname).local:444/ytdl-resolver.php?url=\"$ytLink\"&webplayer=true"
-			#cacheRedirect="http://<?PHP echo \$_SERVER[]"/ytdl-resolver.php?url=\"$ytLink\""
 			cacheRedirect="/ytdl-resolver.php?url=\"$ytLink\""
 			vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$ytLink\\\""
-			fullRedirect="$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
@@ -1198,13 +1195,12 @@ processEpisode(){
 				echo "	🔗Direct Link"
 				echo "</a>"
 
-				#echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
 				echo "<a class='button hardLink' href='$cacheRedirect'>"
 				echo "	📥Cache Link"
 				echo "</a>"
 
 				echo "<?PHP";
-				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
+				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 				echo "?>";
 
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
@@ -1216,17 +1212,19 @@ processEpisode(){
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
-		#elif echo "$videoPath" | grep "http";then
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
 				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
 				# redirect mkv files to the transcoder to cache the video file for the webplayer
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then
-					fullRedirect="/transcode.php?link=\"$videoPath\""
-					echo "<source src='$fullRedirect' type='video/mp4'>"
+					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+					# build the transcoder link
+					fullRedirect="/transcode.php?link=\"$tempEpisodePath\""
+					# transcoder converts everything into the webm format
+					echo "<source src='$fullRedirect' type='video/webm'>"
 					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
-					#echo "<source src='$videoPath' type='$mimeType'>"
+					echo "<source src='$videoPath' type='$mimeType'>"
 				else
 					echo "<source src='$videoPath' type='$mimeType'>"
 				fi
@@ -1246,7 +1244,7 @@ processEpisode(){
 					echo "	📥Cache Link"
 					echo "</a>"
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$vlcCacheRedirect'>\";"
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
 					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
@@ -1265,20 +1263,20 @@ processEpisode(){
 					tempEpisodePath=$(echo "$tempEpisodePath" | sed "s/ /%20/g")
 
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
+					echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['HTTP_HOST'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
 					echo "	🔁 Continue<sup>(External)</sup>"
 					echo "</a>"
 
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"$tempEpisodePath'>\";"
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempEpisodePath'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
 					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 					echo "</a>"
 
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['SERVER_ADDR'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
+					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
 					echo "	🔁 Continue<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
@@ -1291,24 +1289,6 @@ processEpisode(){
 				echo "$episodePlot"
 				echo "</div>"
 			} >> "$episodePagePath"
-		#else
-		#	{
-		#		# build the html5 media player for local and remotly accessable media
-		#		echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-		#		echo "<source src='$episodePath$sufix' type='$mimeType'>"
-		#		echo "</$mediaType>"
-		#		echo "<div class='descriptionCard'>"
-		#		echo "<h2>$episodeTitle</h2>"
-		#		# create a hard link
-		#		echo "<a class='button hardLink' href='$episodePath$sufix'>"
-		#		echo "Hard Link"
-		#		echo "</a>"
-		#		echo "<div class='aired'>"
-		#		echo "$episodeAired"
-		#		echo "</div>"
-		#		echo "$episodePlot"
-		#		echo "</div>"
-		#	} >> "$episodePagePath"
 		fi
 		{
 			# add footer
@@ -1358,7 +1338,6 @@ processEpisode(){
 }
 ################################################################################
 processShow(){
-	#processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 	show=$1
 	showMeta=$2
 	showTitle=$3
@@ -2119,11 +2098,9 @@ function update(){
 	#addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 	# figure out the total number of CPUS for parallel processing
 	if echo "$@" | grep -q -e "--parallel";then
-		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		# if the fullspeed command has not been given split speed in half to avoid server service interruptions
-		if ! echo "$@" | grep -q -e "--fullspeed";then
-			totalCPUS=$(( $totalCPUS / 2 ))
-		fi
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
 	fi
 	# read each libary from the libary config, single path per line
 	ALERT "LIBARIES: $libaries"
@@ -2183,14 +2160,10 @@ function update(){
 						# make sure show has episodes
 						if [ $episodeSearchResults -gt 0 ];then
 							#ALERT "ADDING SHOW $show"
-							if echo "$@" | grep -q -e "--parallel";then
-								#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
-								processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
-								# pause execution while no cpus are open
-								waitQueue 0.5 "$totalCPUS"
-							else
-								processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
-							fi
+							#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+							processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
+							# pause execution while no cpus are open
+							waitQueue 0.5 "$totalCPUS"
 							# write log info from show to the log, this must be done here to keep ordering
 							# of the log and to make log show even when the state of the show is unchanged
 							#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
@@ -2205,17 +2178,12 @@ function update(){
 					fi
 				elif grep -q "<movie>" "$show"/*.nfo;then
 					#ALERT "ADDING MOVIE $show"
-					if echo "$@" | grep -q -e "--parallel";then
-						#ALERT "ADDING NEW PROCESS TO QUEUE"
-						#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
-						# this is a move directory not a show
-						processMovie "$show" "$webDirectory" &
-						# pause execution while no cpus are open
-						waitQueue 0.5 "$totalCPUS"
-					else
-						# this is a move directory not a show
-						processMovie "$show" "$webDirectory"
-					fi
+					#ALERT "ADDING NEW PROCESS TO QUEUE"
+					#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+					# this is a move directory not a show
+					processMovie "$show" "$webDirectory" &
+					# pause execution while no cpus are open
+					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
 		else
@@ -2225,9 +2193,7 @@ function update(){
 		scanForRandomBackgrounds "$webDirectory"
 	done
 	# block for parallel threads here
-	if echo "$@" | grep -q -e "--parallel";then
-		blockQueue 1
-	fi
+	blockQueue 1
 
 	# add the end to the log, add the jump to top button and finish out the html
 	logPagePath="$webDirectory/log/$(date "+%s").log"

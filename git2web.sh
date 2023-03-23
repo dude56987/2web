@@ -158,7 +158,7 @@ function buildDiffGraph(){
 
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
 	#convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
-	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 10x10 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 }
 ################################################################################
 function buildCommitGraph(){
@@ -281,6 +281,12 @@ function processRepo(){
 		# move into the cloned repo, so all work is done on the cloned repo
 		cd "$webDirectory/repos/$repoName/source/"
 
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(cpuCount)
+		else
+			totalCPUS=1
+		fi
+
 		# create data directories inside the web directory
 		createDir "$webDirectory/repos/$repoName/"
 		createDir "$webDirectory/repos/$repoName/lint/"
@@ -310,36 +316,32 @@ function processRepo(){
 		grep --invert-match --ignore-case "<meta" |\
 		grep --invert-match --ignore-case "<title" |\
 		grep --invert-match --ignore-case "<?xml" \
-		> "$webDirectory/repos/$repoName/inspector.html"
+		> "$webDirectory/repos/$repoName/inspector.html" &
+		waitQueue 0.5 "$totalCPUS"
 
 		# get the latest commit time
-		git show --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/origin.index"
+		git show --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/origin.index" &
+		waitQueue 0.5 "$totalCPUS"
 		# get the origin
-		git remote show origin > "$webDirectory/repos/$repoName/origin.index"
+		git remote show origin > "$webDirectory/repos/$repoName/origin.index" &
+		waitQueue 0.5 "$totalCPUS"
 		INFO "$repoName : Rendering gource video for $repoName"
 		# build history video in 720p
-		if echo "$@" | grep -q -e "--parallel";then
-			gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-			ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
-			"$webDirectory/repos/$repoName/repoHistory.mp4"
-		else
-			gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-			ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -bf 0 \
-			"$webDirectory/repos/$repoName/repoHistory.mp4"
-		fi
+		gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+		ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
+		"$webDirectory/repos/$repoName/repoHistory.mp4"
+		waitQueue 0.5 "$totalCPUS"
+
+		# build the thumbnail from the end of the video
+		ffmpegthumbnailer -i "$webDirectory/repos/$repoName/repoHistory.mp4" -o "$webDirectory/repos/$repoName/repoHistory.png" -s 0 -t "100%" &
+		waitQueue 0.5 "$totalCPUS"
+		# build a thumbnail of the video thumbnail
+		convert -trim -background none "$webDirectory/repos/$repoName/repoHistory.png" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/repoHistory-thumb.png" &
+		waitQueue 0.5 "$totalCPUS"
 
 		commitAddresses=$(git log --oneline | cut -d' ' -f1)
 
 		echo "$commitAddresses" > "$webDirectory/repos/$repoName/commits.index"
-
-		#IFS=$'\n'
-		#for commitAddress in $commitAddresses;do
-		#git log --oneline | cut -d' ' -f1 | while read commitAddress;do
-
-		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-			totalCPUS=$(( $totalCPUS - 1 ))
-		fi
 		echo "$commitAddresses" | while read commitAddress;do
 			INFO "$repoName : Building commit page for $commitAddress"
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
@@ -575,22 +577,17 @@ function processRepo(){
 		# build a qr code for the icon link
 		qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
 		waitQueue 0.5 "$totalCPUS"
-		#tempVideoPath="$webDirectory/repos/$repoName/repoHistory.mp4"
-		#timeStamp=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$tempVideoPath")
-		#ffmpeg -y -ss $timeStamp -i "$tempVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "/var/cache/2web/web/repos/$repoName/thumb.png"
 
 		INFO "$repoName : Waiting for parallel processing to end"
 		blockQueue 1
 		INFO "$repoName : Adding to indexes"
 		#	build the index file for this entry if one does not exist
-		#if ! test -f "$gitNamePath/repo.index";then
-			{
-				echo "<a href='/repos/$repoName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='/repos/$repoName/graph_commit_month-thumb.png' />"
-				echo "<div>$repoName</div>"
-				echo "</a>"
-			} > "$webDirectory/repos/$repoName/repos.index"
-		#fi
+		{
+			echo "<a href='/repos/$repoName/' class='indexSeries' >"
+			echo "<img loading='lazy' src='/repos/$repoName/repoHistory.png' />"
+			echo "<div>$repoName</div>"
+			echo "</a>"
+		} > "$webDirectory/repos/$repoName/repos.index"
 
 		# add to the system indexes
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
@@ -626,11 +623,6 @@ webUpdate(){
 	# link the kodi directory to the download directory
 	#ln -s "$downloadDirectory" "$webDirectory/kodi/repos"
 
-	# check for parallel processing and count the cpus
-	#if echo "$@" | grep -q -e "--parallel";then
-	#	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-	#	totalCPUS=$(( $totalCPUS / 2 ))
-	#fi
 	totalrepos=0
 
 	ALERT "Scanning libary config '$downloadDirectory'"
@@ -638,12 +630,6 @@ webUpdate(){
 	find "$downloadDirectory" -maxdepth 1 -type d | sort | while read repoSource;do
 		echo "$repoSource"
 		if test -d "$repoSource/.git/";then
-			#if echo "$@" | grep -q -e "--parallel";then
-			#	processRepo "$repoSource" &
-			#	waitQueue 0.5 "$totalCPUS"
-			#else
-			#	processRepo "$repoSource"
-			#fi
 			processRepo "$repoSource" $@
 			# increment the total repo counters
 			totalRepos=$(( $totalRepos + 1 ))
@@ -655,12 +641,6 @@ webUpdate(){
 	echo "$downloadDirectory" | sort | while read repoSource;do
 		echo "$repoSource"
 		if test -d "$repoSource/.git/";then
-			#if echo "$@" | grep -q -e "--parallel";then
-			#	processRepo "$repoSource" &
-			#	waitQueue 0.5 "$totalCPUS"
-			#else
-			#	processRepo "$repoSource"
-			#fi
 			processRepo "$repoSource" $@
 			# increment the total repo counters
 			totalRepos=$(( $totalRepos + 1 ))
@@ -668,10 +648,6 @@ webUpdate(){
 			INFO "No repo found!"
 		fi
 	done
-	# block for parallel threads here
-	#if echo "$@" | grep -q -e "--parallel";then
-	#	blockQueue 1
-	#fi
 	INFO "Writing total repos "
 	echo "$totalrepos" > "$webDirectory/repos/totalrepos.cfg"
 

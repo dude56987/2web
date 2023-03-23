@@ -54,14 +54,13 @@ function checkFileDataSum(){
 	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$filePath" | sha512sum | cut -d' ' -f1 )"
 
+	# generate the new sum for the file
+	newSum="$(cat "$filePath" | sha512sum | cut -d' ' -f1 )"
+
 	# check for a previous sum
 	if test -f "$webDirectory/sums/${moduleName}_$pathSum.cfg";then
 		# load the old sum
 		oldSum="$(cat "$webDirectory/sums/${moduleName}_$pathSum.cfg")"
-
-		# generate the new sum for the file
-		newSum="$(cat "$filePath" | sha512sum | cut -d' ' -f1 )"
-
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			#ALERT "Sum is UNCHANGED"
@@ -199,16 +198,16 @@ function cacheCheckMin(){
 		# the file exists
 		if [[ $(find "$1" -cmin "+$cacheMinutes") ]];then
 			# the file is more than "$2" minutes old, it needs updated
-			INFO "File is to old, update the file $1"
+			#INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			INFO "File in cache, do not update $1"
+			#INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		INFO "File does not exist, it must be created $1"
+		#INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -474,7 +473,8 @@ function addToIndex(){
 		# the index file exists
 		#ALERT "Looking for $indexItem in $indexPath"
 		if grep -q "$indexItem" "$indexPath";then
-			INFO "The Index '$indexPath' already contains '$indexItem'"
+			echo -n
+			#INFO "The Index '$indexPath' already contains '$indexItem'"
 		else
 			#ALERT "Adding '$indexItem' to '$indexPath'"
 			# the item is not in the index
@@ -516,7 +516,8 @@ function SQLaddToIndex(){
 		#ALERT "Looking for $indexItem in $indexPath"
 		# if the data is already stored in the database
 		if [ $(sqlite3 -cmd ".timeout $timeout" "$indexPath" "select '$indexItem' from '$databaseTable' where title = '$indexItem';" | wc -l) -gt 0 ];then
-			INFO "The Index '$indexPath' already contains '$indexItem'"
+			echo -n
+			#INFO "The Index '$indexPath' already contains '$indexItem'"
 		else
 			#INFO "Adding '$indexItem' to '$indexPath'"
 			sqlite3 -cmd ".timeout $timeout" "$indexPath" "insert into $databaseTable values('$indexItem');"

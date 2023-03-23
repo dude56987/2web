@@ -126,6 +126,174 @@ function disableCronJob(){
 	rm -v "/etc/cron.d/2web"
 }
 ########################################################################
+function recordActivityGraph(){
+	webDirectory=$(webRoot)
+	# record a round robin CSV database of active services in 30 minute intervals
+	if cacheCheckMin "/var/cache/2web/activityGraphData.index" 30;then
+		# store the current activity status in the graph
+		if test -f "$webDirectory/nfo2web.active";then
+			nfo2webStatus=1
+		else
+			nfo2webStatus=0
+		fi
+		if test -f "$webDirectory/music2web.active";then
+			music2webStatus=1
+		else
+			music2webStatus=0
+		fi
+		if test -f "$webDirectory/iptv2web.active";then
+			iptv2webStatus=1
+		else
+			iptv2webStatus=0
+		fi
+		if test -f "$webDirectory/wiki2web.active";then
+			wiki2webStatus=1
+		else
+			wiki2webStatus=0
+		fi
+		if test -f "$webDirectory/comic2web.active";then
+			comic2webStatus=1
+		else
+			comic2webStatus=0
+		fi
+		if test -f "$webDirectory/git2web.active";then
+			git2webStatus=1
+		else
+			git2webStatus=0
+		fi
+		if test -f "$webDirectory/weather2web.active";then
+			weather2webStatus=1
+		else
+			weather2webStatus=0
+		fi
+		if test -f "$webDirectory/graph2web.active";then
+			graph2webStatus=1
+		else
+			graph2webStatus=0
+		fi
+		{
+			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus"
+		} >> "/var/cache/2web/activityGraphData.index"
+		# limit log to last 36 entries, this is because this log is updated every 30 minutes
+		# - You can not > pipe a file directly with tail, so it is stored in memory fist
+		tempDatabase=$(tail -n 36 "/var/cache/2web/activityGraphData.index")
+		# write the trimmed database
+		echo "$tempDatabase" > "/var/cache/2web/activityGraphData.index"
+	fi
+}
+########################################################################
+function buildFakeActivityGraph(){
+	{
+		for index in $(seq 36);do
+			for index in $(seq 8);do
+				# build each line
+				echo -n "1,"
+			done
+			echo "1"
+		done
+	} > "/var/cache/2web/activityGraphData.index"
+}
+########################################################################
+function buildActivityGraph(){
+	# build a 24 hour graph with each block repsenting 30 minutes
+	graphData=$( cat "/var/cache/2web/activityGraphData.index" )
+	index=0
+	barWidth=20
+	textGap=$(( barWidth * 8 ))
+	graphHeight=$(( (barWidth * 9) + (barWidth / 4) ))
+	graphWidth=$((textGap + (barWidth * 36) ))
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+	# generated the paths
+	createDir "/var/cache/2web/web/generated_graphs/"
+	generatedSvgPath="/var/cache/2web/generated_graphs/activityGraph.svg"
+	generatedPngPath="/var/cache/2web/generated_graphs/2web_activity_day.png"
+	webPath="/var/cache/2web/web/activityGraph.png"
+	{
+		echo "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 $graphWidth $graphHeight\" >"
+
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 1 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >nfo2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 2 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >music2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 3 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >iptv2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 4 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >wiki2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 5 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >comic2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 6 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >git2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 7 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >weather2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 8 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >graph2web</text>"
+		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 9 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >ytdl2web</text>"
+
+		for line in $graphData;do
+			index=$(( index + 1 ))
+
+			nfo2webStatus=$(echo "$line" | cut -d',' -f1)
+			music2webStatus=$(echo "$line" | cut -d',' -f2)
+			iptv2webStatus=$(echo "$line" | cut -d',' -f3)
+			wiki2webStatus=$(echo "$line" | cut -d',' -f4)
+			comic2webStatus=$(echo "$line" | cut -d',' -f5)
+			git2webStatus=$(echo "$line" | cut -d',' -f6)
+			weather2webStatus=$(echo "$line" | cut -d',' -f7)
+			graph2webStatus=$(echo "$line" | cut -d',' -f8)
+			ytdl2webStatus=$(echo "$line" | cut -d',' -f9)
+
+			# for every 30 min write the activity to a graph
+			graphX=$(( ( $index * $barWidth ) ))
+
+			if [[ 1 -eq $nfo2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 0) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:red;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 0) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $music2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 1) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:yellow;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 1) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $iptv2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 2) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:blue;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 2) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $wiki2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 3) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:green;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 3) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $comic2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 4) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:orange;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 4) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $git2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 5) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:purple;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 5) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $weather2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 6) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:pink;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 6) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $graph2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 7) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:brown;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 7) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+			if [[ 1 -eq $ytdl2webStatus ]];then
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 8) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:teal;stroke:white;stroke-width:1\" />"
+			else
+				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 8) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			fi
+		done
+		echo "</svg>"
+	} > "$generatedSvgPath"
+
+	# render graph as image file
+	convert -background none -quality 100 "$generatedSvgPath" "$generatedPngPath"
+	#
+	linkFile "$generatedPngPath" "$webPath"
+	IFS=$IFSBACKUP
+}
+########################################################################
 function update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
@@ -135,6 +303,14 @@ function update2web(){
 	# force overwrite symbolic link to web directory
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
+
+	# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
+	recordActivityGraph
+
+	#buildFakeActivityGraph
+
+	# build the updated activity graph
+	buildActivityGraph
 
 	# if the build date of the software has changed then update the generated css themes for the site
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
@@ -380,7 +556,7 @@ function update2web(){
 
 	# install the php streaming script
 	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
-	#linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
+	linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
 
 	# link the randomFanart.php script
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/randomFanart.php"
@@ -434,6 +610,10 @@ backupMetadata(){
 	#  + album/
 	#   * album.nfo
 	#   * cover.jpg
+	# Comics
+	# - comics/*
+	#  + Get comic title from filenames and store comic titles as subfolders
+	IFSBACKUP=$IFS
 	IFS=$'\n'
 	# use find command to search and get paths to all relevent metadata from the /kodi/ directory
 	########################################################################
@@ -464,9 +644,7 @@ backupMetadata(){
 	if test -f $channelsPathRaw;then
 		zip -9 -j --grow "/var/cache/2web/backups/content_$tempTime.zip" "$channelsPathRaw"
 	fi
-	# Comics
-	# - comics/*
-	#  + Get comic title from filenames and store comic titles as subfolders
+	IFS=$IFSBACKUP
 }
 ########################################################################
 restoreSettings(){
@@ -531,6 +709,7 @@ function verifyDatabasePaths(){
 	# check live groups database
 	tables=$(sqlite3 --cmd ".timeout $timeout" "$databasePath" "select name from sqlite_master where type='table';")
 	#INFO "tables='$tables'\n"
+	IFSBACKUP=$IFS
 	IFS=$'\n'
 	for tableName in $tables;do
 		ALERT "Searching $databasePath table:$tableName"
@@ -546,6 +725,7 @@ function verifyDatabasePaths(){
 			fi
 		done
 	done
+	IFS=$IFSBACKUP
 }
 ################################################################################
 function waitForIdleServer(){
@@ -805,6 +985,9 @@ main(){
 		rm -rv /var/cache/2web/web/*
 		disableApacheServer
 		disableCronJob
+	elif [ "$1" == "-F" ] || [ "$1" == "--fake-graph" ] || [ "$1" == "fake-graph" ];then
+		buildFakeActivityGraph
+		buildActivityGraph
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then

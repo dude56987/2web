@@ -80,7 +80,7 @@ examineIconLink(){
 	###################################################################
 	iconLength=$(echo -n "$iconLink" | wc -c)
 	sum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-	INFO "Icon Sum=$sum"
+	#INFO "Icon Sum=$sum"
 	localIconPath="$(webRoot)/live/icons/$sum.png"
 	localIconThumbPath="$(webRoot)/live/thumbs/$sum-thumb.png"
 	localIconThumbMiniPath="$(webRoot)/live/thumbs/$sum-thumb-mini.png"
@@ -161,9 +161,9 @@ examineIconLink(){
 			timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
 		fi
 		# create the icon thumbnail for the web interface
-		INFO "Creating image thumbnail..."
+		#INFO "Creating image thumbnail..."
 		timeout 600 convert "$localIconPath" -adaptive-resize 128x128\! "$localIconThumbPath"
-		INFO "Creating image icon..."
+		#INFO "Creating image icon..."
 		timeout 600 convert "$localIconPath" -adaptive-resize 32x32\! "$localIconThumbMiniPath"
 	fi
 }
@@ -242,7 +242,7 @@ function process_M3U(){
 	webDirectory=$2
 	radioFile=$3
 	if [[ "$radioFile" == "" ]];then
-		INFO "radio not set, turn radio to false"
+		#INFO "radio not set, turn radio to false"
 		radioFile="false"
 	fi
 	################################################################################
@@ -270,32 +270,84 @@ function process_M3U(){
 			title=$(cleanText "$title")
 			#echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$line
-			INFO "Found Link = $link"
+			#INFO "Found Link = $link"
 			radio="false"
-			if [[ "$radioFile" == "true" ]];then
-				INFO "Radio file is being scanned"
+			if echo "$radioFile" | grep -q "true";then
+				#INFO "Radio file is being scanned"
 				# this is a radio file process all entries as radio entries
 				radio="true"
 			elif echo "$lineCaught" | grep -Eq "radio=[\",']true";then
-				INFO "Radio line found mark radio tag true"
+				#INFO "Radio line found mark radio tag true"
 				# if the line is a radio entry
 				radio="true"
 			else
-				INFO "No radio true tag found mark radio as false"
+				#INFO "No radio true tag found mark radio as false"
 				radio="false"
 			fi
 			iconLink=$(getIconLink "$lineCaught")
-			INFO "Icon Link = $iconLink"
+			#INFO "Icon Link = $iconLink"
 			iconSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-			INFO "Icon MD5 = $iconSum"
+			#INFO "Icon MD5 = $iconSum"
 			# check for group title
-			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/.com/ /g" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | sed "s/\./ /g"| tr -s ' ')
+			# NOTE: /Ig is for case insensitve search
+			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/.com/ /g" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | sed "s/\./ /g" | sed "s/-/ /g" | sed "s/:/ /g" | sed "s/&/ /g" | sed "s/and//Ig" | tr -s ' ')
+			# check for groups stored inside the title itself, and remove them from the title
+			if echo "$title" | grep -q --ignore-case "weather";then
+				groupTitle="$groupTitle Weather"
+			fi
+			if echo "$title" | grep -q --ignore-case "geoblocked";then
+				groupTitle="$groupTitle Geoblocked"
+			fi
+			if echo "$title" | grep -q --ignore-case "270p";then
+				groupTitle="$groupTitle 270p"
+			fi
+			if echo "$title" | grep -q --ignore-case "360p";then
+				groupTitle="$groupTitle 360p"
+			fi
+			if echo "$title" | grep -q --ignore-case "476p";then
+				groupTitle="$groupTitle 476p"
+			fi
+			if echo "$title" | grep -q --ignore-case "480p";then
+				groupTitle="$groupTitle 480p"
+			fi
+			if echo "$title" | grep -q --ignore-case "582p";then
+				groupTitle="$groupTitle 582p"
+			fi
+			if echo "$title" | grep -q --ignore-case "720p";then
+				groupTitle="$groupTitle 720p"
+			fi
+			if echo "$title" | grep -q --ignore-case "1080p";then
+				groupTitle="$groupTitle 1080p"
+			fi
+			if echo "$title" | grep -q --ignore-case "west";then
+				groupTitle="$groupTitle West"
+			fi
+			if echo "$title" | grep -q --ignore-case "east";then
+				groupTitle="$groupTitle East"
+			fi
+			if echo "$title" | grep -q --ignore-case "not 247";then
+				groupTitle="$groupTitle Not_24_7"
+			fi
+			if echo "$title" | grep -q --ignore-case "english";then
+				groupTitle="$groupTitle English"
+			fi
+			if echo "$title" | grep -q --ignore-case "Latino";then
+				groupTitle="$groupTitle Latino"
+			fi
+			if echo "$title" | grep -q --ignore-case "español";then
+				groupTitle="$groupTitle español"
+			fi
+			# look for the strange spaced out "game shows" tags and combine them
+			if echo "$groupTitle" | grep -q --ignore-case "game shows";then
+				# remove game and shows tags
+				groupTitle="$(echo "$groupTitle" | sed "s/game//Ig" | sed "s/shows//Ig")"
+				# add the combined game-show tag
+				groupTitle="$groupTitle Game_Shows"
+			fi
 
-			ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
-			ALERT "'$title' contains groups '$groupTitle'"
+			#ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
+			#ALERT "'$title' contains groups '$groupTitle'"
 
-			#IFS=$IFS_NORMAL
-			#echo "$groupTitle" | while read -r group;do
 			# during the building of the m3u file split out blocked items
 			for group in $groupTitle;do
 				# check each channel group to see if the group is in the blocked groups
@@ -330,14 +382,14 @@ function process_M3U(){
 					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
 				fi
 			done
-			ALERT "addChannel='$addChannel'..."
+			#ALERT "addChannel='$addChannel'..."
 			# if the channel was not blocked
 			if [ "$addChannel" == "true" ];then
 				INFO "Building channel $title thumbnail..."
 				# try to download or create the thumbnail
 				examineIconLink "$iconLink" "$link" "$title" "$radio"
 
-				ALERT "Writing channel $title info to disk..."
+				#ALERT "Writing channel $title info to disk..."
 				# Write the new version of the lines to the outputFile
 				webIconPath="http://$(hostname).local/live/icons/$iconSum.png"
 				# write the raw channel file
@@ -354,7 +406,8 @@ function process_M3U(){
 					echo "$link"
 				} >> "$webDirectory/live/channels.index"
 			else
-				ALERT "Channel $title is blocked, addChannel=$addChannel..."
+				echo -n
+				#ALERT "Channel $title is blocked, addChannel=$addChannel..."
 			fi
 			################################################################################
 			# increment the channel number
@@ -390,16 +443,16 @@ function cacheCheck(){
 		# the file exists
 		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
 			# the file is more than "$2" days old, it needs updated
-			INFO "File is to old, update the file $1"
+			#INFO "File is to old, update the file $1"
 			return 0
 		else
 			# the file exists and is not old enough in cache to be updated
-			INFO "File in cache, do not update $1"
+			#INFO "File in cache, do not update $1"
 			return 1
 		fi
 	else
 		# the file does not exist, it needs created
-		INFO "File does not exist, it must be created $1"
+		#INFO "File does not exist, it must be created $1"
 		return 0
 	fi
 }
@@ -421,7 +474,7 @@ function processLink(){
 		radioFile="false"
 	fi
 	################################################################################
-	ALERT "Processing Link '$link'"
+	#ALERT "Processing Link '$link'"
 	INFO "Channels Path '$channelsPath'"
 	# check if link is a comment
 	if echo -n "$link" | grep -Eq "^#";then
@@ -446,8 +499,11 @@ function processLink(){
 			# convert multuple epg files into a master epg.xml on the server
 			# convert .tar.gz and .xml EPG files into a single master EPGA
 			tempEPGsum=$(echo "$link" | md5sum | cut -d' ' -f1)
-			# epg data updates once every 90 minutes per epg link
-			if cacheCheckMin "$webDirectory/live/epg_cache/$tempEPGsum.index" "90";then
+			# - epg data updates once every 45 minutes per epg link
+			# - most epgs now only contain the next 90 minutes of guide data
+			# - there is also a delay for the clients to update individually when kodi is connected
+			# TODO: make this into a setting in the web interface
+			if cacheCheckMin "$webDirectory/live/epg_cache/$tempEPGsum.index" "45";then
 				createDir "$webDirectory/live/epg_cache/"
 				timeout 120 curl -L --silent "$link" > "$webDirectory/live/epg_cache/$tempEPGsum.index"
 			fi
@@ -531,14 +587,14 @@ function processLink(){
 					# if the line is a radio entry
 					ERROR "Radio line found mark radio tag true"
 					radio="true"
-				elif [[ "$radioFile" == "true" ]];then
+				elif echo "$radioFile" | grep -q "true";then
 					ERROR "Radio file is being scanned"
 					radio="true"
 				else
 					INFO "Found generated video entry set radio to false"
 					radio="false"
 				fi
-				ALERT "Adding channel '$fileName' to m3u..."
+				#ALERT "Adding channel '$fileName' to m3u..."
 				# add the info to the database
 				#addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/channels.index"
 				#addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/channels.index"
@@ -780,8 +836,8 @@ fullUpdate(){
 	done
 	echo "$processedSources" > "$webDirectory/live/totalSources.index"
 	# after processing all configs copy the temp channels path over
-	cp -v "$channelsPath" "$channelsOutputPath"
-	cp -v "$channelsRawPath" "$channelsRawOutputPath"
+	cp "$channelsPath" "$channelsOutputPath"
+	cp "$channelsRawPath" "$channelsRawOutputPath"
 
 	# cleanup indexes
 	# - do not cleanup /live/channels.index as it is a placeholder for channels.m3u not a index
@@ -814,13 +870,13 @@ function buildPage(){
 	localLinkSig="http://$(hostname).local/live/"
 	################################################################################
 	# check for .local domain indicating a local link
-	if echo -n "$link" | grep -q --ignore-case ".local";then
-		# cleanup the local string from the link as absolute paths will break resolution
-		link=${link//$localLinkSig}
-		# remove leading and trailing parathensis added from link
-		link=${link//^\"}
-		link=${link//\"$}
-	fi
+	#if echo -n "$link" | grep -q --ignore-case ".local";then
+	#	# cleanup the local string from the link as absolute paths will break resolution
+	#	link=${link//$localLinkSig}
+	#	# remove leading and trailing parathensis added from link
+	#	link=${link//^\"}
+	#	link=${link//\"$}
+	#fi
 	if echo -n "$link" | grep -q --ignore-case "youtube.com";then
 		# embed youtube livestream links into the webpage
 		yt_id=${link//*watch?v=}
@@ -960,12 +1016,15 @@ webGen(){
 	echo -n "" > "$channelListPath"
 	################################################################################
 	# build the channel list
-	INFO "Building channel link list."
+	#INFO "Building channel link list."
 	################################################################################
 	# build each channel page
 	# - channel pages ignore --in-progress to prevent refresh during playback
 	################################################################################
+	totalChannelCount=$(echo "$channels" | wc -l)
+	channelCounter=0
 	echo "$channels" | while read line;do
+		channelCounter=$((channelCounter + 1))
 		# if a info line was detected on the last line
 		#INFO "building channel page for line = $line"
 		#INFO "Line Caught = $line"
@@ -983,6 +1042,7 @@ webGen(){
 				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 				# check for group title
 				groupTitle=$(getTVG "$lineCaught" "group-title")
+				INFO "Building Web Channel $channelCounter/$totalChannelCount: $title in groups $groupTitle"
 				#INFO "Found Title = $title"
 				#INFO "Found Link = $link"
 				#INFO "Icon Link = $iconLink"
@@ -1062,18 +1122,15 @@ webGen(){
 					echo "</div>"
 
 					echo "</div>"
-
 					echo "	<div class='channelList'>"
 					# create the line that will be replaced by the link list to all the channels
 					echo "		<?PHP";
 					echo "			include('/var/cache/2web/web/live/channelList.php')";
 					echo "		?>";
 					echo "	</div>"
-
 					echo "</div>"
 
 					echo "<div>";
-
 					echo "<br>"
 					echo "<div class='descriptionCard'>"
 					echo "	<a class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
@@ -1089,11 +1146,22 @@ webGen(){
 					for group in $groupTitle;do
 						echo "	<a class='button groupButton tag' href='/live/?filter=$group'>$group</a>"
 					done
+					echo "	<table>"
+					echo "		<tr>"
+					echo "			<th>M3U Data</th>"
+					echo "		</tr>"
+					echo "		<tr>"
+					echo "			<td>$lineCaught</td>"
+					echo "		</tr>"
+					echo "		<tr>"
+					echo "			<td>$link</td>"
+					echo "		</tr>"
+					echo "	</table>"
 					echo "</div>"
 					# add footer
 					echo "<?PHP";
-					echo "include('/var/cache/2web/web/randomChannels.php');";
-					echo "include('/var/cache/2web/web/footer.php');";
+					echo "	include('/var/cache/2web/web/randomChannels.php');";
+					echo "	include('/var/cache/2web/web/footer.php');";
 					echo "?>";
 					# add space for jump button when scrolled all the way down
 					echo "<hr class='topButtonSpace'>"
@@ -1184,7 +1252,7 @@ webGen(){
 	done
 
 	# copy over the new versions of the generated webpages
-	cp -v "$channelListPath" "$channelOutputPath"
+	cp "$channelListPath" "$channelOutputPath"
 }
 ################################################################################
 resetCache(){

@@ -547,7 +547,7 @@ if( ! function_exists("displayIndexWithPages")){
 ################################################################################
 if( ! function_exists("checkPort")){
 	function checkPort($port){
-		$connection = @fsockopen($_SERVER['SERVER_ADDR'], $port, $errorNum, $errorStr, 30);
+		$connection = @fsockopen($_SERVER['HTTP_HOST'], $port, $errorNum, $errorStr, 30);
 		if (is_resource($connection)){
 			fclose($connection);
 			return true;
@@ -561,7 +561,7 @@ if( ! function_exists("checkPort")){
 if( ! function_exists("checkServerPath")){
 	function checkServerPath($subDir){
 		# build the url
-		$url = "http://".$_SERVER['SERVER_ADDR'].$subDir;
+		$url = "http://".$_SERVER['HTTP_HOST'].$subDir;
 		// initilize curl the the url
 		$http = curl_init($url);
 		# set the return transfer option to prevent output of url data
@@ -704,7 +704,7 @@ if( ! function_exists("drawServicesWidget")){
 
 		foreach(availableServicesArray() as $serviceData){
 			if (checkPort($serviceData[1])){
-				$serviceLink="http://".$_SERVER['SERVER_ADDR'].":".$serviceData[1];
+				$serviceLink="http://".$_SERVER['HTTP_HOST'].":".$serviceData[1];
 				$qrSum=md5($serviceLink);
 				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
 					# set qr code to be generated
@@ -723,7 +723,7 @@ if( ! function_exists("drawServicesWidget")){
 
 		foreach(availablePathServicesArray() as $serviceData){
 			if (checkServerPath($serviceData[1])){
-				$serviceLink="http://".$_SERVER['SERVER_ADDR'].$serviceData[1];
+				$serviceLink="http://".$_SERVER['HTTP_HOST'].$serviceData[1];
 				$qrSum=md5($serviceLink);
 				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
 					# set qr code to be generated
@@ -765,7 +765,7 @@ if( ! function_exists("checkServices")){
 				echo "			<a id='$serviceData[0]' href='http://localhost:$serviceData[1]'>http://localhost:$serviceData[1]</a>";
 				echo "		</td>";
 				echo "		<td>";
-				echo "			<a id='$serviceData[0]' href='http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]'>http://".$_SERVER['SERVER_ADDR'].":$serviceData[1]</a>";
+				echo "			<a id='$serviceData[0]' href='http://".$_SERVER['HTTP_HOST'].":$serviceData[1]'>http://".$_SERVER['HTTP_HOST'].":$serviceData[1]</a>";
 				echo "		</td>";
 				echo "		<td>$serviceData[2]</td>";
 				echo "	</tr>";
@@ -789,13 +789,13 @@ if( ! function_exists("checkPathServices")){
 				echo "			<a href='http://".gethostname().".local$serviceData[1]'>http://".gethostname().".local$serviceData[1]</a>";
 				echo "		</td>";
 				echo "		<td>";
-				echo "			<a href='http://".$_SERVER['SERVER_ADDR']."$serviceData[1]'>http://".gethostname()."$serviceData[1]</a>";
+				echo "			<a href='http://".gethostname()."$serviceData[1]'>http://".gethostname()."$serviceData[1]</a>";
 				echo "		</td>";
 				echo "		<td>";
 				echo "			<a href='http://localhost$serviceData[1]'>http://localhost$serviceData[1]</a>";
 				echo "		</td>";
 				echo "		<td>";
-				echo "			<a href='http://".$_SERVER['SERVER_ADDR'].$serviceData[1]."'>http://".$_SERVER['SERVER_ADDR'].$serviceData[1]."</a>";
+				echo "			<a href='http://".$_SERVER['HTTP_HOST'].$serviceData[1]."'>http://".$_SERVER['HTTP_HOST'].$serviceData[1]."</a>";
 				echo "		</td>";
 				echo "		<td>$serviceData[2]</td>";
 				echo "	</tr>";
@@ -909,5 +909,5 @@ if( ! function_exists("debug")){
 		}
 	}
 }
-################################################################################
+########################################################################
 ?>
