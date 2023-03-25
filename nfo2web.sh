@@ -1614,7 +1614,7 @@ function addToLog(){
 		echo -e "<td>"
 		echo -e "$errorDescription" | txt2html --extract
 		echo -e "</td>"
-		echo -e "<td>"
+		echo -e "<td class='logDetails'>"
 		# convert the error details into html
 		echo -e "$errorDetails" | txt2html --extract
 		echo -e "</td>"
