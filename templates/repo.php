@@ -191,7 +191,7 @@ if (array_key_exists("inspector",$_GET)){
 	if (in_array($graphName,$graphTitles)){
 		$graphName=$_GET['graph'];
 	}else{
-		$graphName="week";
+		$graphName="commit_week";
 	}
 	echo "<div class='settingListCard'>";
 	echo "<div class='listCard'>";
@@ -222,7 +222,7 @@ if (array_key_exists("inspector",$_GET)){
 
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Commits By Month</h2>\n";
-	echo "	<a href='graph_commit_month.png' class=''>";
+	echo "	<a href='?graph=commit_month' class=''>";
 	echo "		<img class='gitCommitListMonthGraph' src='graph_commit_month.png' />";
 	echo "	</a>";
 	echo "</div>\n";
@@ -315,7 +315,7 @@ if (array_key_exists("inspector",$_GET)){
 	#include("graph.svg");
 	echo "</div>";
 	if (file_exists("repoHistory.mp4")){
-		echo "	<video controls poster='graph_commit_month.png'>\n";
+		echo "	<video controls poster='repoHistory.png'>\n";
 		echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
 		echo "	</video>\n";
 	}

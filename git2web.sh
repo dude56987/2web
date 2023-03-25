@@ -330,10 +330,17 @@ function processRepo(){
 		gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
 		ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
 		"$webDirectory/repos/$repoName/repoHistory.mp4"
-		waitQueue 0.5 "$totalCPUS"
-
-		# build the thumbnail from the end of the video
-		ffmpegthumbnailer -i "$webDirectory/repos/$repoName/repoHistory.mp4" -o "$webDirectory/repos/$repoName/repoHistory.png" -s 0 -t "100%" &
+		# block until video rendering is done, the video render will use all of the cpu cores anyway
+		blockQueue 1
+		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support
+		# build thumbnail for repo from video or from graphs if video does not render
+		if test -f "$webDirectory/repos/$repoName/repoHistory.mp4";then
+			# build the thumbnail from the end of the video
+			ffmpegthumbnailer -i "$webDirectory/repos/$repoName/repoHistory.mp4" -o "$webDirectory/repos/$repoName/repoHistory.png" -s 0 -t "100%" &
+		else
+			# if no video was rendered use generated graphs for thumbnail
+			linkFile "$webDirectory/repos/$repoName/graph_commit_month.png" "$webDirectory/repos/$repoName/repoHistory.png"
+		fi
 		waitQueue 0.5 "$totalCPUS"
 		# build a thumbnail of the video thumbnail
 		convert -trim -background none "$webDirectory/repos/$repoName/repoHistory.png" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/repoHistory-thumb.png" &
