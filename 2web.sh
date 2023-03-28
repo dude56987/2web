@@ -288,7 +288,7 @@ function buildActivityGraph(){
 	} > "$generatedSvgPath"
 
 	# render graph as image file
-	convert -background none -quality 100 "$generatedSvgPath" "$generatedPngPath"
+	convert -background none -quality 100 -font "OpenDyslexic-Bold" "$generatedSvgPath" "$generatedPngPath"
 	#
 	linkFile "$generatedPngPath" "$webPath"
 	IFS=$IFSBACKUP
