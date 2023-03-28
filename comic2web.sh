@@ -802,7 +802,8 @@ renderPage(){
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
 				# if this is the last page create the zip file
-				zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
+				echo -n
+				#zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
 			fi
 		fi
 	else
@@ -814,7 +815,8 @@ renderPage(){
 		linkFile "$imagePath" "$webDirectory/kodi/comics/$pageComicName/$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if this is the last page create the zip file
-			zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
+			echo -n
+			#zip -jrqT -9 "$webDirectory/comics/$pageComicName/$pageComicName.cbz" "."
 		fi
 	fi
 	# check next and previous pages to make sure they can be linked to
@@ -1035,6 +1037,11 @@ renderPage(){
 			echo "		<span class='downloadIcon'>↓</span>"
 			echo "		Download CBZ"
 			echo "	</a>"
+			echo "	<a class='button' href='scroll.php'>"
+			echo "		📜 Scroll View"
+			echo "	</a>"
+			# also link the scroll view page
+			linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/scroll.php"
 			# get the total comic book pages, pages are jpg files, thumbnails are png files
 			totalComicBookPages=0
 			if [ $isChapter = true ];then
@@ -1155,6 +1162,9 @@ renderPage(){
 					echo "		<span class='downloadIcon'>↓</span>"
 					echo "		Download CBZ"
 					echo "	</a>"
+					echo "	<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName'>"
+					echo "		📜 Scroll View"
+					echo "	</a>"
 					echo "<div class='chapterTitleBox'>"
 					if echo "$trueChapterTitle" | grep -q "[[:alpha:]]";then
 						echo "$trueChapterTitle"
@@ -1165,7 +1175,6 @@ renderPage(){
 					echo "</div>"
 					echo "<div class='settingListCard'>"
 				} > "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
-
 				# build the individual image index for this chapter
 				find -L "$webDirectory/comics/$pageComicName/$tempChapterName/" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | sort | while read imagePath;do
 					# single chapter of a multi chapter comic

@@ -795,6 +795,10 @@ a:visited {
 	height: 100vh !important;
 	height: -webkit-fill-available !important;
 }
+.comicScrollViewImg{
+	max-width: 100%;
+	min-width: 60%;
+}
 /*
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
