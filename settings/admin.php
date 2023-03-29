@@ -75,7 +75,7 @@ function outputLog($stringData){
 }
 ////////////////////////////////////////////////////////////////////////////////
 function setModStatus($modName,$modStatus){
-	outputLog("Setting graph2web status to ".$modStatus);
+	outputLog("Setting $modName status to ".$modStatus);
 	# read the link and create a custom config
 	$configPath="/etc/2web/mod_status/".$modName.".cfg";
 	outputLog("Checking for Config file ".$configPath);
@@ -558,7 +558,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "<hr><a class='button' href='/settings/modules.php#weather2webStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("kodi2webStatus",$_POST)){
-	$status=$_POST['weather2webStatus'];
+	$status=$_POST['kodi2webStatus'];
 	setModStatus("kodi2web",$status);
 	echo "<hr><a class='button' href='/settings/modules.php#kodi2webStatus'>BACK</a><hr>";
 	clear();
@@ -566,6 +566,11 @@ if (array_key_exists("newUserName",$_POST)){
 	$status=$_POST['ytdl2nfoStatus'];
 	setModStatus("ytdl2nfo",$status);
 	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfoStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("git2webStatus",$_POST)){
+	$status=$_POST['git2webStatus'];
+	setModStatus("git2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#git2webStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];

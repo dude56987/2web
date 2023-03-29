@@ -129,7 +129,7 @@ foreach($modules as $module){
 		echo "				<li>";
 		echo "					Enable or disable extraction of .zim files in wiki directory to the website.";
 		echo "				</li>";
-	}elseif ($module == "kodi2web"){
+	}elseif ($module == "git2web"){
 		echo "				<li>";
 		echo "					Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.";
 		echo "				</li>";
