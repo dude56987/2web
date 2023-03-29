@@ -251,30 +251,6 @@ function updateCerts(){
 	fi
 }
 ########################################################################
-function checkModStatus(){
-	configFile="$1"
-	if test -f "/etc/2web/mod_status/$configFile";then
-		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/$configFile";then
-			# the module is enabled
-			echo "Preparing to process $configFile..."
-		else
-			# the module is not enabled
-			# - remove the files and directory if they exist
-			nuke
-			exit
-		fi
-	else
-		createDir "/etc/2web/mod_status/"
-		# the config does not exist at all create the default one
-		# - the default status for graph2web should be disabled
-		echo "enabled" > "/etc/2web/mod_status/$configFile"
-		chown www-data:www-data "/etc/2web/mod_status/$configFile"
-		# exit the script since by default the module is disabled
-		exit
-	fi
-}
-################################################################################
 function alterArticles(){
 	pageComicName=$1
 	# alter the title to make articles(a, an, the) sort correctly
@@ -396,6 +372,23 @@ function lockProc(){
 		ALERT "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
 		trap "rm $webDirectory/${procName}.active" EXIT
+	fi
+}
+################################################################################
+function returnModStatus(){
+	moduleName="$1"
+	# the config exists check the config
+	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
+		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
+			ALERT "MOD IS ENABLED!"
+			return 0
+		else
+			ALERT "MOD IS DISABLED!"
+			return 1
+		fi
+	else
+		ALERT "MOD IS DISABLED!"
+		return 1
 	fi
 }
 ################################################################################

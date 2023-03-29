@@ -199,28 +199,98 @@ function buildActivityGraph(){
 	graphData=$( cat "/var/cache/2web/activityGraphData.index" )
 	index=0
 	barWidth=20
-	textGap=$(( barWidth * 8 ))
-	graphHeight=$(( (barWidth * 9) + (barWidth / 4) ))
-	graphWidth=$((textGap + (barWidth * 36) ))
 	IFSBACKUP=$IFS
 	IFS=$'\n'
 	# generated the paths
-	createDir "/var/cache/2web/web/generated_graphs/"
-	generatedSvgPath="/var/cache/2web/generated_graphs/activityGraph.svg"
+	createDir "/var/cache/2web/generated_graphs/"
+	generatedSvgPath="/var/cache/2web/generated_graphs/2web_activity_day.svg"
 	generatedPngPath="/var/cache/2web/generated_graphs/2web_activity_day.png"
 	webPath="/var/cache/2web/web/activityGraph.png"
-	{
-		echo "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 $graphWidth $graphHeight\" >"
+	graphHeightCounter=0
+	graphHeaderData=""
+	# figure out enabled modules and build header text
+	if returnModStatus "nfo2web";then
+		nfo2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >nfo2web</text>\n"
+		nfo2webEnabled=1
+	else
+		nfo2webEnabled=0
+	fi
+	if returnModStatus "music2web";then
+		music2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >music2web</text>\n"
+		music2webEnabled=1
+	else
+		music2webEnabled=0
+	fi
+	if returnModStatus "iptv2web";then
+		iptv2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >iptv2web</text>\n"
+		iptv2webEnabled=1
+	else
+		iptv2webEnabled=0
+	fi
+	if returnModStatus "wiki2web";then
+		wiki2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >wiki2web</text>\n"
+		wiki2webEnabled=1
+	else
+		wiki2webEnabled=0
+	fi
+	if returnModStatus "comic2web";then
+		comic2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >comic2web</text>\n"
+		comic2webEnabled=1
+	else
+		comic2webEnabled=0
+	fi
+	if returnModStatus "git2web";then
+		git2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >git2web</text>\n"
+		git2webEnabled=1
+	else
+		git2webEnabled=0
+	fi
+	if returnModStatus "weather2web";then
+		weather2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >weather2web</text>\n"
+		weather2webEnabled=1
+	else
+		weather2webEnabled=0
+	fi
+	if returnModStatus "graph2web";then
+		graph2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >graph2web</text>\n"
+		graph2webEnabled=1
+	else
+		graph2webEnabled=0
+	fi
+	if returnModStatus "ytdl2nfo";then
+		ytdl2nfoHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >ytdl2nfo</text>\n"
+		ytdl2nfoEnabled=1
+	else
+		ytdl2nfoEnabled=0
+	fi
 
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 1 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >nfo2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 2 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >music2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 3 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >iptv2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 4 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >wiki2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 5 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >comic2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 6 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >git2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 7 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >weather2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 8 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >graph2web</text>"
-		echo "<text x=\"$(( 0 ))\" y=\"$(( barWidth * 9 ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >ytdl2web</text>"
+	textGap=$(( barWidth * 8 ))
+	graphHeight=$(( (barWidth * graphHeightCounter) + (barWidth / 4) ))
+	graphWidth=$((textGap + (barWidth * 36) ))
+
+	{
+		# - add the graph header data after the header
+		# - while building the header it figures out the height of the graph based on enabled modules so it must be
+		#   added after the text headers are added as guidelines for the graph
+		echo -e "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 $graphWidth $graphHeight\" >\n$graphHeaderData"
 
 		for line in $graphData;do
 			index=$(( index + 1 ))
@@ -233,55 +303,73 @@ function buildActivityGraph(){
 			git2webStatus=$(echo "$line" | cut -d',' -f6)
 			weather2webStatus=$(echo "$line" | cut -d',' -f7)
 			graph2webStatus=$(echo "$line" | cut -d',' -f8)
-			ytdl2webStatus=$(echo "$line" | cut -d',' -f9)
+			ytdl2nfoStatus=$(echo "$line" | cut -d',' -f9)
 
 			# for every 30 min write the activity to a graph
 			graphX=$(( ( $index * $barWidth ) ))
 
-			if [[ 1 -eq $nfo2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 0) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:red;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 0) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $nfo2webEnabled ]];then
+				if [[ 1 -eq $nfo2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * nfo2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:red;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * nfo2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $music2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 1) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:yellow;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 1) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $music2webEnabled ]];then
+				if [[ 1 -eq $music2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * music2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:yellow;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * music2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $iptv2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 2) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:blue;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 2) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $iptv2webEnabled ]];then
+				if [[ 1 -eq $iptv2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * iptv2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:blue;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * iptv2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $wiki2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 3) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:green;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 3) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $wiki2webEnabled ]];then
+				if [[ 1 -eq $wiki2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * wiki2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:green;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * wiki2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $comic2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 4) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:orange;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 4) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $comic2webEnabled ]];then
+				if [[ 1 -eq $comic2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * comic2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:orange;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * comic2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $git2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 5) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:purple;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 5) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $git2webEnabled ]];then
+				if [[ 1 -eq $git2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * git2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:purple;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * git2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $weather2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 6) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:pink;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 6) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $weather2webEnabled ]];then
+				if [[ 1 -eq $weather2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * weather2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:pink;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * weather2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $graph2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 7) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:brown;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 7) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $graph2webEnabled ]];then
+				if [[ 1 -eq $graph2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graph2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:brown;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graph2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
-			if [[ 1 -eq $ytdl2webStatus ]];then
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 8) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:teal;stroke:white;stroke-width:1\" />"
-			else
-				echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( ($barWidth * 8) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			if [[ 1 -eq $ytdl2nfoEnabled ]];then
+				if [[ 1 -eq $ytdl2nfoStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:teal;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
 			fi
 		done
 		echo "</svg>"
