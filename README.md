@@ -12,6 +12,7 @@ Generate a website for use on a LAN(Local Area Network) as a http/https accessib
  - Live TV
  - Live Radio
  - Weather Forecasts
+ - Wikis
  - System Graphs
  - Git Repositories
 
@@ -20,7 +21,9 @@ Generate a website for use on a LAN(Local Area Network) as a http/https accessib
  - NO API KEYS REQUIRED
  - Local Search
  - WEB Interface compatible with DESKTOP, PHONES, and TABLETS
- - Add web addresses to include any website or individual user channel on sites supported by ([yt-dlp](https://github.com/yt-dlp/yt-dlp)/[youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)) as a show in the media libary
+ - Add wikis from locally downloaded [ZIM](https://wiki.openzim.org/wiki/OpenZIM) files
+ - Generate reports for local and remote git repositories
+ - Add web addresses to include any website or individual user channel on sites supported by ([yt-dlp](https://github.com/yt-dlp/yt-dlp)/[youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)) as a show in the media library
  - Add web addresses of online comics to cache them locally in your comics section with [gallery-dl](https://github.com/mikf/gallery-dl)
  - Add book collections containing .cbz .txt .pdf .zip or simple folders containing image files.
  - Add music collections and music is auto-sorted based on id3 tag information
