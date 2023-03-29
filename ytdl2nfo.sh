@@ -168,7 +168,8 @@ ytdl2kodi_channel_extractor(){
 	# cache downloaded playlists for 24 hours
 	# true if file is older than 1 day or does not exist
 	#set -x
-	if cacheCheck "$webDirectory/sums/ytdl_channel_$channelSum.cfg" "1";then
+	# every 5 hours = 300 minutes
+	if cacheCheckMin "$webDirectory/sums/ytdl_channel_$channelSum.cfg" "300";then
 		echo "[INFO]: Updatng the cached playlist..."
 		# try to rip as a playlist
 		if test -f /usr/local/bin/yt-dlp;then
@@ -514,6 +515,8 @@ ytdl2kodi_channel_meta_extractor(){
 ytdl2kodi_reset_cache(){
 	if test -f /etc/2web/ytdl/downloadPath.cfg;then
 		downloadPath="$(cat /etc/2web/ytdl/downloadPath.cfg)"
+		# remove the download data stored
+		rm -rv "$downloadPath"/*
 		# empty the databases
 		rm -rv "/etc/2web/ytdl/episodeDatabase/"
 		mkdir -p "/etc/2web/ytdl/episodeDatabase/"
@@ -1282,15 +1285,9 @@ ytdl2kodi_video_extractor(){
 ################################################################################
 function nuke(){
 	echo "########################################################################"
-	echo "[INFO]: Reseting web cache to blank..."
-	downloadPath=$(getDownloadPath)
-	rm -rv "$downloadPath"
-	# recreate the download path and placeholder
-	#rm -rv "$downloadPath"/*
-	touch "$downloadPath.placeholder"
-	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
-	echo "[SUCCESS]: Site will remain the same until updated."
-	echo "[INFO]: Use 'ytdl2nfo update' to generate a new website..."
+	echo "[INFO]: NUKE is disabled for ytdl2nfo..."
+	echo "[INFO]: This is so you can disable the module but keep metadata."
+	echo "[INFO]: Use 'ytdl2nfo reset' to remove all downloaded metadata."
 	echo "########################################################################"
 }
 ################################################################################
