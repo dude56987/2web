@@ -222,6 +222,8 @@ function getTVG(){
 	else
 		tempIconLink=""
 	fi
+	# cleanup data containing endlines, no tvg info should contain newlines
+	#tempIconLink="$(echo -n "$tempIconLink" | sed "s/\n//g")"
 	# return the link to be piped
 	echo -n "$tempIconLink"
 }
@@ -337,13 +339,44 @@ function process_M3U(){
 			if echo "$title" | grep -q --ignore-case "español";then
 				groupTitle="$groupTitle español"
 			fi
+			if echo "$title" | grep -q --ignore-case "32 kbits";then
+				groupTitle="$groupTitle 32_kbits"
+			fi
+			if echo "$title" | grep -q --ignore-case "96 kbits";then
+				groupTitle="$groupTitle 96_kbits"
+			fi
+			if echo "$title" | grep -q --ignore-case "128 kbits";then
+				groupTitle="$groupTitle 128_kbits"
+			fi
+			if echo "$title" | grep -q --ignore-case "256 kbits";then
+				groupTitle="$groupTitle 256_kbits"
+			fi
+
 			# look for the strange spaced out "game shows" tags and combine them
 			if echo "$groupTitle" | grep -q --ignore-case "game shows";then
 				# remove game and shows tags
-				groupTitle="$(echo "$groupTitle" | sed "s/game//Ig" | sed "s/shows//Ig")"
+				groupTitle="$(echo "$groupTitle" | sed "s/game\ shows//Ig" )"
 				# add the combined game-show tag
 				groupTitle="$groupTitle Game_Shows"
 			fi
+			if echo "$groupTitle" | grep -q --ignore-case "daytime tv";then
+				groupTitle="$(echo "$groupTitle" | sed "s/daytime\ tv//Ig" )"
+				# add the combined tag
+				groupTitle="$groupTitle Daytime_TV"
+			fi
+			if echo "$groupTitle" | grep -q --ignore-case "classic tv";then
+				groupTitle="$(echo "$groupTitle" | sed "s/classic\ tv//Ig" )"
+				# add the combined tag
+				groupTitle="$groupTitle Classic_TV"
+			fi
+			if echo "$groupTitle" | grep -q --ignore-case "sci fi";then
+				groupTitle="$(echo "$groupTitle" | sed "s/sci\ fi//Ig" )"
+				# add the combined tag
+				groupTitle="$groupTitle Sci_fi"
+			fi
+
+			# remove leading spaces from group listing
+			groupTitle="$(echo "$groupTitle" | sed "s/^\ //g" )"
 
 			#ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
 			#ALERT "'$title' contains groups '$groupTitle'"
@@ -397,12 +430,14 @@ function process_M3U(){
 					echo "$lineCaught"
 					echo "$link"
 				} >> "$channelsRawPath"
+				ALERT "The channel $title was added with groups $m3uGroupTitle"
+				m3uGroupTitle=$(echo -n "$groupTitle" | sed "s/ /;/g")
 				# write to the default channel file
 				{
 					echo -n "#EXTINF:-1 radio=\"$radio\" "
 					echo -n "tvg-logo=\"$webIconPath\" "
 					echo -n "tvg-name=\"$title\" "
-					echo    "group-title=\"$groupTitle\",$title"
+					echo    "group-title=\"$m3uGroupTitle\",$title"
 					echo "$link"
 				} >> "$webDirectory/live/channels.index"
 			else
@@ -629,8 +664,9 @@ function processLink(){
 }
 ################################################################################
 webUpdateCheck(){
+	processedCount=$1
 	# if the update number is divisible by x
-	if echo "$1 % 50" | bc ;then
+	if [[ $(( processedCount % 50 )) -eq 0 ]];then
 		webGen
 	fi
 }
@@ -1288,31 +1324,6 @@ nuke(){
 	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
-checkCron(){
-	webDirectory=$(webRoot)
-	############ check if this script is already running on the system
-	if pgrep iptv2web;then
-		# if the script is running already do not launch a duplicate process
-		echo "[WARNING]: iptv4everyone_cron is already running..."
-		echo "[WARNING]: Only one instance of iptv4everyone_cron should be run at a time..."
-		exit
-	fi
-	#############################################################
-	if test -f "$webDirectory/live/update.cfg";then
-		echo "[START]: Update started on $(date)"
-		echo "[WEBGEN]: Generate and update webpages"
-		main webGen
-		echo "[UPDATE]: Combine all iptv configs..."
-		main update
-		echo "[WEBGEN]: Generate and update webpages"
-		main webGen
-		echo "[CLEAN]: Remove the update config"
-		rm -rv "$webDirectory/live/update.cfg"
-		echo "[END]: Update ended at $(date)"
-	fi
-	########################################################################
-}
-################################################################################
 main(){
 	################################################################################
 	# if --debug flag used activate bash debugging for script
@@ -1347,8 +1358,6 @@ main(){
 		resetCache
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
-	elif [ "$1" == "-c" ] || [ "$1" == "--cron" ] || [ "$1" == "cron" ] ;then
-		checkCron
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "iptv2web"
 		# upgrade streamlink and yt-dlp pip packages
@@ -1356,30 +1365,8 @@ main(){
 		#pip3 install --upgrade youtube-dl
 		pip3 install --upgrade yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
-		ALERT "Checking if Cached HLS.js is older than 120 days..."
-		if cacheCheck "$(webRoot)/live/hls.js" 120;then
-			ALERT "Updating Cached HLS.js..."
-			# download the latest version of the javascript video player libary
-			#curl --silent https://hls-js.netlify.app/dist/hls.js > "$(webRoot)/live/hls.js"
-			cat /usr/share/2web/iptv/hls.js > "$(webRoot)/live/hls.js"
-			# check the hls.js downloaded correctly
-			if [ $(wc -l "$(webRoot)/live/hls.js") -le 0 ];then
-				# the downloaded file has 0 lines of text and the download has failed
-				ALERT "The download of hls.js has failed..."
-				# try to use the backup hls.js
-				if test -f "$(webRoot)/live/hls.js.backup";then
-					cp "$(webRoot)/live/hls.js.backup" "$(webRoot)/live/hls.js"
-				else
-					ALERT "NO BACKUP OF hls.js COULD BE FOUND, playback will be broken."
-					ALERT "iptv2web can not build a functional website without a copy of hls.js"
-					exit
-				fi
-			else
-				INFO "hls.js has been updated correctly..."
-				# save this downloaded file as a backup
-				cp "$(webRoot)/live/hls.js" "$(webRoot)/live/hls.js.backup"
-			fi
-		fi
+		# copy local hls.js included in package to the website
+		linkFile /usr/share/2web/iptv/hls.js > "$(webRoot)/live/hls.js"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/iptv2web.txt"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
