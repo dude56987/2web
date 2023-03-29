@@ -692,55 +692,101 @@ if( ! function_exists("serverServicesCount")){
 	}
 }
 ###############################################################################
+if( ! function_exists("appendCacheFile")){
+	function appendCacheFile($cacheFilePath,$cacheData="",$tabs=0){
+		# add tabs to front of line to be appended to file
+		for($index=0;$index<$tabs;$index++){
+			$cacheData="\t".$cacheData;
+		}
+		appendFile($cacheFilePath,$cacheData."\n");
+		echo $cacheData;
+	}
+}
+###############################################################################
 if( ! function_exists("drawServicesWidget")){
 	function drawServicesWidget(){
-		if (serverServicesCount() <= 1){
-			return false;
+		$locationSum=md5($_SERVER["HTTP_HOST"]);
+		$cacheFile=$_SERVER["DOCUMENT_ROOT"]."/web_cache/widget_services_$locationSum.index";
+		if (file_exists($cacheFile)){
+			# 3600 seconds = 1 hour = 60 * 60
+			# 10 hours
+			if ( ( time() - filemtime($cacheFile) ) > (10 * 3600)){
+				// update the cached file
+				$writeFile=true;
+			}else{
+				// read from the already cached file
+				$writeFile=false;
+			}
+		}else{
+			# write the file if it does not exist
+			$writeFile=true;
 		}
-		// draw services widget
-		echo "<div class='titleCard'>";
-		echo "<h2>Server Services</h2>";
-		echo "<div class='listCard'>";
+		if ($writeFile){
+			# ignore user aborts after the cacheing has begun
+			ignore_user_abort(true);
 
-		foreach(availableServicesArray() as $serviceData){
-			if (checkPort($serviceData[1])){
-				$serviceLink="http://".$_SERVER['HTTP_HOST'].":".$serviceData[1];
-				$qrSum=md5($serviceLink);
-				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
-					# set qr code to be generated
-					file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+			# set the max execution time to 15 minutes
+			# additional searches will display the results found by this running process
+			set_time_limit(900);
+
+			if (serverServicesCount() <= 1){
+				# write the cache file to avoid running the code again for cache delay
+				appendCacheFile($cacheFile,"<!-- No Active Services Discovered -->");
+				# return false to exit and avoid running the empty loops
+				return false;
+			}
+
+			// draw services widget
+			appendCacheFile($cacheFile,"<div class='titleCard'>");
+			appendCacheFile($cacheFile,"<h2>Server Services</h2>");
+			appendCacheFile($cacheFile,"<div class='listCard'>");
+
+			foreach(availableServicesArray() as $serviceData){
+				if (checkPort($serviceData[1])){
+					$serviceLink="http://".$_SERVER['HTTP_HOST'].":".$serviceData[1];
+					$qrSum=md5($serviceLink);
+					if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+						# set qr code to be generated
+						file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+					}
+					#draw link
+					appendCacheFile($cacheFile,"<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>");
+					if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
+						appendCacheFile($cacheFile,"<img src='/thumbnails/$qrSum-qr.png' />");
+					}
+					appendCacheFile($cacheFile,"<div class='showIndexNumbers'>".$serviceData[0]."</div>");
+					appendCacheFile($cacheFile,"$serviceData[2]");
+					appendCacheFile($cacheFile,"</a>");
 				}
-				#draw link
-				echo "			<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>";
-				if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
-					echo "				<img src='/thumbnails/$qrSum-qr.png' />";
+			}
+			foreach(availablePathServicesArray() as $serviceData){
+				if (checkServerPath($serviceData[1])){
+					$serviceLink="http://".$_SERVER['HTTP_HOST'].$serviceData[1];
+					$qrSum=md5($serviceLink);
+					if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+						# set qr code to be generated
+						file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+					}
+					appendCacheFile($cacheFile,"<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>");
+					if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
+						appendCacheFile($cacheFile,"<img src='/thumbnails/$qrSum-qr.png' />");
+					}
+					appendCacheFile($cacheFile,"<div class='showIndexNumbers'>".$serviceData[0]."</div>");
+					appendCacheFile($cacheFile,"$serviceData[2]");
+					appendCacheFile($cacheFile,"</a>");
 				}
-				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
-				echo "				$serviceData[2]";
-				echo "			</a>";
+			}
+			appendCacheFile($cacheFile,"</div>");
+			appendCacheFile($cacheFile,"</div>");
+			ignore_user_abort(false);
+		}else{
+			# load the cached page
+			$cacheFileHandle = fopen($cacheFile,"r");
+			while( ! feof($cacheFileHandle)){
+				# send a line of the cache file
+				echo fgets($cacheFileHandle);
 			}
 		}
-
-		foreach(availablePathServicesArray() as $serviceData){
-			if (checkServerPath($serviceData[1])){
-				$serviceLink="http://".$_SERVER['HTTP_HOST'].$serviceData[1];
-				$qrSum=md5($serviceLink);
-				if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
-					# set qr code to be generated
-					file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
-				}
-				echo "			<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>";
-				if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
-					echo "				<img src='/thumbnails/$qrSum-qr.png' />";
-				}
-				echo "				<div class='showIndexNumbers'>".$serviceData[0]."</div>";
-				echo "				$serviceData[2]";
-				echo "			</a>";
-			}
-		}
-
-		echo "</div>";
-		echo "</div>";
 	}
 }
 ###############################################################################
