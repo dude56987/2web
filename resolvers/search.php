@@ -90,6 +90,13 @@ function scan_dir($directory){
 }
 ################################################################################
 function searchWeather($cacheFilePath){
+	# kill weather search if no data directory can be found
+	if (is_dir("/var/cache/2web/web/weather/data/")){
+		echo " ";
+	}else{
+		return array(false,"");
+	}
+
 	$weatherData=scanDir("/var/cache/2web/web/weather/data/");
 	$foundData=False;
 	$output="";
