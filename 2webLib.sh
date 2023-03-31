@@ -394,14 +394,14 @@ function returnModStatus(){
 	# the config exists check the config
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
 		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
-			ALERT "MOD IS ENABLED!"
+			ALERT "MOD $moduleName IS ENABLED!"
 			return 0
 		else
-			ALERT "MOD IS DISABLED!"
+			ALERT "MOD $moduleName IS DISABLED!"
 			return 1
 		fi
 	else
-		ALERT "MOD IS DISABLED!"
+		ALERT "MOD $moduleName IS DISABLED!"
 		return 1
 	fi
 }

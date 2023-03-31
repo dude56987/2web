@@ -912,6 +912,16 @@ main(){
 		/usr/bin/wiki2web
 		/usr/bin/git2web
 		rebootCheck
+	elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ];then
+		returnModStatus "nfo2web"
+		returnModStatus "music2web"
+		returnModStatus "comic2web"
+		returnModStatus "git2web"
+		returnModStatus "graph2web"
+		returnModStatus "iptv2web"
+		returnModStatus "wiki2web"
+		returnModStatus "weather2web"
+		returnModStatus "ytdl2nfo"
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
 		# wait for all background services to stop
