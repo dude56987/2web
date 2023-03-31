@@ -314,9 +314,9 @@ if (array_key_exists("inspector",$_GET)){
 	echo "<a href='?graph=commit_365_day'><img class='gitRepoGraph' src='graph_commit_365.png' /></a>";
 	#include("graph.svg");
 	echo "</div>";
-	if (file_exists("repoHistory.mp4")){
+	if (file_exists("repoHistory.webm")){
 		echo "	<video controls poster='repoHistory.png'>\n";
-		echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
+		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
 		echo "	</video>\n";
 	}
 	#echo "	<a href='graph_month.png' class='indexSeries right'>";
