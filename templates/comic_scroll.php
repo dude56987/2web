@@ -64,7 +64,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# draw header
 	echo "<div class='titleCard'>\n";
 	echo "<h1>$comic</h1>\n";
-	echo "<a class='button' href='index.php'>📑 Back to Index</a>\n";
 
 	#echo "comic='$comic'<br>\n";
 	#echo "comicPath='".$_SERVER['DOCUMENT_ROOT']."/comics/".$comic."/'<br>\n";
@@ -87,18 +86,46 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	}
 	$discoveredFiles=$tempFileList;
 
+	$tempDirList=Array();
+	foreach($discoveredDirs as $dirName){
+		if (is_dir($dirName)){
+			$tempDirList=array_merge($tempDirList,Array($dirName));
+		}
+	}
+	$discoveredDirs=$tempDirList;
+
+	# come up with chapter and page counts from cleaned lists
 	$totalPages=count($discoveredFiles);
+	$totalChapters=count($discoveredDirs);
+
+	echo "<a class='button' href='index.php'>📑 Index View</a>\n";
+
+	if (array_key_exists("real",$_GET)){
+		# mark realsize to true
+		$realSize=True;
+		echo "<a class='button' href='?'>📜 Scroll View</a>\n";
+	}else{
+		$realSize=False;
+		echo "<a class='button' href='?real'>🖼️ Real Size View</a>\n";
+	}
+
+	echo "<div>";
 	echo "Pages: $totalPages";
-	echo "	<div class='listCard'>\n";
-	echo "		<a id='all' class='button' href='?#all'>All</a>\n";
-	foreach($discoveredDirs as $fileName){
-		if (is_dir($fileName)){
+	echo "</div>";
+	if ($totalChapters > 0){
+		echo "<div>";
+		echo "Chapters: $totalChapters";
+		echo "</div>";
+
+		echo "	<div class='listCard'>\n";
+		echo "		<a id='all' class='button' href='?#all'>All</a>\n";
+		foreach($discoveredDirs as $fileName){
 			echo "		<a id='$fileName' class='button' href='?chapter=$fileName#$fileName'>\n";
 			echo "			Chapter $fileName\n";
 			echo "		</a>\n";
 		}
+		echo "	</div>\n";
 	}
-	echo "	</div>\n";
 
 	echo "</div>\n";
 	echo "<div class='settingListCard'>";
@@ -107,11 +134,11 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	if (array_key_exists("chapter",$_GET)){
 		echo "<h2>Chapter $chapterNumber</h2>";
 	}
-
 	# check each file for .jpg extension then write to page as scroll page
 	foreach($discoveredFiles as $fileName){
 		# remove document root from path
 		$tempFileName=str_replace($_SERVER["DOCUMENT_ROOT"],"",$fileName);
+		$tempFileThumb=str_replace(".jpg","-thumb.png",$tempFileName);
 
 		$tempPageNumber+=1;
 
@@ -119,26 +146,26 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		#$tempPageNumber=array_pop($tempPageNumber);
 		#$tempPageNumber=str_replace(".jpg","",$tempPageNumber);
 
-		echo "<img id='$tempPageNumber' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
+		if($realSize){
+			echo "<img id='$tempPageNumber' class='comicScrollViewImgReal' loading='lazy' src='$tempFileName' />";
+		}else{
+			echo "<img id='$tempPageNumber' style='background-image: url(\"$tempFileThumb\")' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
+		}
 
 		echo "<div class='settingListCard'>";
-		#echo "<a class='button' href='index.php'>Back to Index</a>";
-		echo "<span>📄 Page: $tempPageNumber/$totalPages</span>";
-		echo "<a class='button left' href='index.php#$tempPageNumber'>📑 View In Page Index</a>";
-		echo "<a class='button right' href='scroll.php#$tempPageNumber'>🔖 Bookmark Here</a>";
+		echo "<a class='button comicScrollIndexButton' href='index.php#$tempPageNumber'>📑 Index View</a>";
+		echo "<span class='comicScrollPageCount'>📄 <span class='footerText'>Page:</span> $tempPageNumber/$totalPages</span>";
+		echo "<a class='button comicScrollBookmarkButton' href='scroll.php#$tempPageNumber'>🔖 Bookmark Here</a>";
 		echo "</div>";
 	}
 
-
-	if (array_key_exists("chapter",$_GET)){
+	if ($totalChapters > 0){
 		echo "	<div class='listCard'>\n";
 		echo "		<a id='all' class='button' href='?#all'>All</a>\n";
 		foreach($discoveredDirs as $fileName){
-			if (is_dir($fileName)){
-				echo "		<a class='button' href='?chapter=$fileName'>\n";
-				echo "			Chapter $fileName\n";
-				echo "		</a>\n";
-			}
+			echo "		<a class='button' href='?chapter=$fileName'>\n";
+			echo "			Chapter $fileName\n";
+			echo "		</a>\n";
 		}
 		echo "	</div>\n";
 	}

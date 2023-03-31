@@ -1040,6 +1040,9 @@ renderPage(){
 			echo "	<a class='button' href='scroll.php'>"
 			echo "		📜 Scroll View"
 			echo "	</a>"
+			echo "	<a class='button' href='scroll.php?real'>"
+			echo "		🖼️ Real Size View"
+			echo "	</a>"
 			# also link the scroll view page
 			linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/scroll.php"
 			# get the total comic book pages, pages are jpg files, thumbnails are png files
@@ -1058,7 +1061,7 @@ renderPage(){
 					totalComicBookPages=$(( "$totalComicBookPages" + "$tempTotalComicPages" ))
 				fi
 			fi
-			echo "<span>Total Pages: $totalComicBookPages </span>"
+			echo "<div>Total Pages: $totalComicBookPages </div>"
 			echo "</div>"
 			echo "<div class='settingListCard'>"
 		} > "$webDirectory/comics/$pageComicName/index.php"
@@ -1164,6 +1167,9 @@ renderPage(){
 					echo "	</a>"
 					echo "	<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName'>"
 					echo "		📜 Scroll View"
+					echo "	</a>"
+					echo "	<a class='button' href='scroll.php?chapter=$tempChapterName&real'>"
+					echo "		🖼️ Real Size View"
 					echo "	</a>"
 					echo "<div class='chapterTitleBox'>"
 					if echo "$trueChapterTitle" | grep -q "[[:alpha:]]";then

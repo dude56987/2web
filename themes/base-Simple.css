@@ -796,8 +796,26 @@ a:visited {
 	height: -webkit-fill-available !important;
 }
 .comicScrollViewImg{
+	display: inline-block;
+	background-size: 100% 100% !important;
+	width: 100%;
+	min-height: 100vh;
+}
+.comicScrollViewImgReal{
 	max-width: 100%;
 	min-width: 60%;
+}
+.comicScrollPageCount{
+	max-width: 25vw;
+	display: inline-block;
+}
+.comicScrollBookmarkButton{
+	float: right;
+	max-width: 20vw;
+}
+.comicScrollIndexButton{
+	float: left;
+	max-width: 20vw;
 }
 /*
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
