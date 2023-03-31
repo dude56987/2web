@@ -161,12 +161,6 @@ checkFileDataSum(){
 	fi
 }
 ########################################################################
-ALERT(){
-	echo
-	echo "$1";
-	echo
-}
-################################################################################
 function update(){
 	# this will launch a processing queue that downloads updates to graph
 	webDirectory=$(webRoot)
