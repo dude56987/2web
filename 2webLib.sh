@@ -356,6 +356,20 @@ function INFO(){
 	printf "$output\r"
 }
 ################################################################################
+function ERROR(){
+	width=$(tput cols)
+	# cut the line to make it fit on one line using ncurses tput command
+	buffer="                                                                                "
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[ERROR]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# print the line
+	echo "################################################################################"
+	echo "$output"
+	echo "################################################################################"
+}
+################################################################################
 function lockProc(){
 	procName=$1
 	webDirectory=$(webRoot)
