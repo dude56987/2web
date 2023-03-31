@@ -133,7 +133,6 @@ ytdl2kodi_channel_extractor(){
 	# check the config database to see if the $channelLink has a entry
 	# create a default channel cache
 	touch /etc/2web/ytdl/channelUpdateCache.cfg
-	#cat "/etc/2web/ytdl/channelUpdateCache.cfg"#DEBUG
 	# if that entry exists then
 	echo "[INFO]: searching for channelLink : '$channelLink'"
 	if grep -q "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg";then
@@ -152,22 +151,13 @@ ytdl2kodi_channel_extractor(){
 			echo "[INFO]: The reset time has passed, Processing link..."
 		fi
 	fi
-
-	# create show directory
-	#mkdir -p "$downloadPath$showTitle/"
-	# download the newgrounds page
 	echo "[INFO]: Downloading '$channelLink'"
 	################################################################################
-	# if the file is a playlist from youtube, rip links from the playlist
-	# otherwise run the generic link ripper
 	echo "[INFO]: Running playlist link extractor..."
-	# run the youtube special link playlist extractor
 	linkList=""
-	# if the previous playlist has been downloaded
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	# cache downloaded playlists for 24 hours
-	# true if file is older than 1 day or does not exist
-	#set -x
+	# true if file is not cached or older than 5 hours
 	# every 5 hours = 300 minutes
 	if cacheCheckMin "$webDirectory/sums/ytdl_channel_$channelSum.cfg" "300";then
 		echo "[INFO]: Updatng the cached playlist..."
@@ -181,11 +171,8 @@ ytdl2kodi_channel_extractor(){
 			errorCode=$?
 			echo "[INFO]: tempLinkList = $tempLinkList"
 		fi
-		# cache the playlist download
-		echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
 	else
 		echo "[INFO]: Loading the previously cached playlist..."
-		touch "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
 		# if the playlist is already cached load the playlist, in reverse order
 		tempLinkList=$(cat "$webDirectory/sums/ytdl_channel_$channelSum.cfg")
 		# add the error code for reading the file so the cache will load, mark true
@@ -198,168 +185,25 @@ ytdl2kodi_channel_extractor(){
 	# list only the urls from the json data retrived
 	tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
 	echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
-	################################################################################
-
-	# the templinklist is the formatted list since the generic link extractor is disabled
-	#linkList=$tempLinkList
-
-	echo "[INFO]: error code = '$errorCode'"
+	echo "[INFO]: Checking error code = '$errorCode'"
 	# check if the error code is true
 	#if [[ $errorCode -eq 0 ]];then
 	if [ $errorCode -eq 0 ];then
-		addToLog "Found Links" "Adding links to Linklist" "$tempLinkList" "/var/cache/2web/ytdl2nfo.log"
+		# mark the playlist download as cached
+		echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
 		for videoId in $tempLinkList;do
 			linkList=$(echo -en "$linkList\n$videoId")
 		done
 	else
-		# set the show title for the generic link extractor based on the domain name
-		showTitle=$(ytdl2kodi_rip_title "$channelLink")
-		# if no custom extractor exists then run the generic link extractor
-		echo "[INFO]: Running generic link extractor..."
-		################################################################################
-		# show errors in curl but not download progress
-		webData=$(curl --silent --show-error "$channelLink")
-		echo "[INFO]: Webpage data found word count = $(echo $webData | wc -w)"
-		################################################################################
-		# rip video links
-		################################################################################
-		# remove contents of head tag from page before parsing
-		echo "[INFO]: Looking for links in the webpage..."
-		# scan if the page is a rss, if so download enclosures as the linklist
-		#if echo "$linkList" | grep -q "<rss ";then
-		#	# this is a rss feed so extract the rss enclosures and they act as direct links
-		#	# - the enclosure is a direct link to the video/audio file
-		#	#linkList=$(echo "$linkList" | grep "enclosure" | sed "s/^.*url=\"//g" | sed "s/\".*$//g")
-		#	# pull the link tag, it contains the episode link, this will be processed by yt-dlp
-		#	set -x
-		#	linkList=$(echo "$linkList" | grep "<link>")
-		#	linkList=$(echo "$linkList" | sed "s/^.*<link>//g"| sed "s/<\/link>//g")
-		#	linkList=$(echo "$linkList" | sed "s/<\!\[CDATA\[//g" | sed "s/\]\]>//g")
-		#	set +x
-		#else
-			# use hxwls to list all links contained within the webpage
-			# Some websites use javascript generated html that can not be parsed without removing backslashes
-			linkList=$(echo "$webData" | sed 's/\\//g')
-			# run a quick clean pass on the html
-			linkList=$(echo "$linkList" | hxclean)
-			# normalize the  html add ending tags
-			linkList=$(echo "$linkList" | hxnormalize -e)
-			# convert any special characters
-			#linkList=$(echo "$linkList" | asc2xml )
-			# list only the links found in the cleaned up html
-			linkList=$(echo "$linkList" | hxwls )
-			################################################################################
-			# clean up links and remove http
-			echo "[INFO]: Cleaning up the link prefixes..."
-			# remove the http or https prefix
-			linkList=$(echo "$linkList" | sed "s/http:/https:/g")
-			linkList=$(echo "$linkList" | sed "s/https://g")
-			linkList=$(echo "$linkList" | sed "s/\/\///g")
-			# remove leading slashes and double slashes some links create
-			echo "[INFO]: Cleaning up the leading slashes..."
-			linkList=$(echo "$linkList" | sed "s/^\/\///g")
-			linkList=$(echo "$linkList" | sed "s/^\///g")
-			# remove links to non webpage content images/javascript/css
-			echo "[INFO]: Removing links to non webpage resources..."
-			linkList=$(echo "$linkList" | sed "s/^.*\.js$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.js\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.css$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.css\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.png$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.png\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.jpg$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.jpg\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.jpeg$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.jpeg\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.svg$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.svg\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.woff$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.woff\?.*$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.ttf$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\.ttf\?.*$//g")
-			# remove links to common website resource pages
-			linkList=$(echo "$linkList" | sed "s/^.*\/privacy$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\#privacy$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\/help$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\#help$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\/terms$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\#terms$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\/dmca$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\#dmca$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\/feedback$//g")
-			linkList=$(echo "$linkList" | sed "s/^.*\#feedback$//g")
-			# remove links to help.website.com type urls
-			linkList=$(echo "$linkList" | sed "s/^https\:\/\/corp\..*.$//g")
-			linkList=$(echo "$linkList" | sed "s/^https\:\/\/help\..*.$//g")
-			linkList=$(echo "$linkList" | sed "s/^https\:\/\/feedback\..*.$//g")
-		#fi
-		################################################################################
-		# the linklist links must be reformatted to a more standardized format for processing
-		# this prevents strange third party website links (Ads) from being processed into episodes
-		tempList=""
-		for link in $linkList;do
-			# if the base url is not in the link found try adding it to the start
-			# without absolute paths the processing wont work
-			if ! echo "$link" | grep -q "$baseUrl";then
-				#echo "[INFO]: Phase 1 : $link"
-				link="$(echo "$baseUrl/$link")"
-				#echo "[INFO]: Phase 2 : $link"
-				link="$(echo "$link" | sed "s/\/\/\//\//g")"
-				#echo "[INFO]: Phase 3 : $link"
-				link="$(echo "$link" | sed "s/\/\//\//g")"
-				#echo "[INFO]: Phase 4 : $link"
-			fi
-			#link="https://$link"
-			#link="$link"
-			################################################################################
-			# begin checking for problem file types
-			################################################################################
-			if echo "$link" | grep -q ".css";then
-				# this is not a video file link its a zip file so ignore it
-				echo "$selection" >> $previousDownloadsPath
-				echo "Incorrect format CSS"
-			elif echo "$link" | grep -q ".png";then
-				# this is not a video file link its a zip file so ignore it
-				echo "$selection" >> $previousDownloadsPath
-				echo "Incorrect format PNG"
-			elif echo "$link" | grep -q ".jpg";then
-				# this is not a video file link its a zip file so ignore it
-				echo "$selection" >> $previousDownloadsPath
-				echo "Incorrect format JPG"
-			elif echo "$link" | grep -q ".ico";then
-				# this is not a video file link its a zip file so ignore it
-				echo "$selection" >> $previousDownloadsPath
-				echo "Incorrect format ICO"
-			elif echo "$previousDownloads" | grep -q "$link";then
-				# if download was found to already have been processed
-				echo "'$link' was found in $previousDownloadsPath"
-				echo "This download has already been processed..."
-			else
-				# if all tests have been passed add the link
-				tempList=$(echo -e "$tempList\n$link")
-			fi
-		done
-		# cleanup blank lines in the tmp list and rename it to linklist
-		linkList=$(echo "$tempList" | tr -s '\n')
+		# exit and do not mark as processed since no playlist/linklist could be retrieved
+		# this should also fail out if the network connection is down
+		return 1
 	fi
 	################################################################################
 	# sort out duplicate links
-	echo "[INFO]: Removing non-unique entries..."
-	# Join adjacent unique lines
-	#linkList=$(echo "$linkList" | uniq)
 	# reverse sort of list since most lists show newest at the top of the webpage
 	echo "[INFO]: Reversing list because most pages list newest to oldest..."
 	linkList=$(echo "$linkList" | tac)
-	################################################################################
-	# check for known individual sites video url patterns, this reduces the haystack
-	if echo "$showTitle" | grep -q "newgrounds";then
-		linkList=$(echo "$linkList" | grep "/portal/view/")
-		# remove the leading newgrounds.com from links
-		linkList=$(echo "$linkList" | sed "s/^.*\/portal/\/portal/g")
-	fi
-	#if echo "$showTitle" | grep -q "youtube";then
-	#	linkList=$(echo "$linkList" | grep "watch?v=")
-	#fi
 	################################################################################
 	# after cleaning the link should be compared to the previous downloads
 	# and removed if it has already been processed
@@ -392,7 +236,6 @@ ytdl2kodi_channel_extractor(){
 		echo "$episodeProcessingLimit" > /etc/2web/ytdl/episodeProcessingLimit.cfg
 	fi
 	################################################################################
-	mkdir -p /tmp/ytdl2kodi/
 	processedEpisodes=0
 	# merge existing
 	#$oldLinks=$(cat /etc/2web/ytdl/previousDownloads.cfg)
@@ -406,7 +249,7 @@ ytdl2kodi_channel_extractor(){
 		# is done in processing the episode
 		if [ $processedEpisodes -ge $episodeProcessingLimit ];then
 			echo "[INFO]: Exceeded Episode Processing Limit, skipping rendering episode..."
-			return
+			return 2
 		fi
 		echo "[INFO]: Preprocessing '$link' ..."
 		echo "[INFO]: Running metadata extractor on '$link' ..."
@@ -639,7 +482,6 @@ ytdl2kodi_update(){
 	fi
 	################################################################################
 	# create the blank temporary database
-	mkdir -p /tmp/ytdl2kodi/
 	mkdir -p /etc/2web/ytdl/meta/
 	################################################################################
 	mkdir -p "$(getDownloadPath)"
@@ -765,6 +607,7 @@ ytdl2kodi_video_extractor(){
 	# create previous downloads list if it does not already exist
 	mkdir -p /etc/2web/ytdl/previousDownloads/
 	mkdir -p /etc/2web/ytdl/processedSums/
+
 	# make list channel specific
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$channelSum.cfg"
 	#selectionSum=$(echo -n "$selection" | sha256sum | cut -d' ' -f1)
@@ -772,30 +615,9 @@ ytdl2kodi_video_extractor(){
 		echo "The data for the selection '$selection' has already been processed."
 		return 1
 	fi
-	#if test -f /etc/2web/ytdl/previousSums/$channelSum.cfg;then
-	#	# if a set of linksums was found, check it for the link sum
-	#	# if the sha256sum of the link has already been processed
-	#	if grep -q "$selectionSum" "/etc/2web/ytdl/processedSums/$channelSum.cfg";then
-	#		# exit the function because it has already been processed
-	#		echo "The data for the selection '$selection' has already been processed."
-	#		return
-	#	fi
-	#fi
-	# check that this is a a link preceded by https://
-	#if echo "$selection" | grep -q "https://";then
-	#	echo "Correctly formatted link $selection"
-	#else
-	#	# exit the function because it is incorrectly formatted
-	#	echo "The data for the selection '$selection' is incorrectly formated."
-	#	return
-	#fi
-	################################################################################
 	echo "################################################################################"
 	echo "# Now extracting '$selection' #"
 	echo "################################################################################"
-	################################################################################
-	mkdir -p /tmp/ytdl2kodi/
-	################################################################################
 	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	# check for a user defined download path
 	downloadPath="$(getDownloadPath)"
@@ -812,9 +634,7 @@ ytdl2kodi_video_extractor(){
 	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
 	echo "Extracting metadata from '$selection'..."
-	# print youtube-dl command for debugging
-	addToLog "INFO" "Extracting Metadata" "$selection" "/var/cache/2web/ytdl2nfo.log"
-	# use the pip package if it is available
+	# use the pip package if it is available, otherwise use default system paths
 	if test -f /usr/local/bin/yt-dlp;then
 		echo "timeout --preserve-status \"$timeLimitSeconds\" /usr/local/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
 		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
