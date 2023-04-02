@@ -159,24 +159,16 @@ ytdl2kodi_channel_extractor(){
 	# cache downloaded playlists for 24 hours
 	# true if file is not cached or older than 5 hours
 	# every 5 hours = 300 minutes
-	if cacheCheckMin "$webDirectory/sums/ytdl_channel_$channelSum.cfg" "300";then
-		echo "[INFO]: Updatng the cached playlist..."
-		# try to rip as a playlist
-		if test -f /usr/local/bin/yt-dlp;then
-			tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-			errorCode=$?
-			echo "[INFO]: tempLinkList = $tempLinkList"
-		else
-			tempLinkList=$(yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-			errorCode=$?
-			echo "[INFO]: tempLinkList = $tempLinkList"
-		fi
+	echo "[INFO]: Updating the cached playlist..."
+	# try to rip as a playlist
+	if test -f /usr/local/bin/yt-dlp;then
+		tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
+		errorCode=$?
+		echo "[INFO]: tempLinkList = $tempLinkList"
 	else
-		echo "[INFO]: Loading the previously cached playlist..."
-		# if the playlist is already cached load the playlist, in reverse order
-		tempLinkList=$(cat "$webDirectory/sums/ytdl_channel_$channelSum.cfg")
-		# add the error code for reading the file so the cache will load, mark true
-		errorCode=0
+		tempLinkList=$(yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
+		errorCode=$?
+		echo "[INFO]: tempLinkList = $tempLinkList"
 	fi
 	# get uploader from the json data and set it as the show title
 	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
