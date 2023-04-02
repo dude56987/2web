@@ -263,6 +263,8 @@ function process_M3U(){
 	blockedGroups=$(cat /etc/2web/iptv/blockedGroups.cfg)
 	blockedGroups=$(printf "$blockedGroups\n$(cat /etc/2web/iptv/blockedGroups.d/*.cfg)")
 
+	generatedGroups=$(generateGroups)
+
 	echo -n "$channels" | while read line;do
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
@@ -293,63 +295,22 @@ function process_M3U(){
 			# check for group title
 			# NOTE: /Ig is for case insensitve search
 			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/.com/ /g" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | sed "s/\./ /g" | sed "s/-/ /g" | sed "s/:/ /g" | sed "s/&/ /g" | sed "s/and//Ig" | tr -s ' ')
+
+			IFSBACKUP=$IFS
+			IFS=$'\n'
+			for generatedGroupName in $generatedGroups;do
+				# the title for generated group words
+				tempGeneratedGroupName=$(echo "$generatedGroupName" | sed "s/_/ /g")
+				if echo "$title" | grep --ignore-case -qw "$tempGeneratedGroupName";then
+					# if the channel title contains the generated group add the generated group to the channel group info
+					groupTitle="$groupTitle $generatedGroupName"
+				fi
+			done
+			IFS=$IFSBACKUP
+
 			# check for groups stored inside the title itself, and remove them from the title
-			if echo "$title" | grep -q --ignore-case "weather";then
-				groupTitle="$groupTitle Weather"
-			fi
-			if echo "$title" | grep -q --ignore-case "geoblocked";then
-				groupTitle="$groupTitle Geoblocked"
-			fi
-			if echo "$title" | grep -q --ignore-case "270p";then
-				groupTitle="$groupTitle 270p"
-			fi
-			if echo "$title" | grep -q --ignore-case "360p";then
-				groupTitle="$groupTitle 360p"
-			fi
-			if echo "$title" | grep -q --ignore-case "476p";then
-				groupTitle="$groupTitle 476p"
-			fi
-			if echo "$title" | grep -q --ignore-case "480p";then
-				groupTitle="$groupTitle 480p"
-			fi
-			if echo "$title" | grep -q --ignore-case "582p";then
-				groupTitle="$groupTitle 582p"
-			fi
-			if echo "$title" | grep -q --ignore-case "720p";then
-				groupTitle="$groupTitle 720p"
-			fi
-			if echo "$title" | grep -q --ignore-case "1080p";then
-				groupTitle="$groupTitle 1080p"
-			fi
-			if echo "$title" | grep -q --ignore-case "west";then
-				groupTitle="$groupTitle West"
-			fi
-			if echo "$title" | grep -q --ignore-case "east";then
-				groupTitle="$groupTitle East"
-			fi
 			if echo "$title" | grep -q --ignore-case "not 247";then
 				groupTitle="$groupTitle Not_24_7"
-			fi
-			if echo "$title" | grep -q --ignore-case "english";then
-				groupTitle="$groupTitle English"
-			fi
-			if echo "$title" | grep -q --ignore-case "Latino";then
-				groupTitle="$groupTitle Latino"
-			fi
-			if echo "$title" | grep -q --ignore-case "español";then
-				groupTitle="$groupTitle español"
-			fi
-			if echo "$title" | grep -q --ignore-case "32 kbits";then
-				groupTitle="$groupTitle 32_kbits"
-			fi
-			if echo "$title" | grep -q --ignore-case "96 kbits";then
-				groupTitle="$groupTitle 96_kbits"
-			fi
-			if echo "$title" | grep -q --ignore-case "128 kbits";then
-				groupTitle="$groupTitle 128_kbits"
-			fi
-			if echo "$title" | grep -q --ignore-case "256 kbits";then
-				groupTitle="$groupTitle 256_kbits"
 			fi
 
 			# look for the strange spaced out "game shows" tags and combine them
@@ -358,16 +319,6 @@ function process_M3U(){
 				groupTitle="$(echo "$groupTitle" | sed "s/game\ shows//Ig" )"
 				# add the combined game-show tag
 				groupTitle="$groupTitle Game_Shows"
-			fi
-			if echo "$groupTitle" | grep -q --ignore-case "daytime tv";then
-				groupTitle="$(echo "$groupTitle" | sed "s/daytime\ tv//Ig" )"
-				# add the combined tag
-				groupTitle="$groupTitle Daytime_TV"
-			fi
-			if echo "$groupTitle" | grep -q --ignore-case "classic tv";then
-				groupTitle="$(echo "$groupTitle" | sed "s/classic\ tv//Ig" )"
-				# add the combined tag
-				groupTitle="$groupTitle Classic_TV"
 			fi
 			if echo "$groupTitle" | grep -q --ignore-case "sci fi";then
 				groupTitle="$(echo "$groupTitle" | sed "s/sci\ fi//Ig" )"
@@ -661,6 +612,34 @@ function processLink(){
 	fi
 	# invoke webgen to update webpage after adding new live links
 	return 0
+}
+################################################################################
+function generateGroups(){
+	data=$(cat /var/cache/2web/web/live/channels.m3u | grep "#EXTINF" | rev | cut -d',' -f1| rev )
+	data=$(echo "$data" | sed "s/;/ /g")
+	data=$(echo "$data" | tr '[:upper:]' '[:lower:]')
+	data=$(echo "$data" | sed "s/\ kbits/_kbits/Ig" )
+	data=$(echo "$data" | sed "s/\ tv/_TV/Ig" )
+	data=$(echo "$data" | sed "s/\ fm/_FM/Ig" )
+	data=$(echo "$data" | sed "s/ /\n/g")
+	data=$(echo "$data" | sort | uniq -c | tr -s ' ' )
+	# grep must search whole words only
+	data=$(echo "$data" | grep -Evw --ignore-case "of|the|or|by|and|are|all|is|at|for" )
+
+	IFS=$'\n'
+	for group in $data;do
+		# if more than 3 instances of tag occur in the data
+		if [[ $(echo $group| cut -d' ' -f2) -gt 3 ]];then
+			# title iteself must be longer than 3 characters
+			if [[ $(echo $group| cut -d' ' -f3 | wc -c) -gt 2 ]];then
+				# if the title contains more than just numbers
+				if echo $group| grep -q "[[:alpha:]]";then
+					# group has more than two entries so make it a group
+					echo "$group" | cut -d' ' -f3
+				fi
+			fi
+		fi
+	done
 }
 ################################################################################
 webUpdateCheck(){
@@ -1077,7 +1056,7 @@ webGen(){
 				iconLink="/live/icons/$iconSum.png"
 				channelNumber=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 				# check for group title
-				groupTitle=$(getTVG "$lineCaught" "group-title")
+				groupTitle=$(getTVG "$lineCaught" "group-title"| sed "s/;/ /g")
 				INFO "Building Web Channel $channelCounter/$totalChannelCount: $title in groups $groupTitle"
 				#INFO "Found Title = $title"
 				#INFO "Found Link = $link"

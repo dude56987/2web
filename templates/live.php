@@ -56,7 +56,10 @@ $databaseObj->busyTimeout(60000);
 $result = $databaseObj->query("select name from sqlite_master where type='table' order by name ASC;");
 # fetch each row data individually and display results
 while($row = $result->fetchArray()){
-	$cleanName=str_replace("_","",$row['name']);
+	#$cleanName=str_replace("_","",$row['name']);
+	$cleanName=preg_replace("/^_/","",$row['name']);
+	$displayName=str_replace("_"," ",$cleanName);
+	$displayName=ucwords($displayName);
 	# read the directory name
 	if (array_key_exists("filter",$_GET)){
 		$filterType=$_GET['filter'];
@@ -68,8 +71,7 @@ while($row = $result->fetchArray()){
 	}else{
 		echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
 	}
-	//echo "	<a id='".$cleanName."' class='button tag' href='?filter=".$cleanName."#".$cleanName."'>\n";
-	echo "		".$cleanName."\n";
+	echo "		".$displayName."\n";
 	echo "	</a>\n";
 }
 echo "</div>\n";
@@ -87,9 +89,11 @@ echo "</div>\n";
 <?php
 if (array_key_exists("filter",$_GET)){
 	$filterType=$_GET['filter'];
+	$displayName=str_replace("_"," ",$filterType);
+	$displayName=ucwords($displayName);
 	# draw the header to identify the filter applied
 	echo "<h2>";
-	echo "$filterType";
+	echo "$displayName";
 	echo "<img id='spinner' src='/spinner.gif' />";
 	echo "</h2>";
 
