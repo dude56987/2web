@@ -376,8 +376,6 @@ function update2web(){
 	# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
 	recordActivityGraph
 
-	#buildFakeActivityGraph
-
 	# build the updated activity graph
 	buildActivityGraph
 
@@ -564,10 +562,37 @@ function update2web(){
 	fi
 
 	createDir /var/cache/2web/qrCodes/
-	# build qr codes
-	for qrCode in /var/cache/2web/qrCodes/*.cfg;do
-		# for each qr code config write a qr code to thumbnails
-		qrencode -m 1 -l H -o "/var/cache/2web/web/thumbnails/$(popPath "$qrCode" | cut -d'.' -f1)-qr.png" "$(cat "$qrCode")"
+	# build the web widgets for these services
+	# build web widgets for each http_host
+	find "/var/cache/2web/qrCodes/" -mindepth 1 -maxdepth 1 -type d | while read qrDir;do
+		hostSum=$(echo "$qrDir" | rev | cut -d'/' -f1 | rev)
+		# per host check if the services file is older than 1 day
+		if cacheCheck "$webDirectory/web_cache/widget_services_${hostSum}.index" "1";then
+			{
+				echo "<div class='titleCard'>"
+				echo "<h2>Server Services</h2>"
+				echo "<div class='listCard'>"
+				find "/var/cache/2web/qrCodes/$hostSum/" -mindepth 1 -maxdepth 1 -type f -name '*-lnk.cfg' | while read qrConfig;do
+					linkData=$(cat "$qrConfig")
+					linkInfo=$(echo "$qrConfig" | sed "s/-lnk.cfg/-srv.cfg/g")
+					linkInfo=$(cat "$linkInfo")
+					linkServiceName=$(echo "$linkInfo" | cut -d',' -f1)
+					linkServiceDesc=$(echo "$linkInfo" | cut -d',' -f2)
+					#linkSum=$(echo "$qrConfig" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
+					linkSum=$(echo -n "$linkData" | md5sum | cut -d' ' -f1)
+					# build the thumbnail image as a qr code
+					qrencode -m 1 -l H -o "/var/cache/2web/web/thumbnails/$linkSum.png" "$linkData"
+					#draw link
+					echo "<a class='showPageEpisode' target='_BLANK' href='$linkData'>"
+					echo "<img src='/thumbnails/$linkSum.png' />"
+					echo "<div class='showIndexNumbers'>$linkServiceName</div>"
+					echo "$linkServiceDesc"
+					echo "</a>"
+				done
+				echo "</div>"
+				echo "</div>"
+			} > "$webDirectory/web_cache/widget_services_${hostSum}.index"
+		fi
 	done
 	################################################################################
 	# build the login users file

@@ -734,53 +734,33 @@ if( ! function_exists("drawServicesWidget")){
 
 			if (serverServicesCount() <= 1){
 				# write the cache file to avoid running the code again for cache delay
-				appendCacheFile($cacheFile,"<!-- No Active Services Discovered -->");
 				# return false to exit and avoid running the empty loops
 				return false;
 			}
-
+			mkdir("/var/cache/2web/qrCodes/$locationSum/");
 			// draw services widget
-			appendCacheFile($cacheFile,"<div class='titleCard'>");
-			appendCacheFile($cacheFile,"<h2>Server Services</h2>");
-			appendCacheFile($cacheFile,"<div class='listCard'>");
-
 			foreach(availableServicesArray() as $serviceData){
 				if (checkPort($serviceData[1])){
 					$serviceLink="http://".$_SERVER['HTTP_HOST'].":".$serviceData[1];
 					$qrSum=md5($serviceLink);
-					if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+					if ( ! file_exists("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum.".cfg") ){
 						# set qr code to be generated
-						file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+						file_put_contents("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum."-lnk.cfg",$serviceLink);
+						file_put_contents("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum."-srv.cfg",$serviceData[0].",".$serviceData[2]);
 					}
-					#draw link
-					appendCacheFile($cacheFile,"<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>");
-					if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
-						appendCacheFile($cacheFile,"<img src='/thumbnails/$qrSum-qr.png' />");
-					}
-					appendCacheFile($cacheFile,"<div class='showIndexNumbers'>".$serviceData[0]."</div>");
-					appendCacheFile($cacheFile,"$serviceData[2]");
-					appendCacheFile($cacheFile,"</a>");
 				}
 			}
 			foreach(availablePathServicesArray() as $serviceData){
 				if (checkServerPath($serviceData[1])){
 					$serviceLink="http://".$_SERVER['HTTP_HOST'].$serviceData[1];
 					$qrSum=md5($serviceLink);
-					if ( ! file_exists("/var/cache/2web/qrCodes/".$qrSum.".cfg") ){
+					if ( ! file_exists("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum.".cfg") ){
 						# set qr code to be generated
-						file_put_contents("/var/cache/2web/qrCodes/".$qrSum.".cfg",$serviceLink);
+						file_put_contents("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum."-lnk.cfg",$serviceLink);
+						file_put_contents("/var/cache/2web/qrCodes/".$locationSum."/".$qrSum."-srv.cfg",$serviceData[0].",".$serviceData[2]);
 					}
-					appendCacheFile($cacheFile,"<a class='showPageEpisode' target='_BLANK' href='$serviceLink'>");
-					if (file_exists("/var/cache/2web/web/thumbnails/$qrSum-qr.png")){
-						appendCacheFile($cacheFile,"<img src='/thumbnails/$qrSum-qr.png' />");
-					}
-					appendCacheFile($cacheFile,"<div class='showIndexNumbers'>".$serviceData[0]."</div>");
-					appendCacheFile($cacheFile,"$serviceData[2]");
-					appendCacheFile($cacheFile,"</a>");
 				}
 			}
-			appendCacheFile($cacheFile,"</div>");
-			appendCacheFile($cacheFile,"</div>");
 			ignore_user_abort(false);
 		}else{
 			# load the cached page
