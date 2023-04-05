@@ -249,21 +249,25 @@ kodi2web is a diffrent module, it is called inside individual modules to trigger
 
 ### Module Components
 
-| module	| man page | Web Settings | /etc/2web/ |
-|---------|----------|--------------|------------|
-| 2web		| ✔️				 | ✔️						| ✔️					 |
-| nfo			| ✔️				 | ✔️						| ✔️					 |
-| comic		| ✔️				 | ✔️						| ✔️					 |
-| iptv		| ✔️				 | ✔️						| ✔️					 |
-| wiki		| ❌			 | ❌						| ✔️					 |
-| weather | ✔️				 | ✔️						| ✔️					 |
-| graph		| ✔️				 | ❌						| ✔️					 |
-| kodi		| ❌			 | ❌						| ✔️					 |
+| module			| man page | Web Settings | /etc/2web/ |
+|-------------|----------|--------------|------------|
+| 2web				| ✔️				 | ✔️						| ✔️					 |
+| nfo2web			| ✔️				 | ✔️						| ✔️					 |
+| comic2web		| ✔️				 | ✔️						| ✔️					 |
+| iptv2web		| ✔️				 | ✔️						| ✔️					 |
+| wiki2web		| ❌			 | ❌						| ✔️					 |
+| weather2web | ✔️				 | ✔️						| ✔️					 |
+| graph2web		| ✔️				 | 〽️						| ✔️					 |
+| kodi2web		| ❌			 | ❌						| ✔️					 |
+| ytdl2nfo		| ✔️				 | ✔️						| ✔️					 |
 
 ### Resolver Components
 
-| resolvers			| Web Settings | /etc/2web/ |
-|---------------|--------------|------------|
-| ytdl-resolver | ✔️						 | ✔️					|
-| m3u-gen				| ❌					 | ❌					|
-| iptv-resolver | ❌					 | ❌					|
+| resolvers			| Working |  Web Settings  | /etc/2web/ |
+|---------------|---------|----------------|------------|
+| ytdl-resolver	| ✔️				| ✔️						 	 | ✔️					|
+| m3u-gen				| ✔️				| ❌						 | ❌					|
+| iptv-resolver	| ✔️				| ❌						 | ❌					|
+| search				| ✔️				| ❌					 	 | ❌					|
+| transcode 		| ✔️				| ❌					 	 | ❌					|
+| zip-gen 			| ✔️				| ❌					 	 | ❌					|
