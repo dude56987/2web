@@ -1349,7 +1349,7 @@ processShow(){
 	# generate the path sum
 	showLogPath="$webDirectory/log/$(date "+%s")_show_${pathSum}.log"
 	# create directory
-	INFO "creating show directory at '$webDirectory/$showTitle/'"
+	INFO "creating show directory at '$webDirectory/shows/$showTitle/'"
 	createDir "$webDirectory/shows/$showTitle/"
 	# link stylesheet
 	linkFile "$webDirectory/style.css" "$webDirectory/shows/$showTitle/style.css"
@@ -1489,6 +1489,8 @@ processShow(){
 			else
 				currentSeasonSum="0"
 			fi
+
+			#
 			libarySeasonSum=$(getDirSum "$season")
 			#if echo "$libarySeasonSum" | grep -q "$currentSeasonSum";then
 			#addToLog "INFO" "Season" "$libarySeasonSum ?= $currentSeasonSum" "$logPagePath"
