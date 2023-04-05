@@ -33,7 +33,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 include("/usr/share/2web/2webLib.php");
 ?>
-
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
@@ -42,29 +41,6 @@ include("/usr/share/2web/2webLib.php");
 		<li><a href='#munin'>Munin</a></li>
 		<li><a href='#smokeping'>Smokeping</a></li>
 	</ul>
-</div>
-<div id='graph2webStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Graphs Enabled</h2>
-			<ul>
-				<li>
-					Enable or disable the graphs on the website.
-				</li>
-			</ul>
-			<select name='graph2webStatus'>
-			<?PHP
-				// check the status of the graph module
-				if (detectEnabledStatus("graph2web")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
 </div>
 <div id='vnstat' class='inputCard'>
 	<h2>Vnstat</h2>
