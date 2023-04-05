@@ -350,8 +350,14 @@ function processRepo(){
 		commitAddresses=$(git log --oneline | cut -d' ' -f1)
 
 		echo "$commitAddresses" > "$webDirectory/repos/$repoName/commits.index"
+
+		# count commits for output
+		totalCommits=$(echo "$commitAddresses" | wc -l)
+		commitCount=0
+
 		echo "$commitAddresses" | while read commitAddress;do
-			INFO "$repoName : Building commit page for $commitAddress"
+			commitCount=$(( commitCount + 1 ))
+			INFO "$repoName : Building commit page $commitCount/$totalCommits for $commitAddress "
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
 			if echo "$@" | grep -q -e "--parallel";then
 				git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
@@ -581,12 +587,11 @@ function processRepo(){
 			done
 		fi
 		INFO "$repoName : Building QR code"
-		startDebug
 		# build a qr code for the icon link
 		qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
 		waitQueue 0.5 "$totalCPUS"
 
-		INFO "$repoName : Waiting for parallel processing to end"
+		INFO "$repoName : Waiting for all threads to finish"
 		blockQueue 1
 		INFO "$repoName : Adding to indexes"
 		#	build the index file for this entry if one does not exist
@@ -601,7 +606,6 @@ function processRepo(){
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 	fi
-	stopDebug
 }
 ################################################################################
 webUpdate(){
