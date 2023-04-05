@@ -126,51 +126,32 @@ function disableCronJob(){
 	rm -v "/etc/cron.d/2web"
 }
 ########################################################################
+function checkActiveStatusForGraph(){
+	graphName="$1"
+	webDirectory="$2"
+	if test -f "$webDirectory/${graphName}.activeGraph";then
+		rm "$webDirectory/${graphName}.activeGraph"
+		echo "1"
+	elif test -f "$webDirectory/${graphName}.active";then
+		echo "1"
+	else
+		echo "0"
+	fi
+}
+########################################################################
 function recordActivityGraph(){
 	webDirectory=$(webRoot)
 	# record a round robin CSV database of active services in 30 minute intervals
 	if cacheCheckMin "/var/cache/2web/activityGraphData.index" 30;then
 		# store the current activity status in the graph
-		if test -f "$webDirectory/nfo2web.active";then
-			nfo2webStatus=1
-		else
-			nfo2webStatus=0
-		fi
-		if test -f "$webDirectory/music2web.active";then
-			music2webStatus=1
-		else
-			music2webStatus=0
-		fi
-		if test -f "$webDirectory/iptv2web.active";then
-			iptv2webStatus=1
-		else
-			iptv2webStatus=0
-		fi
-		if test -f "$webDirectory/wiki2web.active";then
-			wiki2webStatus=1
-		else
-			wiki2webStatus=0
-		fi
-		if test -f "$webDirectory/comic2web.active";then
-			comic2webStatus=1
-		else
-			comic2webStatus=0
-		fi
-		if test -f "$webDirectory/git2web.active";then
-			git2webStatus=1
-		else
-			git2webStatus=0
-		fi
-		if test -f "$webDirectory/weather2web.active";then
-			weather2webStatus=1
-		else
-			weather2webStatus=0
-		fi
-		if test -f "$webDirectory/graph2web.active";then
-			graph2webStatus=1
-		else
-			graph2webStatus=0
-		fi
+		nfo2webStatus=$(checkActiveStatusForGraph "nfo2web" "$webDirectory")
+		music2webStatus=$(checkActiveStatusForGraph "music2web" "$webDirectory")
+		iptv2webStatus=$(checkActiveStatusForGraph "iptv2web" "$webDirectory")
+		wiki2webStatus=$(checkActiveStatusForGraph "wiki2web" "$webDirectory")
+		comic2webStatus=$(checkActiveStatusForGraph "comic2web" "$webDirectory")
+		git2webStatus=$(checkActiveStatusForGraph "git2web" "$webDirectory")
+		weather2webStatus=$(checkActiveStatusForGraph "weather2web" "$webDirectory")
+		graph2webStatus=$(checkActiveStatusForGraph "graph2web" "$webDirectory")
 		{
 			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus"
 		} >> "/var/cache/2web/activityGraphData.index"

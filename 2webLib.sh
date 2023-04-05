@@ -383,6 +383,7 @@ function lockProc(){
 		ALERT "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
 		touch "$webDirectory/${procName}.active"
+		touch "$webDirectory/${procName}.activeGraph"
 		ALERT "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
 		trap "rm $webDirectory/${procName}.active" EXIT
