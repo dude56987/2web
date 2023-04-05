@@ -729,11 +729,9 @@ if( ! function_exists("drawServicesWidget")){
 			# additional searches will display the results found by this running process
 			set_time_limit(900);
 
-			# add comment to cache file before running port scan in order to lock the scan process to a single process
-			appendCacheFile($cacheFile,"<!-- Searching For Server Services -->");
-
 			if (serverServicesCount() <= 1){
 				# write the cache file to avoid running the code again for cache delay
+				appendCacheFile($cacheFile,"<!-- No Server Services Found -->");
 				# return false to exit and avoid running the empty loops
 				return false;
 			}
