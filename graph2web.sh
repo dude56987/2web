@@ -34,14 +34,8 @@ function buildVnstatDevice(){
 	vnstati -i "$device" -y -o "/var/cache/2web/generated_graphs/vnstat_${device}-year.png"
 	# generate additional summary graphs for vnstat
 	vnstati -i "$device" -s -o "/var/cache/2web/generated_graphs/vnstat_${device}-summary.png"
-	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-week.png"
-	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-month.png"
-	#linkFile  "/var/cache/2web/generated_graphs/vnstat_${device}_summary-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_summary-year.png"
 	# generate top activity months of all time
 	vnstati -i "$device" -t -o "/var/cache/2web/generated_graphs/vnstat_${device}-top.png"
-	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-week.png"
-	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-month.png"
-	#linkFile "/var/cache/2web/generated_graphs/vnstat_${device}_top-day.png" "/var/cache/2web/generated-graphs/vnstat_${device}_top-year.png"
 
 }
 ################################################################################
@@ -68,7 +62,6 @@ function vnstatGen(){
 }
 ################################################################################
 function smokepingGen(){
-	set -x
 	# generate smokeping graphs
 	find "/var/cache/smokeping/images/" -type d | while read smokepingSection;do
 		ALERT "smokeping section = $smokepingSection"
@@ -87,7 +80,6 @@ function smokepingGen(){
 			linkFile "${graphPath}/${graphBaseName}_last_31104000.png" "/var/cache/2web/generated_graphs/smokeping_${graphBaseName}-year.png"
 		done
 	done
-	set +x
 }
 ################################################################################
 function loadWithoutComments(){
@@ -95,78 +87,13 @@ function loadWithoutComments(){
 	return 0
 }
 ################################################################################
-linkFile(){
-	if ! test -L "$2";then
-		ln -sf "$1" "$2"
-		# DEBUG: log each linked file
-		#echo "ln -sf '$1' '$2'" >> /var/cache/2web/web/linkedFiles.log
-	fi
-}
-################################################################################
-createDir(){
-	if ! test -d "$1";then
-		mkdir -p "$1"
-		# set ownership of directory and subdirectories as www-data
-		chown -R www-data:www-data "$1"
-	fi
-	chown www-data:www-data "$1"
-}
-################################################################################
-getDirSum(){
-	line=$1
-	# check the libary sum against the existing one
-	totalList=$(find "$line" | sort)
-	# add the version to the sum to update old versions
-	# - Disk caching on linux should make this repetative file read
-	#   not destroy the hard drive
-	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
-	echo "$tempLibList"
-}
-################################################################################
-checkFileDataSum(){
-	# return true if the directory has been updated/changed
-	# store sums in $webdirectory/$sums
-	webDirectory=$1
-	filePath=$2
-	# check the sum of a directory and compare it to a previously stored sum
-	if ! test -d "$webDirectory/sums/";then
-		mkdir -p "$webDirectory/sums/"
-	fi
-	pathSum="$(echo "$filePath" | md5sum | cut -d' ' -f1 )"
-	newSum="$( cat "$filePath" | md5sum | cut -d' ' -f1 )"
-	# check for a previous sum
-	if test -f "$webDirectory/sums/file_$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/file_$pathSum.cfg")"
-		# compare the sum of the old path with the new one
-		if [ "$oldSum" == "$newSum" ];then
-			# UNCHANGED
-			# if the sums are the same no change detected, pass false
-			return 1
-		else
-			# CHANGED
-			# the sums are diffrent, pass true
-			# update the sum
-			echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
-			return 0
-		fi
-	else
-		# CHANGED
-		# no previous file was found, pass true
-		# update the sum
-		echo "$newSum" > "$webDirectory/sums/file_$pathSum.cfg"
-		return 0
-	fi
-}
-########################################################################
 function update(){
 	# this will launch a processing queue that downloads updates to graph
 	webDirectory=$(webRoot)
 	checkModStatus "graph2web"
 
 	createDir "$webDirectory/graphs/"
+	createDir "$webDirectory/kodi/graphs/"
 
 	# copy over the php files for the graph
 	linkFile "/usr/share/2web/templates/graphs.php" "$webDirectory/graphs/index.php"
@@ -193,6 +120,7 @@ function update(){
 
 			# the graph does not exist on the webserver but is enabled in munin so activate it
 			createDir "$webDirectory/graphs/$fileName/"
+			createDir "$webDirectory/kodi/graphs/$fileName/"
 
 			# add the title config file for the php page
 			echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
@@ -205,6 +133,15 @@ function update(){
 			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
 			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
 			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
+
+			# creates kodi directory links
+			linkFile "$searchPath/$fileName-top.png" "$webDirectory/kodi/graphs/$fileName/top.png"
+			linkFile "$searchPath/$fileName-summary.png" "$webDirectory/kodi/graphs/$fileName/summary.png"
+			linkFile "$searchPath/$fileName-hour.png" "$webDirectory/kodi/graphs/$fileName/hour.png"
+			linkFile "$searchPath/$fileName-day.png" "$webDirectory/kodi/graphs/$fileName/day.png"
+			linkFile "$searchPath/$fileName-week.png" "$webDirectory/kodi/graphs/$fileName/week.png"
+			linkFile "$searchPath/$fileName-month.png" "$webDirectory/kodi/graphs/$fileName/month.png"
+			linkFile "$searchPath/$fileName-year.png" "$webDirectory/kodi/graphs/$fileName/year.png"
 
 			# build the index entry for the graph on the main index
 			{
@@ -249,11 +186,18 @@ function update(){
 			# the graph does not exist on the webserver but is enabled in munin so activate it
 
 			createDir "$webDirectory/graphs/$fileName/"
+			createDir "$webDirectory/kodi/graphs/$fileName/"
 			# read each graph path and build a directory for each set of graphs
 			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/day.png"
 			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
 			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
 			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
+
+			# add kodi directory links
+			linkFile "$searchPath/$fileName-day.png" "$webDirectory/kodi/graphs/$fileName/day.png"
+			linkFile "$searchPath/$fileName-week.png" "$webDirectory/kodi/graphs/$fileName/week.png"
+			linkFile "$searchPath/$fileName-month.png" "$webDirectory/kodi/graphs/$fileName/month.png"
+			linkFile "$searchPath/$fileName-year.png" "$webDirectory/kodi/graphs/$fileName/year.png"
 
 			# copy over the metadata for the template to use
 			titleClean=$(echo "$fileName" | sed "s/_/ /g" )
@@ -402,15 +346,17 @@ function cacheCheck(){
 }
 ################################################################################
 function nuke(){
+	webDirectory=$(webRoot)
 	# remove the kodi and web graph files
-	rm -rv $(webRoot)/graphs/ || echo "No files found in graph web directory..."
-	rm -rv $(webRoot)/graphs/* || echo "No files found in graph web directory..."
-	rm -rv $(webRoot)/new/graphs.index || echo "No graph index..."
-	rm -rv $(webRoot)/random/graphs.index || echo "No graph index..."
-	rm -v $(webRoot)/web_cache/widget_random_graphs.index
-	rm -v $(webRoot)/web_cache/widget_new_graphs.index
+	rm -rv "$webDirectory/graphs/" || echo "No files found in graph web directory..."
+	rm -rv "$webDirectory/kodi/graphs/" || echo "No files found in graph web directory..."
+	rm -rv "$webDirectory/new/graphs.index" || echo "No graph index..."
+	rm -rv "$webDirectory/random/graphs.index" || echo "No graph index..."
+	rm -v  "$webDirectory/web_cache/widget_random_graphs.index"
+	rm -v  "$webDirectory/web_cache/widget_new_graphs.index"
+	rm -v  "$webDirectory/activityGraph.png"
 	# remove graphs generated by graph2web
-	rm -rv /var/cache/2web/generated_graphs/
+	rm -rv "/var/cache/2web/generated_graphs/"
 }
 ################################################################################
 main(){

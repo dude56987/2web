@@ -186,7 +186,7 @@ function buildActivityGraph(){
 	# generated the paths
 	createDir "/var/cache/2web/generated_graphs/"
 	generatedSvgPath="/var/cache/2web/generated_graphs/2web_activity_day.svg"
-	generatedPngPath="/var/cache/2web/generated_graphs/2web_activity_day.png"
+	generatedPngPath="/var/cache/2web/generated_graphs/2web_activity-day.png"
 	webPath="/var/cache/2web/web/activityGraph.png"
 	graphHeightCounter=0
 	graphHeaderData=""
@@ -359,7 +359,7 @@ function buildActivityGraph(){
 
 	# render graph as image file
 	convert -background none -quality 100 -font "OpenDyslexic-Bold" "$generatedSvgPath" "$generatedPngPath"
-	#
+	# build the web path
 	linkFile "$generatedPngPath" "$webPath"
 	IFS=$IFSBACKUP
 }
@@ -374,11 +374,12 @@ function update2web(){
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
 
-	# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
-	recordActivityGraph
-
-	# build the updated activity graph
-	buildActivityGraph
+	if returnModStatus "graph2web";then
+		# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
+		recordActivityGraph
+		# build the updated activity graph
+		buildActivityGraph
+	fi
 
 	# if the build date of the software has changed then update the generated css themes for the site
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
@@ -1091,8 +1092,10 @@ main(){
 		disableApacheServer
 		disableCronJob
 	elif [ "$1" == "-F" ] || [ "$1" == "--fake-graph" ] || [ "$1" == "fake-graph" ];then
-		buildFakeActivityGraph
-		buildActivityGraph
+		if returnModStatus "graph2web";then
+			buildFakeActivityGraph
+			buildActivityGraph
+		fi
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then
