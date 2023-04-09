@@ -22,55 +22,55 @@
 
 ################################################################################
 # update every 4 hours, if internet sources are included updates can be frequent
-#0 */4 * * * root /usr/bin/niceload /usr/bin/nfo2web update > /var/log/2web_nfo.log
-0 */2 * * * root /usr/bin/niceload /usr/bin/nfo2web --parallel
+#0 */4 * * * root /usr/bin/nfo2web update > /var/log/2web_nfo.log
+0 */2 * * * root /usr/bin/nfo2web --parallel
 
 ################################################################################
 # check if the iptv lists need updated once every 6 hours
-0 */6 * * * root /usr/bin/niceload /usr/bin/iptv2web
+0 */6 * * * root /usr/bin/iptv2web
 # Check if the epg guide info needs updated every 30 minutes
-*/30 * * * * root /usr/bin/niceload /usr/bin/iptv2web --epg
+*/30 * * * * root /usr/bin/iptv2web --epg
 
 ################################################################################
 # update the comic books
-#@monthly root /usr/bin/niceload /usr/bin/comic2web > /var/log/2web_comic.log
-@monthly root /usr/bin/niceload /usr/bin/comic2web --parallel
+#@monthly root /usr/bin/comic2web > /var/log/2web_comic.log
+0 */6 * * * root /usr/bin/comic2web --parallel
 
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
-#@daily root /usr/bin/niceload /usr/bin/music2web > /var/log/2web_music.log
-@daily root /usr/bin/niceload /usr/bin/music2web --parallel
+#@daily root /usr/bin/music2web > /var/log/2web_music.log
+0 */4 * * * root /usr/bin/music2web --parallel
 
 ################################################################################
 # update graph2web
-#@daily root /usr/bin/niceload /usr/bin/graph2web > /var/log/2web_graph.log
-@hourly root	/usr/bin/niceload /usr/bin/graph2web
+#@daily root /usr/bin/graph2web > /var/log/2web_graph.log
+0 */6 * * * root /usr/bin/graph2web
 
 ################################################################################
-# Update weather info
-#*/15 root /usr/bin/niceload /usr/bin/weather2web > /var/log/2web_weather.log
-*/15 * * * *	root	/usr/bin/niceload /usr/bin/weather2web
+# Update weather info once per hour on the half hour
+#*/15 root /usr/bin/weather2web > /var/log/2web_weather.log
+0 * * * *	root /usr/bin/weather2web
 
 ################################################################################
 # run update every hour, individual channels have individual delays
-#@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
-@hourly root	/usr/bin/niceload /usr/bin/ytdl2nfo
+#@hourly root	/usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
+0 */2 * * * root	/usr/bin/ytdl2nfo
 
 ################################################################################
-# every 4 hours check for changes to git repos
-* */4 * * * root	/usr/bin/niceload /usr/bin/git2web
+# every 6 hours check for changes to git repos
+0 */6 * * * root	/usr/bin/git2web
 
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-#@daily root /usr/bin/niceload /usr/bin/2web upgrade > /var/log/2web_upgrade.log
-@daily root /usr/bin/niceload /usr/bin/2web upgrade
+#@daily root /usr/bin/2web upgrade > /var/log/2web_upgrade.log
+@daily root /usr/bin/2web upgrade
 
 ################################################################################
 # Check once a day to see if the cache need cleaned, files are removed on a time delay
 #  set in '/etc/2web/cache/cacheDelay.cfg'. This delay can be changed in the web
 #  administrator interface.
-#@daily root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
-@daily root /usr/bin/niceload /usr/bin/2web cleancache
-#@reboot root /usr/bin/niceload /usr/bin/2web cleancache > /var/log/2web_cleancache.log
-@reboot root /usr/bin/niceload /usr/bin/2web cleancache
+#@daily root /usr/bin/2web cleancache > /var/log/2web_cleancache.log
+@daily root /usr/bin/2web cleancache
+#@reboot root /usr/bin/2web cleancache > /var/log/2web_cleancache.log
+@reboot root /usr/bin/2web cleancache
