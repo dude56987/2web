@@ -152,8 +152,9 @@ function recordActivityGraph(){
 		git2webStatus=$(checkActiveStatusForGraph "git2web" "$webDirectory")
 		weather2webStatus=$(checkActiveStatusForGraph "weather2web" "$webDirectory")
 		graph2webStatus=$(checkActiveStatusForGraph "graph2web" "$webDirectory")
+		ytdl2nfoStatus=$(checkActiveStatusForGraph "ytdl2nfo" "$webDirectory")
 		{
-			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus"
+			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$ytdl2nfoStatus"
 		} >> "/var/cache/2web/activityGraphData.index"
 		# limit log to last 36 entries, this is because this log is updated every 30 minutes
 		# - You can not > pipe a file directly with tail, so it is stored in memory fist
@@ -166,7 +167,7 @@ function recordActivityGraph(){
 function buildFakeActivityGraph(){
 	{
 		for index in $(seq 36);do
-			for index in $(seq 8);do
+			for index in $(seq 9);do
 				# build each line
 				echo -n "1,"
 			done
