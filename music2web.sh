@@ -82,7 +82,6 @@ function processTrack(){
 		# get the web root
 		webDirectory=$(webRoot)
 
-		INFO "Attempting ffprobe metadata extraction..."
 		# build the blank data in case of bash wierdness with clearing variables
 		artist=""
 		album=""
@@ -141,9 +140,16 @@ function processTrack(){
 
 		if [ $workingFile -eq 0 ];then
 			# add the disc number to the album title to make multi disc albums work
-			if [ "$disc" != "" ];then
-				album="$album $disc"
-			fi
+			#if [ "$disc" != "" ];then
+			#	album="$album $disc"
+			#fi
+			#if [ "$date" != "" ];then
+			#	album="$album ($date)"
+			#fi
+			# cleanup common numbering schemes used for labeling discs
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disc[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disk[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}cd[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
 
 			artistOG=$artist
 			albumOG=$album
@@ -152,8 +158,14 @@ function processTrack(){
 			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
 			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
 
+			# add the disk number preceding the track, this should fix strange formatting issues with multi disk albums
+			if [ "$disc" != "" ];then
+				track="$disc$track"
+			fi
 			# if the track is less than 10 add a preceding zero for sorting
 			if [ "$track" -lt 10 ];then
+				track="00$track"
+			elif [ "$track" -lt 100 ];then
 				track="0$track"
 			fi
 
@@ -391,10 +403,12 @@ function processTrack(){
 				# add the album to the artist index
 				{
 					echo "<a class='indexLink button' href='/music/$artist/$album'>"
-					#echo "	<h2>$date</h2>"
 					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/$album/album-web.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$albumOG"
+					if [ "$date" != "" ];then
+						echo "	<span>($date)</span>"
+					fi
 					echo "	</div>"
 					echo "</a>"
 				} > "$webDirectory/music/$artist/$album/album.index"
