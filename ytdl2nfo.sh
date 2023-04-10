@@ -156,10 +156,7 @@ ytdl2kodi_channel_extractor(){
 	echo "[INFO]: Running playlist link extractor..."
 	linkList=""
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
-	# cache downloaded playlists for 24 hours
-	# true if file is not cached or older than 5 hours
-	# every 5 hours = 300 minutes
-	echo "[INFO]: Updating the cached playlist..."
+	echo "[INFO]: Updating the playlist..."
 	# try to rip as a playlist
 	if test -f /usr/local/bin/yt-dlp;then
 		tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
@@ -171,31 +168,132 @@ ytdl2kodi_channel_extractor(){
 		echo "[INFO]: tempLinkList = $tempLinkList"
 	fi
 	# get uploader from the json data and set it as the show title
-	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
-	echo "[INFO]: Channel show title found = $showTitle"
+	#showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
 
-	# list only the urls from the json data retrived
-	tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
-	echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
+	## get uploader from the json data and set it as the show title
+	#if echo "$@" | grep "\-\-username";then
+	#	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
+	#	if ! validString "$showTitle";then
+	#		showTitle=$(echo "$tempLinkList" | jq -r ".channel" | head -1)
+	#	fi
+	#	# final failsafe username
+	#	#if ! validString "$showTitle";then
+	#	#	showTitle=$(ytdl2kodi_rip_title "$selection")
+	#	#fi
+	#else
+	#	showTitle=$(ytdl2kodi_rip_title "$selection")
+	#fi
+	#echo "[INFO]: Channel show title found = $showTitle"
+
+	#tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	linkList=""
 	echo "[INFO]: Checking error code = '$errorCode'"
 	# check if the error code is true
 	#if [[ $errorCode -eq 0 ]];then
 	if [ $errorCode -eq 0 ];then
 		# mark the playlist download as cached
-		echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
-		for videoId in $tempLinkList;do
-			linkList=$(echo -en "$linkList\n$videoId")
-		done
+		#echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
+		# list only the urls from the json data retrived
+		linkList=$(echo "$tempLinkList" | jq -r ".url")
+		echo "[INFO]: linkList after cleanup = $tempLinkList"
 	else
+		# write in the database that this channel link has failed
+		logPagePath="$webDirectory/log/$(date "+%s").log"
+		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist $linkList" "$logPagePath"
 		# exit and do not mark as processed since no playlist/linklist could be retrieved
 		# this should also fail out if the network connection is down
 		return 1
 	fi
-	################################################################################
-	# sort out duplicate links
+
+	# list only the urls from the json data retrived
+	#tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
+	#echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
+
 	# reverse sort of list since most lists show newest at the top of the webpage
 	echo "[INFO]: Reversing list because most pages list newest to oldest..."
 	linkList=$(echo "$linkList" | tac)
+
+	# set the show title based on the data from the latest video posted on the channel playlist
+	if echo "$@" | grep "\-\-username";then
+		showTitle=""
+		if ! validString "$showTitle";then
+			echo "Reading '.playlist_uploader' from playlist entry"
+			showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
+			echo "Show title set to '$showTitle' from .playlist_uploader"
+		fi
+		if ! validString "$showTitle";then
+			echo "Show title is invalid string '$showTitle'"
+			echo "Reading '.channel' name from first playlist entry"
+			# failsafe extract channel from json data in tempLinkList
+			showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".channel" | head -1)
+		fi
+		if ! validString "$showTitle";then
+			showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".uploader" | head -1)
+		fi
+		if ! validString "$showTitle";then
+			# get the second video from the playlist and compare the uploader name to the first
+			# if the first is the same as the second, that means the playlist title is correct
+			# if the first and second video have diffrent uploaders go to the next failure mode
+			echo "Show title is invalid string '$showTitle'"
+			echo "Downloading json data from latest video to set the show title from '.channel' value"
+			# get the last url in the link list and set the user name based on .channel in that link
+			tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
+			tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
+			echo "tempLinkUrl= $tempLinkUrl"
+			tempJsonInfo=$(yt-dlp -j "$tempLinkUrl")
+			tempJsonInfo2=$(yt-dlp -j "$tempLinkUrl2")
+
+			tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
+			tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".channel")
+
+			echo "[INFO]: [ $tempJsonData == $tempJsonData2 ]"
+			if [ "$tempJsonData" == "$tempJsonData2" ];then
+				echo "[INFO]: comparison correct"
+				showTitle=$tempJsonData
+			fi
+			if ! validString "$showTitle";then
+				tempJsonData=$(echo "$tempJsonInfo" | jq -r ".uploader")
+				tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".uploader")
+				echo "[INFO]: [ $tempJsonData == $tempJsonData2 ]"
+				if [ "$tempJsonData" == "$tempJsonData2" ];then
+					echo "[INFO]: comparison correct"
+					showTitle=$tempJsonData
+				fi
+			fi
+		fi
+		if ! validString "$showTitle";then
+			echo "Show title is invalid string '$showTitle'"
+			showTitle=$(echo "$tempLinkList" | jq -r ".playlist_title" | head -1 )
+			echo "Show title set to '$showTitle' from .playlist_title"
+		fi
+		if ! validString "$showTitle";then
+			echo "Show title is invalid string '$showTitle'"
+			showTitle=$(echo "$tempLinkList" | jq -r ".playlist" | head -1 )
+			echo "Show title set to '$showTitle' from .playlist"
+		fi
+		# get the playlist and try to mangle the domain or path into a title, this will only sometimes work correctly
+		#if ! validString "$showTitle";then
+		#	echo "Show title is invalid string '$showTitle'"
+		#	# if a hash is used in here somehow it will be basicly unreadable
+		#	echo "Getting .Playlist_id and attempting cleanup of the playlist..."
+		#	# remove punctuation from the playlist title if it is the entire url
+		#	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_id" | head -1 | sed "s/\// /g" | tr -s ' ' | sed "s/[[:punct:]]//g")
+		#	# cleanup url crap
+		#	showTitle=$(echo "$showTitle" | sed "s/https\:\/\///g")
+		#	showTitle=$(echo "$showTitle" | sed "s/http\:\/\///g")
+		#fi
+		# final failsafe username generator is the domain name
+		if ! validString "$showTitle";then
+			echo "Show title is invalid string '$showTitle'"
+			echo "Using link domain name as last effort to generate a show title"
+			showTitle=$(ytdl2kodi_rip_title "$channelLink")
+		fi
+	else
+		echo "Using link domain name generate a show title for all videos from this domain"
+		showTitle=$(ytdl2kodi_rip_title "$channelLink")
+	fi
+	echo "Show title set to '$showTitle'"
+	################################################################################
 	################################################################################
 	# after cleaning the link should be compared to the previous downloads
 	# and removed if it has already been processed
@@ -489,7 +587,7 @@ ytdl2kodi_update(){
 	echo "Site Link List = '$siteLinkList'"
 	#echo "$siteLinkList" | while read link;do
 	for link in $siteLinkList;do
-		echo "[INFO]:Checking site link '$link' ..."
+		#echo "[INFO]:Checking site link '$link' ..."
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
 			echo "[INFO]: Channel Processing Limit Reached!"
@@ -498,7 +596,7 @@ ytdl2kodi_update(){
 		if [ "$link" == "" ];then
 			echo "'$link' is blank..."
 		else
-			echo "Running channel metadata extractor on '$link'..."
+			#echo "Running channel metadata extractor on '$link'..."
 			# check links aginst existing stream files to pervent duplicating the work
 			ytdl2kodi_channel_extractor "$link"
 		fi
@@ -539,13 +637,13 @@ validString(){
 	echo "[INFO]: Checking string '$stringToCheck'"
 	# convert string letters to all uppercase and look for returned NULL string
 	# jq returns these strings instead of failing outright
-	if echo "${stringToCheck^^}" | grep "NULL";then
+	if echo "$stringToCheck" | grep -q --ignore-case "^NULL";then
 		# this means the function is a null string returned by jq
 		echo "[WARNING]:string is a NULL value"
 		return 2
-	elif [ 2 -ge $(expr length "$stringToCheck") ];then
+	elif [ 2 -ge "$(echo "$stringToCheck" | wc -c)" ];then
 		# this means the string is only one character
-		echo "[WARNING]:String length is less than one"
+		echo "[WARNING]:String length is less than three"
 		return 1
 	else
 		# all checks have been passed the string is correct
@@ -591,8 +689,9 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	# import and run the debug check
 	################################################################################
-	selection=$1
-	channelLink=$2
+	selection="$1"
+	channelLink="$2"
+	showTitle="$3"
 	################################################################################
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	################################################################################
@@ -647,20 +746,27 @@ ytdl2kodi_video_extractor(){
 		echo
 		return 1
 	else
-		echo "Return code of ytdl = $infoCheck"
-		# if the info returns a failure code
-		# add it to the previous downloads to stop rescanning repeated links
-		addProcessedSum "$selection" "$channelSum"
-		echo "The info extractor failed..."
-		echo "Skipping..."
-		echo
-		return 1
+		# if the extractor failed then try to extract info with ffprobe
+		probeData=$(ffprobe "$selection" |& cat)
+		if ! validString "$probeData";then
+			# get the file title in metadata
+			echo "$probeData" | grep "^title"| tr -s ' ' | cut -d':' -f2
+		fi
+		if ! validString "$probeData";then
+			echo "Return code of ytdl = $infoCheck"
+			# if the info returns a failure code
+			# add it to the previous downloads to stop rescanning repeated links
+			addProcessedSum "$selection" "$channelSum"
+			echo "The info extractor failed..."
+			echo "Skipping..."
+			echo
+			return 1
+		fi
 	fi
 	################################################################################
-	formatCheck=$(echo "$info" | jq ".formats[0].url")
-	formatCheck=$(echo "$formatCheck" | sed 's/\"//g')
-	# if spaces somehow made it into the formating, cut the first field
-	formatCheck=$(echo "$formatCheck" |  cut -d" " -f1)
+	# this checks for the webpage url which is used for playback
+	formatCheck=$(echo "$info" | jq -r ".webpage_url")
+
 	if ! validString "$formatCheck";then
 		# this is not a video file link so ignore it
 		addProcessedSum "$selection" "$channelSum"
@@ -694,6 +800,14 @@ ytdl2kodi_video_extractor(){
 	id=$(echo "$info" | jq -r ".id?" | xargs -0 | cut -d$'\n' -f1 )
 	title=$(echo "$info" | jq -r ".fulltitle?" | xargs -0 | cut -d$'\n' -f1 )
 	titleGet=$?
+
+	# if the extractor failed then try to extract info with ffprobe
+	if ! validString "$title";then
+		probeData=$(ffprobe "$selection" |& cat)
+		# get the file title in metadata
+		title=$(echo "$probeData" | grep "^title"| tr -s ' ' | cut -d':' -f2 | head -1)
+	fi
+
 	# write the webpage as the plot
 	#plot=$(echo "$info" | jq -r ".webpage_url")
 	plot=$(echo "$info" | jq -r ".description" | xargs -0)
@@ -713,46 +827,58 @@ ytdl2kodi_video_extractor(){
 	# figure out the episode season
 	episodeSeason=$(date -d "$airdate" "+%Y")
 	# get uploader
-	uploader=$(echo "$info" | jq -r ".uploader" | xargs -0 | cut -d$'\n' -f1 )
+	uploader=$(echo "$info" | jq -r ".channel")
+	# if channel is not available use uploader
+	if ! validString "$uploader";then
+		uploader=$(echo "$info" | jq -r ".uploader")
+	fi
 	################################################################################
 	# create the show title
-	if echo "$@" | grep "\-\-username";then
-		#if [ 5 -lt $(expr length "$uploader") ];then
-		if validString "$uploader";then
-			# create the username from the uploader, this is toggled by a switch
-			showTitle="$uploader"
-		else
-			echo "No uploader name was found and use username as showname was selected."
-			echo "Uploader = '$uploader'"
-			# if this download is not listed in previousDownloads then add it
-			addProcessedSum "$selection" "$channelSum"
-			echo "Skipping video..."
-			echo
-			return 1
-		fi
-	else
-		# create the showtitle from the base url this is default
-		showTitle=$(ytdl2kodi_rip_title "$selection")
-	fi
+	#if echo "$@" | grep "\-\-username";then
+	#	#if [ 5 -lt $(expr length "$uploader") ];then
+	#	if validString "$uploader";then
+	#		# create the username from the uploader, this is toggled by a switch
+	#		showTitle="$uploader"
+	#	else
+	#		echo "No uploader name was found and use username as showname was selected."
+	#		echo "Uploader = '$uploader'"
+	#		# if this download is not listed in previousDownloads then add it
+	#		addProcessedSum "$selection" "$channelSum"
+	#		echo "Skipping video..."
+	#		echo
+	#		return 1
+	#	fi
+	#if validString "$3";then
+	#	# get uploader from  channel extractor
+	#	echo "[INFO]: uploader='$3' was a valid string"
+	#	echo "[INFO]: uploader wil now become showTitle..."
+	#	# create the username from the uploader, this is toggled by a switch
+	#	showTitle="$3"
+	#else
+	#	echo "[INFO]: uploader='$uploader' was not a valid string"
+	#	echo "[INFO]: ripping title from url..."
+	#	# create the showtitle from the base url this is default
+	#	showTitle=$(ytdl2kodi_rip_title "$selection")
+	#	echo "[INFO]: Discovered title is '$showTitle'..."
+	#fi
 	echo "Show Title = $showTitle"
-	if echo "$@" | grep "\-\-username";then
-		# the show title should be the same as the playlist show title
-		if [ "$showTitle" != "$3" ];then
-			# this means this link is invalid
-			echo "Episode processing stopped, This video link is a diffrent username."
-			# if this download is not listed in previousDownloads then add it
-			addProcessedSum "$selection" "$channelSum"
-			echo "Skipping video..."
-			echo
-			return 1
-		fi
-	fi
+	#if echo "$@" | grep "\-\-username";then
+	#	# the show title should be the same as the playlist show title
+	#	if [ "$showTitle" != "$3" ];then
+	#		# this means this link is invalid
+	#		echo "Episode processing stopped, This video link is a diffrent username."
+	#		# if this download is not listed in previousDownloads then add it
+	#		addProcessedSum "$selection" "$channelSum"
+	#		echo "Skipping video..."
+	#		echo
+	#		return 1
+	#	fi
+	#fi
 	################################################################################
 	# create season directory
 	downloadPath="$downloadPath$showTitle/Season $episodeSeason/"
 	echo "DownloadPath set to = $downloadPath"
 	mkdir -p "$downloadPath"
-
 	################################################################################
 	# if titleget failed and plot get was successfull
 	if ! validString "$title";then
@@ -984,13 +1110,37 @@ ytdl2kodi_video_extractor(){
 		echo "<director>$uploader</director>"
 		echo "<credits>$uploader</credits>"
 		# get the runtime if it is available
-		runtime=$(echo "$info" | jq -r ".duration")
-		if [ "$runtime" -gt 0 ];then
-			echo "<runtime>$runtime</runtime>"
+		runtime="$(echo "$info" | jq -r ".duration")"
+		videoHeight="$(echo "$info" | jq -r ".height")"
+		videoWidth="$(echo "$info" | jq -r ".width")"
+		echo "<fileinfo>"
+		echo "<streamdetails>"
+		echo "<video>"
+		# make sure the runtime is a interger
+		if [[ "$runtime" =~ ^[0-9]+$ ]];then
+			if [ "$runtime" -gt 0 ];then
+				echo "<durationinseconds>$runtime</durationinseconds>"
+			else
+				# default runtime guess is 15 minutes
+				echo "<durationinseconds>600</durationinseconds>"
+			fi
 		else
 			# default runtime guess is 15 minutes
-			echo "<runtime>15 min</runtime>"
+			echo "<durationinseconds>600</durationinseconds>"
 		fi
+		if [[ "$videoWidth" =~ ^[0-9]+$ ]];then
+			if [ "$videoWidth" -gt 0 ];then
+				echo "<width>$videoWidth</width>"
+			fi
+		fi
+		if [[ "$videoHeight" =~ ^[0-9]+$ ]];then
+			if [ "$videoHeight" -gt 0 ];then
+				echo "<height>$videoHeight</height>"
+			fi
+		fi
+		echo "</video>"
+		echo "</streamdetails>"
+		echo "</fileinfo>"
 		echo "<plot>$plot</plot>"
 		echo "<aired>$airdate</aired>"
 		# set the last processed time of the episode
