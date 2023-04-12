@@ -215,8 +215,6 @@ function cacheCheckMin(){
 function linkFile(){
 	if ! test -L "$2";then
 		ln -sf "$1" "$2"
-		# DEBUG: log each linked file
-		#echo "ln -sf '$1' '$2'" >> /var/cache/2web/web/linkedFiles.log
 	fi
 }
 ########################################################################
@@ -294,12 +292,23 @@ function waitQueue(){
 	sleepTime=$1
 	totalCPUS=$2
 	while true;do
+		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
 		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
-			#ALERT "WAITING FOR QUEUE PLACE TO OPEN"
+			#ALERT "Waiting for free CPU cores..."
 			sleep $sleepTime
 		else
-			break
+			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
+			# - bc is required because system load is measured to two decimal places
+			# - this will make all 2web modules parallel process without blocking each other
+			# - this should make the apache server remain available even if all modules are running in parallel
+			highLoad=$(echo "$(cat /proc/loadavg | cut -d' ' -f1) > $totalCPUS" | bc)
+			if [ $highLoad -eq 1 ];then
+				#ALERT "System is overloaded, Waiting for system resources..."
+				sleep $sleepTime
+			else
+				break
+			fi
 		fi
 	done
 }
