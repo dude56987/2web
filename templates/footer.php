@@ -131,9 +131,10 @@ if ($writeFile){
 	# build the header
 	$fileData .= "<a class='' href='/index.php'>";
 	$fileData .= "🏠";
-	#$fileData .= "<span class='footerText'>";
+	$fileData .= "<span class='footerText'>";
 	#$fileData .= " HOME";
-	#$fileData .= "</span>";
+	$fileData .= formatText(strtoupper(gethostname()),1);
+	$fileData .= "</span>";
 	$fileData .= "</a> ";
 
 	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){

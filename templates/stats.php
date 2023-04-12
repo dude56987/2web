@@ -96,9 +96,13 @@ echo ucfirst(shell_exec("hostname"));
 echo "<img id='spinner' src='/spinner.gif' />";
 echo "</h1>";
 
-echo "<div>";
-echo "<img class='homeActivityGraph' src='activityGraph.png' />";
-echo "</div>";
+if ( file_exists("activityGraph.png")){
+	echo "<div>";
+	echo "<a href='/graphs/2web_activity/'>";
+	echo "<img class='homeActivityGraph' src='activityGraph.png' />";
+	echo "</a>";
+	echo "</div>";
+}
 
 if ( file_exists("nfo2web.active")){
 	echo "<span class='activeProcess'>";

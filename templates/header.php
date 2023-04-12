@@ -94,7 +94,7 @@ if ($writeFile){
 	$fileData .= formatText("<a class='button' href='/'>",2);
 	$fileData .= formatText("&#127968;",3);
 	$fileData .= formatText("<span class='headerText'>",3);
-	$fileData .= formatText("HOME",4);
+	$fileData .= formatText(strtoupper(gethostname()),4);
 	$fileData .= formatText("</span>",3);
 	$fileData .= formatText("</a>",2);
 
