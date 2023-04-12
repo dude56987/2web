@@ -735,7 +735,9 @@ if( ! function_exists("drawServicesWidget")){
 				# return false to exit and avoid running the empty loops
 				return false;
 			}
-			mkdir("/var/cache/2web/qrCodes/$locationSum/");
+			if (! is_dir("/var/cache/2web/qrCodes/$locationSum/")){
+				mkdir("/var/cache/2web/qrCodes/$locationSum/");
+			}
 			// draw services widget
 			foreach(availableServicesArray() as $serviceData){
 				if (checkPort($serviceData[1])){
