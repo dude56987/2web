@@ -167,36 +167,48 @@ build-deb: upgrade-hls
 	# add the base lib used across all modules
 	#cp 2webLib.sh debian/var/lib/2web/common
 	echo "#! /bin/bash" > debian/var/lib/2web/common
+	cat build/sh_head.txt > debian/var/lib/2web/common
 	# remove all comment lines from the code to reduce package size and disk read on execution
 	grep --invert-match "^[[:blank:]]*#" 2webLib.sh | tr -s '\n' >> debian/var/lib/2web/common
 	# copy update scripts to /usr/bin
 	#cp 2web.sh debian/usr/bin/2web
 	echo "#! /bin/bash" > debian/usr/bin/2web
+	cat build/sh_head.txt > debian/usr/bin/2web
 	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
 	# search
 	#echo "#! /bin/bash" > debian/usr/bin/search2web
 	#grep --invert-match "^[[:blank:]]*#" search2web.sh | tr -s '\n' >> debian/usr/bin/search2web
 	# wiki
 	echo "#! /bin/bash" > debian/usr/bin/wiki2web
+	# add the gpl header
+	cat build/sh_head.txt > debian/usr/bin/wiki2web
 	grep --invert-match "^[[:blank:]]*#" wiki2web.sh | tr -s '\n' >> debian/usr/bin/wiki2web
-	#cp nfo2web.sh debian/usr/bin/nfo2web
 	echo "#! /bin/bash" > debian/usr/bin/nfo2web
+	cat build/sh_head.txt > debian/usr/bin/nfo2web
 	grep --invert-match "^[[:blank:]]*#" nfo2web.sh | tr -s '\n' >> debian/usr/bin/nfo2web
 	echo "#! /bin/bash" > debian/usr/bin/git2web
+	cat build/sh_head.txt > debian/usr/bin/git2web
 	grep --invert-match "^[[:blank:]]*#" git2web.sh | tr -s '\n' >> debian/usr/bin/git2web
 	echo "#! /bin/bash" > debian/usr/bin/music2web
+	cat build/sh_head.txt > debian/usr/bin/music2web
 	grep --invert-match "^[[:blank:]]*#" music2web.sh | tr -s '\n' >> debian/usr/bin/music2web
 	echo "#! /bin/bash" > debian/usr/bin/iptv2web
+	cat build/sh_head.txt > debian/usr/bin/iptv2web
 	grep --invert-match "^[[:blank:]]*#" iptv2web.sh | tr -s '\n' >> debian/usr/bin/iptv2web
 	echo "#! /bin/bash" > debian/usr/bin/comic2web
+	cat build/sh_head.txt > debian/usr/bin/comic2web
 	grep --invert-match "^[[:blank:]]*#" comic2web.sh | tr -s '\n' >> debian/usr/bin/comic2web
 	echo "#! /bin/bash" > debian/usr/bin/graph2web
+	cat build/sh_head.txt > debian/usr/bin/graph2web
 	grep --invert-match "^[[:blank:]]*#" graph2web.sh | tr -s '\n' >> debian/usr/bin/graph2web
 	echo "#! /bin/bash" > debian/usr/bin/kodi2web
+	cat build/sh_head.txt > debian/usr/bin/kodi2web
 	grep --invert-match "^[[:blank:]]*#" kodi2web.sh | tr -s '\n' >> debian/usr/bin/kodi2web
 	echo "#! /bin/bash" > debian/usr/bin/weather2web
+	cat build/sh_head.txt > debian/usr/bin/weather2web
 	grep --invert-match "^[[:blank:]]*#" weather2web.sh | tr -s '\n' >> debian/usr/bin/weather2web
 	echo "#! /bin/bash" > debian/usr/bin/ytdl2nfo
+	cat build/sh_head.txt > debian/usr/bin/ytdl2nfo
 	grep --invert-match "^[[:blank:]]*#" ytdl2nfo.sh | tr -s '\n' >> debian/usr/bin/ytdl2nfo
 	# build the man pages for the command line tools
 	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
