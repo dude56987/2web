@@ -32,7 +32,6 @@ ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
-
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
@@ -105,7 +104,9 @@ if (file_exists("/var/cache/2web/web/live/groups/")){
 	# check if the table exists in the sql database
 	while($row = $result->fetchArray()){
 		# add each row to the array
-		array_push($sourceFiles,str_replace("_","",$row['name']));
+		#array_push($sourceFiles,str_replace("_","",$row['name']));
+		array_push($sourceFiles,preg_replace("/^_/","",$row['name']));
+		#array_push($sourceFiles,$row['name']);
 	}
 
 	# read the directory name and make a button to block it
