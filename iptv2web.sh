@@ -272,8 +272,12 @@ function process_M3U(){
 			# pull the link on this line and store it
 			title=$(echo -n "$lineCaught" | rev | cut -d',' -f1 | rev)
 			title=$(cleanText "$title")
+			# remove any newlines found in the title
+			title=$(echo -n "$title" | sed "s/\n//g")
+			title=$(echo -n "$title" | sed "s/\r//g")
 			#echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
-			link=$line
+			link=$(echo -n "$line" | sed "s/\n//g")
+			link=$(echo -n "$line" | sed "s/\r//g")
 			#INFO "Found Link = $link"
 			radio="false"
 			if echo "$radioFile" | grep -q "true";then
@@ -294,7 +298,7 @@ function process_M3U(){
 			#INFO "Icon MD5 = $iconSum"
 			# check for group title
 			# NOTE: /Ig is for case insensitve search
-			groupTitle=$(getTVG "$lineCaught" "group-title" | sed "s/.com/ /g" | sed "s/;/ /g" | sed "s/+/ /g" | sed "s/_/ /g" | sed "s/\./ /g" | sed "s/-/ /g" | sed "s/:/ /g" | sed "s/&/ /g" | sed "s/and//Ig" | tr -s ' ')
+			groupTitle=$(getTVG "$lineCaught" "group-title")
 
 			IFSBACKUP=$IFS
 			IFS=$'\n'
@@ -307,6 +311,18 @@ function process_M3U(){
 				fi
 			done
 			IFS=$IFSBACKUP
+
+			# cleanup wierd stuff in the group titles and squeeze spaces
+			groupTitle=$(echo "$groupTitle" | sed "s/,/ /g")
+			groupTitle=$(echo "$groupTitle" | sed "s/.com/ /g")
+			groupTitle=$(echo "$groupTitle" | sed "s/;/ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/+/ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/\./ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/-/ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/:/ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/&/ /g" )
+			groupTitle=$(echo "$groupTitle" | sed "s/and/ /Ig" )
+			groupTitle=$(echo "$groupTitle" | tr -s ' ')
 
 			# check for groups stored inside the title itself, and remove them from the title
 			if echo "$title" | grep -q --ignore-case "not 247";then
@@ -327,7 +343,7 @@ function process_M3U(){
 			fi
 
 			# remove leading spaces from group listing
-			groupTitle="$(echo "$groupTitle" | sed "s/^\ //g" )"
+			groupTitle="$(echo -n "$groupTitle" | sed "s/^\ //g" )"
 
 			#ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
 			#ALERT "'$title' contains groups '$groupTitle'"
@@ -383,6 +399,7 @@ function process_M3U(){
 				} >> "$channelsRawPath"
 				ALERT "The channel $title was added with groups $m3uGroupTitle"
 				m3uGroupTitle=$(echo -n "$groupTitle" | sed "s/ /;/g")
+				m3uGroupTitle=$(echo "$m3uGroupTitle" | tr -s ';')
 				# write to the default channel file
 				{
 					echo -n "#EXTINF:-1 radio=\"$radio\" "
@@ -626,20 +643,22 @@ function generateGroups(){
 	# grep must search whole words only
 	data=$(echo "$data" | grep -Evw --ignore-case "of|the|or|by|and|are|all|is|at|for" )
 
+	IFSBACKUP=$IFS
 	IFS=$'\n'
 	for group in $data;do
 		# if more than 3 instances of tag occur in the data
-		if [[ $(echo $group| cut -d' ' -f2) -gt 3 ]];then
+		if [[ $(echo $group| cut -d' ' -f2) -gt 1 ]];then
 			# title iteself must be longer than 3 characters
 			if [[ $(echo $group| cut -d' ' -f3 | wc -c) -gt 2 ]];then
 				# if the title contains more than just numbers
 				if echo $group| grep -q "[[:alpha:]]";then
 					# group has more than two entries so make it a group
-					echo "$group" | cut -d' ' -f3
+					echo -n "$group" | cut -d' ' -f3
 				fi
 			fi
 		fi
 	done
+	IFS=$IFSBACKUP
 }
 ################################################################################
 webUpdateCheck(){
@@ -759,7 +778,7 @@ fullUpdate(){
 	# build the base new versions of the m3u files
 	INFO "Processing sources..."
 	INFO "Link List = $linkList"
-	echo "#EXTM3U x-tvg-url=\"epg.xml\"" > "$channelsPath"
+	echo "#EXTM3U x-tvg-url=\"http://$(hostname).local/kodi/epg.xml\"" > "$channelsPath"
 	echo "#EXTM3U" > "$channelsRawPath"
 	# load the total sources
 	if test -f "${webDirectory}live/totalSources.index";then
