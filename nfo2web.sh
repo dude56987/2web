@@ -825,7 +825,7 @@ checkForThumbnail(){
 					# store the image inside a variable
 					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 					# resize the image before checking the filesize
-					convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
+					convert -quiet "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
 					tempFileSize=$(echo "$image" | wc --bytes)
 					# get the size of the file, after it has been created
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
@@ -1097,7 +1097,13 @@ processEpisode(){
 
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
-			resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+
+			# check the ytlink for .mp3 file extension and if it contains .mp3 do not run it through the resolver and use the .strm as a direct link
+			if echo "$resolverUrl" | grep -q ".mp3";then
+				resolverUrl="$ytLink"
+			else
+				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+			fi
 
 			# if the config option is set to cache new episodes
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
