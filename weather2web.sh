@@ -94,11 +94,6 @@ function ERROR(){
 	printf "[ERROR]: $output\n"
 }
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 function update(){
 	#DEBUG
 	# this will launch a processing queue that downloads updates to comics

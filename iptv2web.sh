@@ -29,11 +29,6 @@ function ERROR(){
 	printf "[ERROR]: $output\n"
 }
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 cleanText(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	#echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g"

@@ -82,11 +82,6 @@ function smokepingGen(){
 	done
 }
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 function update(){
 	# this will launch a processing queue that downloads updates to graph
 	webDirectory=$(webRoot)

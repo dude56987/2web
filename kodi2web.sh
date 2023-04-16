@@ -21,11 +21,6 @@ source /var/lib/2web/common
 # enable debug log
 #set -x
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 function update(){
 	# create the config directory if it does not exist
 	createDir /etc/2web/kodi/

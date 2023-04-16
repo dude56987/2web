@@ -87,11 +87,6 @@ function ERROR(){
 	printf "[ERROR]: $output\n"
 }
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 function downloadDir(){
 	if [ ! -f /etc/2web/comics/download.cfg ];then
 		# if no config exists create the default config

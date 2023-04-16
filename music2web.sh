@@ -20,11 +20,6 @@
 #set -x
 source /var/lib/2web/common
 ################################################################################
-function loadWithoutComments(){
-	grep -Ev "^#" "$1"
-	return 0
-}
-################################################################################
 function touchFile(){
 	if ! test -f "$1";then
 		touch "$1"
