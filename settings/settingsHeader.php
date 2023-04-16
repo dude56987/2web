@@ -16,59 +16,114 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+$pageURL = $_SERVER['REQUEST_URI'];
 ?>
 <div class='titleCard'>
 	<h2>Settings</h2>
 	<div class='listCard'>
-		<a class='button' href='/settings/modules.php'>
+		<?PHP
+		if ($pageURL == "/settings/modules.php"){
+			echo "<a class='activeButton' href='/settings/modules.php'>";
+		}else{
+			echo "<a class='button' href='/settings/modules.php'>";
+		}
+		?>
 			🧩
 			<span class='headerText'>
 				Modules
 			</span>
 		</a>
-		<a class='button' href='/settings/system.php'>
+		<?PHP
+		if ($pageURL == "/settings/system.php"){
+			echo "<a class='activeButton' href='/settings/system.php'>";
+		}else{
+			echo "<a class='button' href='/settings/system.php'>";
+		}
+		?>
 			🎛️
 			<span class='headerText'>
 				General
 			</span>
 		</a>
-		<a class='button' href='/settings/nfo.php'>
+		<?PHP
+		if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php")){
+			echo "<a class='activeButton' href='/settings/nfo.php'>";
+		}else{
+			echo "<a class='button' href='/settings/nfo.php'>";
+		}
+		?>
 			🎞️
 			<span class='headerText'>
 				Video On Demand
 			</span>
 		</a>
-		<a class='button' href='/settings/music.php'>
+		<?PHP
+		if ($pageURL == "/settings/music.php"){
+			echo "<a class='activeButton' href='/settings/music.php'>";
+		}else{
+			echo "<a class='button' href='/settings/music.php'>";
+		}
+		?>
 			🎧
 			<span class='headerText'>
 				Music
 			</span>
 		</a>
-		<a class='button' href='/settings/comics.php'>
+		<?PHP
+		if (($pageURL == "/settings/comics.php") || ($pageURL == "/settings/comicsDL.php")){
+			echo "<a class='activeButton' href='/settings/comics.php'>";
+		}else{
+			echo "<a class='button' href='/settings/comics.php'>";
+		}
+		?>
 			📚
 			<span class='headerText'>
 				Comics
 			</span>
 		</a>
-		<a class='button' href='/settings/tv.php'>
+		<?PHP
+		if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
+			echo "<a class='activeButton' href='/settings/tv.php'>";
+		}else{
+			echo "<a class='button' href='/settings/tv.php'>";
+		}
+		?>
 			📡
 			<span class='headerText'>
 				Live
 			</span>
 		</a>
-		<a class='button' href='/settings/weather.php'>
+		<?PHP
+		if ($pageURL == "/settings/weather.php"){
+			echo "<a class='activeButton' href='/settings/weather.php'>";
+		}else{
+			echo "<a class='button' href='/settings/weather.php'>";
+		}
+		?>
 			🌤️
 			<span class='headerText'>
 				Weather
 			</span>
 		</a>
-		<a class='button' href='/settings/graphs.php'>
+		<?PHP
+		if ($pageURL == "/settings/graphs.php"){
+			echo "<a class='activeButton' href='/settings/graphs.php'>";
+		}else{
+			echo "<a class='button' href='/settings/graphs.php'>";
+		}
+		?>
 			📊
 			<span class='headerText'>
 				Graphs
 			</span>
 		</a>
-		<a class='button' href='/settings/about.php'>
+		<?PHP
+		if ($pageURL == "/settings/about.php"){
+			echo "<a class='activeButton' href='/settings/about.php'>";
+		}else{
+			echo "<a class='button' href='/settings/about.php'>";
+		}
+		?>
 			❓
 			<span class='headerText'>
 				About
@@ -78,7 +133,6 @@
 </div>
 
 <?PHP
-$pageURL = $_SERVER['REQUEST_URI'];
 if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
 	$moduleName="iptv2web";
 	echo "	<div class='inputCard'>\n";
@@ -129,7 +183,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
-}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/settings/log.php")){
+}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/log/")){
 	$moduleName="none";
 	echo "	<div class='inputCard'>\n";
 	echo "		<h2>General Settings</h2>\n";
