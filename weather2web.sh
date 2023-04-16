@@ -189,12 +189,18 @@ function update(){
 				# store the weather info for the current weather at the location
 				{
 					echo "<h3>"
-					echo "$weatherLocation Current"
+					echo "Current Conditions - $(date "+%A") - $weatherLocation"
 					echo "</h3>"
 					echo "<div class='weatherIcon weatherHomepageIcon right'>"
 					getWeatherIcon "$todaysWeather"
 					echo "</div>"
 					echo "$todaysWeather"
+					echo "<div>"
+					echo "<h4>"
+					echo "Update Time"
+					echo "</h4>"
+					echo "$locationUpdateTime"
+					echo "</div>"
 				} > "$webDirectory/weather/data/current_$locationSum.index"
 
 				# if no hompage weather location exists set the first added weather location as the homepage location since this data is gathered here anyway
@@ -471,6 +477,9 @@ function update(){
 				#echo "</div>";
 				# write the bottom bar of the weather location data
 				echo -n "</div>"
+				echo -n "<h3>"
+				echo -n "Meta"
+				echo -n "</h3>"
 				echo -n "	<div class='listCard'>"
 				echo -n "		<div class='weatherStationInfo'>"
 				echo -n "		Found via $locationName weather station."
