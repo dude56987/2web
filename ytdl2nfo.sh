@@ -199,7 +199,7 @@ ytdl2kodi_channel_extractor(){
 	else
 		# write in the database that this channel link has failed
 		logPagePath="$webDirectory/log/$(date "+%s").log"
-		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist $linkList" "$logPagePath"
+		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist from link '$channelLink'" "$logPagePath"
 		# exit and do not mark as processed since no playlist/linklist could be retrieved
 		# this should also fail out if the network connection is down
 		return 1
