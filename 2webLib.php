@@ -878,6 +878,24 @@ if( ! function_exists("SQLdrawPlaylistButton")){
 	}
 }
 ################################################################################
+if( ! function_exists("createViewsDatabase")){
+	function createViewsDatabase($timeout=60000){
+		# if no database file exists create one
+		if (! file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
+			# load database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(60000);
+
+			# get the list of tables in the sql database
+			$result = $databaseObj->query("PRAGMA journal_mode=WAL;");
+			$result = $databaseObj->query("PRAGMA wal_autocheckpoint=20;");
+			$result = $databaseObj->query("create table view_count(url text primary key,views int);");
+		}
+	}
+}
+################################################################################
 if( ! function_exists("appendFile")){
 	function appendFile($filePath,$data){
 		$fileObject=fopen($filePath,"a");

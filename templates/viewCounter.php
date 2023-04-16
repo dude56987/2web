@@ -39,49 +39,55 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='settingListCard'>
 <?php
 if (is_dir("/var/cache/2web/web/views/")){
+	createViewsDatabase();
 	echo "<table>";
-	echo "<ul>";
-	// get a list of all the genetrated index links for the page
-	$sourceFiles = scandir("/var/cache/2web/web/views/");
-	// reverse the time sort
-	$sourceFiles = array_unique($sourceFiles);
-	# sort the list
-	sort($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".cfg")){
-					// read the index entry
-					$data=file_get_contents($sourceFile);
-					// write the index entry
-					echo "<tr>";
-					echo "	<td>";
-					#$tempOutputData=str_replace("_","/",$sourceFile);
-					$tempOutputData=str_replace("(#)","/",$sourceFile);
-					# after the ? if its in the output data replace / with _
-					$slicePoint=strpos("?",$tempOutputData);
-					if ($slicePoint){
-						$tempSplit=explode("?",$tempOutputData);
-						$frontSide = array_slice($tempOutputData, 0, $slicePoint);
-						$backSide = array_slice($tempOutputData, $slicePoint, count($tempOutputData));
-						# fix formatting of the backside elements, $_GET data
-						$tempOutputData = $frontSide.str_replace("(#)","/",$backside);
-					}
-					$tempOutputData=str_replace(".cfg","",$tempOutputData);
-					echo "		<a href='".$tempOutputData."'>".$tempOutputData."</a>";
-					echo "	</td>";
-					echo "	<td>";
-					echo "		$data";
-					echo "	</td>";
-					echo "</tr>";
-					flush();
-					ob_flush();
-				}
+	echo "<tr><th>URL</th><th>VIEWS</th></tr>";
+	if (is_file("/var/cache/2web/web/views.db")){
+		$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/views.index";
+		if (file_exists($cacheFile)){
+			# set the time the cached results are kept, in seconds
+			if (time()-filemtime($cacheFile) > 10){
+				// update the cached file
+				$writeFile=true;
+			}else{
+				// read from the already cached file
+				$writeFile=false;
 			}
+		}else{
+			# write the file if it does not exist
+			$writeFile=true;
+		}
+		if ($writeFile){
+			ignore_user_abort(true);
+			# load database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(60000);
+
+			# run query to get 800 random
+			#$result = $databaseObj->query('select * from "view_count" order by \'views\' DESC;');
+			$result = $databaseObj->query('select * from "view_count" order by views DESC;');
+			#$result = $databaseObj->query('select * from "view_count" order by \'rows\' DESC;');
+
+			# open the cache file for writing
+			$fileHandle = fopen($cacheFile,'w');
+			# fetch each row data individually and display results
+			while($row = $result->fetchArray()){
+				// read the index entry
+				$data="<tr><td>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				// write the index entry
+				echo "$data";
+				fwrite($fileHandle, "$data");
+				flush();
+				ob_flush();
+			}
+			fclose($fileHandle);
+			ignore_user_abort(false);
+		}else{
+			# load the cached file
+			echo file_get_contents($cacheFile);
 		}
 	}
-	echo "</ul>";
 	echo "</table>";
 }else{
 	// no shows have been loaded yet
