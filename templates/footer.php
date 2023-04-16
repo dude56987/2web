@@ -57,7 +57,6 @@ $result = $databaseObj->query($databaseSearchQuery);
 # search views database for this pages view count
 $data = $result->fetchArray();
 # if the current url url is in the database
-#if ( $data["url"] == $scriptName ){
 if ( $data != false){
 	# increment the view counter
 	$updatedViewCount = $data["views"] + 1;

@@ -52,6 +52,36 @@
 					echo "	</a>";
 					echo "/";
 				}
+				# write the 404 request to 404.db
+
+				# write page views to sql database
+				ignore_user_abort(true);
+				# if the view count database does not exist create it
+				if (! file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
+					createViewsDatabase();
+				}
+				# load the views database add 404 section
+				$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+				# set the timeout to 1 minute since most webbrowsers timeout loading before this
+				$databaseObj->busyTimeout(60000);
+				# load the views database
+				# - scriptName includes php get API request data
+				$databaseSearchQuery='select * from "error_count" where url = \''.$_SERVER['REQUEST_URI'].'\';';
+				$result = $databaseObj->query($databaseSearchQuery);
+				# search views database for this pages view count
+				$data = $result->fetchArray();
+				# if the current url url is in the database
+				if ( $data != false){
+					# increment the view counter
+					$updatedViewCount = $data["views"] + 1;
+				}else{
+					$updatedViewCount = 1;
+				}
+				$dbUpdateQuery  = 'REPLACE INTO "error_count" (url, views) ';
+				$dbUpdateQuery .= "VALUES ('".$_SERVER['REQUEST_URI']."', '".$updatedViewCount."') ";
+				$dbUpdateQuery .= ";";
+				# update the database
+				$databaseObj->query($dbUpdateQuery);
 			?>
 			</li>
 		</ul>

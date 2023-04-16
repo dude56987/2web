@@ -40,8 +40,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 if (is_dir("/var/cache/2web/web/views/")){
 	createViewsDatabase();
-	echo "<table>";
-	echo "<tr><th>URL</th><th>VIEWS</th></tr>";
 	if (is_file("/var/cache/2web/web/views.db")){
 		$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/views.index";
 		if (file_exists($cacheFile)){
@@ -64,13 +62,21 @@ if (is_dir("/var/cache/2web/web/views/")){
 			# set the timeout to 1 minute since most webbrowsers timeout loading before this
 			$databaseObj->busyTimeout(60000);
 
-			# run query to get 800 random
-			#$result = $databaseObj->query('select * from "view_count" order by \'views\' DESC;');
+			# run query view counts
 			$result = $databaseObj->query('select * from "view_count" order by views DESC;');
-			#$result = $databaseObj->query('select * from "view_count" order by \'rows\' DESC;');
 
 			# open the cache file for writing
 			$fileHandle = fopen($cacheFile,'w');
+
+			# build the views database
+			$data ="<table>";
+			$data.="<tr><th>URL</th><th>VIEWS</th></tr>";
+			// write the index entry
+			echo "$data";
+			fwrite($fileHandle, "$data");
+			flush();
+			ob_flush();
+
 			# fetch each row data individually and display results
 			while($row = $result->fetchArray()){
 				// read the index entry
@@ -81,6 +87,43 @@ if (is_dir("/var/cache/2web/web/views/")){
 				flush();
 				ob_flush();
 			}
+
+			$data="</table>";
+			// write the index entry
+			echo "$data";
+			fwrite($fileHandle, "$data");
+			flush();
+			ob_flush();
+
+			# run query view counts
+			$result = $databaseObj->query('select * from "error_count" order by views DESC;');
+
+			# build the 404 database
+			$data ="<table>";
+			$data.="<tr><th>404 URL</th><th>VIEWS</th></tr>";
+			// write the index entry
+			echo "$data";
+			fwrite($fileHandle, "$data");
+			flush();
+			ob_flush();
+
+			# fetch each row data individually and display results
+			while($row = $result->fetchArray()){
+				// read the index entry
+				$data="<tr><td>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				// write the index entry
+				echo "$data";
+				fwrite($fileHandle, "$data");
+				flush();
+				ob_flush();
+			}
+			$data="</table>";
+			// write the index entry
+			echo "$data";
+			fwrite($fileHandle, "$data");
+			flush();
+			ob_flush();
+
 			fclose($fileHandle);
 			ignore_user_abort(false);
 		}else{
@@ -88,7 +131,6 @@ if (is_dir("/var/cache/2web/web/views/")){
 			echo file_get_contents($cacheFile);
 		}
 	}
-	echo "</table>";
 }else{
 	// no shows have been loaded yet
 	echo "<ul>";

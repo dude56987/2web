@@ -889,9 +889,10 @@ if( ! function_exists("createViewsDatabase")){
 			$databaseObj->busyTimeout(60000);
 
 			# get the list of tables in the sql database
-			$result = $databaseObj->query("PRAGMA journal_mode=WAL;");
-			$result = $databaseObj->query("PRAGMA wal_autocheckpoint=20;");
-			$result = $databaseObj->query("create table view_count(url text primary key,views int);");
+			$databaseObj->query("PRAGMA journal_mode=WAL;");
+			$databaseObj->query("PRAGMA wal_autocheckpoint=20;");
+			$databaseObj->query("create table view_count(url text primary key,views int);");
+			$databaseObj->query("create table error_count(url text primary key,views int);");
 		}
 	}
 }
