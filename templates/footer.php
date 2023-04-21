@@ -49,7 +49,7 @@ if (! file_exists($webDirectory."/views.db")){
 # load the views database
 $databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
 # set the timeout to 1 minute since most webbrowsers timeout loading before this
-$databaseObj->busyTimeout(60000);
+$databaseObj->busyTimeout(90000);
 # load the views database
 # - scriptName includes php get API request data
 $databaseSearchQuery='select * from "view_count" where url = \''.$scriptName.'\';';
