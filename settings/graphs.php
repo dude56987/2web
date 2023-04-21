@@ -94,10 +94,19 @@ include("/usr/share/2web/2webLib.php");
 			</ul>
 		</li>
 	</ul>
+	<h2>Enable Munin Plugins</h2>
 	<p>
-		Replace the plugin name in the below example to enable the munin plugin.
+		Replace the pluginName in the below command and run it on this server to enable the munin plugin.
 	</p>
 	<pre>ln -s /usr/share/munin/plugins/pluginName /etc/munin/plugins/</pre>
+	<h2>
+		Munin Plugins with Status
+	</h2>
+	<pre>
+	<?PHP
+	echo shell_exec("munin-node-configure");
+	?>
+	</pre>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
