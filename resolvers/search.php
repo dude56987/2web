@@ -42,9 +42,106 @@ function runShellCommand($command){
 	debug("OUTPUT=".$output."<br>");
 }
 ################################################################################
+function moreMusicLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Music Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://www.newgrounds.com/search/conduct/audio?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' target='_new' href='https://archive.org/details/audio?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreMusicMetaLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Music Metadata Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' target='_new' href='https://musicbrainz.org/search?type=artist&query=$searchQuery'>🔎 Music Brainz</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreBookLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Book Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
+	echo "		<a class='button' target='_new' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
+	echo "		<a class='button' target='_new' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
+	echo "		<a class='button' target='_new' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
+	echo "		<a class='button' target='_new' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreBookMetaLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Book Metadata Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreSearchLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2>External Search</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://www.mojeek.com/search?q=$searchQuery'>Mojeek 🔍</a>";
+	echo "		<a class='button' target='_new' href='https://search.brave.com/search?q=$searchQuery'>Brave 🔍</a>";
+	echo "		<a class='button' target='_new' href='https://www.duckduckgo.com/?q=$searchQuery'>DuckDuckGo 🔍</a>";
+	echo "		<a class='button' target='_new' href='https://www.peekier.com/#!$searchQuery'>Peekier 🔍</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreVideoLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Video Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' target='_new' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' target='_new' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
+	echo "		<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
+	echo "		<a class='button' target='_new' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
+	echo "		<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
+	echo "		<a class='button' target='_new' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
+	echo "		<a class='button' target='_new' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
+	echo "		<a class='button' target='_new' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreVideoMetaLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Video Metadata Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' target='_new' href='https://www.imdb.com/find?q=$searchQuery'>🔎 IMDB</a>";
+	echo "		<a class='button' target='_new' href='https://thetvdb.com/search?query=$searchQuery'>🔎 TheTVDB</a>";
+	echo "		<a class='button' target='_new' href='https://www.themoviedb.org/search?query=$searchQuery'>🔎 TMDB</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
 function searchIndex($indexPath,$searchQuery,$cacheFilePath){
 	$foundData=false;
 	$tempData="";
+	$resultLimit=100;
+	$resultCounter=0;
 	# if the search index exists
 	if ( file_exists( $indexPath ) ){
 		$fileHandle = fopen( $indexPath , "r" );
@@ -54,19 +151,33 @@ function searchIndex($indexPath,$searchQuery,$cacheFilePath){
 			#echo "The file path is '$fileData'<br>\n";
 			#remove newlines from extracted file paths in index
 			$fileData = str_replace( "\n" , "" , $fileData);
-			if ( stripos( $fileData , $searchQuery ) ){
-				if ( file_exists( $fileData ) ){
-					# read the file in peices
-					$linkTextHandle = fopen( $fileData , "r" );
-					while( ! feof( $linkTextHandle ) ){
-						$tempFileData = fgets( $linkTextHandle);
-						# read each line of the file
-						$tempData .= $tempFileData;
-						echo $tempFileData;
-						ob_flush();
-						flush();
+			if ( file_exists( $fileData ) ){
+				# read the file
+				$tempFileData = file_get_contents($fileData);
+				$searchableData = strip_tags($tempFileData);
+				if ( stripos( $searchableData, $searchQuery ) ){
+					if ($foundData == false){
+						$headerData = popPath($indexPath);
+						$headerData = str_replace(".index","",$headerData);
+						$headerData = ucfirst($headerData);
+						$headerData = "<h2 id='$headerData'>".$headerData."</h2>";
+
+						$tempData .= $headerData;
+						echo $headerData;
+
+						$foundData = true;
 					}
-					$foundData = true;
+					# read each line of the file
+					$tempData .= $tempFileData;
+					echo $tempFileData;
+					ob_flush();
+					flush();
+					if($resultCounter >= $resultLimit){
+						# break the loop there are to many results
+						break;
+					}else{
+						$resultCounter+=1;
+					}
 				}
 			}
 		}
@@ -182,9 +293,15 @@ function searchChannels($cacheFilePath){
 			$foundFileData=file_get_contents($serverPath.$foundFile);
 			#
 			if (stripos($foundFileData,$_GET['q'])){
-				$foundData = true;
-				# check each filename for the search term
 				$tempOutput = "";
+
+				if ($foundData == false){
+					$headerData="<h2 id='channels'>Channels</h2>";
+					$tempOutput .= $headerData;
+					$foundData = true;
+				}
+
+				# check each filename for the search term
 				$tempOutput .= $foundFileData;
 
 				$output .= $tempOutput;
@@ -401,9 +518,12 @@ if (array_key_exists("q",$_GET)){
 		# set the timeout to 1 minute since most webbrowsers timeout loading before this
 		$databaseObj->busyTimeout(60000);
 
-		# run query to get 800 random
+		# run query to get a list of all episodes
 		$result = $databaseObj->query('select * from "_episodes";');
 
+		$resultLimit=100;
+		$resultCounter=0;
+		$episodeSearchResultsFound=False;
 		# fetch each row data individually and display results
 		while($row = $result->fetchArray()){
 			$sourceFile = $row['title'];
@@ -414,12 +534,23 @@ if (array_key_exists("q",$_GET)){
 						// read the index entry
 						$data=file_get_contents($sourceFile);
 						if (stripos($data,$searchQuery)){
-							#$data=str_ireplace($searchQuery,"<bold>$searchQuery</bold>",$data);
-							// write the index entry
-							appendFile($searchCacheFilePath, $data);
-							echo $data;
-							flush();
-							ob_flush();
+							if ($episodeSearchResultsFound == False){
+								$headerData="<h2 id='old_episodes'>Old Episodes</h2>";
+								appendFile($searchCacheFilePath, $headerData);
+								echo $headerData;
+								$episodeSearchResultsFound=True;
+							}
+							if($resultCounter >= $resultLimit){
+								# break the loop there are to many results
+								break;
+							}else{
+								$resultCounter+=1;
+								// write the index entry
+								appendFile($searchCacheFilePath, $data);
+								echo $data;
+								flush();
+								ob_flush();
+							}
 						}
 					}
 				}
@@ -444,16 +575,16 @@ if (array_key_exists("q",$_GET)){
 			appendFile($searchCacheFilePath,$tempEndString);
 		}
 	}
+	moreSearchLinks($searchQuery);
 
-	formatEcho("<div class='titleCard'>",1);
-	formatEcho("<h2>External Search</h2>",2);
-	formatEcho("<div class='listCard'>",2);
-	formatEcho("<a class='button' target='_new' href='https://www.mojeek.com/search?q=$searchQuery'>Mojeek 🔍</a>",3);
-	formatEcho("<a class='button' target='_new' href='https://search.brave.com/search?q=$searchQuery'>Brave 🔍</a>",3);
-	formatEcho("<a class='button' target='_new' href='https://www.peekier.com/#!$searchQuery'>Peekier 🔍</a>",3);
-	formatEcho("<a class='button' target='_new' href='https://www.duckduckgo.com/?q=$searchQuery'>DuckDuckGo 🔍</a>",3);
-	formatEcho("</div>",2);
-	formatEcho("</div>",1);
+	moreVideoMetaLinks($searchQuery);
+	moreVideoLinks($searchQuery);
+
+	moreMusicLinks($searchQuery);
+	moreMusicMetaLinks($searchQuery);
+
+	moreBookLinks($searchQuery);
+	moreBookMetaLinks($searchQuery);
 
 	echo "</div>";
 
