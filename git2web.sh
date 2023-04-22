@@ -327,8 +327,7 @@ function processRepo(){
 		waitQueue 0.5 "$totalCPUS"
 		INFO "$repoName : Rendering gource video for $repoName"
 		# build history video in 720p
-		#ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads $totalCPUS -bf 0 \
-		gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+		xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
 		ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 \
 		"$webDirectory/repos/$repoName/repoHistory.webm"
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
