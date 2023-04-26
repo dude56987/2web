@@ -314,7 +314,7 @@ function waitQueue(){
 			# - bc is required because system load is measured to two decimal places
 			# - this will make all 2web modules parallel process without blocking each other
 			# - this should make the apache server remain available even if all modules are running in parallel
-			highLoad=$(echo "$(cat /proc/loadavg | cut -d' ' -f1) > $totalCPUS" | bc)
+			highLoad=$(echo "$(cat /proc/loadavg | cut -d' ' -f1) > $(( totalCPUS * 2 ))" | bc)
 			if [ $highLoad -eq 1 ];then
 				#ALERT "System is overloaded, Waiting for system resources..."
 				sleep $sleepTime
