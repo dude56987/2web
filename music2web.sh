@@ -492,6 +492,7 @@ function processTrack(){
 				echo "$tempList" | sort -u > "$webDirectory/music/$artist/$album/tracks.index"
 			fi
 		fi
+		setFileDataSum "$webDirectory" "$musicPath"
 	fi
 }
 ################################################################################
@@ -537,11 +538,11 @@ function update(){
 	totalTrackList=""
 	# tally up the total tracks
 	for musicSource in $musicSources;do
-		tempFoundTracks=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | wc -l)
-		#echo -n "totalTracks $totalTracks + tempFoundTracks $tempFoundTracks"
-		#echo -n "+ $tempFoundTracks"
-		totalTrackList="${totalTrackList}${tempFoundTracks}\n"
-		totalTracks=$(( $totalTracks + $tempFoundTracks ))
+		if checkDirSum "$webDirectory" "$musicSource";then
+			tempFoundTracks=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | wc -l)
+			totalTrackList="${totalTrackList}${tempFoundTracks}\n"
+			totalTracks=$(( $totalTracks + $tempFoundTracks ))
+		fi
 	done
 	#echo "_____________"
 	#echo "= $totalTracks"
@@ -567,6 +568,12 @@ function update(){
 			waitQueue 0.5 "$totalCPUS"
 		done
 	done
+
+	# after all tracks have been processed mark the sources complete by updating the checksums
+	for musicSource in $musicSources;do
+		setDirSum "$webDirectory" "$musicSource"
+	done
+
 	# block for parallel threads here
 	blockQueue 1
 	# cleanup the music index

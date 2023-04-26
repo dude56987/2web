@@ -429,6 +429,8 @@ function update2web(){
 		done
 		# update the timer
 		touch /var/cache/2web/web/themeGen.cfg
+		# update the checksum file
+		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
 	fi
 	# make sure the directories exist and have correct permissions, also link stylesheets
 	createDir "$webDirectory"
@@ -539,6 +541,7 @@ function update2web(){
 		rebuildFavIcon="yes"
 	elif checkFileDataSum "$webDirectory" "$webDirectory/favicon.png";then
 		rebuildFavIcon="yes"
+		setFileDataSum "$webDirectory" "$webDirectory/favicon.png"
 	else
 		ALERT "A favicon already exists..."
 	fi

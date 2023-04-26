@@ -72,7 +72,7 @@ function checkFileDataSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
+			#echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 			# return true
 			return 0
 		fi
@@ -80,10 +80,22 @@ function checkFileDataSum(){
 		# CHANGED, new file
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
+		#echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 		# return true
 		return 0
 	fi
+}
+########################################################################
+function setFileDataSum(){
+	webDirectory=$1
+	filePath=$2
+	# module name
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# build sums
+	pathSum="$(echo "$filePath" | sha512sum | cut -d' ' -f1 )"
+	newSum="$(cat "$filePath" | sha512sum | cut -d' ' -f1 )"
+
+	echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 }
 ########################################################################
 function buildHomePage(){
@@ -649,15 +661,19 @@ function getDirDataSum(){
 ########################################################################
 function checkDirSum(){
 	# return true if the directory has been updated/changed
+	# - use setDirSum to mark as finished, meaning this should be in a if statement
+	#   and the end of the if statement you sould put a setDirSum with the same arguments
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
 	directory=$2
+	# generate the module name
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# check the sum of a directory and compare it to a previously stored sum
 	if ! test -d "$webDirectory/sums/";then
 		mkdir -p "$webDirectory/sums/"
 	fi
 	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
-	newSum="$(getDirSum "$2")"
+	newSum="$(getDirSum "$directory")"
 	# check for a previous sum
 	if test -f "$webDirectory/sums/nfo_$pathSum.cfg";then
 		oldSum="$(cat "$webDirectory/sums/nfo_$pathSum.cfg")"
@@ -670,16 +686,32 @@ function checkDirSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
+			#echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
 			return 0
 		fi
 	else
 		# CHANGED
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
+		# the sum should be updated with setDirSum
+		#echo "$newSum" > "$webDirectory/sums/nfo_$pathSum.cfg"
 		return 0
 	fi
+}
+########################################################################
+setDirSum(){
+	# for use with checkdir sum, to update a sum as finished
+	webDirectory=$1
+	directory=$2
+
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+
+	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
+	newSum="$(getDirSum "$directory")"
+
+	# write the new sum to the file
+	echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
+
 }
 ########################################################################
 downloadThumbnail(){
