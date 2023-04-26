@@ -567,7 +567,7 @@ function update2web(){
 	# build the web widgets for these services
 	# build web widgets for each http_host
 	find "/var/cache/2web/qrCodes/" -mindepth 1 -maxdepth 1 -type d | while read qrDir;do
-		hostSum=$(echo "$qrDir" | rev | cut -d'/' -f1 | rev)
+		hostSum=$(echo -n "$qrDir" | rev | cut -d'/' -f1 | rev)
 		# per host check if the services file is older than 1 day
 		if cacheCheck "$webDirectory/web_cache/widget_services_${hostSum}.index" "1";then
 			{
