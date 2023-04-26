@@ -821,6 +821,9 @@ a:visited {
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.graphLink{
+		width: 100% !important;
+	}
 	.videoPlayerControls{
 		font-size: 1rem;
 	}
@@ -1750,9 +1753,10 @@ pre{
 	/*
 	height: 40rem;
 	width: 80%;
+	margin: 1rem;
 	*/
 	box-shadow: 0px 0px 1rem var(--shadowColor);
-	width: 30rem;
+	min-width: 40%;
 	max-width: 100%;
 }
 .graphLink img{
@@ -1793,7 +1797,7 @@ svg {
 }
 .moreEpisodesLink{
 	height: 11rem;
-	line-height: 4rem;
+	line-height: 2rem;
 }
 .homeActivityGraph{
 	/*
