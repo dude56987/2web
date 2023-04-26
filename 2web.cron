@@ -23,29 +23,29 @@
 ################################################################################
 # update every 4 hours, if internet sources are included updates can be frequent
 #0 */4 * * * root /usr/bin/nfo2web update > /var/log/2web_nfo.log
-0 */2 * * * root /usr/bin/nfo2web --parallel
+0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel
 
 ################################################################################
 # check if the iptv lists need updated once every 6 hours
-0 */6 * * * root /usr/bin/iptv2web
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/iptv2web
 # Check if the epg guide info needs updated every 30 minutes
 */30 * * * * root /usr/bin/iptv2web --epg
 
 ################################################################################
 # update the comic books
 #@monthly root /usr/bin/comic2web > /var/log/2web_comic.log
-0 */6 * * * root /usr/bin/comic2web --parallel
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel
 
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
 #@daily root /usr/bin/music2web > /var/log/2web_music.log
-0 */4 * * * root /usr/bin/music2web --parallel
+0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel
 
 ################################################################################
 # update graph2web
 #@daily root /usr/bin/graph2web > /var/log/2web_graph.log
-0 */6 * * * root /usr/bin/graph2web
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web
 
 ################################################################################
 # Update weather info once per hour on the half hour
@@ -55,11 +55,11 @@
 ################################################################################
 # run update every hour, individual channels have individual delays
 #@hourly root	/usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
-0 */2 * * * root	/usr/bin/ytdl2nfo
+0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo
 
 ################################################################################
 # every 6 hours check for changes to git repos
-0 */6 * * * root	/usr/bin/git2web
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web
 
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
