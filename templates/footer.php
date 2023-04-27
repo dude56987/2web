@@ -70,6 +70,9 @@ $dbUpdateQuery .= "VALUES ('".$scriptName."', '".$updatedViewCount."') ";
 $dbUpdateQuery .= ";";
 # update the database
 $databaseObj->query($dbUpdateQuery);
+# clear up memory of database file
+$databaseObj->close();
+unset($databaseObj);
 
 # display the page view
 echo "<div class='viewCounterBox'>";
