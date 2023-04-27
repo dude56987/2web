@@ -311,11 +311,10 @@ function waitQueue(){
 			sleep $sleepTime
 		else
 			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
-			# - bc is required because system load is measured to two decimal places
 			# - this will make all 2web modules parallel process without blocking each other
 			# - this should make the apache server remain available even if all modules are running in parallel
-			highLoad=$(echo "$(cat /proc/loadavg | cut -d' ' -f1) > $(( totalCPUS * 2 ))" | bc)
-			if [ $highLoad -eq 1 ];then
+			# convert load into interger and compare
+			if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS * 2 )) ];then
 				#ALERT "System is overloaded, Waiting for system resources..."
 				sleep $sleepTime
 			else
