@@ -1324,20 +1324,20 @@ processEpisode(){
 			echo -ne "$tempEpisodeSeasonThumb" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		fi
 
-		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index"
+		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index"
 
 		#$episodeSum=$(echo "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php" | sha512sum | cut -d' ' -f1)
-		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.cfg"
+		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.cfg"
 
 		# add episodes to new indexes
-		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" "$webDirectory/data.db" "episodes"
-		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" "$webDirectory/data.db" "all"
+		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/data.db" "episodes"
+		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/data.db" "all"
 
-		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/episodes.index"
-		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/new/all.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/new/episodes.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/new/all.index"
 		# random indexes
-		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/random/episodes.index"
-		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/episode_$episodePath.index" >> "$webDirectory/random/all.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/random/episodes.index"
+		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/random/all.index"
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
