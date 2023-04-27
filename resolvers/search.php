@@ -445,23 +445,57 @@ function redirect($url){
 }
 ################################################################################
 $searchQuery = $_GET["q"];
+################################################################################
+# build the array of bang commands that can be checked for
+################################################################################
+$bangCommands=new ArrayObject();
+# redirect bing to duckduckgo
+$bangCommands->append(array("!bing","https://duckduckgo.com/?q="));
+# redirect google to startpage
+$bangCommands->append(array("!google","https://www.startpage.com/sp/search?q="));
+$bangCommands->append(array("!g","https://www.startpage.com/sp/search?q="));
+# duckduckgo search
+$bangCommands->append(array("!duckduckgo","https://duckduckgo.com/?q="));
+$bangCommands->append(array("!duck","https://duckduckgo.com/?q="));
+$bangCommands->append(array("!ddg","https://duckduckgo.com/?q="));
+# startpage search
+$bangCommands->append(array("!startpage","https://www.startpage.com/sp/search?q="));
+$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
+$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
+# youtube search
+$bangCommands->append(array("!youtube","https://youtube.com/results?search_query="));
+$bangCommands->append(array("!yt","https://youtube.com/results?search_query="));
+# bitchute video search
+$bangCommands->append(array("!bitchute","https://www.bitchute.com/search/?kind=video&query="));
+$bangCommands->append(array("!bit","https://www.bitchute.com/search/?kind=video&query="));
+# peertube video search
+$bangCommands->append(array("!peertube","https://sepiasearch.org/search?search="));
+$bangCommands->append(array("!pt","https://sepiasearch.org/search?search="));
+# d tube video search
+$bangCommands->append(array("!dtube","https://d.tube/#!/s/"));
+$bangCommands->append(array("!dt","https://d.tube/#!/s/"));
+# odysee video search
+$bangCommands->append(array("!odysee","https://odysee.com/$/search?q="));
+$bangCommands->append(array("!od","https://odysee.com/$/search?q="));
+# brave search
+$bangCommands->append(array("!brave","https://search.brave.com/search?q="));
+$bangCommands->append(array("!b","https://search.brave.com/search?q="));
+# mojeek search
+$bangCommands->append(array("!mojeek","https://www.mojeek.com/search?q="));
+$bangCommands->append(array("!m","https://www.mojeek.com/search?q="));
+# wikipedia
+$bangCommands->append(array("!wikipedia","https://wikipedia.org/?search="));
+$bangCommands->append(array("!wiki","https://wikipedia.org/?search="));
+$bangCommands->append(array("!w","https://wikipedia.org/?search="));
+################################################################################
 # before anything else is done check for bang commands
-if (strpos("!ddg",$searchQuery) >= 0){
-	$cleanSearch=str_replace("!ddg","",$searchQuery);
-	redirect("https://duckduckgo.com/?q=".$cleanSearch);
-}elseif (strpos("!ddg",$searchQuery) >= 0){
-	$cleanSearch=str_replace("!yt","",$searchQuery);
-	redirect("https://youtube.com/results?search_query=".$cleanSearch);
-}elseif (strpos("!b",$searchQuery) >= 0){
-	$cleanSearch=str_replace("!b","",$searchQuery);
-	redirect("https://search.brave.com/search?q=".$cleanSearch);
-}elseif (strpos("!m",$searchQuery) >= 0){
-	$cleanSearch=str_replace("!m","",$searchQuery);
-	redirect("https://www.mojeek.com/search?q=".$cleanSearch);
-}elseif (strpos("!w",$searchQuery) >= 0){
-	$cleanSearch=str_replace("!w","",$searchQuery);
-	redirect("https://wikipedia.org/?search=".$cleanSearch);
+foreach($bangCommands as $bang){
+	if (strpos($searchQuery,$bang[0])){
+		$cleanSearch=str_replace($bang[0],"",$searchQuery);
+		redirect($bang[1].$cleanSearch);
+	}
 }
+################################################################################
 # start building the webpage
 ?>
 <html class='randomFanart'>
