@@ -422,7 +422,47 @@ function printDateTime(){
 	$date = new DateTimeImmutable();
 	echo $date->format("y-m-d H:i:s");
 }
+function redirect($url){
+	if (array_key_exists("debug",$_GET)){
+		echo "<hr>";
+		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
+		echo '<div>';
+		echo '<video controls>';
+		echo '<source src="'.$url.'" type="video/mp4">';
+		echo '</video>';
+		echo '</div>';
+		echo "<hr>";
+		ob_flush();
+		flush();
+		exit();
+		die();
+	}else{
+		// temporary redirect
+		header('Location: '.$url,true,302);
+		exit();
+		die();
+	}
+}
 ################################################################################
+$searchQuery = $_GET["q"];
+# before anything else is done check for bang commands
+if (strpos("!ddg",$searchQuery) >= 0){
+	$cleanSearch=str_replace("!ddg","",$searchQuery);
+	redirect("https://duckduckgo.com/?q=".$cleanSearch);
+}elseif (strpos("!ddg",$searchQuery) >= 0){
+	$cleanSearch=str_replace("!yt","",$searchQuery);
+	redirect("https://youtube.com/results?search_query=".$cleanSearch);
+}elseif (strpos("!b",$searchQuery) >= 0){
+	$cleanSearch=str_replace("!b","",$searchQuery);
+	redirect("https://search.brave.com/search?q=".$cleanSearch);
+}elseif (strpos("!m",$searchQuery) >= 0){
+	$cleanSearch=str_replace("!m","",$searchQuery);
+	redirect("https://www.mojeek.com/search?q=".$cleanSearch);
+}elseif (strpos("!w",$searchQuery) >= 0){
+	$cleanSearch=str_replace("!w","",$searchQuery);
+	redirect("https://wikipedia.org/?search=".$cleanSearch);
+}
+# start building the webpage
 ?>
 <html class='randomFanart'>
 <head>
@@ -438,7 +478,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 ################################################################################
 if (array_key_exists("q",$_GET)){
-	$searchQuery = $_GET["q"];
 	# create md5sum for the query to store output
 	$querySum = md5($searchQuery);
 
