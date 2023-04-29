@@ -263,6 +263,18 @@ function update(){
 	fi
 }
 ################################################################################
+function generateZip(){
+	webDirectory=$1
+	repoName=$2
+	zipFilePath="$webDirectory/repos/$repoName/source.zip"
+	# generate a zip of the source
+	cd "$webDirectory/repos/$repoName/source/"
+	# compress into a zip file
+	zip -rqT -9 "$zipFilePath" "."
+	# link the zip file created into the web directory
+	linkFile "$zipFilePath" "$webDirectory/kodi/repos/$repoName.zip"
+}
+################################################################################
 function processRepo(){
 	repoSource=$1
 	# create sum and name from repo source
@@ -317,6 +329,9 @@ function processRepo(){
 		grep --invert-match --ignore-case "<title" |\
 		grep --invert-match --ignore-case "<?xml" \
 		> "$webDirectory/repos/$repoName/inspector.html" &
+		waitQueue 0.5 "$totalCPUS"
+
+		generateZip "$webDirectory" "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
 
 		# get the latest commit time
@@ -692,7 +707,8 @@ function nuke(){
 	rm -rv "$webDirectory/new/git_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/git_*.index'"
 	rm -rv "$webDirectory/random/git_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/git_*.index'"
 	# remove git directory and indexes
-	rm -rv $webDirectory/repos/*
+	rm -rv $webDirectory/repos/
+	rm -rv $webDirectory/kodi/repos/
 	rm -rv $webDirectory/new/repos.index
 	rm -rv $webDirectory/random/repos.index
 	rm -rv $webDirectory/sums/git2web_*.cfg || echo "No file sums found..."
