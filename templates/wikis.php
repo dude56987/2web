@@ -17,8 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 -->
-<html id='top' class='randomFanart'>
+<html class='randomFanart'>
 <head>
+	<title>2web Wikis</title>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
@@ -66,8 +67,6 @@ if (file_exists("/var/cache/2web/web/wiki/wikis.index")){
 	// no shows have been loaded yet
 	echo "<ul>";
 	echo "<li>No Wikis have been scanned into the libary!</li>";
-	//echo "<li>Add libary paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
-	//echo "<li>Add download links in <a href='/settings/ytdl2nfo.php'>video on demand admin interface</a></li>";
 	echo "</ul>";
 }
 
