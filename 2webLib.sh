@@ -595,32 +595,19 @@ function SQLtableLength(){
 	echo "$totalCount"
 }
 ################################################################################
-function getDirSum(){
-	line=$1
-	# check the libary sum against the existing one
-	totalList=$(find "$line" | sort)
-	# add the version to the sum to update old versions
-	# - Disk caching on linux should make this repetative file read
-	#   not destroy the hard drive
-	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
-	# convert lists into sum
-	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
-	# write the sum to stdout
-	echo "$tempLibList"
-}
-################################################################################
 function checkDirDataSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums
 	webDirectory=$1
 	directory=$2
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# check the sum of a directory and compare it to a previously stored sum
 	createDir "$webDirectory/sums/"
 	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
 	newSum="$(getDirDataSum "$2")"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/$pathSum.cfg")"
+	if test -f "$webDirectory/sums/${moduleName}_data_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/${moduleName}_data_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED
@@ -630,14 +617,14 @@ function checkDirDataSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+			#echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
 			return 0
 		fi
 	else
 		# CHANGED
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
+		#echo "$newSum" > "$webDirectory/sums/$pathSum.cfg"
 		return 0
 	fi
 }
@@ -648,6 +635,35 @@ function getDirDataSum(){
 	#totalList=$(find "$line" | sort)
 	# read the data from each file
 	totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
+	# add the version to the sum to update old versions
+	# - Disk caching on linux should make this repetative file read
+	#   not destroy the hard drive
+	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# convert lists into sum
+	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	# write the sum to stdout
+	echo "$tempLibList"
+}
+########################################################################
+setDirDataSum(){
+	# for use with checkdir sum, to update a sum as finished
+	webDirectory=$1
+	directory=$2
+
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+
+	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
+	newSum="$(getDirDataSum "$directory")"
+
+	# write the new sum to the file
+	echo "$newSum" > "$webDirectory/sums/${moduleName}_data_$pathSum.cfg"
+
+}
+################################################################################
+function getDirSum(){
+	line=$1
+	# check the libary sum against the existing one
+	totalList=$(find "$line" | sort)
 	# add the version to the sum to update old versions
 	# - Disk caching on linux should make this repetative file read
 	#   not destroy the hard drive
