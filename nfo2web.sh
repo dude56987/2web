@@ -1318,11 +1318,11 @@ processEpisode(){
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</div>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
 
-		if [ "$episodeNumber" -eq 1 ];then
-			echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
-		else
-			echo -ne "$tempEpisodeSeasonThumb" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
-		fi
+		#if [ "$episodeNumber" -eq 1 ];then
+		#	echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		#else
+		#	echo -ne "$tempEpisodeSeasonThumb" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		#fi
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index"
 

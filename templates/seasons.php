@@ -91,9 +91,10 @@ echo "		📁 All";
 echo "	</a>";
 foreach($seasonDirs as $seasonDir){
 	if (is_dir($seasonDir)){
-		if (is_file($seasonDir."/season.index")){
-			$seasonName = str_replace('/season.index','',$seasonDir);
-			$seasonName = str_replace($activeDir.'/','',$seasonName);
+		#if (is_file($seasonDir."/season.index")){
+		#	$seasonName = str_replace('/season.index','',$seasonDir);
+		#	$seasonName = str_replace($activeDir.'/','',$seasonName);
+			$seasonName = str_replace($activeDir.'/','',$seasonDir);
 			$newestSeason = $seasonName;
 			echo "	<a href='?search=$seasonName#$seasonName' class='button'>";
 			if ($seasonName == "Season 0000"){
@@ -104,7 +105,7 @@ foreach($seasonDirs as $seasonDir){
 			echo "	</a>";
 			flush();
 			ob_flush();
-		}
+		#}
 	}
 }
 ?>
@@ -155,7 +156,6 @@ echo "</div>";
 if (array_key_exists("search",$_GET)){
 	$searchTerm=$_GET['search'];
 }
-$seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
 $searchResults=False;
 foreach($seasonDirs as $seasonDir){
 	if (is_dir($seasonDir)){
@@ -164,7 +164,7 @@ foreach($seasonDirs as $seasonDir){
 
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
-		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name 'episode_*.index' | sort"));
+		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name '*.index' | sort"));
 		$seasonHeader="";
 		$seasonHeader.="<div class='seasonContainer'>";
 		$seasonHeader.="<div class='seasonHeader'>";
