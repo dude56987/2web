@@ -198,7 +198,7 @@ if (array_key_exists("inspector",$_GET)){
 	foreach($graphTitles as $graphTitle){
 		echo "	<a href='?graph=$graphTitle' class='showPageEpisode'>";
 		#include("graph_$graphTitle.svg");
-		echo "		<img class='gitCommitListMonthGraph' src='graph_$graphTitle-thumb.png' />";
+		echo "		<img class='' src='graph_$graphTitle-thumb.png' />";
 		echo "		<div class='indexTitle'>";
 		echo ucwords(str_replace("_"," ",$graphTitle));
 		echo "		</div>";

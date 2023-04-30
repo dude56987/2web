@@ -1789,6 +1789,7 @@ pre{
 .gitCommitListMonthGraph{
 	width: 98%;
 	max-height: 35rem;
+	min-height: 8rem;
 }
 svg {
 	display: block;
