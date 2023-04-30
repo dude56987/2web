@@ -137,6 +137,38 @@ function moreVideoMetaLinks($searchQuery){
 	echo "</div>";
 }
 ################################################################################
+function moreDataLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Data Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' target='_new' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
+	echo "		<a class='button' target='_new' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
+	echo "		<a class='button' target='_new' href='https://www.openstreetmap.org/search?query=$searchQuery'>🔎 OpenStreetMap Search</a>";
+	echo "		<a class='button' target='_new' href='https://openweathermap.org/find?q=$searchQuery'>🔎 OpenWeatherMap Search</a>";
+	echo "		<a class='button' target='_new' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
+function moreDictLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		External Dictionary and Thesaurus Search";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' target='_new' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
+	echo "		<a class='button' target='_new' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
+	echo "		<a class='button' target='_new' href='https://www.dictionary.com/$searchQuery'>🔎 Random House Dictionary</a>";
+	echo "		<a class='button' target='_new' href='https://www.thesaurus.com/$searchQuery'>🔎 Random House Thesaurus</a>";
+	echo "		<a class='button' target='_new' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
+	echo "		<a class='button' target='_new' href='https://www.merriam-webster.com/thesaurus/$searchQuery'>🔎 Merriam Webster Thesaurus</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
 function searchIndex($indexPath,$searchQuery,$cacheFilePath){
 	$foundData=false;
 	$tempData="";
@@ -658,6 +690,9 @@ if (array_key_exists("q",$_GET)){
 
 	moreBookLinks($searchQuery);
 	moreBookMetaLinks($searchQuery);
+
+	moreDataLinks($searchQuery);
+	moreDictLinks($searchQuery);
 
 	echo "</div>";
 
