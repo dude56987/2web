@@ -1,13 +1,22 @@
 ################################################################################
-# - The log only keeps the last run by default, you can change > to >> to
-#   keep a running log. However it will take up a lot of disk space and is not
-#   recommended.
-# - Change the commented lines to store logs
+# 2web cron jobs
+# Copyright (C) 2023  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 # cleanup interrupted updates on reboot, removes leftover lockfiles from power cycles
-#@reboot root /usr/bin/2web unlock >> /var/log/2web.log
 @reboot root /usr/bin/2web unlock
-
 ################################################################################
 # run 2web to build the base website and update the site configuration changes
 # this does a lot of important things
@@ -15,62 +24,45 @@
 # - Updates changed themes across the site
 # - Builds the base website for other modules
 # - Checks if cache directories need cleaned
-#@reboot root /usr/bin/2web > /var/log/2web.log
-#@hourly root /usr/bin/2web > /var/log/2web.log
+# - Updates 2web generated graphs
 @reboot root /usr/bin/2web
 */30 * * * * root /usr/bin/2web
-
 ################################################################################
 # update every 4 hours, if internet sources are included updates can be frequent
-#0 */4 * * * root /usr/bin/nfo2web update > /var/log/2web_nfo.log
 0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel
-
 ################################################################################
 # check if the iptv lists need updated once every 6 hours
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/iptv2web
 # Check if the epg guide info needs updated every 30 minutes
 */30 * * * * root /usr/bin/iptv2web --epg
-
 ################################################################################
 # update the comic books
-#@monthly root /usr/bin/comic2web > /var/log/2web_comic.log
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel
-
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
-#@daily root /usr/bin/music2web > /var/log/2web_music.log
 0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel
-
 ################################################################################
 # update graph2web
-#@daily root /usr/bin/graph2web > /var/log/2web_graph.log
+@monthly root /usr/bin/nice -n 10 /usr/bin/wiki2web
+################################################################################
+# update graph2web
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web
-
 ################################################################################
 # Update weather info once per hour on the half hour
-#*/15 root /usr/bin/weather2web > /var/log/2web_weather.log
 0 * * * *	root /usr/bin/weather2web
-
 ################################################################################
 # run update every hour, individual channels have individual delays
-#@hourly root	/usr/bin/ytdl2nfo > /var/lot/2web_ytdl.log
 0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo
-
 ################################################################################
 # every 6 hours check for changes to git repos
-0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web
-
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-#@daily root /usr/bin/2web upgrade > /var/log/2web_upgrade.log
 @daily root /usr/bin/2web upgrade
-
 ################################################################################
 # Check once a day to see if the cache need cleaned, files are removed on a time delay
 #  set in '/etc/2web/cache/cacheDelay.cfg'. This delay can be changed in the web
 #  administrator interface.
-#@daily root /usr/bin/2web cleancache > /var/log/2web_cleancache.log
 @daily root /usr/bin/2web cleancache
-#@reboot root /usr/bin/2web cleancache > /var/log/2web_cleancache.log
 @reboot root /usr/bin/2web cleancache
