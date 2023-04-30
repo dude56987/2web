@@ -428,7 +428,7 @@ function processTrack(){
 			# build the track thumbnail
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.png";then
 				# create a waveform with ffmpeg for the track
-				ffmpeg -loglevel quiet -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex showwavespic -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
+				ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex showwavespic -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
 				convert -quiet "$webDirectory/music/$artist/$album/$track.png" -adaptive-resize 200x50\! "$webDirectory/music/$artist/$album/web-$track.png"
 			fi
 			# track data
