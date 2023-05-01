@@ -595,7 +595,7 @@ function update(){
 				#ALERT "Processing Track $musicPath"
 				processTrack "$musicPath" "$processedTracks/$totalTracks [$processedSources/$totalSources]" "$@" &
 				processedTracks=$(( $processedTracks + 1 ))
-				waitFastQueue 0.2 "$totalCPUS"
+				waitQueue 0.2 "$totalCPUS"
 			done
 			setDirSum "$webDirectory" "$musicSource"
 		fi
