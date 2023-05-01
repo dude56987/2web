@@ -21,72 +21,6 @@
 ################################################################################
 source /var/lib/2web/common
 ################################################################################
-ALERT(){
-	echo;
-	echo "$1";
-	echo;
-}
-################################################################################
-linkFile(){
-	# link file if it is a link
-	if ! test -L "$2";then
-		ln -sf "$1" "$2"
-	fi
-}
-################################################################################
-function cacheCheck(){
-
-	filePath="$1"
-	cacheDays="$2"
-
-	# return true if cached needs updated
-	if [ -f "$filePath" ];then
-		# the file exists
-		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
-			# the file is more than "$2" days old, it needs updated
-			INFO "File is to old, update the file $1"
-			return 0
-		else
-			# the file exists and is not old enough in cache to be updated
-			INFO "File in cache, do not update $1"
-			return 1
-		fi
-	else
-		# the file does not exist, it needs created
-		INFO "File does not exist, it must be created $1"
-		return 0
-	fi
-}
-################################################################################
-getDirSum(){
-	line=$1
-	# check the libary sum against the existing one
-	totalList=$(find "$line" | sort)
-	# convert lists into sum
-	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
-	# write the sum to stdout
-	echo "$tempLibList"
-}
-################################################################################
-function INFO(){
-	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
-	# print the line
-	printf "$output\r"
-	#echo "$output"
-	#printf "$output\n"
-}
-################################################################################
-function ERROR(){
-	output=$1
-	printf "[ERROR]: $output\n"
-}
-################################################################################
 function downloadDir(){
 	if [ ! -f /etc/2web/comics/download.cfg ];then
 		# if no config exists create the default config
@@ -209,7 +143,12 @@ function update(){
 			#touch "$webDirectory/comicCache/download_$comicSum.index"
 		fi
 	done
-
+	# check for parallel processing and count the cpus
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
+	fi
 	echo "$webComicSources" | while read comicSource;do
 		# generate a sum for the source
 		comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
@@ -222,7 +161,7 @@ function update(){
 				# set the number of strips to download to be the current number + 50
 				numStrips=$(( $totalPages + 50 ))
 
-				/usr/local/bin/dosage --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
+				/usr/local/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
 				# cleanup downloaded .txt files
 				rm -v "${downloadDirectory}$comicSource"/*.txt
 				find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
@@ -1378,38 +1317,43 @@ webUpdate(){
 			# build the website tag index page
 			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 				# check the sum for this directory to see if the data has changed
+				if checkDirSum "$webDirectory" "$comicNamePath";then
 
-				INFO "link the comics to the kodi directory"
-				# link this comic to the kodi directory
-				#createDir "$comicNamePath" "$webDirectory/kodi/comics/"
+					INFO "link the comics to the kodi directory"
+					# link this comic to the kodi directory
+					#createDir "$comicNamePath" "$webDirectory/kodi/comics/"
 
-				INFO "scanning comic path '$comicNamePath'"
-				# add one to the total comics
-				totalComics=$(( $totalComics + 1 ))
-				# build the comic index page
-				if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
-					INFO "scanning single chapter comic '$comicNamePath'"
-					# if this directory contains .jpg or .png files then this is a single chapter comic
-					# - build the individual pages for the comic
-					# pause execution while no cpus are open
-					scanPages "$comicNamePath" "$webDirectory" single &
-					waitQueue 0.5 "$totalCPUS"
-				else
-					# if this is not a single chapter comic then read the subdirectories containing
-					#   each of the individual chapters
-					INFO "scanning multi chapter comic '$comicNamePath'"
-					# reset chapter number for count
-					chapterNumber=0
-					find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
-						chapterNumber=$(( 10#$chapterNumber + 1 ))
-						# add zeros to the chapter as a prefix for correct ordering
-						chapterNumber=$(prefixNumber $chapterNumber)
-						# check if the chapter should be updated before running through all pages
-						# for each chapter build the individual pages
+					INFO "scanning comic path '$comicNamePath'"
+					# add one to the total comics
+					totalComics=$(( $totalComics + 1 ))
+					# build the comic index page
+					if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
+						INFO "scanning single chapter comic '$comicNamePath'"
+						# if this directory contains .jpg or .png files then this is a single chapter comic
+						# - build the individual pages for the comic
 						# pause execution while no cpus are open
-						scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+						scanPages "$comicNamePath" "$webDirectory" single &
 						waitQueue 0.5 "$totalCPUS"
-					done
+					else
+						# if this is not a single chapter comic then read the subdirectories containing
+						#   each of the individual chapters
+						INFO "scanning multi chapter comic '$comicNamePath'"
+						# reset chapter number for count
+						chapterNumber=0
+						find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
+							chapterNumber=$(( 10#$chapterNumber + 1 ))
+							# add zeros to the chapter as a prefix for correct ordering
+							chapterNumber=$(prefixNumber $chapterNumber)
+							# check if the chapter should be updated before running through all pages
+							# for each chapter build the individual pages
+							# pause execution while no cpus are open
+							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+							waitQueue 0.5 "$totalCPUS"
+						done
+					fi
+					setDirSum "$webDirectory" "$comicNamePath"
+				else
+					INFO "Already processed '$comicNamePath'"
 				fi
 			done
 			# finish website tag index page
