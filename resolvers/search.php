@@ -162,7 +162,7 @@ function moreDictLinks($searchQuery){
 	echo "		<a class='button' target='_new' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
 	echo "		<a class='button' target='_new' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
 	echo "		<a class='button' target='_new' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
-	echo "		<a class='button' target='_new' href='https://www.dictionary.com/$searchQuery'>🔎 Random House Dictionary</a>";
+	echo "		<a class='button' target='_new' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -492,9 +492,9 @@ $searchQuery = $_GET["q"];
 ################################################################################
 $bangCommands=new ArrayObject();
 # dict and thesaurus
-$bangCommands->append(array("!define","https://www.urbandictionary.com/define.php?term="));
-$bangCommands->append(array("!about","https://www.urbandictionary.com/define.php?term="));
-$bangCommands->append(array("!describe","https://www.urbandictionary.com/define.php?term="));
+$bangCommands->append(array("!define","https://www.dictionary.com/browse/"));
+$bangCommands->append(array("!about","https://www.dictionary.com/browse/"));
+$bangCommands->append(array("!describe","https://www.dictionary.com/browse/"));
 $bangCommands->append(array("!synonyms","https://www.thesaurus.com/browse/"));
 $bangCommands->append(array("!synonym","https://www.thesaurus.com/browse/"));
 $bangCommands->append(array("!syn","https://www.thesaurus.com/browse/"));
@@ -539,11 +539,11 @@ $bangCommands->append(array("!wikipedia","https://wikipedia.org/w/?search="));
 $bangCommands->append(array("!wiki","https://wikipedia.org/w/?search="));
 $bangCommands->append(array("!w","https://wikipedia.org/w/?search="));
 # urban dict
-$bangCommands->append(array("!u","https://www.urbandictionary.com/define.php?term="));
 $bangCommands->append(array("!urban","https://www.urbandictionary.com/define.php?term="));
+$bangCommands->append(array("!u","https://www.urbandictionary.com/define.php?term="));
 # britiannica wiki
-$bangCommands->append(array("!brit","https://www.britannica.com/search?query="));
 $bangCommands->append(array("!britannica","https://www.britannica.com/search?query="));
+$bangCommands->append(array("!brit","https://www.britannica.com/search?query="));
 ################################################################################
 # check for !bang help command in search query
 $bangHelp = "";
