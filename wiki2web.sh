@@ -115,6 +115,8 @@ function update(){
 			# if the md5sum of the wiki file has changed update it
 			#if checkFileDataSum "$zimFilePath";then
 			if test -f "$zimFilePath";then
+				# link the zim file into the kodi directory
+				linkFile "$zimFilePath" "$webDirectory/kodi/wiki/"
 				# get the filename for the wiki name
 				#wikiName=$(popPath $wikiLocation)
 				# generate a md5sum for the location
@@ -175,6 +177,7 @@ function resetCache(){
 ################################################################################
 function nuke(){
 	rm -rv $(webRoot)/wiki/
+	rm -rv $(webRoot)/kodi/wiki/
 }
 ################################################################################
 main(){
