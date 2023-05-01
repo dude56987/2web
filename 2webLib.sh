@@ -287,12 +287,10 @@ function alterArticles(){
 ################################################################################
 function cpuCount(){
 		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		# if the fullspeed command has not been given split speed in half to avoid server service interruptions
-		if ! echo "$@" | grep -q -e "--fullspeed";then
-			totalCPUS=$(( $totalCPUS - 1 ))
-			if [ $totalCPUS -lt 2 ];then
-				totalCPUS=1
-			fi
+		# remove one cpu from the total cpu count, this will prevent service interuptions
+		totalCPUS=$(( $totalCPUS - 1 ))
+		if [ $totalCPUS -lt 2 ];then
+			totalCPUS=1
 		fi
 		# output the cpu count
 		echo $totalCPUS
@@ -307,19 +305,40 @@ function waitQueue(){
 		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
 		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
-			#ALERT "Waiting for free CPU cores..."
+			#INFO "Waiting for free CPU cores..."
 			sleep $sleepTime
 		else
 			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
 			# - this will make all 2web modules parallel process without blocking each other
 			# - this should make the apache server remain available even if all modules are running in parallel
 			# convert load into interger and compare
-			if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS * 2 )) ];then
-				#ALERT "System is overloaded, Waiting for system resources..."
-				sleep $sleepTime
+			if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
+				#INFO "System is overloaded, Waiting for system resources..."
+				sleep 1
 			else
 				break
 			fi
+		fi
+	done
+}
+################################################################################
+function waitFastQueue(){
+	# PARALLEL PROCESSING COMMAND
+	# wait for queue to free up for next command
+	sleepTime=$1
+	totalCPUS=$2
+	while true;do
+		# check if the cpu has any available cores that are unused in this process
+		# jobs -r only shows running jobs
+		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
+			#INFO "Waiting for free CPU cores..."
+			sleep $sleepTime
+		else
+			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
+			# - this will make all 2web modules parallel process without blocking each other
+			# - this should make the apache server remain available even if all modules are running in parallel
+			# convert load into interger and compare
+			break
 		fi
 	done
 }
@@ -330,11 +349,7 @@ function blockQueue(){
 	sleepTime=$1
 	while true;do
 		if [ $(jobs -r | wc -l) -gt 0 ];then
-			# jobs -r only shows running jobs
-			#ALERT "BLOCKING QUEUE '$( jobs -r | wc -l )' Remaining Jobs"
-			#ALERT "$(jobs -r)"
 			sleep $sleepTime
-			#sleep 2
 		else
 			break
 		fi
@@ -690,8 +705,8 @@ function checkDirSum(){
 	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
 	newSum="$(getDirSum "$directory")"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/nfo_$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/nfo_$pathSum.cfg")"
+	if test -f "$webDirectory/sums/${moduleName}_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/${moduleName}_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED

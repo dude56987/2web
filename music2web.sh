@@ -40,8 +40,8 @@ function albumCheckDirSum(){
 	pathSum="$(find "$directory" -type f -name "album.png" | sort | md5sum | cut -d' ' -f1 )"
 	newSum="$(getDirSum "$2")"
 	# check for a previous sum
-	if test -f "$webDirectory/sums/music_$pathSum.cfg";then
-		oldSum="$(cat "$webDirectory/sums/music_$pathSum.cfg")"
+	if test -f "$webDirectory/sums/music2web_$pathSum.cfg";then
+		oldSum="$(cat "$webDirectory/sums/music2web_$pathSum.cfg")"
 		# compare the sum of the old path with the new one
 		if [ "$oldSum" == "$newSum" ];then
 			# UNCHANGED
@@ -51,14 +51,14 @@ function albumCheckDirSum(){
 			# CHANGED
 			# the sums are diffrent, pass true
 			# update the sum
-			echo "$newSum" > "$webDirectory/sums/music_$pathSum.cfg"
+			echo "$newSum" > "$webDirectory/sums/music2web_$pathSum.cfg"
 			return 0
 		fi
 	else
 		# CHANGED
 		# no previous file was found, pass true
 		# update the sum
-		echo "$newSum" > "$webDirectory/sums/music_$pathSum.cfg"
+		echo "$newSum" > "$webDirectory/sums/music2web_$pathSum.cfg"
 		return 0
 	fi
 }
@@ -274,12 +274,13 @@ function processTrack(){
 						# remove excess images
 						rm "$webDirectory/music/$artist/fanart-"*.png
 					fi
-					# trim and blur the fanart
-					convert -quiet "$webDirectory/music/$artist/fanart.png" -trim -blur 5x5 "$webDirectory/music/$artist/fanart.png"
-					# copy the artist fanart to the kodi folder
-					convert -quiet "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/fanart.jpg"
-					linkFile "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/landscape.jpg"
-
+					if test -f "$webDirectory/music/$artist/fanart.png";then
+						# trim and blur the fanart
+						convert -quiet "$webDirectory/music/$artist/fanart.png" -trim -blur 5x5 "$webDirectory/music/$artist/fanart.png"
+						# copy the artist fanart to the kodi folder
+						convert -quiet "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/fanart.jpg"
+						linkFile "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/landscape.jpg"
+					fi
 					################################################################################
 					# build a new poster if the discovred albums have changed
 					################################################################################
@@ -324,21 +325,27 @@ function processTrack(){
 						# remove excess images
 						rm "$webDirectory/music/$artist/poster-"*.png
 					fi
-					convert -quiet "$webDirectory/music/$artist/poster.png" -trim "$webDirectory/music/$artist/poster.png"
-					# resize the poster to resonable porportions
-					convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 800x800\! "$webDirectory/music/$artist/poster.png"
-					# create the smaller thumbnail
-					convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/poster-web.png"
-					# create the kodi jpg artist poster thumb
-					convert -quiet "$webDirectory/music/$artist/poster.png" "$webDirectory/kodi/music/$artist/folder.jpg"
-					linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearart.jpg"
-					linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearlogo.jpg"
+					if test -f "$webDirectory/music/$artist/poster.png";then
+						convert -quiet "$webDirectory/music/$artist/poster.png" -trim "$webDirectory/music/$artist/poster.png"
+						# resize the poster to resonable porportions
+						convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 800x800\! "$webDirectory/music/$artist/poster.png"
+						# create the smaller thumbnail
+						convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/poster-web.png"
+						# create the kodi jpg artist poster thumb
+						convert -quiet "$webDirectory/music/$artist/poster.png" "$webDirectory/kodi/music/$artist/folder.jpg"
+					fi
+					if test -f "$webDirectory/music/$artist/folder.png";then
+						linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearart.jpg"
+						linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearlogo.jpg"
+					fi
 				fi
 				if ! test -f "$webDirectory/kodi/music/$artist/$album/cover.jpg";then
 					convert -quiet "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/cover.jpg"
 				fi
 				# build the web thumbnail
-				convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/$album/album-web.png"
+				if test -f "$webDirectory/music/$artist/$album/album.png";then
+					convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/$album/album-web.png"
+				fi
 			fi
 			################################################################################
 			# create the nfo data
@@ -493,6 +500,8 @@ function processTrack(){
 			fi
 		fi
 		setFileDataSum "$webDirectory" "$musicPath"
+	else
+		INFO "⚙️:$totalProgressString"
 	fi
 }
 ################################################################################
@@ -536,43 +545,70 @@ function update(){
 	totalTracks=0
 	processedTracks=0
 	totalTrackList=""
+	IFSBACKUP=$IFS
+	IFS=$'\n'
 	# tally up the total tracks
-	for musicSource in $musicSources;do
-		if checkDirSum "$webDirectory" "$musicSource";then
-			tempFoundTracks=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | wc -l)
-			totalTrackList="${totalTrackList}${tempFoundTracks}\n"
-			totalTracks=$(( $totalTracks + $tempFoundTracks ))
-		fi
-	done
+	#for musicSource in $musicSources;do
+	#	ALERT "MUSIC SOURCE: $musicSource"
+	#	if checkDirSum "$webDirectory" "$musicSource";then
+	#		tempFoundTracks=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | wc -l)
+	#		tempFoundTrackCount=$(echo "$tempFoundTracks" | wc -l )
+	#		totalTrackList="${totalTrackList}${tempFoundTracks}\n"
+	#		totalTracks=$(( $totalTracks + $tempFoundTrackCount ))
+	#	fi
+	#done
+	#musicFiles=$(echo "$totalTrackList" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+	#IFS=$IFSBACKUP
 	#echo "_____________"
 	#echo "= $totalTracks"
+
+	#ALERT "Total Track List = '$totalTrackList'"
 	#ALERT "CLI OPTIONS $@"
 	#echo "$musicSources" | sort | while read -r musicSource;do
+	totalSources=0
+	for musicSource in $musicSources;do
+		totalSources=$(( $totalSources + 1 ))
+	done
+	processedSources=0
 	# musicSources need to be shuffled since some music files crash the processing
 	echo "$musicSources" | shuf | while read -r musicSource;do
-		#ALERT "MUSIC SOURCE: $musicSource"
-		# scan inside the music source directories for mp3 files
-		musicFiles=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$")
-		musicFiles=$(echo "$musicFiles" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
-		#find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | shuf | while read musicPath;do
-		#ALERT "MUSIC FILES : $musicFiles"
-		IFS=$'\n'
-		#echo "$musicFiles\n$musicFiles" | uniq | shuf | while read -r musicPath;do
-		for musicPath in $musicFiles;do
-			#ALERT "MUSIC FILE PATH IN LOOP : $musicPath"
-			# block for parallel threads here if there are more threads than cpus
-			# block adding thread if there are more threads than cpus
-			#ALERT "Processing Track $musicPath"
-			processTrack "$musicPath" "$processedTracks/$totalTracks" "$@" &
-			processedTracks=$(( $processedTracks + 1 ))
-			waitQueue 0.5 "$totalCPUS"
-		done
+		processedSources=$(( $processedSources + 1 ))
+		INFO "Processing '$musicSource'"
+		if checkDirSum "$webDirectory" "$musicSource";then
+			#ALERT "MUSIC SOURCE: $musicSource"
+			# scan inside the music source directories for mp3 files
+			#musicFiles=$totalTrackList
+			musicFiles=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$")
+			musicFiles=$(echo "$musicFiles" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+			#
+			tempFoundTrackCount=$(echo "$musicFiles" | wc -l )
+			totalTracks=$(( $totalTracks + $tempFoundTrackCount ))
+			#
+			#find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | shuf | while read musicPath;do
+			#ALERT "MUSIC FILES : $musicFiles"
+			IFS=$'\n'
+			#echo "$musicFiles\n$musicFiles" | uniq | shuf | while read -r musicPath;do
+			for musicPath in $musicFiles;do
+				#ALERT "MUSIC FILE PATH IN LOOP : $musicPath"
+				# block for parallel threads here if there are more threads than cpus
+				# block adding thread if there are more threads than cpus
+				#ALERT "Processing Track $musicPath"
+				processTrack "$musicPath" "$processedTracks/$totalTracks [$processedSources/$totalSources]" "$@" &
+				processedTracks=$(( $processedTracks + 1 ))
+				waitFastQueue 0.2 "$totalCPUS"
+			done
+			setDirSum "$webDirectory" "$musicSource"
+		fi
+		IFS=$IFSBACKUP
 	done
 
+	#IFS=$'\n'
 	# after all tracks have been processed mark the sources complete by updating the checksums
-	for musicSource in $musicSources;do
-		setDirSum "$webDirectory" "$musicSource"
-	done
+	#for musicSource in $musicSources;do
+	#	ALERT "Marking music source $musicSource as processed"
+	#	setDirSum "$webDirectory" "$musicSource"
+	#done
+	#IFS=$IFSBACKUP
 
 	# block for parallel threads here
 	blockQueue 1
@@ -692,25 +728,35 @@ function INFO(){
 }
 ################################################################################
 function nuke(){
+	webDirectory=$(webRoot)
 	# remove the kodi and web music files
-	rm -rv $(webRoot)/music/* || echo "No files found in music web directory..."
-	rm -rv $(webRoot)/kodi/music/* || echo "No files found in kodi directory..."
-	rm -rv $(webRoot)/sums/music2web_*.cfg || echo "No file sums found..."
-	databasePath=$($(webRoot)/data.db)
+	rm -rv "$webDirectory/music/" || echo "No files found in music web directory..."
+	rm -rv "$webDirectory/kodi/music/" || echo "No files found in kodi directory..."
+	rm -rv $webDirectory/sums/music2web_*.cfg || echo "No file sums found..."
+	#
+	rm -rv $webDirectory/web_cache/widget_random_music.index || echo "No file sums found..."
+	rm -rv $webDirectory/web_cache/widget_random_artists.index || echo "No file sums found..."
+	rm -rv $webDirectory/web_cache/widget_random_albums.index || echo "No file sums found..."
+	#
+	rm -rv $webDirectory/web_cache/widget_updated_music.index || echo "No file sums found..."
+	rm -rv $webDirectory/web_cache/widget_updated_artists.index || echo "No file sums found..."
+	rm -rv $webDirectory/web_cache/widget_updated_albums.index || echo "No file sums found..."
+	# create the database path
+	databasePath="$webDirectory/data.db"
 	# remove sql data
 	SQLremoveTable "$databasePath" "_music"
 	SQLremoveTable "$databasePath" "_albums"
 	SQLremoveTable "$databasePath" "_artists"
 	# new indexes
-	rm -rv $(webRoot)/new/music.index || echo "No music index..."
-	rm -rv $(webRoot)/new/albums.index || echo "No album index..."
-	rm -rv $(webRoot)/new/artists.index || echo "No artist index..."
-	rm -rv $(webRoot)/new/tracks.index || echo "No track index..."
+	rm -rv "$webDirectory/new/music.index" || echo "No music index..."
+	rm -rv "$webDirectory/new/albums.index" || echo "No album index..."
+	rm -rv "$webDirectory/new/artists.index" || echo "No artist index..."
+	rm -rv "$webDirectory/new/tracks.index" || echo "No track index..."
 	# random indexes
-	rm -rv $(webRoot)/random/music.index || echo "No music index..."
-	rm -rv $(webRoot)/random/albums.index || echo "No album index..."
-	rm -rv $(webRoot)/random/artists.index || echo "No artist index..."
-	rm -rv $(webRoot)/random/tracks.index || echo "No track index..."
+	rm -rv "$webDirectory/random/music.index" || echo "No music index..."
+	rm -rv "$webDirectory/random/albums.index" || echo "No album index..."
+	rm -rv "$webDirectory/random/artists.index" || echo "No artist index..."
+	rm -rv "$webDirectory/random/tracks.index" || echo "No track index..."
 }
 ################################################################################
 function main(){
@@ -746,7 +792,7 @@ function main(){
 		checkModStatus "music2web"
 		lockProc "music2web"
 		update $@
-		webUpdate $@
+		#webUpdate $@
 		#main --help $@
 		showServerLinks
 		echo "Module Links"
