@@ -709,8 +709,8 @@ if( ! function_exists("drawServicesWidget")){
 		$cacheFile=$_SERVER["DOCUMENT_ROOT"]."/web_cache/widget_services_$locationSum.index";
 		if (file_exists($cacheFile)){
 			# 3600 seconds = 1 hour = 60 * 60
-			# 10 hours
-			if ( ( time() - filemtime($cacheFile) ) > (10 * 3600)){
+			# 24 hours
+			if ( ( time() - filemtime($cacheFile) ) > (24 * 3600)){
 				// update the cached file
 				$writeFile=true;
 			}else{
@@ -762,13 +762,12 @@ if( ! function_exists("drawServicesWidget")){
 				}
 			}
 			ignore_user_abort(false);
-		}else{
-			# load the cached page
-			$cacheFileHandle = fopen($cacheFile,"r");
-			while( ! feof($cacheFileHandle)){
-				# send a line of the cache file
-				echo fgets($cacheFileHandle);
-			}
+		}
+		# load the cached page from previous cache time or current cache
+		$cacheFileHandle = fopen($cacheFile,"r");
+		while( ! feof($cacheFileHandle)){
+			# send a line of the cache file
+			echo fgets($cacheFileHandle);
 		}
 	}
 }
