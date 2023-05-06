@@ -90,20 +90,6 @@ if (file_exists("lastUpdate.index")){
 	$lastUpdate = "Never";
 }
 
-echo "<div class='date titleCard'>";
-echo "<h1>";
-echo ucfirst(shell_exec("hostname"));
-echo "<img id='spinner' src='/spinner.gif' />";
-echo "</h1>";
-
-if ( file_exists("activityGraph.png")){
-	echo "<div>";
-	echo "<a href='/graphs/2web_activity/'>";
-	echo "<img class='homeActivityGraph' src='activityGraph.png' />";
-	echo "</a>";
-	echo "</div>";
-}
-
 if ( file_exists("nfo2web.active")){
 	echo "<span class='activeProcess'>";
 	echo " ⚙️: nfo2web";
@@ -229,5 +215,4 @@ if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
 		echo "</a>";
 	}
 }
-echo "</div>"
 ?>

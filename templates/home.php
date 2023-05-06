@@ -35,8 +35,25 @@
 	if (file_exists("progress.index")){
 		include("progress.index");
 	}
+
 	if (file_exists("stats.php")){
+		echo "<div class='date titleCard'>";
+		echo "<h1>";
+		echo ucfirst(shell_exec("hostname"));
+		echo "<img id='spinner' src='/spinner.gif' />";
+		echo "</h1>";
+
+		if ( file_exists("activityGraph.png")){
+			echo "<div>";
+			echo "<a href='/graphs/2web_activity/'>";
+			echo "<img class='homeActivityGraph' src='activityGraph.png' />";
+			echo "</a>";
+			echo "</div>";
+		}
+
 		include("stats.php");
+
+		echo "</div>";
 	}
 	if (file_exists("shows")){
 		drawPosterWidget("episodes");

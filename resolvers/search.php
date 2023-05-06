@@ -46,8 +46,8 @@ function moreMusicLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🎧 External Music Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.newgrounds.com/search/conduct/audio?terms=$searchQuery'>🔎 Newgrounds</a>";
-	echo "		<a class='button' target='_new' href='https://archive.org/details/audio?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' href='https://www.newgrounds.com/search/conduct/audio?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' href='https://archive.org/details/audio?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -56,8 +56,8 @@ function moreMusicMetaLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🌐 External Music Metadata Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' target='_new' href='https://musicbrainz.org/search?type=artist&query=$searchQuery'>🔎 Music Brainz</a>";
+	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' href='https://musicbrainz.org/search?type=artist&query=$searchQuery'>🔎 Music Brainz</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -66,11 +66,11 @@ function moreBookLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>📚 External Book Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
-	echo "		<a class='button' target='_new' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
-	echo "		<a class='button' target='_new' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
-	echo "		<a class='button' target='_new' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
-	echo "		<a class='button' target='_new' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
+	echo "		<a class='button' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
+	echo "		<a class='button' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
+	echo "		<a class='button' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
+	echo "		<a class='button' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -79,7 +79,7 @@ function moreBookMetaLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🌐 External Book Metadata Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -88,10 +88,10 @@ function moreSearchLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🔎 External Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.mojeek.com/search?q=$searchQuery'>🔎 Mojeek</a>";
-	echo "		<a class='button' target='_new' href='https://search.brave.com/search?q=$searchQuery'>🔎 Brave</a>";
-	echo "		<a class='button' target='_new' href='https://www.duckduckgo.com/?q=$searchQuery'>🔎 DuckDuckGo</a>";
-	echo "		<a class='button' target='_new' href='https://www.startpage.com/sp/search?q=$searchQuery'>🔎 StartPage</a>";
+	echo "		<a class='button' href='https://www.mojeek.com/search?q=$searchQuery'>🔎 Mojeek</a>";
+	echo "		<a class='button' href='https://search.brave.com/search?q=$searchQuery'>🔎 Brave</a>";
+	echo "		<a class='button' href='https://www.duckduckgo.com/?q=$searchQuery'>🔎 DuckDuckGo</a>";
+	echo "		<a class='button' href='https://www.startpage.com/sp/search?q=$searchQuery'>🔎 StartPage</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -100,15 +100,15 @@ function moreVideoLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🎞️ External Video Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
-	echo "		<a class='button' target='_new' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
-	echo "		<a class='button' target='_new' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
-	echo "		<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
-	echo "		<a class='button' target='_new' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
-	echo "		<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
-	echo "		<a class='button' target='_new' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
-	echo "		<a class='button' target='_new' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
-	echo "		<a class='button' target='_new' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
+	echo "		<a class='button' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
+	echo "		<a class='button' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
+	echo "		<a class='button' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
+	echo "		<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
+	echo "		<a class='button' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
+	echo "		<a class='button' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
+	echo "		<a class='button' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -119,10 +119,10 @@ function moreVideoMetaLinks($searchQuery){
 	echo "		🌐 External Video Metadata Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' target='_new' href='https://www.imdb.com/find?q=$searchQuery'>🔎 IMDB</a>";
-	echo "		<a class='button' target='_new' href='https://thetvdb.com/search?query=$searchQuery'>🔎 TheTVDB</a>";
-	echo "		<a class='button' target='_new' href='https://www.themoviedb.org/search?query=$searchQuery'>🔎 TMDB</a>";
+	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' href='https://www.imdb.com/find?q=$searchQuery'>🔎 IMDB</a>";
+	echo "		<a class='button' href='https://thetvdb.com/search?query=$searchQuery'>🔎 TheTVDB</a>";
+	echo "		<a class='button' href='https://www.themoviedb.org/search?query=$searchQuery'>🔎 TMDB</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -133,10 +133,10 @@ function moreDataLinks($searchQuery){
 	echo "		🌐 External Data Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' target='_new' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
-	echo "		<a class='button' target='_new' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
-	echo "		<a class='button' target='_new' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
+	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
+	echo "		<a class='button' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
+	echo "		<a class='button' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -147,8 +147,8 @@ function moreMapLinks($searchQuery){
 	echo "		🗺️ External Map Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.openstreetmap.org/search?query=$searchQuery'>🔎 OpenStreetMap Search</a>";
-	echo "		<a class='button' target='_new' href='https://openweathermap.org/find?q=$searchQuery'>🔎 OpenWeatherMap Search</a>";
+	echo "		<a class='button' href='https://www.openstreetmap.org/search?query=$searchQuery'>🔎 OpenStreetMap Search</a>";
+	echo "		<a class='button' href='https://openweathermap.org/find?q=$searchQuery'>🔎 OpenWeatherMap Search</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -159,10 +159,10 @@ function moreDictLinks($searchQuery){
 	echo "		📕 External Dictionary";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
-	echo "		<a class='button' target='_new' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
-	echo "		<a class='button' target='_new' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
-	echo "		<a class='button' target='_new' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
+	echo "		<a class='button' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
+	echo "		<a class='button' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
+	echo "		<a class='button' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
+	echo "		<a class='button' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -173,8 +173,8 @@ function moreSynLinks($searchQuery){
 	echo "		📙 External Thesaurus Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' target='_new' href='https://www.merriam-webster.com/thesaurus/$searchQuery'>🔎 Merriam Webster Thesaurus</a>";
-	echo "		<a class='button' target='_new' href='https://www.thesaurus.com/browse/$searchQuery'>🔎 Random House Thesaurus</a>";
+	echo "		<a class='button' href='https://www.merriam-webster.com/thesaurus/$searchQuery'>🔎 Merriam Webster Thesaurus</a>";
+	echo "		<a class='button' href='https://www.thesaurus.com/browse/$searchQuery'>🔎 Random House Thesaurus</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -263,8 +263,10 @@ function searchWeather($cacheFilePath){
 				if (is_file($fullWeatherPath)){
 					#echo "File is file...<br>";
 					$weatherFileData=file_get_contents($fullWeatherPath);
+					# remove all html from the weather data file
+					$weatherFileSearchData=strip_tags($weatherFileData);
 					#echo $weatherFileData."<br>";
-					if (stripos($weatherFileData,$_GET['q'])){
+					if (stripos($weatherFileSearchData,$_GET['q'])){
 						if (stripos($fullWeatherPath,"current_")){
 							# check current weather conditions
 							$tempOutput="<div class='titleCard'>";
@@ -417,10 +419,15 @@ function searchWiki($wikiPath,$cacheFilePath){
 							$endCut=strlen($lineData);
 						}
 
-						$foundStringPreview = substr($lineData,$startCut,$endCut);
-
-						$foundData = true;
 						$tempOutput = "";
+
+						$foundStringPreview = substr($lineData,$startCut,$endCut);
+						if ($foundData == false){
+							$foundData = true;
+							# write once header
+							$tempOutput .= "<h2>Local Wiki Articles</h2>";
+						}
+
 						# check each files contents for the search term
 						#$tempOutput .= "<div class='titleCard button'>";
 						$tempOutput .= "<div class='inputCard button'>";
@@ -486,84 +493,93 @@ function redirect($url){
 	}
 }
 ################################################################################
-$searchQuery = $_GET["q"];
-################################################################################
-# build the array of bang commands that can be checked for
-################################################################################
-$bangCommands=new ArrayObject();
-# dict and thesaurus
-$bangCommands->append(array("!define","https://www.dictionary.com/browse/"));
-$bangCommands->append(array("!about","https://www.dictionary.com/browse/"));
-$bangCommands->append(array("!describe","https://www.dictionary.com/browse/"));
-$bangCommands->append(array("!synonyms","https://www.thesaurus.com/browse/"));
-$bangCommands->append(array("!synonym","https://www.thesaurus.com/browse/"));
-$bangCommands->append(array("!syn","https://www.thesaurus.com/browse/"));
-$bangCommands->append(array("!similar","https://www.thesaurus.com/browse/"));
-$bangCommands->append(array("!alike","https://www.thesaurus.com/browse/"));
-# redirect bing to duckduckgo
-$bangCommands->append(array("!bing","https://duckduckgo.com/?q="));
-# redirect google to startpage
-$bangCommands->append(array("!google","https://www.startpage.com/sp/search?q="));
-$bangCommands->append(array("!g","https://www.startpage.com/sp/search?q="));
-# duckduckgo search
-$bangCommands->append(array("!duckduckgo","https://duckduckgo.com/?q="));
-$bangCommands->append(array("!duck","https://duckduckgo.com/?q="));
-$bangCommands->append(array("!ddg","https://duckduckgo.com/?q="));
-# startpage search
-$bangCommands->append(array("!startpage","https://www.startpage.com/sp/search?q="));
-$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
-$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
-# youtube search
-$bangCommands->append(array("!youtube","https://youtube.com/results?search_query="));
-$bangCommands->append(array("!yt","https://youtube.com/results?search_query="));
-# bitchute video search
-$bangCommands->append(array("!bitchute","https://www.bitchute.com/search/?kind=video&query="));
-$bangCommands->append(array("!bit","https://www.bitchute.com/search/?kind=video&query="));
-# peertube video search
-$bangCommands->append(array("!peertube","https://sepiasearch.org/search?search="));
-$bangCommands->append(array("!pt","https://sepiasearch.org/search?search="));
-# d tube video search
-$bangCommands->append(array("!dtube","https://d.tube/#!/s/"));
-$bangCommands->append(array("!dt","https://d.tube/#!/s/"));
-# odysee video search
-$bangCommands->append(array("!odysee","https://odysee.com/$/search?q="));
-$bangCommands->append(array("!od","https://odysee.com/$/search?q="));
-# brave search
-$bangCommands->append(array("!brave","https://search.brave.com/search?q="));
-$bangCommands->append(array("!b","https://search.brave.com/search?q="));
-# mojeek search
-$bangCommands->append(array("!mojeek","https://www.mojeek.com/search?q="));
-$bangCommands->append(array("!m","https://www.mojeek.com/search?q="));
-# wikipedia
-$bangCommands->append(array("!wikipedia","https://wikipedia.org/w/?search="));
-$bangCommands->append(array("!wiki","https://wikipedia.org/w/?search="));
-$bangCommands->append(array("!w","https://wikipedia.org/w/?search="));
-# urban dict
-$bangCommands->append(array("!urban","https://www.urbandictionary.com/define.php?term="));
-$bangCommands->append(array("!u","https://www.urbandictionary.com/define.php?term="));
-# britiannica wiki
-$bangCommands->append(array("!britannica","https://www.britannica.com/search?query="));
-$bangCommands->append(array("!brit","https://www.britannica.com/search?query="));
-################################################################################
-# check for !bang help command in search query
-$bangHelp = "";
-if ( strpos($searchQuery,"!help") || ($searchQuery == "!help") ){
-	# print out all the bang commands and the links they generate
-	$bangHelp .= "<h1>Bang Command List</h1>";
-	$bangHelp .= "<table>";
-	$bangHelp .= "<tr><th>Bang</th><th>Link</th></tr>";
+function checkForBangs($searchQuery){
+	################################################################################
+	# build the array of bang commands that can be checked for
+	################################################################################
+	$bangCommands=new ArrayObject();
+	# dict and thesaurus
+	$bangCommands->append(array("!define","https://www.dictionary.com/browse/"));
+	$bangCommands->append(array("!about","https://wikipedia.org/w/?search="));
+	$bangCommands->append(array("!describe","https://wikipedia.org/w/?search="));
+	$bangCommands->append(array("!synonyms","https://www.thesaurus.com/browse/"));
+	$bangCommands->append(array("!synonym","https://www.thesaurus.com/browse/"));
+	$bangCommands->append(array("!syn","https://www.thesaurus.com/browse/"));
+	$bangCommands->append(array("!similar","https://www.thesaurus.com/browse/"));
+	$bangCommands->append(array("!alike","https://www.thesaurus.com/browse/"));
+	# redirect bing to duckduckgo
+	$bangCommands->append(array("!bing","https://duckduckgo.com/?q="));
+	# redirect google to startpage
+	$bangCommands->append(array("!google","https://www.startpage.com/sp/search?q="));
+	$bangCommands->append(array("!g","https://www.startpage.com/sp/search?q="));
+	# duckduckgo search
+	$bangCommands->append(array("!duckduckgo","https://duckduckgo.com/?q="));
+	$bangCommands->append(array("!duck","https://duckduckgo.com/?q="));
+	$bangCommands->append(array("!ddg","https://duckduckgo.com/?q="));
+	# startpage search
+	$bangCommands->append(array("!startpage","https://www.startpage.com/sp/search?q="));
+	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
+	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
+	# youtube search
+	$bangCommands->append(array("!youtube","https://youtube.com/results?search_query="));
+	$bangCommands->append(array("!yt","https://youtube.com/results?search_query="));
+	# bitchute video search
+	$bangCommands->append(array("!bitchute","https://www.bitchute.com/search/?kind=video&query="));
+	$bangCommands->append(array("!bit","https://www.bitchute.com/search/?kind=video&query="));
+	# peertube video search
+	$bangCommands->append(array("!peertube","https://sepiasearch.org/search?search="));
+	$bangCommands->append(array("!pt","https://sepiasearch.org/search?search="));
+	# d tube video search
+	$bangCommands->append(array("!dtube","https://d.tube/#!/s/"));
+	$bangCommands->append(array("!dt","https://d.tube/#!/s/"));
+	# odysee video search
+	$bangCommands->append(array("!odysee","https://odysee.com/$/search?q="));
+	$bangCommands->append(array("!od","https://odysee.com/$/search?q="));
+	# brave search
+	$bangCommands->append(array("!brave","https://search.brave.com/search?q="));
+	$bangCommands->append(array("!b","https://search.brave.com/search?q="));
+	# mojeek search
+	$bangCommands->append(array("!mojeek","https://www.mojeek.com/search?q="));
+	$bangCommands->append(array("!m","https://www.mojeek.com/search?q="));
+	# wikipedia
+	$bangCommands->append(array("!wikipedia","https://wikipedia.org/w/?search="));
+	$bangCommands->append(array("!wiki","https://wikipedia.org/w/?search="));
+	$bangCommands->append(array("!w","https://wikipedia.org/w/?search="));
+	# urban dict
+	$bangCommands->append(array("!urban","https://www.urbandictionary.com/define.php?term="));
+	$bangCommands->append(array("!u","https://www.urbandictionary.com/define.php?term="));
+	# britiannica wiki
+	$bangCommands->append(array("!britannica","https://www.britannica.com/search?query="));
+	$bangCommands->append(array("!brit","https://www.britannica.com/search?query="));
+	################################################################################
+	# check for !bang help command in search query
+	$bangHelp = "";
+	if ( strpos($searchQuery,"!help") || ($searchQuery == "!help") ){
+		# print out all the bang commands and the links they generate
+		$bangHelp .= "<h1>Bang Command List</h1>";
+		$bangHelp .= "<table>";
+		$bangHelp .= "<tr><th>Bang</th><th>Link</th></tr>";
+		foreach($bangCommands as $bang){
+			$bangHelp .= "<tr><td>$bang[0]</td><td>$bang[1]</td></tr>";
+		}
+		$bangHelp .= "</table>";
+	}
+	################################################################################
+	# before anything else is done check for bang commands
 	foreach($bangCommands as $bang){
-		$bangHelp .= "<tr><td>$bang[0]</td><td>$bang[1]</td></tr>";
+		if (strpos($searchQuery,$bang[0])){
+			$cleanSearch=str_replace($bang[0],"",$searchQuery);
+			redirect($bang[1].$cleanSearch);
+		}
 	}
-	$bangHelp .= "</table>";
+	return $bangHelp;
 }
-################################################################################
-# before anything else is done check for bang commands
-foreach($bangCommands as $bang){
-	if (strpos($searchQuery,$bang[0])){
-		$cleanSearch=str_replace($bang[0],"",$searchQuery);
-		redirect($bang[1].$cleanSearch);
-	}
+# check for bangs prior to building any part of the webpage
+# - This must be done before anything is writen to the page for the redirect to work
+if (array_key_exists("q",$_GET)){
+	$searchQuery = $_GET["q"];
+	# check for bang commands
+	$bangHelp=checkForBangs($searchQuery);
 }
 ################################################################################
 # start building the webpage
@@ -571,8 +587,8 @@ foreach($bangCommands as $bang){
 <html class='randomFanart'>
 <head>
 	<title>2web Search</title>
-	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>
@@ -581,7 +597,7 @@ include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 ################################################################################
-if (array_key_exists("q",$_GET)){
+if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# create md5sum for the query to store output
 	$querySum = md5($searchQuery);
 
@@ -590,6 +606,20 @@ if (array_key_exists("q",$_GET)){
 	echo "Searching  for '$searchQuery'";
 	echo "<img id='spinner' src='/spinner.gif' />";
 	echo "</h1>\n";
+	# if the query string contains a space
+	if (strpos($_GET['q']," ")){
+		echo "<div class='titleCard'>";
+		echo "	<h2>Expand Search</h2>";
+		echo "	<div class='listCard'>";
+		# explode the string into an array split based on the spaces
+		$searchTerms=explode( " " , $searchQuery );
+		# for each word seprated by a space create a search link
+		foreach($searchTerms as $searchTerm){
+			echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+		}
+		echo "	</div>";
+		echo "</div>";
+	}
 	echo "$bangHelp\n";
 	# write blank space to bypass buffering and start loading of the search results
 	# if this is not done page will hang on a difficult search
@@ -737,9 +767,40 @@ if (array_key_exists("q",$_GET)){
 
 	echo "</div>";
 
-	// add the footer
-	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+}else{
+	# no search made, the search has been loaded, steal focus for the search bar
+	echo "<script>";
+	echo "	window.onload = function(){";
+	echo "		document.getElementById('searchBox').focus();";
+	echo "	}";
+	echo "</script>";
+	echo "<div class='searchSpacer settingListCard'>";
+	echo "<h3>2web Database Stats</h3>";
+	# build the search spacer and fill with meta content if any
+	include("/usr/share/2web/templates/stats.php");
+	#if (file_exists("fortune.index")){
+	#	$todaysFortune = file_get_contents("fortune.index");
+	#}else{
+	#	$todaysFortune = "Fortune Disabled";
+	#}
+	#if ( file_exists("/etc/2web/fortuneStatus.cfg")){
+	#	echo "<a class='homeWeather' href='/fortune.php'>";
+	#	echo "<div class='listCard'>";
+	#	echo "<h3>🔮 Fortune</h3>";
+	#	echo "<div class='fortuneText'>";
+	#	echo "$todaysFortune";
+	#	echo "</div>";
+	#	echo "</div>";
+	#	echo "</a>";
+	#}
+	echo "<h3>Search Help</h3>";
+	echo "<p>To search the 2web server type a query into the search bar and hit enter! If no data is found in the server, external links to services are given using the same search term.</p>";
+	echo "<p>You can use !bang commands to redirect the search bar to other services. For a list of available !bang commands type !help into the search or click <a href='/search.php?q=!help'>here</a>.</p>";
+
+	echo "</div>";
 }
+// add the footer
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 </body>
 </html>
