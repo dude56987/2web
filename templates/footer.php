@@ -56,6 +56,9 @@ $databaseSearchQuery='select * from "view_count" where url = \''.$scriptName.'\'
 $result = $databaseObj->query($databaseSearchQuery);
 # search views database for this pages view count
 $data = $result->fetchArray();
+# close the database to process the data
+$databaseObj->close();
+unset($databaseObj);
 # if the current url url is in the database
 if ( $data != false){
 	# increment the view counter
@@ -68,6 +71,10 @@ $dbUpdateQuery .= "VALUES ('".$scriptName."', '".$updatedViewCount."') ";
 #$dbUpdateQuery .= "ON DUPLICATE KEY UPDATE";
 #$dbUpdateQuery .= "views = '".$updatedViewCount."'";
 $dbUpdateQuery .= ";";
+# load the views database
+$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+# set the timeout to 1 minute since most webbrowsers timeout loading before this
+$databaseObj->busyTimeout(90000);
 # update the database
 $databaseObj->query($dbUpdateQuery);
 # clear up memory of database file
