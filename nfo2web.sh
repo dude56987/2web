@@ -1988,17 +1988,16 @@ cleanMediaIndexFile(){
 	fi
 }
 ################################################################################
-function clean(){
+function cleanDatabase(){
 	webDirectory=$(webRoot)
 	# find and delete directories for show/movie if the show/movie contains broken links
 	cleanMediaSection "$webDirectory/movies/"
-	cleanMediaSection "$webDirectory/web/shows/"
+	cleanMediaSection "$webDirectory/shows/"
 	# clean index files
 	cleanMediaIndexFile "$webDirectory/shows/" "shows.index"
 	cleanMediaIndexFile "$webDirectory/movies/" "movies.index"
 
 	# remove the web cached data for widgets
-
 	# updated(new) widgets
 	rm -rv /var/cache/2web/web/web_cache/widget_updated_movies.index
 	rm -rv /var/cache/2web/web/web_cache/widget_updated_shows.index
@@ -2118,7 +2117,7 @@ function update(){
 	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
 		# clean the database of broken entries
 		# - this should allow you to delete data from source drives and it automatically remove it from the website.
-		clean
+		cleanDatabase
 	fi
 
 	IFS=$'\n'
