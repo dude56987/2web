@@ -772,3 +772,34 @@ popPath(){
 	echo "$1" | rev | cut -d'/' -f1 | rev
 }
 ########################################################################
+function addToLog(){
+	errorType=$1
+	errorDescription=$2
+	errorDetails=$3
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	errorSum=$(echo "$errorType$errorDescription$errorDetails" | md5sum | cut -d' ' -f1)
+	# set the path prefixed with seconds and nanoseconds
+	logPagePath="/var/cache/2web/web/log/$(date "+%s.%N")_${moduleName}.log"
+	{
+		# add error to log
+		echo -e "<tr class='logEntry $errorType'>"
+		echo -e "<td>"
+		echo -e "$errorType"
+		echo -e "</td>"
+		echo -e "<td>"
+		echo -e "$errorDescription" | txt2html --extract
+		echo -e "</td>"
+		echo -e "<td class='logDetails'>"
+		# convert the error details into html
+		echo -e "$errorDetails" | txt2html --extract
+		echo -e "</td>"
+		echo -e "<td>"
+		date "+%D"
+		echo -e "</td>"
+		echo -e "<td>"
+		date "+%R:%S"
+		echo -e "</td>"
+		echo -e "</tr>"
+	} >> "$logPagePath"
+}
+########################################################################

@@ -1608,34 +1608,6 @@ processShow(){
 	getDirSum "$show" > "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
 }
 ########################################################################
-function addToLog(){
-	errorType=$1
-	errorDescription=$2
-	errorDetails=$3
-	logPagePath=$4
-	{
-		# add error to log
-		echo -e "<tr class='logEntry $errorType'>"
-		echo -e "<td>"
-		echo -e "$errorType"
-		echo -e "</td>"
-		echo -e "<td>"
-		echo -e "$errorDescription" | txt2html --extract
-		echo -e "</td>"
-		echo -e "<td class='logDetails'>"
-		# convert the error details into html
-		echo -e "$errorDetails" | txt2html --extract
-		echo -e "</td>"
-		echo -e "<td>"
-		date "+%D"
-		echo -e "</td>"
-		echo -e "<td>"
-		date "+%R:%S"
-		echo -e "</td>"
-		echo -e "</tr>"
-	} >> "$logPagePath"
-}
-########################################################################
 getLibSum(){
 	# find all state sums for shows and create a collective sum
 	totalList=""
