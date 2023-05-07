@@ -18,18 +18,7 @@
 ########################################################################
 -->
 <?PHP
-function redirect($url,$debug=false){
-	if ($debug){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-	}
-}
+include("/usr/share/2web/2webLib.php");
 // login must be on https
 if (! $_SERVER['HTTPS']){
 	$tempURL=str_replace("http","https",$_SERVER["HTTP_REFERER"]);

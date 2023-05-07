@@ -18,19 +18,7 @@
 ########################################################################
 -->
 <?PHP
-function redirect($url,$debug=false){
-	if ($debug){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-	}
-}
-
+include("/usr/share/2web/2webLib.php");
 # first run logout the user, then redirect them to the homepage
 if (strpos($_SERVER['REQUEST_URI'], "settings/")){
 	# redirect after logout and strip url of login infomation
