@@ -957,4 +957,13 @@ if( ! function_exists("debug")){
 	}
 }
 ########################################################################
+if( ! function_exists("redirect")){
+	function redirect($url){
+		// temporary redirect
+		header('Location: '.$url,true,302);
+		exit();
+		die();
+	}
+}
+########################################################################
 ?>

@@ -46,8 +46,8 @@ function moreMusicLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🎧 External Music Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.newgrounds.com/search/conduct/audio?terms=$searchQuery'>🔎 Newgrounds</a>";
-	echo "		<a class='button' href='https://archive.org/details/audio?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.newgrounds.com/search/conduct/audio?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/audio?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -56,8 +56,8 @@ function moreMusicMetaLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🌐 External Music Metadata Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' href='https://musicbrainz.org/search?type=artist&query=$searchQuery'>🔎 Music Brainz</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' rel='noreferer' href='https://musicbrainz.org/search?type=artist&query=$searchQuery'>🔎 Music Brainz</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -66,11 +66,11 @@ function moreBookLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>📚 External Book Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
-	echo "		<a class='button' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
-	echo "		<a class='button' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
-	echo "		<a class='button' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
-	echo "		<a class='button' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
+	echo "		<a class='button' rel='noreferer' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
+	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -79,7 +79,7 @@ function moreBookMetaLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🌐 External Book Metadata Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -88,10 +88,10 @@ function moreSearchLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🔎 External Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.mojeek.com/search?q=$searchQuery'>🔎 Mojeek</a>";
-	echo "		<a class='button' href='https://search.brave.com/search?q=$searchQuery'>🔎 Brave</a>";
-	echo "		<a class='button' href='https://www.duckduckgo.com/?q=$searchQuery'>🔎 DuckDuckGo</a>";
-	echo "		<a class='button' href='https://www.startpage.com/sp/search?q=$searchQuery'>🔎 StartPage</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.mojeek.com/search?q=$searchQuery'>🔎 Mojeek</a>";
+	echo "		<a class='button' rel='noreferer' href='https://search.brave.com/search?q=$searchQuery'>🔎 Brave</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.duckduckgo.com/?q=$searchQuery'>🔎 DuckDuckGo</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.startpage.com/sp/search?q=$searchQuery'>🔎 StartPage</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -100,15 +100,15 @@ function moreVideoLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🎞️ External Video Search</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
-	echo "		<a class='button' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
-	echo "		<a class='button' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
-	echo "		<a class='button' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
-	echo "		<a class='button' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
-	echo "		<a class='button' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
-	echo "		<a class='button' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
-	echo "		<a class='button' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
-	echo "		<a class='button' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
+	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' rel='noreferer' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
+	echo "		<a class='button' rel='noreferer' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
+	echo "		<a class='button' rel='noreferer' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
+	echo "		<a class='button' rel='noreferer' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -119,10 +119,10 @@ function moreVideoMetaLinks($searchQuery){
 	echo "		🌐 External Video Metadata Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' href='https://www.imdb.com/find?q=$searchQuery'>🔎 IMDB</a>";
-	echo "		<a class='button' href='https://thetvdb.com/search?query=$searchQuery'>🔎 TheTVDB</a>";
-	echo "		<a class='button' href='https://www.themoviedb.org/search?query=$searchQuery'>🔎 TMDB</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.imdb.com/find?q=$searchQuery'>🔎 IMDB</a>";
+	echo "		<a class='button' rel='noreferer' href='https://thetvdb.com/search?query=$searchQuery'>🔎 TheTVDB</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.themoviedb.org/search?query=$searchQuery'>🔎 TMDB</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -133,10 +133,10 @@ function moreDataLinks($searchQuery){
 	echo "		🌐 External Data Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
-	echo "		<a class='button' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
-	echo "		<a class='button' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
-	echo "		<a class='button' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wikipedia.org/w/?search=$searchQuery'>🔎 Wikipedia</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
+	echo "		<a class='button' rel='noreferer' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -147,8 +147,8 @@ function moreMapLinks($searchQuery){
 	echo "		🗺️ External Map Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.openstreetmap.org/search?query=$searchQuery'>🔎 OpenStreetMap Search</a>";
-	echo "		<a class='button' href='https://openweathermap.org/find?q=$searchQuery'>🔎 OpenWeatherMap Search</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.openstreetmap.org/search?query=$searchQuery'>🔎 OpenStreetMap Search</a>";
+	echo "		<a class='button' rel='noreferer' href='https://openweathermap.org/find?q=$searchQuery'>🔎 OpenWeatherMap Search</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -159,10 +159,10 @@ function moreDictLinks($searchQuery){
 	echo "		📕 External Dictionary";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
-	echo "		<a class='button' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
-	echo "		<a class='button' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
-	echo "		<a class='button' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -173,8 +173,8 @@ function moreSynLinks($searchQuery){
 	echo "		📙 External Thesaurus Search";
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
-	echo "		<a class='button' href='https://www.merriam-webster.com/thesaurus/$searchQuery'>🔎 Merriam Webster Thesaurus</a>";
-	echo "		<a class='button' href='https://www.thesaurus.com/browse/$searchQuery'>🔎 Random House Thesaurus</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.merriam-webster.com/thesaurus/$searchQuery'>🔎 Merriam Webster Thesaurus</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.thesaurus.com/browse/$searchQuery'>🔎 Random House Thesaurus</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -373,9 +373,13 @@ function searchWiki($wikiPath,$cacheFilePath){
 	#
 	$wikiName=explode("/",$wikiPath);
 	$wikiName=array_pop($wikiName);
+	$articleCount=0;
 	if ($foundFiles){
 		foreach($foundFiles as $foundFile){
-			if (stripos($foundFile,$_GET['q'])){
+			if ($articleCount > 100){
+				break;
+			}else if (stripos($foundFile,$_GET['q'])){
+				$articleCount += 1;
 				# check each filename for the search term
 				$tempOutput = "";
 
@@ -396,7 +400,10 @@ function searchWiki($wikiPath,$cacheFilePath){
 				# read each file and search line by line
 				$articleHandle = fopen($wikiPath."/A/".$foundFile,'r');
 				while(! feof($articleHandle)){
-					$lineData = fgets($articleHandle,128);
+					# get a single line of the file
+					$lineData = fgets($articleHandle);
+					# remove html tags
+					$lineData = strip_tags($lineData);
 					#$lineData = file_get_contents($wikiPath."/A/".$foundFile);
 					# remove html tags
 					$lineData = strip_tags($lineData);
@@ -406,6 +413,8 @@ function searchWiki($wikiPath,$cacheFilePath){
 					$lineData = str_replace($_GET['q'],("<span class='highlightText'>".$_GET['q']."</span>"),$lineData);
 					#$lineData = str_replace(strtoupper($_GET['q']),("<span class='highlightText'>".strtoupper($_GET['q'])."</span>"),$lineData);
 					if(stripos($lineData,$_GET['q'])){
+
+						$articleCount += 1;
 
 						$foundPosition=stripos($lineData,$_GET['q']);
 
@@ -470,27 +479,6 @@ function searchWiki($wikiPath,$cacheFilePath){
 function printDateTime(){
 	$date = new DateTimeImmutable();
 	echo $date->format("y-m-d H:i:s");
-}
-function redirect($url){
-	if (array_key_exists("debug",$_GET)){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo '<div>';
-		echo '<video controls>';
-		echo '<source src="'.$url.'" type="video/mp4">';
-		echo '</video>';
-		echo '</div>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-		exit();
-		die();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-		exit();
-		die();
-	}
 }
 ################################################################################
 function checkForBangs($searchQuery){
@@ -641,6 +629,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/comics/comics.index"));
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
 	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/episodes.index"));
+	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/repos.index"));
 
 	$searchCacheFilePath="search/".$querySum.".index";
 
