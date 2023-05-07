@@ -124,6 +124,7 @@ if (file_exists("/var/cache/2web/web/live/groups/")){
 		echo "			$sourceFile";
 		echo "		</h2>\n";
 		echo "		<div class='buttonContainer'>\n";
+		echo "			<a class='button' href='/live/?filter=$sourceFile#$sourceFile'>View</a>\n";
 		# if the group has been blocked
 		if(in_array($sourceFile, $blockedGroups)){
 			echo "			<button class='button' type='submit' name='unblockGroup' value='".$sourceFile."'>UNBLOCK</button>\n";

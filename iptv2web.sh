@@ -496,7 +496,7 @@ function processLink(){
 		if echo -n "$link" | grep -Eq "\.xml$";then
 			# convert multuple epg files into a master epg.xml on the server
 			# convert .tar.gz and .xml EPG files into a single master EPGA
-			tempEPGsum=$(echo "$link" | md5sum | cut -d' ' -f1)
+			tempEPGsum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
 			# - epg data updates once every 45 minutes per epg link
 			# - most epgs now only contain the next 90 minutes of guide data
 			# - there is also a delay for the clients to update individually when kodi is connected
@@ -546,7 +546,30 @@ function processLink(){
 					# cache the yt-dlp json data 10 days
 					if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" "10";then
 						#mkdir -p "$webDirectory/live/ytdlp_cache/"
-						yt-dlp -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
+						downloadCount=0
+						while true;do
+							# if there is less than 10 characters in the json data the download has failed
+							if [ $(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" | wc -c) -le 10 ];then
+								# if the file contains no data try to download it again
+								yt-dlp --abort-on-error -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
+								errorCode=$?
+								if [ $errorCode -eq 1 ];then
+									# break if there is an error in yt-dlp
+									addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because of an error in yt-dlp. ERROR CODE = '$errorCode'."
+									# this means the channels most likely can not be played in any way so it should not be added to the list
+									return 1
+								fi
+								downloadCount=$(( downloadCount + 1))
+							else
+								# if the file is big enough break the loop, this is the success state
+								break
+							fi
+							if [ $downloadCount -ge 5 ];then
+								# break the loop if download attempts are 5 or more
+								addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because the download attempts for downloading channel metadata have failed 5 or more times."
+								return 1
+							fi
+						done
 					fi
 					# load the cached data
 					tempMeta=$(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index")
@@ -554,7 +577,12 @@ function processLink(){
 						if echo -n "$tempMeta" | grep -q "fulltitle";then
 							fileName=$(echo "$tempMeta" | jq -r ".fulltitle" )
 							#ALERT "link title = $fileName"
+						else
+							if echo -n "$tempMeta" | grep -q "uploader";then
+								fileName=$(echo "$tempMeta" | jq -r ".uploader" )
+							fi
 						fi
+
 						if echo -n "$tempMeta" | grep -q "thumbnail";then
 							thumbnailLink=$(echo "$tempMeta" | jq -r ".thumbnail" )
 							#ALERT "thumbnailLink = $thumbnailLink"
