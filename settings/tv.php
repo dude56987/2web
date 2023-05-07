@@ -31,6 +31,7 @@
 ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
+$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 ?>
 
 <div class='inputCard'>
@@ -90,12 +91,25 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>Move Down</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
+				$tempImgSum=md5($link);
+				$tempResolverImgSum=md5("http://".gethostname().".local/live/iptv-resolver.php?url=\"".$link."\"");
+				if(file_exists($webDirectory."/live/thumbs/".$tempImgSum."-thumb.png")){
+					# build image link for direct links
+					echo "<a href='/live/channels/channel_".$tempImgSum.".php#'>";
+					echo "	<img src='/live/thumbs/".$tempImgSum."-thumb.png' />\n";
+					echo "</a>";
+				}else if(file_exists($webDirectory."/live/thumbs/".$tempResolverImgSum."-thumb.png")){
+					# build image link for stream site links
+					echo "<a href='/live/channels/channel_".$tempResolverImgSum.".php#$tempResolverImgSum'>";
+					echo "	<img src='/live/thumbs/".$tempResolverImgSum."-thumb.png' />\n";
+					echo "</a>";
+				}
 				echo "</div>\n";
 				//echo "</div>";
 			}else if (strpos(strtolower($sourceFile),".m3u")){
