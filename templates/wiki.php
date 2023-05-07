@@ -29,6 +29,11 @@
 		echo "<title>".$wikiTitle."</title>";
 	}
 	?>
+	<style>
+		html{
+			font-size: 1rem;
+		}
+	</style>
 </head>
 <body>
 <?php
@@ -46,11 +51,9 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		?>
 		<img id='spinner' src='/spinner.gif' />
 	</h1>
-	<div class='listCard'>
-		<a class='button' href='?home'>⛵ Wiki Homepage</a>
-		<a class='button' href='?random'>🎲 Random Article</a>
-		<a class='button' href='?index'>📋 Article Index</a>
-	</div>
+	<a class='button' href='?home'>⛵ Wiki Homepage</a>
+	<a class='button' href='?random'>🎲 Random Article</a>
+	<a class='button' href='?index'>📋 Article Index</a>
 	<hr>
 	<form class='searchBoxForm' method='get'>
 		<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Wiki Search...' >
@@ -192,18 +195,29 @@ if (array_key_exists("search",$_GET)){
 	if (is_file($article)){
 		# load the active article
 		#$articleHandle = fopen("A/".$article,'r');
+		#$= file_get_contents($article);
 		$articleHandle = fopen($article,'r');
+		$cleanFileData = "";
 		while(! feof($articleHandle)){
+			#foreach ($fullFileContents as $lineData ){
 			# read the article line by line and send large packets
 			$lineData = fgets($articleHandle);
+
+			# convert summaries from description tags
+			#$lineData = str_replace("<summary>","<h3>",$lineData);
+			#$lineData = str_replace("</summary>","</h3>",$lineData);
+			#$lineData = preg_replace("/<details.*[0,]>/","<p>",$lineData);
+			#$lineData = preg_replace("/<\/details.*[0,]>/","</p>",$lineData);
+
+			#$lineData = preg_replace('/<script>.*<\/script>/',"",$lineData);
+
 			#$lineData = str_replace('style="*"','',$lineData);
 			$lineData = str_replace('../','',$lineData);
 			# remove all style tags from line
 			$lineData = preg_replace('/style=".*"/',"",$lineData);
 			# replace redirect urls
 			$lineData = str_replace('url=','url=?article=',$lineData);
-			$lineData = preg_replace('/<link.*>/',"",$lineData);
-			$lineData = preg_replace('/<script.*<\/script>/',"",$lineData);
+			#$lineData = preg_replace('/<link.*>/',"",$lineData);
 			# check for metadata redirect
 			#if (strpos($lineData,'http-equiv="refresh"')){
 			#	#echo "\nLineData=".$lineData."<br>\n";
@@ -268,8 +282,19 @@ if (array_key_exists("search",$_GET)){
 			//}
 
 			# write the processed line data
-			echo $lineData;
+			#echo $lineData;
+			$cleanFileData .= $lineData;
 		}
+		# remove script and style
+		$cleanFileData = preg_replace('/<script.*<\/script>/',"",$cleanFileData);
+		$cleanFileData = preg_replace('/<style.*<\/style>/',"",$cleanFileData);
+
+		# remove all unknown tags
+		#$cleanFileData = strip_tags($cleanFileData,"<meta><script><span><p><table><td><th><tr><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
+		$cleanFileData = strip_tags($cleanFileData,"<meta><script><span><p><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
+		#$cleanFileData = strip_tags($cleanFileData,"<meta><span><p><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
+		# write the clean file data of the article
+		echo $cleanFileData;
 	}else{
 		# the article file does not exist
 		echo "<h2>Failed to find Article<h2>";
