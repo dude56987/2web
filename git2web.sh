@@ -85,6 +85,7 @@ function buildDiffGraph(){
 	graphHeight=$(( $textGap + $barWidth ))
 	graphData=""
 	graphWidth=$(($timeLength * $barWidth ))
+	emptyGraph="yes"
 	for index in $( seq $timeLength );do
 		# get commits within a time frame
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
@@ -108,6 +109,14 @@ function buildDiffGraph(){
 		modifier=10
 		orignalRemovedLines=$(( removedLines ))
 		orignalAddedLines=$(( addedLines ))
+
+		totalLines=$(( addedLines + removedLines))
+
+		if [ $totalLines -gt 0 ];then
+			# mark the graph as not empty if any commits are found in the graph
+			emptyGraph="no"
+		fi
+
 		# adjust the height based on the modifier
 		removedLines=$(( removedLines / modifier ))
 		addedLines=$(( addedLines / modifier ))
@@ -159,6 +168,13 @@ function buildDiffGraph(){
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
 	#convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+
+	# empty graph should be removed, when kept they look bad in the web interface and make pages without any info
+	if echo "$emptyGraph" | grep -q "yes";then
+		rm -v "$webDirectory/repos/$repoName/$outputFilename.svg"
+		rm -v "$webDirectory/repos/$repoName/$outputFilename.png"
+		rm -v "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	fi
 }
 ################################################################################
 function buildCommitGraph(){
@@ -173,10 +189,15 @@ function buildCommitGraph(){
 	graphHeight=$(( 50 + $barWidth ))
 	graphData=""
 	graphWidth=$(($timeLength * $barWidth ))
+	emptyGraph="yes"
 	for index in $( seq $timeLength );do
 		# check the number of commits for each day
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | wc -l)
 		commits=$(( $commits ))
+		if [ $commits -gt 0 ];then
+			# mark the graph as not empty if any commits are found in the graph
+			emptyGraph="no"
+		fi
 		if [ $(( ( $commits * $barWidth ) + $barWidth + 50 )) -gt $graphHeight ];then
 			graphHeight=$(( ( $commits * $barWidth ) + $barWidth + 50 ))
 		fi
@@ -203,6 +224,13 @@ function buildCommitGraph(){
 
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+
+	# empty graph should be removed, when kept they look bad in the web interface and make pages without any info
+	if echo "$emptyGraph" | grep -q "yes";then
+		rm -v "$webDirectory/repos/$repoName/$outputFilename.svg"
+		rm -v "$webDirectory/repos/$repoName/$outputFilename.png"
+		rm -v "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	fi
 }
 ################################################################################
 function update(){
@@ -238,15 +266,15 @@ function update(){
 		# generate a sum for the source
 		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
 		# create the repo directory
-		createDir "$webDirectory/repos/$repoSum/"
-		createDir "/var/cache/2web/download_repos/"
+		#createDir "$webDirectory/repos/$repoSum/"
+		#createDir "/var/cache/2web/download_repos/$repoSum/"
 		# do not process the git if it is still in the cache
 		# - Cache removes files older than x days
-		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.index" "10";then
+		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.cfg" "10";then
 			# clone and update remote git repositories on the server
 			#cd $webDirectory/repos/$repoSum/
-			git clone "$repoSource" "$downloadDirectory"
-			touch "$webDirectory/sums/git2web_download_$repoSum.index"
+			git -C "$downloadDirectory/" clone "$repoSource"
+			touch "$webDirectory/sums/git2web_download_$repoSum.cfg"
 		fi
 	done
 	# cleanup the repos index
@@ -279,13 +307,27 @@ function processRepo(){
 	repoSource=$1
 	# create sum and name from repo source
 	repoSum=$(echo "$repoSource" | md5sum | cut -d' ' -f1)
-	repoName=$(echo "$repoSource" | rev | cut -d'/' -f2 | rev)
-	INFO "$repoName : Creating a clone of the repo: $repoName"
-
-	# update only once every 10 days
+	#
+	repoName=$(echo "$repoSource" | rev | cut -d'/' -f1 | rev)
+	#
+	if [ $repoName == "" ];then
+		repoName=$(echo "$repoSource" | rev | cut -d'/' -f2 | rev)
+	fi
+	INFO "$repoName : Checking repo source sum"
+	cd "$repoSource"
+	if git -P log --oneline -1;then
+		ALERT "This is a valid repo '$repoSource'"
+	else
+		ALERT "Invalid repo '$repoSource'"
+		return
+	fi
+	# check if the data sum of the source has changed
 	if cacheCheck "$webDirectory/repos/$repoName/repos.index" 10;then
 		# clone the repo into the web directory
+		INFO "$repoName : Creating a clone of the repo: $repoName"
 		git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
+
+		INFO "$repoName : Checking git repo source data sum: $repoName"
 
 		# set ownership to root of the source code directory, in order to avoid git security errors in metadata generation
 		chown -R root:www-data "$webDirectory/repos/$repoName/source/"
@@ -315,32 +357,42 @@ function processRepo(){
 		echo "$repoName" > "$webDirectory/repos/$repoName/title.index"
 		# link the repo page
 		linkFile "/usr/share/2web/templates/repo.php" "$webDirectory/repos/${repoName}/index.php"
-		INFO "$repoName : Building inspector data for $repoName"
 		# generate the website content
-		#gitinspector --format=htmlembedded -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
-		gitinspector --format=text -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
-		grep --invert-match --ignore-case "<html" |\
-		grep --invert-match --ignore-case "</html" |\
-		grep --invert-match --ignore-case "<head" |\
-		grep --invert-match --ignore-case "</head" |\
-		grep --invert-match --ignore-case "<body" |\
-		grep --invert-match --ignore-case "</body" |\
-		grep --invert-match --ignore-case "<meta" |\
-		grep --invert-match --ignore-case "<title" |\
-		grep --invert-match --ignore-case "<?xml" \
-		> "$webDirectory/repos/$repoName/inspector.html" &
-		waitQueue 0.5 "$totalCPUS"
+		if echo "$@" | grep -q -e "--no-inspector";then
+			INFO "$repoName : Skipping inspector data processing "
+		else
+			INFO "$repoName : Building inspector data"
+			#gitinspector --format=htmlembedded -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
+			# launch gitinspector with a timeout of 2 hours,
+			# - some repos require stronger hardware to process the blame tree
+			timeout 7200 gitinspector --format=text -f "**" -T true -H true -w false -m true --grading=true "$repoSource" |\
+			grep --invert-match --ignore-case "<html" |\
+			grep --invert-match --ignore-case "</html" |\
+			grep --invert-match --ignore-case "<head" |\
+			grep --invert-match --ignore-case "</head" |\
+			grep --invert-match --ignore-case "<body" |\
+			grep --invert-match --ignore-case "</body" |\
+			grep --invert-match --ignore-case "<meta" |\
+			grep --invert-match --ignore-case "<title" |\
+			grep --invert-match --ignore-case "<?xml" \
+			> "$webDirectory/repos/$repoName/inspector.html" &
+			waitQueue 0.5 "$totalCPUS"
+		fi
 
+		INFO "$repoName : Generating zip file"
 		generateZip "$webDirectory" "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
 
+		INFO "$repoName : Get latest commit time"
 		# get the latest commit time
 		git show --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/origin.index" &
 		waitQueue 0.5 "$totalCPUS"
+		INFO "$repoName : Get the origin"
 		# get the origin
 		git remote show origin > "$webDirectory/repos/$repoName/origin.index" &
 		waitQueue 0.5 "$totalCPUS"
 
+		INFO "$repoName : Get the list of all commits"
 		commitAddresses=$(git log --oneline | cut -d' ' -f1)
 
 		echo "$commitAddresses" > "$webDirectory/repos/$repoName/commits.index"
@@ -354,25 +406,25 @@ function processRepo(){
 			INFO "$repoName : Building commit page $commitCount/$totalCommits for $commitAddress "
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
 			if echo "$@" | grep -q -e "--parallel";then
-				git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+				timeout 120 git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
 			else
-				git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
-				git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
-				git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
+				timeout 120 git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
 			fi
 		done
 		INFO "$repoName : Building README.md"
@@ -585,11 +637,15 @@ function processRepo(){
 		qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
 		waitQueue 0.5 "$totalCPUS"
 
-		INFO "$repoName : Rendering gource video for $repoName"
-		# build history video in 720p
-		xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-		ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 \
-		"$webDirectory/repos/$repoName/repoHistory.webm"
+		if echo "$@" | grep -q -e "--no-video";then
+			INFO "$repoName : Skip video rendering..."
+		else
+			INFO "$repoName : Rendering gource video..."
+			# build history video in 720p
+			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 \
+			"$webDirectory/repos/$repoName/repoHistory.webm"
+		fi
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
 		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support
 		# build thumbnail for repo from video or from graphs if video does not render
@@ -608,7 +664,7 @@ function processRepo(){
 		INFO "$repoName : Adding to indexes"
 		#	build the index file for this entry if one does not exist
 		{
-			echo "<a href='/repos/$repoName/' class='indexSeries' >"
+			echo "<a href='/repos/$repoName/' class='showPageEpisode' >"
 			echo "<img loading='lazy' src='/repos/$repoName/repoHistory.png' />"
 			echo "<div>$repoName</div>"
 			echo "</a>"
@@ -616,7 +672,10 @@ function processRepo(){
 
 		# add to the system indexes
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
+		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "all"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
+		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/repos.index"
+		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"
 	fi
 }
 ################################################################################
@@ -650,28 +709,26 @@ webUpdate(){
 	totalrepos=0
 
 	ALERT "Scanning libary config '$downloadDirectory'"
+	IFSBACKUP=$IFS
+	IFS=$'\n'
 	# scan for subdirectories containing git repos
-	find "$downloadDirectory" -maxdepth 1 -type d | sort | while read repoSource;do
-		echo "$repoSource"
-		if test -d "$repoSource/.git/";then
-			processRepo "$repoSource" $@
-			# increment the total repo counters
-			totalRepos=$(( $totalRepos + 1 ))
-		else
-			INFO "No repo found!"
-		fi
+	for sourcePath in $downloadDirectory;do
+		repoPaths=$(find "$sourcePath" -type d | shuf)
+		#INFO "Discovered Repo Paths '$repoPaths', searching for .git/"
+		#find "$sourcePath" -type d | sort | while read repoSource;do
+		for repoSource in $repoPaths;do
+			#INFO "Repo source Found '$repoSource', searching for .git/"
+			if test -d "$repoSource/.git/";then
+				INFO "Repo found processing $repoSource"
+				processRepo "$repoSource" $@
+				# increment the total repo counters
+				totalRepos=$(( $totalRepos + 1 ))
+			else
+				INFO "No repo found!"
+			fi
+		done
 	done
-	# scan if the directory given is a directly a repo
-	echo "$downloadDirectory" | sort | while read repoSource;do
-		echo "$repoSource"
-		if test -d "$repoSource/.git/";then
-			processRepo "$repoSource" $@
-			# increment the total repo counters
-			totalRepos=$(( $totalRepos + 1 ))
-		else
-			INFO "No repo found!"
-		fi
-	done
+	IFS=$IFSBACKUP
 	INFO "Writing total repos "
 	echo "$totalrepos" > "$webDirectory/repos/totalrepos.cfg"
 

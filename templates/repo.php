@@ -191,18 +191,29 @@ if (array_key_exists("inspector",$_GET)){
 	if (in_array($graphName,$graphTitles)){
 		$graphName=$_GET['graph'];
 	}else{
-		$graphName="commit_week";
+		if (file_exists("graph_commit_week.png")){
+			$graphName="commit_week";
+		}else{
+			foreach($graphTitles as $graphTitle){
+				if (file_exists("graph_$graphTitle.png")){
+					$graphName=$graphTitle;
+					break;
+				}
+			}
+		}
 	}
 	echo "<div class='settingListCard'>";
 	echo "<div class='listCard'>";
 	foreach($graphTitles as $graphTitle){
-		echo "	<a href='?graph=$graphTitle' class='showPageEpisode'>";
-		#include("graph_$graphTitle.svg");
-		echo "		<img class='' src='graph_$graphTitle-thumb.png' />";
-		echo "		<div class='indexTitle'>";
-		echo ucwords(str_replace("_"," ",$graphTitle));
-		echo "		</div>";
-		echo "	</a>";
+		if (file_exists("graph_$graphTitle.png")){
+			echo "	<a href='?graph=$graphTitle' class='showPageEpisode'>";
+			#include("graph_$graphTitle.svg");
+			echo "		<img class='' src='graph_$graphTitle-thumb.png' />";
+			echo "		<div class='indexTitle'>";
+			echo ucwords(str_replace("_"," ",$graphTitle));
+			echo "		</div>";
+			echo "	</a>";
+		}
 	}
 	echo "</div>";
 	echo "</div>";
@@ -219,13 +230,21 @@ if (array_key_exists("inspector",$_GET)){
 	}
 }else if (array_key_exists("list",$_GET)){
 	drawHeader();
-
-	echo "<div class='titleCard'>\n";
-	echo "	<h2>Commits By Month</h2>\n";
-	echo "	<a href='?graph=commit_month' class=''>";
-	echo "		<img class='gitCommitListMonthGraph' src='graph_commit_month.png' />";
-	echo "	</a>";
-	echo "</div>\n";
+	if (file_exists("graph_commit_month.png")){
+		echo "<div class='titleCard'>\n";
+		echo "	<h2>Commits By Month</h2>\n";
+		echo "	<a href='?graph=commit_month' class=''>";
+		echo "		<img class='gitCommitListMonthGraph' src='graph_commit_month.png' />";
+		echo "	</a>";
+		echo "</div>\n";
+	}else if (file_exists("graph_commit_year.png")){
+		echo "<div class='titleCard'>\n";
+		echo "	<h2>Commits By Month</h2>\n";
+		echo "	<a href='?graph=commit_year' class=''>";
+		echo "		<img class='gitCommitListMonthGraph' src='graph_commit_year.png' />";
+		echo "	</a>";
+		echo "</div>\n";
+	}
 
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Commits</h2>\n";
@@ -311,7 +330,9 @@ if (array_key_exists("inspector",$_GET)){
 	# draw first commit
 	buildCommitTable(0);
 	echo "<div>";
-	echo "<a href='?graph=commit_365_day'><img class='gitRepoGraph' src='graph_commit_365.png' /></a>";
+	if (file_exists("graph_commit_365.png")){
+		echo "<a href='?graph=commit_365_day'><img class='gitRepoGraph' src='graph_commit_365.png' /></a>";
+	}
 	#include("graph.svg");
 	echo "</div>";
 	if (file_exists("repoHistory.webm")){

@@ -73,6 +73,7 @@ drawPlaylistButton($filterType,"albums","💿 Albums");
 drawPlaylistButton($filterType,"artists","🎤 Artists");
 drawPlaylistButton($filterType,"tracks","🎵 Tracks");
 drawPlaylistButton($filterType,"graphs","📊 Graphs");
+drawPlaylistButton($filterType,"repos","💾 Repos");
 
 ?>
 </div>

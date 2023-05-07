@@ -75,6 +75,7 @@ SQLdrawPlaylistButton($filterType,"albums","💿 Albums");
 SQLdrawPlaylistButton($filterType,"artists","🎤 Artists");
 SQLdrawPlaylistButton($filterType,"tracks","🎵 Tracks");
 SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
+SQLdrawPlaylistButton($filterType,"repos","💾 Repos");
 
 ?>
 </div>
