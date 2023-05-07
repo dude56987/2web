@@ -1339,8 +1339,8 @@ table{
 	display: inline;
 }
 .settingsEntry img{
-	width: 1rem;
-	height: 1rem;
+	max-width: 10rem;
+	max-height: 10rem;
 	float: left;
 }
 .settingsEntry .button{
@@ -1369,6 +1369,9 @@ table{
 	vertical-align: top;
 	word-break: break-all;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
+}
+.searchSpacer{
+	min-height: 50vh;
 }
 .searchBoxForm{
 	margin: 1rem;
