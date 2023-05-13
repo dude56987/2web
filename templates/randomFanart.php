@@ -19,13 +19,31 @@
 ?>
 <?php
 	ini_set('display_errors', 1);
-	$fileContent = file_get_contents("fanart.cfg");
-	$backgrounds = explode("\n", $fileContent);
-	shuffle($backgrounds);
+	# check the section filter
+	if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "")){
+		$filterType=$_GET['filter'];
+	}else{
+		$filterType="all_fanart";
+	}
+	$filterType="_$filterType";
+
+	# load database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(60000);
+
+	# run query to get 800 random
+	$result = $databaseObj->query('select * from "'.$filterType.'" order by random() limit 1;');
+
+	# fetch the row data
+	$fileContent=($result->fetchArray())['title'];
+
+	# close the database to process the data
+	$databaseObj->close();
+	unset($databaseObj);
+
 	// redirect to location of random background
-	//header("Cache-Control: no-store, no-cache");
 	header('Content-type: image/png');
 	header('Cache-Control: max-age=90');
-	//header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + (60 * 60)));
-	header('Location: '.$backgrounds[0]);
+	header('Location: '.$fileContent);
 ?>

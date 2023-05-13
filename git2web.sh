@@ -673,6 +673,12 @@ function processRepo(){
 		# add to the system indexes
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "repos"
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "all"
+
+		#
+		SQLaddToIndex "$webDirectory/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "all_fanart"
+		SQLaddToIndex "$webDirectory/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "repos_fanart"
+
+		#
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"

@@ -369,9 +369,18 @@ function processTrack(){
 				} > "$webDirectory/music/$artist/artist.index"
 
 				# build the sql database entries
+				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "all"
 				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "music"
 				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "artists"
-				SQLaddToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/data.db" "all"
+
+				#
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "all_poster"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "music_poster"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "artist_poster"
+
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "all_fanart"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "music_fanart"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "artist_fanart"
 
 				# add artist to the main music index
 				touchFile "$webDirectory/music/music.index"
@@ -418,6 +427,14 @@ function processTrack(){
 				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "albums"
 				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "music"
 				SQLaddToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/data.db" "all"
+
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "all_poster"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "music_poster"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "albums_poster"
+
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "all_fanart"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "music_fanart"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "albums_fanart"
 
 				# add album to the artist index
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/music/$artist/albums.index"
