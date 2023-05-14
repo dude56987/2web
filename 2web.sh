@@ -4,7 +4,7 @@
 # Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under  the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
@@ -153,8 +153,9 @@ function recordActivityGraph(){
 		weather2webStatus=$(checkActiveStatusForGraph "weather2web" "$webDirectory")
 		graph2webStatus=$(checkActiveStatusForGraph "graph2web" "$webDirectory")
 		ytdl2nfoStatus=$(checkActiveStatusForGraph "ytdl2nfo" "$webDirectory")
+		epg2webStatus=$(checkActiveStatusForGraph "epg2web" "$webDirectory")
 		{
-			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$ytdl2nfoStatus"
+			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$ytdl2nfoStatus,$epg2webStatus"
 		} >> "/var/cache/2web/activityGraphData.index"
 		# limit log to last 36 entries, this is because this log is updated every 30 minutes
 		# - You can not > pipe a file directly with tail, so it is stored in memory fist
@@ -167,7 +168,7 @@ function recordActivityGraph(){
 function buildFakeActivityGraph(){
 	{
 		for index in $(seq 36);do
-			for index in $(seq 9);do
+			for index in $(seq 10);do
 				# build each line
 				echo -n "1,"
 			done
@@ -263,6 +264,14 @@ function buildActivityGraph(){
 	else
 		ytdl2nfoEnabled=0
 	fi
+	if returnModStatus "iptv2web";then
+		epg2webHeight=$graphHeightCounter
+		graphHeightCounter=$(( graphHeightCounter + 1 ))
+		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >epg2web</text>\n"
+		epg2webEnabled=1
+	else
+		epg2webEnabled=0
+	fi
 
 	textGap=$(( barWidth * 8 ))
 	graphHeight=$(( (barWidth * graphHeightCounter) + (barWidth / 4) ))
@@ -286,6 +295,7 @@ function buildActivityGraph(){
 			weather2webStatus=$(echo "$line" | cut -d',' -f7)
 			graph2webStatus=$(echo "$line" | cut -d',' -f8)
 			ytdl2nfoStatus=$(echo "$line" | cut -d',' -f9)
+			epg2webStatus=$(echo "$line" | cut -d',' -f10)
 
 			# for every 30 min write the activity to a graph
 			graphX=$(( ( $index * $barWidth ) ))
@@ -351,6 +361,13 @@ function buildActivityGraph(){
 					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:teal;stroke:white;stroke-width:1\" />"
 				else
 					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+				fi
+			fi
+			if [[ 1 -eq $epg2webEnabled ]];then
+				if [[ 1 -eq $epg2webStatus ]];then
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * epg2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:olive;stroke:white;stroke-width:1\" />"
+				else
+					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * epg2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
 				fi
 			fi
 		done
@@ -961,6 +978,7 @@ main(){
 		# clean all temp lock files
 		rm -v $webDirectory/nfo2web.active
 		rm -v $webDirectory/iptv2web.active
+		rm -v $webDirectory/epg2web.active
 		rm -v $webDirectory/graph2web.active
 		rm -v $webDirectory/weather2web.active
 		rm -v $webDirectory/music2web.active

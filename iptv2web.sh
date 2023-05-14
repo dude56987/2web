@@ -597,6 +597,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
+					addToLog "ERROR" "Failed Download" "The download of '$link' could not be used to identify the name, so the end of the url will be used."
 					#ALERT "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
 				#ERROR "[DEBUG]: FileName = $fileName"
@@ -1363,7 +1364,7 @@ main(){
 	elif [ "$1" == "-E" ] || [ "$1" == "--epg" ] || [ "$1" == "epg" ] ;then
 		ALERT "This will download and build a updated combined EPG file"
 		checkModStatus "iptv2web"
-		lockProc "iptv2web"
+		lockProc "epg2web"
 		webDirectory=$(webRoot)
 		updateEPG "$webDirectory"
 		buildEPG "$webDirectory"
