@@ -141,6 +141,18 @@ function moreDataLinks($searchQuery){
 	echo "</div>";
 }
 ################################################################################
+function moreToolLinks($searchQuery){
+	echo "<div class='titleCard'>";
+	echo "	<h2 class=''>";
+	echo "		🛠️ Web Tools";
+	echo "	</h2>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' rel='noreferer' href='https://web.archive.org/web/$searchQuery'>🔎 Wayback Machine</a>";
+	echo "		<a class='button' rel='noreferer' href='https://downforeveryoneorjustme.com/$searchQuery'>🔎 Down for everyone or just Me</a>";
+	echo "	</div>";
+	echo "</div>";
+}
+################################################################################
 function moreMapLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2 class=''>";
@@ -539,6 +551,13 @@ function checkForBangs($searchQuery){
 	# britiannica wiki
 	$bangCommands->append(array("!britannica","https://www.britannica.com/search?query="));
 	$bangCommands->append(array("!brit","https://www.britannica.com/search?query="));
+	# camelcamelcamel
+	$bangCommands->append(array("!camelcamelcamel","https://camelcamelcamel.com/search?sq="));
+	$bangCommands->append(array("!camel","https://camelcamelcamel.com/search?sq="));
+	$bangCommands->append(array("!ccc","https://camelcamelcamel.com/search?sq="));
+	$bangCommands->append(array("!c","https://camelcamelcamel.com/search?sq="));
+	$bangCommands->append(array("!amazon","https://camelcamelcamel.com/search?sq="));
+	$bangCommands->append(array("!a","https://camelcamelcamel.com/search?sq="));
 	################################################################################
 	# check for !bang help command in search query
 	$bangHelp = "";
@@ -594,19 +613,76 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "Searching  for '$searchQuery'";
 	echo "<img id='spinner' src='/spinner.gif' />";
 	echo "</h1>\n";
+	if (stripos($searchQuery,"http://") || stripos($searchQuery,"https://")){
+		echo "<div class='titleCard'>";
+		echo "	<h2>Direct Link</h2>";
+		echo "		<a class='button' href='$searchQuery'>$searchQuery</a>";
+		echo "</div>";
+	}else if (stripos($searchQuery,"www.") || stripos($searchQuery,".com") || stripos($searchQuery,".net") || stripos($searchQuery,".org")){
+		# if this is a direct link make a link directly to the link
+		echo "<div class='titleCard'>";
+		echo "	<h2>Direct Link</h2>";
+		echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
+		echo "</div>";
+	}
+	$definitionData = shell_exec("dict '".$searchQuery."'");
+	if ( $definitionData ){
+		echo "<div class='settingListCard'>\n";
+		echo "<h2>";
+		echo "Definition";
+		echo "</h2>";
+		echo "<pre>\n";
+		echo "$definitionData";
+		echo "</pre>\n";
+		echo "</div>";
+	}
+
+	$pspell = pspell_new("en");
 	# if the query string contains a space
 	if (strpos($_GET['q']," ")){
-		echo "<div class='titleCard'>";
-		echo "	<h2>Expand Search</h2>";
-		echo "	<div class='listCard'>";
 		# explode the string into an array split based on the spaces
 		$searchTerms=explode( " " , $searchQuery );
+		$correctedQuery="";
+		$foundErrors=False;
 		# for each word seprated by a space create a search link
 		foreach($searchTerms as $searchTerm){
-			echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+			# check the spelling of each search term and include spelling sugestions
+			if (! pspell_check($pspell, $searchTerm)){
+				$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
+				foreach($spellingSuggestions as $word){
+					# create a search for corrected spelling of each word
+					#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+					# add the word to the corrected query
+					$foundErrors=True;
+					$correctedQuery .= $word." ";
+					break;
+				}
+			}else{
+				$correctedQuery .= $searchTerm." ";
+				#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+			}
 		}
-		echo "	</div>";
-		echo "</div>";
+		if ($foundErrors){
+			echo "<div class='titleCard'>";
+			//echo "	<h2>Expand Search</h2>";
+			echo "	<h2>Did you mean?</h2>";
+			echo "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQuery</a>";
+			echo "</div>";
+		}
+	}else{
+		if (! pspell_check($pspell, $_GET['q'])){
+			echo "<div class='titleCard'>";
+			echo "<h2>";
+			echo "Did you mean?";
+			echo "</h2>";
+			echo "<div class='listCard'>";
+			$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
+			foreach($spellingSuggestions as $word){
+				echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+			}
+			echo "</div>";
+			echo "</div>";
+		}
 	}
 	echo "$bangHelp\n";
 	# write blank space to bypass buffering and start loading of the search results
@@ -740,7 +816,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	}
 	moreSearchLinks($searchQuery);
 	moreDataLinks($searchQuery);
+
 	moreMapLinks($searchQuery);
+	moreToolLinks($searchQuery);
 
 	moreDictLinks($searchQuery);
 	moreSynLinks($searchQuery);
