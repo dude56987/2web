@@ -643,6 +643,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		# explode the string into an array split based on the spaces
 		$searchTerms=explode( " " , $searchQuery );
 		$correctedQuery="";
+		$correctedQueryHTML="";
 		$foundErrors=False;
 		# for each word seprated by a space create a search link
 		foreach($searchTerms as $searchTerm){
@@ -655,10 +656,12 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					# add the word to the corrected query
 					$foundErrors=True;
 					$correctedQuery .= $word." ";
+					$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
 					break;
 				}
 			}else{
 				$correctedQuery .= $searchTerm." ";
+				$correctedQueryHTML .= $searchTerm." ";
 				#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
 			}
 		}
@@ -666,7 +669,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<div class='titleCard'>";
 			//echo "	<h2>Expand Search</h2>";
 			echo "	<h2>Did you mean?</h2>";
-			echo "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQuery</a>";
+			echo "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
 			echo "</div>";
 		}
 	}else{
