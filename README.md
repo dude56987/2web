@@ -3,6 +3,26 @@
 
 Generate a website for use on a LAN(Local Area Network) as a http/https accessible multimedia library. 2web allows you to host multimedia content as a KODI compatible http/https media server using apache2 php and minimal javascript. This software is designed to run on the latest version of the raspberry pi (4 2gig). Currently supporting a library size of ~20k shows, ~20k movies, ~20k books, ~50 weather stations and ~5k channels/radio stations on a raspberry pi 4. This software is also designed to be compatible with any Ubuntu or Debian based system. So if you have more than a raspberry pi applications are multi threaded to be able to completely utilize any amount of hardware.
 
+## Install
+
+Copy and extract the source then run
+
+	./configure
+	make
+	make install
+
+This should build and install the package on any Debian or Ubuntu based system.
+
+## Uninstall
+
+The install process creates and installs a .deb package file. So you can uninstall the software with the system package manager.
+
+	sudo apt-get remove 2web
+
+If you would like to purge config files generated use
+
+	sudo apt-get purge 2web
+
 ## Supported Module Content
 
  - Comics
