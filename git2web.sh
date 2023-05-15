@@ -310,7 +310,7 @@ function processRepo(){
 	#
 	repoName=$(echo "$repoSource" | rev | cut -d'/' -f1 | rev)
 	#
-	if [ $repoName == "" ];then
+	if [ "$repoName" == "" ];then
 		repoName=$(echo "$repoSource" | rev | cut -d'/' -f2 | rev)
 	fi
 	INFO "$repoName : Checking repo source sum"

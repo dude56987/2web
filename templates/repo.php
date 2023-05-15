@@ -71,12 +71,53 @@ function buildCommitTable($entriesToRead=-1){
 	}
 }
 ################################################################################
+function buildFullLogPage($entriesToRead=-1){
+	if (file_exists("commits.index")){
+		echo "	<div>\n";
+		// get a list of all the genetrated index links for the page
+		#$sourceFiles = explode("\n",file_get_contents("albums.index"));
+		$sourceFiles = file("commits.index", FILE_IGNORE_NEW_LINES);
+		// reverse the time sort
+		#$sourceFiles = array_unique($sourceFiles);
+		// sort the files by name
+		#sort($sourceFiles);
+		#echo var_dump($sourceFiles);
+		echo "	<div>\n";
+		echo "		<h2>Log</h2>\n";
+		echo "	</div>\n";
+		$totalFilesScanned=0;
+		foreach($sourceFiles as $sourceFile){
+			if (($totalFilesScanned % 2) == 1){
+				echo "	<div class='evenTableRow'>\n";
+			}else{
+				echo "	<div>\n";
+			}
+			// read the index entry
+			echo "		<h3><a href='?commit=$sourceFile#log'>$sourceFile</a></h3>\n";
+			echo "		<div>\n<pre>".file_get_contents("log/$sourceFile.index")."</pre>\n</div>\n";
+			// write the index entry
+			echo "	</div>\n";
+			flush();
+			ob_flush();
+			$totalFilesScanned += 1;
+			# loop is -1 by default to allow infinite looping
+			if ($entriesToRead == 0){
+				break;
+			}else{
+				$entriesToRead -= 1;
+			}
+		}
+		echo "	</div>\n";
+	}
+}
+################################################################################
 function drawHeader(){
 	echo "	<div class='titleCard'>\n";
 	echo "		<h1>".file_get_contents("title.index")."</h1>";
 	echo "		<div class='listCard'>\n";
 	echo "			<a class='button' href='?all'>🗂️ Repository Overview</a>\n";
 	echo "			<a class='button' href='?list'>💼 All Commits</a>\n";
+	echo "			<a class='button' href='?allLogs'>🧾 All Logs</a>\n";
 	echo "			<a class='button' href='?graph'>📈 Graphs</a>\n";
 	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
 	echo "			<a class='button' href='?listLint'>🧹 Lint Data</a>\n";
@@ -183,6 +224,11 @@ if (array_key_exists("inspector",$_GET)){
 	include("inspector.html");
 	echo "</pre>";
 	echo "</div>\n";
+}else if (array_key_exists("allLogs",$_GET)){
+	drawHeader();
+	echo "<div class='settingListCard'>";
+	buildFullLogPage();
+	echo "</div>";
 }else if (array_key_exists("graph",$_GET)){
 	drawHeader();
 	$graphName=$_GET['graph'];
