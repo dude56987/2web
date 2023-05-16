@@ -625,15 +625,68 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
 		echo "</div>";
 	}
-	$definitionData = shell_exec("dict '".$searchQuery."'");
+	$definitionData = shell_exec("dict '".$searchQuery."' | tr -s '\n'");
 	if ( $definitionData ){
+		$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
+		# build the definition data
+		$definitionData = explode("\n",$definitionData);
+
 		echo "<div class='settingListCard'>\n";
 		echo "<h2>";
 		echo "Definition";
 		echo "</h2>";
-		echo "<pre>\n";
-		echo "$definitionData";
-		echo "</pre>\n";
+		echo "<div class='listCard'>\n";
+		//echo "<div class='titleCard'>\n";
+
+		$tempDefinition="";
+		$allDefinitions=Array();
+		foreach($definitionData as $definitionLine){
+			# check the tab depth
+			//echo (var_dump(strpos($definitionLine,"  ") == False)." == (strpos(\$definitionLine,\"  \") == False)<br>");//DEBUG
+			//if( strpos($definitionLine,"  ") == False ){
+			if (stripos($definitionLine,"definitions found")){
+				# this is the header and should be skipped
+				echo " ";
+			}else if (strlen($definitionLine) >= 2){
+				if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
+					# this is the start of a new definition
+					//echo "this is the start of a new definiton '".str_replace("  ","##",$definitionLine)."'<br>";//DEBUG
+					# append the previous definition to the definition array
+					$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
+					# blank the temp definition out for adding the new definiton
+					$tempDefinition = "";
+					# add the discovered line to the new definition entry
+					$tempDefinition .= $definitionLine."\n";
+				}else{
+					//echo "this is part of the current definiton '".str_replace("  ","##",$definitionLine)."'<br>";//DEBUG
+					# this is part of the current definition
+					$tempDefinition .= $definitionLine."\n";
+				}
+			}else{
+				$tempDefinition .= $definitionLine."\n";
+			}
+		}
+		//echo var_dump($allDefinitions);//DEBUG
+		# for each definition draw a definition box object
+		$definitionCounter=1;
+		foreach($allDefinitions as $definition){
+			if (strlen($definition) >= 2){
+				if (($definition[0] != " ") && ($definition[1] != " ")){
+					echo "<div class='searchDef'>";
+					echo "<h3>Definition $definitionCounter</h3>";
+					echo "<pre class=''>";
+					echo $definition;
+					echo "</pre>";
+					echo "</div>";
+					$definitionCounter+=1;
+				}
+			}
+		}
+		//echo "<pre>\n";
+		//echo "$definitionData";
+		//echo "</pre>\n";
+
+		echo "</div>";
 		echo "</div>";
 	}
 

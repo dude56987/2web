@@ -542,7 +542,7 @@ ol{
 }
 @media only screen and (max-width: 400px), (orientation: portrait){
 	html{
-		font-size: 2rem !important;
+		font-size: 2rem;
 		/* Make the scrollbar width thin on small touchscreen devices for FIREFOX */
 		scrollbar-width: thin;
 	}
@@ -1257,6 +1257,9 @@ table, th, td{
 	text-shadow: none;
 	text-align: center;
 }
+td{
+	word-break: break-all;
+}
 /* Make the markdown generated tables display correctly */
 tr[class='header']{
 	display: table-row;
@@ -1422,6 +1425,12 @@ table{
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
+}
+.searchDef{
+	max-height: 20rem;
+	overflow: scroll;
+	display: inline-block;
+	vertical-align: top;
 }
 .inputCard{
 	text-align: center;
@@ -1813,4 +1822,7 @@ svg {
 }
 .logDetails{
 	word-break: break-all;
+}
+details{
+	min-height: 0px !important;
 }
