@@ -342,6 +342,18 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("transcodeForWebpages",$_POST)){
+	$cacheNewEpisodes=$_POST['transcodeForWebpages'];
+	# change the default cache quality
+	outputLog("Changing transcode for webpages option to '".$cacheNewEpisodes."'");
+	# write the config file
+	if ($cacheNewEpisodes == ''){
+		unlink("/etc/2web/transcodeForWebpages.cfg");
+	}else{
+		file_put_contents("/etc/2web/transcodeForWebpages.cfg",$cacheNewEpisodes);
+	}
+	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];
 	outputLog("Running addLink on link ".$link);

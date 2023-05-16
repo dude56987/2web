@@ -220,6 +220,36 @@ include("settingsHeader.php");
 	</form>
 </div>
 
+<div id='transcodeForWebpages' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Transcode</h2>
+			<ul>
+				<li>
+					Automatically transcode videos into a format that can be played though the webplayer.
+				</li>
+			</ul>
+		<select name='transcodeForWebpages'>
+			<?php
+			// figure out the currently selected theme
+			if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
+				$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
+				if ($selected == "yes"){
+					echo "<option value='yes' selected>Yes</option>";
+					echo "<option value='no'>No</option>";
+				}else{
+					echo "<option value='no' selected>No</option>";
+					echo "<option value='yes'>Yes</option>";
+				}
+			}else{
+				echo "<option value='no' selected>No</option>";
+				echo "<option value='yes'>Yes</option>";
+			}
+			?>
+		</select>
+		<button class='button' type='submit'>Change Setting</button>
+	</form>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/ytdl-resolver.php");
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

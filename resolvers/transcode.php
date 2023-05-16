@@ -46,27 +46,41 @@ $webServerPath = $_SERVER['DOCUMENT_ROOT'];
 if (array_key_exists("link",$_GET)){
 	# pull the link from
 	$link = $_GET['link'];
-	debug("Reading link for transcode : '".$link."'");
-	# create the sum of the link
-	$sum=md5($link);
-	if ( ! file_exists($webServerPath."/transcode-cache/$sum.webm")){
-		if ( ! file_exists("$webServerPath/transcode-cache/")){
-			mkdir("$webServerPath/transcode-cache/");
+	$doTranscode = False;
+	# check if the transcode is enabled
+	if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
+		$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
+		if ($selected == "yes"){
+			$doTranscode = True;
 		}
-		# cleanup html string encoding of spaces in pathnames
-		$link = str_replace("%20"," ",$link);
-		$link = str_replace("%21"," ",$link);
-		$link = str_replace("'","",$link);
-		$link = str_replace('"',"",$link);
-		# build the command
-		//$command = "echo \" ffmpeg -i '".$webServerPath.$link."' -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 20 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'\" | at 'now'";
-		$command = "echo \"ffmpeg -i '".$webServerPath."/".$link."' '".$webServerPath."/transcode-cache/$sum.webm'\" | at 'now'";
-		debug("Transcode Command : ".$command);
-		# launch the command to post job in the queue
-		shell_exec($command);
-		sleep(20);
 	}
-	redirect('transcode-cache/'.$sum.'.webm');
+	# if the trancode is enabled run the transcode job
+	if ($doTranscode){
+		debug("Reading link for transcode : '".$link."'");
+		# create the sum of the link
+		$sum=md5($link);
+		if ( ! file_exists($webServerPath."/transcode-cache/$sum.webm")){
+			if ( ! file_exists("$webServerPath/transcode-cache/")){
+				mkdir("$webServerPath/transcode-cache/");
+			}
+			# cleanup html string encoding of spaces in pathnames
+			$link = str_replace("%20"," ",$link);
+			$link = str_replace("%21"," ",$link);
+			$link = str_replace("'","",$link);
+			$link = str_replace('"',"",$link);
+			# build the command
+			//$command = "echo \" ffmpeg -i '".$webServerPath.$link."' -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 20 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'\" | at 'now'";
+			$command = "echo \"nice -n -5 ffmpeg -i '".$webServerPath."/".$link."' '".$webServerPath."/transcode-cache/$sum.webm'\" | at 'now'";
+			debug("Transcode Command : ".$command);
+			# launch the command to post job in the queue
+			shell_exec($command);
+			sleep(20);
+		}
+		redirect('transcode-cache/'.$sum.'.webm');
+	}else{
+		# the transcode should not happen so directly link to the file
+		redirect($link);
+	}
 }else{
 	# no link was given to transcode, draw the interface
 	echo "<div class='settingListCard'>";
