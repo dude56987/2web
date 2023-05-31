@@ -99,6 +99,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/nfo/libaries.d/;
 	mkdir -p debian/etc/2web/music/;
 	mkdir -p debian/etc/2web/music/libaries.d/;
+	mkdir -p debian/etc/2web/ai/personas/;
 	mkdir -p debian/etc/2web/comics/;
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
@@ -179,8 +180,16 @@ build-deb: upgrade-hls
 	#echo "#! /bin/bash" > debian/usr/bin/search2web
 	#grep --invert-match "^[[:blank:]]*#" search2web.sh | tr -s '\n' >> debian/usr/bin/search2web
 	# wiki
+	# build the python scripts
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_prompt
+	cat build/py_head.txt > debian/usr/bin/ai2web_prompt
+	grep --invert-match "^[[:blank:]]*#" ai2web_prompt.py | tr -s '\n' >> debian/usr/bin/ai2web_prompt
+	# build the shell scripts
+	# add the gpl header on the top
+	echo "#! /bin/bash" > debian/usr/bin/ai2web
+	cat build/sh_head.txt > debian/usr/bin/ai2web
+	grep --invert-match "^[[:blank:]]*#" ai2web.sh | tr -s '\n' >> debian/usr/bin/ai2web
 	echo "#! /bin/bash" > debian/usr/bin/wiki2web
-	# add the gpl header
 	cat build/sh_head.txt > debian/usr/bin/wiki2web
 	grep --invert-match "^[[:blank:]]*#" wiki2web.sh | tr -s '\n' >> debian/usr/bin/wiki2web
 	echo "#! /bin/bash" > debian/usr/bin/nfo2web
@@ -269,8 +278,14 @@ build-deb: upgrade-hls
 	# make the script executable only by root
 	chmod u+rwx debian/usr/bin/*
 	chmod go-rwx debian/usr/bin/*
+	# make ai2web_prompt executable by other users
+	chmod u+rwx debian/usr/bin/ai2web_prompt
+	chmod go-w debian/usr/bin/ai2web_prompt
+	chmod go+x debian/usr/bin/ai2web_prompt
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
+	# copy over all the AI personas
+	cp -v ai_personas/*.cfg debian/etc/2web/ai/personas/
 	# copy over apache configs
 	#cp -v systemConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
 	cp -v systemConf/0000-2web-website.conf debian/etc/apache2/sites-available/

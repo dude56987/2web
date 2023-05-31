@@ -186,6 +186,21 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
+	if (file_exists("$webDirectory/ai/")){
+		$fileData .= formatText("<a class='button' href='/ai/'>",2);
+		#$fileData .= formatText("🦾",3);
+		#$fileData .= formatText("🤖",3);
+		$fileData .= formatText("🧠",3);
+		#$fileData .= formatText("🧞",3);
+		#$fileData .= formatText("👹",3);
+		#$fileData .= formatText("👾",3);
+		#$fileData .= formatText("👿",3);
+		#$fileData .= formatText("🫥",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("AI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 
 	# close the listcard block
 	#echo "</div>";

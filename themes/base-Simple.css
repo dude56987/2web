@@ -1826,3 +1826,33 @@ svg {
 details{
 	min-height: 0px !important;
 }
+.viewsPathCell{
+	word-break: break-all;
+}
+.chatLine{
+	text-align: left;
+	word-break: break-all;
+	font-size: 1rem;
+}
+.aiLog{
+	height: 10rem;
+	text-align: left;
+}
+.aiPrompt{
+	min-height: 5rem;
+	width: 85%;
+	margin: auto;
+	text-align: left;
+}
+.aiSubmit{
+	width: 15%;
+	min-height: 5rem;
+	margin: auto;
+	vertical-align: bottom;
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+}
+.aiSubmit:hover{
+	background-color: var(--highlightBackground);
+	color: var(--highlightText);
+}
