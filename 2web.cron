@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 # cleanup interrupted updates on reboot, removes leftover lockfiles from power cycles
-@reboot root /usr/bin/2web unlock
+@reboot root /usr/bin/2web unlock &> /dev/null
 ################################################################################
 # run 2web to build the base website and update the site configuration changes
 # this does a lot of important things
@@ -25,44 +25,44 @@
 # - Builds the base website for other modules
 # - Checks if cache directories need cleaned
 # - Updates 2web generated graphs
-@reboot root /usr/bin/2web
-*/30 * * * * root /usr/bin/2web
+@reboot root /usr/bin/2web &> /dev/null
+*/30 * * * * root /usr/bin/2web &> /dev/null
 ################################################################################
 # update every 4 hours, if internet sources are included updates can be frequent
-0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel
+0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
 ################################################################################
 # check if the iptv lists need updated once every 6 hours
-0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/iptv2web
+@weekly root /usr/bin/nice -n 10 /usr/bin/iptv2web &> /dev/null
 # Check if the epg guide info needs updated every 30 minutes
-*/30 * * * * root /usr/bin/iptv2web --epg
+*/30 * * * * root /usr/bin/iptv2web --epg &> /dev/null
 ################################################################################
 # update the comic books
-0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel &> /dev/null
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
-0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel
+0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel &> /dev/null
 ################################################################################
 # update graph2web
-@monthly root /usr/bin/nice -n 10 /usr/bin/wiki2web
+@monthly root /usr/bin/nice -n 10 /usr/bin/wiki2web &> /dev/null
 ################################################################################
 # update graph2web
-0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
 ################################################################################
 # Update weather info once per hour on the half hour
-0 * * * *	root /usr/bin/weather2web
+0 * * * *	root /usr/bin/weather2web &> /dev/null
 ################################################################################
 # run update every hour, individual channels have individual delays
-0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo
+0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo &> /dev/null
 ################################################################################
 # every 6 hours check for changes to git repos
-0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-@daily root /usr/bin/2web upgrade
+@daily root /usr/bin/2web upgrade &> /dev/null
 ################################################################################
 # Check once a day to see if the cache need cleaned, files are removed on a time delay
 #  set in '/etc/2web/cache/cacheDelay.cfg'. This delay can be changed in the web
 #  administrator interface.
-@daily root /usr/bin/2web cleancache
-@reboot root /usr/bin/2web cleancache
+@daily root /usr/bin/2web cleancache &> /dev/null
+@reboot root /usr/bin/2web cleancache &> /dev/null
