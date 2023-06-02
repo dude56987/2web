@@ -641,10 +641,15 @@ function processRepo(){
 			INFO "$repoName : Skip video rendering..."
 		else
 			INFO "$repoName : Rendering gource video..."
-			# build history video in 720p
-			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 \
-			"$webDirectory/repos/$repoName/repoHistory.webm"
+			gource --output-custom-log "$webDirectory/repos/$repoName/GOURCE_LOG.gource" "$webDirectory/repos/$repoName/source/"
+
+			# Add repo name to the repo log
+			sed -i -r "s#(.+)\|#\1|/$repoName#" "$webDirectory/repos/$repoName/GOURCE_LOG.gource"
+
+			# build history video in 720p from the generated log
+			#xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
+			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/$repoName/GOURCE_LOG.gource" |\
+			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/$repoName/repoHistory.webm"
 		fi
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
 		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support
@@ -735,8 +740,33 @@ webUpdate(){
 		done
 	done
 	IFS=$IFSBACKUP
-	INFO "Writing total repos "
+
 	echo "$totalrepos" > "$webDirectory/repos/totalrepos.cfg"
+
+	if echo "$@" | grep -q -e "--no-video";then
+		INFO "Skip combined video rendering..."
+	else
+		INFO "Writing combined Gource video..."
+		if checkFileDataSum "$webDirectory" "$webDirectory/repos/repos.index";then
+			# combine the gource logs to make a combined repo video
+			{
+				#cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sed -r "s#(.+)\|#\1|/Repos#" | sort -n
+				cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sort -n
+			} > "$webDirectory/repos/combined_gource.gource"
+			startDebug
+			# render the combined video
+			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/combined_gource.gource" | \
+			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/allHistory.webm"
+			stopDebug
+
+			setFileDataSum "$webDirectory" "$webDirectory/repos/repos.index"
+		fi
+	fi
+
+	if test -f "$webDirectory/repos/allHistory.webm";then
+		# build the thumbnail from the end of the video
+		ffmpegthumbnailer -i "$webDirectory/repos/allHistory.webm" -o "$webDirectory/repos/allHistory.png" -s 0 -t "100%"
+	fi
 
 	# finish building main index page a-z
 	linkFile "/usr/share/2web/templates/repos.php" "$webDirectory/repos/index.php"
