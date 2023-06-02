@@ -33,6 +33,7 @@ include("/usr/share/2web/2webLib.php");
 
 <div class="titleCard">
 	<ul>
+		<li><a href="#search">🔎 2web Search</a></li>
 		<li><a href="#link_index">⛓️ Link Index</a></li>
 		<li><a href="#direct_linking">🔗 Direct Linking</a></li>
 		<li><a href="#kodi">🇰 Kodi</a></li>
@@ -62,6 +63,32 @@ include("/usr/share/2web/2webLib.php");
 <p>
 For when you need more than the web interface can handle. This help section defines how to set up syncing of on-demand ( movies/shows ) ,live ( channels/radio ), and comics ( comics/books ) to 🇰 kodi media centers. This also discusses how to use direct link buttons on media and alternative ( desktop/tablet/phone ) software for access.
 </p>
+
+</div>
+
+<div class='titleCard linkInfo'>
+	<h2 id="search">🔎 2web Search</h2>
+	<p>
+		At the top of each page is the 2web global search tool. This allows you to search all data stored on the 2web server including...
+	</p>
+	<ul>
+		<li>Episodes</li>
+		<li>Movies</li>
+		<li>Shows</li>
+		<li>Comics</li>
+		<li>Wiki Articles</li>
+		<li>Weather Stations</li>
+		<li>Live IPTV Channels</li>
+		<li>Live Radio Streams</li>
+		<li>System Graphs</li>
+		<li>Git Repos</li>
+		<li>Music Artists</li>
+		<li>Music Albums</li>
+		<li>Local Dictionaries</li>
+	</ul>
+	<p>
+		If you cant find something, external links to other search engines and web services are included at the bottom of the results.
+	</p>
 </div>
 
 <div class='titleCard linkInfo'>
