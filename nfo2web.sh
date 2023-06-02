@@ -686,6 +686,8 @@ processMovie(){
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
 
+		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/$movieWebPath/$movieWebPath.index"
+
 		# add the movie to the main movie index since it has been updated
 		SQLaddToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/data.db" "movies"
 		SQLaddToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/data.db" "all"
@@ -1586,6 +1588,9 @@ processShow(){
 		#echo "  </marquee>"
 		echo "</a>"
 	} > "$webDirectory/shows/$showTitle/shows.index"
+
+	linkFile "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/$showTitle/tvshow.index"
+
 
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
