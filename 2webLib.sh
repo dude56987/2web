@@ -777,29 +777,29 @@ function addToLog(){
 	errorDescription=$2
 	errorDetails=$3
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
-	errorSum=$(echo "$errorType$errorDescription$errorDetails" | md5sum | cut -d' ' -f1)
-	# set the path prefixed with seconds and nanoseconds
-	logPagePath="/var/cache/2web/web/log/$(date "+%s.%N")_${moduleName}.log"
-	{
-		# add error to log
-		echo -e "<tr class='logEntry $errorType'>"
-		echo -e "<td>"
-		echo -e "$errorType"
-		echo -e "</td>"
-		echo -e "<td>"
-		echo -e "$errorDescription" | txt2html --extract
-		echo -e "</td>"
-		echo -e "<td class='logDetails'>"
-		# convert the error details into html
-		echo -e "$errorDetails" | txt2html --extract
-		echo -e "</td>"
-		echo -e "<td>"
-		date "+%D"
-		echo -e "</td>"
-		echo -e "<td>"
-		date "+%R:%S"
-		echo -e "</td>"
-		echo -e "</tr>"
-	} >> "$logPagePath"
+
+	# create identifier date to organize the data, this is really accurate
+	logIdentifier="$(date "+%s.%N")_${moduleName}"
+	logDate="$(date "+%D")"
+	logTime="$(date "+%R:%S")"
+
+	logDescription=$(echo -e "$errorDescription" | txt2html --extract)
+	logDetails=$(echo -e "$errorDetails" | txt2html --extract)
+
+	# set the log database path
+	indexPath="/var/cache/2web/web/log/log.db"
+	databaseTable="log"
+	timeout=60000
+	# check if the table exists in the database
+	if ! sqlite3 -cmd ".timeout $timeout"  "$indexPath" "select name from sqlite_master where type='table';" | grep -q "$databaseTable";then
+		# create the database if it does not exist
+		# first set the new database into wal mode for better handling of concurrency in the database
+		sqlite3 -cmd ".timeout $timeout" "$indexPath" "PRAGMA journal_mode=WAL;"
+		sqlite3 -cmd ".timeout $timeout" "$indexPath" "PRAGMA wal_autocheckpoint=20;"
+		# create the table
+		sqlite3 -cmd ".timeout $timeout" "$indexPath" "create table $databaseTable(logIdentifier text primary key,module,type,description,details,date,time);"
+	fi
+	# if the data is already stored in the database
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
 }
 ########################################################################

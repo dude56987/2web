@@ -76,25 +76,70 @@
 	<div class='settingsTable'>
 		<hr id='tableTop'>
 		<table>
+		<tr>
+			<th>Module</th>
+			<th>Type</th>
+			<th>Description</th>
+			<th>Debug</th>
+			<th>Date</th>
+			<th>Time</th>
+		</tr>
 		<?PHP
-			$foundLogs = scandir($_SERVER['DOCUMENT_ROOT']."/log/");
+		# load database
+		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
+		# set the timeout to 1 minute since most webbrowsers timeout loading before this
+		$databaseObj->busyTimeout(60000);
 
-			$foundLogs = array_diff($foundLogs,Array(".","..","index.php",".htaccess"));
+		# run query to get 800 random
+		$result = $databaseObj->query('select * from "log" order by logIdentifier DESC;');
 
-			sort($foundLogs);
+		# fetch each row data individually and display results
+		while($row = $result->fetchArray()){
+			$data  = "<tr class='logEntry ".$row['type']."'>";
+			$data .= "<td>";
+			$data .= $row['module'];
+			$data .= "</td>";
+			$data .= "<td>";
+			$data .= $row['type'];
+			$data .= "</td>";
+			$data .= "<td class='logDetails'>";
+			$data .= $row['description'];
+			$data .= "</td>";
+			$data .= "<td class='logDetails'>";
+			$data .= $row['details'];
+			$data .= "</td>";
+			$data .= "<td>";
+			$data .= $row['date'];
+			$data .= "</td>";
+			$data .= "<td>";
+			$data .= $row['time'];
+			$data .= "</td>";
+			$data .= "</tr>";
+			//echo "sourceFile = $sourceFile<br>\n";
+			// read the index entry
+			// write the index entry
+			echo "$data";
+			flush();
+			ob_flush();
+		}
+		#$foundLogs = scandir($_SERVER['DOCUMENT_ROOT']."/log/");
 
-			# read the array in reverse order
-			while (count($foundLogs) > 0){
-				echo file_get_contents(array_pop($foundLogs));
-			}
+		#$foundLogs = array_diff($foundLogs,Array(".","..","index.php",".htaccess"));
 
-			# reverse entries so newest logs are on top, oldest on the bottom
-			#$foundLogs = array_reverse($foundLogs);
+		#sort($foundLogs);
 
-			# read each log file found
-			#foreach( $foundLogs as $logFilePath){
-			#	echo file_get_contents($logFilePath);
-			#}
+		# read the array in reverse order
+		#while (count($foundLogs) > 0){
+		#	echo file_get_contents(array_pop($foundLogs));
+		#}
+
+		# reverse entries so newest logs are on top, oldest on the bottom
+		#$foundLogs = array_reverse($foundLogs);
+
+		# read each log file found
+		#foreach( $foundLogs as $logFilePath){
+		#	echo file_get_contents($logFilePath);
+		#}
 		?>
 		</table>
 	</div>
