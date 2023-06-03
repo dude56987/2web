@@ -33,7 +33,7 @@ function buildCommitTable($entriesToRead=-1){
 		echo "	<tr>\n";
 		echo "		<th>Commit</th>\n";
 		echo "		<th>Author</th>\n";
-		echo "		<th>Email</th>\n";
+		echo "		<th class='extremeTableShrink'>Email</th>\n";
 		echo "		<th>Message</th>\n";
 		echo "		<th>Log</th>\n";
 		echo "		<th>Diff</th>\n";
@@ -50,8 +50,8 @@ function buildCommitTable($entriesToRead=-1){
 			echo "		<td><a href='?commit=$sourceFile'>$sourceFile</a></td>\n";
 			echo "		<td><a href='?commit=$sourceFile#author'>📮 <span class='tableShrink'>".file_get_contents("author/$sourceFile.index")."</span></a></td>\n";
 			$tempEmail=file_get_contents("email/$sourceFile.index");
-			echo "		<td><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
-			echo "		<td>".file_get_contents("msg/$sourceFile.index")."</td>\n";
+			echo "		<td class='extremeTableShrink'><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
+			echo "		<td class='commitMessageCell'>".file_get_contents("msg/$sourceFile.index")."</td>\n";
 			echo "		<td><a href='?commit=$sourceFile#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
 			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
 			echo "		<td><span class='tableShrink'>📅 </span>".file_get_contents("date/$sourceFile.index")."</td>\n";
@@ -322,7 +322,7 @@ if (array_key_exists("inspector",$_GET)){
 	echo "	<tr>\n";
 	echo "		<th>Commit</th>\n";
 	echo "		<th>Author</th>\n";
-	echo "		<th>Email</th>\n";
+	echo "		<th class='extremeTableShrink'>Email</th>\n";
 	echo "		<th>Message</th>\n";
 	echo "		<th>Log</th>\n";
 	echo "		<th>Diff</th>\n";
@@ -332,8 +332,8 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<td><a href='?commit=$commitName'>$commitName</a></td>\n";
 	echo "		<td><a href='?commit=$commitName#author'>📮 <span class='tableShrink'>".file_get_contents("author/$commitName.index")."</span></a></td>\n";
 	$tempEmail=file_get_contents("email/$commitName.index");
-	echo "		<td><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
-	echo "		<td>".file_get_contents("msg/$commitName.index")."</td>\n";
+	echo "		<td class='extremeTableShrink'><a href='mailto:".$tempEmail."'>📧 <span class='tableShrink'>".$tempEmail."</span></a></td>\n";
+	echo "		<td class='commitMessageCell'>".file_get_contents("msg/$commitName.index")."</td>\n";
 	echo "		<td><a href='?commit=$commitName#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
 	echo "		<td><a href='?commit=$commitName#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
 	echo "		<td>📅 ".file_get_contents("date/$commitName.index")."</td>\n";

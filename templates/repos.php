@@ -37,15 +37,24 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # add the updated repos below the header
 drawPosterWidget("repos",False,True);
 ################################################################################
+if (file_exists("allHistory.webm")){
+	echo "<div class='titleCard'>";
+	echo "	<h1>All Repo Overview</h1>";
+	echo "	<video controls poster='allHistory.png'>\n";
+	echo "		<source src='allHistory.webm' type='video/webm'>\n";
+	echo "	</video>\n";
+	echo "</div>";
+}
 ?>
 <div class='settingListCard'>
 <h1>
-	repos
+	Repos
 	<img id='spinner' src='/spinner.gif' />
 </h1>
 <?php
 flush();
 ob_flush();
+
 # store the index path
 $indexFilePath="/var/cache/2web/web/repos/repos.index";
 # store the empty message
