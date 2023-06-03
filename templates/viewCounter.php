@@ -36,7 +36,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 ################################################################################
 ?>
-<div class='settingListCard'>
 <?php
 if (is_dir("/var/cache/2web/web/views/")){
 	createViewsDatabase();
@@ -63,13 +62,13 @@ if (is_dir("/var/cache/2web/web/views/")){
 			$databaseObj->busyTimeout(60000);
 
 			# run query view counts
-			$result = $databaseObj->query('select * from "view_count" order by views DESC;');
+			$result = $databaseObj->query('select * from "view_count" order by views DESC limit 100 ;');
 
 			# open the cache file for writing
 			$fileHandle = fopen($cacheFile,'w');
 
 			# build the views database
-			$data ="<table>";
+			$data ="<div class='titleCard'><h2>Url Views</h2><table>";
 			$data.="<tr><th>URL</th><th>VIEWS</th></tr>";
 			// write the index entry
 			echo "$data";
@@ -80,7 +79,7 @@ if (is_dir("/var/cache/2web/web/views/")){
 			# fetch each row data individually and display results
 			while($row = $result->fetchArray()){
 				// read the index entry
-				$data="<tr><td>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				$data="<tr><td class='viewsPathCell'>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
 				// write the index entry
 				echo "$data";
 				fwrite($fileHandle, "$data");
@@ -88,7 +87,9 @@ if (is_dir("/var/cache/2web/web/views/")){
 				ob_flush();
 			}
 
-			$data="</table>";
+			$data = "</table></div>\n";
+			$data.= "<div class='titleCard'>\n";
+			$data.= "<h2>Failed Urls</h2>\n";
 			// write the index entry
 			echo "$data";
 			fwrite($fileHandle, "$data");
@@ -96,7 +97,7 @@ if (is_dir("/var/cache/2web/web/views/")){
 			ob_flush();
 
 			# run query view counts
-			$result = $databaseObj->query('select * from "error_count" order by views DESC;');
+			$result = $databaseObj->query('select * from "error_count" order by views DESC limit 100 ;');
 
 			# build the 404 database
 			$data ="<table>";
@@ -110,14 +111,14 @@ if (is_dir("/var/cache/2web/web/views/")){
 			# fetch each row data individually and display results
 			while($row = $result->fetchArray()){
 				// read the index entry
-				$data="<tr><td>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				$data="<tr><td class='viewsPathCell'>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
 				// write the index entry
 				echo "$data";
 				fwrite($fileHandle, "$data");
 				flush();
 				ob_flush();
 			}
-			$data="</table>";
+			$data="</table></div>";
 			// write the index entry
 			echo "$data";
 			fwrite($fileHandle, "$data");
@@ -141,7 +142,6 @@ if (is_dir("/var/cache/2web/web/views/")){
 }
 
 ?>
-</div>
 <?php
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
