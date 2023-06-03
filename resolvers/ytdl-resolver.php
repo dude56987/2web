@@ -75,7 +75,7 @@ function cacheUrl($sum,$videoLink){
 	################################################################################
 	// if the cache flag has been set to true then download the file and play it from the cache
 	debug("Build the command<br>");
-	$command = "";
+	$command = "nice -n -5 ";
 	// add the download to the cache with the processing queue
 	if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
@@ -266,28 +266,6 @@ function buildBump($sum){
 	}
 }
 ################################################################################
-function redirect($url){
-	if (array_key_exists("debug",$_GET)){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo '<div>';
-		echo '<video controls>';
-		echo '<source src="'.$url.'" type="video/mp4">';
-		echo '</video>';
-		echo '</div>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-		exit();
-		die();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-		exit();
-		die();
-	}
-}
-################################################################################
 if (array_key_exists("url",$_GET)){
 	$videoLink = $_GET['url'];
 	debug("URL is ".$videoLink."<br>");
@@ -467,28 +445,22 @@ if (array_key_exists("url",$_GET)){
 	echo "</div>";
 	echo "<div class='settingListCard'>";
 	echo "<h2>Random Cached Videos</h2>";
-	$sourceFiles = explode("\n",shell_exec("ls -t1 RESOLVER-CACHE/*/*.mp4"));
-	// reverse the time sort
-	//$sourceFiles = array_reverse($sourceFiles);
+	$sourceFiles = recursiveScan($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/");
 	# build the video index
 	foreach($sourceFiles as $sourceFile){
-		#echo "	<div>File Exists $sourceFile</div>";
 		if (file_exists($sourceFile)){
-			#echo "	<div>Is File $sourceFile</div>";
 			if (is_file($sourceFile)){
-				if ( ! strpos($sourceFile,"-bump")){
-					if ( ! strpos($sourceFile,"-skip")){
-						echo "<a class='showPageEpisode' href='".$sourceFile."'>";
-						if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
-							echo "<img loading='lazy' src='".str_replace(".mp4",".jpg",$sourceFile)."' />";
-						}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
-							echo "<img loading='lazy' src='".str_replace(".mp4",".webp",$sourceFile)."' />";
-						}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
-							echo "<img loading='lazy' src='".str_replace(".mp4",".png",$sourceFile)."' />";
-						}
-						echo "	<h3>".$sourceFile."</h3>";
-						echo "</a>";
+				if (stripos($sourceFile,".mp4")){
+					echo "<a class='showPageEpisode' href='".$sourceFile."'>";
+					if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace(".mp4",".jpg",$sourceFile)."' />";
+					}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace(".mp4",".webp",$sourceFile)."' />";
+					}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace(".mp4",".png",$sourceFile)."' />";
 					}
+					echo "	<h3>".$sourceFile."</h3>";
+					echo "</a>";
 				}
 			}
 		}
