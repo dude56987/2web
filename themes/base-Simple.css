@@ -1257,9 +1257,14 @@ table, th, td{
 	text-shadow: none;
 	text-align: center;
 }
+.commitMessageCell{
+	word-break: break-all;
+}
+/*
 td{
 	word-break: break-all;
 }
+*/
 /* Make the markdown generated tables display correctly */
 tr[class='header']{
 	display: table-row;
@@ -1626,6 +1631,9 @@ th{
 	/*
 		This is for small portrat mode
 	*/
+	.extremeTableShrink{
+		display: none !important;
+	}
 	.headerText{
 		display: inline !important;
 	}
@@ -1835,18 +1843,24 @@ details{
 	font-size: 1rem;
 }
 .aiLog{
+	display: none;
+	/*
 	height: 10rem;
 	text-align: left;
+	*/
 }
 .aiPrompt{
-	min-height: 5rem;
+	min-height: 6rem;
 	width: 85%;
+	max-width: 85% !important;
+	min-width: 85% !important;
 	margin: auto;
 	text-align: left;
 }
 .aiSubmit{
 	width: 15%;
-	min-height: 5rem;
+	max-width: 15%;
+	min-height: 6rem;
 	margin: auto;
 	vertical-align: bottom;
 	background-color: var(--glassBackground);
@@ -1855,4 +1869,14 @@ details{
 .aiSubmit:hover{
 	background-color: var(--highlightBackground);
 	color: var(--highlightText);
+}
+.hidden{
+	display: none;
+}
+.aiContButton{
+	float: right;
+	width: 20%;
+}
+.aiContButton input{
+	width: 95%;
 }
