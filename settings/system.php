@@ -45,15 +45,18 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 	<h2>Add New System Administrator</h2>
 	<ul>
-		<li>New administrators will be added on next scheduled web update.( ~ 24 hours max )</li>
-		<li>
-			<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
-		</li>
-		<li>
-			<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
-		</li>
+		<li>New administrators will be added on next scheduled web update.( ~ 30 minutes max )</li>
+		<li>Add at least one administrator to lock the settings in this web interface.</li>
+		<ul>
+			<li>
+				<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
+			</li>
+			<li>
+				<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
+			</li>
+		</ul>
 	</ul>
-	<button class='button' type='submit'>Add User</button>
+	<button class='button' type='submit'>Add New Administrator</button>
 </form>
 </div>
 
@@ -62,7 +65,10 @@ include("settingsHeader.php");
 		<h2>Remove System Administrator</h2>
 			<ul>
 				<li>
-					Remove existing user from accessing the website
+					Remove existing administrator from accessing the website
+				</li>
+				<li>
+					If at least one administrator exists all web interface settings will be locked, including this page.
 				</li>
 			</ul>
 			<select name='removeUser'>
@@ -96,7 +102,7 @@ include("settingsHeader.php");
 			}
 			?>
 		</select>
-		<button class='button' type='submit'>Remove User</button>
+		<button class='button' type='submit'>Remove Administrator</button>
 	</form>
 </div>
 
