@@ -966,4 +966,24 @@ if( ! function_exists("redirect")){
 	}
 }
 ########################################################################
+if( ! function_exists("cleanPostInput")){
+	function cleanPostInput(){
+		# clean the input of the global post values
+		foreach( array_keys($_POST) as $postKey ){
+			# escape all post keys given to admin script to prevent breaking out of shell commands when used
+			$_POST[$postKey] = escapeshellcmd($_POST[$postKey]);
+		}
+	}
+}
+########################################################################
+if( ! function_exists("cleanGetInput")){
+	function cleanGetInput(){
+		# clean the input of the global post values
+		foreach( array_keys($_GET) as $getKey ){
+			# escape all post keys given to admin script to prevent breaking out of shell commands when used
+			$_GET[$getKey] = escapeshellcmd($_GET[$getKey]);
+		}
+	}
+}
+########################################################################
 ?>

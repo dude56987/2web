@@ -25,6 +25,7 @@
 <body>
 
 <?php
+include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 //include('settingsHeader.php');
 ?>
@@ -109,6 +110,10 @@ function checkUsernamePass($userName, $password){
 		return false;
 	}
 }
+# clean up the post input before processing
+cleanPostInput();
+////////////////////////////////////////////////////////////////////////////////
+// Start processing data
 ////////////////////////////////////////////////////////////////////////////////
 if (array_key_exists("newUserName",$_POST)){
 	# make all chacters lowercase for password
