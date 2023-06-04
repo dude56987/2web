@@ -625,7 +625,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
 		echo "</div>";
 	}
-	$definitionData = shell_exec("dict '".$searchQuery."' | tr -s '\n'");
+	$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
 	if ( $definitionData ){
 		$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
 		# build the definition data
@@ -792,6 +792,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		set_time_limit(900);
 
 		foreach( $indexPaths as $indexPath ){
+			# output space to prevent timeout
+			echo " ";
 			$indexInfo=searchIndex($indexPath,$searchQuery,$searchCacheFilePath);
 			if ( $indexInfo[0] ){
 				echo "<hr>";
