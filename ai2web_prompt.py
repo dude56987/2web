@@ -25,7 +25,7 @@ except:
 	exit()
 ########################################################################
 # import libaries
-import sys, os, json, hashlib, sqlite3
+import sys, os, json, hashlib, sqlite3, time
 ################################################################################
 def ai2web_CLI_help():
 	print("--help")
@@ -169,9 +169,9 @@ def loadDatabase(databasePath):
 		# build the base tables
 		# - ROWID column is incremented in database to identify newest and oldest elements
 		# build the anwsers table
-		dbCursor.execute("create table \"anwsers\" (convoSum text primary key,convoToken text);")
+		dbCursor.execute("create table \"anwsers\" (convoSum text primary key, convoToken text, renderTime text);")
 		# build the question table
-		dbCursor.execute("create table \"questions\" (convoSum text primary key,convoToken text,anwserSum text);")
+		dbCursor.execute("create table \"questions\" (convoSum text primary key, convoToken text,anwserSum text, renderTime text);")
 		dbConnection.commit()
 
 	return [dbConnection, dbCursor]
@@ -213,7 +213,10 @@ def readConvo(convoToken,depth=1):
 	Read a convo token and return the generated anwser token. Cache all convos in a sqlite3 database to allow web interfaces to acccess it.
 
 	"""
-	if depth >= 10:
+	# max out continue statements at 5
+	# - if unfinished a button is placed on the last message with continue so this should be enough
+	# - This also stops infinite loops, The AI can get stuck in logic loops, mostly where continue means to repeat the last message
+	if depth >= 5:
 		return False
 	# database model is used for hash sum generation, to make anwsers model specific
 	databaseModel = getActiveModel()
@@ -264,7 +267,9 @@ def readConvo(convoToken,depth=1):
 			tempData = row
 			break
 		# if the anwserdata has no length then no anwser could be formed
-		if len(anwserData) > 1:
+		if len(anwserData) < 1:
+			# return that the anwser does not exist
+			print("Anwser not found, language model is SILENT. This information is unavailbe or considered so dangerous nothing could be said. This should not ever happen. To resolve this problem language model science methods need to be applied to the model.")
 			return False
 		else:
 			anwserData = tempData
@@ -274,8 +279,8 @@ def readConvo(convoToken,depth=1):
 
 		#dbConnection.close()
 		#print(anwserData)
-		#print(type(anwserData))
-		#print(anwserData)
+		print(type(anwserData))
+		print(anwserData)
 		anwserData = json.loads(anwserData[1])
 		#print(anwserData)
 		# should load an array
@@ -285,29 +290,24 @@ def readConvo(convoToken,depth=1):
 		#print(convoData['anwserSum'])
 	else:
 		convoJson = json.dumps(convoToken)
-		databaseExecute("replace into questions(convoSum, convoToken, anwserSum) values('"+convoSum+"','"+convoJson+"','UNANWSERED');")
+		databaseExecute("replace into questions(convoSum, convoToken, anwserSum, renderTime) values('"+convoSum+"','"+convoJson+"','UNANWSERED','"+str(time.time())+"');")
 		# load up the prompt and get the anwser token
 		gptj = loadModel()
 		anwserToken = gptj.chat_completion(convoToken, True, True, False)
 		#print("Anwser Token before clean : "+str(anwserToken))#debug
 		# read the message dict from the anwser token
 		anwserToken = anwserToken["choices"]
+		orignalAnwserToken = anwserToken
 		#print("Anwser Token after clean choices : "+str(anwserToken))#debug
 		#anwserToken = anwserToken["message"]
 		#print("Anwser Token after clean message : "+str(anwserToken))#debug
 		tempToken = list()
 		# read all anwsers into array
-		for anwserDict in anwserToken:
+		for anwserDict in orignalAnwserToken:
 			#print("Anwser dict message : "+str(anwserDict["message"]))#debug
 			# build the anwser token, remove single quotes that break sql statements
 			tempToken.append({"role":anwserDict["message"]['role'],"content":(anwserDict["message"]['content'].replace("'",'`'))})
 
-			# check the anwserToken and read the last character of the string. If it is not a puncuation automatically ask to continue
-			tempAnwserText = anwserDict["message"]['content'].replace("'",'`')
-			tempAnwserText = tempAnwserText[len(tempAnwserText)-1]
-			if tempAnwserText not in [".","!","?"]:
-				# if the anwser does not contain punctuation then automatically ask AI to continue
-				readConvo(convoToken + tempToken + [{"role":"user","content":"Continue"}],(depth+1))
 			# this should only run once
 			break
 		#print("Temp Token : "+str(tempToken))#debug
@@ -323,11 +323,21 @@ def readConvo(convoToken,depth=1):
 		# the anwsertoken has been generated now, build the anwser token in the database and read it
 		anwserJson = json.dumps(anwserToken)
 		#print("Anwser json : "+str(anwserJson))#debug
+		# - make sure to load anwsers into the database before recursive processing checks
 		#print("replace into anwsers(convoSum, convoToken) values('"+anwserSum+"','"+anwserJson+"');")
-		databaseExecute("replace into anwsers(convoSum, convoToken) values('"+anwserSum+"','"+anwserJson+"');")
+		databaseExecute("replace into anwsers(convoSum, convoToken, renderTime ) values('"+anwserSum+"','"+anwserJson+"','"+str(time.time())+"');")
 		#print("replace into questions(convoSum, convoToken, anwserSum) values('"+convoSum+"','"+convoJson+"','"+anwserSum+"');")
 		# add this convo token to the datbase
-		databaseExecute("replace into questions(convoSum, convoToken, anwserSum) values('"+convoSum+"','"+convoJson+"','"+anwserSum+"');")
+		databaseExecute("replace into questions(convoSum, convoToken, anwserSum, renderTime) values('"+convoSum+"','"+convoJson+"','"+anwserSum+"','"+str(time.time())+"');")
+		# check conversation for broken lines
+		for anwserDict in orignalAnwserToken:
+			# check the anwserToken and read the last character of the string. If it is not a puncuation automatically ask to continue
+			tempAnwserText = anwserDict["message"]['content'].replace("'",'`')
+			tempAnwserText = tempAnwserText[len(tempAnwserText)-1]
+			if tempAnwserText not in [".","!","?"]:
+				# if the anwser does not contain punctuation then automatically ask AI to continue
+				readConvo(convoToken + tempToken + [{"role":"user","content":"Continue"}],(depth+1))
+
 		# commit changes to database
 		#dbConnection.commit()
 		# close the database

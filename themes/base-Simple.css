@@ -1448,6 +1448,10 @@ table{
 	min-height: 3rem;
 	max-height: 45rem;
 	vertical-align: top;
+	white-space: normal;
+}
+.textList{
+	vertical-align: middle;
 }
 pre{
 	text-align: left;
