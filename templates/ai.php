@@ -44,7 +44,6 @@ if (array_key_exists("inputPrompt",$_POST)){
 		# default model loaded by prompt is groovy
 		$command .= '/usr/bin/ai2web_prompt ';
 	}
-	$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-l13b-snoozy.bin ';
 	#$command .= '/usr/bin/ai2web_prompt ';
 	if (array_key_exists("convoSum",$_POST)){
 		$command .= '--input-token \"'.$_POST['convoSum'].'\" ';
@@ -53,7 +52,15 @@ if (array_key_exists("inputPrompt",$_POST)){
 	$_POST['inputPrompt'] = str_replace("'","`",$_POST['inputPrompt']);
 	$_POST['inputPrompt'] = str_replace('"',"`",$_POST['inputPrompt']);
 	$_POST['inputPrompt'] = escapeShellCmd($_POST['inputPrompt']);
-	$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\""';
+	# build the unique user agent string and convert it to a md5
+	# - This is so the web interface will display the recent prompts submited by that user
+	# - This must be seprate in order to allow searching database based on indivual user access
+	# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
+	$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
+	$tempUserAgent .= $_SERVER["REMOTE_ADDR"];
+	$tempUserAgent = md5($tempUserAgent);
+	$command .=	'--user-agent '.$tempUserAgent.' ';
+	$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\"" ';
 	$command .= ' | at -M now';
 	#$command .= ' | batch';
 	# launch the command
@@ -65,11 +72,16 @@ if (array_key_exists("inputPrompt",$_POST)){
 		echo "</div>";
 	}
 	# delay 1 seconds to allow loading of database
-	if($_SERVER['HTTPS']){
-		$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/");
+	if(array_key_exists("HTTPS",$_SERVER)){
+		if($_SERVER['HTTPS']){
+			$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/");
+		}else{
+			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/");
+		}
 	}else{
 		$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/");
 	}
+
 	sleep(1);
 	redirect($redirectUrl);
 }
@@ -249,57 +261,6 @@ if (file_exists($databasePath)){
 				ob_flush();
 			}
 		}
-
-		#$result = $databaseObj->query('select * from "anwsers" where convoSum = \''.$convoToken.'\';');
-
-		## fetch each row data individually and display results
-		#while($row = $result->fetchArray()){
-		#	#echo var_dump($row)."<br>\n";
-		#	$data = json_decode($row['convoToken']);
-		#	// read the index entry
-		#	// write the index entry
-		#	echo "<div class='titleCard'>";
-		#	#echo "<details>";
-		#	#echo "<subject>";
-		#	echo "<h1>Anwser ".$row['convoSum']." ✅</h1>";
-		#	#echo "</subject>";
-		#	echo "<table>";
-		#	echo "<tr>";
-		#	echo "<th>Role</th>";
-		#	echo "<th>Message</th>";
-		#	echo "</tr>";
-		#	foreach($data as $line){
-		#		#echo "dump: ".var_dump($line)."<br>\n";
-		#		#echo "role: ".$line->role."<br>\n";
-		#		#echo "content: ".$line->content."<br>\n";
-		#		# read each line of the conversation
-		#		echo "<tr>";
-		#		echo "<td>";
-		#		echo ($line->role."\n");
-		#		echo "</td>";
-		#		echo "<td class='chatLine'>";
-		#		#echo "<pre>";
-		#		echo str_replace("\n","<br>",$line->content."\n");
-		#		#echo "</pre>";
-		#		echo "</td>";
-		#		echo "</tr>";
-		#	}
-		#	echo "</table>";
-
-		#	echo "<form method='post'>";
-		#	# store the json of the conversation as the input json
-		#	echo "<input class='aiLog' name='convoSum' value='".$row['convoSum']."' type='text' readonly>";
-		#	# add the prompt to the log
-		#	echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
-		#	echo "<input class='aiSubmit' type='submit' value='Prompt'>";
-		#	echo "</form>";
-
-		#	#echo var_dump($data);
-		#	#echo "</details>";
-		#	echo "</div>";
-		#	flush();
-		#	ob_flush();
-		#}
 	}else{
 		echo "<div class='titleCard'>";
 		echo "	<h1>What Can <sup>a</sup>I Do?</h1>";
@@ -354,162 +315,247 @@ if (file_exists($databasePath)){
 		echo "</div>";
 
 		$setOnce=True;
-		$result = $databaseObj->query('select * from "questions" order by renderTime DESC limit 100;');
-		# fetch each row data individually and display results
-		while($row = $result->fetchArray()){
-			if ($row['anwserSum'] == "UNANWSERED"){
-				if ($setOnce){
-					# refresh if block refresh is not set
-					if (array_key_exists("autoRefresh",$_GET)){
-						// using javascript, reload the webpage every 60 seconds, time is in milliseconds
-						echo "<script>";
-						echo "setTimeout(function() { window.location=window.location;},(1000*10));";
-						echo "</script>";
-						# lockout the set once
-						$setOnce = False;
-					}
-				}
 
-				$data = json_decode($row['convoToken']);
-				// read the index entry
-				// write the index entry
-				echo "<div class='inputCard'>";
-				#echo "<details>";
-				#echo "<subject>";
-				echo "<h2>";
-				echo "<a href='?loadConvo=".$row['convoSum']."'>";
-				echo "Question ".$row['convoSum']." ";
-				echo "</a>";
-				#if (! array_key_exists("blockRefresh",$_GET)){
-				#	echo " <img src='/spinner.gif'> <a class='button' href='?blockRefresh'>⏹️</a>";
-				#}else{
-				#	echo "<a class='button' href='?'>▶️ </a>";
-				#}
-				echo "</h2>";
-				#echo "</subject>";
-				echo "<table>";
-				echo "<tr>";
-				echo "<th>Role</th>";
-				echo "<th>Message</th>";
-				echo "</tr>";
-				foreach($data as $line){
-					#echo "dump: ".var_dump($line)."<br>\n";
-					#echo "role: ".$line->role."<br>\n";
-					#echo "content: ".$line->content."<br>\n";
-					# read each line of the conversation
-					echo "<tr>";
-					echo "<td>";
-					echo ($line->role."\n");
-					echo "</td>";
-					echo "<td class='chatLine'>";
-					#echo "<pre>";
-					echo str_replace("\n","<br>",$line->content."\n");
-					#echo "</pre>";
-					echo "</td>";
-					echo "</tr>";
-					# break loop for homepage preview
-					break;
-				}
-				echo "</table>";
+		$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
+		$tempUserAgent .= $_SERVER["REMOTE_ADDR"];
+		$tempUserAgent = md5($tempUserAgent);
 
-				echo "<div class=''>";
-				echo "Total Responses:";
-				echo floor(count($data)/2);
-				echo "</div>";
+		#echo "<div class='titleCard'>";
+		#echo "<hr>debug 1 = '".$_SERVER["HTTP_USER_AGENT"].$_SERVER["REMOTE_ADDR"]."' = ".$tempUserAgent."<hr>\n";
+		#echo "</div>\n";
 
-				#echo var_dump($data);
-				#echo "</details>";
-				echo "</div>";
-				flush();
-				ob_flush();
-			}
-		}
-		$result = $databaseObj->query('select * from "anwsers" order by renderTime DESC limit 100;');
+		$userConvos = $databaseObj->query('select convoSum from "users" where userAgent = \''.$tempUserAgent.'\' order by ROWID DESC;');
 
-		#echo var_dump($result);//DEBUG
-		#echo var_dump($result->fetchArray());//DEBUG
+		#echo "<div class='titleCard'>";
+		#echo "User Convos = ";
+		#echo var_dump($userConvos);
+		#echo "</div>\n";
 
-		# fetch each row data individually and display results
-		while($row = $result->fetchArray()){
-			#echo var_dump($row)."<br>\n";
-			$data = json_decode($row['convoToken']);
-			// read the index entry
-			// write the index entry
-			echo "<div class='inputCard'>";
-			#echo "<details>";
-			#echo "<subject>";
-			echo "<h2>";
-			echo "<a href='?loadConvo=".$row['convoSum']."'>";
-			echo "Anwsered ".$row['convoSum']." ✅";
-			echo "</a>";
-			echo "</h2>";
-			#echo "</subject>";
-			echo "<table>";
-			echo "<tr>";
-			echo "<th>Role</th>";
-			echo "<th>Message</th>";
-			echo "</tr>";
-			$lengthOfData=count($data);
-			$dataCounter=0;
-			foreach($data as $line){
-				$dataCounter+=1;
-				#echo "dump: ".var_dump($line)."<br>\n";
-				#echo "role: ".$line->role."<br>\n";
-				#echo "content: ".$line->content."<br>\n";
-				# read each line of the conversation
-				echo "<tr>";
-				echo "<td>";
-				echo ($line->role."\n");
-				echo "</td>";
-				echo "<td class='chatLine'>";
-				# get the last character of the line
-				$tempLineContent = substr($line->content,-1);
-				#echo "templine content = ".var_dump($tempLineContent)."<br>\n";
-				# if the end of the response is not puncuated
-				if ( $dataCounter == $lengthOfData){
-					if ( $line->role == "assistant" ){
-						if ( ! ( ($tempLineContent == ".") || ($tempLineContent == "!") || ($tempLineContent == "?") ) ){
-							# add a continue button
-							echo "<form class='aiContButton' method='post'>";
-							# store the json of the conversation as the input json
-							echo "<input class='hidden' name='convoSum' value='".$row['convoSum']."' type='text' readonly>";
-							# add the prompt to the log
-							echo "<textarea class='hidden' name='inputPrompt' readonly>Continue</textarea>";
-							echo "<input class='button' type='submit' value='Continue'>";
-							echo "</form>";
+		while($userInfo = $userConvos->fetchArray()){
+			#echo "<div class='titleCard'>\n";
+			#echo "user convos, convo = ";
+			#echo var_dump($userInfo);
+			#echo "\n";
+			#echo "</div>\n";
 
+			#echo "<div class='titleCard'>\n";
+			#echo "dump 1 convoSum = ";
+			#echo var_dump($userInfo['convoSum']);
+			#echo "\n";
+			#echo "</div>\n";
+
+			#echo "<div class='titleCard'>\n";
+			#echo "dump 1 convoSum = ";
+			#echo $userInfo['convoSum'];
+			#echo "\n";
+			#echo "</div>\n";
+
+			#$anwserSum =
+			#$anwserResult = $databaseObj->query('select * from "anwsers" where convoSum = \''.$row['anwserSum'].'\';');
+
+			#echo "<div class='titleCard'>\n";
+			#echo ('select * from "anwsers" where convoSum = \''.$userInfo['convoSum'].'\' order by renderTime DESC limit 100;'."\n");
+			#echo "</div>\n";
+
+			#echo "<div class='titleCard'>\n";
+			#echo ('select * from "questions" where convoSum = \''.$userInfo['convoSum'].'\' order by renderTime DESC limit 100;');
+			#echo "</div>\n";
+
+			$result = $databaseObj->query('select * from "questions" where convoSum = \''.$userInfo['convoSum'].'\' order by renderTime DESC limit 100;');
+
+			#$result = $databaseObj->query('select * from "questions" order by renderTime DESC limit 100;');
+
+			# fetch each row data individually and display results
+			while($row = $result->fetchArray()){
+
+				#echo "<div class='titleCard'>\n";
+				#echo "dump 2 row = ";
+				#echo var_dump($row);
+				#echo "\n";
+				#echo "</div>\n";
+
+				#echo "<div class='titleCard'>\n";
+				#echo "dump 2 row anwserSum = ";
+				#echo var_dump($row["anwserSum"]);
+				#echo "\n";
+				#echo "</div>\n";
+
+				#echo "<div class='titleCard'>\n";
+				#echo "dump 2 row convoToken = ";
+				#echo var_dump($row["convoToken"]);
+				#echo "\n";
+				#echo "</div>\n";
+
+
+				# if the question is unanwsered load the question
+				if ($row['anwserSum'] == "UNANWSERED"){
+					if ($setOnce){
+						# refresh if block refresh is not set
+						if (array_key_exists("autoRefresh",$_GET)){
+							// using javascript, reload the webpage every 60 seconds, time is in milliseconds
+							echo "<script>";
+							echo "setTimeout(function() { window.location=window.location;},(1000*10));";
+							echo "</script>";
+							# lockout the set once
+							$setOnce = False;
 						}
 					}
+
+					#echo "<div class='titleCard'>\n";
+					#echo "dump 2 part 2 row convoToken = ";
+					#echo var_dump($row["convoToken"]);
+					#echo "\n";
+					#echo "</div>\n";
+
+
+					$data = json_decode($row['convoToken']);
+					// read the index entry
+					// write the index entry
+					echo "<div class='inputCard'>";
+					#echo "<details>";
+					#echo "<subject>";
+					echo "<h2>";
+					echo "<a href='?loadConvo=".$row['convoSum']."'>";
+					#echo "Question ".$row['convoSum']." ";
+					echo "Question";
+					echo "</a>";
+					echo "</h2>";
+					#echo "</subject>";
+					echo "<table>";
+					echo "<tr>";
+					echo "<th>Role</th>";
+					echo "<th>Message</th>";
+					echo "</tr>";
+					foreach($data as $line){
+						# read each line of the conversation
+						echo "<tr>";
+						echo "<td>";
+						echo ($line->role."\n");
+						echo "</td>";
+						echo "<td class='chatLine'>";
+						#echo "<pre>";
+						echo str_replace("\n","<br>",$line->content."\n");
+						#echo "</pre>";
+						echo "</td>";
+						echo "</tr>";
+						# break loop for homepage preview
+						break;
+					}
+					echo "</table>";
+
+					echo "<div class=''>";
+					echo "Total Responses:";
+					echo floor(count($data)/2);
+					echo "</div>";
+
+					#echo var_dump($data);
+					#echo "</details>";
+					echo "</div>";
+					flush();
+					ob_flush();
+				}else{
+					# render out any anwsered questions found for this user agent string
+
+					#echo "<div class='titleCard'>\n";
+					#echo "userInfo = ";
+					#echo var_dump($userInfo);
+					#echo "\n";
+					#echo "</div>\n";
+
+					# select anwsers discovered in anwsersums
+					$questionResult = $databaseObj->query('select * from "anwsers" where convoSum = \''.$row['anwserSum'].'\' order by renderTime DESC limit 100;');
+
+					#echo "<div class='titleCard'>\n";
+					#echo "result = ";
+					#echo var_dump($questionResult);
+					#echo "\n";
+					#echo "</div>\n";
+
+					# fetch each row data individually and display results
+					while($anwserRow = $questionResult->fetchArray()){
+						#echo var_dump($row)."<br>\n";
+						$data = json_decode($anwserRow['convoToken']);
+						// read the index entry
+						// write the index entry
+						echo "<div class='inputCard'>";
+						#echo "<details>";
+						#echo "<subject>";
+						echo "<h2>";
+						echo "<a href='?loadConvo=".$anwserRow['convoSum']."'>";
+						#echo "Anwser ".$anwserRow['convoSum']."";
+						echo "Anwser";
+						echo "</a>";
+						echo "</h2>";
+						#echo "</subject>";
+						echo "<table>";
+						echo "<tr>";
+						echo "<th>Role</th>";
+						echo "<th>Message</th>";
+						echo "</tr>";
+						$lengthOfData=count($data);
+						$dataCounter=0;
+						foreach($data as $line){
+							$dataCounter+=1;
+							#echo "dump: ".var_dump($line)."<br>\n";
+							#echo "role: ".$line->role."<br>\n";
+							#echo "content: ".$line->content."<br>\n";
+							# read each line of the conversation
+							echo "<tr>";
+							echo "<td>";
+							echo ($line->role."\n");
+							echo "</td>";
+							echo "<td class='chatLine'>";
+							# get the last character of the line
+							$tempLineContent = substr($line->content,-1);
+							#echo "templine content = ".var_dump($tempLineContent)."<br>\n";
+							# if the end of the response is not puncuated
+							if ( $dataCounter == $lengthOfData){
+								if ( $line->role == "assistant" ){
+									if ( ! ( ($tempLineContent == ".") || ($tempLineContent == "!") || ($tempLineContent == "?") ) ){
+										# add a continue button
+										echo "<form class='aiContButton' method='post'>";
+										# store the json of the conversation as the input json
+										echo "<input class='hidden' name='convoSum' value='".$anwserRow['convoSum']."' type='text' readonly>";
+										# add the prompt to the log
+										echo "<textarea class='hidden' name='inputPrompt' readonly>Continue</textarea>";
+										echo "<input class='button' type='submit' value='Continue'>";
+										echo "</form>";
+
+									}
+								}
+							}
+							#echo "<pre>";
+							echo str_replace("\n","<br>",$line->content."\n");
+							#echo "</pre>";
+							echo "</td>";
+							echo "</tr>";
+							# break loop for homepage preview
+							break;
+						}
+						echo "</table>";
+
+						echo "<div class=''>";
+						echo "Total Responses:";
+						echo floor(count($data)/2);
+						echo "</div>";
+						#echo "<form method='post'>";
+						## store the json of the conversation as the input json
+						#echo "<input class='aiLog' name='convoSum' value='".$row['convoSum']."' type='text' readonly>";
+						## add the prompt to the log
+						#echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
+						#echo "<input class='aiSubmit' type='submit' value='Prompt'>";
+						#echo "</form>";
+
+						#echo var_dump($data);
+						#echo "</details>";
+						echo "</div>";
+						flush();
+						ob_flush();
+					}
+					#echo "</div>";
 				}
-				#echo "<pre>";
-				echo str_replace("\n","<br>",$line->content."\n");
-				#echo "</pre>";
-				echo "</td>";
-				echo "</tr>";
-				# break loop for homepage preview
-				break;
 			}
-			echo "</table>";
-
-			echo "<div class=''>";
-			echo "Total Responses:";
-			echo floor(count($data)/2);
-			echo "</div>";
-			#echo "<form method='post'>";
-			## store the json of the conversation as the input json
-			#echo "<input class='aiLog' name='convoSum' value='".$row['convoSum']."' type='text' readonly>";
-			## add the prompt to the log
-			#echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
-			#echo "<input class='aiSubmit' type='submit' value='Prompt'>";
-			#echo "</form>";
-
-			#echo var_dump($data);
-			#echo "</details>";
-			echo "</div>";
-			flush();
-			ob_flush();
 		}
-		echo "</div>";
 	}
 }else{
 	# draw the new conversation prompt

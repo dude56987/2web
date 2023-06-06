@@ -172,6 +172,8 @@ def loadDatabase(databasePath):
 		dbCursor.execute("create table \"anwsers\" (convoSum text primary key, convoToken text, renderTime text);")
 		# build the question table
 		dbCursor.execute("create table \"questions\" (convoSum text primary key, convoToken text,anwserSum text, renderTime text);")
+		# build the user agent links
+		dbCursor.execute("create table \"users\" (convoSum text primary key, userAgent text);")
 		dbConnection.commit()
 
 	return [dbConnection, dbCursor]
@@ -222,6 +224,21 @@ def readConvo(convoToken,depth=1):
 	databaseModel = getActiveModel()
 	# generate the sum using both values
 	convoSum = hashlib.md5((databaseModel+str(convoToken)).encode('utf-8')).hexdigest()
+
+	if "--user-agent" in sys.argv:
+		# set the user agent based on input
+		userAgent = sys.argv[(sys.argv.index("--user-agent")+1)]
+		print("User Agent set to '"+userAgent+"'");
+		#userAgent = hashlib.md5((databaseModel+str(userAgent)).encode('utf-8')).hexdigest()
+		print("User Agent sum set to '"+userAgent+"'");
+	else:
+		# set the default user agent
+		userAgent = "UNKNOWN"
+		print("User Agent set to '"+userAgent+"'");
+	# store username
+	# - the user agent should be able to be posted more than once
+	databaseExecute("replace into users(userAgent, convoSum) values('"+userAgent+"','"+convoSum+"');")
+
 	# build the anwsers table
 
 	## if the database path does not exist
@@ -270,7 +287,8 @@ def readConvo(convoToken,depth=1):
 		if len(anwserData) < 1:
 			# return that the anwser does not exist
 			print("Anwser not found, language model is SILENT. This information is unavailbe or considered so dangerous nothing could be said. This should not ever happen. To resolve this problem language model science methods need to be applied to the model.")
-			return False
+			# return a empty list to parse
+			return list()
 		else:
 			anwserData = tempData
 		#print("Anwser data after clean : "+str(anwserData))
