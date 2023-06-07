@@ -67,10 +67,11 @@ function moreBookLinks($searchQuery){
 	echo "	<h2>📚 External Book Search</h2>";
 	echo "	<div class='listCard'>";
 	echo "		<a class='button' rel='noreferer' href='https://www.gutenberg.org/ebooks/search/?query=$searchQuery'>🔎 Project Gutenberg</a>";
+	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "		<a class='button' rel='noreferer' href='https://en.wikibooks.org/wiki/?search=$searchQuery'>🔎 Wiki Books</a>";
 	echo "		<a class='button' rel='noreferer' href='https://librivox.org/search?search_form=advanced&q=$searchQuery'>🔎 LibriVox</a>";
 	echo "		<a class='button' rel='noreferer' href='https://en.wikisource.org/w/index.php?search=$searchQuery'>🔎 Wikisource</a>";
-	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/texts?query=$searchQuery'>🔎 Internet Archive</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.newgrounds.com/search/conduct/art?terms=$searchQuery'>🔎 Newgrounds</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -105,8 +106,9 @@ function moreVideoLinks($searchQuery){
 	echo "		<a class='button' rel='noreferer' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
 	echo "		<a class='button' rel='noreferer' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
-	echo "		<a class='button' rel='noreferer' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
+	echo "		<a class='button' rel='noreferer' href='https://cozy.tv/$searchQuery'>🔎 Cozy.TV</a>";
 	echo "		<a class='button' rel='noreferer' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
 	echo "		<a class='button' rel='noreferer' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
 	echo "	</div>";
