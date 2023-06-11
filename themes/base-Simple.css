@@ -1804,6 +1804,10 @@ pre{
 	vertical-align: middle;
 	float: right;
 }
+.globalPulse{
+	width: 100%;
+	height: 0.5rem;
+}
 .gitRepoGraph{
 	border: solid var(--borderColor) 0.1rem;
 	border-radius: 0.2rem;

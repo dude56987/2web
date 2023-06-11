@@ -574,13 +574,19 @@ function update2web(){
 			\( -clone 0 -resize 128x128 \) \
 			-delete 0 -channel Alpha "$webDirectory/favicon.ico"
 	fi
-	# build the spinner
+	# build the pulse graphic
+	if ! test -f /var/cache/2web/pulse.gif;then
+		buildPulseGif
+	fi
+	# build the spinner GIF
 	if ! test -f /var/cache/2web/spinner.gif;then
 		buildSpinnerGif
 	fi
-	# link the spinner into the web directory
 	if ! test -f $webDirectory/spinner.gif;then
 		linkFile "/var/cache/2web/spinner.gif" "$webDirectory/spinner.gif"
+	fi
+	if ! test -f $webDirectory/pulse.gif;then
+		linkFile "/var/cache/2web/pulse.gif" "$webDirectory/pulse.gif"
 	fi
 
 	createDir /var/cache/2web/qrCodes/
@@ -886,10 +892,10 @@ function waitForIdleServer(){
 }
 ################################################################################
 function buildSpinnerGif(){
-	mkdir -p /tmp/2web/
+	mkdir -p /tmp/2web/spinner/
 	backgroundColor="transparent"
 	foregroundColor="white"
-	outputPathPrefix="/tmp/2web/frame"
+	outputPathPrefix="/tmp/2web/spinner/frame"
 	newSize="32x32"
 	# draw all the frames of the gif
 	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_08.gif"
@@ -912,6 +918,60 @@ function buildSpinnerGif(){
 		-page +0+0 "${outputPathPrefix}_07.gif" \
 		-page +0+0 "${outputPathPrefix}_08.gif" \
 		-loop 0 "/var/cache/2web/spinner.gif"
+}
+################################################################################
+function buildPulseGif(){
+	webDirectory=$1
+	mkdir -p /tmp/2web/pulse/
+	backgroundColor="transparent"
+	foregroundColor="white"
+	outputPathPrefix="/tmp/2web/pulse/frame"
+	newSize="100x10"
+
+	# pulse to right side
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_01.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_02.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_03.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 3,0' -scale $newSize "${outputPathPrefix}_04.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 4,0' -scale $newSize "${outputPathPrefix}_05.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 5,0' -scale $newSize "${outputPathPrefix}_06.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 6,0' -scale $newSize "${outputPathPrefix}_07.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 7,0' -scale $newSize "${outputPathPrefix}_08.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 8,0' -scale $newSize "${outputPathPrefix}_09.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 9,0' -scale $newSize "${outputPathPrefix}_10.gif"
+	# pulse back to start
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 8,0' -scale $newSize "${outputPathPrefix}_11.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 7,0' -scale $newSize "${outputPathPrefix}_12.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 6,0' -scale $newSize "${outputPathPrefix}_13.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 5,0' -scale $newSize "${outputPathPrefix}_14.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 4,0' -scale $newSize "${outputPathPrefix}_15.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 3,0' -scale $newSize "${outputPathPrefix}_16.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_17.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_18.gif"
+	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_19.gif"
+
+	# convert frames into transparent gif
+	convert -delay 16 -dispose Background \
+		-page +0+0 "${outputPathPrefix}_01.gif" \
+		-page +0+0 "${outputPathPrefix}_02.gif" \
+		-page +0+0 "${outputPathPrefix}_03.gif" \
+		-page +0+0 "${outputPathPrefix}_04.gif" \
+		-page +0+0 "${outputPathPrefix}_05.gif" \
+		-page +0+0 "${outputPathPrefix}_06.gif" \
+		-page +0+0 "${outputPathPrefix}_07.gif" \
+		-page +0+0 "${outputPathPrefix}_08.gif" \
+		-page +0+0 "${outputPathPrefix}_09.gif" \
+		-page +0+0 "${outputPathPrefix}_10.gif" \
+		-page +0+0 "${outputPathPrefix}_11.gif" \
+		-page +0+0 "${outputPathPrefix}_12.gif" \
+		-page +0+0 "${outputPathPrefix}_13.gif" \
+		-page +0+0 "${outputPathPrefix}_14.gif" \
+		-page +0+0 "${outputPathPrefix}_15.gif" \
+		-page +0+0 "${outputPathPrefix}_16.gif" \
+		-page +0+0 "${outputPathPrefix}_17.gif" \
+		-page +0+0 "${outputPathPrefix}_18.gif" \
+		-page +0+0 "${outputPathPrefix}_19.gif" \
+		-loop 0 "/var/cache/2web/pulse.gif"
 }
 ################################################################################
 function screenshot(){

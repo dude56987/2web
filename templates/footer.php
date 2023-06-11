@@ -292,5 +292,8 @@ echo "<style>";
 echo "	#spinner {";
 echo "		display: none;";
 echo "	}";
+echo "	.globalPulse{";
+echo "		display: none;";
+echo "	}";
 echo "</style>";
 ?>

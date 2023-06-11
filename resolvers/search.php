@@ -613,7 +613,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "<div class='settingListCard'>\n";
 	echo "<h1>";
 	echo "Searching  for '$searchQuery'";
-	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "<img class='globalPulse' src='/pulse.gif'>";
 	echo "</h1>\n";
 	if (stripos($searchQuery,"http://") || stripos($searchQuery,"https://")){
 		echo "<div class='titleCard'>";
