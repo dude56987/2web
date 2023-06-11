@@ -57,7 +57,9 @@ if (array_key_exists("inputPrompt",$_POST)){
 	# - This must be seprate in order to allow searching database based on indivual user access
 	# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
 	$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
-	$tempUserAgent .= $_SERVER["REMOTE_ADDR"];
+	if (array_key_exists("REMOTE_USER",$_SERVER)){
+		$tempUserAgent .= $_SERVER["REMOTE_USER"];
+	}
 	$tempUserAgent = md5($tempUserAgent);
 	$command .=	'--user-agent '.$tempUserAgent.' ';
 	$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\"" ';
@@ -92,7 +94,7 @@ if (array_key_exists("inputPrompt",$_POST)){
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 	<?php # Disable scaling of page elements ?>
-	<meta meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" >
+	<meta meta name="viewport" content="width=device-width, initial-scale=0.4, maximum-scale=0.4, user-scalable=no" >
 </head>
 <body>
 <?php
@@ -147,11 +149,22 @@ if (file_exists($databasePath)){
 				#echo "<subject>";
 				echo "<h1>Question ".$row['convoSum']."</h1> ";
 				if (! array_key_exists("blockRefresh",$_GET)){
-					echo " <img src='/spinner.gif'> <a class='button' href='?blockRefresh".$_SERVER['QUERY_STRING']."'>⏹️ Stop Auto Page Refresh</a>";
+					echo " <img src='/spinner.gif'> <a class='button' href='?blockRefresh&".$_SERVER['QUERY_STRING']."'>⏹️ Stop Auto Page Refresh</a>";
+					$executionTime = $_SERVER['REQUEST_TIME_FLOAT'] - ($row['renderTime']) ;
+					$executionMinutes = floor($executionTime / 60);
+					$executionSeconds = floor($executionTime - floor($executionMinutes * 60));
+					# check for numbers less than 10
+					if ($executionMinutes < 10){
+						$executionMinutes = "0$executionMinutes" ;
+					}
+					if ($executionSeconds < 10){
+						$executionSeconds = "0$executionSeconds" ;
+					}
+					# list the time elapsed so far
+					echo "<div class='elapsedTime'>ElapsedTime $executionMinutes:$executionSeconds</div>";
 				}else{
-					echo "<a class='button' href='?'>▶️  Auto Refresh Until Answered</a>";
+					echo "<a class='button' href='?loadConvo=".$_GET['loadConvo']."'>▶️  Auto Refresh Until Answered</a>";
 				}
-				echo "</h1>";
 				#echo "</subject>";
 				echo "<table>";
 				echo "<tr>";
@@ -202,7 +215,16 @@ if (file_exists($databasePath)){
 						echo ($anwserLine->role."\n");
 						echo "</td>";
 						echo "<td class='chatLine'>";
-						echo str_replace("\n","<br>",$anwserLine->content."\n");
+						if (array_key_exists("preformated",$_GET)){
+							echo "<pre class='aiPreformatedResponse'>";
+							echo $anwserLine->content;
+							echo "</pre>";
+						}else{
+							while (strpos($anwserLine->content,"\n\n\n")){
+								$anwserLine->content = str_replace("\n\n\n","\n\n",$anwserLine->content."\n");
+							}
+							echo str_replace("\n","<br>",$anwserLine->content."\n");
+						}
 						echo "</td>";
 						echo "</tr>";
 					}
@@ -242,7 +264,18 @@ if (file_exists($databasePath)){
 					echo ($anwserLine->role."\n");
 					echo "</td>";
 					echo "<td class='chatLine'>";
-					echo str_replace("\n","<br>",$anwserLine->content."\n");
+					if (array_key_exists("preformated",$_GET)){
+						echo "<pre class='aiPreformatedResponse'>";
+						echo $anwserLine->content;
+						echo "</pre>";
+					}else{
+						# remove all double spaces
+						while (strpos($anwserLine->content,"\n\n\n")){
+							$anwserLine->content = str_replace("\n\n\n","\n\n",$anwserLine->content."\n");
+						}
+						# convert single spaces into html newlines
+						echo str_replace("\n","<br>",$anwserLine->content."\n");
+					}
 					echo "</td>";
 					echo "</tr>";
 				}
@@ -320,7 +353,9 @@ if (file_exists($databasePath)){
 		$setOnce=True;
 
 		$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
-		$tempUserAgent .= $_SERVER["REMOTE_ADDR"];
+		if (array_key_exists("REMOTE_USER",$_SERVER)){
+			$tempUserAgent .= $_SERVER["REMOTE_USER"];
+		}
 		$tempUserAgent = md5($tempUserAgent);
 
 		#echo "<div class='titleCard'>";
@@ -429,21 +464,23 @@ if (file_exists($databasePath)){
 					echo "<th>Role</th>";
 					echo "<th>Message</th>";
 					echo "</tr>";
+					$messageData="";
 					foreach($data as $line){
-						# read each line of the conversation
-						echo "<tr>";
-						echo "<td>";
-						echo ($line->role."\n");
-						echo "</td>";
-						echo "<td class='chatLine'>";
-						#echo "<pre>";
-						echo str_replace("\n","<br>",$line->content."\n");
-						#echo "</pre>";
-						echo "</td>";
-						echo "</tr>";
-						# break loop for homepage preview
-						break;
+						if($line->role == "user"){
+							# read each line of the conversation
+							$messageData = "<tr>";
+							$messageData .= "<td>";
+							$messageData .= ($line->role."\n");
+							$messageData .= "</td>";
+							$messageData .= "<td class='chatLine'>";
+							#messageData .= "<pre>";
+							$messageData .= str_replace("\n","<br>",$line->content."\n");
+							$messageData .= "</pre>";
+							$messageData .= "</td>";
+							$messageData .= "</tr>";
+						}
 					}
+					echo $messageData;
 					echo "</table>";
 
 					echo "<div class=''>";
@@ -497,44 +534,46 @@ if (file_exists($databasePath)){
 						echo "</tr>";
 						$lengthOfData=count($data);
 						$dataCounter=0;
+						$tempConvoData = "";
 						foreach($data as $line){
 							$dataCounter+=1;
-							#echo "dump: ".var_dump($line)."<br>\n";
-							#echo "role: ".$line->role."<br>\n";
-							#echo "content: ".$line->content."<br>\n";
-							# read each line of the conversation
-							echo "<tr>";
-							echo "<td>";
-							echo ($line->role."\n");
-							echo "</td>";
-							echo "<td class='chatLine'>";
-							# get the last character of the line
-							$tempLineContent = substr($line->content,-1);
-							#echo "templine content = ".var_dump($tempLineContent)."<br>\n";
-							# if the end of the response is not puncuated
-							if ( $dataCounter == $lengthOfData){
-								if ( $line->role == "assistant" ){
-									if ( ! ( ($tempLineContent == ".") || ($tempLineContent == "!") || ($tempLineContent == "?") ) ){
-										# add a continue button
-										echo "<form class='aiContButton' method='post'>";
-										# store the json of the conversation as the input json
-										echo "<input class='hidden' name='convoSum' value='".$anwserRow['convoSum']."' type='text' readonly>";
-										# add the prompt to the log
-										echo "<textarea class='hidden' name='inputPrompt' readonly>Continue</textarea>";
-										echo "<input class='button' type='submit' value='Continue'>";
-										echo "</form>";
+							if($line->role == "user"){
+								#echo "dump: ".var_dump($line)."<br>\n";
+								#echo "role: ".$line->role."<br>\n";
+								#echo "content: ".$line->content."<br>\n";
+								# read each line of the conversation
+								$tempConvoData = "<tr>";
+								$tempConvoData .= "<td>";
+								$tempConvoData .= ($line->role."\n");
+								$tempConvoData .= "</td>";
+								$tempConvoData .= "<td class='chatLine'>";
+								# get the last character of the line
+								$tempLineContent = substr($line->content,-1);
+								#echo "templine content = ".var_dump($tempLineContent)."<br>\n";
+								# if the end of the response is not puncuated
+								if ( $dataCounter == $lengthOfData){
+									if ( $line->role == "assistant" ){
+										if ( ! ( ($tempLineContent == ".") || ($tempLineContent == "!") || ($tempLineContent == "?") ) ){
+											# add a continue button
+											$tempConvoData .= "<form class='aiContButton' method='post'>";
+											# store the json of the conversation as the input json
+											$tempConvoData .= "<input class='hidden' name='convoSum' value='".$anwserRow['convoSum']."' type='text' readonly>";
+											# add the prompt to the log
+											$tempConvoData .= "<textarea class='hidden' name='inputPrompt' readonly>Continue</textarea>";
+											$tempConvoData .= "<input class='button' type='submit' value='Continue'>";
+											$tempConvoData .= "</form>";
 
+										}
 									}
 								}
+								#echo "<pre>";
+								$tempConvoData .= str_replace("\n","<br>",$line->content."\n");
+								#echo "</pre>";
+								$tempConvoData .= "</td>";
+								$tempConvoData .= "</tr>";
 							}
-							#echo "<pre>";
-							echo str_replace("\n","<br>",$line->content."\n");
-							#echo "</pre>";
-							echo "</td>";
-							echo "</tr>";
-							# break loop for homepage preview
-							break;
 						}
+						echo $tempConvoData;
 						echo "</table>";
 
 						echo "<div class=''>";
