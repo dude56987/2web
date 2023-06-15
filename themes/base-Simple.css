@@ -1888,3 +1888,20 @@ details{
 .aiContButton input{
 	width: 95%;
 }
+.bottomButtonSpacer{
+	width: 4rem;
+	height: 1rem;
+	visibility: hidden;
+	float: right;
+}
+.bottomButton{
+	white-space: nowrap;
+}
+.singleStat{
+	display: inline-block;
+	border: 1px var(--borderColor) solid;
+	background-color: var(--glassBackground);
+	white-space: nowrap;
+	margin: 0.1rem;
+	padding: 0.2rem;
+}

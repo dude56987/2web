@@ -18,164 +18,66 @@
 ########################################################################
 ?>
 <?PHP
-# write totals for header building
-if (file_exists("totalMovies.index")){
-	$totalMovies = file_get_contents("totalMovies.index");
-}else{
-	$totalMovies = 0;
+function getStat($totalPath, $label){
+	if (file_exists($totalPath)){
+		$total = file_get_contents($totalPath);
+	}else{
+		$total= 0;
+	}
+	echo "		<span class='singleStat'>";
+	echo "			$label:$total";
+	echo "		</span>";
+
 }
-if (file_exists("totalShows.index")){
-	$totalShows = file_get_contents("totalShows.index");
-}else{
-	$totalShows = 0;
+# modules array
+$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ai2web","ytdl2nfo","epg2web");
+# check for active processes
+foreach($moduleNames as $moduleName){
+	if ( file_exists("$moduleName.active")){
+		echo "<span class='activeProcess'>";
+		echo " ⚙️: $moduleName";
+		echo "</span>";
+	}
 }
-if (file_exists("totalEpisodes.index")){
-	$totalEpisodes = file_get_contents("totalEpisodes.index");
-}else{
-	$totalEpisodes= 0;
-}
-if (file_exists("totalComics.index")){
-	$totalComics = file_get_contents("totalComics.index");
-}else{
-	$totalComics = 0;
-}
-if (file_exists("totalChannels.index")){
-	$totalChannels = file_get_contents("totalChannels.index");
-}else{
-	$totalChannels = 0;
-}
-if (file_exists("totalRadio.index")){
-	$totalRadio = file_get_contents("totalRadio.index");
-}else{
-	$totalRadio = 0;
-}
-if (file_exists("fortune.index")){
-	$todaysFortune = file_get_contents("fortune.index");
-}else{
-	$todaysFortune = 0;
-}
-if (file_exists("weather.index")){
-	$todaysWeather= file_get_contents("weather.index");
-}else{
-	$todaysWeather= 0;
-}
-if (file_exists("totalWeatherStations.index")){
-	$totalWeatherStations = file_get_contents("totalWeatherStations.index");
-}else{
-	$totalWeatherStations = 0;
-}
-if (file_exists("webSize.index")){
-	$webSize = file_get_contents("webSize.index");
-}else{
-	$webSize = 0;
-}
-if (file_exists("mediaSize.index")){
-	$mediaSize = file_get_contents("mediaSize.index");
-}else{
-	$mediaSize = 0;
-}
-if (file_exists("cacheSize.index")){
-	$cacheSize = file_get_contents("cacheSize.index");
-}else{
-	$cacheSize = 0;
-}
-if (file_exists("freeSpace.index")){
-	$freeSpace = file_get_contents("freeSpace.index");
-}else{
-	$freeSpace = 0;
-}
+# check last update time
 if (file_exists("lastUpdate.index")){
 	$lastUpdate = file_get_contents("lastUpdate.index");
 }else{
 	$lastUpdate = "Never";
 }
-
-if ( file_exists("nfo2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: nfo2web";
-	echo "</span>";
-}
-if ( file_exists("comic2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: comic2web";
-	echo "</span>";
-}
-if ( file_exists("iptv2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: iptv2web";
-	echo "</span>";
-}
-if ( file_exists("graph2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: graph2web";
-	echo "</span>";
-}
-if ( file_exists("music2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: music2web";
-	echo "</span>";
-}
-if ( file_exists("weather2web.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: weather2web";
-	echo "</span>";
-}
-if ( file_exists("ytdl2nfo.active")){
-	echo "<span class='activeProcess'>";
-	echo " ⚙️: ytdl2nfo";
-	echo "</span>";
-}
-
 echo "	<div>";
 echo "		Last updated on $lastUpdate";
 echo "	</div>";
 
+# build the stats section
 echo "	<div>";
-if ( $totalShows > 0 ){
-	echo "		<span>";
-	echo "			Episodes:$totalEpisodes";
-	echo "		</span>";
-	echo "		<span>";
-	echo "			Shows:$totalShows";
-	echo "		</span>";
+
+if (detectEnabledStatus("nfo2web")){
+	getStat("totalShows.index", "Shows");
+	getStat("totalMovies.index", "Movies");
+	getStat("totalEpisodes.index", "Episodes");
 }
-if ( $totalMovies > 0 ){
-	echo "		<span>";
-	echo "			Movies:$totalMovies";
-	echo "		</span>";
+if (detectEnabledStatus("comic2web")){
+	getStat("totalComics.index", "Books/Comics");
 }
-if ( $totalComics > 0 ){
-	echo "		<span>";
-	echo "			Comics:$totalComics";
-	echo "		</span>";
+if (detectEnabledStatus("git2web")){
+	getStat("totalRepos.index", "Repos");
 }
-if ( $totalChannels > 0 ){
-	echo "		<span>";
-	echo "			Channels:$totalChannels";
-	echo "		</span>";
+if (detectEnabledStatus("iptv2web")){
+	getStat("totalChannels.index", "TV Channels");
+	getStat("totalRadio.index", "Radio Channels");
 }
-if ( $totalRadio > 0 ){
-	echo "		<span>";
-	echo "			Radio:$totalRadio";
-	echo "		</span>";
+if (detectEnabledStatus("weather2web")){
+	getStat("totalWeather.index", "Weather Stations");
 }
-if ( $totalWeatherStations > 0 ){
-	echo "		<span>";
-	echo "			Weather Stations:$totalWeatherStations";
-	echo "		</span>";
+if (detectEnabledStatus("wiki2web")){
+	getStat("totalWiki.index", "Wikis");
 }
-echo "		<span>";
-echo "			Total Web:$webSize ";
-echo "		</span>";
-echo "		<span>";
-echo "			Video Cache:$cacheSize";
-echo "		</span>";
-echo "		<span>";
-echo "			Media:$mediaSize";
-echo "		</span>";
-echo "		<span>";
-echo "			Free:$freeSpace";
-echo "		</span>";
+getStat("webSize.index", "Total Web");
+getStat("cacheSize.index", "Video Cache");
+getStat("mediaSize.index", "Media");
+getStat("free.index", "Free");
+
 echo "	</div>";
 # check the status of the fortunes for drawing large or small widgets
 $fortuneEnabled = False;
@@ -188,31 +90,39 @@ if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
 		$weatherEnabled = True;
 	}
 }
-if ( file_exists("/etc/2web/fortuneStatus.cfg")){
-	echo "<a class='homeWeather' href='/fortune.php'>";
-	if ($weatherEnabled){
-		echo "<div class='inputCard'>";
-	}else{
-		echo "<div class='listCard'>";
-	}
-	echo "<h3>🔮 Fortune</h3>";
-	echo "<div class='fortuneText'>";
-	echo "$todaysFortune";
-	echo "</div>";
-	echo "</div>";
-	echo "</a>";
-}
-if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-	if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
-		echo "<a class='homeFortune' href='/weather/#".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
-		if ($fortuneEnabled){
+if (file_exists("fortune.index")){
+	$todaysFortune = file_get_contents("fortune.index");
+	if ( file_exists("/etc/2web/fortuneStatus.cfg")){
+		echo "<a class='homeWeather' href='/fortune.php'>";
+		if ($weatherEnabled){
 			echo "<div class='inputCard'>";
 		}else{
 			echo "<div class='listCard'>";
 		}
-		echo "$todaysWeather";
+		echo "<h3>🔮 Fortune</h3>";
+		echo "<div class='fortuneText'>";
+		echo "$todaysFortune";
+		echo "</div>";
 		echo "</div>";
 		echo "</a>";
+	}
+}
+
+
+if (file_exists("weather.index")){
+	$todaysWeather= file_get_contents("weather.index");
+	if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
+		if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
+			echo "<a class='homeFortune' href='/weather/#".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
+			if ($fortuneEnabled){
+				echo "<div class='inputCard'>";
+			}else{
+				echo "<div class='listCard'>";
+			}
+			echo "$todaysWeather";
+			echo "</div>";
+			echo "</a>";
+		}
 	}
 }
 ?>

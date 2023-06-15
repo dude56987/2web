@@ -114,31 +114,35 @@ function buildHomePage(){
 	echo "$(date)" > "$webDirectory/lastUpdate.index"
 	# set the timeout
 	timeout=60000
+	databasePath="$(webRoot)/data.db"
 	if test -d "$webDirectory/comics/";then
 		if cacheCheck "$webDirectory/totalComics.index" "1";then
-			#totalComics=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _comics;")
-			# figure out the stats
-			totalComics=$(cat "$webDirectory/comics/comics.index" | wc -l )
-			# write the stats
+			# get the count stats from SQL database
+			totalComics=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_comics\";")
 			echo "$totalComics" > "$webDirectory/totalComics.index"
 		fi
 	fi
 	if test -d "$webDirectory/shows/";then
-		if cacheCheck "$webDirectory/totalEpisodes.index" "7";then
-			#totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _episodes;")
-			totalEpisodes=$(find "$webDirectory"/shows/*/*/ -name '*.nfo' | wc -l)
+		if cacheCheck "$webDirectory/totalEpisodes.index" "1";then
+			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_episodes\";")
 			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
 		fi
 		if cacheCheck "$webDirectory/totalShows.index" "1";then
-			#totalShows=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _shows;")
-			totalShows=$(cat "$webDirectory/shows/shows.index" | wc -l )
+			totalShows=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_shows\";")
 			echo "$totalShows" > "$webDirectory/totalShows.index"
 		fi
 	fi
 	if cacheCheck "$webDirectory/totalMovies.index" "1";then
-		#totalMovies=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in _movies;")
-		totalMovies=$(cat "$webDirectory/movies/movies.index" | wc -l )
+		totalMovies=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_movies\";")
 		echo "$totalMovies" > "$webDirectory/totalMovies.index"
+	fi
+	if cacheCheck "$webDirectory/totalWikis.index" "1";then
+		totalWikis=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_wikis\";")
+		echo "$totalWikis" > "$webDirectory/totalWikis.index"
+	fi
+	if cacheCheck "$webDirectory/totalRepos.index" "1";then
+		totalRepos=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_repos\";")
+		echo "$totalRepos" > "$webDirectory/totalRepos.index"
 	fi
 	if test -f "$webDirectory/live/channels.m3u";then
 		if cacheCheck "$webDirectory/totalChannels.index" "7";then
@@ -150,7 +154,8 @@ function buildHomePage(){
 			echo "$totalRadio" > "$webDirectory/totalRadio.index"
 		fi
 	fi
-	if cacheCheck "$webDirectory/webSize.index" "7";then
+	# Run filesystem size checks for stats
+	if cacheCheck "$webDirectory/webSize.index" "1";then
 		# count website size in total ignoring symlinks
 		webSize=$(du -shP "$webDirectory" | cut -f1)
 		echo "$webSize" > "$webDirectory/webSize.index"
@@ -160,12 +165,12 @@ function buildHomePage(){
 		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
 		echo "$cacheSize" > "$webDirectory/cacheSize.index"
 	fi
-	if cacheCheck "$webDirectory/mediaSize.index" "7";then
+	if cacheCheck "$webDirectory/mediaSize.index" "1";then
 		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
 		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
 		echo "$mediaSize" > "$webDirectory/mediaSize.index"
 	fi
-	if cacheCheck "$webDirectory/freeSpace.index" "7";then
+	if cacheCheck "$webDirectory/freeSpace.index" "1";then
 		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		echo "$freeSpace" > "$webDirectory/freeSpace.index"
