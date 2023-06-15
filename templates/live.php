@@ -41,7 +41,7 @@ drawPosterWidget("channels",False);
 <div class='titleCard'>
 <h1>
 	Groups
-	<img id='spinner' src='/spinner.gif' />
+	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <div class='listCard'>
 	<a id='all' class='button tag' href='/live/#all'>
@@ -94,7 +94,7 @@ if (array_key_exists("filter",$_GET)){
 	# draw the header to identify the filter applied
 	echo "<h2>";
 	echo "$displayName";
-	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "<img class='globalPulse' src='/pulse.gif' />";
 	echo "</h2>";
 
 	$result = $databaseObj->query('select * from "_'.$filterType.'";');
@@ -116,7 +116,7 @@ if (array_key_exists("filter",$_GET)){
 	# draw the header to identify the filter applied
 	echo "<h2>";
 	echo "All Channels";
-	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "<img class='globalPulse' src='/pulse.gif' />";
 	echo "</h2>";
 
 	// get a list of all the genetrated index links for the page
@@ -142,7 +142,7 @@ if (array_key_exists("filter",$_GET)){
 	# draw the header to identify the filter applied
 	echo "<h2>";
 	echo "All Found Channels";
-	echo "<img id='spinner' src='/spinner.gif' />";
+	echo "<img class='globalPulse' src='/pulse.gif' />";
 	echo "</h2>";
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/live/index/channel_*.index | sort"));

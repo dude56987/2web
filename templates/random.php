@@ -32,7 +32,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='titleCard'>
 	<h2>
 		Playlists
-		<img id='spinner' src='/spinner.gif' />
 	</h2>
 	<div class='listCard'>
 		<?PHP
@@ -49,6 +48,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 			🔀 RANDOM
 		</a>
 	</div>
+	<img class='globalPulse' src='/pulse.gif'>
 </div>
 
 <div class='titleCard'>
@@ -81,9 +81,7 @@ SQLdrawPlaylistButton($filterType,"repos","💾 Repos");
 </div>
 </div>
 
-
 <div class='settingListCard'>
-<img class='globalPulse' src='/pulse.gif'>
 <?php
 flush();
 ob_flush();
@@ -146,11 +144,6 @@ if ($writeFile){
 <?php
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-echo "<style>";
-echo "	#spinner {";
-echo "		display: none;";
-echo "	}";
-echo "</style>";
 ?>
 </body>
 </html>
