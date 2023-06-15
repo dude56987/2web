@@ -21,7 +21,6 @@
 <?php
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
-
 # get the name of the script this script is included in
 #$scriptName = str_replace("/","(#)",explode(".",$_SERVER['SCRIPT_NAME'])[0]);
 $scriptName = $_SERVER['SCRIPT_NAME'];
@@ -96,6 +95,7 @@ echo "<span class='executionTime'>";
 echo round((microtime(True) - $startTime), 4);
 echo "</span>";
 echo "</div>";
+echo "<hr>";
 # figure out the header data template
 $cacheFile=$webDirectory."/web_cache/footerData.index";
 # if file is older than 1 hours
@@ -156,8 +156,11 @@ if ($writeFile){
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	$fileData = "";
 
+	# add the spacer to prevent links being under the back to top button
+	$fileData .= "<div class='bottomButtonSpacer'></div>";
+
 	# build the header
-	$fileData .= "<a class='' href='/index.php'>";
+	$fileData .= "<a class='footerButton' href='/index.php'>";
 	$fileData .= "🏠";
 	$fileData .= "<span class='footerText'>";
 	#$fileData .= " HOME";
@@ -166,7 +169,7 @@ if ($writeFile){
 	$fileData .= "</a> ";
 
 	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
-		$fileData .= "<a class='' href='/new/'>";
+		$fileData .= "<a class='footerButton' href='/new/'>";
 		$fileData .= "📃";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " PLAYLISTS";
@@ -175,7 +178,7 @@ if ($writeFile){
 	}
 
 	if ($moviesFound){
-		$fileData .= "<a class='' href='/movies'>";
+		$fileData .= "<a class='footerButton' href='/movies'>";
 		$fileData .= "🎥";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " MOVIES";
@@ -183,7 +186,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if ($showsFound){
-		$fileData .= "<a class='' href='/shows'>";
+		$fileData .= "<a class='footerButton' href='/shows'>";
 		$fileData .= "📺";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " SHOWS";
@@ -191,7 +194,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if ($musicFound){
-		$fileData .= "<a class='' href='/music'>";
+		$fileData .= "<a class='footerButton' href='/music'>";
 		$fileData .= "🎧";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " MUSIC";
@@ -199,7 +202,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if ($comicsFound){
-		$fileData .= "<a class='' href='/comics'>";
+		$fileData .= "<a class='footerButton' href='/comics'>";
 		$fileData .= "📚";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " COMICS";
@@ -207,7 +210,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if ($channelsFound){
-		$fileData .= "<a class='' href='/live'>";
+		$fileData .= "<a class='footerButton' href='/live'>";
 		$fileData .= "📡";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " LIVE";
@@ -215,7 +218,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if (file_exists("$webDirectory/wiki/")){
-		$fileData .= "<a class='' href='/wiki/'>";
+		$fileData .= "<a class='footerButton' href='/wiki/'>";
 		$fileData .= "⛵";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " WIKI";
@@ -226,7 +229,7 @@ if ($writeFile){
 	if (file_exists("$webDirectory/weather/index.php")){
 		if (file_exists("$webDirectory/totalWeatherStations.index")){
 			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-				$fileData .= "<a class='' href='/weather/'>";
+				$fileData .= "<a class='footerButton' href='/weather/'>";
 				$fileData .= "🌤️";
 				$fileData .= "<span class='footerText'>";
 				$fileData .= " WEATHER";
@@ -236,7 +239,7 @@ if ($writeFile){
 		}
 	}
 	if ($graphsFound){
-		$fileData .= "<a class='' href='/graphs/'>";
+		$fileData .= "<a class='footerButton' href='/graphs/'>";
 		$fileData .= "📊";
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " GRAPHS";
@@ -244,7 +247,7 @@ if ($writeFile){
 		$fileData .= "</a> ";
 	}
 	if ($reposFound){
-		$fileData .= formatText("<a class='' href='/repos/'>",2);
+		$fileData .= formatText("<a class='footerButton' href='/repos/'>",2);
 		$fileData .= formatText("💾",3);
 		$fileData .= formatText("<span class='footerText'>",3);
 		$fileData .= formatText("REPOS",4);
@@ -260,14 +263,14 @@ if ($writeFile){
 	#$fileData .= "</a> ";
 
 	// draw the help button
-	$fileData .= "<a class='' href='/help.php'>";
+	$fileData .= "<a class='footerButton' href='/help.php'>";
 	$fileData .= "❔";
 	$fileData .= "<span class='footerText'>";
 	$fileData .= " HELP";
 	$fileData .= "</span>";
 	$fileData .= "</a> ";
 
-	$fileData .= "<a class='' href='/support.php'>";
+	$fileData .= "<a class='footerButton' href='/support.php'>";
 	$fileData .= "🫀";
 	$fileData .= "<span class='footerText'>";
 	$fileData .= " SUPPORT";
@@ -290,10 +293,10 @@ echo file_get_contents($cacheFile);
 // remove the spinners after the footer is loaded
 echo "<style>";
 echo "	#spinner {";
-echo "		display: none;";
+echo "		visibility: hidden;";
 echo "	}";
 echo "	.globalPulse{";
-echo "		display: none;";
+echo "		visibility: hidden;";
 echo "	}";
 echo "</style>";
 ?>

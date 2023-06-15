@@ -140,7 +140,6 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
-
 	if ($channelsFound){
 		$fileData .= formatText("<a class='button' href='/live'>",2);
 		$fileData .= formatText("📡",3);
@@ -154,6 +153,30 @@ if ($writeFile){
 		$fileData .= formatText("⛵",3);
 		$fileData .= formatText("<span class='headerText'>",3);
 		$fileData .= formatText("WIKI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+	if ($reposFound){
+		$fileData .= formatText("<a class='button' href='/repos/'>",2);
+		$fileData .= formatText("💾",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("REPOS",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+	if (file_exists("$webDirectory/ai/")){
+		$fileData .= formatText("<a class='button' href='/ai/'>",2);
+		$fileData .= formatText("🧠",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("AI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+	if ($graphsFound){
+		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
+		$fileData .= formatText("📊",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("GRAPHS",4);
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
@@ -171,40 +194,7 @@ if ($writeFile){
 			}
 		}
 	}
-	if ($graphsFound){
-		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
-		$fileData .= formatText("📊",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("GRAPHS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($reposFound){
-		$fileData .= formatText("<a class='button' href='/repos/'>",2);
-		$fileData .= formatText("💾",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("REPOS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (file_exists("$webDirectory/ai/")){
-		$fileData .= formatText("<a class='button' href='/ai/'>",2);
-		#$fileData .= formatText("🦾",3);
-		#$fileData .= formatText("🤖",3);
-		$fileData .= formatText("🧠",3);
-		#$fileData .= formatText("🧞",3);
-		#$fileData .= formatText("👹",3);
-		#$fileData .= formatText("👾",3);
-		#$fileData .= formatText("👿",3);
-		#$fileData .= formatText("🫥",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("AI",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-
-	# close the listcard block
-	#echo "</div>";
+	# write all data in buffer
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
