@@ -149,7 +149,8 @@ if (file_exists($databasePath)){
 				#echo "<subject>";
 				echo "<h1>Question ".$row['convoSum']."</h1> ";
 				if (! array_key_exists("blockRefresh",$_GET)){
-					echo " <img src='/spinner.gif'> <a class='button' href='?blockRefresh&".$_SERVER['QUERY_STRING']."'>⏹️ Stop Auto Page Refresh</a>";
+					echo "<img class='localPulse' src='/pulse.gif'>";
+					echo "<a class='button' href='?blockRefresh&".$_SERVER['QUERY_STRING']."'>⏹️ Stop Auto Page Refresh</a>";
 					$executionTime = $_SERVER['REQUEST_TIME_FLOAT'] - ($row['renderTime']) ;
 					$executionMinutes = floor($executionTime / 60);
 					$executionSeconds = floor($executionTime - floor($executionMinutes * 60));
@@ -341,7 +342,7 @@ if (file_exists($databasePath)){
 		echo "<div>";
 		if (array_key_exists("autoRefresh",$_GET)){
 			echo "<hr>";
-			echo " <img src='/spinner.gif'> <a class='button' href='?'>⏹️ Disable Auto Refresh</a>";
+			echo " <img class='globalPulse' src='/pulse.gif'> <a class='button' href='?'>⏹️ Disable Auto Refresh</a>";
 			echo "<hr>";
 		}else{
 			echo "<hr>";
