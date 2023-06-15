@@ -196,12 +196,33 @@ function drawLint(){
 	echo "</div>\n";
 }
 ################################################################################
+if (file_exists("repoHistory.webm")){
+	echo "<html class='seriesBackground'>";
+}else{
+	echo "<html class='randomFanart'>";
+}
 ?>
-<html class='randomFanart'>
 <head>
 	<script src='/2web.js'></script>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+
+	<style>
+	<?PHP
+	if (file_exists("repoHistory.webm")){
+		$data=getcwd();
+		$data=explode('/',$data);
+		$repo=array_pop($data);
+
+		# set the background
+		echo ":root{";
+		echo "--backgroundPoster: url(\"/repos/$repo/repoHistory.png\");";
+		echo "--backgroundFanart: url(\"/repos/$repo/repoHistory.png\");";
+		echo"}";
+	}
+	?>
+	</style>
+
 </head>
 <body>
 <?php

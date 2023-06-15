@@ -17,11 +17,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 -->
-<html id='top' class='randomFanart'>
+<?PHP
+if (file_exists("allHistory.webm")){
+	echo "<html class='seriesBackground'>";
+}else{
+	echo "<html class='randomFanart'>";
+}
+?>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2web.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+
+	<style>
+	<?PHP
+	if (file_exists("allHistory.webm")){
+		# set the background
+		echo ":root{";
+		echo "--backgroundPoster: url(\"/repos/allHistory.png\");";
+		echo "--backgroundFanart: url(\"/repos/allHistory.png\");";
+		echo"}";
+	}
+	?>
+	</style>
 </head>
 <body>
 <?php
