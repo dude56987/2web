@@ -40,7 +40,7 @@ include("/usr/share/2web/2webLib.php");
 		<li>Enable/Disable Modules
 			<ul>
 <?PHP
-$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web","git2web");
+$modules=Array("nfo2web","ytdl2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web","git2web","ai2web");
 foreach($modules as $module){
 	echo "				<li><a href='#".$module."Status'>$module</a></li>";
 }
@@ -133,8 +133,12 @@ foreach($modules as $module){
 		echo "				<li>";
 		echo "					Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.";
 		echo "				</li>";
+	}elseif ($module == "ai2web"){
 		echo "				<li>";
-		echo "					";
+		echo "					Will enable machine learning for recommending videos.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Will enable gpt4all web interface for prompting.";
 		echo "				</li>";
 	}
 	# check the module status for drawing enabled or disabled onscreen

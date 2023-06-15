@@ -589,6 +589,11 @@ if (array_key_exists("newUserName",$_POST)){
 	setModStatus("git2web",$status);
 	echo "<hr><a class='button' href='/settings/modules.php#git2webStatus'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("ai2webStatus",$_POST)){
+	$status=$_POST['ai2webStatus'];
+	setModStatus("ai2web",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#ai2webStatus'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	$link=$_POST['addComicDownloadLink'];
 	outputLog("Running addComicDownloadLink on link ".$link);
