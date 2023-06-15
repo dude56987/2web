@@ -17,11 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-
+@font-face{
+	font-family: font2web;
+	src: url("/fonts/OpenDyslexic-Regular.otf");
+}
 button{
-	font-family: OpenDyslexic;
+	font-family: font2web;
 }
 html{
-	font-family: OpenDyslexic;
+	font-family: font2web;
 	font-size: 14px;
 }

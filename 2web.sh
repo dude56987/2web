@@ -700,6 +700,11 @@ function update2web(){
 	theme=$(cat "/etc/2web/theme.cfg")
 	# link the theme and overwrite if another theme is chosen
 	ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
+	# create font directory
+	createDir "$webDirectory/fonts/"
+	# link the fonts
+	linkFile "/usr/share/fonts/truetype/hermit/Hermit-medium.otf" "$webDirectory/fonts/"
+	linkFile "/usr/share/fonts/opentype/opendyslexic/OpenDyslexic-Regular.otf" "$webDirectory/fonts/"
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
 }
