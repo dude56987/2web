@@ -382,6 +382,7 @@ function buildActivityGraph(){
 }
 ########################################################################
 function update2web(){
+	lockProc "2web"
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(webRoot)"
@@ -1015,6 +1016,7 @@ main(){
 		returnModStatus "wiki2web"
 		returnModStatus "weather2web"
 		returnModStatus "ytdl2nfo"
+		returnModStatus "ai2web"
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
 		# wait for all background services to stop
@@ -1052,6 +1054,7 @@ main(){
 		rm -v $webDirectory/kodi2web.active
 		rm -v $webDirectory/ytdl2nfo.active
 		rm -v $webDirectory/git2web.active
+		rm -v $webDirectory/ai2web.active
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		ALERT "================================================================================"
 		ALERT "PARALLEL MODE"
@@ -1072,28 +1075,38 @@ main(){
 		/usr/bin/weather2web &
 		waitQueue 1 "$totalCPUS"
 		# update the metadata and build webpages for all generators
+		###########################################################################
 		ALERT "Launching nfo2web..."
 		/usr/bin/nfo2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
 		ALERT "Launching graph2web..."
 		/usr/bin/graph2web &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
 		ALERT "Launching iptv2web..."
 		/usr/bin/iptv2web &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
 		ALERT "Launching comic2web..."
 		/usr/bin/comic2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
 		ALERT "Launching music2web..."
 		/usr/bin/music2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
 		ALERT "Launching wiki2web..."
 		/usr/bin/wiki2web --parallel &
 		waitQueue 1 "$totalCPUS"
-		blockQueue 1
+		###########################################################################
 		ALERT "Launching git2web..."
 		/usr/bin/git2web --parallel &
 		waitQueue 1 "$totalCPUS"
+		###########################################################################
+		ALERT "Launching ai2web..."
+		/usr/bin/ai2web --parallel &
+		blockQueue 1
 		# wait for all background services to stop
 		waitForIdleServer "$webDirectory"
 		ALERT "Finished Parallel Processing..."
@@ -1135,6 +1148,10 @@ main(){
 		update2web
 		/usr/bin/wiki2web
 		rebootCheck
+	elif [ "$1" == "-A" ] || [ "$1" == "--ai" ] || [ "$1" == "ai" ];then
+		update2web
+		/usr/bin/ai2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2web
@@ -1146,6 +1163,7 @@ main(){
 		/usr/bin/music2web
 		/usr/bin/wiki2web
 		/usr/bin/graph2web
+		/usr/bin/ai2web
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# - upgrade streamlink and yt-dlp and gallery-dl pip packages
@@ -1162,6 +1180,7 @@ main(){
 		iptv2web --upgrade
 		comic2web --upgrade
 		git2web --upgrade
+		ai2web --upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web nuke
@@ -1172,6 +1191,8 @@ main(){
 		/usr/bin/wiki2web nuke
 		/usr/bin/weather2web nuke
 		/usr/bin/graph2web nuke
+		/usr/bin/git2web nuke
+		/usr/bin/ai2web nuke
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
 		# remove all website content and disable the website
 		rm -rv /var/cache/2web/web/*
@@ -1181,6 +1202,8 @@ main(){
 		if returnModStatus "graph2web";then
 			buildFakeActivityGraph
 			buildActivityGraph
+		else
+			echo "[ERROR]: graph2web is disabled so no fake graph was generated."
 		fi
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
@@ -1233,8 +1256,11 @@ main(){
 		screenshot "http://localhost/wiki/" "03_index_wiki.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		# music2web index
-		# need example of a music artist and a album, and a track playing
+		# - need example of a music artist and a album, and a track playing
 		screenshot "http://localhost/music/" "05_index_music.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# ai index
+		screenshot "http://localhost/ai/" "03_index_ai.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# search
@@ -1246,6 +1272,8 @@ main(){
 		screenshot "http://localhost/search.php?q=cpu" "06_search_cpu.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "http://localhost/search.php?q=2web" "06_search_2web.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/search.php?q=awesome" "06_search_awesome.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# git2web index
@@ -1322,11 +1350,6 @@ main(){
 		echo "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
 		if test -d "$webDirectory/RESOLVER-CACHE/";then
 			find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
-		fi
-		echo "Checking for cache files in $webDirectory/log/"
-		if test -d "$webDirectory/log/";then
-			#find "$webDirectory/log/" -type d -mtime +"$cacheDelay" -name '*.log' -exec rm -rv {} \;
-			find "$webDirectory/log/" -type f -mtime +1 -name '*.log' -exec rm -rv {} \;
 		fi
 		echo "Checking for cache files in $webDirectory/M3U-CACHE/"
 		# delete the m3u cache
