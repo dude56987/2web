@@ -133,9 +133,9 @@ function update(){
 				mainPageName=$(zimdump info "$zimFilePath" | grep "main page:" | cut -d':' -f2 | tr -s ' ' | sed "s/^ //g")
 				echo "$mainPageName" > "$webDirectory/wiki/$wikiSum/M/MainPage"
 
-				set +x
-
+				# add to indexes
 				addToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/wiki/wikis.index"
+				SQLaddToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/data.db" "wiki"
 
 				if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
 					convert "$webDirectory/wiki/$wikiSum/-/favicon" -adaptive-resize 128x128 "$webDirectory/wiki/$wikiSum/thumb.png"
