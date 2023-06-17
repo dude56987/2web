@@ -114,88 +114,88 @@ function update(){
 	createDir "$webDirectory/comics/"
 	# create web and cache directories
 	createDir "$webDirectory/comicCache/"
-	# remove mark files older than 40 days, this will cause the comic to be updated
-	find "$webDirectory/comicCache/" -type f -name "download_*.index" -mtime +40 -delete
-	# update webcomics every 7 days, download is limited to 50 pages every 7 days
-	find "$webDirectory/comicCache/" -type f -name "webDownload_*.index" -mtime +7 -delete
-	# clean the cache of old files
-	# scan the sources
-	ALERT "Comic Download Sources: $comicSources"
-	#for comicSource in $comicSources;do
-	echo "$comicSources" | while read comicSource;do
-		# generate a sum for the source
-		comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
-		# do not process the comic if it is still in the cache
-		# - Cache removes files older than x days
-		if ! test -f "$webDirectory/comicCache/download_$comicSum.index";then
-			# if the comic is not cached it should be downloaded
-			# - gallery-dl with json output will download into the $downloadDirectory/
-			# - niceload --net will sleep a process when the network is overloaded
-			#sem --bg --retries 2 --no-notice --ungroup --jobs 1 --id downloadQueue "echo 'Processing...';sleep 15;gallery-dl --write-metadata --dest '$downloadDirectory' '$comicSource'"
-			#--exec 'convert {} {}.png && rm {}'
-			#/usr/local/bin/gallery-dl --write-metadata --exec 'convert {} {}.jpg && rm {}' --dest "$downloadDirectory" "$comicSource"
-			#/usr/local/bin/gallery-dl --write-metadata --exec 'convert {} {}.jpg' --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
-			/usr/local/bin/gallery-dl --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
-			#/usr/local/bin/gallery-dl --write-metadata --exec '/usr/bin/comic2web convert {}' --dest "$downloadDirectory" "$comicSource"
-			# download unfinished chapters
-			#/usr/local/bin/gallery-dl --chapter-range "$downloadChapters" --write-metadata --dest "$downloadDirectory" "$comicSource"
-			# after download mark the download to have been successfully cached
-			#touch "$webDirectory/comicCache/download_$comicSum.index"
-		fi
-	done
 	# check for parallel processing and count the cpus
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
 	fi
-	echo "$webComicSources" | while read comicSource;do
-		# generate a sum for the source
-		comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
-		# do not process the comic if it is still in the cache
-		# - Cache removes files older than x days
-		if ! test -f "$webDirectory/comicCache/webDownload_$comicSum.index";then
-			# if the comic is not cached it should be downloaded
-			if echo "$comicSource" | grep "/";then
-				totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
-				# set the number of strips to download to be the current number + 50
-				numStrips=$(( $totalPages + 50 ))
-
-				/usr/local/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
-				# cleanup downloaded .txt files
-				rm -v "${downloadDirectory}$comicSource"/*.txt
-				find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
-					newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
-					# convert each png file to a jpg file
-					convert "$imageToConvert" "$newImagePath"
-				done
-				find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
-					newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
-					# convert each png file to a jpg file
-					convert "$imageToConvert" "$newImagePath"
-				done
-			else
-				totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
-				# set the number of strips to download to be the current number + 50
-				numStrips=$(( $totalPages + 50 ))
-
-				/usr/local/bin/dosage --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
-				# cleanup downloaded .txt files
-				rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
-				find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
-					newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
-					# convert each png file to a jpg file
-					convert "$imageToConvert" "$newImagePath"
-				done
-				find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
-					newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
-					# convert each png file to a jpg file
-					convert "$imageToConvert" "$newImagePath"
-				done
+	################################################################################
+	################################################################################
+	# DOWNLOAD SECTION
+	################################################################################
+	################################################################################
+	if yesNoCfgCheck /etc/2web/comics/downloadNew.cfg "yes";then
+		# remove mark files older than 40 days, this will cause the comic to be updated once every 40 days
+		find "$webDirectory/comicCache/" -type f -name "download_*.index" -mtime +40 -delete
+		# update webcomics every 7 days, download is limited to 50 pages every 7 days
+		find "$webDirectory/comicCache/" -type f -name "webDownload_*.index" -mtime +7 -delete
+		# clean the cache of old files
+		# scan the sources
+		ALERT "Comic Download Sources: $comicSources"
+		#for comicSource in $comicSources;do
+		echo "$comicSources" | while read comicSource;do
+			# generate a sum for the source
+			comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
+			# do not process the comic if it is still in the cache
+			# - Cache removes files older than x days
+			if ! test -f "$webDirectory/comicCache/download_$comicSum.index";then
+				# if the comic is not cached it should be downloaded
+				/usr/local/bin/gallery-dl --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
 			fi
-		fi
-	done
+		done
+		echo "$webComicSources" | while read comicSource;do
+			# generate a sum for the source
+			comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
+			# do not process the comic if it is still in the cache
+			# - Cache removes files older than x days
+			if ! test -f "$webDirectory/comicCache/webDownload_$comicSum.index";then
+				# if the comic is not cached it should be downloaded
+				if echo "$comicSource" | grep "/";then
+					totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
+					# set the number of strips to download to be the current number + 50
+					numStrips=$(( $totalPages + 50 ))
 
+					/usr/local/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
+					# cleanup downloaded .txt files
+					rm -v "${downloadDirectory}$comicSource"/*.txt
+					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
+						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
+						# convert each png file to a jpg file
+						convert "$imageToConvert" "$newImagePath"
+					done
+					find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
+						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
+						# convert each png file to a jpg file
+						convert "$imageToConvert" "$newImagePath"
+					done
+				else
+					totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
+					# set the number of strips to download to be the current number + 50
+					numStrips=$(( $totalPages + 50 ))
+
+					/usr/local/bin/dosage --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
+					# cleanup downloaded .txt files
+					rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
+					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
+						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
+						# convert each png file to a jpg file
+						convert "$imageToConvert" "$newImagePath"
+					done
+					find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
+						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
+						# convert each png file to a jpg file
+						convert "$imageToConvert" "$newImagePath"
+					done
+				fi
+			fi
+		done
+	fi
+	################################################################################
+	################################################################################
+	# CONVERSION SECTION
+	################################################################################
+	################################################################################
 	# check for txt files and convert them into comics
 	comicLibaries="$(libaryPaths | tr -s '\n' | shuf )"
 	# first convert epub files to pdf files
@@ -910,8 +910,10 @@ renderPage(){
 
 		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
 
-		SQLaddToIndex "$webDirectory/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "poster_comics"
-		SQLaddToIndex "$webDirectory/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "poster_all"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "comics_poster"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "comics_fanart"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "poster_all"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "fanart_all"
 
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
