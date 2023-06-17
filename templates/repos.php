@@ -52,22 +52,24 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
 <?php
-# add the updated repos below the header
-drawPosterWidget("repos",False,True);
 ################################################################################
 if (file_exists("allHistory.webm")){
-	echo "<div class='titleCard'>";
-	echo "	<h1>All Repo Overview</h1>";
-	echo "	<video controls poster='allHistory.png'>\n";
-	echo "		<source src='allHistory.webm' type='video/webm'>\n";
-	echo "	</video>\n";
-	echo "</div>";
+	if (file_exists("allHistory.png")){
+		echo "<div class='titleCard'>";
+		echo "	<h1>Combined Overview</h1>";
+		echo "	<video controls poster='allHistory.png'>\n";
+		echo "		<source src='allHistory.webm' type='video/webm'>\n";
+		echo "	</video>\n";
+		echo "</div>";
+	}
 }
+# add the updated repos below the header
+drawPosterWidget("repos",False,True);
 ?>
 <div class='settingListCard'>
 <h1>
-	Repos
-	<img id='spinner' src='/spinner.gif' />
+	All Repos
+	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <?php
 flush();
