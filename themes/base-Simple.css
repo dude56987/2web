@@ -429,9 +429,34 @@ ol{
 .randomFanart{
 	background: url("/randomFanart.php");
 	background-size: 100vw 100vh;
-	/*
-	background-color: darkgray;
-	*/
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.musicFanart{
+	background: url("/randomFanart.php?filter=music");
+	background-size: 100vw 100vh;
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.comicsFanart{
+	background: url("/randomFanart.php?filter=comics");
+	background-size: 100vw 100vh;
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.moviesFanart{
+	background: url("/randomFanart.php?filter=movies");
+	background-size: 100vw 100vh;
+	background-color: var(--solidBackground);
+	background-repeat: repeat;
+	background-attachment: fixed;
+}
+.showsFanart{
+	background: url("/randomFanart.php?filter=shows");
+	background-size: 100vw 100vh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
@@ -506,6 +531,30 @@ ol{
 	}
 	.randomFanart{
 		background: url("/randomPoster.php") !important;
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
+	}
+	.musicFanart{
+		background: url("/randomPoster.php?filter=music") !important;
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
+	}
+	.comicsFanart{
+		background: url("/randomPoster.php?filter=comics") !important;
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
+	}
+	.moviesFanart{
+		background: url("/randomPoster.php?filter=movies") !important;
+		background-size: 100vw 100vh !important;
+		background-repeat: repeat !important;
+		background-attachment: fixed !important;
+	}
+	.showsFanart{
+		background: url("/randomPoster.php?filter=shows") !important;
 		background-size: 100vw 100vh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;

@@ -21,7 +21,7 @@
 	ini_set('display_errors', 1);
 	# check the section filter
 	if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "")){
-		$filterType=$_GET['filter'];
+		$filterType=$_GET['filter']."_fanart";
 	}else{
 		$filterType="all_fanart";
 	}
