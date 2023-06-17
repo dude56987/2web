@@ -53,9 +53,9 @@ echo "	</div>";
 echo "	<div>";
 
 if (detectEnabledStatus("nfo2web")){
+	getStat("totalEpisodes.index", "Episodes");
 	getStat("totalShows.index", "Shows");
 	getStat("totalMovies.index", "Movies");
-	getStat("totalEpisodes.index", "Episodes");
 }
 if (detectEnabledStatus("comic2web")){
 	getStat("totalComics.index", "Books/Comics");
