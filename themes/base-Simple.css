@@ -293,11 +293,7 @@ ol li{
 	height: 0.6rem;
 	margin: 0px;
 	margin-top: 0.1rem;
-	/*display: none !important;*/
 	display: inline-block !important;
-	/*
-	float: left;
-	*/
 }
 .enabledSetting{
  background-color: #99ff33 !important;
@@ -517,6 +513,7 @@ ol{
 		background-attachment: fixed !important;
 	}
 	.header .button{
+		margin-bottom: 0px !important;
 		width: auto !important;
 		display: block !important;
 		text-align: center !important;
@@ -732,6 +729,7 @@ a:visited {
 	display: inline-block;
 	margin-right: 0px;
 	margin-left: 0px;
+	margin-bottom: 0.5rem
 }
 .activeProcess{
 	display: inline;
