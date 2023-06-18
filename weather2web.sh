@@ -433,16 +433,19 @@ function update(){
 									echo -n "🪖";
 								elif echo "$timeOfForcast" | grep -q --ignore-case "CHRISTMAS";then
 									echo -n "	<h3>CHRISTMAS<br>DAY"
-									echo -n "🎄";
+									echo -n "🎄"
 								elif echo "$timeOfForcast" | grep -q --ignore-case "INDEPENDENCE";then
 									echo -n "	<h3>INDEPENDENCE<br>DAY"
-									echo -n "🎆";
+									echo -n "🎆"
 								elif echo "$timeOfForcast" | grep -q --ignore-case "NEW YEARS DAY";then
 									echo -n "	<h3>NEW YEARS<br>DAY"
-									echo -n "🍎";
+									echo -n "🍎"
+								elif echo "$timeOfForcast" | grep -q --ignore-case "JUNETEENTH";then
+									echo -n "	<h3>JUNETEENTH"
+									echo -n "✊"
 								else
 									echo -n "	<h3>$timeOfForcast"
-									echo -n "🌞";
+									echo -n "🌞"
 								fi
 							fi
 							echo -n "</h3>"
