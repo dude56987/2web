@@ -73,10 +73,15 @@ if (detectEnabledStatus("weather2web")){
 if (detectEnabledStatus("wiki2web")){
 	getStat("totalWiki.index", "Wikis");
 }
+if (detectEnabledStatus("music2web")){
+	getStat("totalArtists.index", "Artists");
+	getStat("totalAlbums.index", "Albums");
+	getStat("totalTracks.index", "Tracks");
+}
 getStat("webSize.index", "Total Web");
 getStat("cacheSize.index", "Video Cache");
 getStat("mediaSize.index", "Media");
-getStat("free.index", "Free");
+getStat("freeSpace.index", "Free");
 
 echo "	</div>";
 # check the status of the fortunes for drawing large or small widgets

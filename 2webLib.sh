@@ -122,6 +122,20 @@ function buildHomePage(){
 			echo "$totalComics" > "$webDirectory/totalComics.index"
 		fi
 	fi
+	if test -d "$webDirectory/music";then
+		if cacheCheck "$webDirectory/totalTracks.index" "1";then
+			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_tracks\";")
+			echo "$totalEpisodes" > "$webDirectory/totalTracks.index"
+		fi
+		if cacheCheck "$webDirectory/totalArtists.index" "1";then
+			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_artists\";")
+			echo "$totalEpisodes" > "$webDirectory/totalArtists.index"
+		fi
+		if cacheCheck "$webDirectory/totalAlbums.index" "1";then
+			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_albums\";")
+			echo "$totalEpisodes" > "$webDirectory/totalAlbums.index"
+		fi
+	fi
 	if test -d "$webDirectory/shows/";then
 		if cacheCheck "$webDirectory/totalEpisodes.index" "1";then
 			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_episodes\";")
@@ -143,6 +157,15 @@ function buildHomePage(){
 	if cacheCheck "$webDirectory/totalRepos.index" "1";then
 		totalRepos=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_repos\";")
 		echo "$totalRepos" > "$webDirectory/totalRepos.index"
+	fi
+	if cacheCheck "$webDirectory/totalWeather.index" "1";then
+		totalWeather=$(find "$webDirectory/weather/data/" -name "station_*.index" | wc -l)
+		echo "$totalWeather" > "$webDirectory/totalWeather.index"
+	fi
+	#
+	if cacheCheck "$webDirectory/totalWiki.index" "1";then
+		totalWeather=$(cat "$webDirectory/wiki/wikis.index" | wc -l)
+		echo "$totalWeather" > "$webDirectory/totalWiki.index"
 	fi
 	if test -f "$webDirectory/live/channels.m3u";then
 		if cacheCheck "$webDirectory/totalChannels.index" "7";then
