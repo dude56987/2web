@@ -40,6 +40,7 @@ drawPosterWidget("wikis");
 ################################################################################
 ?>
 <div class='settingListCard'>
+<h1>Local Wikis</h1>
 <?php
 if (file_exists("/var/cache/2web/web/wiki/wikis.index")){
 	// get a list of all the genetrated index links for the page
