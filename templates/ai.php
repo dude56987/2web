@@ -350,6 +350,9 @@ if (file_exists($databasePath)){
 
 		echo "<div class='titleCard'>";
 		echo "<h1>Start New Conversation</h1>";
+
+		echo "<div>";
+
 		echo "<form method='post'>";
 		#echo "<input class='aiLog' name='inputLog' type='textarea'>";
 		echo " LLM:";
@@ -360,7 +363,7 @@ if (file_exists($databasePath)){
 			echo "<option value='$directoryPath'>$directoryPath</option>";
 		}
 		echo "</select>";
-
+		echo "<span>";
 		echo " PERSONA:";
 		echo "<select name='persona'>";
 		echo "<option value='NONE' selected>NONE</option>";
@@ -370,13 +373,15 @@ if (file_exists($databasePath)){
 			echo "<option value='$directoryPath'>$directoryPath</option>";
 		}
 		echo "</select>";
+		echo "</span>";
 
 		echo "<span>Debug:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>";
 
-		echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
-		echo "<input class='aiSubmit' type='submit' value='Prompt'>";
-		echo "</form>";
 		echo "</div>";
+
+		echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
+		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
+		echo "</form>";
 
 		echo "<div class='settingListCard'>";
 
