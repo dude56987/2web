@@ -21,71 +21,93 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 
 if (array_key_exists("inputPrompt",$_POST)){
-	if (array_key_exists("debug",$_GET)){
-		echo "<div class='titleCard'>";
-	}
-	# launch the process with a background scheduler
-	$command = 'echo "';
-	# one at a time queue, but launch from atq right away
-	#$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --retries 10 --jobs 1 --id ai2web ';
-	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --bg --jobs 1 --id ai2web ';
-	# default load order of models if found on system
-	if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-l13b-snoozy.bin")){
-		$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-l13b-snoozy.bin ';
-	}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.2-jazzy.bin")){
-		$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.2-jazzy.bin ';
-	}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.3-groovy.bin")){
-		$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.3-groovy.bin ';
-	}else if (file_exists("/var/cache/2web/downloads_ai/ggml-mpt-7b-chat.bin")){
-		$command .= '/usr/bin/ai2web_prompt --set-model ggml-mpt-7b-chat.bin ';
-	}else if (file_exists("/var/cache/2web/downloads_ai/ggml-nous-gpt4-vicuna-13b.bin")){
-		$command .= '/usr/bin/ai2web_prompt --set-model ggml-nous-gpt4-vicuna-13b.bin ';
-	}else{
-		# default model loaded by prompt is groovy
-		$command .= '/usr/bin/ai2web_prompt ';
-	}
-	#$command .= '/usr/bin/ai2web_prompt ';
-	if (array_key_exists("convoSum",$_POST)){
-		$command .= '--input-token \"'.$_POST['convoSum'].'\" ';
-	}
-	$_POST['inputPrompt'] = str_replace("\n","",$_POST['inputPrompt']);
-	$_POST['inputPrompt'] = str_replace("'","`",$_POST['inputPrompt']);
-	$_POST['inputPrompt'] = str_replace('"',"`",$_POST['inputPrompt']);
-	$_POST['inputPrompt'] = escapeShellCmd($_POST['inputPrompt']);
-	# build the unique user agent string and convert it to a md5
-	# - This is so the web interface will display the recent prompts submited by that user
-	# - This must be seprate in order to allow searching database based on indivual user access
-	# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
-	$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
-	if (array_key_exists("REMOTE_USER",$_SERVER)){
-		$tempUserAgent .= $_SERVER["REMOTE_USER"];
-	}
-	$tempUserAgent = md5($tempUserAgent);
-	$command .=	'--user-agent '.$tempUserAgent.' ';
-	$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\"" ';
-	$command .= ' | at -M now';
-	#$command .= ' | batch';
-	# launch the command
-	shell_exec($command);
-	if (array_key_exists("debug",$_GET)){
-		echo "SHELL EXECUTE '$command'<br>";
-		echo "<a class='button' href='/ai/'>Back To Main Index</a>";
-		# check if the file is cached as a conversation
+	if($_POST["inputPrompt"] == ""){
+		echo "<div class='errorBanner'>";
+		echo "<hr>";
+		echo "Error in prompt: Blank prompts do nothing!";
+		echo "<hr>";
 		echo "</div>";
-	}
-	# delay 1 seconds to allow loading of database
-	if(array_key_exists("HTTPS",$_SERVER)){
-		if($_SERVER['HTTPS']){
-			$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/");
+	}else{
+		if ($_POST["debug"] == "yes"){
+			echo "<div class='titleCard'>";
+		}
+		# launch the process with a background scheduler
+		$command = 'echo "';
+		# one at a time queue, but launch from atq right away
+		#$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --retries 10 --jobs 1 --id ai2web ';
+		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --bg --jobs 1 --id ai2web ';
+		# default load order of models if found on system
+		# check for loading custom LLM
+		if (array_key_exists("llm",$_POST)){
+			$command .= '/usr/bin/ai2web_prompt --set-model '.$_POST["llm"].' ';
+		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-l13b-snoozy.bin")){
+			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-l13b-snoozy.bin ';
+		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.2-jazzy.bin")){
+			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.2-jazzy.bin ';
+		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.3-groovy.bin")){
+			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.3-groovy.bin ';
+		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-mpt-7b-chat.bin")){
+			$command .= '/usr/bin/ai2web_prompt --set-model ggml-mpt-7b-chat.bin ';
+		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-nous-gpt4-vicuna-13b.bin")){
+			$command .= '/usr/bin/ai2web_prompt --set-model ggml-nous-gpt4-vicuna-13b.bin ';
+		}else{
+			# default model loaded by prompt is groovy
+			$command .= '/usr/bin/ai2web_prompt ';
+		}
+
+		# check for custom personas
+		if (array_key_exists("persona",$_POST)){
+			if ($_POST["persona"] != "NONE"){
+				$command .= '--load-persona '.$_POST["persona"].' ';
+			}
+		}
+
+		#$command .= '/usr/bin/ai2web_prompt ';
+		if (array_key_exists("convoSum",$_POST)){
+			$command .= '--input-token \"'.$_POST['convoSum'].'\" ';
+		}
+		$_POST['inputPrompt'] = str_replace("\n","",$_POST['inputPrompt']);
+		$_POST['inputPrompt'] = str_replace("'","`",$_POST['inputPrompt']);
+		$_POST['inputPrompt'] = str_replace('"',"`",$_POST['inputPrompt']);
+		$_POST['inputPrompt'] = escapeShellCmd($_POST['inputPrompt']);
+		# build the unique user agent string and convert it to a md5
+		# - This is so the web interface will display the recent prompts submited by that user
+		# - This must be seprate in order to allow searching database based on indivual user access
+		# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
+		$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
+		if (array_key_exists("REMOTE_USER",$_SERVER)){
+			$tempUserAgent .= $_SERVER["REMOTE_USER"];
+		}
+		$tempUserAgent = md5($tempUserAgent);
+		$command .=	'--user-agent '.$tempUserAgent.' ';
+		$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\"" ';
+		$command .= ' | at -M now';
+		#$command .= ' | batch';
+		# launch the command
+		shell_exec($command);
+		if ($_POST["debug"] == "yes"){
+			echo "SHELL EXECUTE '$command'<br>";
+			# check if the file is cached as a conversation
+		}
+		# delay 1 seconds to allow loading of database
+		if(array_key_exists("HTTPS",$_SERVER)){
+			if($_SERVER['HTTPS']){
+				$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/");
+			}else{
+				$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/");
+			}
 		}else{
 			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/");
 		}
-	}else{
-		$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/");
+		if ($_POST["debug"] == "yes"){
+			echo "<p>".$redirectUrl."</p>";
+			echo "<a class='button' href='/ai/'>Back To Main Index</a>";
+			echo "</div>";
+		}else{
+			sleep(1);
+			redirect($redirectUrl);
+		}
 	}
-
-	sleep(1);
-	redirect($redirectUrl);
 }
 ?>
 <html class='randomFanart'>
@@ -330,6 +352,27 @@ if (file_exists($databasePath)){
 		echo "<h1>Start New Conversation</h1>";
 		echo "<form method='post'>";
 		#echo "<input class='aiLog' name='inputLog' type='textarea'>";
+		echo " LLM:";
+		echo "<select name='llm'>";
+		# load each of the ai models
+		foreach(array_diff(scanDir("/var/cache/2web/downloads_ai/"),array(".","..")) as $directoryPath){
+			#$directoryPath=str_replace(".bin","",$directoryPath);
+			echo "<option value='$directoryPath'>$directoryPath</option>";
+		}
+		echo "</select>";
+
+		echo " PERSONA:";
+		echo "<select name='persona'>";
+		echo "<option value='NONE' selected>NONE</option>";
+		# load each of the ai models
+		foreach(array_diff(scanDir("/etc/2web/ai/personas/"),array(".","..")) as $directoryPath){
+			$directoryPath=str_replace(".cfg","",$directoryPath);
+			echo "<option value='$directoryPath'>$directoryPath</option>";
+		}
+		echo "</select>";
+
+		echo "<span>Debug:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>";
+
 		echo "<textarea class='aiPrompt' name='inputPrompt'></textarea>";
 		echo "<input class='aiSubmit' type='submit' value='Prompt'>";
 		echo "</form>";

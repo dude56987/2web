@@ -355,6 +355,7 @@ def readConvo(convoToken,depth=1):
 			if tempAnwserText not in [".","!","?"]:
 				# if the anwser does not contain punctuation then automatically ask AI to continue
 				readConvo(convoToken + tempToken + [{"role":"user","content":"Continue"}],(depth+1))
+				#readConvo(convoToken + tempToken,(depth+1))
 
 		# commit changes to database
 		#dbConnection.commit()
@@ -445,11 +446,11 @@ if "--list-personas" in sys.argv:
 	print("="*80)
 
 samePromptBuffer=list()
+personaText=str()
 # preload a persona from the prompt
 if "--load-persona" in sys.argv:
 	# get item after the --load-persona as the name of the persona to use
 	persona = sys.argv[(sys.argv.index("--load-persona")+1)]
-	personaText = str()
 	if os.path.exists("/etc/2web/ai/personas/"+persona+".cfg"):
 		# preload the prompt with the persona file
 		fileObject = open("/etc/2web/ai/personas/"+persona+".cfg","r")
@@ -457,9 +458,7 @@ if "--load-persona" in sys.argv:
 			#personaText += fileObject.read()
 			personaText += line
 		#print("Persona = "+str(personaText))
-		samePromptBuffer.append({"role": "user", "content": personaText.replace("'","`")})
-else:
-	persona = str()
+		#samePromptBuffer.append({"role": "user", "content": personaText.replace("'","`")})
 
 if "--input-json" in sys.argv:
 	# load input json string, this is for loading previous conversations saved with --output-json
@@ -541,6 +540,7 @@ while prompt:
 			# print the symbol to repsenent a active processing job on the prompt
 			print("💬")
 
+		question = personaText+question
 		# add the question to the same prompt buffer, e.g. this conversation
 		samePromptBuffer.append({"role": "user", "content": question})
 		anwserNotCached = True
@@ -564,6 +564,7 @@ while prompt:
 			# add the prompt to the the buffer to build the conversation token
 			if "--raw" in sys.argv:
 				# --raw generates replys based on the input only not the totality of the conversation, like goldfish mode
+				gptj = loadModel()
 				# generate raw input output
 				raw_anwser = gptj.generate(question)
 				# rebuild the buffer because --raw generates a new conversation for every prompt
@@ -588,10 +589,15 @@ while prompt:
 			if type(anwser) == type(""):
 				print(noOutputWarning)
 			else:
+				#print("Anwser = ",anwser)
 				# print the anwser queue as json output
 				for anwserDict in anwser:
 					samePromptBuffer.append(anwserDict)
-				outputDict = samePromptBuffer[len(samePromptBuffer)-1]
+				if len(samePromptBuffer) < 2:
+					outputDict = samePromptBuffer[len(samePromptBuffer) - 1]
+				else:
+					outputDict = samePromptBuffer[0]
+
 				print(outputDict['content'])
 			# after printing the output exit the program
 			exit()
