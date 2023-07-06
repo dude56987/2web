@@ -260,6 +260,10 @@ processMovie(){
 			unchangedInfo="$movieTitle"
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
+				if cacheCheck "$webDirectory/movies/$movieWebPath/movies.index" 7;then
+					# create the block to lockout updates from kodi clients after 1 weeks
+					echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+				fi
 				# this means they are the same so no update needs run
 				#INFO "State is unchanged for $movieTitle, no update is needed."
 				#ALERT "[DEBUG]: $currentSum == $libarySum"
@@ -267,6 +271,10 @@ processMovie(){
 				return
 			else
 				#INFO "States are diffrent, updating $movieTitle..."
+				# enable kodi client updates if the state has changed
+				if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
+					rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+				fi
 				#ALERT "[DEBUG]: $currentSum != $libarySum"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			fi
@@ -1378,11 +1386,20 @@ processShow(){
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
 			# this means they are the same so no update needs run
+			# if the show is unchanged check for the time it has been unchanged for more than 7 days
+			if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
+				# create the block to lockout updates from kodi clients after 1 weeks
+				echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
 			#INFO "[DEBUG]: $currentSum == $libarySum"
 			addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
 			return
 		else
+			# enable kodi client updates
+			if test -f "$webDirectory/kodi/shows/$showTitle/.nomedia";then
+				rm -v "$webDirectory/kodi/shows/$showTitle/.nomedia"
+			fi
 			#INFO "States are diffrent, updating $showTitle..."
 			#INFO "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
