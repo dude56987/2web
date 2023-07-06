@@ -139,6 +139,7 @@ function moreDataLinks($searchQuery){
 	echo "		<a class='button' rel='noreferer' href='https://www.britannica.com/search?query=$searchQuery'>🔎 Britannica</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.fandom.com/?s=$searchQuery'>🔎 Fandom Wiki Search</a>";
 	echo "		<a class='button' rel='noreferer' href='https://everything2.com/title/$searchQuery'>🔎 Everything2 Search</a>";
+	echo "		<a class='button' rel='noreferer' href='https://library.kiwix.org/?q=$searchQuery'>🔎 ZIM file Search</a>";
 	echo "	</div>";
 	echo "</div>";
 }
