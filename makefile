@@ -100,6 +100,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/music/;
 	mkdir -p debian/etc/2web/music/libaries.d/;
 	mkdir -p debian/etc/2web/ai/personas/;
+	mkdir -p debian/etc/2web/ai/negative_prompts/;
 	mkdir -p debian/etc/2web/comics/;
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
@@ -161,6 +162,8 @@ build-deb: upgrade-hls
 	chown -R www-data:www-data debian/etc/2web/nfo/*.d/
 	chown -R www-data:www-data debian/etc/2web/comics/*.d/
 	chown -R www-data:www-data debian/etc/2web/weather/*.d/
+	chown -R www-data:www-data debian/etc/2web/ai/personas/
+	chown -R www-data:www-data debian/etc/2web/ai/negative_prompts/
 	#chown -R www-data:www-data debian/etc/2web/*.d/
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
@@ -285,7 +288,8 @@ build-deb: upgrade-hls
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over all the AI personas
-	cp -v ai_personas/*.cfg debian/etc/2web/ai/personas/
+	cp -v ai/personas/*.cfg debian/etc/2web/ai/personas/
+	cp -v ai/negative_prompts/*.cfg debian/etc/2web/ai/negative_prompts/
 	# copy over apache configs
 	#cp -v systemConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
 	cp -v systemConf/0000-2web-website.conf debian/etc/apache2/sites-available/
