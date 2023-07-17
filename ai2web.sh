@@ -140,6 +140,15 @@ function update(){
 	createDir "$downloadDirectory"
 	# make ai directory
 	createDir "$webDirectory/ai/"
+	################################################################################
+	# create the default download directories
+	################################################################################
+	# used for stable diffusion to generate images and videos
+	createDir "/var/cache/2web/downloads_ai_image/"
+	# used for gpt4all to anwser text prompts
+	createDir "/var/cache/2web/downloads_ai_text/"
+	# used for whisper to convert voice to text locally
+	createDir "/var/cache/2web/downloads_ai_voice/"
 	# scan the sources
 	ALERT "AI Download Sources: $aiSources"
 	echo "$aiSources" | while read aiSource;do
@@ -151,9 +160,9 @@ function update(){
 		# link the individual index page for this ai model in the web interface
 		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
 		# do not process the ai if it is still in the cache
-		if ! test -f "/var/cache/2web/downloads_ai/$aiName";then
+		if ! test -f "/var/cache/2web/downloads_ai_text/$aiName";then
 			# download the ai model from remote location
-			curl "$aiSource" > "/var/cache/2web/downloads_ai/$aiName"
+			curl "$aiSource" > "/var/cache/2web/downloads_ai_text/$aiName"
 		fi
 	done
 }
@@ -420,6 +429,66 @@ function buildBlock(){
 		fi
 	done
 }
+########################################################################
+function generateSubtitles(){
+	# generate subtitles using local AI tool whisper
+
+	# used to generate subtitles for video files that do not already have subtitles
+	videoFile=$1
+
+	# split up input path
+	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
+	filePath=$(echo "$videoFile" | rev | cut -d '/' -f2- | rev)
+
+	# check if the video file exists
+	if ! test -f "$videoFile";then
+		return 0
+	fi
+	# check if the file has already been created
+	if test -f "$filePath/$fileName.ai.srt";then
+		return 0
+	elif echo "$videoFile" | grep ".strm$";then
+		# check if the file is a .strm that can not generate subtitles
+		return 0
+	fi
+	startDebug
+
+	# speech to text translantion model download directory
+	createDir "/var/cache/2web/downloads/ai/tts/"
+	createDir "/var/cache/2web/downloads/ai/stt/"
+	#
+	createDir "/var/cache/2web/downloads/ai/voice2txt/"
+	createDir "/var/cache/2web/downloads/ai/txt2voice/"
+	#
+	createDir "/var/cache/2web/downloads/ai/txt2img/"
+	createDir "/var/cache/2web/downloads/ai/img2img/"
+	# generated subtitles cache directory
+	createDir "/var/cache/2web/ai/subs/"
+
+	# input the videofile to generate srt file
+	# - save only .srt subtitle files
+	# - use the max threads
+	# - set task to translate so non-english movies are translated into english
+	# - english movies will be transcribed with with translate task as well
+	# - chosen model will be downloaded on first use
+	# - models are: tiny, base, small, medium, large, large-v2
+	# - threads is set to one because the processing jobs that call this function run in parallel
+	#/usr/bin/sem --retries 10 --jobs 1 --fg --id "AI" whisper --model small \
+	#whisper --model small \
+	#whisper --model tiny \
+	whisper --model base \
+		--task translate \
+		--model_dir "/var/cache/2web/downloads/ai/stt/" \
+		--output_format "srt" \
+		--output_dir "/var/cache/2web/ai/subs/" \
+		--threads "$(cpuCount)" \
+		"$videoFile"
+	# link the generated subtitle file into the same directory as the file
+	# - This can then be linked into the kodi directory for library video files
+	# - This can generate .srt subs for the video_cache/ and translate_cache/
+	linkFile "/var/cache/2web/ai/subs/$fileName.srt" "$filePath/$fileName.ai.srt"
+	stopDebug
+}
 ################################################################################
 webUpdate(){
 	# read the download directory and convert ai into webpages
@@ -440,6 +509,26 @@ webUpdate(){
 
 	# link the homepage
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
+
+	startDebug
+	#	check for files that can be transcribed by whisper
+	foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
+		| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+		| shuf )
+	echo "$foundVideoFiles" | while read videoFilePath;do
+		#
+		generateSubtitles "$videoFilePath"
+	done
+	# look for movies that can be transcribed by whisper
+	foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
+		| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+		| shuf )
+	echo "$foundVideoFiles" | while read videoFilePath;do
+		#
+		generateSubtitles "$videoFilePath"
+	done
+	stopDebug
+
 
 	################################################################################
 	# build the comparisons in the database for machine learning comparison match database
@@ -502,6 +591,17 @@ main(){
 		checkModStatus "ai2web"
 		# upgrade the jslint package
 		pip3 install --upgrade gpt4all
+		# install whisper speech recognition
+		pip3 install --upgrade openai-whisper
+		# install stable diffusion
+		pip3 install --upgrade diffusers
+		# install additional components for stable diffusion
+		pip3 install --upgrade transformers
+		pip3 install --upgrade torch
+		pip3 install --upgrade safetensors
+		pip3 install --upgrade accelerate
+		# speech functions are provided by speechbrain, tts, stt
+		pip3 install --upgrade speechbrain
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "ai2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

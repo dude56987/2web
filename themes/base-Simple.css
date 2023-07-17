@@ -206,6 +206,18 @@ h1 {
 	text-align: center;
 	color: var(--textColor);
 	-webkit-text-stroke: 0.04rem black;
+	padding: 0.5rem;
+}
+h2 {
+	text-align: center;
+	color: var(--textColor);
+	-webkit-text-stroke: 0.04rem black;
+	padding: 0.5rem;
+}
+ol li{
+	margin-left: 1rem;
+	color: var(--textColor);
+	text-align:left !important;
 }
 .date{
 	color: var(--textColor);
@@ -263,16 +275,6 @@ h1 {
 .episodeList{
 	margin-left: auto;
 	margin-right: auto;
-}
-h2 {
-	text-align: center;
-	color: var(--textColor);
-	-webkit-text-stroke: 0.04rem black;
-}
-ol li{
-	margin-left: 1rem;
-	color: var(--textColor);
-	text-align:left !important;
 }
 .comicPageBackground{
 	/*
@@ -687,7 +689,9 @@ ol{
 }
 input{
 	font-size: 1rem;
+	/*
 	width: 98%;
+	*/
 }
 .checkbox{
 	width: auto;
@@ -1914,17 +1918,30 @@ details{
 	*/
 }
 .aiPrompt{
-	min-height: 6rem;
+	min-height: 4rem;
 	width: 85%;
 	max-width: 85% !important;
 	min-width: 85% !important;
 	margin: auto;
 	text-align: left;
 }
+.imageInputPrompt{
+	min-height: 4rem;
+	width: 45%;
+	max-width: 45% !important;
+	min-width: 45% !important;
+}
+.imageNegativeInputPrompt{
+	min-height: 4rem;
+	width: 40%;
+	max-width: 40% !important;
+	min-width: 40% !important;
+	background-color: lightpink;
+}
 .aiSubmit{
 	width: 15%;
 	max-width: 15%;
-	min-height: 6rem;
+	min-height: 4rem;
 	margin: auto;
 	vertical-align: bottom;
 	background-color: var(--glassBackground);
@@ -1956,7 +1973,7 @@ details{
 }
 .singleStat{
 	display: inline-block;
-	border: 1px var(--borderColor) solid;
+	border: 0.2rem var(--borderColor) solid;
 	background-color: var(--glassBackground);
 	white-space: nowrap;
 	margin: 0.1rem;
@@ -1966,4 +1983,50 @@ details{
 	width: 100%;
 	background-color: red;
 	color: white;
+}
+.imageUploadPreview{
+	vertical-align: top;
+	max-width: 50% !important;
+	max-height: 10rem;
+}
+#imageUploadForm{
+	vertical-align: top;
+	max-width: 50% !important;
+	max-height: 10rem;
+	height: 100%;
+	border: 0.2rem var(--borderColor) solid;
+	background-color: var(--solidBackground);
+}
+.groupedMenuItem{
+	white-space: nowrap;
+}
+.aiGenPreviewImage{
+	width: 100%;
+}
+.aiGenPreview{
+	text-align: center;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	background-color: var(--glassBackground);
+	width: 15rem;
+	display: inline-block;
+	margin: 1rem;
+	float: none;
+	min-height: 3rem;
+	max-height: 45rem;
+	vertical-align: top;
+	white-space: normal;
+	overflow: scroll;
+}
+.progressBar{
+	display: inline-block;
+	margin-left: auto;
+	margin-right: auto;
+	border: 0.2rem var(--borderColor) solid;
+	width: 90%;
+	background-color: var(--glassBackground);
+}
+.progressBarBar{
+	background-color: var(--highlightBackground);
+	color: var(--solidBackground);
+	min-width: 10%;
 }

@@ -30,9 +30,26 @@ function webRoot(){
 	if [ -f /etc/2web/web.cfg ];then
 		webDirectory=$(cat /etc/2web/web.cfg)
 	else
-		chown -R www-data:www-data "/var/cache/2web/cache/"
-		echo "/var/cache/2web/cache/" > /etc/2web/web.cfg
-		webDirectory="/var/cache/2web/cache/"
+		chown -R www-data:www-data "/var/cache/2web/web_cache/"
+		echo "/var/cache/2web/web_cache/" > /etc/2web/web.cfg
+		webDirectory="/var/cache/2web/web_cache/"
+	fi
+	# check for a trailing slash appended to the path
+	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
+		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
+	fi
+	echo "$webDirectory"
+}
+########################################################################
+function downloadRoot(){
+	# the webdirectory is a cache where the generated website is stored
+	if [ -f /etc/2web/download.cfg ];then
+		webDirectory=$(cat /etc/2web/download.cfg)
+	else
+		chown -R www-data:www-data "/var/cache/2web/download_cache/"
+		echo "/var/cache/2web/download_cache/" > /etc/2web/download.cfg
+		webDirectory="/var/cache/2web/download_cache/"
 	fi
 	# check for a trailing slash appended to the path
 	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
@@ -341,11 +358,26 @@ function waitQueue(){
 			# - this should make the apache server remain available even if all modules are running in parallel
 			# convert load into interger and compare
 			if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
-				#INFO "System is overloaded, Waiting for system resources..."
+				INFO "System is overloaded, Waiting for system resources..."
 				sleep 1
 			else
 				break
 			fi
+		fi
+	done
+}
+################################################################################
+function waitSlowQueue(){
+	# PARALLEL PROCESSING COMMAND
+	# wait for system load to get below the totalCpus
+	sleepTime=$1
+	totalCPUS=$2
+	while true;do
+		if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
+			INFO "System is overloaded, Waiting for system resources..."
+			sleep 1
+		else
+			break
 		fi
 	done
 }
@@ -631,7 +663,7 @@ function SQLtableLength(){
 		# check if the table exists in the database
 		timeout=60000
 		if ! sqlite3 -cmd ".timeout $timeout"  "$databasePath" "select name from sqlite_master where type='table';" | grep -q "$tableName";then
-			# remove the table that has been found
+			# count all items in the table
 			totalCount=$(sqlite3 -cmd ".timeout $timeout" "from COUNT(*) in $tableName;")
 		fi
 	fi
@@ -677,7 +709,14 @@ function getDirDataSum(){
 	# check the libary sum against the existing one
 	#totalList=$(find "$line" | sort)
 	# read the data from each file
-	totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
+	#totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
+	totalFileList="$( find "$line" -type f )"
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+	for filePath in $totalFileList;do
+		totalList="$( cat "$filePath" )"
+	done
+	IFS=$IFSBACKUP
 	# add the version to the sum to update old versions
 	# - Disk caching on linux should make this repetative file read
 	#   not destroy the hard drive

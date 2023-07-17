@@ -168,14 +168,18 @@ build-deb: upgrade-hls
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
-	# add the base lib used across all modules
+	# add the base bash lib used across all modules
 	#cp 2webLib.sh debian/var/lib/2web/common
 	echo "#! /bin/bash" > debian/var/lib/2web/common
 	cat build/sh_head.txt > debian/var/lib/2web/common
 	# remove all comment lines from the code to reduce package size and disk read on execution
 	grep --invert-match "^[[:blank:]]*#" 2webLib.sh | tr -s '\n' >> debian/var/lib/2web/common
+	# python common lib for all python based tools
+	echo "#! /bin/python3" > debian/usr/share/2web/python2webLib.py
+	cat build/py_head.txt > debian/usr/share/2web/python2webLib.py
+	# remove all comment lines from the code to reduce package size and disk read on execution
+	grep --invert-match "^[[:blank:]]*#" 2webLib.py | tr -s '\n' >> debian/usr/share/2web/python2webLib.py
 	# copy update scripts to /usr/bin
-	#cp 2web.sh debian/usr/bin/2web
 	echo "#! /bin/bash" > debian/usr/bin/2web
 	cat build/sh_head.txt > debian/usr/bin/2web
 	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
@@ -183,10 +187,20 @@ build-deb: upgrade-hls
 	#echo "#! /bin/bash" > debian/usr/bin/search2web
 	#grep --invert-match "^[[:blank:]]*#" search2web.sh | tr -s '\n' >> debian/usr/bin/search2web
 	# wiki
-	# build the python scripts
+	# build the python scripts for use by 2web batch utilities
+	# build the text prompt
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_prompt
 	cat build/py_head.txt > debian/usr/bin/ai2web_prompt
 	grep --invert-match "^[[:blank:]]*#" ai2web_prompt.py | tr -s '\n' >> debian/usr/bin/ai2web_prompt
+	# build ai image prompt tools
+	# txt2img
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2img
+	cat build/py_head.txt > debian/usr/bin/ai2web_txt2img
+	grep --invert-match "^[[:blank:]]*#" ai2web_txt2img.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2img
+	# img2img
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_img2img
+	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
+	grep --invert-match "^[[:blank:]]*#" ai2web_img2img.py | tr -s '\n' >> debian/usr/bin/ai2web_img2img
 	# build the shell scripts
 	# add the gpl header on the top
 	echo "#! /bin/bash" > debian/usr/bin/ai2web
@@ -285,6 +299,14 @@ build-deb: upgrade-hls
 	chmod u+rwx debian/usr/bin/ai2web_prompt
 	chmod go-w debian/usr/bin/ai2web_prompt
 	chmod go+x debian/usr/bin/ai2web_prompt
+	#	txt2img
+	chmod u+rwx debian/usr/bin/ai2web_txt2img
+	chmod go-w debian/usr/bin/ai2web_txt2img
+	chmod go+x debian/usr/bin/ai2web_txt2img
+	#	img2img
+	chmod u+rwx debian/usr/bin/ai2web_img2img
+	chmod go-w debian/usr/bin/ai2web_img2img
+	chmod go+x debian/usr/bin/ai2web_img2img
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over all the AI personas
