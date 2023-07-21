@@ -166,6 +166,26 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "			</li>\n";
 	echo "		</ul>";
 	echo "	</div>\n";
+}else if ($pageURL == "/settings/music.php"){
+	$moduleName="music2web";
+	echo "	<div class='inputCard'>\n";
+	echo "		<h2>Music</h2>\n";
+	echo "		<ul>";
+	echo "			<li>\n";
+	echo "				<a class='' href='/settings/music.php'>Local Music</a>\n";
+	echo "			</li>\n";
+	echo "		</ul>";
+	echo "	</div>\n";
+}else if ($pageURL == "/settings/graphs.php"){
+	$moduleName="graph2web";
+	echo "	<div class='inputCard'>\n";
+	echo "		<h2>Graphs</h2>\n";
+	echo "		<ul>";
+	echo "			<li>\n";
+	echo "				<a class='' href='/settings/graphs.php'>Graphs</a>\n";
+	echo "			</li>\n";
+	echo "		</ul>";
+	echo "	</div>\n";
 }else if (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
 	echo "	<div class='inputCard'>\n";
