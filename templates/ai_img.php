@@ -18,6 +18,22 @@
 ########################################################################
 ini_set('display_errors', 1);
 ini_set('file_uploads', "On");
+########################################################################
+function filesize_to_human($tempFileSize){
+	# get the filesize
+	if ($tempFileSize > pow(1024, 4)){
+		return round($tempFileSize/pow(1024, 4), 2)." TB";
+	}else if ($tempFileSize > pow(1024, 3)){
+		return round($tempFileSize/pow(1024, 3), 2)." GB";
+	}else if ($tempFileSize > pow(1024, 2)){
+		return round($tempFileSize/pow(1024, 2), 2)." MB";
+	}else if ($tempFileSize > 1024){
+		return round(($tempFileSize/1024))." KB";
+	}else{
+		return $tempFileSize." Bytes";
+	}
+}
+########################################################################
 ?>
 <html class='randomFanart'>
 <head>
@@ -46,11 +62,22 @@ echo "<div class=''>\n";
 $noDiscoveredImages=True;
 $discoveredImages=0;
 $discoveredImageList=array_diff(scanDir("."),array(".",".."));
+$discoveredImageList=array_reverse($discoveredImageList);
+$discoveredFileSizes=Array();
+$totalFileSize=0;
 
 foreach( $discoveredImageList as $directoryPath){
 	if (strpos($directoryPath,".png")){
 		$noDiscoveredImages=False;
 		$discoveredImages += 1;
+
+		$tempFileSize=filesize($directoryPath);
+		if ($tempFileSize > 0){
+			$totalFileSize += $tempFileSize;
+		}
+
+		$discoveredFileSizes += Array($directoryPath => $tempFileSize);
+
 	}
 }
 $totalVersions=file_get_contents("versions.cfg");
@@ -92,22 +119,26 @@ if($discoveredImages > 0){
 	echo "<table>";
 	echo "	<tr>";
 	echo "		<th>Discovered Files</th>";
+	echo "		<th>Total Filesize</th>";
 	echo "		<th>Prompt</th>";
 	echo "		<th>Negative Prompt</th>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>$discoveredImages</td>";
+	echo "		<td>".filesize_to_human($totalFileSize)."</td>";
 	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
 	echo "		<td>".file_get_contents("negativePrompt.cfg")."</td>";
 	echo "	</tr>";
 	echo "</table>";
 }
-
 foreach( $discoveredImageList as $directoryPath){
 	if (strpos($directoryPath,".png")){
 		echo "<a class='aiGenPreview' href='$directoryPath'>\n";
 		echo "<h2>".$directoryPath."</h2>";
-		echo "<img class='aiGenPreviewImage' src='$directoryPath' />\n";
+		echo "<img loading='lazy' class='aiGenPreviewImage' src='$directoryPath' />\n";
+		echo "<hr>";
+		# load the discovered file size from the array
+		echo filesize_to_human($discoveredFileSizes[$directoryPath]);
 		echo "</a>\n";
 	}
 }
