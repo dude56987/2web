@@ -504,6 +504,7 @@ processMovie(){
 		} > "$moviePagePath"
 
 
+		thumbnailExt=".png"
 		# generate a thumbnail from the xml data if it can be retreved
 		if ! test -f "$thumbnailPath.png";then
 			if echo "$nfoInfo" | grep -q "fanart";then
@@ -626,7 +627,8 @@ processMovie(){
 		elif echo "$videoPath" | grep -q "http";then
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls preload>"
+				#echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls preload>"
+				echo "<$mediaType poster='poster.png' controls preload>"
 				echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -653,7 +655,8 @@ processMovie(){
 		else
 			{
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls preload>"
+				#echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls preload>"
+				echo "<$mediaType id='nfoMediaPlayer' poster='poster.png' controls preload>"
 				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -1018,31 +1021,31 @@ processEpisode(){
 			return
 		fi
 		# set the video type based on the found video path
-		if echo "$videoPath" | grep -q --ignore-case ".mp3";then
+		if echo "$videoPath" | grep -q --ignore-case "\.mp3";then
 			mediaType="audio"
 			mimeType="audio/mp3"
-		elif echo "$videoPath" | grep -q --ignore-case ".ogg";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.ogg";then
 			mediaType="audio"
 			mimeType="audio/ogg"
-		elif echo "$videoPath" | grep -q --ignore-case ".ogv";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.ogv";then
 			mediaType="video"
 			mimeType="video/ogv"
-		elif echo "$videoPath" | grep -q --ignore-case ".mp4";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.mp4";then
 			mediaType="video"
 			mimeType="video/mp4"
-		elif echo "$videoPath" | grep -q --ignore-case ".m4v";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.m4v";then
 			mediaType="video"
 			mimeType="video/m4v"
-		elif echo "$videoPath" | grep -q --ignore-case ".mpeg";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.mpeg";then
 			mediaType="video"
 			mimeType="video/mpeg"
-		elif echo "$videoPath" | grep -q --ignore-case ".mpg";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.mpg";then
 			mediaType="video"
 			mimeType="video/mpg"
-		elif echo "$videoPath" | grep -q --ignore-case ".avi";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.avi";then
 			mediaType="video"
 			mimeType="video/avi"
-		elif echo "$videoPath" | grep -q --ignore-case ".mkv";then
+		elif echo "$videoPath" | grep -q --ignore-case "\.mkv";then
 			mediaType="video"
 			mimeType="video/x-matroska"
 		else
@@ -1102,6 +1105,7 @@ processEpisode(){
 		episodeVideoPath="${episode//.nfo/$sufix}"
 		#INFO "episodeVideoPath = $videoPath"
 
+		resolverUrl=""
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
 		if echo "$sufix" | grep -q --ignore-case "strm";then
 			createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
@@ -1110,17 +1114,26 @@ processEpisode(){
 			# change the video path into a video id to make it embedable
 			#yt_id=${videoPath//*video_id=}
 			#INFO "yt-id = $yt_id"
-			#ytLink="https://youtube.com/watch?v=$yt_id"
+			#ytLink="https://youtube.com/watch?v=$yt_id"#
+			# get the contents of the stream file as the link
+			#ytLink="$(cat "$videoPath")"
 			ytLink="$videoPath"
 
 			# generate a link to the local caching resolver
 			# - cache new links in batch processing mode
-
 			# check the ytlink for .mp3 file extension and if it contains .mp3 do not run it through the resolver and use the .strm as a direct link
-			if echo "$resolverUrl" | grep -q ".mp3";then
+			if echo "$ytLink" | grep -q "\.mp3";then
 				resolverUrl="$ytLink"
+				# create a thumbnail for the mp3 links inside streams
+				episodeThumbSum=$(echo "$episodePath" | md5sum | cut -d' ' -f1)
+				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.png";then
+					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex showwavespic -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.png"
+				fi
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.png" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.png"
+				# add kodi link
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.png" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.png"
 			else
-				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$ytLink\""
+				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 			fi
 
 			# if the config option is set to cache new episodes
@@ -1322,6 +1335,34 @@ processEpisode(){
 			echo "</body>"
 			echo "</html>"
 		} >> "$episodePagePath"
+
+		episodeSubSearch="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath/"
+		episodeSubSearchPath=$(echo "$episode" | rev | cut -d'/' -f2- | rev)
+
+		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
+
+		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
+
+		# check for existing subtitles
+		existingSubs="no"
+		if test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt";then
+			existingSubs="yes"
+		elif test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub";then
+			existingSubs="yes"
+		elif test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx";then
+			existingSubs="yes"
+		fi
+		# if existing subs is no then  skip this
+		if [ "$existingSubs" == "no" ];then
+			# copy over subtitles for episodes
+			if test -f "$episodeSubSearchPath/$episodePath.srt";then
+				linkFile "$episodeSubSearchPath/$episodePath.srt" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
+			elif test -f "$episodeSubSearchPath/$episodePath.sub";then
+				linkFile "$episodeSubSearchPath/$episodePath.sub" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub"
+			elif test -f "$episodeSubSearchPath/$episodePath.idx";then
+				linkFile "$episodeSubSearchPath/$episodePath.idx" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx"
+			fi
+		fi
 		################################################################################
 		# build the episode link to be included by index pages
 		################################################################################
