@@ -386,11 +386,17 @@ function update2web(){
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(webRoot)"
+	downloadDirectory="$(downloadRoot)"
+
+	createDir "$webDirectory"
+	createDir "$downloadDirectory"
 
 	INFO "Building web directory at '$webDirectory'"
 	# force overwrite symbolic link to web directory
 	# - link must be used to also use premade apache settings
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
+	# link the user setable download directory cache
+	ln -sfn "$downloadDirectory" "/var/cache/2web/downloads"
 
 	if returnModStatus "graph2web";then
 		# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
