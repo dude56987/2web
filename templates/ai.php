@@ -657,7 +657,6 @@ if (file_exists($databasePath)){
 		echo "<span class='groupedMenuItem'>\n";
 		echo " PERSONA:\n";
 		echo "<select name='persona'>\n";
-		echo "<option value='NONE' selected>NONE</option>\n";
 		# load each of the ai models
 		foreach(array_diff(scanDir("/etc/2web/ai/personas/"),array(".","..")) as $directoryPath){
 			$directoryPath=str_replace(".cfg","",$directoryPath);
@@ -741,7 +740,6 @@ if (file_exists($databasePath)){
 			#echo ($directoryPath)."\n";
 			echo "<option value='$directoryPath'>$directoryPath</option>\n";
 		}
-		echo "<option value='none'>None</option>\n";
 		echo "</select>\n";
 		echo "</span>\n";
 
@@ -802,7 +800,6 @@ if (file_exists($databasePath)){
 			echo "<option value='$directoryPath'>$directoryPath</option>\n";
 			$discoveredNegativePrompts=True;
 		}
-		echo "<option value='none'>None</option>\n";
 		echo "</select>\n";
 		echo "</span>\n";
 
