@@ -1214,14 +1214,53 @@ processEpisode(){
 			#INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			{
+				echo "<?PHP"
+				# check if a file is cached
+				tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
+				echo "if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4\")){"
+				echo "	echo \"<video id='nfoMediaPlayer' class='' poster='$poster' controls>\";"
+				echo "	echo \"	<source src='/RESOLVER-CACHE/$tempSum/$tempSum.mp4' type='video/mp4'>\";"
+				echo "	echo \"</video>\";";
+				echo "}else if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.m3u\")){"
+				echo "	echo \"<script src='/2web.js'></script>\";"
+				echo "	echo \"<script src='/live/hls.js'></script>\";"
+				echo "	echo \"<video id='video' class='livePlayer' poster='$poster' controls></video>\";"
+				echo "	echo \"<script>\";"
+				echo "	echo \"	if(Hls.isSupported()) {\";"
+				echo "	echo \"		var video = document.getElementById('video');\";"
+				echo "	echo \"		var hls = new Hls({\";"
+				#echo "	echo \"			debug: true\";"
+				echo "	echo \"			startPosition: 0\";"
+				echo "	echo \"		});\";"
+				echo "	echo \"		hls.loadSource('/RESOLVER-CACHE/$tempSum/$tempSum.m3u');\";"
+				echo "	echo \"		hls.attachMedia(video);\";"
+				echo "	echo \"		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\";"
+				#echo "	echo \"			video.muted = false;\";"
+				echo "	echo \"			video.play();\";"
+				echo "	echo \"		});\";"
+				echo "	echo \"	}\";"
+				echo "	echo \"	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\";"
+				echo "	echo \"		video.src = '/RESOLVER-CACHE/$tempSum/$tempSum.m3u';\";"
+				echo "	echo \"		video.addEventListener('canplay',function() {\";"
+				echo "	echo \"			video.play();\";"
+				echo "	echo \"		});\";"
+				echo "	echo \"	}\";"
+				# start playback on page load
+				echo "	echo \"hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\";"
+				echo "	echo \"</script>\";"
+				echo "}else{";
+				echo " 	echo \"<source src='$videoPath' type='$mimeType'>\";"
 				# embed the youtube player
-				echo "<iframe id='nfoMediaPlayer' width='560' height='315'"
-				echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-				echo "frameborder='0'"
-				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-				echo "allowfullscreen>"
-				echo "</iframe>"
+				echo "	echo \"<iframe id='nfoMediaPlayer' width='560' height='315'\";"
+				echo "	echo \"src='https://www.youtube-nocookie.com/embed/$yt_id'\";"
+				echo "	echo \"frameborder='0'\";"
+				echo "	echo \"allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'\";"
+				echo "	echo \"allowfullscreen>\";"
+				echo "	echo \"</iframe>\";"
+				echo "}";
+				echo "?>"
 			} >> "$episodePagePath"
+
 			cacheRedirect="/ytdl-resolver.php?url=\"$ytLink\""
 			vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$ytLink\\\""
 			{
@@ -1237,7 +1276,7 @@ processEpisode(){
 				echo "</a>"
 
 				echo "<?PHP";
-				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
+				echo "	echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 				echo "?>";
 
 				echo "<span id='vlcIcon'>&#9650;</span> VLC"
@@ -1263,9 +1302,11 @@ processEpisode(){
 					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
 					echo "<source src='$videoPath' type='$mimeType'>"
 				else
+
+
+
 					echo "<source src='$videoPath' type='$mimeType'>"
 				fi
-				#echo "<source src='$videoPath' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"

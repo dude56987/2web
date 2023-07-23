@@ -1388,7 +1388,7 @@ main(){
 		pip3 install --upgrade yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# copy local hls.js included in package to the website
-		linkFile /usr/share/2web/iptv/hls.js > "$(webRoot)/live/hls.js"
+		linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/iptv2web.txt"
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
