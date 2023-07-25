@@ -164,7 +164,8 @@ foreach($seasonDirs as $seasonDir){
 
 		// set so script keeps running even if user cancels it
 		ignore_user_abort(true);
-		$episodeFiles = explode("\n",shell_exec("find '$seasonDir' -type 'f' -name '*.index' | sort"));
+		$episodeFiles = scanDir($seasonDir);
+		sort($episodeFiles);
 		$seasonHeader="";
 		$seasonHeader.="<div class='seasonContainer'>";
 		$seasonHeader.="<div class='seasonHeader'>";
@@ -178,8 +179,8 @@ foreach($seasonDirs as $seasonDir){
 
 		if (array_key_exists("search",$_GET)){
 			foreach($episodeFiles as $episodeFile){
-				if (is_file($episodeFile)){
-					$tempData=file_get_contents($episodeFile);
+				if (strpos($episodeFile,".index")){
+					$tempData=file_get_contents($seasonDir."/".$episodeFile);
 					# filter by search term
 					if (stripos($tempData,$searchTerm)){
 						if ($firstRun){
@@ -197,13 +198,13 @@ foreach($seasonDirs as $seasonDir){
 			}
 		}else{
 			foreach($episodeFiles as $episodeFile){
-				if (is_file($episodeFile)){
+				if (strpos($episodeFile,".index")){
 					if ($firstRun){
 						echo $seasonHeader;
 						$firstRun=False;
 						$searchResults=True;
 					}
-					echo file_get_contents($episodeFile);
+					echo file_get_contents($seasonDir."/".$episodeFile);
 					flush();
 					ob_flush();
 				}
