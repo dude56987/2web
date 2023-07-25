@@ -183,20 +183,21 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/2web
 	cat build/sh_head.txt > debian/usr/bin/2web
 	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
-	# search
-	#echo "#! /bin/bash" > debian/usr/bin/search2web
-	#grep --invert-match "^[[:blank:]]*#" search2web.sh | tr -s '\n' >> debian/usr/bin/search2web
-	# wiki
-	# build the python scripts for use by 2web batch utilities
+	################################################################################
+	# build ai prompt tools
+	################################################################################
 	# build the text prompt
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_prompt
 	cat build/py_head.txt > debian/usr/bin/ai2web_prompt
 	grep --invert-match "^[[:blank:]]*#" ai2web_prompt.py | tr -s '\n' >> debian/usr/bin/ai2web_prompt
-	# build ai image prompt tools
 	# txt2img
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2img
 	cat build/py_head.txt > debian/usr/bin/ai2web_txt2img
 	grep --invert-match "^[[:blank:]]*#" ai2web_txt2img.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2img
+	# txt2txt
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2txt
+	cat build/py_head.txt > debian/usr/bin/ai2web_txt2txt
+	grep --invert-match "^[[:blank:]]*#" ai2web_txt2txt.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2txt
 	# img2img
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_img2img
 	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
