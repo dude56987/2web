@@ -42,6 +42,21 @@ function runShellCommand($command){
 	debug("OUTPUT=".$output."<br>");
 }
 ################################################################################
+function filesize_to_human($tempFileSize){
+	# get the filesize
+	if ($tempFileSize > pow(1024, 4)){
+		return round($tempFileSize/pow(1024, 4), 2)." TB";
+	}else if ($tempFileSize > pow(1024, 3)){
+		return round($tempFileSize/pow(1024, 3), 2)." GB";
+	}else if ($tempFileSize > pow(1024, 2)){
+		return round($tempFileSize/pow(1024, 2), 2)." MB";
+	}else if ($tempFileSize > 1024){
+		return round(($tempFileSize/1024))." KB";
+	}else{
+		return $tempFileSize." Bytes";
+	}
+}
+################################################################################
 function moreMusicLinks($searchQuery){
 	echo "<div class='titleCard'>";
 	echo "	<h2>🎧 External Music Search</h2>";
@@ -628,121 +643,6 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
 		echo "</div>";
 	}
-	$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
-	if ( $definitionData ){
-		$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
-		# build the definition data
-		$definitionData = explode("\n",$definitionData);
-
-		echo "<div class='settingListCard'>\n";
-		echo "<h2>";
-		echo "Definition";
-		echo "</h2>";
-		echo "<div class='listCard'>\n";
-		//echo "<div class='titleCard'>\n";
-
-		$tempDefinition="";
-		$allDefinitions=Array();
-		foreach($definitionData as $definitionLine){
-			# check the tab depth
-			//echo (var_dump(strpos($definitionLine,"  ") == False)." == (strpos(\$definitionLine,\"  \") == False)<br>");//DEBUG
-			//if( strpos($definitionLine,"  ") == False ){
-			if (stripos($definitionLine,"definitions found")){
-				# this is the header and should be skipped
-				echo " ";
-			}else if (strlen($definitionLine) >= 2){
-				if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
-					# this is the start of a new definition
-					//echo "this is the start of a new definiton '".str_replace("  ","##",$definitionLine)."'<br>";//DEBUG
-					# append the previous definition to the definition array
-					$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
-					# blank the temp definition out for adding the new definiton
-					$tempDefinition = "";
-					# add the discovered line to the new definition entry
-					$tempDefinition .= $definitionLine."\n";
-				}else{
-					//echo "this is part of the current definiton '".str_replace("  ","##",$definitionLine)."'<br>";//DEBUG
-					# this is part of the current definition
-					$tempDefinition .= $definitionLine."\n";
-				}
-			}else{
-				$tempDefinition .= $definitionLine."\n";
-			}
-		}
-		//echo var_dump($allDefinitions);//DEBUG
-		# for each definition draw a definition box object
-		$definitionCounter=1;
-		foreach($allDefinitions as $definition){
-			if (strlen($definition) >= 2){
-				if (($definition[0] != " ") && ($definition[1] != " ")){
-					echo "<div class='searchDef'>";
-					echo "<h3>Definition $definitionCounter</h3>";
-					echo "<pre class=''>";
-					echo $definition;
-					echo "</pre>";
-					echo "</div>";
-					$definitionCounter+=1;
-				}
-			}
-		}
-		//echo "<pre>\n";
-		//echo "$definitionData";
-		//echo "</pre>\n";
-
-		echo "</div>";
-		echo "</div>";
-	}
-
-	$pspell = pspell_new("en");
-	# if the query string contains a space
-	if (strpos($_GET['q']," ")){
-		# explode the string into an array split based on the spaces
-		$searchTerms=explode( " " , $searchQuery );
-		$correctedQuery="";
-		$correctedQueryHTML="";
-		$foundErrors=False;
-		# for each word seprated by a space create a search link
-		foreach($searchTerms as $searchTerm){
-			# check the spelling of each search term and include spelling sugestions
-			if (! pspell_check($pspell, $searchTerm)){
-				$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
-				foreach($spellingSuggestions as $word){
-					# create a search for corrected spelling of each word
-					#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
-					# add the word to the corrected query
-					$foundErrors=True;
-					$correctedQuery .= $word." ";
-					$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
-					break;
-				}
-			}else{
-				$correctedQuery .= $searchTerm." ";
-				$correctedQueryHTML .= $searchTerm." ";
-				#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
-			}
-		}
-		if ($foundErrors){
-			echo "<div class='titleCard'>";
-			//echo "	<h2>Expand Search</h2>";
-			echo "	<h2>Did you mean?</h2>";
-			echo "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
-			echo "</div>";
-		}
-	}else{
-		if (! pspell_check($pspell, $_GET['q'])){
-			echo "<div class='titleCard'>";
-			echo "<h2>";
-			echo "Did you mean?";
-			echo "</h2>";
-			echo "<div class='listCard'>";
-			$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
-			foreach($spellingSuggestions as $word){
-				echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
-			}
-			echo "</div>";
-			echo "</div>";
-		}
-	}
 	echo "$bangHelp\n";
 	# write blank space to bypass buffering and start loading of the search results
 	# if this is not done page will hang on a difficult search
@@ -773,26 +673,176 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	$weatherResults=searchWeather($searchCacheFilePath);
 
 	if (file_exists($searchCacheFilePath)){
+		$fullCacheOutput="";
+		$searchFinished=False;
 		# load the cached search results
 		$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
 		while( ! feof($searchCacheFileHandle)){
+			$tempLineData=fgets($searchCacheFileHandle);
 			# send a line of the cache file
-			echo fgets($searchCacheFileHandle);
+			#echo $tempLineData;
+			$fullCacheOutput .= $tempLineData;
+			if (strpos($tempLineData,"No Search Results for '")){
+				if (strpos($tempLineData,"' after search time of ")){
+					$searchFinished=True;
+				}
+			}
+			if (strpos($tempLineData,"Search Complete in ")){
+				$searchFinished=True;
+			}
+		}
+		$dataSize=filesize($searchCacheFilePath);
+		$dataSize=filesize_to_human($dataSize);
+
+		echo "<div class='searchCacheFileDateSize'>Found ".$dataSize." / ".file_get_contents("mediaSize.index")." of related results on ".date("F d Y h:i:s a",filemtime($searchCacheFilePath))."</div>\n";
+		# if the search loaded from memory and was completed
+		if ($searchFinished){
+			echo $fullCacheOutput;
+		}else{
+			# the search was not completed so reload the page every 60 seconds until it is
+			echo "<script>";
+			echo "setTimeout(function() { window.location=window.location;},(1000*1));";
+			echo "</script>";
+			echo "<img class='localPulse' src='/pulse.gif'>\n";
+			echo $fullCacheOutput;
 		}
 	}else{
 		# if the file does not exist cache the search results
 		# ignore user aborts after the cacheing has begun
 		ignore_user_abort(true);
 
+		# write the cache file as a lock file
+		appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
+
+		# reload the page for the user
+		echo "<script>";
+		echo "window.location=window.location;";
+		echo "</script>";
+		echo "<img class='localPulse' src='/pulse.gif'>\n";
+
 		$startSearchTime=microtime(True);
 		# tell apache to not compress search results so streaming search results will work
 		#apache_setenv("no-gzip", "1");
 
-		# write the cache file as a lock file
-		appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
 		# set the max execution time to 15 minutes
 		# additional searches will display the results found by this running process
 		set_time_limit(900);
+
+		$pspell = pspell_new("en");
+		$pspellData="";
+		# if the query string contains a space
+		if (strpos($_GET['q']," ")){
+			# explode the string into an array split based on the spaces
+			$searchTerms=explode( " " , $searchQuery );
+			$correctedQuery="";
+			$correctedQueryHTML="";
+			$foundErrors=False;
+			# for each word seprated by a space create a search link
+			foreach($searchTerms as $searchTerm){
+				# check the spelling of each search term and include spelling sugestions
+				if (! pspell_check($pspell, $searchTerm)){
+					$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
+					foreach($spellingSuggestions as $word){
+						# create a search for corrected spelling of each word
+						#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+						# add the word to the corrected query
+						$foundErrors=True;
+						$correctedQuery .= $word." ";
+						$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
+						break;
+					}
+				}else{
+					$correctedQuery .= $searchTerm." ";
+					$correctedQueryHTML .= $searchTerm." ";
+					#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+				}
+			}
+			if ($foundErrors){
+				$pspellData .= "<div class='titleCard'>";
+				//echo "	<h2>Expand Search</h2>";
+				$pspellData .= "	<h2>Did you mean?</h2>";
+				$pspellData .= "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
+				$pspellData .= "</div>";
+			}
+		}else{
+			if (! pspell_check($pspell, $_GET['q'])){
+				$pspellData .= "<div class='titleCard'>";
+				$pspellData .= "<h2>";
+				$pspellData .= "Did you mean?";
+				$pspellData .= "</h2>";
+				$pspellData .= "<div class='listCard'>";
+				$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
+				foreach($spellingSuggestions as $word){
+					$pspellData .= "		<a class='button' href='/search.php?q=$word'>$word</a>";
+				}
+				$pspellData .= "</div>";
+				$pspellData .= "</div>";
+			}
+		}
+		# cache found data and display it
+		echo "$pspellData";
+		appendFile($searchCacheFilePath,$pspellData);
+
+		# build the dict data
+		$dictData="";
+		$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
+		if ( $definitionData ){
+			$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
+			# build the definition data
+			$definitionData = explode("\n",$definitionData);
+
+			$dictData .= "<div class='settingListCard'>\n";
+			$dictData .= "<h2>";
+			$dictData .= "Definition";
+			$dictData .= "</h2>";
+			$dictData .= "<div class='listCard'>\n";
+			//echo "<div class='titleCard'>\n";
+
+			$tempDefinition="";
+			$allDefinitions=Array();
+			foreach($definitionData as $definitionLine){
+				# check the tab depth
+				if (stripos($definitionLine,"definitions found")){
+					# this is the header and should be skipped
+					echo " ";
+				}else if (strlen($definitionLine) >= 2){
+					if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
+						# this is the start of a new definition
+						# append the previous definition to the definition array
+						$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
+						# blank the temp definition out for adding the new definiton
+						$tempDefinition = "";
+						# add the discovered line to the new definition entry
+						$tempDefinition .= $definitionLine."\n";
+					}else{
+						# this is part of the current definition
+						$tempDefinition .= $definitionLine."\n";
+					}
+				}else{
+					$tempDefinition .= $definitionLine."\n";
+				}
+			}
+			# for each definition draw a definition box object
+			$definitionCounter=1;
+			foreach($allDefinitions as $definition){
+				if (strlen($definition) >= 2){
+					if (($definition[0] != " ") && ($definition[1] != " ")){
+						$dictData .= "<div class='searchDef'>";
+						$dictData .= "<h3>Definition $definitionCounter</h3>";
+						$dictData .= "<pre class=''>";
+						$dictData .= $definition;
+						$dictData .= "</pre>";
+						$dictData .= "</div>";
+						$definitionCounter+=1;
+					}
+				}
+			}
+			$dictData .= "</div>";
+			$dictData .= "</div>";
+		}
+
+		appendFile($searchCacheFilePath,$dictData);
+		echo $dictData;
 
 		foreach( $indexPaths as $indexPath ){
 			# output space to prevent timeout
