@@ -1126,12 +1126,12 @@ processEpisode(){
 				resolverUrl="$ytLink"
 				# create a thumbnail for the mp3 links inside streams
 				episodeThumbSum=$(echo "$episodePath" | md5sum | cut -d' ' -f1)
-				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.png";then
-					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex showwavespic -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.png"
+				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.jpg";then
+					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex showwavespic -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.jpg"
 				fi
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.png" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.png"
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.jpg"
 				# add kodi link
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.png" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.png"
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.jpg"
 			else
 				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 			fi
@@ -1290,8 +1290,14 @@ processEpisode(){
 			} >> "$episodePagePath"
 		else
 			{
+				# for mp3 audio streams load the thumbnail as the background of the video
+				tempStyle="background-image: url(\"$episodePath-thumb$thumbnailExt\") !important;"
 				# build the html5 media player for local and remotly accessable media
-				echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+				if echo $mediaType | grep -q "audio";then
+					echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' style='$tempStyle' controls preload>"
+				else
+					echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+				fi
 				# redirect mkv files to the transcoder to cache the video file for the webplayer
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then
 					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
@@ -1302,9 +1308,6 @@ processEpisode(){
 					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
 					echo "<source src='$videoPath' type='$mimeType'>"
 				else
-
-
-
 					echo "<source src='$videoPath' type='$mimeType'>"
 				fi
 				echo "</$mediaType>"
