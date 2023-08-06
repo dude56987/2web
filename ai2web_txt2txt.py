@@ -44,9 +44,17 @@ if "--help" in sys.argv:
 	# exit after showing help
 	exit()
 ################################################################################
+def addToLog(tempFilePath, fileData):
+	print(fileData)
+	fileObj = open(tempFilePath, "a")
+	fileObj.write(fileData)
+	fileObj.close()
+################################################################################
 import torch
 # stable diffusion image generating code
 from diffusers import StableDiffusionPipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM
+
 
 if "--prompt" in sys.argv:
 	# get everything after one prompt and make that the prompt
@@ -75,10 +83,10 @@ if "--output-dir" in sys.argv:
 
 # replace spaces with underscores
 tempPromptText = promptText
-baseFileTitle = tempPromptText.replace(" ", "_")
+#baseFileTitle = tempPromptText.replace(" ", "_")
 
 # create hex for base file name
-baseFileTitle = hashlib.md5((baseFileTitle).encode('utf-8')).hexdigest()
+baseFileTitle = hashlib.md5((promptText).encode('utf-8')).hexdigest()
 
 versionNumber = 1
 
@@ -90,17 +98,49 @@ elif versionNumber < 100:
 
 if "--output-dir" in sys.argv:
 	fileTitle = os.path.join(outputDir, (baseFileTitle + "_v" + str(tempVersionNumber)))
+	# create the output dir if it does not exist
+	# - This will only happen from the CLI, the web interface creates its own directories to
+	#   avoid file permission issues
+	if not os.path.exists(outputDir):
+		os.mkdir(outputDir)
 else:
 	fileTitle = baseFileTitle + "_v" + str(tempVersionNumber)
+
+# if --set-model is called change the model
+if "--set-model" in sys.argv:
+	modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
+else:
+	modelPath = "distilgpt2"
+
+if "--offline" in sys.argv:
+	use_only_local = True
+else:
+	use_only_local = False
+
+# if --set-model is called change the model
+if "--max-length" in sys.argv:
+	maxLength = int(sys.argv[(sys.argv.index("--max-length")+1)])
+else:
+	maxLength = 100
+
+# if --set-model is called change the model
+if "--temp" in sys.argv:
+	outputTemp = float(sys.argv[(sys.argv.index("--temp")+1)])
+else:
+	outputTemp = 0.7
+
+# add  the log data #DEBUG
+tempFilePath = (fileTitle+".log")
+
+addToLog(tempFilePath,"Started log for prompt: "+promptText)
 
 failures = 0
 tempVersionNumber=1
 while versions > 0:
-	print("Versions Left: ", versions)
+	addToLog((fileTitle+".log"),("Versions Left: "+str(versions)))
 	if "--output-dir" in sys.argv:
-		print(fileTitle)
 		# figure out the name and version
-		while os.path.exists(fileTitle+".png"):
+		while os.path.exists(fileTitle+".txt"):
 			if versionNumber < 10:
 				tempVersionNumber = "00"+str(versionNumber)
 			elif versionNumber < 100:
@@ -109,8 +149,7 @@ while versions > 0:
 			versionNumber += 1
 			#print("File Title with outputDir: "+fileTitle)
 	else:
-		print(fileTitle)
-		while os.path.exists(fileTitle+".png"):
+		while os.path.exists(fileTitle+".txt"):
 			if versionNumber < 10:
 				tempVersionNumber = "00"+str(versionNumber)
 			elif versionNumber < 100:
@@ -119,57 +158,78 @@ while versions > 0:
 			versionNumber += 1
 			#print("File Title: "+fileTitle)
 
-	print("Creating image from prompt: "+fileTitle+".png")
-
-	# if --set-model is called change the model
-	if "--set-model" in sys.argv:
-		modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
-	else:
-		modelPath = "runwayml/stable-diffusion-v1-5"
-
-	if "--offline" in sys.argv:
-		use_only_local = True
-	else:
-		use_only_local = False
+	addToLog((fileTitle+".log"), ("Creating response from prompt as: "+fileTitle+".txt\n"))
 
 	# enable safety checker
-	if "--sfw" in sys.argv:
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads_ai_image/", local_files_only=use_only_local)
-		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads_ai_image/", local_files_only=use_only_local)
+	if "--gpu" in sys.argv:
+		#pipe = AutoModelForCausalLM.from_pretrained(model=modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local)
+		#model = AutoModelForCausalLM.from_pretrained(modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
+		try:
+			model = AutoModelForCausalLM.from_pretrained(modelPath, torch_dtype="auto", cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
+		except:
+			model = AutoModelForCausalLM.from_pretrained(modelPath, torch_dtype="auto", cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True, from_tf=True)
+		#model = AutoModelForSeq2SeqLM.from_pretrained(modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
 	else:
-		# the safety checker is disabled by default
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, safety_checker=None, cache_dir="/var/cache/2web/downloads_ai_image/", local_files_only=use_only_local)
-		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=None, cache_dir="/var/cache/2web/downloads_ai_image/", local_files_only=use_only_local)
+		#pipe = AutoModelForCausalLM.from_pretrained(model=modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local)
+		try:
+			model = AutoModelForCausalLM.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
+		except:
+			model = AutoModelForCausalLM.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True, from_tf=True)
+		#model = AutoModelForSeq2SeqLM.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
 
 	if "--debug-pipe-components" in sys.argv:
 		print("Pipe components: "+str(pipe.components))
 
+	addToLog((fileTitle+".log"), ("Building tokenizer...\n"))
+
+	tokenizer = AutoTokenizer.from_pretrained(modelPath)
+
+	addToLog((fileTitle+".log"), ("Checking for CUDA cores...\n"))
+
 	# allow the forced use of GPU or CPU for processing
 	if "--gpu" in sys.argv:
-		pipe.to("cuda")
+		model.to("cuda")
 	elif "--cpu" in sys.argv:
-		pipe.to("cpu")
+		model.to("cpu")
 	else:
 		# by default check if cuda cores are avaiable and if so use them, otherwise use the cpu
 		if torch.cuda.is_available():
-			pipe.to("cuda")
+			model.to("cuda")
 		else:
-			pipe.to("cpu")
+			model.to("cpu")
 	# generate image from prompt and get the generated image from the generated images array
-	image = pipe(prompt=promptText, height=int(imageHeight), width=int(imageWidth), negative_prompt=negativePromptText).images[0]
+	inputs = tokenizer(promptText, return_tensors="pt")
 
-# check if the output directory has been set
-	if "--output-dir" in sys.argv:
-		# save the created image to the specified output directory
-		tempFilePath = (os.path.join(outputDir, (fileTitle+".png")))
-	else:
-		tempFilePath = (fileTitle+".png")
+	input_ids = inputs.input_ids
 
-	image.save(tempFilePath)
+	#gen_tokens = model.generate(input_ids, do_sample=True, temperature=0.9, max_length=100)
+	gen_tokens = model.generate(input_ids, temperature=outputTemp, max_length=maxLength, do_sample=True)
+
+	gen_text = tokenizer.batch_decode(gen_tokens)[0]
+
+	#gen_text.replace("\n\n","\n")
+
+	print(gen_text)
+
+	#print("INPUTS: ",inputs)
+	#outputs = model(**inputs)
+	#print("OUTPUTS: ",outputs)
+	#anwserStartIndex= outputs.start_logits.argmax()
+	#anwserEndIndex= outputs.end_logits.argmax()
+	#predict_anwser_tokens = inputs.input_ids[0, anwserStartIndex : (anwserEndIndex + 1)]
+	#target_start_index = torch.tensor([14])
+	#target_end_index= torch.tensor([15])
+
+	#outputs = model(**inputs, start_positions=target_start_index, end_positions=target_end_index)
+	#print("outputs.loss:",outputs.loss)
+
+	addToLog((fileTitle+".log"), ("Writing cached response \n"))
+	# check if the output directory has been set
+	tempFilePath = (fileTitle+".txt")
+
+	fileObj = open(tempFilePath, "w")
+	fileObj.write(gen_text)
+	fileObj.close()
 
 	# check if the version was created successfully
 	if os.path.exists(tempFilePath):

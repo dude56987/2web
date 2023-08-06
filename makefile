@@ -198,6 +198,10 @@ build-deb: upgrade-hls
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2txt
 	cat build/py_head.txt > debian/usr/bin/ai2web_txt2txt
 	grep --invert-match "^[[:blank:]]*#" ai2web_txt2txt.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2txt
+	# q2a
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_q2a
+	cat build/py_head.txt > debian/usr/bin/ai2web_q2a
+	grep --invert-match "^[[:blank:]]*#" ai2web_q2a.py | tr -s '\n' >> debian/usr/bin/ai2web_q2a
 	# img2img
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_img2img
 	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
@@ -300,6 +304,14 @@ build-deb: upgrade-hls
 	chmod u+rwx debian/usr/bin/ai2web_prompt
 	chmod go-w debian/usr/bin/ai2web_prompt
 	chmod go+x debian/usr/bin/ai2web_prompt
+	# text anwsering
+	chmod u+rwx debian/usr/bin/ai2web_q2a
+	chmod go-w debian/usr/bin/ai2web_q2a
+	chmod go+x debian/usr/bin/ai2web_q2a
+	# text generation
+	chmod u+rwx debian/usr/bin/ai2web_txt2txt
+	chmod go-w debian/usr/bin/ai2web_txt2txt
+	chmod go+x debian/usr/bin/ai2web_txt2txt
 	#	txt2img
 	chmod u+rwx debian/usr/bin/ai2web_txt2img
 	chmod go-w debian/usr/bin/ai2web_txt2img

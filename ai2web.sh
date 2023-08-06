@@ -55,7 +55,7 @@ function libaryPaths(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/downloads_ai/"
+			echo "/var/cache/2web/downloads/ai/prompt/"
 		} >> "/etc/2web/ai/libaries.cfg"
 	fi
 	# write path to console
@@ -143,26 +143,35 @@ function update(){
 	################################################################################
 	# create the default download directories
 	################################################################################
-	# used for stable diffusion to generate images and videos
-	createDir "/var/cache/2web/downloads_ai_image/"
-	# used for gpt4all to anwser text prompts
-	createDir "/var/cache/2web/downloads_ai_text/"
+	# create web cache directories for model generated responses
+	createDir "/var/cache/2web/web/ai/txt2txt/"
+	createDir "/var/cache/2web/web/ai/img2img/"
+	createDir "/var/cache/2web/web/ai/txt2img/"
+	createDir "/var/cache/2web/web/ai/prompt/"
+	# create cache directories for AI models
+	createDir "/var/cache/2web/downloads/ai/prompt/"
+	createDir "/var/cache/2web/downloads/ai/txt2txt/"
+	createDir "/var/cache/2web/downloads/ai/txt2img/"
+	createDir "/var/cache/2web/downloads/ai/img2img/"
+	createDir "/var/cache/2web/downloads/ai/img2txt/"
+	createDir "/var/cache/2web/downloads/ai/zoom/"
+	createDir "/var/cache/2web/downloads/ai/voice2txt/"
+	createDir "/var/cache/2web/downloads/ai/txt2voice/"
 	# used for whisper to convert voice to text locally
-	createDir "/var/cache/2web/downloads_ai_voice/"
+	createDir "/var/cache/2web/downloads/ai/subtitles/"
 	# scan the sources
 	ALERT "AI Download Sources: $aiSources"
 	echo "$aiSources" | while read aiSource;do
 		# generate a sum for the source
-		#aiSum=$(echo "$aiSource" | sha512sum | cut -d' ' -f1)
 		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
 		# create the ai directory
 		createDir "$webDirectory/ai/$aiName/"
 		# link the individual index page for this ai model in the web interface
 		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
 		# do not process the ai if it is still in the cache
-		if ! test -f "/var/cache/2web/downloads_ai_text/$aiName";then
+		if ! test -f "/var/cache/2web/downloads/ai/prompt/$aiName";then
 			# download the ai model from remote location
-			curl "$aiSource" > "/var/cache/2web/downloads_ai_text/$aiName"
+			curl "$aiSource" > "/var/cache/2web/downloads/ai/prompt/$aiName"
 		fi
 	done
 }
@@ -453,15 +462,6 @@ function generateSubtitles(){
 	fi
 	startDebug
 
-	# speech to text translantion model download directory
-	createDir "/var/cache/2web/downloads/ai/tts/"
-	createDir "/var/cache/2web/downloads/ai/stt/"
-	#
-	createDir "/var/cache/2web/downloads/ai/voice2txt/"
-	createDir "/var/cache/2web/downloads/ai/txt2voice/"
-	#
-	createDir "/var/cache/2web/downloads/ai/txt2img/"
-	createDir "/var/cache/2web/downloads/ai/img2img/"
 	# generated subtitles cache directory
 	createDir "/var/cache/2web/ai/subs/"
 
@@ -478,7 +478,7 @@ function generateSubtitles(){
 	#whisper --model tiny \
 	whisper --model base \
 		--task translate \
-		--model_dir "/var/cache/2web/downloads/ai/stt/" \
+		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
 		--output_format "srt" \
 		--output_dir "/var/cache/2web/ai/subs/" \
 		--threads "$(cpuCount)" \
@@ -589,19 +589,26 @@ main(){
 		update "$@"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "ai2web"
-		# upgrade the jslint package
-		pip3 install --upgrade gpt4all
+		# install gpt4all for base text prompt generation
+		pip3 install --break-system-packages --upgrade gpt4all
 		# install whisper speech recognition
-		pip3 install --upgrade openai-whisper
-		# install stable diffusion
-		pip3 install --upgrade diffusers
-		# install additional components for stable diffusion
-		pip3 install --upgrade transformers
-		pip3 install --upgrade torch
-		pip3 install --upgrade safetensors
-		pip3 install --upgrade accelerate
+		pip3 install --break-system-packages --upgrade openai-whisper
+		# install stable diffusion diffusers library
+		pip3 install --break-system-packages --upgrade diffusers
+		# install the huggingface transformers library
+		pip3 install --break-system-packages --upgrade transformers
+		pip3 install --break-system-packages --upgrade torch
+		# tensor libaries
+		pip3 install --break-system-packages --upgrade safetensors
+		pip3 install --break-system-packages --upgrade xformers
+		pip3 install --break-system-packages --upgrade tensorflow
+		# accelerate allows using cpu and gpu
+		pip3 install --break-system-packages --upgrade accelerate
+		# 8bit support for accelerate to run larger models on smaller computers
+		pip3 install --break-system-packages --upgrade bitsandbytes
+		pip3 install --break-system-packages --upgrade tensorrt
 		# speech functions are provided by speechbrain, tts, stt
-		pip3 install --upgrade speechbrain
+		pip3 install --break-system-packages --upgrade speechbrain
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "ai2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

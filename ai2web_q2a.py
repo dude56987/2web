@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 ########################################################################
-# ai2web_image is a CLI tool to use stable diffusion language models
+# ai2web_q2a is a CLI tool to use stable diffusion text generation
 # Copyright (C) 2023  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,14 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-########################################################################
-try:
-	import gpt4all
-except:
-	print("ERROR: GPT4All is not installed ai2web_prompt needs missing dependency!")
-	print("You can install it with 'ai2web --upgrade'")
-	print("ai2web_prompt will now close...")
-	exit()
 ########################################################################
 # import libaries
 import sys, os, json, hashlib, sqlite3, time
@@ -52,33 +44,17 @@ if "--help" in sys.argv:
 	# exit after showing help
 	exit()
 ################################################################################
+def addToLog(tempFilePath, fileData):
+	print(fileData)
+	fileObj = open(tempFilePath, "a")
+	fileObj.write(fileData)
+	fileObj.close()
+################################################################################
 import torch
 # stable diffusion image generating code
 from diffusers import StableDiffusionPipeline
-if "--list-negative-prompts" in sys.argv:
-	h1("Looking for default prompts in: /etc/2web/ai/negative_prompts/")
-	# set the default negative prompt created by stable diffusion
-	discoveredPrompts = os.scandir("/etc/2web/ai/negative_prompts/")
-	for negativePromptBase in discoveredPrompts:
-		h1(str(negativePromptBase))
-		print(file_get_contents(os.path.join("/etc/2web/ai/negative_prompts/",negativePromptBase)))
-	exit()
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoModelForQuestionAnwsering
 
-if "--base-negative-prompt" in sys.argv:
-	baseNegativePrompt = sys.argv[(sys.argv.index("--base-negative-prompt")+1)]
-	baseNegativePromptPath = os.path.join("/etc/2web/ai/negative_prompts/",baseNegativePrompt)
-
-	if os.path.exists(baseNegativePromptPath):
-		# the negative prompt exists load it
-		negativePromptText = file_get_contents(baseNegativePromptPath)
-	elif os.path.exists(baseNegativePromptPath+".cfg"):
-		# the negative prompt exists but no extension was included
-		negativePromptText = file_get_contents(baseNegativePromptPath+".cfg")
-	else:
-		print("ERROR: The chosen --base-negative-prompt could not be loaded.")
-		exit()
-else:
-	negativePromptText = file_get_contents("/etc/2web/ai/negative_prompts/default.cfg")
 
 if "--prompt" in sys.argv:
 	# get everything after one prompt and make that the prompt
@@ -90,17 +66,6 @@ else:
 	print("[ERROR]:You must give a prompt with --prompt")
 	exit()
 
-# custom negative prompts
-if "--negative-prompt" in sys.argv:
-	# get everything after one prompt and make that the prompt
-	tempQuestion = " ".join(sys.argv)
-	argumentSearch = "--negative-prompt "
-	# get value of negative prompt, use quotes for multi line
-	negativePromptText = sys.argv[(sys.argv.index("--negative-prompt")+1)]
-elif "--negative-prompt-plus" in sys.argv:
-	# negative prompt that adds to the default negative prompts
-	negativePromptText += "," + sys.argv[(sys.argv.index("--negative-prompt-plus")+1)]
-
 # loop and make x versions of the image prompt
 if "--versions" in sys.argv:
 	versions = sys.argv[(sys.argv.index("--versions")+1)]
@@ -108,35 +73,20 @@ if "--versions" in sys.argv:
 else:
 	versions = 1
 
-if "--height" in sys.argv:
-	imageHeight = sys.argv[(sys.argv.index("--height")+1)]
-else:
-	imageHeight = 512
-
-if "--width" in sys.argv:
-	imageWidth = sys.argv[(sys.argv.index("--width")+1)]
-else:
-	imageWidth = 512
-
-# if the prompt is greater than 120 characters have the gpt4all ai rewrite it
-if len(promptText) > 120:
-	print("[ERROR]: This prompt is to long, Rewrite the prompt with less than 120 characters.")
+# if the prompt is greater than 500 characters it can not be processed
+if len(promptText) > 500:
+	print("[ERROR]: This prompt is to long, Rewrite the prompt with less than 500 characters.")
 	exit()
 
 if "--output-dir" in sys.argv:
 	outputDir = sys.argv[(sys.argv.index("--output-dir")+1)]
-	# write the log file
-	#fileObject=open(os.path.join(outputDir, "data.log"),"w")
-	#fileObject.write(str(sys.argv)+"\n")
-	#fileObject.close()
 
 # replace spaces with underscores
 tempPromptText = promptText
-baseFileTitle = tempPromptText.replace(" ", "_")
+#baseFileTitle = tempPromptText.replace(" ", "_")
 
-if len(baseFileTitle) > 100:
-	# if the file title is to long replace it with a hash sum of the input prompt
-	baseFileTitle = hashlib.md5((baseFileTitle).encode('utf-8')).hexdigest()
+# create hex for base file name
+baseFileTitle = hashlib.md5((promptText).encode('utf-8')).hexdigest()
 
 versionNumber = 1
 
@@ -148,17 +98,49 @@ elif versionNumber < 100:
 
 if "--output-dir" in sys.argv:
 	fileTitle = os.path.join(outputDir, (baseFileTitle + "_v" + str(tempVersionNumber)))
+	# create the output dir if it does not exist
+	# - This will only happen from the CLI, the web interface creates its own directories to
+	#   avoid file permission issues
+	if not os.path.exists(outputDir):
+		os.mkdir(outputDir)
 else:
 	fileTitle = baseFileTitle + "_v" + str(tempVersionNumber)
+
+# if --set-model is called change the model
+if "--set-model" in sys.argv:
+	modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
+else:
+	modelPath = "distilgpt2"
+
+if "--offline" in sys.argv:
+	use_only_local = True
+else:
+	use_only_local = False
+
+# if --set-model is called change the model
+if "--max-length" in sys.argv:
+	maxLength = int(sys.argv[(sys.argv.index("--max-length")+1)])
+else:
+	maxLength = 100
+
+# if --set-model is called change the model
+if "--temp" in sys.argv:
+	outputTemp = float(sys.argv[(sys.argv.index("--temp")+1)])
+else:
+	outputTemp = 0.7
+
+# add  the log data #DEBUG
+tempFilePath = (fileTitle+".log")
+
+addToLog(tempFilePath,"Started log for prompt: "+promptText)
 
 failures = 0
 tempVersionNumber=1
 while versions > 0:
-	print("Versions Left: ", versions)
+	addToLog((fileTitle+".log"),("Versions Left: "+str(versions)))
 	if "--output-dir" in sys.argv:
-		print(fileTitle)
 		# figure out the name and version
-		while os.path.exists(fileTitle+".png"):
+		while os.path.exists(fileTitle+".txt"):
 			if versionNumber < 10:
 				tempVersionNumber = "00"+str(versionNumber)
 			elif versionNumber < 100:
@@ -167,8 +149,7 @@ while versions > 0:
 			versionNumber += 1
 			#print("File Title with outputDir: "+fileTitle)
 	else:
-		print(fileTitle)
-		while os.path.exists(fileTitle+".png"):
+		while os.path.exists(fileTitle+".txt"):
 			if versionNumber < 10:
 				tempVersionNumber = "00"+str(versionNumber)
 			elif versionNumber < 100:
@@ -177,66 +158,64 @@ while versions > 0:
 			versionNumber += 1
 			#print("File Title: "+fileTitle)
 
-	print("Creating image from prompt: "+fileTitle+".png")
-
-	# if --set-model is called change the model
-	if "--set-model" in sys.argv:
-		modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
-	else:
-		modelPath = "runwayml/stable-diffusion-v1-5"
-
-	if "--offline" in sys.argv:
-		use_only_local = True
-	else:
-		use_only_local = False
+	addToLog((fileTitle+".log"), ("Creating response from prompt as: "+fileTitle+".txt\n"))
 
 	# enable safety checker
-	if "--sfw" in sys.argv:
-		#pipe = StableDiffusionPipeline.from_pretrained(modelPath, revision="fp16", torch_dtype=torch.float16)
-		#pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16)
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
-		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
+	if "--gpu" in sys.argv:
+		try:
+			model = AutoModelForQuestionAnwsering.from_pretrained(modelPath, torch_dtype="auto", cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
+		except:
+			model = AutoModelForQuestionAnwsering.from_pretrained(modelPath, torch_dtype="auto", cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True, from_tf=True)
 	else:
-		# the safety checker is disabled by default
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, safety_checker=None, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
-		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=None, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
+		try:
+			model = AutoModelForQuestionAnwsering.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True)
+		except:
+			model = AutoModelForQuestionAnwsering.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2txt/", local_files_only=use_only_local, low_cpu_mem_usage=True, from_tf=True)
 
 	if "--debug-pipe-components" in sys.argv:
 		print("Pipe components: "+str(pipe.components))
 
+	addToLog((fileTitle+".log"), ("Building tokenizer...\n"))
+
+	tokenizer = AutoTokenizer.from_pretrained(modelPath)
+
+	addToLog((fileTitle+".log"), ("Checking for CUDA cores...\n"))
+
 	# allow the forced use of GPU or CPU for processing
 	if "--gpu" in sys.argv:
-		pipe.to("cuda")
+		model.to("cuda")
 	elif "--cpu" in sys.argv:
-		pipe.to("cpu")
+		model.to("cpu")
 	else:
 		# by default check if cuda cores are avaiable and if so use them, otherwise use the cpu
 		if torch.cuda.is_available():
-			pipe.to("cuda")
+			model.to("cuda")
 		else:
-			pipe.to("cpu")
+			model.to("cpu")
 	# generate image from prompt and get the generated image from the generated images array
-	image = pipe(prompt=promptText, height=int(imageHeight), width=int(imageWidth), negative_prompt=negativePromptText).images[0]
+	inputs = tokenizer(promptText, return_tensors="pt")
 
-# check if the output directory has been set
-	if "--output-dir" in sys.argv:
-		# save the created image to the specified output directory
-		tempFilePath = (os.path.join(outputDir, (fileTitle+".png")))
-	else:
-		tempFilePath = (fileTitle+".png")
+	input_ids = inputs.input_ids
 
-	image.save(tempFilePath)
+	#gen_tokens = model.generate(input_ids, do_sample=True, temperature=0.9, max_length=100)
+	gen_tokens = model.generate(input_ids, temperature=outputTemp, max_length=maxLength, do_sample=True)
+
+	gen_text = tokenizer.batch_decode(gen_tokens)[0]
+
+	print(gen_text)
+
+	addToLog((fileTitle+".log"), ("Writing cached response \n"))
+	# check if the output directory has been set
+	tempFilePath = (fileTitle+".txt")
+
+	fileObj = open(tempFilePath, "w")
+	fileObj.write(gen_text)
+	fileObj.close()
 
 	# check if the version was created successfully
 	if os.path.exists(tempFilePath):
 		# mark another version completed
 		versions -= 1
-		# reset failures so they must be consecutive to fail out
-		failures = 0
 	else:
 		# this is a failure to save the file
 		print("ERROR: Could not save version correctly", tempFilePath)
