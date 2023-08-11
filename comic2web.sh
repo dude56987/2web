@@ -1474,8 +1474,8 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "comic2web"
 		# upgrade gallery-dl pip packages
-		pip3 install --upgrade gallery-dl
-		pip3 install --upgrade dosage
+		pip3 install --break-system-packages --upgrade gallery-dl
+		pip3 install --break-system-packages --upgrade dosage
 	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
 		# comic2web --convert filePath
 		convertImage "$3"

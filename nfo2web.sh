@@ -2454,6 +2454,11 @@ main(){
 		nuke
 	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 		clean
+	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		checkModStatus "iptv2web"
+		# upgrade streamlink and yt-dlp pip packages
+		pip3 install --break-system-packages --upgrade streamlink
+		pip3 install --break-system-packages --upgrade yt-dlp
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"
