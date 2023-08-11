@@ -455,6 +455,33 @@ function cacheCheck(){
 	fi
 }
 ################################################################################
+iptv2web_sleep(){
+	################################################################################
+	# checking sleepTime.cfg to see the max wait time between downloads
+	echo "Loading up sleep config '/etc/2web/iptv/sleepTime.cfg'"
+	if test -f /etc/2web/iptv/sleepTime.cfg;then
+		# load the config file
+		sleepTime=$(cat /etc/2web/iptv/sleepTime.cfg)
+	else
+		# if no config exists create the default config
+		sleepTime="30"
+		# write the new config from the path variable
+		echo "$sleepTime" > /etc/2web/iptv/sleepTime.cfg
+	fi
+	################################################################################
+	# sleep between 0 and 10 seconds between each link download
+	if [ $sleepTime -gt 0 ];then
+		tempTime="$(($RANDOM % $sleepTime))"
+		echo "Waiting for '$tempTime' seconds..."
+		sleep "$tempTime"
+	else
+		echo "Wait time disabled..."
+		return
+	fi
+	################################################################################
+	return
+}
+################################################################################
 function process_M3U_file(){
 	# open m3u files
 	channels=$(grep -v "#EXTM3U" "$1")
@@ -535,11 +562,18 @@ function processLink(){
 			if streamPass --can-handle-url "$link";then
 				INFO "Link can be processed by streamlink..."
 				# determine the local hostname, use it to build the resolver path
-				hostPath='http://'$(hostname)'.local/live/iptv-resolver.php?url="'$link'"'
-				hostPathHD='http://'$(hostname)'.local/live/iptv-resolver.php?HD="true"&url="'$link'"'
+				# - check for php values in url
+				#if echo "$link" | grep -q "?";then
+					hostPath='http://'$(hostname)'.local/live/iptv-resolver.php?url="'$link'"'
+					hostPathHD='http://'$(hostname)'.local/live/iptv-resolver.php?HD="true"&url="'$link'"'
+				#else
+				#	hostPath="http://$(hostname).local/live/iptv-resolver.php?url=$link"
+				#	hostPathHD="http://$(hostname).local/live/iptv-resolver.php?HD="true"&url=$link"
+				#fi
 				#hostPath='iptv-resolver.php?url="'$link'"'
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
+
 				if which yt-dlp && which jq;then
 					INFO "Attempting to get link metadata with yt-dlp ..."
 					streamLinkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
@@ -583,6 +617,7 @@ function processLink(){
 							fi
 						fi
 
+
 						if echo -n "$tempMeta" | grep -q "thumbnail";then
 							thumbnailLink=$(echo "$tempMeta" | jq -r ".thumbnail" )
 							#ALERT "thumbnailLink = $thumbnailLink"
@@ -592,59 +627,69 @@ function processLink(){
 						#ALERT "link title  from display_id = $fileName"
 					fi
 				fi
-				#ERROR "[DEBUG]: checking filename length '$fileName'"
+
 				tempFileName=$(echo -n "$fileName" | wc -c )
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
+					# try to get json data with streamlink
+					fileName=$(streamlink -j "$link" | jq .metadata.title)
+				fi
+
+				#ERROR "[DEBUG]: checking filename length '$fileName'"
+				tempFileName=$(echo -n "$fileName" | wc -c )
+				tempFileName=$(($tempFileName))
+				if [ 3 -lt $tempFileName ];then
+					# if the name of the stream could be retrieved then process the link
+					#ERROR "[DEBUG]: FileName = $fileName"
+					examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
+					examineIconLink "$thumbnailLink" "$hostPath" "$fileName" "$radio"
+					sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
+					sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
+					#ERROR "[DEBUG]: SUM = $sum"
+					webIconPath="http://$(hostname).local/live/icons/$sum.png"
+					webIconPathHD="http://$(hostname).local/live/icons/$sumHD.png"
+					#webIconPath="$sum.png"
+					# check if this link is a radio link
+					if echo $lineCaught | grep -Eq "radio=[\",']true";then
+						# if the line is a radio entry
+						ERROR "Radio line found mark radio tag true"
+						radio="true"
+					elif echo "$radioFile" | grep -q "true";then
+						ERROR "Radio file is being scanned"
+						radio="true"
+					else
+						INFO "Found generated video entry set radio to false"
+						radio="false"
+					fi
+					#ALERT "Adding channel '$fileName' to m3u..."
+					#ERROR "[DEBUG]: WebIconPath = $webIconPath"
+					{
+						echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"2web\",$fileName HD"
+						echo "$hostPathHD"
+						echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"2web\",$fileName"
+						echo "$hostPath"
+					} >> "$channelsPath"
+
+					# add the channels to the 2web group
+					SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/groups.db" "2web"
+					SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/groups.db" "2web"
+
+					# add the info to the database
+					addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/new/channels.index"
+					addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/new/channels.index"
+
+					addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/random/channels.index"
+					addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/random/channels.index"
+
+					SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/data.db" "channels"
+					SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/data.db" "channels"
+					iptv2web_sleep
+				else
+					# if the title of the stream could not be found skip adding the stream to the combined playlist and log an error
 					fileName=$(echo "$link" | rev | cut -d'/' -f1 | rev)
-					addToLog "ERROR" "Failed Download" "The download of '$link' could not be used to identify the name, so the end of the url will be used."
+					addToLog "ERROR" "Failed Download" "The download of '$link' could not be used to identify the name. Skipping adding broken link."
 					#ALERT "[DEBUG]: filename too short ripping end of url '$fileName'"
 				fi
-				#ERROR "[DEBUG]: FileName = $fileName"
-				examineIconLink "$thumbnailLink" "$hostPathHD" "$fileName HD" "$radio"
-				examineIconLink "$thumbnailLink" "$hostPath" "$fileName" "$radio"
-				sum=$(echo -n "$hostPath" | md5sum | cut -d' ' -f1)
-				sumHD=$(echo -n "$hostPathHD" | md5sum | cut -d' ' -f1)
-				#ERROR "[DEBUG]: SUM = $sum"
-				webIconPath="http://$(hostname).local/live/icons/$sum.png"
-				webIconPathHD="http://$(hostname).local/live/icons/$sumHD.png"
-				#webIconPath="$sum.png"
-				# check if this link is a radio link
-				if echo $lineCaught | grep -Eq "radio=[\",']true";then
-					# if the line is a radio entry
-					ERROR "Radio line found mark radio tag true"
-					radio="true"
-				elif echo "$radioFile" | grep -q "true";then
-					ERROR "Radio file is being scanned"
-					radio="true"
-				else
-					INFO "Found generated video entry set radio to false"
-					radio="false"
-				fi
-				#ALERT "Adding channel '$fileName' to m3u..."
-				# add the info to the database
-				#addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/channels.index"
-				#addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/channels.index"
-
-				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/new/channels.index"
-				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/new/channels.index"
-
-				addToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/random/channels.index"
-				addToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/random/channels.index"
-
-				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/data.db" "channels"
-				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/data.db" "channels"
-
-				#ERROR "[DEBUG]: WebIconPath = $webIconPath"
-				{
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPath\" group-title=\"2web\",$fileName HD"
-					echo "$hostPathHD"
-					echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"2web\",$fileName"
-					echo "$hostPath"
-				} >> "$channelsPath"
-				# add the channels to the 2web group
-				SQLaddToIndex "$webDirectory/live/index/channel_$sum.index" "$webDirectory/live/groups.db" "2web"
-				SQLaddToIndex "$webDirectory/live/index/channel_$sumHD.index" "$webDirectory/live/groups.db" "2web"
 			else
 				ERROR "Custom url creation failed for '$link'"
 				return 1
@@ -1130,9 +1175,18 @@ webGen(){
 					echo "	<a class='button' href='$link'>"
 					echo "		Direct Link"
 					echo "	</a>"
-					echo "	<a class='button vlcButton' href='vlc://$link'>"
+
+					newLink="$( echo ${link//\"/\\\"} )"
+					newLink="$( echo ${newLink//http:\/\/$(hostname).local/} )"
+
+					newLink="vlc://http://\".\$_SERVER['HTTP_HOST'].\"$newLink"
+
+					echo "<?PHP"
+					echo "	echo \"<a class='button hardLink vlcButton' href='$newLink'>\";"
+					echo "?>"
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "	</a>"
+
 					echo "</div>"
 					echo "</div>"
 
@@ -1198,9 +1252,18 @@ webGen(){
 					echo "	<a class='button hardLink' href='$link'>"
 					echo "		Direct Link"
 					echo "	</a>"
-					echo "	<a class='button hardLink vlcButton' href='vlc://$link'>"
+
+					newLink="$( echo ${link//\"/\\\"} )"
+					newLink="$( echo ${newLink//http:\/\/$(hostname).local/} )"
+
+					newLink="vlc://http://\".\$_SERVER['HTTP_HOST'].\"$newLink"
+
+					echo "<?PHP"
+					echo "	echo \"<a class='button hardLink vlcButton' href='$newLink'>\";"
+					echo "?>"
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "	</a>"
+
 					for group in $groupTitle;do
 						echo "	<a class='button groupButton tag' href='/live/?filter=$group'>$group</a>"
 					done
@@ -1226,6 +1289,12 @@ webGen(){
 					echo "</body>"
 					echo "</html>"
 				} > "$webDirectory/live/channels/channel_$channelNumber.php"
+				{
+					# write the link to a strm file for vlc link
+					echo "#EXTM3U"
+					echo "#EXTINF:-1,$title"
+					echo "$link"
+				} > "$webDirectory/live/channels/channel_$channelNumber.m3u"
 				################################################################################
 				# pull the link on this line and store it
 				################################################################################
@@ -1383,9 +1452,8 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "iptv2web"
 		# upgrade streamlink and yt-dlp pip packages
-		pip3 install --upgrade streamlink
-		#pip3 install --upgrade youtube-dl
-		pip3 install --upgrade yt-dlp
+		pip3 install --break-system-packages --upgrade streamlink
+		pip3 install --break-system-packages --upgrade yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# copy local hls.js included in package to the website
 		linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"
