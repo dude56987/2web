@@ -133,6 +133,7 @@ if "--list-json" in sys.argv:
 	gptj = loadModel()
 	# list the models in json format
 	print(str(gptj.list_models()))
+	exit()
 
 # read the current active models
 aiModels = os.scandir("/var/cache/2web/downloads/ai/prompt/")
@@ -144,6 +145,7 @@ if "--list-installed" in sys.argv:
 	prompt = False
 	for aiModel in installedAi:
 		print("Installed AI Model: "+aiModel)
+	exit()
 
 if "--list-models" in sys.argv:
 	prompt = False
@@ -164,6 +166,25 @@ if "--list-models" in sys.argv:
 		if "isDefault" in onlineModel.keys():
 			print("Recommended 'Default' Model For Use by GPT4All")
 		print()
+	exit()
+
+if "--rebuild-config" in sys.argv:
+	prompt = False
+	gptj = loadModel()
+	# get json format of available models
+	# get the list of dicts describing moddels
+	onlineModels = gptj.list_models()
+	fileObj = open("/etc/2web/ai/sources.cfg", "w")
+	for onlineModel in onlineModels:
+		fileObj.write("#"*80+"\n")
+		fileObj.write("# Uncomment the below to download the language model"+"\n")
+		fileObj.write("#"+ onlineModel["filename"]+"\n")
+		fileObj.write("#\t Description: "+ onlineModel["description"]+"\n")
+		fileObj.write("#\t  Model Size: "+ "MB "+str(int(onlineModel["filesize"]) / 1000000)+"\n")
+		if "isDefault" in onlineModel.keys():
+			fileObj.write("# Recommended 'Default' Model For Use by GPT4All\n")
+	fileObj.close()
+	exit()
 
 if "--prompt" in sys.argv:
 	prompt = True
@@ -247,7 +268,7 @@ while versions > 0:
 			versionNumber += 1
 			print("File Title: "+fileTitle)
 	# generate the anwser
-	anwser = gptj.generate(prompt=question, max_tokens=100, repeat_penalty=1.18, temp=temperature )
+	anwser = gptj.generate(prompt=question, max_tokens=500, repeat_penalty=1.18, temp=temperature )
 
 	noOutputWarning  = "WARNING: No anwser could be returned by the language model to your input.\n"
 	noOutputWarning += "Please change your input in order to get a response. Some ways to fix this.\n"

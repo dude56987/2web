@@ -439,6 +439,57 @@ function buildBlock(){
 	done
 }
 ########################################################################
+function generateLyrics(){
+	# generate lyrics using local AI tool whisper
+
+	# used to generate subtitles for video files that do not already have subtitles
+	videoFile=$1
+
+	# split up input path
+	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
+	filePath=$(echo "$videoFile" | rev | cut -d '/' -f2- | rev)
+
+	# check if the video file exists
+	if ! test -f "$videoFile";then
+		return 0
+	fi
+	# check if the file has already been created
+	if test -f "$filePath/$fileName-lyrics.ai.txt";then
+		return 0
+	elif echo "$videoFile" | grep ".strm$";then
+		# check if the file is a .strm that can not generate subtitles
+		return 0
+	fi
+	startDebug
+
+	# generated subtitles cache directory
+	createDir "/var/cache/2web/ai/lyrics/"
+
+	# input the videofile to generate srt file
+	# - save only .srt subtitle files
+	# - use the max threads
+	# - set task to translate so non-english movies are translated into english
+	# - english movies will be transcribed with with translate task as well
+	# - chosen model will be downloaded on first use
+	# - models are: tiny, base, small, medium, large, large-v2
+	# - threads is set to one because the processing jobs that call this function run in parallel
+	#/usr/bin/sem --retries 10 --jobs 1 --fg --id "AI" whisper --model small \
+	#whisper --model small \
+	#whisper --model tiny \
+	whisper --model base \
+		--task translate \
+		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
+		--output_format "srt" \
+		--output_dir "/var/cache/2web/ai/lyrics/" \
+		--threads "$(cpuCount)" \
+		"$videoFile"
+	# link the generated subtitle file into the same directory as the file
+	# - This can then be linked into the kodi directory for library video files
+	# - This can generate .srt subs for the video_cache/ and translate_cache/
+	linkFile "/var/cache/2web/ai/subs/$fileName-lyrics.ai.txt" "$filePath/$fileName.ai.txt"
+	stopDebug
+}
+########################################################################
 function generateSubtitles(){
 	# generate subtitles using local AI tool whisper
 
@@ -510,33 +561,50 @@ webUpdate(){
 	# link the homepage
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
 
-	startDebug
-	#	check for files that can be transcribed by whisper
-	foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
-		| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
-		| shuf )
-	echo "$foundVideoFiles" | while read videoFilePath;do
-		#
-		generateSubtitles "$videoFilePath"
-	done
-	# look for movies that can be transcribed by whisper
-	foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
-		| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
-		| shuf )
-	echo "$foundVideoFiles" | while read videoFilePath;do
-		#
-		generateSubtitles "$videoFilePath"
-	done
-	stopDebug
+	################################################################################
+	# generate lyrics for mp3 tracks in music2web
+	################################################################################
+	if returnModStatus "music2web";then
+		foundVideoFiles=$(find "$webDirectory/kodi/music/" \
+			| grep ".mp3$" \
+			| shuf )
+		echo "$foundVideoFiles" | while read videoFilePath;do
+			#
+			generateLyrics "$videoFilePath"
+		done
+	fi
 
+
+	################################################################################
+	#	check for files that can be transcribed by whisper
+	################################################################################
+	if returnModStatus "nfo2web";then
+		foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
+			| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+			| shuf )
+		echo "$foundVideoFiles" | while read videoFilePath;do
+			#
+			generateSubtitles "$videoFilePath"
+		done
+		# look for movies that can be transcribed by whisper
+		foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
+			| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+			| shuf )
+		echo "$foundVideoFiles" | while read videoFilePath;do
+			#
+			generateSubtitles "$videoFilePath"
+		done
+	fi
 
 	################################################################################
 	# build the comparisons in the database for machine learning comparison match database
 	# - This will build comparisons for related videos style comparisons
 	################################################################################
-	compareGroup "/var/cache/2web/ml.db" "movies"
-	compareGroup "/var/cache/2web/ml.db" "shows"
-	compareGroup "/var/cache/2web/ml.db" "episodes"
+	if returnModStatus "nfo2web";then
+		compareGroup "/var/cache/2web/ml.db" "movies"
+		compareGroup "/var/cache/2web/ml.db" "shows"
+		compareGroup "/var/cache/2web/ml.db" "episodes"
+	fi
 	#compareGroup "/var/cache/2web/ml.db" "graphs"
 	#compareGroup "/var/cache/2web/ml.db" "repos"
 	#compareGroup "/var/cache/2web/ml.db" "artists"

@@ -117,9 +117,11 @@ foreach($modules as $module){
 		echo "					Enable or disable sync of linked kodi instances.";
 		echo "				</li>";
 	}elseif ($module == "wiki2web"){
+		echo "				<li>";
+		echo "					 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.";
+		echo "				<li>";
+		# if zimdump does not exist zim files can not be extracted correctly
 		if (! is_file("/usr/bin/zimdump")){
-			# if zimdump does not exist zim files can not be extracted correctly
-			echo "				<li>";
 			echo "					<span class='disabledSetting'>wiki2web REQUIRES zimdump from zim-tools package to extract .zim files<span>";
 			echo "				</li>";
 			echo "				<li>";
@@ -134,6 +136,9 @@ foreach($modules as $module){
 		echo "					Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.";
 		echo "				</li>";
 	}elseif ($module == "ai2web"){
+		echo "				<li>";
+		echo "					 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.";
+		echo "				</li>";
 		echo "				<li>";
 		echo "					Will enable machine learning for recommending videos.";
 		echo "				</li>";

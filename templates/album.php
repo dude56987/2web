@@ -139,6 +139,14 @@ if (array_key_exists("play",$_GET)){
 		echo "<audio class='albumPlayer' controls loop autoplay>";
 		echo "	<source src='$track.mp3' type='audio/mpeg'>";
 		echo "</audio>";
+		if (file_exists($track."-lyrics.txt")){
+			echo "<div class='titleCard'>";
+			echo "<h1>Lyrics</h1>";
+			echo "<pre>";
+			echo file_get_contents($track."-lyrics.txt");
+			echo "</pre>";
+			echo "</div>";
+		}
 	}
 }
 ?>

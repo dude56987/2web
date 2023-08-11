@@ -61,7 +61,7 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 		# launch the process with a background scheduler
 		$command = 'echo "';
 		# one at a time queue, but launch from atq right away
-		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --bg --jobs 1 --id ai2web ';
+		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
 		# default load order of models if found on system
 		# check for loading custom LLM
 		if (! is_dir("/var/cache/2web/web/ai/img2img/")){
@@ -152,6 +152,100 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 			redirect($redirectUrl);
 		}
 	}
+}else if (array_key_exists("prompt",$_POST)){
+	# text prompting interface for gpt4all
+	# prompt
+
+	$fileSumString  = ($_POST['prompt']);
+	$fileSumString .= ($_POST['model']);
+	$fileSumString .= ($_POST['temperature']);
+
+	$fileSum=md5($fileSumString);
+
+	# launch the process with a background scheduler
+	$command = "echo '";
+	# one at a time queue, but launch from atq right away
+	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
+	# default load order of models if found on system
+	# check for loading custom LLM
+	if (! is_dir("/var/cache/2web/web/ai/prompt/")){
+		mkdir("/var/cache/2web/web/ai/prompt/");
+	}
+	if (! is_dir("/var/cache/2web/web/ai/prompt/".$fileSum."/")){
+		mkdir("/var/cache/2web/web/ai/prompt/".$fileSum."/");
+	}
+	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg")){
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg",$_POST["prompt"]);
+	}
+	# always write start time
+	file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
+	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg")){
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg",$_POST["model"]);
+	}
+	if (array_key_exists("model",$_POST)){
+		$command .= '/usr/bin/ai2web_prompt --set-model "'.$_POST["model"].'" ';
+	}else{
+		# default model loaded by prompt is groovy
+		$command .= '/usr/bin/ai2web_prompt ';
+	}
+	$command .= '--output-dir "/var/cache/2web/web/ai/prompt/'.$fileSum.'/" ';
+	if (array_key_exists("versions",$_POST)){
+		if ($_POST["versions"] != "NONE"){
+			$command .= '--versions "'.$_POST["versions"].'" ';
+		}
+	}
+
+	if (is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg")){
+		# increment existing versions file
+		$foundVersions = file_get_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg");
+		$foundVersions += $_POST["versions"];
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg", $foundVersions);
+	}else{
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$_POST["versions"]);
+	}
+
+	if (array_key_exists("prompt",$_POST)){
+		if ($_POST["prompt"] != "NONE"){
+			$command .= '--one-prompt "'.$_POST["prompt"].'" ';
+		}
+	}
+
+	$command .= "' | at -M now";
+
+	if ($_POST["debug"] == "yes"){
+		echo "<div class='errorBanner'>\n";
+		echo "<hr>\n";
+		echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+		echo "<hr>\n";
+		echo "</div>\n";
+	}
+	# create the image view script link
+	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
+		symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php"));
+	}
+	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg")){
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$command);
+	}
+	# launch the command
+	shell_exec($command);
+	# delay 1 seconds to allow loading of database
+	if(array_key_exists("HTTPS",$_SERVER)){
+		if($_SERVER['HTTPS']){
+			$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/prompt/".$fileSum."/?autoRefresh");
+		}else{
+			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/prompt/".$fileSum."/?autoRefresh");
+		}
+	}else{
+		$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/prompt/".$fileSum."/?autoRefresh");
+	}
+	if ($_POST["debug"] == "yes"){
+		echo "<p>".$redirectUrl."</p>\n";
+		echo "<a class='button' href='/ai/'>Back To Main Index</a>\n";
+		echo "</div>\n";
+	}else{
+		sleep(1);
+		redirect($redirectUrl);
+	}
 }else if (array_key_exists("imageInputPrompt",$_POST)){
 	# text to image generation
 	# txt2img
@@ -168,7 +262,7 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 	# launch the process with a background scheduler
 	$command = "echo '";
 	# one at a time queue, but launch from atq right away
-	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --bg --jobs 1 --id ai2web ';
+	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
 	# default load order of models if found on system
 	# check for loading custom LLM
 	if (! is_dir("/var/cache/2web/web/ai/txt2img/")){
@@ -295,45 +389,73 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 		echo "<hr>\n";
 		echo "</div>\n";
 	}else{
+		# create the directories with proper permissions for web access
 		if ($_POST["debug"] == "yes"){
 			echo "<div class='titleCard'>\n";
 		}
-		# launch the process with a background scheduler
-		$command = 'echo "';
-		# one at a time queue, but launch from atq right away
-		#$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --retries 10 --jobs 1 --id ai2web ';
-		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --bg --jobs 1 --id ai2web ';
-		# default load order of models if found on system
-		# check for loading custom LLM
-		if (array_key_exists("llm",$_POST)){
-			$command .= '/usr/bin/ai2web_prompt --set-model '.$_POST["llm"].' ';
-		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-l13b-snoozy.bin")){
-			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-l13b-snoozy.bin ';
-		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.2-jazzy.bin")){
-			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.2-jazzy.bin ';
-		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-gpt4all-j-v1.3-groovy.bin")){
-			$command .= '/usr/bin/ai2web_prompt --set-model ggml-gpt4all-j-v1.3-groovy.bin ';
-		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-mpt-7b-chat.bin")){
-			$command .= '/usr/bin/ai2web_prompt --set-model ggml-mpt-7b-chat.bin ';
-		}else if (file_exists("/var/cache/2web/downloads_ai/ggml-nous-gpt4-vicuna-13b.bin")){
-			$command .= '/usr/bin/ai2web_prompt --set-model ggml-nous-gpt4-vicuna-13b.bin ';
-		}else{
-			# default model loaded by prompt is groovy
-			$command .= '/usr/bin/ai2web_prompt ';
+
+		if (! is_dir("/var/cache/2web/web/ai/txt2txt/")){
+			mkdir("/var/cache/2web/web/ai/txt2txt/");
 		}
 
-		# check for custom personas
-		if (array_key_exists("persona",$_POST)){
-			if ($_POST["persona"] != "NONE"){
-				$command .= '--load-persona '.$_POST["persona"].' ';
-			}
+		# build the input prompt sum
+		$questionSum = md5($_POST['inputPrompt']);
+
+		#
+		if (! is_dir("/var/cache/2web/web/ai/txt2txt/".$questionSum."/")){
+			mkdir("/var/cache/2web/web/ai/txt2txt/".$questionSum."/");
 		}
-		# build the convoSum to be as unique as posible
-		$_POST["threadSum"] = md5($_SERVER['REQUEST_TIME_FLOAT'].$_SERVER["HTTP_USER_AGENT"].gethostname());
-		#$command .= '/usr/bin/ai2web_prompt ';
-		if (array_key_exists("threadSum",$_POST)){
-			$command .= '--thread-sum \"'.$_POST['threadSum'].'\" ';
+
+		# update the started time
+		file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
+
+		# create the response viewing script link
+		if (! is_link("/var/cache/2web/web/ai/txt2txt/".$questionSum."/index.php")){
+			symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/txt2txt/".$questionSum."/index.php"));
 		}
+		if (! is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/prompt.cfg")){
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/prompt.cfg",$_POST["inputPrompt"]);
+		}
+		if (! is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg")){
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg",  );
+		}
+
+		# launch the process with a background scheduler
+		$command = "echo '";
+		# one at a time queue, but launch from atqueue right away, leave in foreground to view active processes from atq command
+		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
+
+		# check for loading custom LLM
+
+
+		# default model loaded by prompt is groovy
+		$command .= '/usr/bin/ai2web_txt2txt ';
+
+
+		$command .= '--output-dir "/var/cache/2web/web/ai/txt2txt/'.$questionSum.'/" ';
+
+		# set the versions value for this prompt
+		if (is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg")){
+			# increment existing versions file
+			$foundVersions = file_get_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg");
+			$foundVersions += $_POST["versions"];
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg", $foundVersions);
+		}else{
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg",$_POST["versions"]);
+		}
+		# set the versions in the command
+		$command .= '--versions "'.$_POST["versions"].'" ';
+
+		# convert temperature
+		if($_POST["temperature"] > 9){
+			$command .= '--temp "1.0" ';
+		}else if($_POST["temperature"] <= 0){
+			$command .= '--temp "0.1" ';
+		}else{
+			$command .= '--temp "0.'.$_POST["temperature"].'" ';
+		}
+
+		$command .= '--max-length "'.$_POST["maxOutput"].'" ';
 
 		$_POST['inputPrompt'] = str_replace("\n","",$_POST['inputPrompt']);
 		$_POST['inputPrompt'] = str_replace("'","`",$_POST['inputPrompt']);
@@ -343,20 +465,9 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 		# - This is so the web interface will display the recent prompts submited by that user
 		# - This must be seprate in order to allow searching database based on indivual user access
 		# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
-		$tempUserAgent = $_SERVER["HTTP_USER_AGENT"];
-		if (array_key_exists("REMOTE_USER",$_SERVER)){
-			$tempUserAgent .= $_SERVER["REMOTE_USER"];
-		}
-		$tempUserAgent = md5($tempUserAgent);
-		# use the threadSum for the userSum
-		$tempUserAgent = $_POST["threadSum"];
-		# if in a thread
-		if (array_key_exists("thread",$_POST)){
-			$tempUserAgent = $_POST["thread"];
-		}
+		$tempUserAgent = md5($_POST["inputPrompt"]);
 		# generate the command setting the user agent, otherwise user agent will be set to unknown
-		$command .=	'--user-agent '.$tempUserAgent.' ';
-		$command .=	'--one-prompt \"'.$_POST['inputPrompt'].'\"" ';
+		$command .=	'--prompt "'.$_POST['inputPrompt'].'" '."'";
 		$command .= ' | at -M now';
 		#$command .= ' | batch';
 		# launch the command
@@ -368,12 +479,122 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 		# delay 1 seconds to allow loading of database
 		if(array_key_exists("HTTPS",$_SERVER)){
 			if($_SERVER['HTTPS']){
-				$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/?thread=".$tempUserAgent);
+				$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/?autoRefresh");
 			}else{
-				$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/?thread=".$tempUserAgent);
+				$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/?autoRefresh");
 			}
 		}else{
-			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/?thread=".$tempUserAgent);
+			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/?autoRefresh");
+		}
+		if ($_POST["debug"] == "yes"){
+			echo "<p>".$redirectUrl."</p>\n";
+			echo "<a class='button' href='/ai/'>Back To Main Index</a>\n";
+			echo "</div>\n";
+		}else{
+			sleep(1);
+			redirect($redirectUrl);
+		}
+	}
+}else if (array_key_exists("inputQuestionPrompt",$_POST)){
+	if($_POST["inputQuestionPrompt"] == ""){
+		echo "<div class='errorBanner'>\n";
+		echo "<hr>\n";
+		echo "Error in prompt: Blank prompts do nothing!\n";
+		echo "<hr>\n";
+		echo "</div>\n";
+	}else{
+		# create the directories with proper permissions for web access
+		if ($_POST["debug"] == "yes"){
+			echo "<div class='titleCard'>\n";
+		}
+
+		if (! is_dir("/var/cache/2web/web/ai/txt2txt/")){
+			mkdir("/var/cache/2web/web/ai/txt2txt/");
+		}
+
+		# build the input prompt sum
+		$questionSum = md5($_POST['inputQuestionPrompt']);
+
+		#
+		if (! is_dir("/var/cache/2web/web/ai/txt2txt/".$questionSum."/")){
+			mkdir("/var/cache/2web/web/ai/txt2txt/".$questionSum."/");
+		}
+
+		# update the started time
+		file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
+
+		# create the response viewing script link
+		if (! is_link("/var/cache/2web/web/ai/txt2txt/".$questionSum."/index.php")){
+			symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/txt2txt/".$questionSum."/index.php"));
+		}
+		if (! is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/prompt.cfg")){
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/prompt.cfg",$_POST["inputQuestionPrompt"]);
+		}
+		if (! is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg")){
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/started.cfg",  );
+		}
+
+		# launch the process with a background scheduler
+		$command = "echo '";
+		# one at a time queue, but launch from atqueue right away, leave in foreground to view active processes from atq command
+		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
+
+		# call the CLI tool for generating anwsers
+		$command .= '/usr/bin/ai2web_q2a ';
+
+		$command .= '--output-dir "/var/cache/2web/web/ai/txt2txt/'.$questionSum.'/" ';
+
+		# set the versions value for this prompt
+		if (is_file("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg")){
+			# increment existing versions file
+			$foundVersions = file_get_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg");
+			$foundVersions += $_POST["versions"];
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg", $foundVersions);
+		}else{
+			file_put_contents("/var/cache/2web/web/ai/txt2txt/".$questionSum."/versions.cfg",$_POST["versions"]);
+		}
+		# set the versions in the command
+		$command .= '--versions "'.$_POST["versions"].'" ';
+
+		# convert temperature
+		if($_POST["temperature"] > 9){
+			$command .= '--temp "1.0" ';
+		}else if($_POST["temperature"] <= 0){
+			$command .= '--temp "0.1" ';
+		}else{
+			$command .= '--temp "0.'.$_POST["temperature"].'" ';
+		}
+
+		$command .= '--max-length "'.$_POST["maxOutput"].'" ';
+
+		$_POST['inputQuestionPrompt'] = str_replace("\n","",$_POST['inputQuestionPrompt']);
+		$_POST['inputQuestionPrompt'] = str_replace("'","`",$_POST['inputQuestionPrompt']);
+		$_POST['inputQuestionPrompt'] = str_replace('"',"`",$_POST['inputQuestionPrompt']);
+		$_POST['inputQuestionPrompt'] = escapeShellCmd($_POST['inputQuestionPrompt']);
+		# build the unique user agent string and convert it to a md5
+		# - This is so the web interface will display the recent prompts submited by that user
+		# - This must be seprate in order to allow searching database based on indivual user access
+		# - THIS IS NOT PRIVATE, its kinda private, but this is for home server use.
+		$tempUserAgent = md5($_POST["inputQuestionPrompt"]);
+		# generate the command setting the user agent, otherwise user agent will be set to unknown
+		$command .=	'--prompt "'.$_POST['inputQuestionPrompt'].'" '."'";
+		$command .= ' | at -M now';
+		#$command .= ' | batch';
+		# launch the command
+		shell_exec($command);
+		if ($_POST["debug"] == "yes"){
+			echo "SHELL EXECUTE '$command'<br>\n";
+			# check if the file is cached as a conversation
+		}
+		# delay 1 seconds to allow loading of database
+		if(array_key_exists("HTTPS",$_SERVER)){
+			if($_SERVER['HTTPS']){
+				$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/");
+			}else{
+				$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/");
+			}
+		}else{
+			$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/txt2txt/".$tempUserAgent."/");
 		}
 		if ($_POST["debug"] == "yes"){
 			echo "<p>".$redirectUrl."</p>\n";
@@ -385,6 +606,7 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 		}
 	}
 }
+
 ?>
 <html class='randomFanart'>
 <head>
@@ -622,6 +844,7 @@ if (file_exists($databasePath)){
 		$helpTexts=array_merge($helpTexts,["If you tell me I am in a profession, I will respond as if I am."]);
 		$helpTexts=array_merge($helpTexts,["Type 'Continue' to get me to complete unfinished responses."]);
 		$helpTexts=array_merge($helpTexts,["I'm also a chatbot, just talk to me. I can pretend to be a person."]);
+		$helpTexts=array_merge($helpTexts,["Randomness of 0 is deterministic and 10 is completely random."]);
 		$helpTexts=array_merge($helpTexts,["I only know what has been loaded into me. Subjects considered taboo or controversial may have not been included."]);
 		$helpTexts=array_merge($helpTexts,["Some prompts will trigger premade responses. This was done by the creators of the AI model being used."]);
 		$helpTexts=array_merge($helpTexts,["I only exist between when you ask the question and I answer it."]);
@@ -635,7 +858,61 @@ if (file_exists($databasePath)){
 		echo "</div>\n";
 
 		echo "<div class='titleCard'>\n";
-		echo "<h1>Start New Conversation</h1>\n";
+		echo "<h1>Prompt a AI 👽</h1>\n";
+
+		echo "<div>\n";
+
+		echo "<form method='post'>\n";
+
+		echo "<span class='groupedMenuItem'>\n";
+		echo " LLM:\n";
+		echo "<select name='model'>\n";
+		# load each of the ai models
+		$discoveredTxt2Txt=False;
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+			$niceDirectoryPath=str_replace(".bin","",$directoryPath);
+			echo "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
+			$discoveredPrompt=True;
+		}
+		echo "</select>\n";
+		echo "</span>\n";
+
+		echo "<span class='groupedMenuItem'>\n";
+		echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
+		echo "</span>\n";
+
+		echo "<span class='groupedMenuItem'>\n";
+		echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
+		echo "</span>\n";
+
+		echo "<span class='groupedMenuItem'>\n";
+		echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
+		echo "</span>\n";
+
+
+		echo "<span class='groupedMenuItem'>Debug:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
+
+		echo "</div>\n";
+
+		#
+		if($discoveredPrompt){
+			echo "<hr>\n";
+		}else{
+			#
+			echo "<div class='errorBanner'>\n";
+			echo "<hr>\n";
+			echo "Error: No language models discovered in '/var/cache/2web/downloads/ai/prompt/', Install models to make them available in the web interface.\n";
+			echo "<hr>\n";
+			echo "</div>\n";
+		}
+
+		echo "<textarea class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
+		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> 🮴</button>";
+		echo "</form>\n";
+		echo "</div>\n";
+
+		echo "<div class='titleCard'>\n";
+		echo "<h1>Generate Text ✍️</h1>\n";
 
 		echo "<div>\n";
 
@@ -646,24 +923,27 @@ if (file_exists($databasePath)){
 		echo "<select name='llm'>\n";
 		# load each of the ai models
 		$discoveredTxt2Txt=False;
-		foreach(array_diff(scanDir("/var/cache/2web/downloads_ai/"),array(".","..")) as $directoryPath){
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2txt/"),array(".","..")) as $directoryPath){
+			$directoryPath=str_replace("--","/",$directoryPath);
+			$directoryPath=str_replace("models/","",$directoryPath);
 			echo "<option value='$directoryPath'>$directoryPath</option>\n";
 			$discoveredTxt2Txt=True;
 		}
 		echo "</select>\n";
 		echo "</span>\n";
 
+		echo "<span class='groupedMenuItem'>\n";
+		echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
+		echo "</span>\n";
 
 		echo "<span class='groupedMenuItem'>\n";
-		echo " PERSONA:\n";
-		echo "<select name='persona'>\n";
-		# load each of the ai models
-		foreach(array_diff(scanDir("/etc/2web/ai/personas/"),array(".","..")) as $directoryPath){
-			$directoryPath=str_replace(".cfg","",$directoryPath);
-			echo "<option value='$directoryPath'>$directoryPath</option>\n";
-		}
-		echo "</select>\n";
+		echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
 		echo "</span>\n";
+
+		echo "<span class='groupedMenuItem'>\n";
+		echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
+		echo "</span>\n";
+
 
 		echo "<span class='groupedMenuItem'>Debug:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
 
@@ -676,13 +956,13 @@ if (file_exists($databasePath)){
 			#
 			echo "<div class='errorBanner'>\n";
 			echo "<hr>\n";
-			echo "Error: No language models discovered in '/var/cache/2web/downloads_ai/', Install models to make them available in the web interface.\n";
+			echo "Error: No language models discovered in '/var/cache/2web/downloads/ai/txt2txt/', Install models to make them available in the web interface.\n";
 			echo "<hr>\n";
 			echo "</div>\n";
 		}
 
 		echo "<textarea class='aiPrompt' name='inputPrompt' placeholder='Text generation prompt...'></textarea>";
-		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
+		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Generate</span> ⮔</button>";
 		echo "</form>\n";
 		echo "</div>\n";
 
@@ -711,14 +991,14 @@ if (file_exists($databasePath)){
 
 		# draw the image generator
 		echo "<div class='titleCard'>\n";
-		echo "<h1>Generate a image from text</h1>\n";
+		echo "<h1>Generate a image from text 🎨</h1>\n";
 		echo "<form method='post' enctype='multipart/form-data'>\n";
 
 		echo "<span class='groupedMenuItem'>\n";
 		echo " Models:\n";
 		echo "<select name='model'>\n";
 		# load each of the ai models
-		foreach(array_diff(scanDir("/var/cache/2web/downloads_ai_image/"),array(".","..")) as $directoryPath){
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
 			$directoryPath=str_replace("--","/",$directoryPath);
 			$directoryPath=str_replace("models/","",$directoryPath);
 			if (strpos($directoryPath,"/")){
@@ -758,15 +1038,15 @@ if (file_exists($databasePath)){
 
 		echo "<hr>\n";
 
-		echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...'></textarea>";
-		echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...'></textarea>";
+		echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'></textarea>";
+		echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...' maxlength='120'></textarea>";
 		echo "<input class='aiSubmit' type='submit' value='Prompt'>";
 		echo "</form>";
 		echo "</div>";
 
 		# draw edit image prompt
 		echo "<div class='titleCard'>";
-		echo "<h1>Upload and Edit a Image</h1>";
+		echo "<h1>Upload and Edit a Image 🖊️</h1>";
 
 		echo "<form method='post' enctype='multipart/form-data'>";
 		echo "<span class='groupedMenuItem'>\n";
@@ -821,16 +1101,16 @@ if (file_exists($databasePath)){
 		}
 
 		$changeScript="document.getElementById('imagePreview').src = window.URL.createObjectURL(this.files[0])";
-		echo "<input class='' type='file' id='imageUploadForm' name='imageFileToEdit' onchange=\"$changeScript\">";
+		echo "<input class='' type='file' id='imageUploadForm' name='imageFileToEdit' onchange=\"$changeScript\" accept='image/*'>";
 		echo "<img class='imageUploadPreview' id='imagePreview' src=''>";
 		echo "<hr>";
-		echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='How to edit the image...'></textarea>";
-		echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...'></textarea>";
+		echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='How to edit the image...' maxlength='120'></textarea>";
+		echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...' maxlength='120'></textarea>";
 		echo "<input class='aiSubmit' type='submit' value='Prompt'>";
 		echo "</form>";
 		echo "</div>";
 
-		echo "<div class='settingListCard'>";
+		#echo "<div class='settingListCard'>";
 
 		if (array_key_exists("thread",$_GET)){
 			echo "<h1>Thread ".$_GET["thread"]."</h1>";
