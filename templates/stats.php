@@ -30,7 +30,7 @@ function getStat($totalPath, $label){
 
 }
 # modules array
-$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ai2web","ytdl2nfo","epg2web");
+$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ai2web","ytdl2nfo","epg2web","ai2web");
 # check for active processes
 foreach($moduleNames as $moduleName){
 	if ( file_exists("$moduleName.active")){
@@ -78,10 +78,23 @@ if (detectEnabledStatus("music2web")){
 	getStat("totalAlbums.index", "Albums");
 	getStat("totalTracks.index", "Tracks");
 }
-getStat("webSize.index", "Total Web");
+if (detectEnabledStatus("ai2web")){
+	getStat("promptAi.index", "Prompt AI");
+	getStat("txtGenAi.index", "Text Gen AI");
+	getStat("subAi.index", "Subtitle AI");
+	getStat("imageEditAi.index", "Image Edit AI");
+	getStat("imageAi.index", "Image Gen AI");
+	getStat("localAi.index", "Total AI");
+	getStat("aiSize.index", "Total AI Size");
+}
+if (detectEnabledStatus("git2web")){
+	getStat("repoGenSize.index", "Repo Cache");
+}
+getStat("webThumbSize.index", "Thumbnail Cache");
 getStat("cacheSize.index", "Video Cache");
-getStat("mediaSize.index", "Media");
-getStat("freeSpace.index", "Free");
+getStat("webSize.index", "Total Web");
+getStat("mediaSize.index", "Local Media");
+getStat("freeSpace.index", "Free Space");
 
 echo "	</div>";
 # check the status of the fortunes for drawing large or small widgets

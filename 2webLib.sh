@@ -200,10 +200,19 @@ function buildHomePage(){
 		webSize=$(du -shP "$webDirectory" | cut -f1)
 		echo "$webSize" > "$webDirectory/webSize.index"
 	fi
+	if cacheCheck "$webDirectory/webThumbSize.index" "1";then
+		# count website thumbnail size in total ignoring symlinks
+		webThumbSize=$(du -shP "$webDirectory/thumbnails/" | cut -f1)
+		echo "$webThumbSize" > "$webDirectory/webThumbSize.index"
+	fi
 	if cacheCheck "$webDirectory/cacheSize.index" "1";then
 		# cache size for resolver-cache
 		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
 		echo "$cacheSize" > "$webDirectory/cacheSize.index"
+	fi
+	if cacheCheck "$webDirectory/repoGenSize.index" "1";then
+		repoGenSize=$(du -shP "$webDirectory/repos/" | cut -f1)
+		echo "$repoGenSize" > "$webDirectory/repoGenSize.index"
 	fi
 	if cacheCheck "$webDirectory/mediaSize.index" "1";then
 		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
@@ -214,6 +223,41 @@ function buildHomePage(){
 		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		echo "$freeSpace" > "$webDirectory/freeSpace.index"
+	fi
+	if cacheCheck "$webDirectory/aiSize.index" "6";then
+		# count total size of AI models
+		aiSize=$(du -shL "/var/cache/2web/downloads/ai/" | cut -f1)
+		echo "$aiSize" > "$webDirectory/aiSize.index"
+	fi
+	if cacheCheck "$webDirectory/promptAi.index" "1";then
+		# the number of prompt ais that are installed on the system
+		promptAi=$(find "/var/cache/2web/downloads/ai/prompt/" -name "*.bin" | wc -l)
+		echo "$promptAi" > "$webDirectory/promptAi.index"
+	fi
+	if cacheCheck "$webDirectory/imageAi.index" "1";then
+		imageAi=$(find "/var/cache/2web/downloads/ai/txt2img/" -maxdepth 1 -type d -name "models--*" | wc -l)
+		echo "$imageAi" > "$webDirectory/imageAi.index"
+	fi
+	if cacheCheck "$webDirectory/txtGenAi.index" "1";then
+		txtGenAi=$(find "/var/cache/2web/downloads/ai/txt2txt/" -maxdepth 1 -type d -name "models--*" | wc -l)
+		echo "$txtGenAi" > "$webDirectory/txtGenAi.index"
+	fi
+	if cacheCheck "$webDirectory/imageEditAi.index" "1";then
+		imageEditAi=$(find "/var/cache/2web/downloads/ai/img2img/" -maxdepth 1 -type d -name "models--*" | wc -l)
+		echo "$imageEditAi" > "$webDirectory/imageEditAi.index"
+	fi
+	if cacheCheck "$webDirectory/subAi.index" "1";then
+		subAi=$(find "/var/cache/2web/downloads/ai/subtitles/" -type f -name "*.pt" | wc -l)
+		echo "$subAi" > "$webDirectory/subAi.index"
+	fi
+	if cacheCheck "$webDirectory/localAi.index" "1";then
+		# the total number of AIs
+		localAi=0
+		localAi=$(( $localAi + $(cat "$webDirectory/subAi.index") ))
+		localAi=$(( $localAi + $(cat "$webDirectory/imageAi.index") ))
+		localAi=$(( $localAi + $(cat "$webDirectory/imageEditAi.index") ))
+		localAi=$(( $localAi + $(cat "$webDirectory/promptAi.index") ))
+		echo "$localAi" > "$webDirectory/localAi.index"
 	fi
 }
 ########################################################################
