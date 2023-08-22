@@ -17,10 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 def hr():
+	"""
+	Draws a horisontal line of bangs(#) across the terminal. with a width of 80 characters.
+	"""
 	width=80
 	print("_"*width)
 ################################################################################
 def h1(bannerText):
+	"""
+	This function will draw the given bannerText variable with a line above and below it.
+	"""
 	width=80
 	edge = int(( width - len("  "+bannerText+"  ") ) / 2)
 	print("#"*width)
@@ -28,6 +34,9 @@ def h1(bannerText):
 	print("#"*width)
 ################################################################################
 def file_get_contents(filePath):
+	"""
+	A copy of file_get_contents from PHP. This function takes a file path and returns the contents of the file as a full string.
+	"""
 	fileObj = open(filePath, "r")
 	tempFileData = ""
 	for line in fileObj:
