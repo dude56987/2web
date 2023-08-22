@@ -47,6 +47,30 @@ function downloadDir(){
 	cat "/etc/2web/ai/download.cfg"
 }
 ################################################################################
+function loadLyricsModel(){
+	if [ ! -f /etc/2web/ai/lyricsLanguageModel.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "base"
+		} >> "/etc/2web/ai/lyricsLanguageModel.cfg"
+	fi
+	# write path to console
+	cat "/etc/2web/ai/lyricsLanguageModel.cfg"
+}
+################################################################################
+function loadSubsModel(){
+	if [ ! -f /etc/2web/ai/subtitlesLanguageModel.cfg ];then
+		# if no config exists create the default config
+		{
+			# write the new config from the path variable
+			echo "base"
+		} >> "/etc/2web/ai/subtitlesLanguageModel.cfg"
+	fi
+	# write path to console
+	cat "/etc/2web/ai/subtitlesLanguageModel.cfg"
+}
+################################################################################
 function libaryPaths(){
 	# add the download directory to the paths
 	echo "$(downloadDir)"
@@ -160,7 +184,8 @@ function update(){
 	# used for whisper to convert voice to text locally
 	createDir "/var/cache/2web/downloads/ai/subtitles/"
 	# scan the sources
-	ALERT "AI Download Sources: $aiSources"
+	ALERT "AI Download Model Sources: $aiSources"
+
 	echo "$aiSources" | while read aiSource;do
 		# generate a sum for the source
 		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
@@ -169,11 +194,19 @@ function update(){
 		# link the individual index page for this ai model in the web interface
 		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
 		# do not process the ai if it is still in the cache
-		if ! test -f "/var/cache/2web/downloads/ai/prompt/$aiName";then
+		#if ! test -f "/var/cache/2web/downloads/ai/prompt/$aiName";then
+		if cacheCheck "$webDirectory/sums/ai2web-model-prompt-$aiName.index" "30";then
 			# download the ai model from remote location
-			curl "$aiSource" > "/var/cache/2web/downloads/ai/prompt/$aiName"
+			wget --continue "https://gpt4all.io/models/$aiSource" -O "/var/cache/2web/downloads/ai/prompt/$aiName"
+			if [ $? -eq 0 ];then
+				# the download finished successfully
+				touch "$webDirectory/sums/ai2web-model-prompt-$aiName.index"
+			fi
+			#curl -C - "https://gpt4all.io/models/$aiSource" > "/var/cache/2web/downloads/ai/prompt/$aiName"
 		fi
+		#fi
 	done
+
 }
 ################################################################################
 function getWeight(){
@@ -444,26 +477,32 @@ function generateLyrics(){
 
 	# used to generate subtitles for video files that do not already have subtitles
 	videoFile=$1
+	aiModel=$2
 
 	# split up input path
 	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
+	# remove file extension
+	fileName=$(echo "$fileName" | sed "s/\.mp3//g")
+
 	filePath=$(echo "$videoFile" | rev | cut -d '/' -f2- | rev)
+
+	inputSum=$(echo "$filePath" | md5sum | cut -d' ' -f1 )
 
 	# check if the video file exists
 	if ! test -f "$videoFile";then
 		return 0
 	fi
 	# check if the file has already been created
-	if test -f "$filePath/$fileName-lyrics.ai.txt";then
+	if test -f "$filePath/$fileName-lyrics.txt";then
 		return 0
 	elif echo "$videoFile" | grep ".strm$";then
 		# check if the file is a .strm that can not generate subtitles
 		return 0
 	fi
-	startDebug
 
 	# generated subtitles cache directory
 	createDir "/var/cache/2web/ai/lyrics/"
+	createDir "/var/cache/2web/ai/lyrics/$inputSum/"
 
 	# input the videofile to generate srt file
 	# - save only .srt subtitle files
@@ -476,18 +515,18 @@ function generateLyrics(){
 	#/usr/bin/sem --retries 10 --jobs 1 --fg --id "AI" whisper --model small \
 	#whisper --model small \
 	#whisper --model tiny \
-	whisper --model base \
+	#whisper --model base \
+	whisper --model "$aiModel" \
 		--task translate \
 		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
-		--output_format "srt" \
-		--output_dir "/var/cache/2web/ai/lyrics/" \
+		--output_format "txt" \
+		--output_dir "/var/cache/2web/ai/lyrics/$inputSum/" \
 		--threads "$(cpuCount)" \
 		"$videoFile"
 	# link the generated subtitle file into the same directory as the file
 	# - This can then be linked into the kodi directory for library video files
 	# - This can generate .srt subs for the video_cache/ and translate_cache/
-	linkFile "/var/cache/2web/ai/subs/$fileName-lyrics.ai.txt" "$filePath/$fileName.ai.txt"
-	stopDebug
+	linkFile "/var/cache/2web/ai/lyrics/$inputSum/$fileName.txt" "$filePath/$fileName-lyrics.txt"
 }
 ########################################################################
 function generateSubtitles(){
@@ -495,6 +534,7 @@ function generateSubtitles(){
 
 	# used to generate subtitles for video files that do not already have subtitles
 	videoFile=$1
+	aiModel=$2
 
 	# split up input path
 	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
@@ -527,7 +567,8 @@ function generateSubtitles(){
 	#/usr/bin/sem --retries 10 --jobs 1 --fg --id "AI" whisper --model small \
 	#whisper --model small \
 	#whisper --model tiny \
-	whisper --model base \
+	#whisper --model base \
+	whisper --model "$aiModel" \
 		--task translate \
 		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
 		--output_format "srt" \
@@ -561,30 +602,35 @@ webUpdate(){
 	# link the homepage
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
 
+	startDebug
 	################################################################################
 	# generate lyrics for mp3 tracks in music2web
 	################################################################################
+	# check if music module is enabled
 	if returnModStatus "music2web";then
-		foundVideoFiles=$(find "$webDirectory/kodi/music/" \
+		# load up the lyrics model chosen
+		lyricsModel="$(loadLyricsModel)"
+		# search web directories for music to generate lyrics for web interface
+		foundVideoFiles=$(find "$webDirectory/music/" \
 			| grep ".mp3$" \
 			| shuf )
 		echo "$foundVideoFiles" | while read videoFilePath;do
 			#
-			generateLyrics "$videoFilePath"
+			generateLyrics "$videoFilePath" "$lyricsModel"
 		done
 	fi
-
 
 	################################################################################
 	#	check for files that can be transcribed by whisper
 	################################################################################
 	if returnModStatus "nfo2web";then
+		subsModel="$(loadSubsModel)"
 		foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
 			| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
 			| shuf )
 		echo "$foundVideoFiles" | while read videoFilePath;do
 			#
-			generateSubtitles "$videoFilePath"
+			generateSubtitles "$videoFilePath" "$subsModel"
 		done
 		# look for movies that can be transcribed by whisper
 		foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
@@ -592,9 +638,10 @@ webUpdate(){
 			| shuf )
 		echo "$foundVideoFiles" | while read videoFilePath;do
 			#
-			generateSubtitles "$videoFilePath"
+			generateSubtitles "$videoFilePath" "$subsModel"
 		done
 	fi
+	stopDebug
 
 	################################################################################
 	# build the comparisons in the database for machine learning comparison match database
@@ -638,8 +685,6 @@ function nuke(){
 	# remove the cached conversations
 	rm -rv $webDirectory/ai/convos.db
 	rm -rv $webDirectory/sums/ai2web_*.cfg || echo "No file sums found..."
-	# remove sql data
-	sqlite3 $webDirectory/data.db "drop table ai;"
 	# remove widgets cached
 	rm -v $webDirectory/web_cache/widget_random_ai.index
 	rm -v $webDirectory/web_cache/widget_new_ai.index

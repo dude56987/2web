@@ -194,8 +194,8 @@ if ($drawPrompt){
 
 	echo "<hr>\n";
 
-	echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' >".file_get_contents("prompt.cfg")."</textarea>";
-	echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...' >".file_get_contents("negativePrompt.cfg")."</textarea>";
+	echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'>".file_get_contents("prompt.cfg")."</textarea>";
+	echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...'  maxlength='120'>".file_get_contents("negativePrompt.cfg")."</textarea>";
 	echo "<input class='aiSubmit' type='submit' formtarget='_blank' value='Prompt'>";
 	echo "</form>";
 	echo "</div>";
