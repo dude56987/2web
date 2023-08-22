@@ -452,7 +452,10 @@ function processTrack(){
 			# build the track thumbnail
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.png";then
 				# create a waveform with ffmpeg for the track
-				ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex showwavespic -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
+				# generate the thumbnail
+				#ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic=colors=blue|white|yellow|green|orange" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
+				#ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
+				ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic=colors=white" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
 				convert -quiet "$webDirectory/music/$artist/$album/$track.png" -adaptive-resize 200x50\! "$webDirectory/music/$artist/$album/web-$track.png"
 			fi
 			# track data
@@ -520,6 +523,25 @@ function processTrack(){
 	else
 		INFO "⚙️:$totalProgressString"
 	fi
+}
+################################################################################
+function buildVisual(){
+	# Function for building visuals for mp3 files
+	# - used for multithreading visual generation
+	mp3FilePath=$1
+	mp3FileName=$2
+	webDirectory=$3
+	totalCPUS=$4
+	# generate the visualization, with white waveforms at 12 fps ( the lowest framerate human eyes can handle )
+	# if the ffmpeg process was successfull mark the render as complete with setFileDataSum
+	# NOTE: webm codec is not multithreaded so only one CPU will be used, This might be something that the FFMPEG project needs to fix
+	#< /dev/null ffmpeg -loglevel "quiet" -y -threads "$totalCPUS" -i "$mp3FilePath" -filter_complex "showwaves=mode=line:colors=white:r=12" -shortest "$mp3FileName.webm"
+	# NOTE: can only use one thread for webm so set to one for multithreading purposes
+	< /dev/null ffmpeg -loglevel "quiet" -y -threads "1" -i "$mp3FilePath" -filter_complex "showwaves=mode=line:colors=white:r=12" -shortest "$mp3FileName.webm"
+	if [ $? -eq 0 ];then
+		setFileDataSum "$webDirectory" "$mp3FilePath"
+	fi
+	ALERT "Found track '$mp3FileName', Finished Generating visualization..."
 }
 ################################################################################
 function update(){
@@ -601,7 +623,6 @@ function update(){
 			tempFoundTrackCount=$(echo "$musicFiles" | wc -l )
 			totalTracks=$(( $totalTracks + $tempFoundTrackCount ))
 			#
-			#find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$" | shuf | while read musicPath;do
 			#ALERT "MUSIC FILES : $musicFiles"
 			IFS=$'\n'
 			#echo "$musicFiles\n$musicFiles" | uniq | shuf | while read -r musicPath;do
@@ -619,13 +640,20 @@ function update(){
 		IFS=$IFSBACKUP
 	done
 
-	#IFS=$'\n'
-	# after all tracks have been processed mark the sources complete by updating the checksums
-	#for musicSource in $musicSources;do
-	#	ALERT "Marking music source $musicSource as processed"
-	#	setDirSum "$webDirectory" "$musicSource"
-	#done
-	#IFS=$IFSBACKUP
+	# check config file but default to "no"
+	if yesNoCfgCheck "/etc/2web/music/generateVisualisationsForWeb.cfg" "no";then
+		# generate visualizations for music tracks after the base mp3 processing and webpage generation has been completed, this is the longest processing task
+		find "/var/cache/2web/web/music/" -name '*.mp3' | shuf | while read mp3FilePath;do
+			mp3FileName=$(echo "$mp3FilePath" | sed "s/.mp3//g")
+			# extract the cbz file to the download directory
+			INFO "Found track '$mp3FileName', Checking visualization..."
+			if checkFileDataSum "$webDirectory" "$mp3FilePath";then
+				INFO "Found track '$mp3FileName', Generating visualization..."
+				buildVisual "$mp3FilePath" "$mp3FileName" "$webDirectory" "$totalCPUS" &
+				waitQueue 2 "$totalCPUS"
+			fi
+		done
+	fi
 
 	# block for parallel threads here
 	blockQueue 1

@@ -513,6 +513,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
 	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"
 	linkFile "/usr/share/2web/settings/tv.php" "$webDirectory/settings/tv.php"
+	linkFile "/usr/share/2web/settings/ai.php" "$webDirectory/settings/ai.php"
 	linkFile "/usr/share/2web/settings/iptv_blocked.php" "$webDirectory/settings/iptv_blocked.php"
 	linkFile "/usr/share/2web/settings/nfo.php" "$webDirectory/settings/nfo.php"
 	linkFile "/usr/share/2web/settings/comics.php" "$webDirectory/settings/comics.php"

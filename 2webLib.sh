@@ -916,18 +916,14 @@ function addToLog(){
 ########################################################################
 function yesNoCfgCheck(){
 	configFilePath="$1"
-	defaultValue=$2
-	# if the default value is not yes it is no
-	if echo "$defaultValue"| grep --ignore-case -v "yes";then
-		echo "no"
-	fi
 	if test -f "$configFilePath";then
-		if grep --ignore-case "yes" "$configFilePath";then
+		# file exists check if it is a yes value
+		if grep --quiet --ignore-case "yes" "$configFilePath";then
 			return 0
 		else
 			return 1
 		fi
-		# if the file does not exist set the default
+	else
 		return 1
 	fi
 }

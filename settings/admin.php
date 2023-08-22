@@ -37,6 +37,9 @@ ini_set("display_errors", 1);
 error_reporting(E_ALL);
 ////////////////////////////////////////////////////////////////////////////////
 function clear(){
+	/**
+	 * Flush output to the users webpage.
+	 */
 	flush();
 	ob_flush();
 }
@@ -55,6 +58,44 @@ function countdown($countdownTime){
 	sleep(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ * This function checks the value of a configuration file and returns true if the file is set to yes.
+ * If no config file exists a new one will be created.
+ */
+function yesNoCfgCheck($configPath){
+	# check if the config file exists
+	if (path_exists($configPath)){
+		if (stripos(strtolower(file_get_contents($configPath)), 'yes')){
+			# the config file is set to yes
+			return True;
+		}else{
+			# set the file to "no" if anything other than yes is set
+			file_put_contents($configPath , "no");
+			return False;
+		}
+	}else{
+		# no file exists return false and create default no config
+		file_put_contents($configPath , "no");
+		return False;
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
+ */
+function yesNoCfgSet($configPath, $newConfigSetting){
+	if (strtolower($newConfigSetting) == "yes"){
+		file_put_contents($configPath , "yes");
+	}else{
+		# set the file to disabled if anything other than yes is set
+		file_put_contents($configPath, "no");
+	}
+	return True;
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Write output and do three dots with randomized delays to simulate processing
+ */
 function outputLog($stringData){
 	echo "$stringData";
 	$index=0;
@@ -75,6 +116,9 @@ function outputLog($stringData){
 	echo "<br>\n";
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ * Enable/Disable a module
+ */
 function setModStatus($modName,$modStatus){
 	outputLog("Setting $modName status to ".$modStatus);
 	# read the link and create a custom config
@@ -358,6 +402,30 @@ if (array_key_exists("newUserName",$_POST)){
 		file_put_contents("/etc/2web/transcodeForWebpages.cfg",$cacheNewEpisodes);
 	}
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("aiSubsGenerate",$_POST)){
+	outputLog("Setting AI lyrics generation status to ".$_POST['aiSubsGenerate']);
+	# generate subtitles for nfo2web movies/shows
+	yesNoCfgSet("/etc/2web/ai/aiSubsGenerate.cfg", $_POST['aiSubsGenerate']);
+	echo "<hr><a class='button' href='/settings/ai.php#aiSubsGenerate'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("aiLyricsGenerate",$_POST)){
+	outputLog("Setting AI lyrics generation status to ".$_POST['aiLyricsGenerate']);
+	# generate lyrics for music2web tracks
+	yesNoCfgSet("/etc/2web/ai/aiLyricsGenerate.cfg", $_POST['aiLyricsGenerate']);
+	echo "<hr><a class='button' href='/settings/ai.php#aiLyricsGenerate'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("aiCompareGenerate",$_POST)){
+	outputLog("Setting AI comparison generation status to ".$_POST['aiCompareGenerate']);
+	# run the ai comparison generators
+	yesNoCfgSet("/etc/2web/ai/aiCompareGenerate.cfg", $_POST['aiCompareGenerate']);
+	echo "<hr><a class='button' href='/settings/ai.php#aiCompareGenerate'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("generateVisualisationsForWeb",$_POST)){
+	outputLog("Setting music2web visual generation status to ".$_POST['generateVisualisationsForWeb']);
+	# run the ai comparison generators
+	yesNoCfgSet("/etc/2web/music/generateVisualisationsForWeb.cfg", $_POST['generateVisualisationsForWeb']);
+	echo "<hr><a class='button' href='/settings/music.php#generateVisualisationsForWeb'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	$link=$_POST['addLink'];

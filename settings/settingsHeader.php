@@ -106,6 +106,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if ($pageURL == "/settings/ai.php"){
+			echo "<a class='activeButton' href='/settings/ai.php'>";
+		}else{
+			echo "<a class='button' href='/settings/ai.php'>";
+		}
+		?>
+			🧠
+			<span class='headerText'>
+				AI
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/settings/graphs.php"){
 			echo "<a class='activeButton' href='/settings/graphs.php'>";
 		}else{
