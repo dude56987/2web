@@ -19,6 +19,9 @@
 ini_set('display_errors', 1);
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
+	/**
+	 * draw the poster widget as HTML
+	 */
 	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
 		if ($random){
 			$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/$filterType/$filterType.index";
@@ -175,8 +178,10 @@ if( ! function_exists("drawPosterWidget")){
 		}
 	}
 }
-################################################################################
 if( ! function_exists("detectEnabledStatus")){
+	/**
+	 * Return true if given module is enabled
+	 */
 	function detectEnabledStatus($filePath){
 		# Used for testing module enabled or disabled status
 		# return true if a $filePath exists and contains the text "enabled"
@@ -193,11 +198,12 @@ if( ! function_exists("detectEnabledStatus")){
 		}
 	}
 }
-#################################################################################
 if( ! function_exists("formatText")){
+	/**
+	 * write a line with a number of tabs and a custom newline character to variable
+	 */
 	function formatText($text,$tabs=0,$newline="\n"){
 		$returnValue="";
-		# write a line with a number of tabs and a custom newline character to variable
 		if ($tabs > 0){
 			foreach(range(1,$tabs) as $index){
 				$returnValue .= "\t";
@@ -209,23 +215,28 @@ if( ! function_exists("formatText")){
 		return $returnValue;
 	}
 }
-################################################################################
 if( ! function_exists("formatEcho")){
+	/**
+	 * Write a line with a number of tabs and a custom newline character to page
+	 */
 	function formatEcho($text,$tabs=0,$newline="\n"){
-		# write a line with a number of tabs and a custom newline character to page
 		echo formatText($text,$tabs,$newline);
 	}
 }
-################################################################################
 if( ! function_exists("logPrint")){
+	/**
+	 * Print data into the console log of a page with javascript
+	 */
 	function logPrint($logMessage){
 		echo "<script>";
 		echo "console.log('".$logMessage."');";
 		echo "</script>\n";
 	}
 }
-################################################################################
 if( ! function_exists("listAllIndex")){
+	/**
+	 * List all text files stored in a .index file
+	 */
 	function listAllIndex($indexPath,$sortMethod="forward"){
 		$foundData=false;
 		$tempData="";
@@ -307,6 +318,9 @@ if( ! function_exists("listAllIndex")){
 }
 ################################################################################
 if( ! function_exists("listIndexPage")){
+	/*
+	 * List a single page of a .index list
+	 */
 	function listIndexPage($indexPath,$pageNumber=1,$maxPageItems=50,$sortMethod='forward'){
 		$foundData=false;
 		$tempData="";
@@ -395,6 +409,9 @@ if( ! function_exists("listIndexPage")){
 }
 ################################################################################
 if( ! function_exists("readFileInPackets")){
+	/*
+	 * Read a file in large frame packets and send them to the page as each is read from the disk
+	 */
 	function readFileInPackets($fileData){
 		$foundData=False;
 		#echo "'".$fileData."'<br>\n";
@@ -424,6 +441,9 @@ if( ! function_exists("readFileInPackets")){
 }
 ################################################################################
 if( ! function_exists("displayIndexWithPages")){
+	/*
+	 * Higher level display a display index with the pages buttons below the page
+	 */
 	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=45,$sortMethod="forward"){
 		# - sort can be forward, reverse, and random
 		# - Default maxItemsPerPage is equilivent to the number of even rows on the default css setting
@@ -546,6 +566,9 @@ if( ! function_exists("displayIndexWithPages")){
 }
 ################################################################################
 if( ! function_exists("checkPort")){
+	/*
+	 * Check if a port is open on the local server
+	 */
 	function checkPort($port){
 		$connection = @fsockopen($_SERVER['HTTP_HOST'], $port, $errorNum, $errorStr, 30);
 		if (is_resource($connection)){
@@ -559,6 +582,9 @@ if( ! function_exists("checkPort")){
 }
 ################################################################################
 if( ! function_exists("checkServerPath")){
+	/*
+	 * Check if a server path exists on the local server
+	 */
 	function checkServerPath($subDir){
 		# build the url
 		$url = "http://".$_SERVER['HTTP_HOST'].$subDir;
@@ -586,6 +612,9 @@ if( ! function_exists("checkServerPath")){
 }
 ###############################################################################
 if( ! function_exists("availableServicesArray")){
+	/*
+	 * Return an array of all the detectable services, ports and descriptions
+	 */
 	function availableServicesArray(){
 		// take port number and service name and generate a index then generate a series of links
 		$services = Array();
@@ -641,6 +670,9 @@ if( ! function_exists("availableServicesArray")){
 }
 ###############################################################################
 if( ! function_exists("availablePathServicesArray")){
+	/*
+	 * Return the services that can be detected by server paths
+	 */
 	function availablePathServicesArray(){
 		// take port number and service name and generate a index then generate a series of links
 		$pathServices = Array();
@@ -664,6 +696,9 @@ if( ! function_exists("availablePathServicesArray")){
 }
 ###############################################################################
 if( ! function_exists("serverPathServicesCount")){
+	/*
+	 * The count of discovered path services on the system.
+	 */
 	function serverPathServicesCount(){
 		$totalServiceCount=0;
 		foreach(availablePathServicesArray() as $serviceData){
@@ -676,6 +711,9 @@ if( ! function_exists("serverPathServicesCount")){
 }
 ###############################################################################
 if( ! function_exists("serverServicesCount")){
+	/*
+	 * The count of discovered port services on the system.
+	 */
 	function serverServicesCount(){
 		$totalServiceCount=0;
 		foreach(availableServicesArray() as $serviceData){
@@ -693,6 +731,9 @@ if( ! function_exists("serverServicesCount")){
 }
 ###############################################################################
 if( ! function_exists("appendCacheFile")){
+	/*
+	 * Add to the end of a cache file.
+	 */
 	function appendCacheFile($cacheFilePath,$cacheData="",$tabs=0){
 		# add tabs to front of line to be appended to file
 		for($index=0;$index<$tabs;$index++){
@@ -704,6 +745,9 @@ if( ! function_exists("appendCacheFile")){
 }
 ###############################################################################
 if( ! function_exists("drawServicesWidget")){
+	/*
+	 * Draw the available services widget in HTML
+	 */
 	function drawServicesWidget(){
 		$locationSum=md5($_SERVER["HTTP_HOST"]);
 		$cacheFile=$_SERVER["DOCUMENT_ROOT"]."/web_cache/widget_services_$locationSum.index";
@@ -773,6 +817,9 @@ if( ! function_exists("drawServicesWidget")){
 }
 ###############################################################################
 if( ! function_exists("checkServices")){
+	/*
+	 * Check available port services and write HTML
+	 */
 	function checkServices(){
 		$services=availableServicesArray();
 		################################################################################
@@ -803,6 +850,9 @@ if( ! function_exists("checkServices")){
 }
 ################################################################################
 if( ! function_exists("checkPathServices")){
+	/*
+	 * Check available path services and write HTML
+	 */
 	function checkPathServices(){
 		$services=availablePathServicesArray();
 		################################################################################
@@ -850,6 +900,9 @@ if( ! function_exists("drawPlaylistButton")){
 }
 ################################################################################
 if( ! function_exists("SQLdrawPlaylistButton")){
+	/*
+	 * Draw a button based on the SQL database information for playlist filters
+	 */
 	function SQLdrawPlaylistButton($activeFilter,$filterName,$buttonText){
 		if (file_exists($_SERVER['DOCUMENT_ROOT']."/data.db")){
 			# load database
@@ -878,6 +931,9 @@ if( ! function_exists("SQLdrawPlaylistButton")){
 }
 ################################################################################
 if( ! function_exists("createViewsDatabase")){
+	/*
+	 * Creates the view count database if it does not already exist
+	 */
 	function createViewsDatabase($timeout=60000){
 		# if no database file exists create one
 		if (! file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
@@ -897,6 +953,9 @@ if( ! function_exists("createViewsDatabase")){
 }
 ################################################################################
 if( ! function_exists("appendFile")){
+	/*
+	 * Append content to a file
+	 */
 	function appendFile($filePath,$data){
 		$fileObject=fopen($filePath,"a");
 		fwrite($fileObject,$data);
@@ -904,6 +963,9 @@ if( ! function_exists("appendFile")){
 }
 ################################################################################
 if( ! function_exists("recursiveScan")){
+	/*
+	 * Recursively scan a directory and all subdirectories and return an array of the full paths to all discovered files.
+	 */
 	function recursiveScan($directoryPath){
 		# scan the directory
 		$foundPaths = scandir($directoryPath);
@@ -936,6 +998,9 @@ if( ! function_exists("recursiveScan")){
 }
 ################################################################################
 if( ! function_exists("popPath")){
+	/*
+	 * Pop the path from a absolute path
+	 */
 	function popPath($sourceFile){
 		$fileName = explode("/",$sourceFile);
 		$fileName = array_reverse($fileName);
@@ -945,6 +1010,9 @@ if( ! function_exists("popPath")){
 }
 ################################################################################
 if( ! function_exists("debug")){
+	/*
+	 * Write debug info if debug key is in the GET data
+	 */
 	function debug($message){
 		if (array_key_exists("debug",$_GET)){
 			echo "[DEBUG]: ".$message."<br>";
@@ -958,6 +1026,9 @@ if( ! function_exists("debug")){
 }
 ########################################################################
 if( ! function_exists("redirect")){
+	/*
+	 * Send the user to a temporary redirect at a given URL
+	 */
 	function redirect($url){
 		// temporary redirect
 		header('Location: '.$url,true,302);
@@ -967,6 +1038,9 @@ if( ! function_exists("redirect")){
 }
 ########################################################################
 if( ! function_exists("cleanPostInput")){
+	/*
+	 * Cleanup post data values to remove shell commands injected, This is a security measure
+	 */
 	function cleanPostInput(){
 		# clean the input of the global post values
 		foreach( array_keys($_POST) as $postKey ){
@@ -977,6 +1051,9 @@ if( ! function_exists("cleanPostInput")){
 }
 ########################################################################
 if( ! function_exists("cleanGetInput")){
+	/*
+	 * Cleanup get data values to remove shell commands injected, This is a security measure
+	 */
 	function cleanGetInput(){
 		# clean the input of the global post values
 		foreach( array_keys($_GET) as $getKey ){
