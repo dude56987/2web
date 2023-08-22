@@ -39,6 +39,13 @@ select{
 }
 sup{
 	font-size: 0.5rem;
+	display: none;
+}
+sup::before {
+	content: "(";
+}
+sup::after {
+	content: ")";
 }
 .tag{
 	line-height: 1rem;
@@ -331,6 +338,13 @@ ol li{
 	visibility: hidden;
 }
 */
+/* Media check for touchscreens */
+@media (pointer: coarse){
+	/* show sup content on touchscreens */
+	sup{
+		display: inline-block;
+	}
+}
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
 		/*
@@ -1504,7 +1518,7 @@ table{
 	max-height: 45rem;
 	vertical-align: top;
 	white-space: normal;
-	overflow: scroll;
+	overflow: auto;
 }
 .textList{
 	vertical-align: middle;
@@ -2029,4 +2043,25 @@ details{
 	background-color: var(--highlightBackground);
 	color: var(--solidBackground);
 	min-width: 10%;
+}
+.searchCacheFileDateSize{
+	margin: 0px;
+	background-color: var(--solidBackground);
+	text-align: center;
+	color: var(--textColor);
+	-webkit-text-stroke: 0.04rem black;
+	padding: 0.5rem;
+	font-size: 1.5rem;
+}
+.aiGenComment{
+	display: inline-block;
+	width: 40%;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 1rem;
+	vertical-align: top;
+}
+#scrollProgress{
+	background-color: var(--highlightBackground);
+	height: 0.5rem;
+	width: 0px;
 }

@@ -18,7 +18,19 @@
 ########################################################################
 ?>
 <!-- create top jump button -->
-<a href='#' id='topButton' class='button'>&uarr;</a>
+<a href='#' id='topButton' class='button'>&uarr;<div><div id='scrollProgress'></div></div></a>
+
+<script>
+	window.onscroll = function(){scrollCheck()};
+	function scrollCheck(){
+		var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+		var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+		var scrolled = (winScroll / height) * 100;
+		document.getElementById("scrollProgress").style.width = (scrolled + "%");
+	}
+	scrollCheck();
+</script>
+
 <?php
 $startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
