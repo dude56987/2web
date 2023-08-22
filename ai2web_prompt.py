@@ -204,9 +204,6 @@ samePromptBuffer = list()
 # add the prompt to the the buffer to build the conversation token
 gptj = loadModel()
 
-# generate a new chat session
-gptj.chat_session()
-
 # read the input temp given by the user
 if "--deterministic" in sys.argv:
 	# deterministic flag blocks temp and random
@@ -245,6 +242,9 @@ failures = 0
 
 # loop the prompt until ctrl-c is hit
 while versions > 0:
+	# generate a new chat session for each version of the output
+	gptj.chat_session()
+	# list versions left in CLI
 	print("Versions Left: ", versions)
 	if "--output-dir" in sys.argv:
 		print(fileTitle)
@@ -268,7 +268,7 @@ while versions > 0:
 			versionNumber += 1
 			print("File Title: "+fileTitle)
 	# generate the anwser
-	anwser = gptj.generate(prompt=question, max_tokens=500, repeat_penalty=1.18, temp=temperature )
+	anwser = gptj.generate(prompt=question, max_tokens=7000, repeat_penalty=1.18, temp=temperature )
 
 	noOutputWarning  = "WARNING: No anwser could be returned by the language model to your input.\n"
 	noOutputWarning += "Please change your input in order to get a response. Some ways to fix this.\n"
