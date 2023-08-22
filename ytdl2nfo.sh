@@ -771,7 +771,11 @@ ytdl2kodi_video_extractor(){
 	# get the id and the title info
 	id=$(echo "$info" | jq -r ".id?" | xargs -0 | cut -d$'\n' -f1 )
 	title=$(echo "$info" | jq -r ".fulltitle?" | xargs -0 | cut -d$'\n' -f1 )
-	titleGet=$?
+
+	# try to simply use the .title in the json
+	if ! validString "$title";then
+		title=$(echo "$info" | jq -r ".title?" | xargs -0 | cut -d$'\n' -f1 )
+	fi
 
 	# if the extractor failed then try to extract info with ffprobe
 	if ! validString "$title";then
