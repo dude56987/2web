@@ -387,9 +387,15 @@ function cpuCount(){
 ################################################################################
 function waitQueue(){
 	# PARALLEL PROCESSING COMMAND
+	# - use system load and free cores to manage queue
 	# wait for queue to free up for next command
 	sleepTime=$1
 	totalCPUS=$2
+	if [ $totalCPUS -eq 1 ];then
+		# if there is only one cpu use the fastqueue, one at a time, ignore system load
+		waitFastQueue $sleepTime 1
+		return 0
+	fi
 	while true;do
 		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
@@ -413,6 +419,8 @@ function waitQueue(){
 ################################################################################
 function waitSlowQueue(){
 	# PARALLEL PROCESSING COMMAND
+	# - use only the system load to manage queue
+	# - This is dangerous and will heavily tax the system in a uneven way
 	# wait for system load to get below the totalCpus
 	sleepTime=$1
 	totalCPUS=$2
@@ -428,6 +436,7 @@ function waitSlowQueue(){
 ################################################################################
 function waitFastQueue(){
 	# PARALLEL PROCESSING COMMAND
+	# - use only the free cpu cores to manage the queue
 	# wait for queue to free up for next command
 	sleepTime=$1
 	totalCPUS=$2
@@ -890,7 +899,7 @@ function addToLog(){
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 
 	# create identifier date to organize the data, this is really accurate
-	logIdentifier="$(date "+%s.%N")_${moduleName}"
+	logIdentifier="$(date "+%s.%N")"
 	logDate="$(date "+%D")"
 	logTime="$(date "+%R:%S")"
 
