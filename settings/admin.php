@@ -31,6 +31,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 ?>
 
 <div class='settingListCard'>
+<h1>Running adminstrative action, This will be logged!</h1>
+<img class='globalPulse' src='/pulse.gif'>
 <?php
 # enable error reporting
 ini_set("display_errors", 1);
