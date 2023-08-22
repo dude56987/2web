@@ -136,9 +136,22 @@ if (file_exists("artist.cfg")){
 if (array_key_exists("play",$_GET)){
 	$track=($_GET['play']);
 	if (file_exists("$track.mp3")){
-		echo "<audio class='albumPlayer' controls loop autoplay>";
-		echo "	<source src='$track.mp3' type='audio/mpeg'>";
-		echo "</audio>";
+		if (file_exists("$track.webm")){
+			echo "<video id='nfoMediaPlayer' controls loop autoplay poster='$track.png' data-setup='{ \"inactivityTimeout\": 0 }'>";
+			echo "	<source src='$track.webm' type='video/webm'>";
+			echo "</video>";
+		}else{
+			echo "<audio class='albumPlayer' controls loop autoplay>";
+			echo "	<source src='$track.mp3' type='audio/mpeg'>";
+			echo "</audio>";
+		}
+		echo "<div class='titleCard'>";
+		echo "	<div class='listCard'>";
+		echo "		<a class='button' href='$track.mp3'>";
+		echo "			🔗Direct Link";
+		echo "		</a>";
+		echo "	</div>";
+		echo "</div>";
 		if (file_exists($track."-lyrics.txt")){
 			echo "<div class='titleCard'>";
 			echo "<h1>Lyrics</h1>";
@@ -154,23 +167,29 @@ if (array_key_exists("play",$_GET)){
 <div class='settingListCard trackListing'>
 <h2>Tracks</h2>
 <?php
-if (file_exists("tracks.index")){
-	// get a list of all the genetrated index links for the page
-	$sourceFiles = file("tracks.index", FILE_IGNORE_NEW_LINES);
-	// reverse the time sort
-	$sourceFiles = array_unique($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			// read the index entry
-			$data=file_get_contents($sourceFile);
-			// write the index entry
-			echo "$data";
-			flush();
-			ob_flush();
-		}
+#if (file_exists("tracks.index")){
+// get a list of all the genetrated index links for the page
+//$sourceFiles = file("tracks.index", FILE_IGNORE_NEW_LINES);
+//$sourceFiles = file("tracks.index", FILE_IGNORE_NEW_LINES);
+$sourceFiles = scanDir(".");
+$noFileFound = True;
+// reverse the time sort
+$sourceFiles = array_unique($sourceFiles);
+# sort the list
+sort($sourceFiles);
+
+foreach($sourceFiles as $sourceFile){
+	if (stripos($sourceFile, ".mp3")){
+		// read the index entry
+		$data=file_get_contents(str_replace(".mp3",".index",$sourceFile));
+		// write the index entry
+		echo "$data";
+		flush();
+		ob_flush();
+		$noFileFound = False;
 	}
-}else{
+}
+if ($noFileFound){
 	echo "<ul>";
 	echo "<li>No Music have been scanned into the libary!</li>";
 	echo "<li>Add libary paths in the <a href='/music.php'>video on demand admin interface</a> to populate this page.</li>";
