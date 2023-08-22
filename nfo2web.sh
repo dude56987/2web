@@ -646,7 +646,7 @@ processMovie(){
 					tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 					echo "?>"
-					echo "<span id='vlcIcon'>&#9650;</span> VLC"
+					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 					echo "</a>"
 				fi
 				echo "$moviePlot"
@@ -669,7 +669,7 @@ processMovie(){
 				tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
 				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 				echo "?>"
-				echo "<span id='vlcIcon'>&#9650;</span> VLC"
+				echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 				echo "</a>"
 				echo "$moviePlot"
 				echo "</div>"
@@ -1279,7 +1279,7 @@ processEpisode(){
 				echo "	echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 				echo "?>";
 
-				echo "<span id='vlcIcon'>&#9650;</span> VLC"
+				echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
 				echo "</a>"
 
 				echo "<div class='aired'>"
