@@ -608,38 +608,42 @@ webUpdate(){
 	################################################################################
 	# check if music module is enabled
 	if returnModStatus "music2web";then
-		# load up the lyrics model chosen
-		lyricsModel="$(loadLyricsModel)"
-		# search web directories for music to generate lyrics for web interface
-		foundVideoFiles=$(find "$webDirectory/music/" \
-			| grep ".mp3$" \
-			| shuf )
-		echo "$foundVideoFiles" | while read videoFilePath;do
-			#
-			generateLyrics "$videoFilePath" "$lyricsModel"
-		done
+		if yesNoCfgCheck "/etc/2web/ai/aiLyricsGenerate.cfg";then
+			# load up the lyrics model chosen
+			lyricsModel="$(loadLyricsModel)"
+			# search web directories for music to generate lyrics for web interface
+			foundVideoFiles=$(find "$webDirectory/music/" \
+				| grep ".mp3$" \
+				| shuf )
+			echo "$foundVideoFiles" | while read videoFilePath;do
+				#
+				generateLyrics "$videoFilePath" "$lyricsModel"
+			done
+		fi
 	fi
 
 	################################################################################
 	#	check for files that can be transcribed by whisper
 	################################################################################
 	if returnModStatus "nfo2web";then
-		subsModel="$(loadSubsModel)"
-		foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
-			| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
-			| shuf )
-		echo "$foundVideoFiles" | while read videoFilePath;do
-			#
-			generateSubtitles "$videoFilePath" "$subsModel"
-		done
-		# look for movies that can be transcribed by whisper
-		foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
-			| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
-			| shuf )
-		echo "$foundVideoFiles" | while read videoFilePath;do
-			#
-			generateSubtitles "$videoFilePath" "$subsModel"
-		done
+		if yesNoCfgCheck "/etc/2web/ai/aiSubsGenerate.cfg";then
+			subsModel="$(loadSubsModel)"
+			foundVideoFiles=$(find "$webDirectory/kodi/shows/" \
+				| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+				| shuf )
+			echo "$foundVideoFiles" | while read videoFilePath;do
+				#
+				generateSubtitles "$videoFilePath" "$subsModel"
+			done
+			# look for movies that can be transcribed by whisper
+			foundVideoFiles=$(find "$webDirectory/kodi/movies/" \
+				| grep ".mkv$\|.mp4$\|.avi$\|.ogv$" \
+				| shuf )
+			echo "$foundVideoFiles" | while read videoFilePath;do
+				#
+				generateSubtitles "$videoFilePath" "$subsModel"
+			done
+		fi
 	fi
 	stopDebug
 
@@ -648,9 +652,11 @@ webUpdate(){
 	# - This will build comparisons for related videos style comparisons
 	################################################################################
 	if returnModStatus "nfo2web";then
-		compareGroup "/var/cache/2web/ml.db" "movies"
-		compareGroup "/var/cache/2web/ml.db" "shows"
-		compareGroup "/var/cache/2web/ml.db" "episodes"
+		if yesNoCfgCheck "/etc/2web/ai/aiCompareGenerate.cfg";then
+			compareGroup "/var/cache/2web/ml.db" "movies"
+			compareGroup "/var/cache/2web/ml.db" "shows"
+			compareGroup "/var/cache/2web/ml.db" "episodes"
+		fi
 	fi
 	#compareGroup "/var/cache/2web/ml.db" "graphs"
 	#compareGroup "/var/cache/2web/ml.db" "repos"
