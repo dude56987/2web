@@ -556,8 +556,14 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
 	# add the random index
 	linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
-	# link lists these can be built and rebuilt during libary update
+	# add robots.txt, to attempt to prevent any crawling of the site
+	# - the site is for use on a internal network not online but still should not be crawled
+	# - Can be edited by the user
+	linkFile "/etc/2web/config_default/robots.txt" "$webDirectory/robots.txt"
 
+	################################################################################
+	# link lists these can be built and rebuilt during libary update
+	################################################################################
 	# copy over the favicon
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
 	rebuildFavIcon="no"
