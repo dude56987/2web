@@ -280,7 +280,7 @@ build-deb: upgrade-hls
 	# build the default themes
 	# user themes can be any self contained .css file
 	# copy over the main javascript libary
-	cp 2web.js debian/usr/share/2web/
+	cp 2webLib.js debian/usr/share/2web/
 	# copy over the main php libary
 	cp 2webLib.php debian/usr/share/2web/
 	# copy over the settings pages

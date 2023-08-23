@@ -21,7 +21,7 @@
 <head>
 	<title>2web Wikis</title>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
-	<script src='/2web.js'></script>
+	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>

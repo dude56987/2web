@@ -21,7 +21,7 @@
 <head>
 	<link rel='stylesheet' href='/style.css' />
 	<link rel='icon' type='image/png' href='/favicon.png'>
-	<script src='/2web.js'></script>
+	<script src='/2webLib.js'></script>
 <?PHP
 	if (array_key_exists("refresh",$_GET)){
 		if ($_GET['refresh'] == 'true'){

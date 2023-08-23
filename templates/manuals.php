@@ -20,7 +20,7 @@
 <html class='randomFanart'>
 <head>
 	<link href="/style.css" rel="stylesheet">
-	<script src='/2web.js'></script>
+	<script src='/2webLib.js'></script>
 </head>
 <body>
 <?PHP

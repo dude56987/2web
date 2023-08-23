@@ -20,7 +20,7 @@
 <html class='seriesBackground'>
 <head>
 <link rel='stylesheet' href='/style.css' />
-<script src='/2web.js'></script>
+<script src='/2webLib.js'></script>
 <style>
 <?PHP
 	# get the show name

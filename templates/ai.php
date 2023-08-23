@@ -610,7 +610,7 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 ?>
 <html class='randomFanart'>
 <head>
-	<script src='/2web.js'></script>
+	<script src='/2webLib.js'></script>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 	<?php # Disable scaling of page elements ?>

@@ -26,7 +26,7 @@ if (file_exists("allHistory.webm")){
 ?>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
-	<script src='/2web.js'></script>
+	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
 
 	<style>
