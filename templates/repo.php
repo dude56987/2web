@@ -169,6 +169,8 @@ function drawLint(){
 			echo "	<td>PHP</td>";
 		}else if ($fileExt == "html"){
 			echo "	<td>HTML</td>";
+		}else if ($fileExt == "py"){
+			echo "	<td>Python</td>";
 		}else{
 			echo "	<td>Unknown</td>";
 		}
