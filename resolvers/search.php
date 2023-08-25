@@ -699,11 +699,23 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		if ($searchFinished){
 			echo $fullCacheOutput;
 		}else{
-			# the search was not completed so reload the page every 60 seconds until it is
-			echo "<script>";
-			echo "setTimeout(function() { window.location=window.location;},(1000*1));";
-			echo "</script>";
-			echo "<img class='localPulse' src='/pulse.gif'>\n";
+			if ( ! array_key_exists("stopRefresh",$_GET)){
+				echo "<img class='localPulse' src='/pulse.gif'>\n";
+				echo "<hr>";
+				echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
+				echo "<hr>";
+			}else{
+				echo "<hr>";
+				echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
+				echo "<hr>";
+			}
+
+			if ( ! array_key_exists("stopRefresh",$_GET)){
+				# the search was not completed so reload the page every 60 seconds until it is
+				echo "<script>";
+				echo "setTimeout(function() { window.location=window.location;},(1000*15));";
+				echo "</script>";
+			}
 			echo $fullCacheOutput;
 		}
 	}else{
@@ -713,12 +725,22 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 		# write the cache file as a lock file
 		appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
-
-		# reload the page for the user
-		echo "<script>";
-		echo "window.location=window.location;";
-		echo "</script>";
-		echo "<img class='localPulse' src='/pulse.gif'>\n";
+		if ( ! array_key_exists("stopRefresh",$_GET)){
+			echo "<img class='localPulse' src='/pulse.gif'>\n";
+			echo "<hr>";
+			echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
+			echo "<hr>";
+		}else{
+			echo "<hr>";
+			echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
+			echo "<hr>";
+		}
+		if ( ! array_key_exists("stopRefresh",$_GET)){
+			# reload the page for the user
+			echo "<script>";
+			echo "window.location=window.location;";
+			echo "</script>";
+		}
 
 		$startSearchTime=microtime(True);
 		# tell apache to not compress search results so streaming search results will work
