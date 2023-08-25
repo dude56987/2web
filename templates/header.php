@@ -184,6 +184,14 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
+	if (file_exists("$webDirectory/portal/")){
+		$fileData .= formatText("<a class='button' href='/portal/'>",2);
+		$fileData .= formatText("🚪",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("Portal",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 	if ($graphsFound){
 		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
 		$fileData .= formatText("📊",3);
