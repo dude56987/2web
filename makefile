@@ -124,6 +124,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/bash_completion.d/;
 	mkdir -p debian/etc/avahi/;
 	mkdir -p debian/etc/avahi/services/;
+	mkdir -p debian/etc/2web/portal/;
 	mkdir -p debian/var/lib/2web/;
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
@@ -155,6 +156,7 @@ build-deb: upgrade-hls
 	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/usr/share/2web/themes/.placeholder
 	touch debian/etc/2web/users/.placeholder
+	touch debian/etc/2web/portal/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/2web/users/
 	chown -R www-data:www-data debian/etc/2web/ytdl/*.d/
@@ -217,6 +219,9 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/nfo2web
 	cat build/sh_head.txt > debian/usr/bin/nfo2web
 	grep --invert-match "^[[:blank:]]*#" nfo2web.sh | tr -s '\n' >> debian/usr/bin/nfo2web
+	echo "#! /bin/bash" > debian/usr/bin/portal2web
+	cat build/sh_head.txt > debian/usr/bin/portal2web
+	grep --invert-match "^[[:blank:]]*#" portal2web.sh | tr -s '\n' >> debian/usr/bin/portal2web
 	echo "#! /bin/bash" > debian/usr/bin/git2web
 	cat build/sh_head.txt > debian/usr/bin/git2web
 	grep --invert-match "^[[:blank:]]*#" git2web.sh | tr -s '\n' >> debian/usr/bin/git2web
@@ -245,30 +250,36 @@ build-deb: upgrade-hls
 	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
 	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1.gz
 	pandoc --standalone help/man_nfo2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/nfo2web.1.gz
+	#pandoc --standalone help/man_portal2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/portal2web.1.gz
 	pandoc --standalone help/man_iptv2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/iptv2web.1.gz
 	pandoc --standalone help/man_comic2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/comic2web.1.gz
 	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1.gz
 	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
 	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1.gz
 	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1.gz
+	#pandoc --standalone help/man_ai2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/ai2web.1.gz
 	# build the web versions of the man pages
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
 	pandoc help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
+	#pandoc help/man_portal2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/portal2web.html
 	pandoc help/man_iptv2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/iptv2web.html
 	pandoc help/man_comic2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/comic2web.html
 	pandoc help/man_weather2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/weather2web.html
 	pandoc help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
 	pandoc help/man_music2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/music2web.html
 	pandoc help/man_graph2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/graph2web.html
+	#pandoc help/man_ai2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/ai2web.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
+	#w3m debian/usr/share/2web/help/portal2web.html > debian/usr/share/2web/help/portal2web.txt
 	w3m debian/usr/share/2web/help/iptv2web.html > debian/usr/share/2web/help/iptv2web.txt
 	w3m debian/usr/share/2web/help/comic2web.html > debian/usr/share/2web/help/comic2web.txt
 	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	w3m debian/usr/share/2web/help/music2web.html > debian/usr/share/2web/help/music2web.txt
 	w3m debian/usr/share/2web/help/graph2web.html > debian/usr/share/2web/help/graph2web.txt
+	#w3m debian/usr/share/2web/help/ai2web.html > debian/usr/share/2web/help/ai2web.txt
 	# build the readme
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
@@ -354,6 +365,8 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ 2web.sh" | wc -l >> debian/usr/share/2web/version_2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_nfo2web.cfg
 	/usr/bin/git log --stat | grep "^ nfo2web.sh" | wc -l >> debian/usr/share/2web/version_nfo2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_portal2web.cfg
+	/usr/bin/git log --stat | grep "^ portal2web.sh" | wc -l >> debian/usr/share/2web/version_portal2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_comic2web.cfg
 	/usr/bin/git log --stat | grep "^ comic2web.sh" | wc -l >> debian/usr/share/2web/version_comic2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_weather2web.cfg
@@ -368,6 +381,8 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ ytdl2nfo.sh" | wc -l >> debian/usr/share/2web/version_ytdl2nfo.cfg
 	echo -n "#" > debian/usr/share/2web/version_wiki2web.cfg
 	/usr/bin/git log --stat | grep "^ wiki2web.sh" | wc -l >> debian/usr/share/2web/version_wiki2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_ai2web.cfg
+	/usr/bin/git log --stat | grep "^ ai2web.sh" | wc -l >> debian/usr/share/2web/version_ai2web.cfg
 	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg

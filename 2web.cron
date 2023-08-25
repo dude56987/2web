@@ -58,6 +58,9 @@
 # every 6 hours check for changes to git repos
 0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
 ################################################################################
+# every 6 hours check the links in the portal
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
+################################################################################
 # once a day check for updates to fast moving metadata extraction packages
 @daily root /usr/bin/2web upgrade &> /dev/null
 ################################################################################

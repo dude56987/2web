@@ -1066,6 +1066,7 @@ main(){
 		rm -v $webDirectory/wiki2web.active
 		rm -v $webDirectory/kodi2web.active
 		rm -v $webDirectory/ytdl2nfo.active
+		rm -v $webDirectory/portal2web.active
 		rm -v $webDirectory/git2web.active
 		rm -v $webDirectory/ai2web.active
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
