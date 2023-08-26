@@ -167,7 +167,7 @@ function buildDiffGraph(){
 
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
 	#convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
-	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 200x100 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 
 	# empty graph should be removed, when kept they look bad in the web interface and make pages without any info
 	if echo "$emptyGraph" | grep -q "yes";then
@@ -223,7 +223,7 @@ function buildCommitGraph(){
 	} > "$webDirectory/repos/$repoName/$outputFilename.svg"
 
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
-	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
+	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" -thumbnail 200x100 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 
 	# empty graph should be removed, when kept they look bad in the web interface and make pages without any info
 	if echo "$emptyGraph" | grep -q "yes";then
