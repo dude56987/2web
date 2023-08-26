@@ -265,16 +265,25 @@ function update(){
 	echo "$reposources" | while read repoSource;do
 		# generate a sum for the source
 		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
-		# create the repo directory
-		#createDir "$webDirectory/repos/$repoSum/"
-		#createDir "/var/cache/2web/download_repos/$repoSum/"
-		# do not process the git if it is still in the cache
-		# - Cache removes files older than x days
-		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.cfg" "10";then
+		# create the repo directory, limit new repo pulls to once per day
+		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.cfg" "1";then
 			# clone and update remote git repositories on the server
-			#cd $webDirectory/repos/$repoSum/
 			git -C "$downloadDirectory/" clone "$repoSource"
+			# update a existing repo
 			touch "$webDirectory/sums/git2web_download_$repoSum.cfg"
+		fi
+	done
+	# update any existing repos by pulling local paths to update repo
+	find "$webDirectory/repos/" -maxdepth 1 -mindepth 1 -type d | while read repoSource;do
+		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
+		# if this is a git repository, update once per day
+		if cacheCheck "$webDirectory/sums/git2web_pull_$repoSum.cfg" "1";then
+			if test -d "$repoSource/source/.git/";then
+				ALERT "Found Repo at $repoSource"
+				# launch as www-data so git will not throw security errors
+				su www-data git -C "$repoSource/source/" pull
+			fi
+			touch "$webDirectory/sums/git2web_pull_$repoSum.cfg"
 		fi
 	done
 	# cleanup the repos index
@@ -285,7 +294,6 @@ function update(){
 	# cleanup new git index
 	if test -f "$webDirectory/new/repos.index";then
 		# new repos but preform a fancy sort that does not change the order of the items
-		#tempList=$(cat -n "$webDirectory/new/repos.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
 		tempList=$(cat "$webDirectory/new/repos.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/repos.index"
 	fi
@@ -305,6 +313,7 @@ function generateZip(){
 ################################################################################
 function processRepo(){
 	repoSource=$1
+	webDirectory=$2
 	# create sum and name from repo source
 	repoSum=$(echo "$repoSource" | md5sum | cut -d' ' -f1)
 	#
@@ -321,14 +330,35 @@ function processRepo(){
 		ALERT "Invalid repo '$repoSource'"
 		return
 	fi
-	# check if the data sum of the source has changed
-	if cacheCheck "$webDirectory/repos/$repoName/repos.index" 10;then
+
+	if test -d "$webDirectory/repos/$repoName/source/.git/";then
+		INFO "$repoName : Pull updates to git repo..."
+		# pull updates to existing repo
+		git -C "$webDirectory/repos/$repoName/source/" pull
+	else
+		INFO "$repoName : Creating a clone of the repo..."
+		# add as a safe directory for service to be able to update in above git pull
+		git config --global --add safe.directory "$webDirectory/repos/$repoName/source/"
 		# clone the repo into the web directory
-		INFO "$repoName : Creating a clone of the repo: $repoName"
 		git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
+	fi
 
-		INFO "$repoName : Checking git repo source data sum: $repoName"
+	# get the old status sum
+	if test -f "$webDirectory/repos/$repoName/status.cfg";then
+		oldRepoStatusSum=$(cat "$webDirectory/repos/$repoName/status.cfg")
+	else
+		oldRepoStatusSum="NOSUM"
+	fi
 
+	# get the repo status sum based on the last commit to the local repo
+	repoStatusSum=$(git -P log --oneline -1 | md5sum | cut -d' ' -f1)
+	INFO "$repoName : Checking git repo source data sum: $repoName"
+
+	# check if the data sum of the source has changed
+	if [ "$repoStatusSum" == "$oldRepoStatusSum" ];then
+		ALERT "The Repo $repoName has not changed and will not be updated..."
+	else
+		ALERT "The Repo $repoName has changed and will be updated..."
 		# set ownership to root of the source code directory, in order to avoid git security errors in metadata generation
 		chown -R root:www-data "$webDirectory/repos/$repoName/source/"
 
@@ -662,7 +692,7 @@ function processRepo(){
 			linkFile "$webDirectory/repos/$repoName/graph_commit_month.png" "$webDirectory/repos/$repoName/repoHistory.png"
 		fi
 		# build a thumbnail of the video thumbnail
-		convert -trim -background none "$webDirectory/repos/$repoName/repoHistory.png" -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/repoHistory-thumb.png"
+		convert -trim -background none "$webDirectory/repos/$repoName/repoHistory.png" -thumbnail 200x100 -unsharp 1x1 "$webDirectory/repos/$repoName/repoHistory-thumb.png"
 
 		INFO "$repoName : Waiting for all threads to finish"
 		blockQueue 1
@@ -687,6 +717,9 @@ function processRepo(){
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"
+
+		# update the repo status sum
+		echo -n "$repoStatusSum" > "$webDirectory/repos/$repoName/status.cfg"
 	fi
 }
 ################################################################################
@@ -731,7 +764,7 @@ webUpdate(){
 			#INFO "Repo source Found '$repoSource', searching for .git/"
 			if test -d "$repoSource/.git/";then
 				INFO "Repo found processing $repoSource"
-				processRepo "$repoSource" $@
+				processRepo "$repoSource" "$webDirectory" $@
 				# increment the total repo counters
 				totalRepos=$(( $totalRepos + 1 ))
 			else
@@ -753,11 +786,9 @@ webUpdate(){
 				#cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sed -r "s#(.+)\|#\1|/Repos#" | sort -n
 				cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sort -n
 			} > "$webDirectory/repos/combined_gource.gource"
-			startDebug
 			# render the combined video
 			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/combined_gource.gource" | \
 			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/allHistory.webm"
-			stopDebug
 
 			setFileDataSum "$webDirectory" "$webDirectory/repos/repos.index"
 		fi
