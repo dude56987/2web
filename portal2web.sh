@@ -31,14 +31,14 @@ function scanLink(){
 		port=$(echo "$scanPort" | cut -d',' -f2)
 		description=$(echo "$scanPort" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		INFO "Scanning $link:$port"
-		wget --tries=1 -q -S --timeout=5 -O /dev/null -o /dev/null "$link:$port"
+		ALERT "Scanning $link:$port"
+		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$link:$port"
 		if [ $? -eq 0 ];then
-			INFO "Found link at $link:$port, generating link..."
+			ALERT "Found link at $link:$port, generating link..."
 			# for working links generate index files
 			generateLink "$link:$port" "$name" "$description" "$webDirectory"
 		else
-			INFO "No link found for $link:$port..."
+			ALERT "No link found for $link:$port..."
 		fi
 	done
 	# scan paths
@@ -47,15 +47,14 @@ function scanLink(){
 		path=$(echo "$scanPath" | cut -d',' -f2)
 		description=$(echo "$scanPath" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		INFO "Scanning $link$path"
-		wget --tries=1 -q -S --timeout=5 -O /dev/null -o /dev/null "$link$path"
+		ALERT "Scanning $link$path"
+		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$link$path"
 		if [ $? -eq 0 ];then
-
-			INFO "Found link at $link$path, generating link..."
+			ALERT "Found link at $link$path, generating link..."
 			# for working links generate index files
 			generateLink "$link$path" "$name" "$description" "$webDirectory"
 		else
-			INFO "No link found for $link$path..."
+			ALERT "No link found for $link$path..."
 		fi
 	done
 }
@@ -68,10 +67,12 @@ function generateLink(){
 	# create sum
 	linkSum=$(echo "$link" | md5sum | cut -d' ' -f1)
 	# figure out the domain from the link
-	if echo "$link" | grep -q "http://";then
-		domain=$(echo "$link" | sed "s/http:\/\///g" | cut -d'/' -f1 )
-	elif echo "$link" | grep -q "https://";then
-		domain=$(echo "$link" | sed "s/https:\/\///g" | cut -d'/' -f1 )
+	domain=$(echo "$link" | tr -s "/" | cut -d'/' -f2 )
+	if echo "$domain" | grep -q ":";then
+		domain=$(echo "$domain" | cut -d':' -f1 )
+	fi
+	if echo "$domain" | grep -q ".local";then
+		domain=$(echo "$domain" | sed "s/\.local//g" )
 	fi
 	# generate qr codes for each link
 	if ! test -f "$webDirectory/portal/$linkSum.png";then
@@ -81,11 +82,22 @@ function generateLink(){
 	if ! test -f "$webDirectory/portal/$linkSum.index";then
 		{
 			echo "<a class='showPageEpisode' target='_BLANK' href='$link'>"
+			echo "	<h2>$domain</h2>"
 			echo "	<img src='/portal/$linkSum.png'>"
 			echo "	<div class='showIndexNumbers'>$name</div>"
 			echo "		$description"
 			echo "</a>"
-		} > "$webDirectory/portal/$linkSum.index"
+		} > "$webDirectory/portal/${domain}_$linkSum.index"
+		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/portal/portal.index"
+
+		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/new/all.index"
+		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/random/all.index"
+
+		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/new/portal.index"
+		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/random/portal.index"
+
+		# add to sql
+		SQLaddToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/data.db" "portal"
 	fi
 }
 ################################################################################
@@ -238,6 +250,15 @@ function update(){
 
 	# block for parallel threads here
 	blockQueue 1
+
+	if test -f "$webDirectory/new/portal.index";then
+		tempList=$(cat "$webDirectory/new/portal.index" | uniq | tail -n 800 )
+		echo "$tempList" > "$webDirectory/new/portal.index"
+	fi
+	if test -f "$webDirectory/random/portal.index";then
+		tempList=$(cat "$webDirectory/random/portal.index" | uniq | tail -n 800 )
+		echo "$tempList" > "$webDirectory/random/portal.index"
+	fi
 }
 ################################################################################
 function resetCache(){

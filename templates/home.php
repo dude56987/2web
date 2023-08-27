@@ -91,7 +91,10 @@
 		drawPosterWidget("repos");
 		drawPosterWidget("repos", True);
 	}
-	drawServicesWidget();
+	if (file_exists("portal")){
+		drawPosterWidget("portal");
+		drawPosterWidget("portal", True);
+	}
 	// add the footer
 	include("footer.php");
 ?>

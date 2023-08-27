@@ -215,7 +215,9 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
-}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/log/")){
+}else if ($pageURL == "/settings/modules.php"){
+	$moduleName="none";
+}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1)){
 	$moduleName="none";
 	echo "	<div class='inputCard'>\n";
 	echo "		<h2>General Settings</h2>\n";
