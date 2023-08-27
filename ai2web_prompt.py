@@ -52,6 +52,7 @@ def ai2web_CLI_help():
 	print(" - Punctuation in sentences helps the model understand meaning.")
 	print(" - Mispelled words confuse the model")
 	print(" - Incorrect grammer confuses the model")
+	exit()
 ################################################################################
 def ai2web_prompt_help():
 	h1("When creating prompts REMEMBER")
@@ -215,8 +216,8 @@ elif "--temp" in sys.argv:
 	# set the temp manually must be in form of 1.0
 	temperature = float(sys.argv[(sys.argv.index("--temp")+1)])
 else:
-	# choose a anwser that has greater than 90% probability of being correct by default
-	temperature = 0.9
+	# choose a anwser that has greater than 70% probability of being correct by default
+	temperature = 0.7
 
 if "--versions" in sys.argv:
 	versions = int(sys.argv[(sys.argv.index("--versions")+1)])
