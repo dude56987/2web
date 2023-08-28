@@ -40,6 +40,31 @@
 	# add the javascript sorter controls
 ?>
 <div class='inputCard'>
+	<h2>Automatic Refresh</h2>
+	<hr>
+<?PHP
+	if (array_key_exists("limit", $_GET)){
+		if (is_numeric($_GET["limit"])){
+			$limitRefreshString="&limit=".$_GET["limit"];
+		}else{
+			$limitRefreshString="";
+		}
+	}else{
+		$limitRefreshString="";
+	}
+	if (array_key_exists("refresh",$_GET)){
+		if ($_GET['refresh'] == 'true'){
+			echo "<a class='activeButton' href='?refresh=false'>Disable</a>";
+		}else{
+			echo "<a class='button' href='?refresh=true".$limitRefreshString."#tableTop'>Enable</a>";
+		}
+	}else{
+		echo "<a class='button' href='?refresh=true".$limitRefreshString."#tableTop'>Enable</a>";
+	}
+	?>
+	<hr>
+</div>
+<div class='titleCard'>
 	<h2>Filter Log Entries</h2>
 	<input type='button' class='button' value='Info' onclick='toggleVisibleClass("INFO")'>
 	<input type='button' class='button' value='Error' onclick='toggleVisibleClass("ERROR")'>
@@ -49,24 +74,30 @@
 	<input type='button' class='button' value='Debug' onclick='toggleVisibleClass("DEBUG")'>
 	<input type='button' class='button' value='Download' onclick='toggleVisibleClass("DOWNLOAD")'>
 </div>
-<div class='inputCard'>
-	<h2>Automatic Refresh</h2>
-	<hr>
-	<?PHP
-	if (array_key_exists("refresh",$_GET)){
-		if ($_GET['refresh'] == 'true'){
-			echo "<a class='activeButton' href='?refresh=false'>Disable</a>";
+<div class='titleCard'>
+	<h2>Limit Shown Entries</h2>
+	<div class='listCard'>
+		<form method="get">
+		<?PHP
+		if (array_key_exists("limit", $_GET)){
+			if (is_numeric($_GET["limit"])){
+				echo "<input type='number' name='limit' max=1000 min=5 value='".$_GET["limit"]."' placeholder='X'>";
+			}else{
+				echo "<input type='number' name='limit' max=1000 min=5 value='50'>";
+			}
 		}else{
-			echo "<a class='button' href='?refresh=true#tableTop'>Enable</a>";
+			echo "<input type='number' name='limit' max=1000 min=5 value='50'>";
 		}
-	}else{
-			echo "<a class='button' href='?refresh=true#tableTop'>Enable</a>";
-	}
-	?>
-	<hr>
-	<!--
-	<span id='countdownTimer'>0</span>
-	-->
+		?>
+		<button class='button' type="submit">Change Limit</button>
+		<!--
+		<input class='button' type="submit" value="Change Limit">
+		-->
+		</form>
+		<hr>
+		<a class='button' href='?limit=500' >😕 Default</a>
+		<a class='button' href='?limit=all' >∞ Unlimited</a>
+	</div>
 </div>
 <hr>
 <!--  add the search box -->
@@ -89,9 +120,26 @@
 		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
 		# set the timeout to 1 minute since most webbrowsers timeout loading before this
 		$databaseObj->busyTimeout(60000);
-
-		# run query to get 800 random
-		$result = $databaseObj->query('select * from "log" order by logIdentifier DESC;');
+		# get the limit for how many items are displayed from the log
+		if (array_key_exists("limit", $_GET)){
+			if ($_GET["limit"] == "all"){
+				$result = $databaseObj->query('select * from "log" order by logIdentifier DESC;');
+			}else{
+				if (is_numeric($_GET["limit"])){
+					$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit '.$_GET["limit"].';');
+				}else{
+					# display error
+					echo "<div class='errorBanner'>\n";
+					echo "<hr>\n";
+					echo "Invalid limit value: '".$_GET["limit"]."'<br>\n";
+					echo "<hr>\n";
+					echo "</div>\n";
+				}
+			}
+		}else{
+			# run query to get the 100 most recent log entries
+			$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit 500;');
+		}
 
 		# fetch each row data individually and display results
 		while($row = $result->fetchArray()){
