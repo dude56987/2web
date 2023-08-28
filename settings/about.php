@@ -142,18 +142,8 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 </div>
-<div id='services' class='inputCard'>
-<h2>Server Services</h2>
-	<ul>
-		<li>List all available server services found to be active.</li>
-		<li>Not all linux services will be detected.</li>
-		<li>Services list is based off of <a href='https://dietpi.com/docs/software/'>DietPI software listings</a></li>
-	</ul>
-	<a class='button' href="/settings/serverServices.php">Active Server Services</a>
-	<hr>
-</div>
-<div id='CLI_manuals' class='titleCard'>
-	<h2>CLI<sup>(Command Line Interface)</sup> Manual Pages</h2>
+<div id='CLI_manuals' class='inputCard'>
+	<h2>CLI<sup>Command Line Interface</sup> Manual Pages</h2>
 	<ul>
 		<li><a href="/settings/manuals.php#README">README</a></li>
 		<li><a href="/settings/manuals.php#2web">2web</a></li>
@@ -162,6 +152,43 @@ include("settingsHeader.php");
 		<li><a href="/settings/manuals.php#iptv2web">iptv2web</a></li>
 		<li><a href="/settings/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
 		<li><a href="/settings/manuals.php#weather2web">weather2web</a></li>
+	</ul>
+</div>
+<div id='system_checks' class='inputCard'>
+	<h2>System Checks</h2>
+	<ul>
+		<?PHP
+		if (file_exists("/usr/bin/unattended-upgrades")){
+			echo "<li>Unattended Upgrades are <span class='enabledSetting'>INSTALLED</span></li>";
+		}else{
+			echo "<li>";
+			echo "	Unattended Upgrades are <span class='disabledSetting'>NOT INSTALLED</span>";
+			echo "	<ul>";
+			echo "		<li>To install use 'sudo apt-get install unattended-upgrades'</li>";
+			echo "	</ul>";
+			echo "</li>";
+		}
+		if (file_exists("/usr/sbin/ufw")){
+			echo "<li>UFW firewall is <span class='enabledSetting'>INSTALLED</span></li>";
+		}else{
+			echo "<li>";
+			echo "	<li>UFW firewall is <span class='disabledSetting'>NOT INSTALLED</span></li>";
+			echo "	<ul>";
+			echo "		<li>To install use 'sudo apt-get install ufw'</li>";
+			echo "	</ul>";
+			echo "</li>";
+		}
+		if (file_exists("/etc/default/fail2ban")){
+			echo "<li>Fail2ban is <span class='enabledSetting'>INSTALLED</span></li>";
+		}else{
+			echo "<li>";
+			echo "	<li>Fail2ban is <span class='disabledSetting'>NOT INSTALLED</span></li>";
+			echo "	<ul>";
+			echo "		<li>To install use 'sudo apt-get install fail2ban'</li>";
+			echo "	</ul>";
+			echo "</li>";
+		}
+		?>
 	</ul>
 </div>
 <div id='sslCert' class='titleCard'>
