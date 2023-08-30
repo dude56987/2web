@@ -710,8 +710,11 @@ input{
 .checkbox{
 	width: auto;
 }
-form .button{
-	width: 50%;
+.inputBox form .button{
+	width: 45%;
+}
+.inputBox form input{
+	width: 45%;
 }
 button{
 	width: 50%;
@@ -743,7 +746,9 @@ a:visited {
 .titlecard .button{
 	white-space: nowrap;
 	font-size: 1rem;
+	/*
 	line-height: 4rem;
+	*/
 }
 .header .button{
 	white-space: nowrap;
@@ -1037,6 +1042,10 @@ a:visited {
 	white-space: nowrap;
 	overflow-x: auto;
 	padding: 0.5rem;
+	min-height: 3rem;
+}
+.listCard .button{
+	display: inline-block;
 }
 .aired{
 	float: left;
