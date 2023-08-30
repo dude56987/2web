@@ -95,25 +95,38 @@ function cacheCheck(){
 }
 ########################################################################
 function enableApacheServer(){
-	# enable the apache config, four zeros are required to overwride the default apache config "000-default.cfg"
 	rm -v "/etc/apache2/conf-enabled/0000-default.conf"
 	rm -v "/etc/apache2/conf-enabled/000-default.conf"
 	rm -v "/etc/apache2/conf-enabled/00-default.conf"
 	rm -v "/etc/apache2/conf-enabled/0-default.conf"
+	# disable default site by removing symlink
+	rm -v "/etc/apache2/sites-enabled/0000-default.conf"
+	rm -v "/etc/apache2/sites-enabled/000-default.conf"
+	rm -v "/etc/apache2/sites-enabled/00-default.conf"
+	rm -v "/etc/apache2/sites-enabled/0-default.conf"
 	# copy over the config files
-	#linkFile "/etc/apache2/conf-available/0000-2web-ports.conf" "/etc/apache2/conf-enabled/0000-2web-ports.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website.conf" "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
-	#linkFile "/etc/apache2/sites-available/0000-2web-website-compat.conf" "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
 	# restart apache to apply changes
 	apache2ctl restart
 }
 ########################################################################
 function disableApacheServer(){
+	# remove 2web apache configs
 	rm -v "/etc/apache2/conf-enabled/0000-2web-ports.conf"
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
 	rm -v "/etc/apache2/sites-enabled/0000-2web-website-compat.conf"
+	# renenable the default apache config found
+	if test -f "/etc/apache2/sites-available/0000-default.conf";then
+		ln -s "/etc/apache2/sites-available/0000-default.conf" "/etc/apache2/sites-enabled/0000-default.conf"
+	elif test -f "/etc/apache2/sites-available/000-default.conf";then
+		ln -s "/etc/apache2/sites-available/000-default.conf" "/etc/apache2/sites-enabled/000-default.conf"
+	elif test -f "/etc/apache2/sites-available/00-default.conf";then
+		ln -s "/etc/apache2/sites-available/00-default.conf" "/etc/apache2/sites-enabled/00-default.conf"
+	elif test -f "/etc/apache2/sites-available/0-default.conf";then
+		ln -s "/etc/apache2/sites-available/0-default.conf" "/etc/apache2/sites-enabled/0-default.conf"
+	fi
 	# restart apache to apply changes
 	apache2ctl restart
 }
