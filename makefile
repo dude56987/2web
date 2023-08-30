@@ -350,6 +350,8 @@ build-deb: upgrade-hls
 	# this also makes the build date time more correct since the package is
 	# built but is now being compressed and converted into a debian package
 	###################
+	# set the build directory as safe for git
+	git config --global --add safe.directory "$$PWD"
 	# create the 2web version info special flags
 	if /usr/bin/git status| grep "Changes not staged for";then echo -n "+UNSTABLE+ " >> debian/usr/share/2web/version.cfg;fi
 	if /usr/bin/git status| grep "Changes to be committed";then echo -n "+TESTING+ " >> debian/usr/share/2web/version.cfg;fi
@@ -417,6 +419,8 @@ build-deb: upgrade-hls
 	#sed -i "s/<VERSION_NUMBER>/$(shell cat debian/usr/share/2web/simple_version.cfg)/g" debian/DEBIAN/control
 	# write the changelog
 	/usr/bin/git log --date short > ./debian/DEBIAN/changelog
+	# remove build directory from safe directory list in git configuration
+	git config --global --unset-all safe.directory "$$PWD"
 	# fix permissions in package
 	chmod -Rv 775 debian/DEBIAN/
 	chmod -Rv ugo+r debian/
