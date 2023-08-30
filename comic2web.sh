@@ -26,9 +26,9 @@ function downloadDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/downloads_comics/"
+			echo "/var/cache/2web/downloads/comics/"
 		} >> "/etc/2web/comics/download.cfg"
-		createDir "/var/cache/2web/downloads_comics/"
+		createDir "/var/cache/2web/downloads/comics/"
 	fi
 	# write path to console
 	cat "/etc/2web/comics/download.cfg"
@@ -39,9 +39,9 @@ function generatedDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/generated_comics/"
+			echo "/var/cache/2web/generated/comics/"
 		} >> "/etc/2web/comics/generated.cfg"
-		createDir "/var/cache/2web/generated_comics/"
+		createDir "/var/cache/2web/generated/comics/"
 	fi
 	# write path to console
 	cat "/etc/2web/comics/generated.cfg"

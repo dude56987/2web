@@ -58,7 +58,7 @@ function update(){
 			echo "# - You can download .zim files from the kiwix project"
 			echo "#   - https://library.kiwix.org/"
 			echo "################################################################################"
-			echo "/var/cache/2web/downloads_wiki/"
+			echo "/var/cache/2web/downloads/wiki/"
 		} > /etc/2web/wiki/sources.cfg
 	fi
 	# load sources

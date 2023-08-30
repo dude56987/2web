@@ -125,6 +125,8 @@ function update(){
 		# if no config exists create the default config
 		{
 			cat /etc/2web/config_default/portal2web_scanSources.cfg
+			# add the localhost to the scan
+			echo "http://$(hostname).local"
 		} > /etc/2web/portal/scanSources.cfg
 	fi
 	# load sources

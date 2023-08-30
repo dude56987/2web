@@ -24,18 +24,18 @@ function buildVnstatDevice(){
 	device=$1
 
 	# generate vnstat graphs for graph section from the vnstat sqlite database
-	vnstati -i "$device" -hg -o "/var/cache/2web/generated_graphs/vnstat_${device}-day.png"
-	if ! test -f "/var/cache/2web/generated_graphs/vnstat_${device}-day.png";then
+	vnstati -i "$device" -hg -o "/var/cache/2web/generated/graphs/vnstat_${device}-day.png"
+	if ! test -f "/var/cache/2web/generated/graphs/vnstat_${device}-day.png";then
 		# this is for compatiblity with older versions of vnstat, -hg is only in new versions
-		vnstati -i "$device" -h -o "/var/cache/2web/generated_graphs/vnstat_${device}-day.png"
+		vnstati -i "$device" -h -o "/var/cache/2web/generated/graphs/vnstat_${device}-day.png"
 	fi
-	vnstati -i "$device" -d 7 -o "/var/cache/2web/generated_graphs/vnstat_${device}-week.png"
-	vnstati -i "$device" -m -o "/var/cache/2web/generated_graphs/vnstat_${device}-month.png"
-	vnstati -i "$device" -y -o "/var/cache/2web/generated_graphs/vnstat_${device}-year.png"
+	vnstati -i "$device" -d 7 -o "/var/cache/2web/generated/graphs/vnstat_${device}-week.png"
+	vnstati -i "$device" -m -o "/var/cache/2web/generated/graphs/vnstat_${device}-month.png"
+	vnstati -i "$device" -y -o "/var/cache/2web/generated/graphs/vnstat_${device}-year.png"
 	# generate additional summary graphs for vnstat
-	vnstati -i "$device" -s -o "/var/cache/2web/generated_graphs/vnstat_${device}-summary.png"
+	vnstati -i "$device" -s -o "/var/cache/2web/generated/graphs/vnstat_${device}-summary.png"
 	# generate top activity months of all time
-	vnstati -i "$device" -t -o "/var/cache/2web/generated_graphs/vnstat_${device}-top.png"
+	vnstati -i "$device" -t -o "/var/cache/2web/generated/graphs/vnstat_${device}-top.png"
 
 }
 ################################################################################
@@ -43,7 +43,7 @@ function vnstatGen(){
 	# generate vnstat graphs for old and new versions of vnstat
 
 	# create a path to store generated graphs for each device
-	mkdir -p /var/cache/2web/generated_graphs/
+	mkdir -p /var/cache/2web/generated/graphs/
 	# check for the sqlite database from new versions of vnstat
 	if test -f /var/lib/vnstat/vnstat.db;then
 		# read vnstat database for interface entries
@@ -93,7 +93,7 @@ function update(){
 	# copy over the php files for the graph
 	linkFile "/usr/share/2web/templates/graphs.php" "$webDirectory/graphs/index.php"
 
-	searchPath="/var/cache/2web/generated_graphs"
+	searchPath="/var/cache/2web/generated/graphs"
 	# build vnstat graphs
 	if test -f /usr/bin/vnstati;then
 		vnstatGen

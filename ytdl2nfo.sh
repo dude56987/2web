@@ -44,7 +44,7 @@ getDownloadPath(){
 		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
 	else
 		# if no config exists create the default config
-		downloadPath="/var/cache/2web/downloads_nfo/"
+		downloadPath="/var/cache/2web/downloads/nfo/"
 		# write the new config from the path variable
 		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
 	fi

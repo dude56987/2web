@@ -26,9 +26,9 @@ function generatedDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/generated_ai/"
+			echo "/var/cache/2web/generated/ai/"
 		} >> "/etc/2web/ai/generated.cfg"
-		createDir "/var/cache/2web/generated_ai/"
+		createDir "/var/cache/2web/generated/ai/"
 	fi
 	# write path to console
 	cat "/etc/2web/ai/generated.cfg"
@@ -39,9 +39,9 @@ function downloadDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/download_ai/"
+			echo "/var/cache/2web/downloads/ai/"
 		} >> "/etc/2web/ai/download.cfg"
-		createDir "/var/cache/2web/download_ai/"
+		createDir "/var/cache/2web/downloads/ai/"
 	fi
 	# write path to console
 	cat "/etc/2web/ai/download.cfg"

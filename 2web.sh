@@ -1009,13 +1009,13 @@ function buildPulseGif(){
 function screenshot(){
 	webPath=$1
 	localPath=$2
-	mkdir -p "/var/cache/2web/downloads_comics/generated/2web Screenshots/"
+	mkdir -p "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
 	# make desktop screenshot
 	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 1920 --disable-smart-width --height 1080 \
-		"$webPath" "/var/cache/2web/downloads_comics/generated/2web Screenshots/desktop_$localPath"
+		"$webPath" "/var/cache/2web/downloads/comics/generated/2web Screenshots/desktop_$localPath"
 	# make phone screenshot
 	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 800 --disable-smart-width --height 2000 \
-		"$webPath" "/var/cache/2web/downloads_comics/generated/2web Screenshots/phone_$localPath"
+		"$webPath" "/var/cache/2web/downloads/comics/generated/2web Screenshots/phone_$localPath"
 }
 ################################################################################
 main(){
@@ -1357,9 +1357,9 @@ main(){
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "https://localhost/settings/about.php" "10_settings_about.jpg" &
 		blockQueue 1
-		chown -R www-data:www-data "/var/cache/2web/downloads_comics/generated/2web Screenshots/"
+		chown -R www-data:www-data "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		ALERT "Finished building the 2web screenshots"
-		ALERT "Screenshots are stored in /var/cache/2web/downloads_comics/generated/2web Screenshots/"
+		ALERT "Screenshots are stored in /var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		ALERT "Run 'comic2web' in order to add the screenshots to the comic section of 2web"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
 		webDirectory=$(webRoot);

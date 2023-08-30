@@ -26,9 +26,9 @@ function generatedDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/generated_repos/"
+			echo "/var/cache/2web/generated/repos/"
 		} >> "/etc/2web/repos/generated.cfg"
-		createDir "/var/cache/2web/generated_repos/"
+		createDir "/var/cache/2web/generated/repos/"
 	fi
 	# write path to console
 	cat "/etc/2web/repos/generated.cfg"
@@ -39,9 +39,9 @@ function downloadDir(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/download_repos/"
+			echo "/var/cache/2web/downloads/repos/"
 		} >> "/etc/2web/repos/download.cfg"
-		createDir "/var/cache/2web/download_repos/"
+		createDir "/var/cache/2web/downloads/repos/"
 	fi
 	# write path to console
 	cat "/etc/2web/repos/download.cfg"
@@ -55,7 +55,7 @@ function libaryPaths(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/downloads_repos/"
+			echo "/var/cache/2web/downloads/repos/"
 		} >> "/etc/2web/repos/libaries.cfg"
 	fi
 	# write path to console
