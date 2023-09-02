@@ -94,6 +94,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if (($pageURL == "/settings/repos.php")){
+			echo "<a class='activeButton' href='/settings/repos.php'>";
+		}else{
+			echo "<a class='button' href='/settings/repos.php'>";
+		}
+		?>
+			💾
+			<span class='headerText'>
+				Repos
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/settings/weather.php"){
 			echo "<a class='activeButton' href='/settings/weather.php'>";
 		}else{

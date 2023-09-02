@@ -537,6 +537,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
 	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
+	linkFile "/usr/share/2web/settings/repos.php" "$webDirectory/settings/repos.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 	# add the manuals page

@@ -916,6 +916,34 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/music.php#musicLibaryPaths'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addRepoLibrary",$_POST)){
+	$link=$_POST['addRepoLibrary'];
+	outputLog("Running addRepoLibrary on link ".$link);
+	$sumOfLink=md5($link);
+	# read the link and create a custom config
+	$configPath="/etc/2web/repos/libaries.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the library path to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		echo "Adding library ".$link."<br>\n";
+		# write the config file
+		file_put_contents($configPath,$link);
+	}
+	echo "<hr><a class='button' href='/settings/repos.php#repoLibraryPaths'>BACK</a><hr>";
+	clear();
+}else if(array_key_exists("removeRepoLibrary",$_POST)){
+	$link=$_POST['removeRepoLibrary'];
+	outputLog("Running removeRepoLibrary on link ".$link);
+	$sumOfLink=md5($link);
+	$configPath="/etc/2web/repos/libaries.d/".$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	if (file_exists($configPath)){
+		echo "Removing library ".$link."<br>\n";
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	echo "<hr><a class='button' href='/settings/repos.php#repoLibraryPaths'>BACK</a><hr>";
+	clear();
 }else{
 	countdown(5);
 	echo "<h1>[ERROR]:UNKNOWN COMMAND SUBMITTED TO API</h1>";
@@ -928,7 +956,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "</ul>";
 }
 ?>
-
+<hr>
 </div>
 
 <?php
