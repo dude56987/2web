@@ -1240,7 +1240,7 @@ main(){
 		disableMod "ytdl2nfo"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "ytdl2nfo"
-		pip3 install --upgrade yt-dlp
+		pip3 install --break-system-packages --upgrade yt-dlp
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "ytdl2nfo"
 		ytdl2kodi_reset_cache
