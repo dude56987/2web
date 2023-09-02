@@ -602,12 +602,11 @@ processMovie(){
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
 			# change the video path into a video id to make it embedable
-			#yt_id=${videoPath//plugin:\/\/plugin.video.youtube\/play\/?video_id=}
-			#yt_id=$(echo "$videoPath" | sed "s/^.*\?video_id=//g")
-			#yt_id=${videoPath//^.*\?video_id\=/}
 			#yt_id=${videoPath//*video_id=}
+			#yt_id=${videoPath//*watch?v=}
+
 			#INFO "yt-id = $yt_id"
-			ytLink="https://youtube.com/watch?v=$yt_id"
+			#ytLink="https://youtube.com/watch?v=$yt_id"
 			{
 				# embed the youtube player
 				echo "<iframe width='560' height='315'"
@@ -1208,11 +1207,14 @@ processEpisode(){
 			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$thumbnailPath-web.png"
 		fi
 		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
-		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
+		if echo "$videoPath" | grep -q --ignore-case "youtube.com";then
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
+			yt_id=${yt_id//*watch?v=}
+			yt_id=${yt_id//*shorts\/}
 			#INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
+			ytLink="$videoPath"
 			{
 				echo "<?PHP"
 				# check if a file is cached
