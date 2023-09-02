@@ -361,6 +361,13 @@ if ($_SERVER['SERVER_PORT'] == 443){
 }
 ?>
 <form class='searchBoxForm' action='/search.php' method='get'>
-	<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >
+	<?PHP
+if (array_key_exists("q",$_GET)){
+		# place query into the search bar to allow editing of the query and resubmission
+		echo "<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' value='".$_GET["q"]."' >";
+	}else{
+		echo "<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >";
+	}
+	?>
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
