@@ -540,17 +540,22 @@ function lockProc(){
 ################################################################################
 function returnModStatus(){
 	moduleName="$1"
+	# foreground color codes
+	redFG="\033[38;5;9m"
+	greenFG="\033[38;5;10m"
+	# reset all color code
+	resetTerm="\033[0m"
 	# the config exists check the config
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
 		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
-			ALERT "MOD $moduleName IS ENABLED!"
+			echo -e "MOD $moduleName IS ${greenFG}ENABLED${resetTerm}!"
 			return 0
 		else
-			ALERT "MOD $moduleName IS DISABLED!"
+			echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
 			return 1
 		fi
 	else
-		ALERT "MOD $moduleName IS DISABLED!"
+		echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
 		return 1
 	fi
 }
