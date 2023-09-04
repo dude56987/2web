@@ -90,7 +90,7 @@ function generateLink(){
 		# create .index files for direct links
 		{
 			echo "<div class='showPageEpisode'>"
-			echo "	<a href='$domain.php'>"
+			echo "	<a href='/portal/$domain.php'>"
 			echo "		<h2>$domain</h2>"
 			echo "	</a>"
 			echo "	<a target='_BLANK' href='$link'>"
