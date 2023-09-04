@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 -->
-<html id='top' class='randomFanart'>
+<html id='top' class='musicFanart'>
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
@@ -34,42 +34,23 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
 <?php
-#drawPosterWidget("portal");
+drawPosterWidget("portal");
 ################################################################################
 ?>
 <div class='settingListCard'>
+<h1>
+	Portal
+	<img class='globalPulse' src='/pulse.gif' />
+</h1>
 <?php
 $portalLinks=scanDir(".");
 sort($portalLinks);
 $portalLinks=array_diff($portalLinks, Array("portal.index"));
 # scan for links
-$scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
-$scriptDomain=str_ireplace("/portal/","",$scriptDomain);
-# load each portal link that is also in this domain
-echo "<h1>";
-echo "	$scriptDomain";
-echo "	<img class='globalPulse' src='/pulse.gif'>";
-echo "</h1>";
 foreach($portalLinks as $portalLink){
-	if (strpos($portalLink, ".index") !== false){
-		if (strpos($portalLink, $scriptDomain) !== false){
-			# load each portal link
-			echo "<div class='listCard'>";
-			echo "		".file_get_contents($portalLink);
-			echo "	<div class='portalPreviewContainer'>";
-			echo "		<a href='".str_replace(".index","-web.png",$portalLink)."'>";
-			echo "			<h3>Preview</h3>";
-			echo "			<img class='portalPreview' loading='lazy' src='".str_replace(".index","-web.png",$portalLink)."'>";
-			echo "		</a>";
-			echo "	</div>";
-			echo "	<div class='portalPreviewContainer'>";
-			echo "		<a href='".str_replace(".index","-qr.png",$portalLink)."'>";
-			echo "			<h3>HD QR</h3>";
-			echo "			<img class='portalPreview' loading='lazy' src='".str_replace(".index","-qr.png",$portalLink)."'>";
-			echo "		</a>";
-			echo "	</div>";
-			echo "</div>";
-		}
+	if (stripos($portalLink, ".index")){
+		# load each portal link
+		echo file_get_contents($portalLink);
 	}
 }
 ?>

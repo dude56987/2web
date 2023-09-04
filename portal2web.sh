@@ -75,19 +75,36 @@ function generateLink(){
 		domain=$(echo "$domain" | sed "s/\.local//g" )
 	fi
 	# generate qr codes for each link
-	if ! test -f "$webDirectory/portal/$linkSum.png";then
-		qrencode -m 1 -l H -o "$webDirectory/portal/$linkSum.png" "$link"
-	fi
-	# create .index files for direct links
-	if ! test -f "$webDirectory/portal/$linkSum.index";then
+	startDebug
+	# update the link once every 14 days
+	if cacheCheck "$webDirectory/portal/${domain}_$linkSum-web.png" "14";then
+		# build the qr code image with a transparent background
+		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}_$linkSum-qr.png" "$link"
+		# create a screenshot of the webpage link
+		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 10000 "$link" "$webDirectory/portal/${domain}_$linkSum-web.png"
+		# resize the qr code in order to use it in composite
+		convert "$webDirectory/portal/${domain}_$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}_$linkSum-qr.png"
+		# save the combined file as the image to use in the web interface
+		composite -gravity "center" "$webDirectory/portal/${domain}_$linkSum-qr.png" "$webDirectory/portal/${domain}_$linkSum-web.png" "$webDirectory/portal/${domain}_$linkSum.png"
+		stopDebug
+		# create .index files for direct links
 		{
-			echo "<a class='showPageEpisode' target='_BLANK' href='$link'>"
-			echo "	<h2>$domain</h2>"
-			echo "	<img src='/portal/$linkSum.png'>"
-			echo "	<div class='showIndexNumbers'>$name</div>"
-			echo "		$description"
-			echo "</a>"
+			echo "<div class='showPageEpisode'>"
+			echo "	<a href='$domain.php'>"
+			echo "		<h2>$domain</h2>"
+			echo "	</a>"
+			echo "	<a target='_BLANK' href='$link'>"
+			echo "		<img src='/portal/${domain}_$linkSum.png'>"
+			echo "		<div class='showIndexNumbers'>$name</div>"
+			echo "			$description"
+			echo "	</a>"
+			#echo "	<a href='${domain}_$linkSum.php'>ℹ️</a>"
+			echo "</div>"
 		} > "$webDirectory/portal/${domain}_$linkSum.index"
+
+		# link the portal info button to the portal page
+		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain.php"
+
 		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/portal/portal.index"
 
 		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/new/all.index"
@@ -172,7 +189,7 @@ function update(){
 	# make portals directory
 	createDir "$webDirectory/portal/"
 	# setup the main index page
-	linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/index.php"
+	linkFile "/usr/share/2web/templates/portals.php" "$webDirectory/portal/index.php"
 	# copy over config page
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/portal.php"
 	# scan the sources

@@ -1046,6 +1046,13 @@ a:visited {
 }
 .listCard .button{
 	display: inline-block;
+	line-height: 3rem;
+}
+.listCard .activeButton{
+	display: inline-block;
+	-webkit-text-stroke: 0.04rem black;
+	text-shadow: 0px 0px 0.5rem var(--shadowColor);
+	line-height: 3rem;
 }
 .aired{
 	float: left;
@@ -2073,4 +2080,10 @@ details{
 	background-color: var(--highlightBackground);
 	height: 0.5rem;
 	width: 0px;
+}
+.portalPreview{
+	height: 15rem;
+}
+.portalPreviewContainer{
+	display: inline-block;
 }
