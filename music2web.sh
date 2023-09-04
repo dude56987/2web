@@ -87,38 +87,61 @@ function processTrack(){
 		length=""
 		genre=""
 
-		# get the music metadata
-		musicData=$(ffprobe "$musicPath" |& cat)
-		# build the cleanup pipes
-		artist=$(echo "$musicData" | tr -s ' ' | grep "artist" | tac | tail -n 1 | cut -d':' -f2  | cut -c2- )
-		album=$(echo "$musicData" | tr -s ' ' | grep "album" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
-		title=$(echo "$musicData" | tr -s ' ' | grep "title" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
-		disc=$(echo "$musicData" | tr -s ' ' | grep "disc" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- | cut -d'/' -f1 )
-		track=$(echo "$musicData" | tr -s ' ' | grep "track" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 | cut -d'/' -f1 )
-		date=$(echo "$musicData" | tr -s ' ' | grep "date" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 )
-		length=$(echo "$musicData" | tr -s ' ' | grep "Duration" | cut -d'.' -f1 | cut -c2- | cut -d' ' -f2 )
-		genre=$(echo "$musicData" | tr -s ' ' | grep "genre" | tac | tail -n 1 | cut -d':' -f3  | cut -c2- )
+		# try mediainfo for getting info on tracks
+		musicData=$(mediainfo "$musicPath")
 
-		# check for metadata extraction failure and try other eyeD3
-		metadataBackup=0
-		if echo "$musicData" | grep -q "misdetection possible";then
-			metadataBackup=1
-		elif [ $( echo "$artist" | wc -c ) -le 0 ];then
-			metadataBackup=1
-		fi
-		if [ $metadataBackup -eq 1 ];then
-			echo "Falling back to eyeD3 tag extraction..."
-			# metadata fallback
-			musicData=$(eyeD3 "$musicPath")
-			artist=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^artist" | cut -d':' -f2  | cut -c2-)
-			album=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^album" | cut -d':' -f2 | cut -c2- )
+		# build the cleanup pipes
+		artist=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "performer :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		album=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "album :" | head -n 1 | cut -d':' -f2  | tr --delete "'" | xargs )
+		title=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "track name :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		disc=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "part/position :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		# if the disk value is not found mark the disk as disk number 1
+		if echo "$disc" | grep -qE "[[:alpha:]]";then
 			disc=""
-			date=""
-			title=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^title" | cut -d':' -f2 | cut -c2-)
-			track=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^track" | cut -d':' -f2  | cut -d' ' -f2 )
-			length=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^Time" | cut -d' ' -f2 )
-			genre=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "genre:" | cut -d':' -f3  | cut -c2-)
 		fi
+		if ! echo "$disc" | grep -qE "[[:digit:]]";then
+			disc=""
+		fi
+		track=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "track name/position :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		date=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "recorded date :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		length=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "duration :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+		genre=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "genre :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+
+		#if [ $( echo "$artist" | wc -c ) -le 0 ];then
+		#	# get the music metadata
+		#	musicData=$(ffprobe "$musicPath" |& cat)
+
+		#	# build the cleanup pipes
+		#	artist=$(echo "$musicData" | tr -s ' ' | grep "artist" | tac | tail -n 1 | cut -d':' -f2  | cut -c2- )
+		#	album=$(echo "$musicData" | tr -s ' ' | grep "album" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
+		#	title=$(echo "$musicData" | tr -s ' ' | grep "title" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- )
+		#	disc=$(echo "$musicData" | tr -s ' ' | grep "disc" | tac | tail -n 1 | cut -d':' -f2 | cut -c2- | cut -d'/' -f1 )
+		#	track=$(echo "$musicData" | tr -s ' ' | grep "track" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 | cut -d'/' -f1 )
+		#	date=$(echo "$musicData" | tr -s ' ' | grep "date" | tac | tail -n 1 | cut -d':' -f2  | cut -d' ' -f2 )
+		#	length=$(echo "$musicData" | tr -s ' ' | grep "Duration" | cut -d'.' -f1 | cut -c2- | cut -d' ' -f2 )
+		#	genre=$(echo "$musicData" | tr -s ' ' | grep "genre" | tac | tail -n 1 | cut -d':' -f3  | cut -c2- )
+		#fi
+
+		## check for metadata extraction failure and try other eyeD3
+		#metadataBackup=0
+		#if echo "$musicData" | grep -q "misdetection possible";then
+		#	metadataBackup=1
+		#elif [ $( echo "$artist" | wc -c ) -le 0 ];then
+		#	metadataBackup=1
+		#fi
+		#if [ $metadataBackup -eq 1 ];then
+		#	echo "Falling back to eyeD3 tag extraction..."
+		#	# metadata fallback
+		#	musicData=$(eyeD3 "$musicPath")
+		#	artist=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^artist" | cut -d':' -f2  | cut -c2-)
+		#	album=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^album" | cut -d':' -f2 | cut -c2- )
+		#	disc=""
+		#	date=""
+		#	title=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^title" | cut -d':' -f2 | cut -c2-)
+		#	track=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^track" | cut -d':' -f2  | cut -d' ' -f2 )
+		#	length=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "^Time" | cut -d' ' -f2 )
+		#	genre=$(echo "$musicData" | sed "s/^ / /g" | sed "s/\n/ /g" | sed "s/\t/ /g" | tr -s ' ' | grep "genre:" | cut -d':' -f3  | cut -c2-)
+		#fi
 
 		workingFile=0
 		if echo "$musicData" | grep -q "misdetection possible";then
@@ -134,29 +157,36 @@ function processTrack(){
 		fi
 
 		if [ $workingFile -eq 0 ];then
+			# cleanup common numbering schemes used for labeling discs
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disc[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}Disc[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disk[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}Disk[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}cd[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}CD[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
+
 			# add the disc number to the album title to make multi disc albums work
-			#if [ "$disc" != "" ];then
-			#	album="$album $disc"
-			#fi
+			if [ "$disc" != "" ];then
+				album="$album Disc $disc"
+			fi
 			#if [ "$date" != "" ];then
 			#	album="$album ($date)"
 			#fi
-			# cleanup common numbering schemes used for labeling discs
-			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disc[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
-			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}disk[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
-			album=$(echo "$album" | sed -E "s/[ ]{0,1}[(]{0,1}cd[ ]{0,1}[0-9]{0,3}[)]{0,1}[ ]{0,1}//Ig")
 
-			artistOG=$artist
-			albumOG=$album
+			artistOG="$artist"
+			albumOG="$album"
 
 			# paths must be cleaned up for compatiblity
-			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
-			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" )
+			#artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g" | tr --delete '[]`' )
+			#album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | sed "s/'/[\`,\',\"]/g"  | tr --delete '[]`' )
+			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | tr --delete '`' )
+			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | tr --delete '`' )
 
 			# add the disk number preceding the track, this should fix strange formatting issues with multi disk albums
-			if [ "$disc" != "" ];then
-				track="$disc$track"
-			fi
+			#if [ "$disc" != "" ];then
+			#	track="$disc$track"
+			#	#track=$(echo "$track" | sed "s/^0*//")
+			#fi
 			# if the track is less than 10 add a preceding zero for sorting
 			if [ "$track" -lt 10 ];then
 				track="00$track"
@@ -237,6 +267,7 @@ function processTrack(){
 					convert -quiet -size 800x800 plasma: "$webDirectory/music/$artist/$album/album.png"
 					convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 800x800\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 800x800 -gravity center caption:"$albumOG" -composite "$webDirectory/music/$artist/$album/album.png"
 				fi
+
 				# create a artist thumbnail from combining all the album covers
 				if albumCheckDirSum "$webDirectory" "$webDirectory/music/$artist/";then
 					albumCount=$( find "$webDirectory/music/$artist/" -type f -name "album.png" | wc -l )
