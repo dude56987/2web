@@ -187,8 +187,37 @@ include("settingsHeader.php");
 			<button class='button' type='submit'>Set Status</button>
 	</form>
 </div>
+
+<div id='randomTheme' class='inputCard'>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<h2>Randomize Theme</h2>
+			<ul>
+				<li>
+					Change theme randomly every 30 minutes.
+				</li>
+			</ul>
+		<select name='randomTheme'>
+			<?php
+			if (file_exists("/etc/2web/randomTheme.cfg")){
+				$selected=file_get_contents("/etc/2web/randomTheme.cfg");
+				if ($selected == "yes"){
+					echo "<option value='yes' selected>Yes</option>";
+					echo "<option value='no'>No</option>";
+				}else{
+					echo "<option value='no' selected>No</option>";
+					echo "<option value='yes'>Yes</option>";
+				}
+			}else{
+				echo "<option value='no' selected>No</option>";
+				echo "<option value='yes'>Yes</option>";
+			}
+			?>
+		</select>
+		<button class='button' type='submit'>Change Setting</button>
+	</form>
 </div>
 
+</div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

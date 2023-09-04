@@ -724,13 +724,22 @@ function update2web(){
 		echo "Simple-Gray-OpenDyslexic-round.css" > "/etc/2web/theme.cfg"
 		chown www-data:www-data "/etc/2web/theme.cfg"
 	fi
-	# load the chosen theme
-	theme=$(cat "/etc/2web/theme.cfg")
-	# link the theme and overwrite if another theme is chosen
-	ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
+	# check if the user has set randomTheme.cfg to yes to change to a random theme every 30 minutes
+	if yesNoCfgCheck "/etc/2web/randomTheme.cfg";then
+		# use a random theme from the themes directory
+		theme=$(find /usr/share/2web/themes/ -name '*.css' | shuf | head -1 | rev | cut -d'/' -f1 | rev)
+		ALERT "Randomly picked theme is '$theme'"
+		# set the theme
+		ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
+	else
+		# load the chosen theme
+		theme=$(cat "/etc/2web/theme.cfg")
+		# link the theme and overwrite if another theme is chosen
+		ln -sf "/usr/share/2web/themes/$theme" "$webDirectory/style.css"
+	fi
 	# create font directory
 	createDir "$webDirectory/fonts/"
-	# link the fonts
+	# link the fonts, only two are enabled by default, these fonts are for accessibility
 	linkFile "/usr/share/fonts/truetype/hermit/Hermit-medium.otf" "$webDirectory/fonts/"
 	linkFile "/usr/share/fonts/opentype/opendyslexic/OpenDyslexic-Regular.otf" "$webDirectory/fonts/"
 	# build the homepage stats and link the homepage
