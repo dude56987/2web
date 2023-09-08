@@ -126,6 +126,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/etc/2web/portal/;
 	mkdir -p debian/var/lib/2web/;
+	# copy the license over to the webserver to include it in about page and in CLI tools
+	cp -v LICENSE debian/usr/share/2web/
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
 	# copy over default config templates

@@ -205,6 +205,17 @@ include("settingsHeader.php");
 	?>
 </div>
 
+<div id='sslCert' class='titleCard'>
+	<h1>2web License</h1>
+	<?PHP
+	if (file_exists("/usr/share/2web/LICENSE")){
+		echo "<pre>";
+		echo str_replace(">","&gt;", str_replace("<","&lt;",file_get_contents("/usr/share/2web/LICENSE")));
+		echo "</pre>";
+	}
+	?>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
