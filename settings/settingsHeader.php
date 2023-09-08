@@ -142,6 +142,30 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if ($pageURL == "/settings/cache.php"){
+			echo "<a class='activeButton' href='/settings/cache.php'>";
+		}else{
+			echo "<a class='button' href='/settings/cache.php'>";
+		}
+		?>
+			📥
+			<span class='headerText'>
+				Cache
+			</span>
+		</a>
+		<?PHP
+		if ($pageURL == "/log/index.php"){
+			echo "<a class='activeButton' href='/log/'>";
+		}else{
+			echo "<a class='button' href='/log/'>";
+		}
+		?>
+			📋
+			<span class='headerText'>
+				Log
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/settings/about.php"){
 			echo "<a class='activeButton' href='/settings/about.php'>";
 		}else{
