@@ -71,9 +71,9 @@ function generateLink(){
 	if echo "$domain" | grep -q ":";then
 		domain=$(echo "$domain" | cut -d':' -f1 )
 	fi
-	if echo "$domain" | grep -q ".local";then
-		domain=$(echo "$domain" | sed "s/\.local//g" )
-	fi
+	#if echo "$domain" | grep -q ".local";then
+	#	domain=$(echo "$domain" | sed "s/\.local//g" )
+	#fi
 	# generate qr codes for each link
 	startDebug
 	# update the link once every 14 days

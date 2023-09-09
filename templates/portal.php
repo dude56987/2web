@@ -26,6 +26,23 @@
 <body>
 <?php
 ################################################################################
+function replaceLink($search, $replace, $filePath){
+	# run search and replace on inside contents of href tag
+	$fileObject = file($filePath);
+	$tempText="";
+	foreach($fileObject as $line){
+		# replace lines that contain the href
+		if (stripos($line, "href=") !== false){
+			# if the line is a link replace the string
+			$tempText .= str_replace($search, $replace, $line);
+		}else{
+			# add each line not containing a href link to the return output
+			$tempText .= $line;
+		}
+	}
+	return $tempText;
+}
+################################################################################
 ini_set('display_errors', 1);
 # add the base php libary
 include("/usr/share/2web/2webLib.php");
@@ -45,9 +62,15 @@ $portalLinks=array_diff($portalLinks, Array("portal.index"));
 # scan for links
 $scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
 $scriptDomain=str_ireplace("/portal/","",$scriptDomain);
+$hostnameIp=gethostbyname($scriptDomain);
 # load each portal link that is also in this domain
 echo "<h1>";
 echo "	$scriptDomain";
+if (key_exists("ip",$_GET)){
+	echo "<a class='button' href='?'>Domain Links</a>";
+}else{
+	echo "<a class='button' href='?ip'>IP Links</a>";
+}
 echo "	<img class='globalPulse' src='/pulse.gif'>";
 echo "</h1>";
 foreach($portalLinks as $portalLink){
@@ -55,7 +78,11 @@ foreach($portalLinks as $portalLink){
 		if (strpos($portalLink, $scriptDomain) !== false){
 			# load each portal link
 			echo "<div class='listCard'>";
-			echo "		".file_get_contents($portalLink);
+			if (key_exists("ip",$_GET)){
+				echo "	".replaceLink($scriptDomain, $hostnameIp, $portalLink);
+			}else{
+				echo "	".file_get_contents($portalLink);
+			}
 			echo "	<div class='portalPreviewContainer'>";
 			echo "		<a href='".str_replace(".index","-web.png",$portalLink)."'>";
 			echo "			<h3>Preview</h3>";
@@ -68,6 +95,7 @@ foreach($portalLinks as $portalLink){
 			echo "			<img class='portalPreview' loading='lazy' src='".str_replace(".index","-qr.png",$portalLink)."'>";
 			echo "		</a>";
 			echo "	</div>";
+			#echo "	".str_replace($scriptDomain, $hostnameIp, file_get_contents($portalLink));
 			echo "</div>";
 		}
 	}
