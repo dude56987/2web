@@ -27,6 +27,7 @@ function scanLink(){
 	webDirectory="$4"
 	# scan ports
 	echo "$scanPorts" | shuf | while read -r scanPort;do
+		startDebug
 		name=$(echo "$scanPort" | cut -d',' -f1)
 		port=$(echo "$scanPort" | cut -d',' -f2)
 		description=$(echo "$scanPort" | cut -d',' -f3)
@@ -40,6 +41,9 @@ function scanLink(){
 		else
 			ALERT "No link found for $link:$port..."
 		fi
+		# reset port
+		port=""
+		stopDebug
 	done
 	# scan paths
 	echo "$scanPaths" | shuf | while read -r scanPath;do
@@ -75,18 +79,16 @@ function generateLink(){
 	#	domain=$(echo "$domain" | sed "s/\.local//g" )
 	#fi
 	# generate qr codes for each link
-	startDebug
 	# update the link once every 14 days
 	if cacheCheck "$webDirectory/portal/${domain}_$linkSum-web.png" "14";then
 		# build the qr code image with a transparent background
 		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}_$linkSum-qr.png" "$link"
 		# create a screenshot of the webpage link
-		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 10000 "$link" "$webDirectory/portal/${domain}_$linkSum-web.png"
+		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 30000 "$link" "$webDirectory/portal/${domain}_$linkSum-web.png"
 		# resize the qr code in order to use it in composite
 		convert "$webDirectory/portal/${domain}_$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}_$linkSum-qr.png"
 		# save the combined file as the image to use in the web interface
 		composite -gravity "center" "$webDirectory/portal/${domain}_$linkSum-qr.png" "$webDirectory/portal/${domain}_$linkSum-web.png" "$webDirectory/portal/${domain}_$linkSum.png"
-		stopDebug
 		# create .index files for direct links
 		{
 			echo "<div class='showPageEpisode'>"
@@ -101,7 +103,22 @@ function generateLink(){
 			#echo "	<a href='${domain}_$linkSum.php'>ℹ️</a>"
 			echo "</div>"
 		} > "$webDirectory/portal/${domain}_$linkSum.index"
-
+		# build the .desktop file link for all linux/bsd systems
+		{
+			echo "[Desktop Entry]"
+			echo "Encoding=UTF-8"
+			echo "Name=$name"
+			echo "Type=Link"
+			echo "URL=$link"
+			echo "Icon=text-html"
+		} > "$webDirectory/kodi/portal/${domain}_$linkSum.desktop"
+		chmod +x "$webDirectory/kodi/portal/${domain}_$linkSum.desktop"
+		# build the windows url file link
+		{
+			echo "[InternetShortcut]"
+			echo "URL=$link"
+		} > "$webDirectory/kodi/portal/${domain}_$linkSum.url"
+		chmod +x "$webDirectory/kodi/portal/${domain}_$linkSum.url"
 		# link the portal info button to the portal page
 		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain.php"
 
@@ -188,6 +205,7 @@ function update(){
 	################################################################################
 	# make portals directory
 	createDir "$webDirectory/portal/"
+	createDir "$webDirectory/kodi/portal/"
 	# setup the main index page
 	linkFile "/usr/share/2web/templates/portals.php" "$webDirectory/portal/index.php"
 	# copy over config page
