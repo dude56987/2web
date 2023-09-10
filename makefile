@@ -101,6 +101,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/music/libaries.d/;
 	mkdir -p debian/etc/2web/ai/personas/;
 	mkdir -p debian/etc/2web/ai/negative_prompts/;
+	mkdir -p debian/etc/2web/ai/promptModels.d/;
 	mkdir -p debian/etc/2web/comics/;
 	mkdir -p debian/etc/2web/comics/libaries.d/;
 	mkdir -p debian/etc/2web/comics/sources.d/;
@@ -137,6 +138,7 @@ build-deb: upgrade-hls
 	# make placeholder
 	#touch debian/etc/2web/search/sources.d/.placeholder
 	touch debian/etc/2web/cache/.placeholder
+	touch debian/etc/2web/ai/promptModels.d/.placeholder
 	touch debian/etc/2web/repos/sources.d/.placeholder
 	touch debian/etc/2web/repos/libaries.d/.placeholder
 	touch debian/etc/2web/wiki/sources.d/.placeholder

@@ -139,15 +139,10 @@ include("settingsHeader.php");
 	</form>
 </div>
 
-<div id='addaiLibary' class='inputCard'>
+<div id='addAiPromptModel' class='inputCard'>
 <form action='admin.php' method='post'>
-	<h2>Add ai Libary Path</h2>
-	<ul>
-		<li>Only supports .mp3 files</li>
-		<li>Directory structure does not matter</li>
-		<li>Metadata is read from file tags</li>
-	</ul>
-	<input width='60%' type='text' name='addaiLibary' placeholder='/absolute/path/to/the/libary'>
+	<h2>Add AI Libary Path</h2>
+	<input width='60%' type='text' name='addAiPromptModel' placeholder='example_gpt4all.bin'>
 	<button class='button' type='submit'>Add Path</button>
 </form>
 </div>
@@ -156,13 +151,13 @@ include("settingsHeader.php");
 echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";
 echo "<h2>AI Server Libary Paths</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/2web/ai/libaries.cfg");
+echo (file_get_contents("/etc/2web/ai/promptModels.cfg"));
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div id='aiLibaryPaths' class='settingListCard'>";
-echo "<h2>ai Libary Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ai/libaries.d/*.cfg"));
+echo "<h2>AI Libary Paths</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ai/promptModels.d/*.cfg"));
 sort($sourceFiles);
 # write each config file as a editable entry
 foreach($sourceFiles as $sourceFile){
@@ -171,11 +166,11 @@ foreach($sourceFiles as $sourceFile){
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
-				$link=file_get_contents($sourceFile);
+				$link=(file_get_contents($sourceFile));
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeaiLibary' value='".$link."'>Remove Libary</button>\n";
+				echo "	<button class='button' type='submit' name='removeAiPromptModel' value='".$link."'>Remove Model</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";

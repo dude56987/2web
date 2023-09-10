@@ -142,17 +142,17 @@ function update(){
 	#DEBUG
 	#set -x
 	# this will launch a processing queue that downloads updates to ai
-	INFO "Loading up sources..."
+	INFO "Loading up prompt models..."
 	# check for defined sources
-	if ! test -f /etc/2web/ai/sources.cfg;then
+	if ! test -f /etc/2web/ai/promptModels.cfg;then
 		# if no config exists create the default config
 		{
-			cat /etc/2web/config_default/ai2web_sources.cfg
-		} > /etc/2web/ai/sources.cfg
+			cat /etc/2web/config_default/ai2web_promptModels.cfg
+		} > /etc/2web/ai/promptModels.cfg
 	fi
 	# load sources
-	aiSources=$(grep -v "^#" /etc/2web/ai/sources.cfg)
-	aiSources=$(echo -e "$aiSources\n$(grep -v --no-filename "^#" /etc/2web/ai/sources.d/*.cfg)")
+	aiPromptModels=$(grep -v "^#" /etc/2web/ai/promptModels.cfg)
+	aiPromptModels=$(echo -e "$aiPromptModels\n$(grep -v --no-filename "^#" /etc/2web/ai/promptModels.d/*.cfg)")
 
 	################################################################################
 	webDirectory=$(webRoot)
@@ -184,9 +184,9 @@ function update(){
 	# used for whisper to convert voice to text locally
 	createDir "/var/cache/2web/downloads/ai/subtitles/"
 	# scan the sources
-	ALERT "AI Download Model Sources: $aiSources"
+	ALERT "AI Download Model Sources: $aiPromptModels"
 
-	echo "$aiSources" | while read aiSource;do
+	echo "$aiPromptModels" | while read aiSource;do
 		# generate a sum for the source
 		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
 		# create the ai directory

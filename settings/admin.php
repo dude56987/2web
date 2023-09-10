@@ -489,6 +489,10 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/ai/aiCompareGenerate.cfg", $_POST['aiCompareGenerate']);
 	echo "<hr><a class='button' href='/settings/ai.php#aiCompareGenerate'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addAiPromptModel",$_POST)){
+	addCustomConfig("addAiPromptModel","/etc/2web/ai/promptModel.d/","ai.php");
+}else if (array_key_exists("removeAiPromptModel",$_POST)){
+	removeCustomConfig("removeAiPromptModel","/etc/2web/ai/promptModel.d/","ai.php");
 }else if (array_key_exists("generateVisualisationsForWeb",$_POST)){
 	outputLog("Setting music2web visual generation status to ".$_POST['generateVisualisationsForWeb']);
 	# run the ai comparison generators
