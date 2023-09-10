@@ -302,7 +302,7 @@ function update(){
 function generateZip(){
 	webDirectory=$1
 	repoName=$2
-	zipFilePath="$webDirectory/repos/$repoName/source.zip"
+	zipFilePath="$webDirectory/repos/$repoName/$repoName.zip"
 	# generate a zip of the source
 	cd "$webDirectory/repos/$repoName/source/"
 	# compress into a zip file
