@@ -39,6 +39,9 @@ include("settingsHeader.php");
 		<li><a href='#addReposLibrary'>Add Repo Library Paths</a></li>
 		<li><a href='#reposServerLibraryPaths'>Server Library Paths Config</a></li>
 		<li><a href='#reposLibraryPaths'>Repo Library Paths</a></li>
+		<li><a href='#addRepoSource'>Add Repo Source</a></li>
+		<li><a href='#reposServerSourcePaths'>Server Repo Sources</a></li>
+		<li><a href='#reposSourcePaths'>Repo Source Paths</a></li>
 	</ul>
 </div>
 
@@ -82,13 +85,55 @@ foreach($sourceFiles as $sourceFile){
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
-				//echo "</div>";
 			}
 		}
 	}
 }
 ?>
 </div>
+
+<div id='addRepoLibrary' class='inputCard'>
+<form action='admin.php' method='post'>
+	<h2>Add Repo Source Path</h2>
+	<input width='60%' type='text' name='addRepoSource' placeholder='/absolute/path/to/the/library'>
+	<button class='button' type='submit'>Add Path</button>
+</form>
+</div>
+
+<?php
+echo "<div id='repoServerSourcePaths' class='settingListCard'>\n";
+echo "<h2>Repo Server Source Paths</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/2web/repos/sources.cfg");
+echo "</pre>\n";
+echo "</div>";
+
+echo "<div id='repoSourcePaths' class='settingListCard'>";
+echo "<h2>Repo Source Paths</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/repos/sources.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				$link=file_get_contents($sourceFile);
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='removeRepoSource' value='".$link."'>Remove Source</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+			}
+		}
+	}
+}
+?>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
