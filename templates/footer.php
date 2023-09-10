@@ -125,6 +125,8 @@ if ($writeFile){
 		$channelsFound=False;
 		$graphsFound=False;
 		$reposFound=False;
+		$portalsFound=False;
+		$aiFound=False;
 
 		if (file_exists("$webDirectory/graphs/")){
 			$graphsFound=True;
@@ -150,6 +152,12 @@ if ($writeFile){
 					$channelsFound=True;
 				}
 			}
+		}
+		if (file_exists("$webDirectory/portal/")){
+			$portalsFound=True;
+		}
+		if (file_exists("$webDirectory/ai/")){
+			$aiFound=True;
 		}
 	}
 
@@ -238,14 +246,6 @@ if ($writeFile){
 			}
 		}
 	}
-	if ($graphsFound){
-		$fileData .= "<a class='footerButton' href='/graphs/'>";
-		$fileData .= "📊";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " GRAPHS";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
 	if ($reposFound){
 		$fileData .= formatText("<a class='footerButton' href='/repos/'>",2);
 		$fileData .= formatText("💾",3);
@@ -254,13 +254,30 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
-
-	#$fileData .= "<a class='' href='/kodi/'>";
-	#$fileData .= "🇰";
-	#$fileData .= "<span class='footerText'>";
-	#$fileData .= " KODI";
-	#$fileData .= "</span>";
-	#$fileData .= "</a> ";
+	if ($aiFound){
+		$fileData .= formatText("<a class='footerButton' href='/ai/'>",2);
+		$fileData .= formatText("🧠",3);
+		$fileData .= formatText("<span class='footerText'>",3);
+		$fileData .= formatText("AI",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+	if ($portalsFound){
+		$fileData .= formatText("<a class='footerButton' href='/portal/'>",2);
+		$fileData .= formatText("🚪",3);
+		$fileData .= formatText("<span class='footerText'>",3);
+		$fileData .= formatText("PORTAL",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
+	if ($graphsFound){
+		$fileData .= "<a class='footerButton' href='/graphs/'>";
+		$fileData .= "📊";
+		$fileData .= "<span class='footerText'>";
+		$fileData .= " GRAPHS";
+		$fileData .= "</span>";
+		$fileData .= "</a> ";
+	}
 
 	// draw the help button
 	$fileData .= "<a class='footerButton' href='/help.php'>";

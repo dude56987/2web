@@ -66,6 +66,8 @@ if ($writeFile){
 	$comicsFound=False;
 	$channelsFound=False;
 	$reposFound=False;
+	$portalsFound=False;
+	$aiFound=False;
 
 	if (file_exists("$webDirectory/graphs/")){
 		$graphsFound=True;
@@ -87,6 +89,12 @@ if ($writeFile){
 	}
 	if (file_exists("$webDirectory/repos/repos.index")){
 		$reposFound=True;
+	}
+	if (file_exists("$webDirectory/portal/")){
+		$portalsFound=True;
+	}
+	if (file_exists("$webDirectory/ai/")){
+		$aiFound=True;
 	}
 
 	# build the header
@@ -188,7 +196,7 @@ if ($writeFile){
 		$fileData .= formatText("<a class='button' href='/portal/'>",2);
 		$fileData .= formatText("🚪",3);
 		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("Portal",4);
+		$fileData .= formatText("PORTAL",4);
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
