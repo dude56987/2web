@@ -148,6 +148,49 @@ function setModStatus($modName,$modStatus){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ * Add a custom config file for a list in a 2web module
+ * - $link is the link to be added to this location
+ * - $settingsWebpage is a webpage name from the settings directory in the webserver
+ *  - Example: "radio.php"
+ */
+function addCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
+	$data=$_POST[$keyName];
+	outputLog("Running ".$keyName." on ".$data);
+	$sumOfLink=md5($data);
+	# read the link and create a custom config
+	$configPath=$baseConfigPath.$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the data to a file at the configPath if the path does not already exist
+	if ( ! file_exists($configPath)){
+		outputLog("Adding ".$data);
+		# write the config file
+		file_put_contents($configPath,$data);
+	}
+	echo "<hr><a class='button' href='/settings/".$settingsWebpage."#".$keyName."'>BACK</a><hr>";
+	clear();
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Remove custom config file
+ */
+function removeCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
+	$data=$_POST[$keyName];
+	outputLog("Running ".$keyName." on ".$data);
+	$sumOfLink=md5($data);
+	# read the link and create a custom config
+	$configPath=$baseConfigPath.$sumOfLink.".cfg";
+	echo "Checking for Config file ".$configPath."<br>\n";
+	# write the data to a file at the configPath if the path does not already exist
+	if ( file_exists($configPath)){
+		outputLog("Removing ".$data." from ".$configPath);
+		# delete the custom config created for the link
+		unlink($configPath);
+	}
+	echo "<hr><a class='button' href='/settings/".$settingsWebpage."#".$keyName."'>BACK</a><hr>";
+	clear();
+}
+////////////////////////////////////////////////////////////////////////////////
 function checkUsernamePass($userName, $password){
 	$passSum = file_get_contents("/etc/2web/users/".md5($userName));
 	if ( $passSum == md5($password) ){
@@ -410,6 +453,24 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
 	echo "<hr><a class='button' href='/settings/system.php#randomTheme'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addPortalScanSource",$_POST)){
+	# add portal scan source
+	addCustomConfig("addPortalScanSource","/etc/2web/portal/scanSources.d/","portal.php");
+}else if (array_key_exists("removePortalScanSource",$_POST)){
+	# remove portal scan source
+	removeCustomConfig("removePortalScanSource","/etc/2web/portal/scanSources.d/","portal.php");
+}else if (array_key_exists("addPortalScanPorts",$_POST)){
+	# add portal scan port
+	addCustomConfig("addPortalScanPort","/etc/2web/portal/scanPorts.d/","portal.php");
+}else if (array_key_exists("removePortalScanPorts",$_POST)){
+	# remove portal scan port
+	removeCustomConfig("removePortalScanPort","/etc/2web/portal/scanPorts.d/","portal.php");
+}else if (array_key_exists("addPortalScanPath",$_POST)){
+	# add portal scan path
+	addCustomConfig("addPortalScanPath","/etc/2web/portal/scanPaths.d/","portal.php");
+}else if (array_key_exists("removePortalScanPath",$_POST)){
+	# remove portal scan path
+	removeCustomConfig("removePortalScanPath","/etc/2web/portal/scanPaths.d/","portal.php");
 }else if (array_key_exists("aiSubsGenerate",$_POST)){
 	outputLog("Setting AI lyrics generation status to ".$_POST['aiSubsGenerate']);
 	# generate subtitles for nfo2web movies/shows

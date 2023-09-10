@@ -106,6 +106,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if (($pageURL == "/settings/portal.php")){
+			echo "<a class='activeButton' href='/settings/portal.php'>";
+		}else{
+			echo "<a class='button' href='/settings/portal.php'>";
+		}
+		?>
+			🚪
+			<span class='headerText'>
+				Portal
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/settings/weather.php"){
 			echo "<a class='activeButton' href='/settings/weather.php'>";
 		}else{
@@ -279,6 +291,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "			</li>\n";
 	echo "		</ul>";
 	echo "	</div>\n";
+}else if ($pageURL == "/settings/repos.php"){
+	$moduleName="git2web";
 }else{
 	$moduleName="none";
 }
