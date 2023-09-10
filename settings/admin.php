@@ -405,6 +405,11 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("randomTheme",$_POST)){
+	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
+	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
+	echo "<hr><a class='button' href='/settings/system.php#randomTheme'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("aiSubsGenerate",$_POST)){
 	outputLog("Setting AI lyrics generation status to ".$_POST['aiSubsGenerate']);
 	# generate subtitles for nfo2web movies/shows
