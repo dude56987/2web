@@ -48,13 +48,13 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='addportalscanSources' class='inputCard'>
+<div id='addportalscanSource' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add portal scanSources Path</h2>
 	<ul>
 		<li>Use the base url of a server to scan for services</li>
 	</ul>
-	<input width='60%' type='text' name='addportalscanSources' placeholder='/absolute/path/to/the/scanSources'>
+	<input width='60%' type='text' name='addportalscanSource' placeholder='/absolute/path/to/the/scanSources'>
 	<button class='button' type='submit'>Add Path</button>
 </form>
 </div>
@@ -139,7 +139,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div id='addportalScanPorts' class='inputCard'>
+<div id='addPortalScanPort' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add Scan Port</h2>
 	<ul>
