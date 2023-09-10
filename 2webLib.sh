@@ -47,9 +47,9 @@ function downloadRoot(){
 	if [ -f /etc/2web/download.cfg ];then
 		webDirectory=$(cat /etc/2web/download.cfg)
 	else
-		chown -R www-data:www-data "/var/cache/2web/download_cache/"
-		echo "/var/cache/2web/download_cache/" > /etc/2web/download.cfg
-		webDirectory="/var/cache/2web/download_cache/"
+		chown -R www-data:www-data "/var/cache/2web/downloads_cache/"
+		echo "/var/cache/2web/downloads_cache/" > /etc/2web/download.cfg
+		webDirectory="/var/cache/2web/downloads_cache/"
 	fi
 	# check for a trailing slash appended to the path
 	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
@@ -897,6 +897,11 @@ popPath(){
 	echo "$1" | rev | cut -d'/' -f1 | rev
 }
 ########################################################################
+sqliteEscape(){
+	printf -v var "%q" "$1"
+	echo "$var"
+}
+########################################################################
 function addToLog(){
 	errorType=$1
 	errorDescription=$2
@@ -908,8 +913,24 @@ function addToLog(){
 	logDate="$(date "+%D")"
 	logTime="$(date "+%R:%S")"
 
-	logDescription=$(echo -e "$errorDescription" | txt2html --extract)
-	logDetails=$(echo -e "$errorDetails" | txt2html --extract)
+	#logDescription=$(echo -e "$errorDescription" | txt2html --extract | recode TXT..HTML )
+	#logDescription=$(echo -e "$errorDescription" | txt2html --extract)
+	#logDescription=$(echo -e "$errorDescription")
+	#logDescription=$(echo -e "$errorDescription")
+	#logDescription=$(sqliteEscape "$errorDescription")
+	#logDescription=$(echo -e "$errorDescription" | php -R 'echo addslashes($argn);')
+	#logDescription=$(echo -e "$errorDescription" | txt2html --extract --link_only)
+	#logDescription=$(echo -e "$errorDescription" | tr --delete "[:punct:]" | tr --delete "[:digit:]" )
+	logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
+	#logDetails=$(echo -e "$errorDetails" | txt2html --extract | recode TXT..HTML )
+	#logDetails=$(echo -e "$errorDetails" | txt2html --extract)
+	#logDetails=$(echo -e "$errorDetails")
+	#logDetails=$(echo -e "$errorDetails")
+	#logDetails=$(sqliteEscape "$errorDetails")
+	#logDetails=$(echo -e "$errorDetails" | php -R 'echo addslashes($argn);')
+	#logDetails=$(echo -e "$errorDetails" | txt2html --extract --link_only)
+	#logDetails=$(echo -e "$errorDetails" | tr --delete "[:punct:]" |  tr --delete "[:digit:]" )
+	logDetails=$(echo -e "$errorDetails" | sed "s/'/''/g" )
 
 	# set the log database path
 	indexPath="/var/cache/2web/web/log/log.db"
@@ -925,7 +946,8 @@ function addToLog(){
 		sqlite3 -cmd ".timeout $timeout" "$indexPath" "create table $databaseTable(logIdentifier text primary key,module,type,description,details,date,time);"
 	fi
 	# if the data is already stored in the database
-	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
+	#sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType',quote('$logDescription'),quote('$logDetails'),'$logDate','$logTime');"
 }
 ########################################################################
 function yesNoCfgCheck(){
