@@ -124,7 +124,9 @@ function drawHeader(){
 	#$fileName = popPath(file_get_contents("source.index"));
 	#$fileName = str_replace(".index","",$fileName);
 	#echo "			<a class='button' href='/zip-gen?repo=".$fileName."'>\n";
-	echo "			<a class='button' href='/zip-gen.php?repo=".file_get_contents("title.index")."'>\n";
+	#echo "			<a class='button' href='/zip-gen.php?repo=".file_get_contents("title.index")."'>\n";
+	echo "			<a class='button' href='".file_get_contents("title.index").".zip'>\n";
+	#echo "			<a class='button' href='source.zip'>\n";
 	echo "				<span class='downloadIcon'>↓</span>\n";
 	echo "				Download Source\n";
 	echo "			</a>\n";
