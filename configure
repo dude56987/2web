@@ -25,6 +25,8 @@ if [ "$keepBuilding" == "true" ];then
 	apt-get install xz-utils
 	# install make if not installed
 	apt-get install make
+	# install npm to get javascript packages
+	apt-get install npm
 else
 	echo "Only Debian, Ubuntu, Raspbian, and Dietpi builds are currently supported!"
 	echo "You can force configure to run if you add --force"
