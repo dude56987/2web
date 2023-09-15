@@ -246,7 +246,7 @@ function update(){
 					echo "<head>"
 					# use the currently active theme for the website
 					echo "	<link rel='stylesheet' type='text/css' href='http://localhost/style.css'>"
-					echo "	<script src='/2web.js'></script>"
+					echo "	<script src='/2webLib.js'></script>"
 					echo "	<link rel='icon' type='image/png' href='/favicon.png'>"
 					echo "</head>"
 					echo "<body>"
@@ -761,14 +761,14 @@ renderPage(){
 	} > "$pagePath"
 	if [ $isChapter = true ];then
 		echo "<title>$pageComicName - Chapter $((10#$pageChapter))/$totalChapters - Page $((10#$pageNumber))/$totalPages</title>" >> "$pagePath"
-		echo "<link rel='stylesheet' href='../../style.css'>" >> "$pagePath"
+		echo "<link rel='stylesheet' href='/style.css'>" >> "$pagePath"
 	else
 		echo "<title>$pageComicName - Page $((10#$pageNumber))/$totalPages</title>" >> "$pagePath"
-		echo "<link rel='stylesheet' href='../style.css'>" >> "$pagePath"
+		echo "<link rel='stylesheet' href='/style.css'>" >> "$pagePath"
 	fi
 	{
+		echo "<script src='/2webLib.js'></script>"
 		echo "<script>"
-		cat /usr/share/2web/2web.js
 		# add a listener to pass the key event into a function
 		echo "function setupKeys() {"
 		echo "	document.body.addEventListener('keydown', function(event){"
@@ -927,11 +927,11 @@ renderPage(){
 			echo "<html>"
 			echo "<head>"
 			echo "<link rel='stylesheet' href='../style.css'>"
+			echo "<script src='/2webLib.js'></script>"
 			echo "<style>"
 			echo "html{ background-image: url(\"thumb.png\") }"
 			echo "</style>"
 			echo "<script>"
-			cat /usr/share/2web/2web.js
 			# add a listener to pass the key event into a function
 			echo "function setupKeys() {"
 			echo "	document.body.addEventListener('keydown', function(event){"
@@ -1064,8 +1064,8 @@ renderPage(){
 					echo "html{ background-image: url(\"thumb.png\") }"
 					echo "</style>"
 					echo "<link rel='stylesheet' href='../../style.css'>"
+					echo "<script src='/2webLib.js'></script>"
 					echo "<script>"
-					cat /usr/share/2web/2web.js
 					# add a listener to pass the key event into a function
 					echo "function setupKeys() {"
 					echo "	document.body.addEventListener('keydown', function(event){"
