@@ -28,7 +28,7 @@
 @reboot root /usr/bin/2web &> /dev/null
 */30 * * * * root /usr/bin/2web &> /dev/null
 ################################################################################
-# update every 4 hours, if internet sources are included updates can be frequent
+# update every 2 hours, if internet sources are included updates can be frequent
 0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
 ################################################################################
 # check if the iptv lists need updated once every 6 hours
@@ -38,6 +38,9 @@
 ################################################################################
 # update the comic books
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel &> /dev/null
+################################################################################
+# update the AI data
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/ai2web --parallel &> /dev/null
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
@@ -52,10 +55,10 @@
 # Update weather info once per hour on the half hour
 0 * * * *	root /usr/bin/weather2web &> /dev/null
 ################################################################################
-# run update every hour, individual channels have individual delays
+# Update ytdl2nfo, Individual channels have individual delays
 0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo &> /dev/null
 ################################################################################
-# every 6 hours check for changes to git repos
+# Check for changes to git repos
 0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
 ################################################################################
 # every 6 hours check the links in the portal
