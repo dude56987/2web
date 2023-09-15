@@ -217,6 +217,43 @@ include("settingsHeader.php");
 	</form>
 </div>
 
+
+<div id='channelCacheUpdateDelay' class='inputCard'>
+<h2>2web Website Cache Path</h2>
+<ul>
+	<li>
+		The location on the server the web root will be stored.
+	</li>
+	<li>
+		This location will have lots of read/write activity.
+	</li>
+	<li>
+		Only a server administrator can change this by editing /etc/2web/web.cfg
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/2web/web.cfg");
+?>
+</div>
+
+<div id='channelCacheUpdateDelay' class='inputCard'>
+<h2>2web Download Path</h2>
+<ul>
+	<li>
+		The location on the server the downloads from modules will be stored.
+	</li>
+	<li>
+		This location will have lots of write once read repeatedly disk activity.
+	</li>
+	<li>
+		Only a server administrator can change this by editing /etc/2web/download.cfg
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/2web/download.cfg");
+?>
+</div>
+
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
