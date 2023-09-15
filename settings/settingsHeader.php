@@ -267,20 +267,20 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="none";
 }else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1)){
 	$moduleName="none";
-	echo "	<div class='inputCard'>\n";
-	echo "		<h2>General Settings</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/system.php'>🎛️System</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/cache.php'>📥Cache</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/log/'>📋Log</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
-	echo "	</div>\n";
+	#echo "	<div class='inputCard'>\n";
+	#echo "		<h2>General Settings</h2>\n";
+	#echo "		<ul>";
+	#echo "			<li>\n";
+	#echo "				<a class='' href='/settings/system.php'>🎛️System</a>\n";
+	#echo "			</li>\n";
+	#echo "			<li>\n";
+	#echo "				<a class='' href='/settings/cache.php'>📥Cache</a>\n";
+	#echo "			</li>\n";
+	#echo "			<li>\n";
+	#echo "				<a class='' href='/log/'>📋Log</a>\n";
+	#echo "			</li>\n";
+	#echo "		</ul>";
+	#echo "	</div>\n";
 }else if ($pageURL == "/settings/weather.php"){
 	$moduleName="weather2web";
 	echo "	<div class='inputCard'>\n";
