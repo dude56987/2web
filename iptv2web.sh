@@ -716,9 +716,9 @@ function generateGroups(){
 	IFS=$'\n'
 	for group in $data;do
 		# if more than 3 instances of tag occur in the data
-		if [[ $(echo $group| cut -d' ' -f2) -gt 1 ]];then
+		if [[ "$(echo $group| cut -d' ' -f2)" -gt 2 ]];then
 			# title iteself must be longer than 3 characters
-			if [[ $(echo $group| cut -d' ' -f3 | wc -c) -gt 2 ]];then
+			if [[ "$(echo $group| cut -d' ' -f3 | wc -c)" -gt 2 ]];then
 				# if the title contains more than just numbers
 				if echo $group| grep -q "[[:alpha:]]";then
 					# group has more than two entries so make it a group
@@ -1428,11 +1428,13 @@ main(){
 		webGen
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "iptv2web"
+		enableMod "epg2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "iptv2web"
+		disableMod "epg2web"
 	elif [ "$1" == "-E" ] || [ "$1" == "--epg" ] || [ "$1" == "epg" ] ;then
 		ALERT "This will download and build a updated combined EPG file"
-		checkModStatus "iptv2web"
+		checkModStatus "epg2web"
 		lockProc "epg2web"
 		webDirectory=$(webRoot)
 		updateEPG "$webDirectory"
