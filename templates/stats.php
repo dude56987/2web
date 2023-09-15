@@ -24,9 +24,12 @@ function getStat($totalPath, $label){
 	}else{
 		$total= 0;
 	}
-	echo "		<span class='singleStat'>";
-	echo "			$label:$total";
-	echo "		</span>";
+	# only draw stats that are greater than zero
+	if ($total > 0){
+		echo "		<span class='singleStat'>";
+		echo "			$label:$total";
+		echo "		</span>";
+	}
 
 }
 # modules array
