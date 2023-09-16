@@ -3,3 +3,5 @@ a2enmod ssl
 # cleanup broken symlinks in apache
 symlinks -d "/etc/apache2/sites-enabled/" || echo "No broken symlinks found..."
 symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
+# launch 2web to build basic webserver
+/usr/bin/2web
