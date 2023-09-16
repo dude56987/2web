@@ -403,6 +403,7 @@ function update2web(){
 
 	createDir "$webDirectory"
 	createDir "$downloadDirectory"
+	createDir "/etc/2web/mod_status/"
 
 	INFO "Building web directory at '$webDirectory'"
 	# force overwrite symbolic link to web directory
@@ -538,6 +539,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
 	linkFile "/usr/share/2web/settings/repos.php" "$webDirectory/settings/repos.php"
+	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/settings/portal.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 	# add the manuals page
@@ -610,13 +612,14 @@ function update2web(){
 	if ! test -f /var/cache/2web/spinner.gif;then
 		buildSpinnerGif
 	fi
+	# link default animations
 	if ! test -f $webDirectory/spinner.gif;then
 		linkFile "/var/cache/2web/spinner.gif" "$webDirectory/spinner.gif"
 	fi
 	if ! test -f $webDirectory/pulse.gif;then
 		linkFile "/var/cache/2web/pulse.gif" "$webDirectory/pulse.gif"
 	fi
-
+	# create directory to store links that will generate qr codes
 	createDir /var/cache/2web/qrCodes/
 	# build the web widgets for these services
 	# build web widgets for each http_host
@@ -1053,6 +1056,8 @@ main(){
 		returnModStatus "weather2web"
 		returnModStatus "ytdl2nfo"
 		returnModStatus "ai2web"
+		returnModStatus "epg2web"
+		returnModStatus "kodi2web"
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
 		# wait for all background services to stop
@@ -1189,6 +1194,10 @@ main(){
 		update2web
 		/usr/bin/ai2web
 		rebootCheck
+	elif [ "$1" == "-P" ] || [ "$1" == "--portal" ] || [ "$1" == "portal" ];then
+		update2web
+		/usr/bin/portal2web
+		rebootCheck
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2web
@@ -1200,6 +1209,7 @@ main(){
 		/usr/bin/music2web
 		/usr/bin/wiki2web
 		/usr/bin/graph2web
+		/usr/bin/portal2web
 		/usr/bin/ai2web
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
@@ -1215,6 +1225,7 @@ main(){
 		#   only enabled modules will upgrade
 		ytdl2nfo --upgrade
 		iptv2web --upgrade
+		nfo2web --upgrade
 		comic2web --upgrade
 		git2web --upgrade
 		ai2web --upgrade
@@ -1229,6 +1240,7 @@ main(){
 		/usr/bin/weather2web nuke
 		/usr/bin/graph2web nuke
 		/usr/bin/git2web nuke
+		/usr/bin/portal2web nuke
 		/usr/bin/ai2web nuke
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
 		# remove all website content and disable the website
