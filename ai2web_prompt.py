@@ -30,6 +30,8 @@ import sys, os, json, hashlib, sqlite3, time
 def ai2web_CLI_help():
 	print("--help")
 	print("\tDisplay this message")
+	print("--rebuild-config")
+	print("\tBuild a new default config from the GPT4All website")
 	print("--list-json")
 	print("\tFetch online json list of all GPT4All models")
 	print("--list-installed")
@@ -121,6 +123,24 @@ def loadModel():
 					print("Download default language model with 'ai2web_prompt --download.'")
 					exit()
 ################################################################################
+if "--rebuild-config" in sys.argv:
+	prompt = False
+	gptj = loadModel()
+	# get json format of available models
+	# get the list of dicts describing moddels
+	onlineModels = gptj.list_models()
+	fileObj = open("/etc/2web/ai/sources.cfg", "w")
+	for onlineModel in onlineModels:
+		fileObj.write("#"*80+"\n")
+		fileObj.write("# Uncomment the below to download the language model"+"\n")
+		fileObj.write("#"+ onlineModel["filename"]+"\n")
+		fileObj.write("#\t Description: "+ onlineModel["description"]+"\n")
+		fileObj.write("#\t  Model Size: "+ "MB "+str(int(onlineModel["filesize"]) / 1000000)+"\n")
+		if "isDefault" in onlineModel.keys():
+			fileObj.write("# Recommended 'Default' Model For Use by GPT4All\n")
+	fileObj.close()
+	exit()
+################################################################################
 # run prompt by default
 prompt = True
 
@@ -167,24 +187,6 @@ if "--list-models" in sys.argv:
 		if "isDefault" in onlineModel.keys():
 			print("Recommended 'Default' Model For Use by GPT4All")
 		print()
-	exit()
-
-if "--rebuild-config" in sys.argv:
-	prompt = False
-	gptj = loadModel()
-	# get json format of available models
-	# get the list of dicts describing moddels
-	onlineModels = gptj.list_models()
-	fileObj = open("/etc/2web/ai/sources.cfg", "w")
-	for onlineModel in onlineModels:
-		fileObj.write("#"*80+"\n")
-		fileObj.write("# Uncomment the below to download the language model"+"\n")
-		fileObj.write("#"+ onlineModel["filename"]+"\n")
-		fileObj.write("#\t Description: "+ onlineModel["description"]+"\n")
-		fileObj.write("#\t  Model Size: "+ "MB "+str(int(onlineModel["filesize"]) / 1000000)+"\n")
-		if "isDefault" in onlineModel.keys():
-			fileObj.write("# Recommended 'Default' Model For Use by GPT4All\n")
-	fileObj.close()
 	exit()
 
 if "--prompt" in sys.argv:
