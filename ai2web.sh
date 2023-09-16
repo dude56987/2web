@@ -185,7 +185,6 @@ function update(){
 	createDir "/var/cache/2web/downloads/ai/subtitles/"
 	# scan the sources
 	ALERT "AI Download Model Sources: $aiPromptModels"
-
 	echo "$aiPromptModels" | while read aiSource;do
 		# generate a sum for the source
 		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
@@ -195,18 +194,21 @@ function update(){
 		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
 		# do not process the ai if it is still in the cache
 		#if ! test -f "/var/cache/2web/downloads/ai/prompt/$aiName";then
-		if cacheCheck "$webDirectory/sums/ai2web-model-prompt-$aiName.index" "30";then
+		ALERT "checking for existance of lock file that blocks further download  '$webDirectory/sums/ai2web_model_prompt_$aiName.cfg'"
+		if ! test -f "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg";then
+			ALERT "No block file found downloading with wget..."
 			# download the ai model from remote location
 			wget --continue "https://gpt4all.io/models/$aiSource" -O "/var/cache/2web/downloads/ai/prompt/$aiName"
+			# set correct ownership of files
+			chown www-data:www-data "/var/cache/2web/downloads/ai/prompt/$aiName"
 			if [ $? -eq 0 ];then
 				# the download finished successfully
-				touch "$webDirectory/sums/ai2web-model-prompt-$aiName.index"
+				touch "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg"
 			fi
 			#curl -C - "https://gpt4all.io/models/$aiSource" > "/var/cache/2web/downloads/ai/prompt/$aiName"
 		fi
 		#fi
 	done
-
 }
 ################################################################################
 function getWeight(){
@@ -589,7 +591,7 @@ webUpdate(){
 	#   + aiWebsite/aiName/image.png
 
 	webDirectory=$(webRoot)
-	downloadDirectory="$(libaryPaths | tr -s '\n' | shuf )"
+	downloadDirectory="$(downloadDir)"
 
 	ALERT "$downloadDirectory"
 
@@ -709,7 +711,8 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "ai2web"
 		# install gpt4all for base text prompt generation
-		pip3 install --break-system-packages --upgrade gpt4all
+		# - version 1.0.8 is still working on debain but 1.0.9 is broken
+		pip3 install --break-system-packages --upgrade "gpt4all==1.0.8"
 		# install whisper speech recognition
 		pip3 install --break-system-packages --upgrade openai-whisper
 		# install stable diffusion diffusers library
