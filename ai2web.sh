@@ -603,6 +603,8 @@ webUpdate(){
 
 	# link the homepage
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
+	# link the prompting interface
+	linkFile "/usr/share/2web/templates/ai_prompt.php" "$webDirectory/ai/prompt/index.php"
 
 	startDebug
 	################################################################################

@@ -19,6 +19,9 @@
 ini_set('display_errors', 1);
 ini_set('file_uploads', "On");
 ########################################################################
+# add the base php libary
+include("/usr/share/2web/2webLib.php");
+########################################################################
 function filesize_to_human($tempFileSize){
 	# get the filesize
 	if ($tempFileSize > pow(1024, 4)){
@@ -34,6 +37,18 @@ function filesize_to_human($tempFileSize){
 	}
 }
 ########################################################################
+if (array_key_exists("generateMore",$_GET)){
+	# increment the versions file
+	$versions=file_get_contents("versions.cfg");
+	$versions+=1;
+	file_put_contents("versions.cfg",$versions);
+	# update the elapsed time since prompt
+	file_put_contents("started.cfg",$_SERVER["REQUEST_TIME"]);
+	# launch the command again to generate more versions of the output
+	shell_exec(file_get_contents("command.cfg"));
+	# redirect back to this page in refresh mode
+	redirect("?autoRefresh");
+}
 ?>
 <html class='randomFanart'>
 <head>
@@ -43,8 +58,6 @@ function filesize_to_human($tempFileSize){
 </head>
 <body>
 <?PHP
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 if (array_key_exists("debug",$_POST)){
@@ -85,6 +98,8 @@ $totalVersions=file_get_contents("versions.cfg");
 if ($discoveredImages < $totalVersions){
 	if (array_key_exists("autoRefresh",$_GET)){
 		echo "<img class='localPulse' src='/pulse.gif'>\n";
+		echo "<hr>";
+		echo "<hr>";
 		echo "<a class='button' href='?'>⏹️ Stop Refresh</a>\n";
 	}else{
 		echo "<a class='button' href='?autoRefresh'>▶️  Auto Refresh</a>\n";
@@ -121,7 +136,6 @@ if($discoveredImages > 0){
 	echo "		<th>Discovered Files</th>";
 	echo "		<th>Total Filesize</th>";
 	echo "		<th>Prompt</th>";
-	echo "		<th>Negative Prompt</th>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>$discoveredImages</td>";
@@ -162,30 +176,22 @@ if ($discoveredImages < $totalVersions){
 }
 
 if ($drawPrompt){
-	# draw the image generator
-	echo "<div class='titleCard'>\n";
-	echo "<h1>Generate More Versions</h1>\n";
-	echo "<form method='post' enctype='multipart/form-data' action='/ai/index.php'>\n";
-
-	echo "<span class='groupedMenuItem'>\n";
-	echo " Models:\n";
-	echo "<select name='model'>\n";
-	# load each of the ai models
-	echo "<option value='".file_get_contents("model.cfg")."'>".file_get_contents("model.cfg")."</option>\n";
-	echo "</select>\n";
-	echo "</span>\n";
-
-	echo "<span class='groupedMenuItem'>\n";
-	echo "Versions: <input class='imageVersionsInput' type='number' min='1' max='10' value='1' name='imageGenVersions' placeholder='Number of versions to draw'>";
-	echo "</span>\n";
-
-	echo "<span class='groupedMenuItem'>Debug:<input class='checkbox' type='checkbox' name='debug' value='yes' ></input></span>";
-
-	echo "<hr>\n";
-
-	echo "<textarea class='aiPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' >".file_get_contents("prompt.cfg")."</textarea>";
-	echo "<input class='aiSubmit' type='submit' formtarget='_blank' value='Prompt'>";
-	echo "</form>";
+	echo "<div class='titleCard'>";
+	echo "<table>";
+	echo "	<tr>";
+	echo "		<th>Model</th>";
+	echo "		<th>Prompt</th>";
+	echo "	</tr>";
+	echo "	<tr>";
+	echo "		<td>".file_get_contents("model.cfg")."</td>";
+	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
+	echo "	</tr>";
+	echo "</table>";
+	echo "<pre>";
+	echo file_get_contents("command.cfg");
+	echo "</pre>";
+	echo "<hr>";
+	echo "	<a class='button' href='?generateMore'>Generate More Responses</a>";
 	echo "</div>";
 }
 echo "</div>\n";

@@ -161,6 +161,7 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 	$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
+	$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
 
 	# launch the process with a background scheduler
 	$command = "echo '";
@@ -836,74 +837,90 @@ if (array_key_exists("loadConvo",$_GET)){
 		$discoveredTxt2TxtData .= "<option value='$directoryPath'>$directoryPath</option>\n";
 		$discoveredTxt2Txt=True;
 	}
-
-	if ($discoveredPrompt || $discoveredTxt2TxtPrompt){
-		echo "<div class='titleCard'>\n";
-		echo "	<h1>What Can Text <sup>a</sup>I Do?</h1>\n";
-		echo "	<div class='listCard'>\n";
-		$helpTexts=Array();
-		$helpTexts=array_merge($helpTexts,["Ask me anything."]);
-		$helpTexts=array_merge($helpTexts,["Summarize the following text. X"]);
-		$helpTexts=array_merge($helpTexts,["Write a essay several paragraphs long about X."]);
-		$helpTexts=array_merge($helpTexts,["Describe X"]);
-		$helpTexts=array_merge($helpTexts,["Give me the full recipe and steps to cook X."]);
-		$helpTexts=array_merge($helpTexts,["Ask me to write a poem about X."]);
-		$helpTexts=array_merge($helpTexts,["Create a top ten list of X."]);
-		$helpTexts=array_merge($helpTexts,["What ideas exist in X that can be applied to Y?"]);
-		$helpTexts=array_merge($helpTexts,["Write a song as X about Y."]);
-		$helpTexts=array_merge($helpTexts,["Take the text after this and translate it into X."]);
-		$helpTexts=array_merge($helpTexts,["If you tell me I'm a expert in a field before your question, I will respond as if I am."]);
-		$helpTexts=array_merge($helpTexts,["If you tell me I am in a profession, I will respond as if I am."]);
-		$helpTexts=array_merge($helpTexts,["Type 'Continue' to get me to complete unfinished responses."]);
-		$helpTexts=array_merge($helpTexts,["I'm also a chatbot, just talk to me. I can pretend to be a person."]);
-		$helpTexts=array_merge($helpTexts,["Randomness of 0 is deterministic and 10 is completely random."]);
-		$helpTexts=array_merge($helpTexts,["I only know what has been loaded into me. Subjects considered taboo or controversial may have not been included."]);
-		$helpTexts=array_merge($helpTexts,["Some prompts will trigger premade responses. This was done by the creators of the AI model being used."]);
-		$helpTexts=array_merge($helpTexts,["I only exist between when you ask the question and I answer it."]);
-		$helpTexts=array_merge($helpTexts,["Remember, I lie. Experts call it hallucinating, I call it lying."]);
-		foreach($helpTexts as $helpText ){
-			echo "		<div class='inputCard textList'>\n";
-			echo "			<p>$helpText</p>\n";
-			echo "		</div>\n";
+	# load each of the ai models
+	$discoveredImg2Img=False;
+	$discoveredImg2ImgData="";
+	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/img2img/"),array(".","..")) as $directoryPath){
+		$directoryPath=str_replace("--","/",$directoryPath);
+		$directoryPath=str_replace("models/","",$directoryPath);
+		if (strpos($directoryPath,"/")){
+			$discoveredImg2ImgData.="<option value='$directoryPath'>$directoryPath</option>\n";
+			$discoveredImg2Img=True;
 		}
-		echo "	</div>\n";
-		echo "</div>\n";
 	}
+	# load each of the ai models
+	$discoveredTxt2Img=False;
+	$discoveredTxt2ImgData="";
+	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
+		$directoryPath=str_replace("--","/",$directoryPath);
+		$directoryPath=str_replace("models/","",$directoryPath);
+		if (strpos($directoryPath,"/")){
+			$discoveredTxt2ImgData.="<option value='$directoryPath'>$directoryPath</option>\n";
+			$discoveredTxt2Img=True;
+		}
+	}
+
+	echo "<div class='titleCard'>";
+	echo "<h2>AI Tools</h2>";
+	if ($discoveredPrompt){
+		# ai prompting interface
+		echo "<a class='showPageEpisode' href='/ai/prompt/'>";
+		echo "	<h2>AI Prompting</h2>";
+		echo "	<div class='aiIcon'>👽</div>";
+		echo "</a>";
+	}
+	if ($discoveredTxt2Txt){
+		#
+		echo "<a class='showPageEpisode' href='/ai/txt2txt/'>";
+		echo "	<h2>Text Generation</h2>";
+		echo "	<div class='aiIcon'>✏️</div>";
+		echo "</a>";
+	}
+	if ($discoveredTxt2Img){
+		#
+		echo "<a class='showPageEpisode' href='/ai/txt2img/'>";
+		echo "	<h2>Image Generation</h2>";
+		echo "	<div class='aiIcon'>🎨</div>";
+		echo "</a>";
+	}
+	if ($discoveredImg2Img){
+		#
+		echo "<a class='showPageEpisode' href='/ai/img2img/'>";
+		echo "	<h2>Image Editing</h2>";
+		echo "	<div class='aiIcon'>🖌️</div>";
+		echo "</a>";
+	}
+
+	echo "</div>";
+
 	if ($discoveredPrompt){
 		echo "<div class='titleCard'>\n";
-		echo "<h1>Prompt an AI 👽</h1>\n";
-
-		echo "<div>\n";
-
-		echo "<form method='post'>\n";
-
-		echo "<span class='groupedMenuItem'>\n";
-		echo " LLM:\n";
-		echo "<select name='model'>\n";
-		echo $discoveredPromptData;
-		echo "</select>\n";
-		echo "</span>\n";
-
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
-		echo "</span>\n";
-
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
-		echo "</span>\n";
-
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
-		echo "</span>\n";
-
-
-		echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
-
-		echo "</div>\n";
-
-		echo "<textarea class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
-		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
-		echo "</form>\n";
+		echo "<h1>Previous Prompts</h1>\n";
+		# draw the threads discovered
+		$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/prompt/"),array(".","..","index.php"));
+		# shuffle the items in the index
+		shuffle($promptIndex);
+		#sort($promptIndex);
+		# order newest prompts first
+		$promptIndex=array_reverse($promptIndex);
+		# split into pages and grab only the first page
+		$promptIndex=array_chunk($promptIndex,6)[0];
+		foreach($promptIndex as $directoryPath){
+			echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+			echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
+			echo "<div>Responses: ";
+			$finishedResponses=0;
+			foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
+				if(strpos($responseFileName,".txt") !== false){
+					$finishedResponses += 1;
+				}
+			}
+			echo "$finishedResponses";
+			echo "/";
+			echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
+			echo "</div>";
+			echo "</a>";
+		}
 		echo "</div>\n";
 	}
 
@@ -946,32 +963,6 @@ if (array_key_exists("loadConvo",$_GET)){
 		echo "</form>\n";
 		echo "</div>\n";
 	}
-
-
-	# load each of the ai models
-	$discoveredImg2Img=False;
-	$discoveredImg2ImgData="";
-	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/img2img/"),array(".","..")) as $directoryPath){
-		$directoryPath=str_replace("--","/",$directoryPath);
-		$directoryPath=str_replace("models/","",$directoryPath);
-		if (strpos($directoryPath,"/")){
-			$discoveredImg2ImgData.="<option value='$directoryPath'>$directoryPath</option>\n";
-			$discoveredImg2Img=True;
-		}
-	}
-
-	# load each of the ai models
-	$discoveredTxt2Img=False;
-	$discoveredTxt2ImgData="";
-	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-		$directoryPath=str_replace("--","/",$directoryPath);
-		$directoryPath=str_replace("models/","",$directoryPath);
-		if (strpos($directoryPath,"/")){
-			$discoveredTxt2ImgData.="<option value='$directoryPath'>$directoryPath</option>\n";
-			$discoveredTxt2Img=True;
-		}
-	}
-
 
 	if ($discoveredImg2Img || $discoveredTxt2Img){
 		echo "<div class='titleCard'>\n";

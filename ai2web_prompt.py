@@ -289,15 +289,41 @@ while versions > 0:
 	if "--output-dir" in sys.argv:
 		# save the created image to the specified output directory
 		tempFilePath = (os.path.join(outputDir, (fileTitle+".txt")))
+		tempFailureFilePath = (os.path.join(outputDir, ("failures.cfg")))
 	else:
 		tempFilePath = (fileTitle+".txt")
+		tempFailureFilePath = ("failures.cfg")
 
-	print("Writing file to ", tempFilePath)
-	# save the output as a cache file since one does not exist
-	fileObject = open(tempFilePath, "w")
-	fileObject.write(anwser)
+	# if the anwser is greater than zero characters long
+	# - If the response is a non response ignore it
+	if (len(anwser) > 0):
+		print("Writing file to ", tempFilePath)
+		# save the output as a cache file since one does not exist
+		fileObject = open(tempFilePath, "w")
+		fileObject.write(anwser)
+		fileObject.close()
+
+		versions -= 1
+	else:
+		failures += 1
+
+	# if failures exceeds 5 exit out the program
+	if failures > 5:
+		print("ERROR: FAILED OUT OF PROCESSING, more than 5 failures to anwser prompt!")
+
+# store failures of the prompt
+if failures > 0:
+	fileData = ""
+	# look for existing file
+	if os.path.exists(tempFailureFilePath):
+		fileObject = open(tempFailureFilePath, "r")
+		for line in fileObject:
+			fileData += line
+		# combine the new failures to the old ones
+		failures += fileData
+	# write the failures to a file
+	fileObject = open(tempFailureFilePath, "w")
+	fileObject.write(failures)
 	fileObject.close()
-
-	versions -= 1
 
 exit()

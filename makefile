@@ -62,7 +62,7 @@ debugOff:
 build: build-deb
 	# install the build tools
 	sudo make build-deb;
-upgrade-hls: node_modules/hls.js/dist/hls.js
+upgrade-hls:
 	if ! test -f node_modules/hls.js/dist/hls.js;then npm install --save hls.js;fi
 build-deb: upgrade-hls
 	# build the directories inside the package
@@ -171,6 +171,7 @@ build-deb: upgrade-hls
 	chown -R www-data:www-data debian/etc/2web/ai/personas/
 	chown -R www-data:www-data debian/etc/2web/ai/negative_prompts/
 	#chown -R www-data:www-data debian/etc/2web/*.d/
+	chown -R www-data:www-data debian/etc/2web/*/*.d/
 	chown -R www-data:www-data debian/etc/2web/
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
