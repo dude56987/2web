@@ -192,8 +192,26 @@ if ($drawPrompt){
 	echo "</pre>";
 	echo "<hr>";
 	echo "	<a class='button' href='?generateMore'>Generate More Responses</a>";
+	echo "<hr>";
 	echo "</div>";
 }
+
+if (file_exists("failures.cfg")){
+	echo "<div class='titleCard'>";
+	echo "<h2>Failures</h2>";
+	echo "<div>Failed Generation Attempts: ";
+	echo file_get_contents("failures.cfg");
+	echo "</div>";
+	echo "<ul>";
+	echo "	<li>Failures are the blank responses.</li>";
+	echo "	<li>Failures indicate the model can not generate anwsers for this specific prompt.</li>";
+	echo "	<li>You can change the prompt itself to try and get anwsers.</li>";
+	echo "	<li>You can change the language model and try this same prompt.</li>";
+	echo "	<li>You can brute force this and eventually you may get a result.</li>";
+	echo "</ul>";
+	echo "</div>";
+}
+
 echo "</div>\n";
 ?>
 <?php

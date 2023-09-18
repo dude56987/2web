@@ -36,11 +36,34 @@ def h1(bannerText):
 def file_get_contents(filePath):
 	"""
 	A copy of file_get_contents from PHP. This function takes a file path and returns the contents of the file as a full string.
-	"""
-	fileObj = open(filePath, "r")
-	tempFileData = ""
-	for line in fileObj:
-		tempFileData += line
-	fileObj.close()
-	return tempFileData
 
+	Return BOOL,STRING
+	STRING = Contents of the file.
+	False = Reading of the file failed.
+	"""
+	try:
+		fileObj = open(filePath, "r")
+		tempFileData = ""
+		for line in fileObj:
+			tempFileData += line
+		fileObj.close()
+		return tempFileData
+	except:
+		return False
+################################################################################
+def file_put_contents(filePath, contents):
+	"""
+	A copy of file_put_contents from PHP. This function takes a file path and write the contents to it. This will overwrite the file if it already exists.
+
+	Return BOOL
+	True = Write was successfull
+	False = Write failed
+	"""
+	try:
+		fileObj = open(filePath, "w")
+		fileObj.write(contents)
+		fileObj.close()
+		return True
+	except:
+		return False
+################################################################################

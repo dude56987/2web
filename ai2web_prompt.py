@@ -26,6 +26,9 @@ except:
 ########################################################################
 # import libaries
 import sys, os, json, hashlib, sqlite3, time
+# add custom lib path
+sys.path.append("/usr/share/2web/")
+from python2webLib import h1, hr, file_get_contents, file_put_contents
 ################################################################################
 def ai2web_CLI_help():
 	print("--help")
@@ -242,6 +245,7 @@ else:
 	fileTitle = baseFileTitle + "_v" + str(tempVersionNumber)
 
 failures = 0
+max_failures = versions * 10
 
 # loop the prompt until ctrl-c is hit
 while versions > 0:
@@ -249,6 +253,7 @@ while versions > 0:
 	gptj.chat_session()
 	# list versions left in CLI
 	print("Versions Left: ", versions)
+	print("Failures : ", failures)
 	if "--output-dir" in sys.argv:
 		print(fileTitle)
 		# figure out the name and version
@@ -307,23 +312,25 @@ while versions > 0:
 	else:
 		failures += 1
 
-	# if failures exceeds 5 exit out the program
-	if failures > 5:
-		print("ERROR: FAILED OUT OF PROCESSING, more than 5 failures to anwser prompt!")
+	# if failures exceeds max_failures exit out the program
+	if failures > max_failures:
+		print("ERROR: FAILED OUT OF PROCESSING, more than ", max_failures, " failures to anwser prompt!")
+		break
 
 # store failures of the prompt
 if failures > 0:
 	fileData = ""
 	# look for existing file
 	if os.path.exists(tempFailureFilePath):
-		fileObject = open(tempFailureFilePath, "r")
-		for line in fileObject:
-			fileData += line
-		# combine the new failures to the old ones
-		failures += fileData
+		fileData = file_get_contents(tempFailureFilePath)
+		try:
+			fileData = int(fileData)
+			# combine the new failures to the old ones
+			failures += fileData
+		except:
+			# somehow everything failed
+			print("Failures = ", failures)
 	# write the failures to a file
-	fileObject = open(tempFailureFilePath, "w")
-	fileObject.write(failures)
-	fileObject.close()
+	file_put_contents(tempFailureFilePath, str(failures))
 
 exit()

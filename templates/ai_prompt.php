@@ -253,6 +253,15 @@ if ($discoveredPrompt){
 		echo "/";
 		echo file_get_contents($directoryPath."/versions.cfg");
 		echo "</div>";
+
+		# check for failures
+		if (file_exists($directoryPath."/failures.cfg")){
+			echo "<hr>";
+			echo "Failures: ";
+			echo file_get_contents($directoryPath."/failures.cfg");
+			echo "<hr>";
+		}
+
 		echo "</a>";
 	}
 	echo "<div class='listCard'>";
