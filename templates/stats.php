@@ -33,7 +33,7 @@ function getStat($totalPath, $label){
 
 }
 # modules array
-$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ai2web","ytdl2nfo","epg2web","ai2web");
+$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ytdl2nfo","epg2web","ai2web","portal2web","wiki2web", "git2web","kodi2web");
 # check for active processes
 foreach($moduleNames as $moduleName){
 	if ( file_exists("$moduleName.active")){
