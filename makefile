@@ -59,6 +59,9 @@ debugOn:
 	sudo mv /etc/2web/nfo/debug.disabled /etc/2web/nfo/debug.enabled
 debugOff:
 	sudo mv /etc/2web/nfo/debug.enabled /etc/2web/nfo/debug.disabled
+downloadable: 2web_UNSTABLE.deb
+	cp 2web_UNSTABLE.deb /var/cache/2web/web/kodi/2web_install.deb
+	cp 2web_UNSTABLE.tar.gz /var/cache/2web/web/kodi/2web.tar.gz
 build: build-deb
 	# install the build tools
 	sudo make build-deb;
