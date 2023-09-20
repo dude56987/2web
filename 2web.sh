@@ -174,7 +174,8 @@ function recordActivityGraph(){
 		} >> "/var/cache/2web/activityGraphData.index"
 		# limit log to last 36 entries, this is because this log is updated every 30 minutes
 		# - You can not > pipe a file directly with tail, so it is stored in memory fist
-		tempDatabase=$(tail -n 36 "/var/cache/2web/activityGraphData.index")
+		# - 48 should be 24 hours worth of stats
+		tempDatabase=$(tail -n 48 "/var/cache/2web/activityGraphData.index")
 		# write the trimmed database
 		echo "$tempDatabase" > "/var/cache/2web/activityGraphData.index"
 	fi
@@ -182,7 +183,7 @@ function recordActivityGraph(){
 ########################################################################
 function buildFakeActivityGraph(){
 	{
-		for index in $(seq 36);do
+		for index in $(seq 48);do
 			for index in $(seq 11);do
 				# randomize anwser
 				if [[ $(( $RANDOM % 2 )) -eq 0 ]];then
@@ -257,7 +258,7 @@ function buildActivityGraph(){
 
 	textGap=$(( barWidth * 8 ))
 	graphHeight=$(( (barWidth * graphHeightCounter) + (barWidth / 4) ))
-	graphWidth=$((textGap + (barWidth * 36) ))
+	graphWidth=$((textGap + (barWidth * 48) ))
 
 	{
 		# - add the graph header data after the header
