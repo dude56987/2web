@@ -183,6 +183,12 @@ if (array_key_exists("imageFileToEdit",$_FILES)){
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg")){
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg",$_POST["model"]);
 	}
+
+	if ($_POST["hidden"] == "yes"){
+		# if the post is set to hidden generate a hidden.cfg
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
+	}
+
 	if (array_key_exists("model",$_POST)){
 		$command .= '/usr/bin/ai2web_prompt --set-model "'.$_POST["model"].'" ';
 	}else{
@@ -895,7 +901,7 @@ if (array_key_exists("loadConvo",$_GET)){
 
 	if ($discoveredPrompt){
 		echo "<div class='titleCard'>\n";
-		echo "<h1>Previous Prompts</h1>\n";
+		echo "<h1>Random Prompts</h1>\n";
 		# draw the threads discovered
 		$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/prompt/"),array(".","..","index.php"));
 		# shuffle the items in the index
@@ -906,20 +912,23 @@ if (array_key_exists("loadConvo",$_GET)){
 		# split into pages and grab only the first page
 		$promptIndex=array_chunk($promptIndex,6)[0];
 		foreach($promptIndex as $directoryPath){
-			echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
-			echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
-			echo "<div>Responses: ";
-			$finishedResponses=0;
-			foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
-				if(strpos($responseFileName,".txt") !== false){
-					$finishedResponses += 1;
+			# if the hidden cfg file does not exist use this in the index
+			if ( ! file_exists("prompt/".$directoryPath."/hidden.cfg")){
+				echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+				echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
+				echo "<div>Responses: ";
+				$finishedResponses=0;
+				foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
+					if(strpos($responseFileName,".txt") !== false){
+						$finishedResponses += 1;
+					}
 				}
+				echo "$finishedResponses";
+				echo "/";
+				echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
+				echo "</div>";
+				echo "</a>";
 			}
-			echo "$finishedResponses";
-			echo "/";
-			echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
-			echo "</div>";
-			echo "</a>";
 		}
 		echo "</div>\n";
 	}
@@ -943,14 +952,15 @@ if (array_key_exists("loadConvo",$_GET)){
 		echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
 		echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
-		echo "</span>\n";
+		#echo "<span class='groupedMenuItem'>\n";
+		#echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
+		#echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
-		echo "</span>\n";
+		#echo "<span class='groupedMenuItem'>\n";
+		#echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
+		#echo "</span>\n";
 
+		echo "<span class='groupedMenuItem'> 🥸<span class='footerText'> Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
 
 		echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
 

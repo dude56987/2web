@@ -35,7 +35,7 @@ if (array_key_exists("prompt",$_POST)){
 
 	$fileSumString  = ($_POST['prompt']);
 	$fileSumString .= ($_POST['model']);
-	$fileSumString .= ($_POST['temperature']);
+	#$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
 	$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
@@ -61,16 +61,23 @@ if (array_key_exists("prompt",$_POST)){
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg",$_POST["model"]);
 	}
 	if (array_key_exists("model",$_POST)){
+		# set the model
 		$command .= '/usr/bin/ai2web_prompt --set-model "'.$_POST["model"].'" ';
 	}else{
-		# default model loaded by prompt is groovy
+		# use the default model
 		$command .= '/usr/bin/ai2web_prompt ';
 	}
 	$command .= '--output-dir "/var/cache/2web/web/ai/prompt/'.$fileSum.'/" ';
 	if (array_key_exists("versions",$_POST)){
 		if ($_POST["versions"] != "NONE"){
-			$command .= '--versions "'.$_POST["versions"].'" ';
+			#$command .= '--versions "'.$_POST["versions"].'" ';
+			$command .= '--versions "1" ';
 		}
+	}
+
+	if ($_POST["hidden"] == "yes"){
+		# if the post is set to hidden generate a hidden.cfg
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
 	}
 
 	if (is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg")){
@@ -104,8 +111,11 @@ if (array_key_exists("prompt",$_POST)){
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg")){
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$command);
 	}
-	# launch the command
-	shell_exec($command);
+	# launch a job on the queue for each version
+	foreach(range(1,$_POST["versions"]) as $index){
+		# launch the command
+		shell_exec($command);
+	}
 	# delay 1 seconds to allow loading of database
 	if(array_key_exists("HTTPS",$_SERVER)){
 		if($_SERVER['HTTPS']){
@@ -200,14 +210,15 @@ if ($discoveredPrompt){
 	echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
 	echo "</span>\n";
 
-	echo "<span class='groupedMenuItem'>\n";
-	echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
-	echo "</span>\n";
+	#echo "<span class='groupedMenuItem'>\n";
+	#echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
+	#echo "</span>\n";
 
-	echo "<span class='groupedMenuItem'>\n";
-	echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
-	echo "</span>\n";
+	#echo "<span class='groupedMenuItem'>\n";
+	#echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
+	#echo "</span>\n";
 
+	echo "<span class='groupedMenuItem'> 🥸<span class='footerText'> Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
 
 	echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
 
@@ -240,29 +251,32 @@ if ($discoveredPrompt){
 		$promptIndex=$promptIndex[0];
 	}
 	foreach($promptIndex as $directoryPath){
-		echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
-		echo file_get_contents($directoryPath."/prompt.cfg");
-		echo "<div>Responses: ";
-		$finishedResponses=0;
-		foreach(scandir($directoryPath."/") as $responseFileName){
-			if(strpos($responseFileName,".txt") !== false){
-				$finishedResponses += 1;
+		# if the hidden cfg file does not exist use this in the index
+		if ( ! file_exists($directoryPath."/hidden.cfg")){
+			echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+			echo file_get_contents($directoryPath."/prompt.cfg");
+			echo "<div>Responses: ";
+			$finishedResponses=0;
+			foreach(scandir($directoryPath."/") as $responseFileName){
+				if(strpos($responseFileName,".txt") !== false){
+					$finishedResponses += 1;
+				}
 			}
-		}
-		echo "$finishedResponses";
-		echo "/";
-		echo file_get_contents($directoryPath."/versions.cfg");
-		echo "</div>";
+			echo "$finishedResponses";
+			echo "/";
+			echo file_get_contents($directoryPath."/versions.cfg");
+			echo "</div>";
 
-		# check for failures
-		if (file_exists($directoryPath."/failures.cfg")){
-			echo "<hr>";
-			echo "Failures: ";
-			echo file_get_contents($directoryPath."/failures.cfg");
-			echo "<hr>";
-		}
+			# check for failures
+			if (file_exists($directoryPath."/failures.cfg")){
+				echo "<hr>";
+				echo "Failures: ";
+				echo file_get_contents($directoryPath."/failures.cfg");
+				echo "<hr>";
+			}
 
-		echo "</a>";
+			echo "</a>";
+		}
 	}
 	echo "<div class='listCard'>";
 	if (array_key_exists("page",$_GET)){

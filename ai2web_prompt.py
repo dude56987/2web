@@ -26,6 +26,7 @@ except:
 ########################################################################
 # import libaries
 import sys, os, json, hashlib, sqlite3, time
+import datetime
 # add custom lib path
 sys.path.append("/usr/share/2web/")
 from python2webLib import h1, hr, file_get_contents, file_put_contents
@@ -246,6 +247,12 @@ else:
 
 failures = 0
 max_failures = versions * 10
+
+if "--output-dir" in sys.argv:
+	# rewrite the started time for each new created prompt
+	file_put_contents(os.path.join(outputDir, "started.cfg"), datetime.datetime.now().strftime("%s"))
+else:
+	file_put_contents("started.cfg", datetime.datetime.now().strftime("%s"))
 
 # loop the prompt until ctrl-c is hit
 while versions > 0:

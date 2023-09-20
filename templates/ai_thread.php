@@ -129,6 +129,10 @@ if ($discoveredImages < $totalVersions){
 	}
 	# list the time elapsed so far
 	echo "<div class='elapsedTime'>Elapsed Time since last prompt $executionMinutes:$executionSeconds</div>\n";
+}else{
+	# if discovered versions is greater than total versions from the file
+	# overwrite the versions file with the greater number
+	file_put_contents("versions.cfg","$discoveredImages");
 }
 if($discoveredImages > 0){
 	echo "<table>";
