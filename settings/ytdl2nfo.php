@@ -72,7 +72,7 @@ echo "</pre>\n";
 echo "</div>";
 ?>
 
-<div id='addWebsiteSource' class='inputCard'>
+<div id='ytdl_add_source' class='inputCard'>
 <form action='admin.php' method='post'>
 <h2>Add Website Source</h2>
 <ul>
@@ -91,9 +91,8 @@ echo "</div>";
 </form>
 </div>
 
-
 <?php
-echo "<div id='websiteSources' class='settingListCard'>";
+echo "<div id='ytdl_remove_source' class='settingListCard'>";
 echo "<h2>Website Sources</h2>\n";
 $sourceFiles = scandir("/etc/2web/ytdl/sources.d/");
 //print_r($sourceFiles);
@@ -156,7 +155,7 @@ echo "</div>";
 </div>
 
 <?php
-echo "<div id='usernameSources' class='settingListCard'>";
+echo "<div id='ytdl_remove_username_source' class='settingListCard'>";
 echo "<h2>Username Sources</h2>\n";
 $sourceFiles = scandir("/etc/2web/ytdl/usernameSources.d/");
 //print_r($sourceFiles);
