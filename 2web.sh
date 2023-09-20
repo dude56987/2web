@@ -165,10 +165,12 @@ function recordActivityGraph(){
 		git2webStatus=$(checkActiveStatusForGraph "git2web" "$webDirectory")
 		weather2webStatus=$(checkActiveStatusForGraph "weather2web" "$webDirectory")
 		graph2webStatus=$(checkActiveStatusForGraph "graph2web" "$webDirectory")
+		portal2webStatus=$(checkActiveStatusForGraph "portal2web" "$webDirectory")
+		ai2webStatus=$(checkActiveStatusForGraph "ai2web" "$webDirectory")
 		ytdl2nfoStatus=$(checkActiveStatusForGraph "ytdl2nfo" "$webDirectory")
 		epg2webStatus=$(checkActiveStatusForGraph "epg2web" "$webDirectory")
 		{
-			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$ytdl2nfoStatus,$epg2webStatus"
+			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$portal2webStatus,$ai2webStatus,$ytdl2nfoStatus,$epg2webStatus"
 		} >> "/var/cache/2web/activityGraphData.index"
 		# limit log to last 36 entries, this is because this log is updated every 30 minutes
 		# - You can not > pipe a file directly with tail, so it is stored in memory fist
@@ -181,11 +183,21 @@ function recordActivityGraph(){
 function buildFakeActivityGraph(){
 	{
 		for index in $(seq 36);do
-			for index in $(seq 10);do
-				# build each line
-				echo -n "1,"
+			for index in $(seq 11);do
+				# randomize anwser
+				if [[ $(( $RANDOM % 2 )) -eq 0 ]];then
+					# build each line
+					echo -n "1,"
+				else
+					echo -n "0,"
+				fi
 			done
-			echo "1"
+			# randomize anwser
+			if [[ $(( $RANDOM % 2 )) -eq 0 ]];then
+				echo "1"
+			else
+				echo "0"
+			fi
 		done
 	} > "/var/cache/2web/activityGraphData.index"
 }
@@ -195,96 +207,53 @@ function buildActivityGraph(){
 	graphData=$( cat "/var/cache/2web/activityGraphData.index" )
 	index=0
 	barWidth=20
-	IFSBACKUP=$IFS
-	IFS=$'\n'
 	# generated the paths
-	createDir "/var/cache/2web/generated_graphs/"
-	generatedSvgPath="/var/cache/2web/generated_graphs/2web_activity_day.svg"
-	generatedPngPath="/var/cache/2web/generated_graphs/2web_activity-day.png"
+	createDir "/var/cache/2web/generated/graphs/"
+	generatedSvgPath="/var/cache/2web/generated/graphs/2web_activity_day.svg"
+	generatedPngPath="/var/cache/2web/generated/graphs/2web_activity-day.png"
 	webPath="/var/cache/2web/web/activityGraph.png"
 	graphHeightCounter=0
 	graphHeaderData=""
+
+	# set ifs to newlines for next loop
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+
+	# setup the modules and thier colors in the graph
+	# - this is used by the loops that draw the graph elements in SVG
+	moduleNames=$'nfo2web=red=1\n'
+	moduleNames=$moduleNames$'music2web=yellow=2\n'
+	moduleNames=$moduleNames$'iptv2web=blue=3\n'
+	moduleNames=$moduleNames$'wiki2web=green=4\n'
+	moduleNames=$moduleNames$'comic2web=orange=5\n'
+	moduleNames=$moduleNames$'git2web=purple=6\n'
+	moduleNames=$moduleNames$'weather2web=pink=7\n'
+	moduleNames=$moduleNames$'graph2web=burlywood=8\n'
+	moduleNames=$moduleNames$'portal2web=coral=9\n'
+	moduleNames=$moduleNames$'ai2web=lime=10\n'
+	moduleNames=$moduleNames$'ytdl2nfo=teal=11\n'
+	moduleNames=$moduleNames$'epg2web=olive=12\n'
+
+	ALERT "MODULE NAMES =\n$moduleNames"
+
+	#moduleNames=$(echo "$moduleNames")
+
+	# storage varable for active modules
+	enabledModules=""
 	# figure out enabled modules and build header text
-	if returnModStatus "nfo2web";then
-		nfo2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >nfo2web</text>\n"
-		nfo2webEnabled=1
-	else
-		nfo2webEnabled=0
-	fi
-	if returnModStatus "music2web";then
-		music2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >music2web</text>\n"
-		music2webEnabled=1
-	else
-		music2webEnabled=0
-	fi
-	if returnModStatus "iptv2web";then
-		iptv2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >iptv2web</text>\n"
-		iptv2webEnabled=1
-	else
-		iptv2webEnabled=0
-	fi
-	if returnModStatus "wiki2web";then
-		wiki2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >wiki2web</text>\n"
-		wiki2webEnabled=1
-	else
-		wiki2webEnabled=0
-	fi
-	if returnModStatus "comic2web";then
-		comic2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >comic2web</text>\n"
-		comic2webEnabled=1
-	else
-		comic2webEnabled=0
-	fi
-	if returnModStatus "git2web";then
-		git2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >git2web</text>\n"
-		git2webEnabled=1
-	else
-		git2webEnabled=0
-	fi
-	if returnModStatus "weather2web";then
-		weather2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >weather2web</text>\n"
-		weather2webEnabled=1
-	else
-		weather2webEnabled=0
-	fi
-	if returnModStatus "graph2web";then
-		graph2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >graph2web</text>\n"
-		graph2webEnabled=1
-	else
-		graph2webEnabled=0
-	fi
-	if returnModStatus "ytdl2nfo";then
-		ytdl2nfoHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >ytdl2nfo</text>\n"
-		ytdl2nfoEnabled=1
-	else
-		ytdl2nfoEnabled=0
-	fi
-	if returnModStatus "iptv2web";then
-		epg2webHeight=$graphHeightCounter
-		graphHeightCounter=$(( graphHeightCounter + 1 ))
-		graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >epg2web</text>\n"
-		epg2webEnabled=1
-	else
-		epg2webEnabled=0
-	fi
+	for module in $moduleNames;do
+		module="$(echo "$module" | cut -d'=' -f1)"
+		# figure out enabled modules and build header text
+		if returnModStatus "$module";then
+			#nfo2webHeight=$graphHeightCounter
+			graphHeightCounter=$(( graphHeightCounter + 1 ))
+			graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >$module</text>\n"
+			# add the module to the enabled modules variable
+			enabledModules="$enabledModules $module"
+		fi
+	done
+
+	ALERT "ENABLED MODULES =\n$enabledModules"
 
 	textGap=$(( barWidth * 8 ))
 	graphHeight=$(( (barWidth * graphHeightCounter) + (barWidth / 4) ))
@@ -299,90 +268,28 @@ function buildActivityGraph(){
 		for line in $graphData;do
 			index=$(( index + 1 ))
 
-			nfo2webStatus=$(echo "$line" | cut -d',' -f1)
-			music2webStatus=$(echo "$line" | cut -d',' -f2)
-			iptv2webStatus=$(echo "$line" | cut -d',' -f3)
-			wiki2webStatus=$(echo "$line" | cut -d',' -f4)
-			comic2webStatus=$(echo "$line" | cut -d',' -f5)
-			git2webStatus=$(echo "$line" | cut -d',' -f6)
-			weather2webStatus=$(echo "$line" | cut -d',' -f7)
-			graph2webStatus=$(echo "$line" | cut -d',' -f8)
-			ytdl2nfoStatus=$(echo "$line" | cut -d',' -f9)
-			epg2webStatus=$(echo "$line" | cut -d',' -f10)
-
 			# for every 30 min write the activity to a graph
 			graphX=$(( ( $index * $barWidth ) ))
+			# reset height counter
+			graphHeightCounter=0
 
-			if [[ 1 -eq $nfo2webEnabled ]];then
-				if [[ 1 -eq $nfo2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * nfo2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:red;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * nfo2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+			# for each active module generate graph data
+			for module in $moduleNames;do
+				moduleColor="$(echo "$module" | cut -d'=' -f2)"
+				moduleNumber="$(echo "$module" | cut -d'=' -f3)"
+				module="$(echo "$module" | cut -d'=' -f1)"
+
+				if echo "$enabledModules" | grep -q "$module";then
+					moduleStatus=$(echo "$line" | cut -d',' -f${moduleNumber} )
+					if [[ 1 -eq $moduleStatus ]];then
+						echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graphHeightCounter ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:$moduleColor;stroke:white;stroke-width:1\" />"
+					else
+						echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graphHeightCounter ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
+					fi
+					graphHeightCounter=$((graphHeightCounter + 1))
 				fi
-			fi
-			if [[ 1 -eq $music2webEnabled ]];then
-				if [[ 1 -eq $music2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * music2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:yellow;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * music2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $iptv2webEnabled ]];then
-				if [[ 1 -eq $iptv2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * iptv2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:blue;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * iptv2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $wiki2webEnabled ]];then
-				if [[ 1 -eq $wiki2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * wiki2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:green;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * wiki2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $comic2webEnabled ]];then
-				if [[ 1 -eq $comic2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * comic2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:orange;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * comic2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $git2webEnabled ]];then
-				if [[ 1 -eq $git2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * git2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:purple;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * git2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $weather2webEnabled ]];then
-				if [[ 1 -eq $weather2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * weather2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:pink;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * weather2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $graph2webEnabled ]];then
-				if [[ 1 -eq $graph2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graph2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:brown;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * graph2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $ytdl2nfoEnabled ]];then
-				if [[ 1 -eq $ytdl2nfoStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:teal;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * ytdl2nfoHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
-			if [[ 1 -eq $epg2webEnabled ]];then
-				if [[ 1 -eq $epg2webStatus ]];then
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * epg2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:olive;stroke:white;stroke-width:1\" />"
-				else
-					echo "<rect x=\"$(( textGap + graphX - barWidth ))\" y=\"$(( (barWidth * epg2webHeight ) ))\" width=\"$(( barWidth ))\" height=\"$barWidth\" style=\"fill:none;stroke:white;stroke-width:1\" />"
-				fi
-			fi
+			done
+
 		done
 		echo "</svg>"
 	} > "$generatedSvgPath"
