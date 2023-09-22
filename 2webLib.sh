@@ -25,38 +25,47 @@ function createDir(){
 	chown www-data:www-data "$1"
 }
 ########################################################################
-function webRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/web.cfg ];then
-		webDirectory=$(cat /etc/2web/web.cfg)
+function readPathConfig(){
+	pathToConfig=$1
+	defaultPath=$2
+	# check for the config path
+	if test -f "$pathToConfig";then
+		foundPath=$(cat "$pathToConfig")
+		buildDefault="no"
 	else
-		chown -R www-data:www-data "/var/cache/2web/web_cache/"
-		echo "/var/cache/2web/web_cache/" > /etc/2web/web.cfg
-		webDirectory="/var/cache/2web/web_cache/"
+		buildDefault="yes"
+	fi
+	# if a blank file is found
+	if [ "${#foundPath}" -eq 0 ];then
+		# this is catastrophic so overwrite it with the default path
+		buildDefault="yes"
+	fi
+	# if the default does not exist create it and set the config
+	if echo "$buildDefault" | grep -q "yes";then
+		mkdir -p "$defaultPath"
+		chown -R www-data:www-data "$defaultPath"
+		echo "$defaultPath" > "$pathToConfig"
+		foundPath="$defaultPath"
 	fi
 	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
+	if [ "$(echo "$foundPath" | rev | cut -b 1)" == "/" ];then
 		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
+		foundPath="$(echo "$foundPath" | rev | cut -b 2- | rev )"
 	fi
-	echo "$webDirectory"
+	# output the found path
+	echo "$foundPath"
+}
+########################################################################
+function webRoot(){
+	readPathConfig "/etc/2web/web.cfg" "/var/cache/2web/web_cache/"
+}
+########################################################################
+function generatedRoot(){
+	readPathConfig "/etc/2web/generated.cfg" "/var/cache/2web/generated_cache/"
 }
 ########################################################################
 function downloadRoot(){
-	# the webdirectory is a cache where the generated website is stored
-	if [ -f /etc/2web/download.cfg ];then
-		webDirectory=$(cat /etc/2web/download.cfg)
-	else
-		chown -R www-data:www-data "/var/cache/2web/downloads_cache/"
-		echo "/var/cache/2web/downloads_cache/" > /etc/2web/download.cfg
-		webDirectory="/var/cache/2web/downloads_cache/"
-	fi
-	# check for a trailing slash appended to the path
-	if [ "$(echo "$webDirectory" | rev | cut -b 1)" == "/" ];then
-		# rip the last byte off the string and return the correct path, WITHOUT THE TRAILING SLASH
-		webDirectory="$(echo "$webDirectory" | rev | cut -b 2- | rev )"
-	fi
-	echo "$webDirectory"
+	readPathConfig "/etc/2web/download.cfg" "/var/cache/2web/downloads_cache/"
 }
 ########################################################################
 function checkFileDataSum(){
@@ -531,6 +540,8 @@ function lockProc(){
 		ALERT "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
 		touch "$webDirectory/${procName}.active"
+		# the activegraph file will be removed when the graph is updated
+		# - this detects when  a module runs but is finished before the graph is updated
 		touch "$webDirectory/${procName}.activeGraph"
 		ALERT "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
