@@ -438,7 +438,7 @@ function processRepo(){
 			if echo "$@" | grep -q -e "--parallel";then
 				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+				timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
@@ -450,7 +450,7 @@ function processRepo(){
 				waitQueue 0.5 "$totalCPUS"
 			else
 				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
-				timeout 120 git diff "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
+				timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
