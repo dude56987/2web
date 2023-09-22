@@ -158,7 +158,9 @@ foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..
 	$discoveredPromptData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
 	$discoveredPrompt=True;
 }
-
+# add the toolbox to the top of the page
+include("/usr/share/2web/templates/ai_toolbox.php");
+#
 if ($discoveredPrompt){
 	echo "<div class='titleCard'>\n";
 	echo "	<h1>What Can Text <sup>a</sup>I Do?</h1>\n";
@@ -199,15 +201,21 @@ if ($discoveredPrompt){
 
 	echo "<form method='post'>\n";
 
+	echo "<span title='What Large Language Model would you like to use to generate anwsers to your prompt?'>";
 	echo "<span class='groupedMenuItem'>\n";
 	echo " LLM:\n";
-	echo "<select name='model'>\n";
+
+	echo "<select name='model' class='dropBox'>\n";
 	echo $discoveredPromptData;
 	echo "</select>\n";
+
+	echo "</span>\n";
 	echo "</span>\n";
 
+	echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
 	echo "<span class='groupedMenuItem'>\n";
-	echo "Versions: <input class='' type='number' min='1' max='100' value='1' name='versions' placeholder='Number of versions to draw'>";
+	echo "Versions: <input class='numberBox' type='number' min='1' max='20' value='1' name='versions' placeholder='Number of versions to draw'>";
+	echo "</span>\n";
 	echo "</span>\n";
 
 	#echo "<span class='groupedMenuItem'>\n";
@@ -217,15 +225,20 @@ if ($discoveredPrompt){
 	#echo "<span class='groupedMenuItem'>\n";
 	#echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
 	#echo "</span>\n";
+	echo "<span title='Hide the prompt output from the public indexes. Anyone can still access it with a direct link though.'>";
+	echo "<span class='groupedMenuItem'>🥸 Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
+	echo "</span>";
 
-	echo "<span class='groupedMenuItem'> 🥸<span class='footerText'> Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
-
+	echo "<span title='Do not touch bugs! This is only for developers.'>";
 	echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
+	echo "</span>";
 
 	echo "</div>\n";
+	echo "</span>";
 
-	echo "<textarea class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
-	echo "<button class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
+	echo "<textarea title='Input the prompt text here.' class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
+	echo "<button title='Submit the prompt to generate responses.' class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
+
 	echo "</form>\n";
 	echo "</div>\n";
 

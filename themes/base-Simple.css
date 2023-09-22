@@ -19,6 +19,7 @@
 */
 html{
 	height: 100%;
+	font-variant-emoji: unicode;
 }
 ::selection{
 	color: var(--highlightText);
@@ -701,14 +702,26 @@ ol{
 		background-color: black;
 	}
 }
+/*
 input{
 	font-size: 1rem;
-	/*
-	width: 98%;
-	*/
+}
+*/
+.dropBox{
+	height: 2rem;
+	vertical-align: middle;
+	font-size: 1.5rem;
+}
+.numberBox{
+	height: 2rem;
+	vertical-align: middle;
+	font-size: 1.5rem;
+	width: 6rem;
 }
 .checkbox{
-	width: auto;
+	width: 2rem;
+	height: 2rem;
+	vertical-align: middle;
 }
 .inputBox form .button{
 	width: 45%;
@@ -895,6 +908,14 @@ a:visited {
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
+	.dropBox{
+		display: block;
+		width: 100%;
+	}
+	.numberBox{
+		display: block;
+		width: 100%;
+	}
 	.graphLink{
 		width: 100% !important;
 	}
@@ -1538,6 +1559,7 @@ table{
 }
 .textList{
 	vertical-align: middle;
+	text-decoration: none;
 }
 pre{
 	text-align: left;
@@ -2086,4 +2108,8 @@ details{
 }
 .portalPreviewContainer{
 	display: inline-block;
+}
+.aiIcon{
+	font-size: 6rem;
+	line-height: 8rem;
 }

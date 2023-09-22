@@ -222,8 +222,8 @@ elif "--temp" in sys.argv:
 	# set the temp manually must be in form of 1.0
 	temperature = float(sys.argv[(sys.argv.index("--temp")+1)])
 else:
-	# choose a anwser that has greater than 70% probability of being correct by default
-	temperature = 0.7
+	# set the temperature to almost deterministic
+	temperature = 0.1
 
 if "--versions" in sys.argv:
 	versions = int(sys.argv[(sys.argv.index("--versions")+1)])
@@ -234,19 +234,9 @@ versionNumber = 1
 tempVersionNumber = "001"
 # replace spaces with underscores
 tempPromptText = question
-baseFileTitle = tempPromptText.replace(" ", "_")
-
-if len(baseFileTitle) > 100:
-	# if the file title is to long replace it with a hash sum of the input prompt
-	baseFileTitle = hashlib.md5((baseFileTitle).encode('utf-8')).hexdigest()
-
-if "--output-dir" in sys.argv:
-	fileTitle = os.path.join(outputDir, (baseFileTitle + "_v" + str(tempVersionNumber)))
-else:
-	fileTitle = baseFileTitle + "_v" + str(tempVersionNumber)
 
 failures = 0
-max_failures = versions * 10
+max_failures = versions * 100
 
 if "--output-dir" in sys.argv:
 	# rewrite the started time for each new created prompt
@@ -261,29 +251,18 @@ while versions > 0:
 	# list versions left in CLI
 	print("Versions Left: ", versions)
 	print("Failures : ", failures)
-	if "--output-dir" in sys.argv:
-		print(fileTitle)
-		# figure out the name and version
-		while os.path.exists(fileTitle+".txt"):
-			if versionNumber < 10:
-				tempVersionNumber = "00"+str(versionNumber)
-			elif versionNumber < 100:
-				tempVersionNumber = "0"+str(versionNumber)
-			fileTitle = os.path.join(outputDir, (baseFileTitle+"_v"+str(tempVersionNumber)))
-			versionNumber += 1
-			print("File Title with outputDir: "+fileTitle)
-	else:
-		print(fileTitle)
-		while os.path.exists(fileTitle+".txt"):
-			if versionNumber < 10:
-				tempVersionNumber = "00"+str(versionNumber)
-			elif versionNumber < 100:
-				tempVersionNumber = "0"+str(versionNumber)
-			fileTitle = baseFileTitle+"_v"+str(tempVersionNumber)
-			versionNumber += 1
-			print("File Title: "+fileTitle)
+	print("Current Temp: ", temperature)
 	# generate the anwser
 	anwser = gptj.generate(prompt=question, max_tokens=7000, repeat_penalty=1.18, temp=temperature )
+
+	anwserSum = hashlib.md5((anwser).encode('utf-8')).hexdigest()
+
+	if "--output-dir" in sys.argv:
+		fileTitle = os.path.join(outputDir, (anwserSum))
+		print(fileTitle)
+	else:
+		fileTitle = anwserSum
+		print(fileTitle)
 
 	noOutputWarning  = "WARNING: No anwser could be returned by the language model to your input.\n"
 	noOutputWarning += "Please change your input in order to get a response. Some ways to fix this.\n"
@@ -297,39 +276,85 @@ while versions > 0:
 		print(anwser)
 	else:
 		print(noOutputWarning)
-	# check if the output directory has been set
-	if "--output-dir" in sys.argv:
-		# save the created image to the specified output directory
-		tempFilePath = (os.path.join(outputDir, (fileTitle+".txt")))
-		tempFailureFilePath = (os.path.join(outputDir, ("failures.cfg")))
-	else:
-		tempFilePath = (fileTitle+".txt")
-		tempFailureFilePath = ("failures.cfg")
 
-	# if the anwser is greater than zero characters long
-	# - If the response is a non response ignore it
-	if (len(anwser) > 0):
-		print("Writing file to ", tempFilePath)
-		# save the output as a cache file since one does not exist
-		fileObject = open(tempFilePath, "w")
-		fileObject.write(anwser)
-		fileObject.close()
-
-		versions -= 1
-	else:
+	# check if the anwser has already been generated
+	if os.path.exists(fileTitle+".txt"):
+		# if the anwser has been generated generate a votes file and increment it by one
+		if os.path.exists(fileTitle+".votes"):
+			# load the existing votes file and convert it to a int
+			currentVotes = file_get_contents(fileTitle+".votes")
+			if currentVotes == "":
+				currentVotes = 1
+			else:
+				# convert value in file to interger
+				currentVotes = int(currentVotes)
+			# incrent votes
+			currentVotes += 1
+			# write new tally of votes
+			file_put_contents((fileTitle+".votes"), str(currentVotes))
+		else:
+			# create a new votes file with one vote
+			file_put_contents((fileTitle+".votes"), "1")
+		# for every failure increase the temperature to generate more random anwsers
+		temperature += 0.1
+		# a vote counts as a failure to generate a new version
 		failures += 1
+	else:
+		# if the anwser is greater than zero characters long
+		# - If the response is a non response ignore it
+		if (len(anwser) > 0):
+			# remove one completed unique version
+			versions -= 1
+			#
+			print("Writing file to ", fileTitle+".txt")
+			# save the output as a cache file since one does not exist
+			fileObject = open((fileTitle+".txt"), "w")
+			fileObject.write(anwser)
+			fileObject.close()
+		else:
+			# for every failure increase the temperature to generate more random anwsers
+			temperature += 0.1
+			failures += 1
+
+	# max out the temp value at 1
+	if temperature >= 1:
+		temperature = 1.0
 
 	# if failures exceeds max_failures exit out the program
 	if failures > max_failures:
 		print("ERROR: FAILED OUT OF PROCESSING, more than ", max_failures, " failures to anwser prompt!")
 		break
+# increment the finished versions
+if "--output-dir" in sys.argv:
+	finishedPath = os.path.join(outputDir, "finished.cfg")
+else:
+	finishedPath = "finished.cfg"
+# set the finished number
+finished = 1
+# look for existing file
+if os.path.exists(finishedPath):
+	fileData = file_get_contents(finishedPath)
+	try:
+		fileData = int(fileData)
+		# combine the new finished to the old ones
+		finished += fileData
+	except:
+		# somehow everything failed
+		print("finished = ", finished)
+# write the finished count to a file
+file_put_contents(finishedPath, str(finished))
 
 # store failures of the prompt
 if failures > 0:
 	fileData = ""
+	#
+	if "--output-dir" in sys.argv:
+		failurePath = os.path.join(outputDir, "failures.cfg")
+	else:
+		failurePath = "failures.cfg"
 	# look for existing file
-	if os.path.exists(tempFailureFilePath):
-		fileData = file_get_contents(tempFailureFilePath)
+	if os.path.exists(failurePath):
+		fileData = file_get_contents(failurePath)
 		try:
 			fileData = int(fileData)
 			# combine the new failures to the old ones
@@ -338,6 +363,6 @@ if failures > 0:
 			# somehow everything failed
 			print("Failures = ", failures)
 	# write the failures to a file
-	file_put_contents(tempFailureFilePath, str(failures))
+	file_put_contents(failurePath, str(failures))
 
 exit()

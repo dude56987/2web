@@ -67,6 +67,9 @@ if (array_key_exists("debug",$_POST)){
 	echo "<hr>\n";
 	echo "</div>\n";
 }
+# add the toolbox to the top of the page
+include("/usr/share/2web/templates/ai_toolbox.php");
+# build the anwser header
 echo "<div class='titleCard'>\n";
 echo "<a href='".$_SERVER["REQUEST_URI"]."'>";
 echo "<h1>".file_get_contents("prompt.cfg")."</h1>";
@@ -79,8 +82,11 @@ $discoveredImageList=array_reverse($discoveredImageList);
 $discoveredFileSizes=Array();
 $totalFileSize=0;
 
+$fileSortPaths = array();
+
 foreach( $discoveredImageList as $directoryPath){
 	if (strpos($directoryPath,".txt")){
+		$fileSortPaths[$directoryPath]=filemtime($directoryPath);
 		$noDiscoveredImages=False;
 		$discoveredImages += 1;
 
@@ -93,9 +99,20 @@ foreach( $discoveredImageList as $directoryPath){
 
 	}
 }
+arsort($fileSortPaths);
+$discoveredImageList=array_keys($fileSortPaths);
+
+#$discoveredImageList=array_reverse($discoveredImageList);
+
 $totalVersions=file_get_contents("versions.cfg");
+if (file_exists("finished.cfg")){
+	$finishedVersions=file_get_contents("finished.cfg");
+}else{
+	$finishedVersions=0;
+}
+
 # if all versions have not been created
-if ($discoveredImages < $totalVersions){
+if ($finishedVersions < $totalVersions){
 	if (array_key_exists("autoRefresh",$_GET)){
 		echo "<img class='localPulse' src='/pulse.gif'>\n";
 		echo "<hr>";
@@ -104,6 +121,7 @@ if ($discoveredImages < $totalVersions){
 	}else{
 		echo "<a class='button' href='?autoRefresh'>▶️  Auto Refresh</a>\n";
 	}
+	echo "	<a class='button' href='?generateMore'>⚙️ Generate More Responses</a>";
 	echo "<hr>";
 
 	$executionTime = $_SERVER['REQUEST_TIME'] - (file_get_contents("started.cfg")) ;
@@ -120,10 +138,10 @@ if ($discoveredImages < $totalVersions){
 		echo "No responses have finished rendering yet... ";
 		echo "<hr>";
 	}else{
-		$progress=floor(($discoveredImages/$totalVersions)*100);
+		$progress=floor(($finishedVersions/$totalVersions)*100);
 		echo "<div class='progressBar'>\n";
 		echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
-		echo ($discoveredImages."/".$totalVersions." %".$progress);
+		echo ($finishedVersions."/".$totalVersions." %".$progress);
 		echo "\t</div>\n";
 		echo "</div>\n";
 	}
@@ -132,7 +150,7 @@ if ($discoveredImages < $totalVersions){
 }else{
 	# if discovered versions is greater than total versions from the file
 	# overwrite the versions file with the greater number
-	file_put_contents("versions.cfg","$discoveredImages");
+	file_put_contents("versions.cfg","$finishedVersions");
 }
 if($discoveredImages > 0){
 	echo "<table>";
@@ -148,25 +166,70 @@ if($discoveredImages > 0){
 	echo "	</tr>";
 	echo "</table>";
 }
+$highestVotedAnwser="";
+$highestVoteValue=0;
+$allOtherAnwsers="";
+$versionNumber=count($discoveredImageList);
 foreach( $discoveredImageList as $directoryPath){
 	if (strpos($directoryPath,".txt")){
-		//echo "<a class='aiGenComment' href='#$directoryPath' >\n";
-		echo "<div class='titleCard' href='#$directoryPath' >\n";
-		echo "<h1>".$directoryPath."</h1>";
-		echo "<div>";
-		echo str_replace("\n","<br>\n",file_get_contents($directoryPath));
-		echo "</div>";
-		echo "<hr>";
+		$tempAnwserData="";
+		$tempAnwserData .= "<div class='titleCard' href='#$directoryPath' >\n";
+		if($versionNumber < 10){
+			$printVersionNumber = "00".$versionNumber;
+		}else if($versionNumber < 100){
+			$printVersionNumber = "0".$versionNumber;
+		}else{
+			$printVersionNumber = $versionNumber;
+		}
+		$tempAnwserData .= "<h1>Version ".$printVersionNumber."</h1>";
+		# incremnt the version number
+		$versionNumber -= 1;
+		#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
+		$tempAnwserData .= "<div>";
+		$fileData=file_get_contents($directoryPath);
+		if (strpos($fileData,"```") !== false){
+			$tempAnwserData .= "<pre>";
+			$tempAnwserData .= $fileData;
+			$tempAnwserData .= "</pre>";
+		}else{
+			$tempAnwserData .= str_replace("\n","<br>\n",$fileData);
+		}
+		$tempAnwserData .= "</div>";
+		# check for votes
+		$votesPath = str_replace(".txt", ".votes", $directoryPath);
+		if (file_exists($votesPath)){
+			$tempAnwserData .= "<hr>";
+			$tempAnwserVotes = file_get_contents($votesPath);
+			$tempAnwserData .= "Votes:".$tempAnwserVotes;
+		}else{
+			# if no votes exist
+			$tempAnwserVotes = 0;
+		}
+		$tempAnwserData .= "<hr>";
 		# load the discovered file size from the array
-		echo filesize_to_human($discoveredFileSizes[$directoryPath]);
-		echo "</div>\n";
-		//echo "</a>\n";
+		$tempAnwserData .= filesize_to_human($discoveredFileSizes[$directoryPath]);
+		$tempAnwserData .= "</div>\n";
+
+		# compare this to the highest voted anwser
+		if ($tempAnwserVotes > $highestVoteValue){
+			$highestVoteValue = $tempAnwserVotes;
+			# this is the new highest voted anwser set it
+			$highestVotedAnwser = $tempAnwserData;
+		}
+
+		# append the anwser to all other anwser data
+		$allOtherAnwsers .= $tempAnwserData;
 	}
 }
+# print the highest voted anwser at the top of the list
+echo $highestVotedAnwser;
+# print out the discovered anwsers
+echo $allOtherAnwsers;
+
 echo "</div>\n";
 
 $drawPrompt=False;
-if ($discoveredImages < $totalVersions){
+if ($finishedVersions < $totalVersions){
 	if (array_key_exists("autoRefresh",$_GET)){
 		// using javascript, reload the webpage every 60 seconds, time is in milliseconds
 		echo "<script>";
@@ -195,7 +258,7 @@ if ($drawPrompt){
 	echo file_get_contents("command.cfg");
 	echo "</pre>";
 	echo "<hr>";
-	echo "	<a class='button' href='?generateMore'>Generate More Responses</a>";
+	echo "	<a class='button' href='?generateMore'>⚙️ Generate More Responses</a>";
 	echo "<hr>";
 	echo "</div>";
 }
