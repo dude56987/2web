@@ -865,7 +865,7 @@ function checkDirSum(){
 	fi
 }
 ########################################################################
-setDirSum(){
+function setDirSum(){
 	# for use with checkdir sum, to update a sum as finished
 	webDirectory=$1
 	directory=$2
@@ -880,7 +880,7 @@ setDirSum(){
 
 }
 ########################################################################
-downloadThumbnail(){
+function downloadThumbnail(){
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
@@ -902,18 +902,19 @@ downloadThumbnail(){
 	fi
 }
 ########################################################################
-popPath(){
+function popPath(){
 	# pop the path name from the end of a absolute path
 	# e.g. popPath "/path/to/your/file/test.jpg" gives you "test.jpg"
 	echo "$1" | rev | cut -d'/' -f1 | rev
 }
 ########################################################################
-sqliteEscape(){
+function sqliteEscape(){
 	printf -v var "%q" "$1"
 	echo "$var"
 }
 ########################################################################
 function addToLog(){
+	# add a entry to the 2web log system
 	errorType=$1
 	errorDescription=$2
 	errorDetails=$3
@@ -932,7 +933,8 @@ function addToLog(){
 	#logDescription=$(echo -e "$errorDescription" | php -R 'echo addslashes($argn);')
 	#logDescription=$(echo -e "$errorDescription" | txt2html --extract --link_only)
 	#logDescription=$(echo -e "$errorDescription" | tr --delete "[:punct:]" | tr --delete "[:digit:]" )
-	logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
+	#logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
+	logDescription=$(echo -e "$errorDescription" | txt2html --extract --link_only | sed "s/'/''/g" )
 	#logDetails=$(echo -e "$errorDetails" | txt2html --extract | recode TXT..HTML )
 	#logDetails=$(echo -e "$errorDetails" | txt2html --extract)
 	#logDetails=$(echo -e "$errorDetails")
@@ -941,7 +943,8 @@ function addToLog(){
 	#logDetails=$(echo -e "$errorDetails" | php -R 'echo addslashes($argn);')
 	#logDetails=$(echo -e "$errorDetails" | txt2html --extract --link_only)
 	#logDetails=$(echo -e "$errorDetails" | tr --delete "[:punct:]" |  tr --delete "[:digit:]" )
-	logDetails=$(echo -e "$errorDetails" | sed "s/'/''/g" )
+	#logDetails=$(echo -e "$errorDetails" | sed "s/'/''/g" )
+	logDetails=$(echo -e "$errorDetails" | txt2html --extract --link_only | sed "s/'/''/g" )
 
 	# set the log database path
 	indexPath="/var/cache/2web/web/log/log.db"
@@ -958,7 +961,18 @@ function addToLog(){
 	fi
 	# if the data is already stored in the database
 	#sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
-	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType',quote('$logDescription'),quote('$logDetails'),'$logDate','$logTime');"
+	#sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType',quote('$logDescription'),quote('$logDetails'),'$logDate','$logTime');"
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
+}
+########################################################################
+function cleanupLog(){
+	# max out the log at 5,000 entries so the database does not grow forever
+	indexPath="/var/cache/2web/web/log/log.db"
+	timeout=60000
+	# remove old entries in the database but keep last 5,000 entries
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "delete from log where logIdentifier not in ( select logIdentifier from log order by date desc limit 5000 );"
+	# rebuild and shrink the database file
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "vacuum;"
 }
 ########################################################################
 function yesNoCfgCheck(){

@@ -308,9 +308,11 @@ function update2web(){
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(webRoot)"
 	downloadDirectory="$(downloadRoot)"
+	generatedDirectory="$(generatedRoot)"
 
 	createDir "$webDirectory"
 	createDir "$downloadDirectory"
+	createDir "$generatedDirectory"
 	createDir "/etc/2web/mod_status/"
 
 	INFO "Building web directory at '$webDirectory'"
@@ -319,6 +321,8 @@ function update2web(){
 	ln -sfn "$webDirectory" "/var/cache/2web/web"
 	# link the user setable download directory cache
 	ln -sfn "$downloadDirectory" "/var/cache/2web/downloads"
+	# link the user setable generated directory cache
+	ln -sfn "$generatedDirectory" "/var/cache/2web/generated"
 
 	if returnModStatus "graph2web";then
 		# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
@@ -490,8 +494,8 @@ function update2web(){
 	################################################################################
 	# copy over the favicon
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
-	rebuildFavIcon="no"
 	# only build a new .ico file if the source favicon.png has changed in contents
+	rebuildFavIcon="no"
 	if ! test -f "$webDirectory/favicon.ico";then
 		rebuildFavIcon="yes"
 	elif checkFileDataSum "$webDirectory" "$webDirectory/favicon.png";then
@@ -653,6 +657,14 @@ function update2web(){
 	# link the fonts, only two are enabled by default, these fonts are for accessibility
 	linkFile "/usr/share/fonts/truetype/hermit/Hermit-medium.otf" "$webDirectory/fonts/"
 	linkFile "/usr/share/fonts/opentype/opendyslexic/OpenDyslexic-Regular.otf" "$webDirectory/fonts/"
+
+	# cleanup tail of log database only once a day
+	if cacheCheck "$webDirectory/log/cleanup.index" "1";then
+		cleanupLog
+		# update the time on the file to lock it out for another 24 hours
+		touch "$webDirectory/log/cleanup.index"
+	fi
+
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
 }
@@ -800,6 +812,9 @@ function verifyDatabasePaths(){
 			fi
 		done
 	done
+	# cleanup and rebuild the database
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "vacuum;"
+	# reset IFS
 	IFS=$IFSBACKUP
 }
 ################################################################################
