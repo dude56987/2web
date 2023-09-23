@@ -1435,13 +1435,13 @@ function resetCache(){
 function nuke(){
 	webDirectory="$(webRoot)"
 	downloadDirectory="$(downloadDir)"
+	generatedDirectory="$(generatedDir)"
+	# remove generated documents to prevent adding cached generated versions of removed files after nuke
+	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
 	# delete intermediate conversion directories
-	rm -rv "$downloadDirectory/pdf2comic/" || INFO "No path to remove at '$downloadDirectory/pdf2comic/'"
-	rm -rv "$downloadDirectory/txt2comic/" || INFO "No path to remove at '$downloadDirectory/txt2comic/'"
-	rm -rv "$downloadDirectory/epub2comic/" || INFO "No path to remove at '$downloadDirectory/epub2comic/'"
-	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
-	rm -rv "$downloadDirectory/markdown2comic/" || INFO "No path to remove at '$downloadDirectory/markdown2comic/'"
-	rm -rv "$downloadDirectory/html2comic/" || INFO "No path to remove at '$downloadDirectory/html2comic/'"
+	for location in $locations;do
+		rm -rv "$generatedDirectory$location/" || INFO "No path to remove at '$generatedDirectory$location/'"
+	done
 	# remove new and random indexes
 	rm -rv "$webDirectory/new/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
 	rm -rv "$webDirectory/random/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
