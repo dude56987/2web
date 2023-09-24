@@ -998,6 +998,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "<p>You can use !bang commands to redirect the search bar to other services. For a list of available !bang commands type !help into the search or click <a href='/search.php?q=!help'>here</a>.</p>";
 
 	echo "</div>";
+	drawPosterWidget("portal", True);
 }
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
