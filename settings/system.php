@@ -217,6 +217,38 @@ include("settingsHeader.php");
 	</form>
 </div>
 
+<div id='additionalDictionaryResults' class='inputCard'>
+	<h2>Additional dictionary results</h2>
+	<p>
+		You can install the below packages in order to expand the local dictionary results in search.
+	</p>
+	<ul>
+		<li>
+			dict-freedict-eng-lat
+		</li>
+		<li>
+			dict-gcide
+		</li>
+		<li>
+			dict-devil
+		</li>
+		<li>
+			dict-jargon
+		</li>
+		<li>
+			dict-vera
+		</li>
+		<li>
+			dict-wn
+		</li>
+		<li>
+			dict-foldoc
+		</li>
+		<li>
+			dict-elements
+		</li>
+	</ul>
+</div>
 
 <div id='channelCacheUpdateDelay' class='inputCard'>
 <h2>2web Website Cache Path</h2>
