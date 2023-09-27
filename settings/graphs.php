@@ -39,7 +39,6 @@ include("/usr/share/2web/2webLib.php");
 		<li><a href='#graph2webStatus'>Enable or Disable Graphs</a></li>
 		<li><a href='#vnstat'>Vnstat</a></li>
 		<li><a href='#munin'>Munin</a></li>
-		<li><a href='#smokeping'>Smokeping</a></li>
 	</ul>
 </div>
 <div id='vnstat' class='inputCard'>
@@ -58,27 +57,6 @@ include("/usr/share/2web/2webLib.php");
 		<li>Graphs are added from vnstat via vnstati package
 			<ul>
 				<li>If vnstat and vnstati package is installed these graphs will be automatically generated.</li>
-			</ul>
-		</li>
-	</ul>
-</div>
-<div id='smokeping' class='inputCard'>
-	<h2>Smokeping</h2>
-	<ul>
-		<li>
-			<?PHP
-			if(file_exists("/usr/sbin/smokeping")){
-				echo "<span class='enabledSetting'>Smokeping Enabled</span>";
-			}else{
-				echo "<span class='disabledSetting'>Smokeping Disabled</span> ";
-				echo "Install the smokeping package in order to include graphs.";
-			}
-			?>
-		</li>
-		<li>Graphs are added from smokeping
-			<ul>
-				<li>Smokeping targets can be added in the smokeping config file</li>
-				<li>/etc/smokeping/config.d/Targets</li>
 			</ul>
 		</li>
 	</ul>
