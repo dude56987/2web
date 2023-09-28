@@ -86,6 +86,46 @@ function buildDiffGraph(){
 	graphData=""
 	graphWidth=$(($timeLength * $barWidth ))
 	emptyGraph="yes"
+	graphScale=0
+	largestValue=0
+
+	for index in $( seq $timeLength );do
+		# get commits within a time frame
+		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
+		printAddedLines=0
+		printRemovedLines=0
+
+		for commitName in $commits;do
+			tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
+			tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
+			#ALERT "$index | Checking the values for the largest value '$tempAddedLines'+/'$tempRemovedLines'- current=$largestValue"
+			# add the commits diff values to the values used to generate the graph
+			printAddedLines=$(( printAddedLines + tempAddedLines ))
+			printRemovedLines=$(( printRemovedLines + tempRemovedLines ))
+		done
+
+		if [ $(( printRemovedLines )) -gt $largestValue ];then
+			#ALERT "The removed lines '$printRemovedLines' are larger than the largest value '$largestValue'"
+			largestValue=$(( printRemovedLines ))
+		fi
+		if [ $(( printAddedLines )) -gt $largestValue ];then
+			#ALERT "The added lines '$printAddedLines' are larger than the largest value '$largestValue'"
+			largestValue=$(( printAddedLines ))
+		fi
+	done
+	#echo "largest value = $largestValue"
+	# generate the graph scale for a specific pixel height graph
+	graphHeight=800
+
+	if [[ $largestValue -lt $graphHeight ]];then
+		# if the greatest value is less than the set height then the scale should be one
+		graphScale=1
+	else
+		#graphScale=$( bc -l <<< "$graphHeight / $largestValue" )
+		graphScale=$( bc -l <<< "$largestValue / ($graphHeight - $textGap)" )
+		graphScale=$( echo "$graphScale" | sed "s/^\./0./g" )
+	fi
+
 	for index in $( seq $timeLength );do
 		# get commits within a time frame
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
@@ -94,9 +134,6 @@ function buildDiffGraph(){
 		# read each of those commit diffs to build the added and removed lines numbers
 		for commitName in $commits;do
 			# get the numbers
-			#tempAddedLines=$(git diff -U0 "$commitName" | grep "^+" | wc -l)
-			#tempRemovedLines=$(git diff -U0 "$commitName" | grep "^-" | wc -l)
-
 			tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
 			tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
 
@@ -116,39 +153,37 @@ function buildDiffGraph(){
 			# mark the graph as not empty if any commits are found in the graph
 			emptyGraph="no"
 		fi
-
+		#echo "graphscale = $graphScale"
+		#echo "largest value = $largestValue"
 		# adjust the height based on the modifier
-		removedLines=$(( removedLines / modifier ))
-		addedLines=$(( addedLines / modifier ))
+		#echo "removedLines / graphScale"
+		#echo "$removedLines / $graphScale"
+		removedLines=$( bc -l <<< "$removedLines / $graphScale" )
+		removedLines=$( echo "$removedLines" | sed "s/^\./0./g" )
+		#ALERT "Removed Lines = $removedLines"
+		#echo "addedLines / graphScale"
+		#echo "$addedLines / $graphScale"
+		addedLines=$( bc -l <<< "$addedLines / $graphScale" )
+		addedLines=$( echo "$addedLines" | sed "s/^\./0./g" )
+		#ALERT "Added Lines = $addedLines"
 
-		#if [ $(( ( ( removedLines + addedLines ) ) + barWidth + textGap )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( removedLines + addedLines ) ) + barWidth + textGap ))
+		#if [[ $( echo "$addedLines" | sed "s/^\./0./g" | cut -d'.' -f1 ) -gt 800 ]];then
+		#	ALERT "A error has occured added lines scaled incorrectly..."
+		#	exit
 		#fi
-
-		#if [ $(( ( ( removedLines ) * barWidth ) + barWidth + textGap )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( removedLines ) * barWidth ) + barWidth + textGap ))
+		#if [[ $( echo "$removedLines" | sed "s/^\./0./g" | cut -d'.' -f1 ) -gt 800 ]];then
+		#	ALERT "A error has occured removed lines has scaled incorrectly..."
+		#	exit
 		#fi
-		#if [ $(( ( ( addedLines ) * barWidth ) + barWidth + textGap )) -gt $graphHeight ];then
-		#	graphHeight=$(( ( ( addedLines ) * barWidth ) + barWidth + textGap ))
-		#fi
-
-		if [ $(( ( ( removedLines ) ) + textGap )) -gt $graphHeight ];then
-			graphHeight=$(( ( ( removedLines ) ) + textGap ))
-		fi
-		if [ $(( ( ( addedLines ) ) + textGap )) -gt $graphHeight ];then
-			graphHeight=$(( ( ( addedLines ) ) + textGap ))
-		fi
 
 		#ALERT "Removed Lines: $removedLines"
 		#ALERT "Added Lines: $addedLines"
 		graphX=$(( ( $index * $barWidth ) - $barWidth ))
 		# draw the base bar
-		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 1 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( addedLines ))\" style=\"fill:green;stroke:gray;stroke-width:1\" />"
-		#graphData="$graphData<rect x=\"$(( graphX + ( ( barWidth / 4 ) * 1 ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines + addedLines ))\" style=\"fill:gray;stroke:gray;stroke-width:1\" />"
-		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 3 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$(( removedLines ))\" style=\"fill:red;stroke:gray;stroke-width:1\" />"
+		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 1 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$addedLines\" style=\"fill:green;stroke:gray;stroke-width:1\" />"
+		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 3 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$removedLines\" style=\"fill:red;stroke:gray;stroke-width:1\" />"
 
 		# draw text number of changed lines
-		#graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"$textGap\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),$textGap)\" style=\"fill:black;stroke:white;\" >$(( addedLines + removedLines ))</text>"
 		graphData="$graphData<text x=\"$(( graphX + barWidth ))\" y=\"$textGap\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( graphX + barWidth )),$textGap)\" style=\"fill:black;stroke:white;\" >$(( orignalAddedLines + orignalRemovedLines ))</text>"
 	done
 	{
@@ -234,6 +269,7 @@ function buildCommitGraph(){
 }
 ################################################################################
 function update(){
+	addToLog "INFO" "STARTED Update" "$(date)"
 	#DEBUG
 	#set -x
 	# this will launch a processing queue that downloads updates to repos
@@ -267,6 +303,7 @@ function update(){
 		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
 		# create the repo directory, limit new repo pulls to once per day
 		if cacheCheck "$webDirectory/sums/git2web_download_$repoSum.cfg" "1";then
+			addToLog "DOWNLOAD" "Clone remote repo" "$repoSource"
 			# clone and update remote git repositories on the server
 			git -C "$downloadDirectory/" clone "$repoSource"
 			# update a existing repo
@@ -280,6 +317,7 @@ function update(){
 		if cacheCheck "$webDirectory/sums/git2web_pull_$repoSum.cfg" "1";then
 			if test -d "$repoSource/source/.git/";then
 				ALERT "Found Repo at $repoSource"
+				addToLog "DOWNLOAD" "Pull updates to repo" "$repoSource"
 				# launch as www-data so git will not throw security errors
 				su www-data git -C "$repoSource/source/" pull
 			fi
@@ -297,6 +335,8 @@ function update(){
 		tempList=$(cat "$webDirectory/new/repos.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/repos.index"
 	fi
+	#
+	addToLog "INFO" "Update FINISHED" "$(date)"
 }
 ################################################################################
 function generateZip(){
@@ -328,6 +368,7 @@ function processRepo(){
 		ALERT "This is a valid repo '$repoSource'"
 	else
 		ALERT "Invalid repo '$repoSource'"
+		addToLog "ERROR" "Invalid Repo" "$repoSource"
 		return
 	fi
 
@@ -335,6 +376,7 @@ function processRepo(){
 		INFO "$repoName : Pull updates to git repo..."
 		# pull updates to existing repo
 		git -C "$webDirectory/repos/$repoName/source/" pull
+		#addToLog "DOWNLOAD" "Pull updates to repo" "$repoName"
 	else
 		INFO "$repoName : Creating a clone of the repo..."
 		# add as a safe directory for service to be able to update in above git pull
@@ -358,6 +400,7 @@ function processRepo(){
 	if [ "$repoStatusSum" == "$oldRepoStatusSum" ];then
 		ALERT "The Repo $repoName has not changed and will not be updated..."
 	else
+		addToLog "UPDATE" "New Repo Changes" "'$repoName' Commits have Changed, Updating all repo information and generated content."
 		ALERT "The Repo $repoName has changed and will be updated..."
 		# set ownership to root of the source code directory, in order to avoid git security errors in metadata generation
 		chown -R root:www-data "$webDirectory/repos/$repoName/source/"
@@ -438,7 +481,7 @@ function processRepo(){
 			if echo "$@" | grep -q -e "--parallel";then
 				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
@@ -450,7 +493,7 @@ function processRepo(){
 				waitQueue 0.5 "$totalCPUS"
 			else
 				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
-				timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
+				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
@@ -710,8 +753,8 @@ function processRepo(){
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "all"
 
 		#
-		SQLaddToIndex "$webDirectory/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "all_fanart"
-		SQLaddToIndex "$webDirectory/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "repos_fanart"
+		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "all_fanart"
+		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "repos_fanart"
 
 		#
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
@@ -724,6 +767,7 @@ function processRepo(){
 }
 ################################################################################
 webUpdate(){
+	addToLog "INFO" "STARTED Webgen" "$(date)"
 	# read the download directory and convert repos into webpages
 	# - There are 2 types of directory structures for repos in the download directory
 	#   + gitWebsite/gitName/chapter/image.png
@@ -804,6 +848,8 @@ webUpdate(){
 
 	# the random index simply uses the main index for repos
 	linkFile "$webDirectory/repos/repos.index" "$webDirectory/random/repos.index"
+	#
+	addToLog "INFO" "Webgen FINISHED" "$(date)"
 }
 ################################################################################
 function resetCache(){
@@ -835,7 +881,8 @@ function nuke(){
 	rm -rv $webDirectory/random/repos.index
 	rm -rv $webDirectory/sums/git2web_*.cfg || echo "No file sums found..."
 	# remove sql data
-	sqlite3 $webDirectory/data.db "drop table repos;"
+	sqlite3 $webDirectory/data.db "drop table _repos;"
+	sqlite3 $webDirectory/data.db "drop table _repos_fanart;"
 	# remove widgets cached
 	rm -v $webDirectory/web_cache/widget_random_repos.index
 	rm -v $webDirectory/web_cache/widget_new_repos.index
