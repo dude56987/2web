@@ -115,7 +115,7 @@ function buildDiffGraph(){
 	done
 	#echo "largest value = $largestValue"
 	# generate the graph scale for a specific pixel height graph
-	graphHeight=800
+	graphHeight=600
 
 	if [[ $largestValue -lt $graphHeight ]];then
 		# if the greatest value is less than the set height then the scale should be one
@@ -153,31 +153,13 @@ function buildDiffGraph(){
 			# mark the graph as not empty if any commits are found in the graph
 			emptyGraph="no"
 		fi
-		#echo "graphscale = $graphScale"
-		#echo "largest value = $largestValue"
 		# adjust the height based on the modifier
-		#echo "removedLines / graphScale"
-		#echo "$removedLines / $graphScale"
 		removedLines=$( bc -l <<< "$removedLines / $graphScale" )
 		removedLines=$( echo "$removedLines" | sed "s/^\./0./g" )
-		#ALERT "Removed Lines = $removedLines"
-		#echo "addedLines / graphScale"
-		#echo "$addedLines / $graphScale"
+
 		addedLines=$( bc -l <<< "$addedLines / $graphScale" )
 		addedLines=$( echo "$addedLines" | sed "s/^\./0./g" )
-		#ALERT "Added Lines = $addedLines"
 
-		#if [[ $( echo "$addedLines" | sed "s/^\./0./g" | cut -d'.' -f1 ) -gt 800 ]];then
-		#	ALERT "A error has occured added lines scaled incorrectly..."
-		#	exit
-		#fi
-		#if [[ $( echo "$removedLines" | sed "s/^\./0./g" | cut -d'.' -f1 ) -gt 800 ]];then
-		#	ALERT "A error has occured removed lines has scaled incorrectly..."
-		#	exit
-		#fi
-
-		#ALERT "Removed Lines: $removedLines"
-		#ALERT "Added Lines: $addedLines"
 		graphX=$(( ( $index * $barWidth ) - $barWidth ))
 		# draw the base bar
 		graphData="$graphData<rect x=\"$(( ( graphX + ( ( barWidth / 4 ) * 1 ) ) ))\" y=\"$textGap\" width=\"$(( barWidth / 4 ))\" height=\"$addedLines\" style=\"fill:green;stroke:gray;stroke-width:1\" />"
@@ -188,20 +170,11 @@ function buildDiffGraph(){
 	done
 	{
 		echo "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 $graphWidth $graphHeight\" >"
-		#echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
-		#echo "<svg height=\"auto\" width=\"auto\">"
-		#echo "<defs>"
-		#echo '<filter id="dropShadow" x="0" y="0" width="200%" height="200%">'
-		#echo '<feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />'
-		#echo '<feGaussianBlur result="blurOut" in="offOut" stdDeviation="10" />'
-		#echo '<feBlend in="SourceGraphic" in2="blurOut" mode="normal" />'
-		#echo "</defs>"
 		echo "$graphData"
 		echo "</svg>"
 	} > "$webDirectory/repos/$repoName/$outputFilename.svg"
 
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
-	#convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 100x50 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 	convert -flip -flop -trim -background none -quality 100 "$webDirectory/repos/$repoName/$outputFilename.svg" -filter box -thumbnail 200x100 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 
 	# empty graph should be removed, when kept they look bad in the web interface and make pages without any info
@@ -220,43 +193,66 @@ function buildCommitGraph(){
 	# - build a svg graph by building a single bar for each month for the past 30 months
 	# - each commit on a day should make the bar 1px higher
 	barWidth=15
+	textGap=100
 	#graphHeight=$(( 50 + $barWidth ))
-	graphHeight=$(( 50 + $barWidth ))
+	graphHeight=$(( $textGap + $barWidth ))
 	graphData=""
 	graphWidth=$(($timeLength * $barWidth ))
 	emptyGraph="yes"
+	graphScale=1
+	largestValue=0
+	commits=0
+
+	for index in $( seq $timeLength );do
+		# get commits within a time frame
+		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | wc -l)
+		commits=$(( $commits * $barWidth ))
+
+		if [ $(( commits )) -gt $largestValue ];then
+			largestValue=$(( commits ))
+		fi
+		if [ $(( commits )) -gt $largestValue ];then
+			largestValue=$(( commits ))
+		fi
+	done
+	# generate the graph scale for a specific pixel height graph
+	graphHeight=600
+
+	if [[ $largestValue -lt $graphHeight ]];then
+		# if the greatest value is less than the set height then the scale should be one
+		graphScale=1
+	else
+		graphScale=$( bc -l <<< "$largestValue / ($graphHeight - $textGap)" )
+		graphScale=$( echo "$graphScale" | sed "s/^\./0./g" )
+	fi
+
+	commits=0
+
 	for index in $( seq $timeLength );do
 		# check the number of commits for each day
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | wc -l)
-		commits=$(( $commits ))
-		if [ $commits -gt 0 ];then
+		orignalCommits=$(( $commits ))
+		# scale up the commit graph
+		commits=$(( $commits * $barWidth ))
+		# scale the commit
+		commits=$( bc -l <<< "$commits / $graphScale" )
+		commits=$( echo "$commits" | sed "s/^\./0./g" )
+		# check for a empty graph
+		if [ $orignalCommits -gt 0 ];then
 			# mark the graph as not empty if any commits are found in the graph
 			emptyGraph="no"
 		fi
-		if [ $(( ( $commits * $barWidth ) + $barWidth + 50 )) -gt $graphHeight ];then
-			graphHeight=$(( ( $commits * $barWidth ) + $barWidth + 50 ))
-		fi
 		graphX=$(( ( $index * $barWidth ) - $barWidth ))
 		# draw the base bar
-		#graphData="$graphData<rect x=\"$graphX\" y=\"50\" width=\"$barWidth\" height=\"$(( $commits * $barWidth ))\" style=\"fill:white;stroke:gray;stroke-width:1\" filter=\"url(#dropShadow)\"/>"
-		graphData="$graphData<rect x=\"$graphX\" y=\"50\" width=\"$barWidth\" height=\"$(( $commits * $barWidth ))\" style=\"fill:white;stroke:gray;stroke-width:1\" />"
+		graphData="$graphData<rect x=\"$graphX\" y=\"$textGap\" width=\"$barWidth\" height=\"$commits\" style=\"fill:white;stroke:gray;stroke-width:1\" />"
 		# draw text number of commits above bar
-		#graphData="$graphData<text x=\"$(( $graphX + $barWidth ))\" y=\"50\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( $graphX + $barWidth )),50)\" style=\"fill:black;stroke:white;\" filter=\"url(#dropShadow)\">$commits</text>"
-		graphData="$graphData<text x=\"$(( $graphX + $barWidth ))\" y=\"50\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( $graphX + $barWidth )),50)\" style=\"fill:black;stroke:white;\" >$commits</text>"
+		graphData="$graphData<text x=\"$(( $graphX + $barWidth ))\" y=\"$textGap\" font-size=\"$barWidth\" transform=\"rotate(-90,$(( $graphX + $barWidth )),$textGap)\" style=\"fill:black;stroke:white;\" >$orignalCommits</text>"
 	done
 	{
 		echo "<svg height=\"$graphHeight\" width=\"$graphWidth\" viewbox=\"0 0 $graphWidth $graphHeight\">"
-		#echo "<svg height=\"$graphHeight\" width=\"$graphWidth\">"
-		#echo "<defs>"
-		#echo '<filter id="dropShadow" x="0" y="0" width="200%" height="200%">'
-		#echo '<feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />'
-		#echo '<feGaussianBlur result="blurOut" in="offOut" stdDeviation="10" />'
-		#echo '<feBlend in="SourceGraphic" in2="blurOut" mode="normal" />'
-		#echo "</defs>"
 		echo "$graphData"
 		echo "</svg>"
 	} > "$webDirectory/repos/$repoName/$outputFilename.svg"
-
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" "$webDirectory/repos/$repoName/$outputFilename.png"
 	convert -flip -flop -trim -background none "$webDirectory/repos/$repoName/$outputFilename.svg" -thumbnail 200x100 -unsharp 1x1 "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 
