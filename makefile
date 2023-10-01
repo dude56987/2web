@@ -112,6 +112,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/repos/;
 	mkdir -p debian/etc/2web/repos/sources.d/;
 	mkdir -p debian/etc/2web/repos/libaries.d/;
+	mkdir -p debian/etc/2web/graph/;
 	mkdir -p debian/etc/2web/iptv/;
 	mkdir -p debian/etc/2web/iptv/sources.d/;
 	mkdir -p debian/etc/2web/iptv/blockedGroups.d/;
@@ -173,6 +174,8 @@ build-deb: upgrade-hls
 	chown -R www-data:www-data debian/etc/2web/weather/*.d/
 	chown -R www-data:www-data debian/etc/2web/ai/personas/
 	chown -R www-data:www-data debian/etc/2web/ai/negative_prompts/
+	chown -R www-data:www-data debian/etc/2web/portal/
+	#chown -R www-data:www-data debian/etc/2web/ai/
 	#chown -R www-data:www-data debian/etc/2web/*.d/
 	chown -R www-data:www-data debian/etc/2web/*/*.d/
 	chown -R www-data:www-data debian/etc/2web/
@@ -265,6 +268,7 @@ build-deb: upgrade-hls
 	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
 	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1.gz
 	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1.gz
+	pandoc --standalone help/man_git2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/git2web.1.gz
 	#pandoc --standalone help/man_ai2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/ai2web.1.gz
 	# build the web versions of the man pages
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
@@ -276,6 +280,7 @@ build-deb: upgrade-hls
 	pandoc help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
 	pandoc help/man_music2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/music2web.html
 	pandoc help/man_graph2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/graph2web.html
+	pandoc help/man_git2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/git2web.html
 	#pandoc help/man_ai2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/ai2web.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
@@ -287,6 +292,7 @@ build-deb: upgrade-hls
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	w3m debian/usr/share/2web/help/music2web.html > debian/usr/share/2web/help/music2web.txt
 	w3m debian/usr/share/2web/help/graph2web.html > debian/usr/share/2web/help/graph2web.txt
+	w3m debian/usr/share/2web/help/git2web.html > debian/usr/share/2web/help/git2web.txt
 	#w3m debian/usr/share/2web/help/ai2web.html > debian/usr/share/2web/help/ai2web.txt
 	# build the readme
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
