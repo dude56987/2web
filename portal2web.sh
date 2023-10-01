@@ -81,6 +81,7 @@ function generateLink(){
 	# generate qr codes for each link
 	# update the link once every 14 days
 	if cacheCheck "$webDirectory/portal/${domain}_$linkSum-web.png" "14";then
+		addToLog "DOWNLOAD" "Building portal link" "$link"
 		# build the qr code image with a transparent background
 		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}_$linkSum-qr.png" "$link"
 		# create a screenshot of the webpage link
@@ -136,6 +137,7 @@ function generateLink(){
 }
 ################################################################################
 function update(){
+	addToLog "INFO" "STARTED Update" "$(date)"
 	# this will launch a processing queue that downloads updates to portal
 	echo "Loading up sources..."
 	# check for defined sources
@@ -149,7 +151,8 @@ function update(){
 	# load sources
 	portalSources=$(grep -v "^#" /etc/2web/portal/sources.cfg)
 	portalSources=$(echo -en "$portalSources\n$(grep --invert-match --no-filename "^#" /etc/2web/portal/sources.d/*.cfg)")
-	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+	# remove empty lines and other problems in sources
+	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
 
 	# this will launch a processing queue that downloads updates to portal
 	echo "Loading up sources..."
@@ -296,6 +299,7 @@ function update(){
 		tempList=$(cat "$webDirectory/random/portal.index" | uniq | tail -n 800 )
 		echo "$tempList" > "$webDirectory/random/portal.index"
 	fi
+	addToLog "INFO" "Update FINISHED" "$(date)"
 }
 ################################################################################
 function resetCache(){
@@ -320,11 +324,7 @@ function nuke(){
 }
 ################################################################################
 function main(){
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		checkModStatus "portal2web"
-		lockProc "portal2web"
-		webUpdate $@
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "portal2web"
 		lockProc "portal2web"
 		update $@
