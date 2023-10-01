@@ -47,7 +47,7 @@
 0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel &> /dev/null
 ################################################################################
 # update graph2web
-@monthly root /usr/bin/nice -n 10 /usr/bin/wiki2web &> /dev/null
+@weekly root /usr/bin/nice -n 10 /usr/bin/wiki2web &> /dev/null
 ################################################################################
 # update graph2web
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
