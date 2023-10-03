@@ -1,3 +1,9 @@
+<?PHP
+# add the base php libary
+include("/usr/share/2web/2webLib.php");
+# verify the login before loading the page
+requireLogin();
+?>
 <!--
 ########################################################################
 # 2web view counter stats page
@@ -27,16 +33,9 @@
 <?php
 ################################################################################
 ini_set('display_errors', 1);
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 # add the header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
-?>
-
-<?php
 ################################################################################
-?>
-<?php
 if (is_dir("/var/cache/2web/web/views/")){
 	createViewsDatabase();
 	if (is_file("/var/cache/2web/web/views.db")){

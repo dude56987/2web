@@ -1,3 +1,7 @@
+<?PHP
+include("/usr/share/2web/2webLib.php");
+requireLogin();
+?>
 <!--
 ########################################################################
 # 2web update log

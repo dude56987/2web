@@ -19,11 +19,11 @@
 -->
 <?PHP
 include("/usr/share/2web/2webLib.php");
-// login must be on https
-if (! $_SERVER['HTTPS']){
-	$tempURL=str_replace("http","https",$_SERVER["HTTP_REFERER"]);
-	redirect($tempURL);
-}
+# build the redirect url after login
+$tempURL="https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"];
+#redirect($tempURL);
+# redirect to the login page with the referer back to the https version of the failed page
+redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?redirect=".$tempURL);
 // log the failed login
 // open file with append
 // add the login time, user agent string, and ip address of failed login

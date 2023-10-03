@@ -1,3 +1,8 @@
+<?PHP
+ini_set('display_errors', 1);
+include("/usr/share/2web/2webLib.php");
+requireLogin();
+?>
 <!--
 ########################################################################
 # 2web module settings
@@ -28,10 +33,8 @@
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
-ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
-include("/usr/share/2web/2webLib.php");
 ?>
 
 <div id='index' class='inputCard'>

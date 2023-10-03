@@ -1,3 +1,7 @@
+<?PHP
+include("/usr/share/2web/2webLib.php");
+requireLogin();
+?>
 <!--
 ########################################################################
 # 2web administrative API
@@ -25,7 +29,6 @@
 <body>
 
 <?php
-include("/usr/share/2web/2webLib.php");
 include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 //include('settingsHeader.php');
 ?>
@@ -207,38 +210,26 @@ cleanPostInput();
 if (array_key_exists("newUserName",$_POST)){
 	# make all chacters lowercase for password
 	$userName=strtolower($_POST['newUserName']);
-	echo "Creating new user '$userName'";
+	outputLog("Creating new user '$userName'");
 	if (array_key_exists("newUserPass",$_POST)){
 		if ( ! file_exists("/etc/2web/users/")){
 			mkdir("/etc/2web/users/");
 		}
-		$userPass=strtolower($_POST['newUserPass']);
-		# build the password
-		$passSum=md5($userPass);
-		if (array_key_exists("authType",$_POST)){
-			$authType=$_POST['authType'];
+		if (file_exists("/etc/2web/users/".$userName.".cfg")){
+			# the username has already exists
+			outputLog("The user ".$userName."username already exists!");
+			outputLog("Processing failed!");
 		}else{
-			# by default if a authType is not configured use default method
-			$authType='bcrypt';
+			# build the password hash
+			$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
+			# save the password
+			file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
 		}
-		if ($authType == "md5"){
-			shell_exec("htpasswd -cb /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
-		}else if ($authType == "bcrypt"){
-			# default bcrypt encryption for password, -C is 5 by default
-			shell_exec("htpasswd -cb -B /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
-		}else if ($authType == "bcrypt_weakest"){
-			shell_exec("htpasswd -cb -B -C 4 /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
-		}else if ($authType == "bcrypt_strongest"){
-			# strongest encryption but takes a long time to verify each page served
-			shell_exec("htpasswd -cb -B -C 17 /etc/2web/users/".($userName).".cfg '".($userName."' '".$userPass."'") );
-		}
-		//echo ( "Writing ".($userName.":".$passSum)." to ".("/etc/2web/users/".md5($userName).".cfg")."<br>" );
-		//file_put_contents( ("/etc/2web/users/".md5($userName).".cfg"), ($userName.":$".$passSum."\n") );
-
-		# create a new htaccces file
-		//file_put_contents("/var/cache/nfo2web/.htaccess","$userName:$passSum");
+	}else{
+		outputLog("No password was given for the new user!");
+		outputLog("Processing failed!");
 	}
-	outputLog("<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>");
+	echo ("<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>");
 }else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
 	outputLog("Removing user $userName from authorization list");

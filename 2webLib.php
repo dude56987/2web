@@ -1063,4 +1063,47 @@ if( ! function_exists("cleanGetInput")){
 	}
 }
 ########################################################################
+if( ! function_exists("errorBanner")){
+	/*
+	 * Draw the html error banner to show on the page to the user a error message.
+	 */
+	function errorBanner($message,$returnText=false){
+		$outputText = "<div class='errorBanner'>\n";
+		$outputText .= "<hr>\n";
+		$outputText .= $message."<br>\n";
+		$outputText .= "<hr>\n";
+		$outputText .= "</div>\n";
+		if ($returnText){
+			return $outputText;
+		}else{
+			echo $outputText;
+		}
+	}
+}
+########################################################################
+if( ! function_exists("requireLogin")){
+	/*
+	 * only load this page if the user is logged in, otherwise redirect to the login page
+	 */
+	function requireLogin(){
+		# try to load a session in the current window
+		session_start();
+		# check the user has logged in successfully
+		if (array_key_exists("admin",$_SESSION)){
+			if ($_SESSION["admin"]){
+				# draw the username at the top of the page
+				echo ("<div class='loggedInUsername'>".$_SESSION["user"]."</div>");
+				# if the user is logged in just load the page
+				return true;
+			}else{
+				# if the user is not logged in redirect to the login page
+				redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
+			}
+		}else{
+			# if the user is not logged in redirect to the login page
+			redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
+		}
+	}
+}
+########################################################################
 ?>

@@ -1,3 +1,7 @@
+<?PHP
+include("/usr/share/2web/2webLib.php");
+requireLogin();
+?>
 <!--
 ########################################################################
 # 2web graph settings
@@ -31,7 +35,6 @@
 ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
-include("/usr/share/2web/2webLib.php");
 ?>
 <div id='index' class='inputCard'>
 	<h2>Index</h2>

@@ -454,6 +454,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/settings/portal.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
+	linkFile "/usr/share/2web/settings/login.php" "$webDirectory/login.php"
 	# add the manuals page
 	linkFile "/usr/share/2web/templates/manuals.php" "$webDirectory/settings/manuals.php"
 	# help/info docs
@@ -566,34 +567,6 @@ function update2web(){
 		fi
 	done
 	################################################################################
-	# build the login users file
-	if [ $( find "/etc/2web/users/" -type f -name "*.cfg" | wc -l ) -gt 0 ];then
-		# if there are any users
-		#linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/.htaccess"
-		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/settings/.htaccess"
-		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/backups/.htaccess"
-		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/log/.htaccess"
-		linkFile "/usr/share/2web/templates/_htaccess" "$webDirectory/views/.htaccess"
-		# copy server users to administrator list
-		cat /etc/2web/users/*.cfg > "/var/cache/2web/htpasswd.cfg"
-	else
-		# if there are no users set in the cfg remove the .htaccess file
-		if test -f "$webDirectory/.htaccess";then
-			rm "$webDirectory/.htaccess"
-		fi
-		if test -f "$webDirectory/settings/.htaccess";then
-			rm "$webDirectory/settings/.htaccess"
-		fi
-		if test -f "$webDirectory/backups/.htaccess";then
-			rm "$webDirectory/backups/.htaccess"
-		fi
-		if test -f "$webDirectory/log/.htaccess";then
-			rm "$webDirectory/log/.htaccess"
-		fi
-		if test -f "$webDirectory/views/.htaccess";then
-			rm "$webDirectory/views/.htaccess"
-		fi
-	fi
 	createDir "$webDirectory/RESOLVER-CACHE/"
 
 	# update the certificates

@@ -19,16 +19,15 @@
 -->
 <?PHP
 include("/usr/share/2web/2webLib.php");
+# destroy the existing logged in session
+session_start();
+session_destroy();
+redirect("https://".$_SERVER["HTTP_HOST"]."/login.php");
 # first run logout the user, then redirect them to the homepage
-if (strpos($_SERVER['REQUEST_URI'], "settings/")){
-	# redirect after logout and strip url of login infomation
-	redirect("https://logout:logout@".$_SERVER["HTTP_HOST"]."/logout.php");
-}else{
-	redirect("http://".$_SERVER["HTTP_HOST"]."/");
-}
-# redirect to http version of page to logout, this can not be done on the settings menu
-#if ($_SERVER['HTTPS']){
-#	$tempURL=str_replace("https://","http://",$_SERVER["HTTP_REFERER"]);
-#	redirect($tempURL);
+#if (strpos($_SERVER['REQUEST_URI'], "settings/")){
+#	# redirect after logout and strip url of login infomation
+#	redirect("https://logout:logout@".$_SERVER["HTTP_HOST"]."/logout.php");
+#}else{
+#	redirect("http://".$_SERVER["HTTP_HOST"]."/");
 #}
 ?>
