@@ -1092,7 +1092,7 @@ if( ! function_exists("requireLogin")){
 		if (array_key_exists("admin",$_SESSION)){
 			if ($_SESSION["admin"]){
 				# draw the username at the top of the page
-				echo ("<div class='loggedInUsername'>".$_SESSION["user"]."</div>");
+				#echo ("<div class='loggedInUsername'>🧑‍💻 ".$_SESSION["user"]."</div>");
 				# if the user is logged in just load the page
 				return true;
 			}else{

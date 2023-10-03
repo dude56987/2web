@@ -22,12 +22,34 @@ include("/usr/share/2web/2webLib.php");
 # destroy the existing logged in session
 session_start();
 session_destroy();
-redirect("https://".$_SERVER["HTTP_HOST"]."/login.php");
-# first run logout the user, then redirect them to the homepage
-#if (strpos($_SERVER['REQUEST_URI'], "settings/")){
-#	# redirect after logout and strip url of login infomation
-#	redirect("https://logout:logout@".$_SERVER["HTTP_HOST"]."/logout.php");
-#}else{
-#	redirect("http://".$_SERVER["HTTP_HOST"]."/");
-#}
+# you are logged out
+echo "<html class='randomFanart'>";
+echo "<head>";
+echo "	<link rel='stylesheet' type='text/css' href='/style.css'>";
+echo "	<script src='/2webLib.js'></script>";
+echo "</head>";
+echo "<body>";
+include($_SERVER['DOCUMENT_ROOT']."/header.php");
+# no login is detected draw the login window
+$tempURL=$_SERVER["HTTP_REFERER"];
+echo "<div class='inputCard'>";
+echo "<h1>Logged out of ".gethostname()."</h1>";
+echo "You have been logged out!";
+echo "<hr>";
+echo "<a class='button' href='$tempURL'>Return to Last Page</a>";
+echo "<hr>";
+echo "<hr>";
+$homeURL="https://".$_SERVER["HTTP_HOST"]."/";
+echo "<a class='button' href='$homeURL'>Return to Homepage</a>";
+echo "<hr>";
+echo "<hr>";
+$loginURL="https://".$_SERVER["HTTP_HOST"]."/login.php";
+echo "<a class='button' href='$loginURL'>Log Back In</a>";
+echo "<hr>";
+echo "<hr>";
+echo "</div>";
+include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+echo "</body>";
+echo "</html>";
+#redirect("https://".$_SERVER["HTTP_HOST"]."/login.php");
 ?>

@@ -49,7 +49,6 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 	<h2>Add New System Administrator</h2>
 	<ul>
-		<li>New administrators will be added on next scheduled web update.( ~ 30 minutes max )</li>
 		<li>Add at least one administrator to lock the settings in this web interface.</li>
 		<ul>
 			<li>

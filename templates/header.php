@@ -231,48 +231,45 @@ if ($writeFile){
 // read the file that is cached
 echo file_get_contents($cacheFile);
 
-
-#if ((array_key_exists("https",$_GET)) && ($_SERVER['https'] != 0)){
-#if ((isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') ){
-#if ((array_key_exists("SERVER_PORT",$_SERVER)) && ($_SERVER['SERVER_PORT'] == 443)){
-
-if ($_SERVER['SERVER_PORT'] == 443){
-	if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI'], "log/") || strpos($_SERVER['REQUEST_URI'], "backup/")){
+# try to load a session in the current window if one does not exist
+if (session_status() != 2){
+	session_start();
+}
+# check the user has logged in successfully
+if (array_key_exists("admin",$_SESSION)){
+	if ($_SESSION["admin"]){
+		# admin settings
 		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
 		formatEcho("🛠️",3);
 		formatEcho("<span class='headerText'>",3);
 		formatEcho("SETTINGS",4);
 		formatEcho("</span>",3);
 		formatEcho("</a>",2);
-
+		# logout
 		formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
 		formatEcho("🔒",3);
 		formatEcho("<span class='headerText'>",3);
 		formatEcho("LOGOUT",4);
 		formatEcho("</span>",3);
 		formatEcho("</a>",2);
-	}else{
-		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
-		formatEcho("🔒",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("LOGIN",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
 	}
-}else if ($_SERVER['SERVER_PORT'] == 443){
-	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"]."/'>",2);
+}else if ($_SERVER['SERVER_PORT'] != 443){
+	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
 	formatEcho("🔑",3);
 	formatEcho("<span class='headerText'>",3);
 	formatEcho("ENCRYPT",4);
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }else{
-	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"]."/'>",2);
-	formatEcho("🔑",3);
-	formatEcho("<span class='headerText'>",3);
-	formatEcho("ENCRYPT",4);
-	formatEcho("</span>",3);
-	formatEcho("</a>",2);
+	# hide login button on the login page
+	if ($_SERVER["PHP_SELF"] != "/login.php"){
+		echo "<a class='button headerLoginButton' href='/settings/'>";
+		echo "🔓";
+		echo "<span class='headerText'>";
+		echo " LOGIN";
+		echo "</span>";
+		echo "</a>";
+	}
 }
 
 formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
@@ -282,16 +279,6 @@ formatEcho("Help",4);
 formatEcho("</span>",3);
 formatEcho("</a>",2);
 
-// draw the help button
-//formatEcho("<a class='button' href='/help.php'>",2);
-//formatEcho( "❔",3);
-//formatEcho("<span class='headerText'>",3);
-//formatEcho("Help",4);
-//formatEcho("</span>",3);
-//formatEcho("</a>",2);
-
-//echo "<div class='loginLogoutBoxSpacer'>";
-
 # close the header buttons class
 #formatEcho("</div>",2);
 # close the
@@ -300,15 +287,14 @@ formatEcho("</div>",1);
 formatEcho("</div>",0);
 
 formatEcho('<script>',1);
-//$fileData .= formatText('hideVisibleClass(\'headerButtons\');',2);
 formatEcho('setHeaderStartState();',2);
 formatEcho('</script>',1);
 
 # if the path is in the settings draw the logout button
-#if (strpos($_SERVER['REQUEST_URI'], "settings/")){
-if ($_SERVER['SERVER_PORT'] == 443){
-	if (strpos($_SERVER['REQUEST_URI'], "settings/") || strpos($_SERVER['REQUEST_URI'], "log/") || strpos($_SERVER['REQUEST_URI'], "backup/") || strpos($_SERVER['REQUEST_URI'], "views/")){
-		echo "<div class='loginLogoutBox'>";
+
+echo "<div class='loginLogoutBox'>";
+if (array_key_exists("admin",$_SESSION)){
+	if ($_SESSION["admin"]){
 		echo "		<a class='button' href='/settings/'>";
 		echo "			🛠️";
 		echo "			<span class='headerText'>";
@@ -323,50 +309,35 @@ if ($_SERVER['SERVER_PORT'] == 443){
 		echo "			</span>";
 		echo "		</a>";
 		// draw the help button
-		echo "	<hr>";
-		formatEcho("<a class='button' href='/help.php'>",2);
-		formatEcho( "❓",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Help",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
-		echo "</div>";
-	}else{
-		echo "<div class='loginLogoutBox'>";
-		echo "<a class='button' href='/settings/'>";
-		echo "🔓";
-		echo "<span class='headerText'>";
-		echo " LOGIN";
-		echo "</span>";
-		echo "</a>";
-		echo "	<hr>";
-		// draw the help button
-		formatEcho("<a class='button' href='/help.php'>",2);
-		formatEcho( "❓",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Help",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
-		echo "</div>";
 	}
-}else{
-	echo "<div class='loginLogoutBox'>";
+}else if ($_SERVER['SERVER_PORT'] != 443){
 	echo "<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>";
 	echo "🔑";
 	echo "<span class='headerText'>";
 	echo " ENCRYPT";
 	echo "</span>";
 	echo "</a>";
-	echo "	<hr>";
-	// draw the help button
-	formatEcho("<a class='button' href='/help.php'>",2);
-	formatEcho( "❓",3);
-	formatEcho("<span class='headerText'>",3);
-	formatEcho("Help",4);
-	formatEcho("</span>",3);
-	formatEcho("</a>",2);
-	echo "</div>";
+}else{
+	# hide login button on the login page
+	if ($_SERVER["PHP_SELF"] != "/login.php"){
+		echo "<a class='button' href='/settings/'>";
+		echo "🔓";
+		echo "<span class='headerText'>";
+		echo " LOGIN";
+		echo "</span>";
+		echo "</a>";
+	}
 }
+echo "	<hr>";
+// draw the help button
+formatEcho("<a class='button' href='/help.php'>",2);
+formatEcho( "❓",3);
+formatEcho("<span class='headerText'>",3);
+formatEcho("Help",4);
+formatEcho("</span>",3);
+formatEcho("</a>",2);
+echo "</div>";
+
 ?>
 <form class='searchBoxForm' action='/search.php' method='get'>
 	<?PHP
