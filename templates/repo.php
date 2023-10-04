@@ -148,38 +148,40 @@ function drawLint(){
 	$totalFilesScanned=0;
 	$totalReportLines=0;
 	foreach(recursiveScan("lint/") as $sourceFile){
-		if (($totalFilesScanned % 2) == 1){
-			echo "	<tr class='evenTableRow'>\n";
-		}else{
-			echo "	<tr>\n";
+		if (($sourceFile != "") && ($sourceFile != "lint/.index")){
+			if (($totalFilesScanned % 2) == 1){
+				echo "	<tr class='evenTableRow'>\n";
+			}else{
+				echo "	<tr>\n";
+			}
+			$fileName = popPath($sourceFile);
+			$fileTime = str_replace(".index","",$fileName);
+			$fileTime = "lint_time/".$fileTime.".index";
+			$fileTitle = str_replace(".index","",$fileName);
+			$fileExt = explode(".",$fileName)[1];
+			$tempLineCount=count(file($sourceFile));
+			# get the number of lines in the lint file
+			// read the index entry
+			echo "	<td><a href='?lint=$fileName'>$fileTitle</a></td>\n";
+			echo "	<td>".$tempLineCount."</td>";
+			if ($fileExt == "sh"){
+				echo "	<td>ShellScript</td>";
+			}else if ($fileExt == "js"){
+				echo "	<td>Javascript</td>";
+			}else if ($fileExt == "php"){
+				echo "	<td>PHP</td>";
+			}else if ($fileExt == "html"){
+				echo "	<td>HTML</td>";
+			}else if ($fileExt == "py"){
+				echo "	<td>Python</td>";
+			}else{
+				echo "	<td>Unknown</td>";
+			}
+			echo "	<td>".file_get_contents($fileTime)."</td>\n";
+			echo "	</tr>\n";
+			$totalReportLines += $tempLineCount;
+			$totalFilesScanned += 1;
 		}
-		$fileName = popPath($sourceFile);
-		$fileTime = str_replace(".index","",$fileName);
-		$fileTime = "lint_time/".$fileTime.".index";
-		$fileTitle = str_replace(".index","",$fileName);
-		$fileExt = explode(".",$fileName)[1];
-		$tempLineCount=count(file($sourceFile));
-		# get the number of lines in the lint file
-		// read the index entry
-		echo "	<td><a href='?lint=$fileName'>$fileTitle</a></td>\n";
-		echo "	<td>".$tempLineCount."</td>";
-		if ($fileExt == "sh"){
-			echo "	<td>ShellScript</td>";
-		}else if ($fileExt == "js"){
-			echo "	<td>Javascript</td>";
-		}else if ($fileExt == "php"){
-			echo "	<td>PHP</td>";
-		}else if ($fileExt == "html"){
-			echo "	<td>HTML</td>";
-		}else if ($fileExt == "py"){
-			echo "	<td>Python</td>";
-		}else{
-			echo "	<td>Unknown</td>";
-		}
-		echo "	<td>".file_get_contents($fileTime)."</td>\n";
-		echo "	</tr>\n";
-		$totalReportLines += $tempLineCount;
-		$totalFilesScanned += 1;
 	}
 	echo "</table>\n";
 	echo "</div>\n";
