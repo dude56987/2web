@@ -18,7 +18,43 @@
 ########################################################################
 ?>
 <hr>
+<script>
+	// setup the keys only if they have not already been set in the interface
+	if  (typeof setupKeys !== "function"){
+		// check for any listCard elements in the document
+		var elements = document.getElementsByClassName("listCard");
+		if (elements.length > 0){
+			// Make the listCard elements scrollable
+			// Add a listener to pass the key event into a function
+			function setupKeys(){
+				document.body.addEventListener('keydown', function(event){
+					const key = event.key;
+					switch (key){
+						case 'ArrowLeft':
+							// search though the document for elements with listCard class
+							var elements = document.getElementsByClassName("listCard");
+							// for each element scroll the box to the left
+							for (var element of elements){
+								element.scrollLeft -= 50;
+							}
+							break;
+						case 'ArrowRight':
+							// search though the document for elements with listCard class
+							var elements = document.getElementsByClassName("listCard");
+							for (var element of elements){
+								// for each element scroll the box to the right
+								element.scrollLeft += 50;
+							};
+							break;
+					}
+				});
+			}
+		}
+		setupKeys();
+	}
+</script>
 <?php
+
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
 # get the name of the script this script is included in
