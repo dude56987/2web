@@ -664,9 +664,9 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("removeComicDownloadLink",$_POST)){
 	removeCustomConfig("removeComicDownloadLink","/etc/2web/comics/sources.d/","comicsDL.php");
 }else if (array_key_exists("addComicLibrary",$_POST)){
-	addCustomConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comicsDL.php");
+	addCustomConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if(array_key_exists("removeComicLibrary",$_POST)){
-	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comicsDL.php");
+	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
 	outputLog("Running moveToBottom on link ".$link);
