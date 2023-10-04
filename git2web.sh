@@ -705,20 +705,28 @@ function processRepo(){
 		# build a qr code for the icon link
 		qrencode -m 1 -l H -o "/var/cache/2web/web/repos/$repoName/thumb.png" "http://$(hostname).local/repos/$repoName/" &
 		waitQueue 0.5 "$totalCPUS"
-
-		if echo "$@" | grep -q -e "--no-video";then
-			INFO "$repoName : Skip video rendering..."
+		# check if the video should be rendered
+		renderVideo="yes"
+		if yesNoCfgCheck "/etc/2web/repos/renderVideo.cfg";then
+			renderVideo="yes"
 		else
+			renderVideo="no"
+		fi
+		if echo "$@" | grep -q -e "--no-video";then
+			renderVideo="no"
+		fi
+		# render the video
+		if echo "$renderVideo" | grep -q "yes";then
 			INFO "$repoName : Rendering gource video..."
 			gource --output-custom-log "$webDirectory/repos/$repoName/GOURCE_LOG.gource" "$webDirectory/repos/$repoName/source/"
-
-			# Add repo name to the repo log
+			# Add repo name to the combined repo log
 			sed -i -r "s#(.+)\|#\1|/$repoName#" "$webDirectory/repos/$repoName/GOURCE_LOG.gource"
-
 			# build history video in 720p from the generated log
 			#xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
 			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/$repoName/GOURCE_LOG.gource" |\
 			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/$repoName/repoHistory.webm"
+		else
+			INFO "$repoName : Skip video rendering..."
 		fi
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
 		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support

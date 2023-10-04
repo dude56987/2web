@@ -731,6 +731,11 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomConfig("addRepoSource","/etc/2web/repos/sources.d/","repos.php");
 }else if(array_key_exists("removeRepoSource",$_POST)){
 	removeCustomConfig("removeRepoSource","/etc/2web/repos/sources.d/","repos.php");
+}else if (array_key_exists("repoRenderVideo",$_POST)){
+	outputLog("Render gource videos for repos ".$_POST['repoRenderVideo']);
+	yesNoCfgSet("/etc/2web/repos/renderVideo.cfg", $_POST['repoRenderVideo']);
+	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>BACK</a><hr>";
+	clear();
 }else{
 	countdown(5);
 	echo "<h1>[ERROR]:UNKNOWN COMMAND SUBMITTED TO API</h1>";
