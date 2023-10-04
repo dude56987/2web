@@ -89,6 +89,9 @@ if (array_key_exists("prompt",$_POST)){
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$_POST["versions"]);
 	}
 
+	# cleanup the prompt so it will work correctly
+	$_POST["prompt"] =	str_replace("'","",$_POST["prompt"]);
+
 	if (array_key_exists("prompt",$_POST)){
 		if ($_POST["prompt"] != "NONE"){
 			$command .= '--one-prompt "'.$_POST["prompt"].'" ';
@@ -214,7 +217,7 @@ if ($discoveredPrompt){
 
 	echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
 	echo "<span class='groupedMenuItem'>\n";
-	echo "Versions: <input class='numberBox' type='number' min='1' max='20' value='1' name='versions' placeholder='Number of versions to draw'>";
+	echo "Unique Versions: <input class='numberBox' type='number' min='1' max='5' value='1' name='versions' placeholder='Number of versions to draw'>";
 	echo "</span>\n";
 	echo "</span>\n";
 
