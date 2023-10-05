@@ -289,6 +289,18 @@ include("settingsHeader.php");
 ?>
 </div>
 
+<div id='channelCacheUpdateDelay' class='inputCard'>
+<h2>2web Generated Path</h2>
+<ul>
+	<li>
+		Only a server administrator can change this by editing /etc/2web/generated.cfg
+	</li>
+</ul>
+<?PHP
+	echo file_get_contents("/etc/2web/generated.cfg");
+?>
+</div>
+
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
