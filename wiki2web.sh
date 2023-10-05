@@ -23,6 +23,7 @@ source /var/lib/2web/common
 ################################################################################
 function update(){
 	if ! test -f /usr/bin/zimdump;then
+		ALERT "No zimdump package was found the program can not continue!"
 		# without zimdump wiki2web can not do anything so exit with error
 		return 1
 	fi
@@ -45,25 +46,16 @@ function update(){
 	# this will launch a processing queue that looks for .zim files in a server path
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! test -f /etc/2web/wiki/sources.cfg;then
+	if ! test -f /etc/2web/wiki/libraries.cfg;then
+		createDir "/etc/2web/wiki/libraries.d/"
 		# if no config exists create the default config
 		{
-			echo "################################################################################"
-			echo "# Example Config"
-			echo "################################################################################"
-			echo "# - all .zim files found in the paths added here will be extracted and added to"
-			echo "#   the server"
-			echo "# - The .zim format project website"
-			echo "#   - https://wiki.openzim.org/wiki/OpenZIM"
-			echo "# - You can download .zim files from the kiwix project"
-			echo "#   - https://library.kiwix.org/"
-			echo "################################################################################"
-			echo "/var/cache/2web/downloads/wiki/"
-		} > /etc/2web/wiki/sources.cfg
+			cat /etc/2web/config_default/wiki2web_libraries.cfg
+		} > /etc/2web/wiki/libraries.cfg
 	fi
 	# load sources
-	wikiLocations=$(grep -v "^#" /etc/2web/wiki/sources.cfg)
-	wikiLocations=$(echo -e "$wikiLocations\n$(grep -v --no-filename "^#" /etc/2web/wiki/sources.d/*.cfg)")
+	wikiLocations=$(grep -v "^#" /etc/2web/wiki/libraries.cfg)
+	wikiLocations=$(echo -e "$wikiLocations\n$(grep -v --no-filename "^#" /etc/2web/wiki/libraries.d/*.cfg)")
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -110,7 +102,7 @@ function update(){
 			break
 		done
 
-		#
+		# extract all found zim files
 		find "$wikiLocation" -type f -name '*.zim' | sort | while read zimFilePath;do
 			# if the md5sum of the wiki file has changed update it
 			#if checkFileDataSum "$zimFilePath";then

@@ -93,7 +93,7 @@ build-deb: upgrade-hls
 	#mkdir -p debian/etc/2web/search/
 	#mkdir -p debian/etc/2web/search/sources.d/
 	mkdir -p debian/etc/2web/wiki/
-	mkdir -p debian/etc/2web/wiki/sources.d/
+	mkdir -p debian/etc/2web/wiki/libraries.d/
 	mkdir -p debian/etc/2web/ytdl/
 	mkdir -p debian/etc/2web/ytdl/sources.d/
 	mkdir -p debian/etc/2web/ytdl/usernameSources.d/
@@ -145,7 +145,7 @@ build-deb: upgrade-hls
 	touch debian/etc/2web/ai/promptModels.d/.placeholder
 	touch debian/etc/2web/repos/sources.d/.placeholder
 	touch debian/etc/2web/repos/libaries.d/.placeholder
-	touch debian/etc/2web/wiki/sources.d/.placeholder
+	touch debian/etc/2web/wiki/libraries.d/.placeholder
 	touch debian/etc/2web/ytdl/sources.d/.placeholder
 	touch debian/etc/2web/ytdl/usernameSources.d/.placeholder
 	touch debian/etc/2web/iptv/.placeholder
