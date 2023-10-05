@@ -21,6 +21,19 @@ if (array_key_exists("home",$_GET)){
 		# go to the index if a home page could not be found for the wiki
 		header('Location: ?index',true);
 	}
+}else if (array_key_exists("search",$_GET)){
+	echo "";
+}else if (array_key_exists("article",$_GET)){
+	echo "";
+}else if (array_key_exists("index",$_GET)){
+	echo "";
+}else if (array_key_exists("random",$_GET)){
+	echo "";
+}else if (array_key_exists("redirect",$_GET)){
+	echo "";
+}else{
+	# go to the home page
+	header('Location: ?home',true);
 }
 ?>
 <!--
@@ -311,9 +324,6 @@ if (array_key_exists("search",$_GET)){
 		}
 		echo "</ul>";
 	}
-}else{
-	#redirect("?article=A/Main_Page/Sandbox");
-	header('Location: ?home',true);
 }
 
 echo "</div>";
