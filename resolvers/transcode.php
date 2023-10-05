@@ -59,9 +59,9 @@ if (array_key_exists("link",$_GET)){
 		debug("Reading link for transcode : '".$link."'");
 		# create the sum of the link
 		$sum=md5($link);
-		if ( ! file_exists($webServerPath."/transcode-cache/$sum.webm")){
-			if ( ! file_exists("$webServerPath/transcode-cache/")){
-				mkdir("$webServerPath/transcode-cache/");
+		if ( ! file_exists($webServerPath."/TRANSCODE-CACHE/$sum.webm")){
+			if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
+				mkdir("$webServerPath/TRANSCODE-CACHE/");
 			}
 			# cleanup html string encoding of spaces in pathnames
 			$link = str_replace("%20"," ",$link);
@@ -70,13 +70,13 @@ if (array_key_exists("link",$_GET)){
 			$link = str_replace('"',"",$link);
 			# build the command
 			//$command = "echo \" ffmpeg -i '".$webServerPath.$link."' -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 20 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'\" | at 'now'";
-			$command = "echo \"nice -n -5 ffmpeg -i '".$webServerPath."/".$link."' '".$webServerPath."/transcode-cache/$sum.webm'\" | at 'now'";
+			$command = "echo \"nice -n -5 ffmpeg -i '".$webServerPath."/".$link."' '".$webServerPath."/TRANSCODE-CACHE/$sum.webm'\" | at 'now'";
 			debug("Transcode Command : ".$command);
 			# launch the command to post job in the queue
 			shell_exec($command);
 			sleep(20);
 		}
-		redirect('transcode-cache/'.$sum.'.webm');
+		redirect('TRANSCODE-CACHE/'.$sum.'.webm');
 	}else{
 		# the transcode should not happen so directly link to the file
 		redirect($link);

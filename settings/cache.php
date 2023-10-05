@@ -165,13 +165,20 @@ include("settingsHeader.php");
 	</form>
 </div>
 
-<!-- create the theme picker based on installed themes -->
 <div id='cacheDelay' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Cache Time</h2>
-		<p>
-			Change the number of days that the cache will retain videos.
-		</p>
+		<ul>
+			<li>
+				Change the number of days that the system caches will retain videos.
+			</li>
+			<li>
+				If set to forever no cleanup will occur. This can take up a EXTREME amount of disk space!
+			</li>
+			<li>
+				The forever option should only be used for archive purposes.
+			</li>
+		<ul>
 		<select name='cacheDelay'>
 			<?php
 				// add the cache Mode as a option
@@ -182,7 +189,7 @@ include("settingsHeader.php");
 			?>
 			<option value='1'>1 Days</option>
 			<option value='3'>3 Days</option>
-			<option value='7' selected>7 Days</option>
+			<option value='7'>7 Days</option>
 			<option value='14'>14 Days</option>
 			<option value='30'>30 Days</option>
 			<option value='90'>90 Days</option>

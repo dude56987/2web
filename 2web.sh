@@ -1291,22 +1291,32 @@ main(){
 			echo "Using default cache settings..."
 			cacheDelay="14"
 		fi
-		echo "Checking cache for files older than ${cacheDelay} Days"
-		# delete files older than x days
-		echo "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
-		if test -d "$webDirectory/RESOLVER-CACHE/";then
-			find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
-		fi
-		echo "Checking for cache files in $webDirectory/M3U-CACHE/"
-		# delete the m3u cache
-		if test -d "$webDirectory/M3U-CACHE/";then
-			find "$webDirectory/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
-		fi
-		if test -d "$webDirectory/search/";then
-			find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
-		fi
-		if test -d "$webDirectory/zip_cache/";then
-			find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
+		# if the cache is not set to forever then cleanup the cache directories that exist
+		if ! echo "$cacheDelay" | grep -q "forever";then
+			# cleanup the caches
+			echo "Checking cache for files older than ${cacheDelay} Days"
+			# delete files older than x days
+			ALERT "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
+			if test -d "$webDirectory/RESOLVER-CACHE/";then
+				find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
+			fi
+			ALERT "Checking for cache files in $webDirectory/TRANSCODE-CACHE/"
+			if test -d "$webDirectory/TRANSCODE-CACHE/";then
+				find "$webDirectory/TRANSCODE-CACHE/" -type f -mtime +"$cacheDelay" -name '*.webm' -exec rm -v {} \;
+			fi
+			# delete the m3u cache
+			ALERT "Checking for cache files in $webDirectory/M3U-CACHE/"
+			if test -d "$webDirectory/M3U-CACHE/";then
+				find "$webDirectory/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
+			fi
+			ALERT "Checking for cache files in $webDirectory/search/"
+			if test -d "$webDirectory/search/";then
+				find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
+			fi
+			ALERT "Checking for cache files in $webDirectory/zip_cache/"
+			if test -d "$webDirectory/zip_cache/";then
+				find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
+			fi
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
