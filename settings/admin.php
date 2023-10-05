@@ -667,6 +667,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if(array_key_exists("removeComicLibrary",$_POST)){
 	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
+}else if (array_key_exists("addWikiPath",$_POST)){
+	addCustomConfig("addWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
+}else if(array_key_exists("removeWikiPath",$_POST)){
+	removeCustomConfig("removeWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
 }else if (array_key_exists("moveToBottom",$_POST)){
 	$link=$_POST['moveToBottom'];
 	outputLog("Running moveToBottom on link ".$link);
