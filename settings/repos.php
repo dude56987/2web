@@ -85,9 +85,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 	<h2>Add Repo Library Path</h2>
 	<ul>
-		<li>Only supports .mp3 files</li>
-		<li>Directory structure does not matter</li>
-		<li>Metadata is read from file tags</li>
+		<li>Path is scanned recursively to look for GIT repositories</li>
 	</ul>
 	<input width='60%' type='text' name='addRepoLibrary' placeholder='/absolute/path/to/the/library'>
 	<button class='button' type='submit'>Add Path</button>
