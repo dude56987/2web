@@ -1346,7 +1346,7 @@ processEpisode(){
 					tempEpisodePath=$(echo "$tempEpisodePath" | sed "s/ /%20/g")
 
 					echo "<?PHP";
-					echo "echo \"<a class='button hardLink' href='http://\".\$_SERVER['HTTP_HOST'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
+					echo "echo \"<a class='button hardLink' href='/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
 					echo "	🔁 Continue<sup>(External)</sup>"
 					echo "</a>"
@@ -1424,10 +1424,14 @@ processEpisode(){
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
 
 		#if [ "$episodeNumber" -eq 1 ];then
-		#	echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		#	echo -ne "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		#else
-		#	echo -ne "$tempEpisodeSeasonThumb" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		#	echo -ne "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 		#fi
+
+		# mark the season as updated by creating a episode season path in the web directory as a season lock file
+		# - this is used to generate a .nomedia file
+		echo -ne "$(date)" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath.index"
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index"
 
@@ -1469,13 +1473,14 @@ processShow(){
 		# a existing state was found
 		currentSum=$(cat "$webDirectory/shows/$showTitle/state_$pathSum.cfg")
 		libarySum=$(getDirSum "$show")
-		updateInfo="$showTitle\n$currentSum != $libarySum\n$(ls "$show")\n$show"
+		updateInfo="$showTitle\n<br>$currentSum != $libarySum\n<br>$(ls "$show")\n<br>$show"
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
 			# this means they are the same so no update needs run
 			# if the show is unchanged check for the time it has been unchanged for more than 7 days
 			if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
 				# create the block to lockout updates from kodi clients after 1 weeks
+				# - this should reset when the software is updated and all content will be rescanned by clients
 				echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
@@ -1616,10 +1621,26 @@ processShow(){
 			#addToLog "INFO" "Season" "$libarySeasonSum ?= $currentSeasonSum" "$logPagePath"
 			if [ "$libarySeasonSum" == "$currentSeasonSum" ];then
 				# this season folder is unchanged ignore it
+				################################################################################
+				# check if the season lock file has been updated more than 7 days ago
+				# - seasons need to be checked indivually because some shows can have thousands of episodes a year
+				# - This will only add .nomedia to seasons of active shows, shows with no new episodes will add
+				#   a .nomedia file to the entire show after 7 days
+				if cacheCheck "$webDirectory/shows/$showTitle/$seasonName.index" 7;then
+					# create the block to lockout updates from kodi clients after 1 weeks
+					# - this should reset when the software is updated and all content will be rescanned by clients
+					echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+				fi
+				################################################################################
 				#INFO "Season Unchanged $season"
 				addToLog "INFO" "Season Unchanged" "$showTitle $seasonName\n$season" "$logPagePath"
 			else
 				# update the altered season files
+				################################################################################
+				# enable kodi client updates
+				if test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
+					rm -v "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+				fi
 				################################################################################
 				addToLog "UPDATE" "Season is Updating" "$showTitle $seasonName\n$season" "$logPagePath"
 
@@ -2301,7 +2322,7 @@ function update(){
 
 	# add the end to the log, add the jump to top button and finish out the html
 	logPagePath="$webDirectory/log/$(date "+%s").log"
-	addToLog "INFO" "FINISHED" "$(date)" "$logPagePath"
+	addToLog "INFO" "FINISHED" "$(date)"
 	if test -f /usr/bin/kodi2web;then
 		# update video libaries on all kodi clients, if no video playback is detected
 		/usr/bin/kodi2web video
