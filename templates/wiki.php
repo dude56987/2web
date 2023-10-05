@@ -1,3 +1,28 @@
+<?PHP
+if (array_key_exists("home",$_GET)){
+	# try and load the home page from the /M/MainPage file
+	if(file_exists("M/MainPage")){
+		# find main page in metadata
+		$mainPagePath=file_get_contents("M/MainPage");
+		# remove newlines
+		$mainPagePath=str_replace("\n","",$mainPagePath);
+		if(is_file($mainPagePath)){
+			# redirect to the main page
+			header('Location: ?article='.$mainPagePath,true);
+		}else if(is_file($mainPagePath."/Sandbox")){
+			# redirect to the main page
+			header('Location: ?article='.$mainPagePath."/Sandbox",true);
+		}
+	}else if(is_file("A/Main_Page/Sandbox")){
+		header('Location: ?article=Main_Page/Sandbox',true);
+	}else if (is_file("A/Main_Page")){
+		header('Location: ?article=Main_Page',true);
+	}else{
+		# go to the index if a home page could not be found for the wiki
+		header('Location: ?index',true);
+	}
+}
+?>
 <!--
 ########################################################################
 # 2web wiki viewer
@@ -106,28 +131,6 @@ if (array_key_exists("search",$_GET)){
 				}
 			}
 		}
-	}
-}else if (array_key_exists("home",$_GET)){
-	# try and load the home page from the /M/MainPage file
-	if(file_exists("M/MainPage")){
-		# find main page in metadata
-		$mainPagePath=file_get_contents("M/MainPage");
-		# remove newlines
-		$mainPagePath=str_replace("\n","",$mainPagePath);
-		if(is_file($mainPagePath)){
-			# redirect to the main page
-			header('Location: ?article='.$mainPagePath,true);
-		}else if(is_file($mainPagePath."/Sandbox")){
-			# redirect to the main page
-			header('Location: ?article='.$mainPagePath."/Sandbox",true);
-		}
-	}else if(is_file("A/Main_Page/Sandbox")){
-		header('Location: ?article=Main_Page/Sandbox',true);
-	}else if (is_file("A/Main_Page")){
-		header('Location: ?article=Main_Page',true);
-	}else{
-		# go to the index if a home page could not be found for the wiki
-		header('Location: ?index',true);
 	}
 }else if (array_key_exists("index",$_GET)){
 		$foundFiles=scandir("A/");
