@@ -44,7 +44,7 @@ OPTIONS
 
 `-u, --update, update`
 
-:   Download links and scan libaries.
+:   Scan for active munin graphs and load them into the web interface.
 
 `-w, --webgen, webgen`
 
