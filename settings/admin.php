@@ -128,25 +128,22 @@ function setModStatus($modName,$modStatus){
 	outputLog("Setting $modName status to ".$modStatus);
 	# read the link and create a custom config
 	$configPath="/etc/2web/mod_status/".$modName.".cfg";
-	outputLog("Checking for Config file ".$configPath);
-	if ( $modStatus == "disabled"){
-		outputLog("Disabled $modName");
-		# this means to remove the link
-		if (file_get_contents($configPath) == "enabled"){
-			//unlink($configPath);
-			file_put_contents($configPath,$modStatus);
-		}else{
-			outputLog("$modName status is already set to ".$modStatus);
-		}
+	if ( $modStatus == "enabled"){
+		# enable the module
+		outputLog("Enabling $modName");
+		# write status to module config
+		file_put_contents($configPath,$modStatus);
+		outputLog("$modName has been set to $modStatus");
 	}else{
-		# write the libary path to a file at the configPath if the path does not already exist
-		outputLog("Enabled $modName");
-		# enable the graph section
-		if ((file_exists($configPath)) and (file_get_contents($configPath) != "enabled") ){
-			# write the config file
-			file_put_contents($configPath,$modStatus);
+		# disable the module
+		outputLog("Disabling $modName");
+		# if the file exists
+		if (file_exists($configPath)){
+			# remove the config file to disable the module
+			unlink($configPath);
+			outputLog("$modName has been set to $modStatus");
 		}else{
-			outputLog("$modName status is already set to ".$modStatus);
+			outputLog("$modName status is already $modStatus");
 		}
 	}
 }
