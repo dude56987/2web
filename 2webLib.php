@@ -103,6 +103,8 @@ if( ! function_exists("drawPosterWidget")){
 						$linkType="icon";
 					}else if ($filterType == "episodes"){
 						$linkType="episode";
+					}else if ($filterType == "portal"){
+						$linkType="episode";
 					}else{
 						$linkType="poster";
 					}
