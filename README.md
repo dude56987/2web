@@ -63,17 +63,13 @@ If you would like to purge config files generated use
 
 ## Access
 
-To access the local webserver you must have run
-
-	2web
-
-as an adminstrator(sudo 2web) to enable it. Then go to
+To access the web interface on the machine you have installed it on, go to
 
 	http://localhost/
 
-Once you login the first time you will probably want to create a adminstrative user to password lock the settings. You can then enable the modules you want to run automatically at
+In the top right corner of the webpage click the login button. If no login button exists click the encrypt button to switch to HTTPS. You may have to accept the custom SSL certificate used to encrypt the connection. Once you login the first time you will probably want to create a administrative user to password lock the settings. You can then enable the modules you want to run automatically in
 
-	https://localhost/settings/modules.php
+	http://localhost/settings/
 
 ### Settings
 
@@ -81,9 +77,57 @@ Nearly everything can be configured via the web interface.
 
 	http://localhost/settings/
 
-If you have adminstrative access to the server all the 2web settings are stored in text files in
+If you have direct access to the server all the 2web settings are stored in text files in
 
 	/etc/2web/
+
+## CLI
+
+On the command line interface you can view the status of modules with
+
+	2web status
+
+To enable a module, for example nfo2web you would use
+
+	nfo2web enable
+
+To disable the same module
+
+	nfo2web disable
+
+If a module is disabled it will cleanup and remove that web section on the next update. To remove all module content manually you can use
+
+	nfo2web nuke
+
+To generate content for the module simply run that module
+
+	nfo2web
+
+Most modules have a option to run the update of its content in parallel with
+
+	nfo2web --parallel
+
+Module commands also have manual pages that can be accessed with
+
+	man nfo2web
+
+or
+
+	nfo2web --help
+
+if your system does not have the man command. If you want to run all enabled modules at once the 2web command acts as a master interface.
+
+	2web update
+
+You can also run all modules in parallel with
+
+	2web parallel
+
+If things need reset completely you can run
+
+	2web nuke
+
+however be advised this will remove everything and require you to redownload thumbnails. No source data will be removed but all generated content will need to be recreated.
 
 ## Supported Systems
  - Raspbery PI 4
@@ -93,5 +137,4 @@ If you have adminstrative access to the server all the 2web settings are stored 
  - x86/x64
 	 - Ubuntu
 	 - Debian
-
 
