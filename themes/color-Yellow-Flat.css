@@ -19,7 +19,7 @@
 */
 :root{
 	--solidBackground: gold;
-	--glassBackground: rgb(239,239,6);
+	--glassBackground: rgba(184,184,0);
 	--borderColor: yellow;
 	--textColor: black;
 	--textShadowColor: white;
