@@ -331,6 +331,22 @@ function update2web(){
 		buildActivityGraph
 	fi
 
+	# update the search plugin once per x days, this should only change if the hostname changes
+	if cacheCheck "$webDirectory/opensearch.xml" 10;then
+		# build the search plugin for the local server instance
+		# - only works with mdns .local based resolution
+		{
+			echo "<?xml version='1.0' encoding='UTF-8'?>"
+			echo "<OpenSearchDescription xmlns='http://a9.com/-/spec/opensearch/1.1/'>"
+			echo "	<ShortName>$(hostname) 2web Search</ShortName>"
+			echo "	<Description>Use 2web on $(hostname) to search the Internet.</Description>"
+			echo "	<Image width='64' height='64' type='image/x-icon'>https://$(hostname).local/favicon.ico</Image>"
+			echo "	<Url type='text/html' template='https://$(hostname).local/search.php?q={searchTerms}' />"
+			echo "	<InputEncoding>UTF-8</InputEncoding>"
+			echo "</OpenSearchDescription>"
+		} > "$webDirectory/opensearch.xml"
+	fi
+
 	# if the build date of the software has changed then update the generated css themes for the site
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')

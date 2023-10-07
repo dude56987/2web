@@ -615,6 +615,7 @@ if (array_key_exists("q",$_GET)){
 	<script src='/2webLib.js'></script>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<link rel="search" type="application/opensearchdescription+xml" title="2web" href="/opensearch.xml">
 </head>
 <body>
 <?PHP
