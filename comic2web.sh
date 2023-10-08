@@ -1124,7 +1124,7 @@ renderPage(){
 					echo "		<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName'>"
 					echo "			📜 Scroll View"
 					echo "		</a>"
-					echo "		<a class='button' href='scroll.php?chapter=$tempChapterName&real'>"
+					echo "		<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName&real'>"
 					echo "			🖼️ Real Size View"
 					echo "		</a>"
 					echo "	</div>"
