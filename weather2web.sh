@@ -430,19 +430,22 @@ function update(){
 								# daytime forcast
 								if echo "$timeOfForcast" | grep -q --ignore-case "MEMORIAL DAY";then
 									echo -n "	<h3>MEMORIAL <br>DAY"
-									echo -n "🪖";
+									echo -n " 🪖";
 								elif echo "$timeOfForcast" | grep -q --ignore-case "CHRISTMAS";then
 									echo -n "	<h3>CHRISTMAS<br>DAY"
-									echo -n "🎄"
+									echo -n " 🎄"
 								elif echo "$timeOfForcast" | grep -q --ignore-case "INDEPENDENCE";then
 									echo -n "	<h3>INDEPENDENCE<br>DAY"
-									echo -n "🎆"
+									echo -n " 🎆"
 								elif echo "$timeOfForcast" | grep -q --ignore-case "NEW YEARS DAY";then
 									echo -n "	<h3>NEW YEARS<br>DAY"
-									echo -n "🍎"
+									echo -n " 🍎"
 								elif echo "$timeOfForcast" | grep -q --ignore-case "JUNETEENTH";then
 									echo -n "	<h3>JUNETEENTH"
-									echo -n "✊"
+									echo -n " ✊"
+								elif echo "$timeOfForcast" | grep -q --ignore-case "COLUMBUS";then
+									echo -n "	<h3>COLUMBUS<br>DAY"
+									echo -n " ⛵"
 								else
 									echo -n "	<h3>$timeOfForcast"
 									echo -n "🌞"
