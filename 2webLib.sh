@@ -347,6 +347,7 @@ function updateCerts(){
 		genCert='yes'
 	fi
 	if [ $genCert == 'yes' ];then
+		addToLog "UPDATE" "Updating custom SSL certificate"
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
 		# convert the ssl certificate into the der format
 		# - der format can be copied to other systems at /usr/local/share/ca-certificates/
@@ -456,9 +457,12 @@ function waitFastQueue(){
 			#INFO "Waiting for free CPU cores..."
 			sleep $sleepTime
 		else
-			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
-			# - this will make all 2web modules parallel process without blocking each other
-			# - this should make the apache server remain available even if all modules are running in parallel
+			# if the load exceeds the number of cpus block the queue, this means the
+			# system is maxed out globally
+			# - this will make all 2web modules parallel process without blocking each
+			#   other
+			# - this should make the apache server remain available even if all
+			#   modules are running in parallel
 			# convert load into interger and compare
 			break
 		fi
