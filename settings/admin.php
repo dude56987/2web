@@ -620,6 +620,8 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("iptv2webStatus",$_POST)){
 	$status=$_POST['iptv2webStatus'];
 	setModStatus("iptv2web",$status);
+	# also enable epg2web if iptv2web is enabled
+	setModStatus("epg2web",$status);
 	echo "<hr><a class='button' href='/settings/modules.php#iptv2webStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("weather2webStatus",$_POST)){
