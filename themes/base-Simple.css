@@ -127,7 +127,7 @@ html::-webkit-scrollbar-thumb{
 	border: 1px var(--textColor) solid;
 }
 html{
-	background-size: 100vw;
+	background-size: 100dvw;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
@@ -438,41 +438,41 @@ ol{
 }
 .seriesBackground{
 	background: var(--backgroundFanart) !important;
-	background-size: 100vw 100vh !important;
+	background-size: 100dvw 100dvh !important;
 	background-repeat: repeat !important;
 	background-attachment: fixed !important;
 }
 .randomFanart{
 	background: url("/randomFanart.php");
-	background-size: 100vw 100vh;
+	background-size: 100dvw 100dvh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
 .musicFanart{
 	background: url("/randomFanart.php?filter=music");
-	background-size: 100vw 100vh;
+	background-size: 100dvw 100dvh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
 .comicsFanart{
 	background: url("/randomFanart.php?filter=comics");
-	background-size: 100vw 100vh;
+	background-size: 100dvw 100dvh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
 .moviesFanart{
 	background: url("/randomFanart.php?filter=movies");
-	background-size: 100vw 100vh;
+	background-size: 100dvw 100dvh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 }
 .showsFanart{
 	background: url("/randomFanart.php?filter=shows");
-	background-size: 100vw 100vh;
+	background-size: 100dvw 100dvh;
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
@@ -484,7 +484,7 @@ ol{
 	font-size: 1rem;
 	margin-right: auto;
 	margin-left: auto;
-	width: 20vw;
+	width: 20dvw;
 }
 .topButtonSpace{
 	font-size: 0px;
@@ -499,36 +499,36 @@ ol{
 */
 @media only screen and (max-width: 800px), (orientation: portrait){
 	.indexLink{
-		width: 20vw;
+		width: 20dvw;
 	}
 	.indexLink img{
-		width: 20vw;
+		width: 20dvw;
 	}
 	.liveFilter{
-		width:80vw;
+		width:80dvw;
 	}
 	.searchBox{
 		width: auto;
 	}
 	.settingsEntry{
-		width: 90vw !important;
+		width: 90dvw !important;
 	}
 	.inputCard{
-		width: 80vw !important;
+		width: 80dvw !important;
 		float: none !important;
 	}
 	.liveBackground{
 		background-image: url("/randomPoster.php");
 	}
 	.channelList{
-		width: 80vw !important;
+		width: 80dvw !important;
 	}
 	.livePlayer{
 		width: 100%;
 	}
 	.seriesBackground{
 		background: var(--backgroundPoster) !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
@@ -548,31 +548,31 @@ ol{
 	}
 	.randomFanart{
 		background: url("/randomPoster.php") !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
 	.musicFanart{
 		background: url("/randomPoster.php?filter=music") !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
 	.comicsFanart{
 		background: url("/randomPoster.php?filter=comics") !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
 	.moviesFanart{
 		background: url("/randomPoster.php?filter=movies") !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
 	.showsFanart{
 		background: url("/randomPoster.php?filter=shows") !important;
-		background-size: 100vw 100vh !important;
+		background-size: 100dvw 100dvh !important;
 		background-repeat: repeat !important;
 		background-attachment: fixed !important;
 	}
@@ -594,7 +594,7 @@ ol{
 	}
 	#topButton{
 		font-size: 2rem; /* Increase font size */
-		width: 100vw;
+		width: 100dvw;
 		margin: 0px;
 		border-right: none;
 		border-left: none;
@@ -631,7 +631,7 @@ ol{
 	background-color: black;
 }
 .progressIndicator{
-	width: 100vw;
+	width: 100dvw;
 	margin: 0px;
 	text-align: center;
 	background-color: darkgreen;
@@ -680,10 +680,10 @@ ol{
 		/*Fullscreen and touchscreen only*/
 		/*
 		.videoPlayerControls .button{
-			font-size: 2vh !important;
+			font-size: 2dvh !important;
 		}
 		.videoPlayerControls{
-			font-size: 1vh !important;
+			font-size: 1dvh !important;
 		}
 	}
 	*/
@@ -824,7 +824,7 @@ a:visited {
 	display: inline-block;
 }
 .comicFooter{
-	width: 10vw;
+	width: 10dvw;
 	margin-right: auto;
 	margin-left: auto;
 	text-align: center;
@@ -838,29 +838,29 @@ a:visited {
 .comicHeader{
 	margin-right: auto;
 	margin-left: auto;
-	width: 10vw;
+	width: 10dvw;
 	text-align: center;
 }
 .comicThumb{
-	width: 20vw;
+	width: 20dvw;
 }
 .comicWidePane{
 	/*This means the picture is a landscape*/
-	/*background-size: 100vw 100vh !important;*/
+	/*background-size: 100dvw 100dvh !important;*/
 	background-size: 100% 100% !important;
 	margin: 0px !important;
-	width: 100vw !important;
-	/*height: 100vh;*/
-	height: 100vh !important;
+	width: 100dvw !important;
+	/*height: 100dvh;*/
+	height: 100dvh !important;
 }
 .comicThumbWidePane{
 	/*This means the picture is a landscape*/
-	/*background-size: 100vw 100vh !important;*/
+	/*background-size: 100dvw 100dvh !important;*/
 	background-size: 100% 100% !important;
 	margin: 0px !important;
-	width: 100vw !important;
-	/*height: 100vh;*/
-	height: 100vh !important;
+	width: 100dvw !important;
+	/*height: 100dvh;*/
+	height: 100dvh !important;
 }
 
 .comicThumbPane{
@@ -870,42 +870,42 @@ a:visited {
 	margin-right: 0px !important;
 	margin-top: 0px !important;
 	margin-bottom: 0px !important;
-	width: 60vw !important;
-	height: 100vh !important;
+	width: 60dvw !important;
+	height: 100dvh !important;
 	height: -webkit-fill-available !important;
 }
 .comicPane{
 	background-size: 100% 100% !important;
 	/*This means the picture is a portrat*/
-	margin-left: 20vw !important;
-	margin-right: 20vw !important;
+	margin-left: 20dvw !important;
+	margin-right: 20dvw !important;
 	margin-top: 0px !important;
 	margin-bottom: 0px !important;
-	width: 60vw !important;
-	height: 100vh !important;
+	width: 60dvw !important;
+	height: 100dvh !important;
 	height: -webkit-fill-available !important;
 }
 .comicScrollViewImg{
 	display: inline-block;
 	background-size: 100% 100% !important;
 	width: 100%;
-	min-height: 100vh;
+	min-height: 100dvh;
 }
 .comicScrollViewImgReal{
 	max-width: 100%;
 	min-width: 60%;
 }
 .comicScrollPageCount{
-	max-width: 25vw;
+	max-width: 25dvw;
 	display: inline-block;
 }
 .comicScrollBookmarkButton{
 	float: right;
-	max-width: 20vw;
+	max-width: 20dvw;
 }
 .comicScrollIndexButton{
 	float: left;
-	max-width: 20vw;
+	max-width: 20dvw;
 }
 /*
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
@@ -945,9 +945,9 @@ a:visited {
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		margin: 0px !important;
-		width: 100vw !important;
+		width: 100dvw !important;
 		width: -webkit-fill-available !important;
-		height: 100vh !important;
+		height: 100dvh !important;
 		height: -webkit-fill-available !important;
 	}
 	.comicThumbPane{
@@ -958,9 +958,9 @@ a:visited {
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		margin: 0px !important;
-		width: 100vw !important;
+		width: 100dvw !important;
 		width: -webkit-fill-available !important;
-		height: 100vh !important;
+		height: 100dvh !important;
 		height: -webkit-fill-available !important;
 	}
 	.comicWidePane{
@@ -971,11 +971,11 @@ a:visited {
 		margin-left: 0px !important;
 		margin-right: 0px !important;
 		/*Add top and bottom margins on screen*/
-		margin-top: 20vh !important;
-		margin-bottom: 20vh !important;
-		width: 100vw !important;
+		margin-top: 20dvh !important;
+		margin-bottom: 20dvh !important;
+		width: 100dvw !important;
 		width: -webkit-fill-available !important;
-		height: 60vh !important;
+		height: 60dvh !important;
 	}
 	.comicThumbWidePane{
 		/*This means the picture is a landscape picture*/
@@ -987,9 +987,9 @@ a:visited {
 		/*Add top and bottom margins on screen*/
 		margin-top: 0px !important;
 		margin-bottom: 0px !important;
-		width: 100vw !important;
+		width: 100dvw !important;
 		width: -webkit-fill-available !important;
-		height: 60vh !important;
+		height: 60dvh !important;
 	}
 
 }
@@ -1028,7 +1028,7 @@ a:visited {
 }
 .comicPageButton{
 	width: 20%;
-	min-height: 50vh;
+	min-height: 50dvh;
 	height: -webkit-fill-available;
 	height: 100%;
 	/*
@@ -1225,7 +1225,7 @@ a:visited {
 	width: 100%;
 	/*
 	height: 10rem;
-	width: 10vw;
+	width: 10dvw;
 	width: 200px;
 	height: 300px;
 	*/
@@ -1294,10 +1294,10 @@ ol{
 	width: 8rem;
 	/*
 	height: 8rem;
-	height: 10vw;
+	height: 10dvw;
 	height: 300px;
 	*/
-	background-size: 100vw 100vw;
+	background-size: 100dvw 100dvw;
 	vertical-align: top;
 	overflow-y: hidden;
 	overflow-x: hidden;
@@ -1383,7 +1383,7 @@ tr[class='header']{
 }
 /*
 table{
-	width: 90vw;
+	width: 90dvw;
 }
 */
 .player audio{
@@ -1471,8 +1471,8 @@ table{
 .settingsEntry{
 	margin: 1rem;
 	/*
-	margin-top: 0.5vh;
-	margin-bottom: 0.5vh;
+	margin-top: 0.5dvh;
+	margin-bottom: 0.5dvh;
 	margin-left: auto;
 	margin-right: auto;
 	*/
@@ -1480,7 +1480,7 @@ table{
 	background-color: white;
 	word-wrap: break-word;
 	display: inline-block;
-	width: 45vw;
+	width: 45dvw;
 	color: black;
 	float: none;
 	min-height: 5rem;
@@ -1490,13 +1490,13 @@ table{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 }
 .searchSpacer{
-	min-height: 50vh;
+	min-height: 50dvh;
 }
 .searchBoxForm{
 	margin: 1rem;
 }
 .searchBox{
-	width: 80vw;
+	width: 80dvw;
 	font-size: 2rem;
 	border-style: solid;
 	border-color: var(--borderColor);
@@ -1552,7 +1552,7 @@ table{
 	text-align: center;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background-color: var(--glassBackground);
-	width: 40vw;
+	width: 40dvw;
 	display: inline-block;
 	margin: 1rem;
 	float: none;
@@ -1588,7 +1588,7 @@ th{
 	/*
 	overflow: scroll;
 	*/
-	width: 95vw;
+	width: 95dvw;
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -1660,7 +1660,7 @@ th{
 	display: block;
 	min-height: 3rem;
 	/*
-	width: 95vw;
+	width: 95dvw;
 	*/
 	margin: 0px;
 	/*
@@ -1721,7 +1721,7 @@ th{
 	}
 	.headerButtons{
 		text-align: left;
-		width: 90vw;
+		width: 90dvw;
 	}
 	.header{
 		margin-right: 0px;
@@ -1878,7 +1878,7 @@ pre{
 }
 .allGraphLink{
 	display: inline-block;
-	width: 49vw;
+	width: 49dvw;
 }
 .graphLinkThumbnail{
 	background-color: white;
@@ -2117,7 +2117,7 @@ details{
 	line-height: 8rem;
 }
 .loggedInUsername{
-	width: 30vw;
+	width: 30dvw;
 	background-color: var(--glassBackground);
 	border: solid 0.2rem;
 	border-top: none;
