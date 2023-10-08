@@ -964,6 +964,7 @@ main(){
 		returnModStatus "comic2web"
 		returnModStatus "git2web"
 		returnModStatus "graph2web"
+		returnModStatus "portal2web"
 		returnModStatus "iptv2web"
 		returnModStatus "wiki2web"
 		returnModStatus "weather2web"
