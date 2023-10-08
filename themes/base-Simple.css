@@ -40,7 +40,9 @@ select{
 }
 sup{
 	font-size: 0.5rem;
+	/*
 	display: none;
+	*/
 }
 sup::before {
 	content: "(";
