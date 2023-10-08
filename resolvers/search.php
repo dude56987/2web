@@ -784,7 +784,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				$pspellData .= "<div class='titleCard'>";
 				//echo "	<h2>Expand Search</h2>";
 				$pspellData .= "	<h2>Did you mean?</h2>";
-				$pspellData .= "	<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
+				$pspellData .= "	<div class='listcard'>";
+				$pspellData .= "		<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
+				$pspellData .= "	</div>";
 				$pspellData .= "</div>";
 			}
 		}else{
