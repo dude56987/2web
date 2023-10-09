@@ -102,6 +102,8 @@ function yesNoCfgSet($configPath, $newConfigSetting){
  * Write output and do three dots with randomized delays to simulate processing
  */
 function outputLog($stringData){
+	# write $stringData to the log then to the webpage
+	addToLog("ADMIN","Running Admin Action","$stringData");
 	echo "$stringData";
 	$index=0;
 	$waitTime=3;
@@ -146,6 +148,47 @@ function setModStatus($modName,$modStatus){
 			outputLog("$modName status is already $modStatus");
 		}
 	}
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Add a log entry
+ */
+function addToLog($errorType, $errorDescription, $errorDetails){
+	# set the module name to admin
+	$moduleName="WEB";
+	# create identifier date to organize the data, this is really accurate
+	$logIdentifier=$_SERVER["REQUEST_TIME_FLOAT"];
+	$logDate=date("d\/m\/y");
+	$logTime=date("h:i:s");
+	#
+	$logDescription=str_replace("'", "''", $errorDescription);
+	#
+	#echo "error details = $errorDetails <br>\n";
+
+	$logDetails=str_replace("'", "''", "$errorDetails");
+
+	# load database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(60000);
+	# get the list of tables in the sql database
+	$result = $databaseObj->query("select name from sqlite_master where type='table';");
+	# check if the database has been created yet
+	if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/log/log.db")){
+		# setup the base function of the database
+		$databaseObj->query("PRAGMA journal_mode=WAL;");
+		$databaseObj->query("PRAGMA wal_autocheckpoint=20;");
+		# create the database table structure
+		$databaseObj->query("create table log(logIdentifier text primary key,module,type,description,details,date,time);");
+	}
+	# add the log entry
+	$databaseObj->query("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');");
+
+	#echo ("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');<br>\n");
+
+	# clear up memory of database file
+	$databaseObj->close();
+	unset($databaseObj);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -447,10 +490,16 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("removePortalScanSource",$_POST)){
 	# remove portal scan source
 	removeCustomConfig("removePortalScanSource","/etc/2web/portal/scanSources.d/","portal.php");
-}else if (array_key_exists("addPortalScanPorts",$_POST)){
+}else if (array_key_exists("addPortalSource",$_POST)){
+	# add portal source
+	addCustomConfig("addPortalSource","/etc/2web/portal/sources.d/","portal.php");
+}else if (array_key_exists("removePortalSource",$_POST)){
+	# remove portal source
+	removeCustomConfig("removePortalSource","/etc/2web/portal/sources.d/","portal.php");
+}else if (array_key_exists("addPortalScanPort",$_POST)){
 	# add portal scan port
 	addCustomConfig("addPortalScanPort","/etc/2web/portal/scanPorts.d/","portal.php");
-}else if (array_key_exists("removePortalScanPorts",$_POST)){
+}else if (array_key_exists("removePortalScanPort",$_POST)){
 	# remove portal scan port
 	removeCustomConfig("removePortalScanPort","/etc/2web/portal/scanPorts.d/","portal.php");
 }else if (array_key_exists("addPortalScanPath",$_POST)){
@@ -727,7 +776,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("removeMusicLibary",$_POST)){
 	removeCustomConfig("removeMusicLibary","/etc/2web/music/libaries.d/","music.php");
 }else if (array_key_exists("addRepoLibrary",$_POST)){
-	addCustomConfig("addRepoLibary","/etc/2web/repos/libaries.d/","repos.php");
+	addCustomConfig("addRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
 }else if(array_key_exists("removeRepoLibrary",$_POST)){
 	removeCustomConfig("removeRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
 }else if (array_key_exists("addRepoSource",$_POST)){
@@ -740,6 +789,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>BACK</a><hr>";
 	clear();
 }else{
+	addToLog("ERROR","UNKONWN ADMIN COMMAND",var_export($_POST, true));
 	countdown(5);
 	echo "<h1>[ERROR]:UNKNOWN COMMAND SUBMITTED TO API</h1>";
 	echo "<ul>";

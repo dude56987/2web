@@ -43,22 +43,22 @@ include("settingsHeader.php");
 		<li><a href='#addPortalscanSources'>Add portal scanSources Paths</a></li>
 		<li><a href='#portalServerscanSourcesPaths'>Server scanSources Paths Config</a></li>
 		<li><a href='#portalscanSourcesPaths'>portal scanSources Paths</a></li>
-		<li><a href='#addportalSource'>Add portal Source</a></li>
+		<li><a href='#addPortalSource'>Add portal Source</a></li>
 		<li><a href='#portalServerSourcePaths'>Server portal Sources</a></li>
 		<li><a href='#portalSourcePaths'>portal Source Paths</a></li>
-		<li><a href='#addportalScanPort'>Add portal Scan Port</a></li>
+		<li><a href='#addPortalScanPort'>Add portal Scan Port</a></li>
 		<li><a href='#portalServerScanPort'>Server Portal Scan Ports</a></li>
 		<li><a href='#portalScanPorts'>Portal Scan Ports</a></li>
 	</ul>
 </div>
 
-<div id='addportalscanSource' class='inputCard'>
+<div id='addPortalScanSource' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add portal scanSources Path</h2>
 	<ul>
 		<li>Use the base url of a server to scan for services</li>
 	</ul>
-	<input width='60%' type='text' name='addportalscanSource' placeholder='/absolute/path/to/the/scanSources'>
+	<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
 	<button class='button' type='submit'>Add Path</button>
 </form>
 </div>
@@ -86,7 +86,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeportalScanSources' value='".$link."'>Remove scanSources</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanSource' value='".$link."'>Remove scanSources</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -97,14 +97,14 @@ foreach($sourceFiles as $sourceFile){
 ?>
 </div>
 
-<div id='addportalscanSources' class='inputCard'>
+<div id='addPortalScanSources' class='inputCard'>
 <form action='admin.php' method='post'>
 	<h2>Add portal Source Path</h2>
 	<ul>
 		<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
 		<li>Title,URL,Description</li>
 	</ul>
-	<input width='60%' type='text' name='addportalSource' placeholder=''>
+	<input width='60%' type='text' name='addPortalSource' placeholder=''>
 	<button class='button' type='submit'>Add Path</button>
 </form>
 </div>
@@ -132,7 +132,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeportalSource' value='".$link."'>Remove Source</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalSource' value='".$link."'>Remove Source</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -156,14 +156,14 @@ foreach($sourceFiles as $sourceFile){
 </div>
 
 <?php
-echo "<div id='portalServerScanPorts' class='settingListCard'>\n";
+echo "<div id='portalServerScanPort' class='settingListCard'>\n";
 echo "<h2>Portal Server Scan Ports</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/portal/scanPorts.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div id='portalScanPorts' class='settingListCard'>";
+echo "<div id='removePortalScanPort' class='settingListCard'>";
 echo "<h2>Portal Scan Ports</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/scanPorts.d/*.cfg"));
 sort($sourceFiles);
@@ -178,7 +178,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeportalScanPort' value='".$link."'>Remove Port</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanPort' value='".$link."'>Remove Port</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -224,7 +224,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeportalScanPort' value='".$link."'>Remove Path</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanPath' value='".$link."'>Remove Path</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
