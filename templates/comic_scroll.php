@@ -158,7 +158,9 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		echo "<a class='button comicScrollBookmarkButton' href='scroll.php#$tempPageNumber'>🔖 Bookmark Here</a>";
 		echo "</div>";
 	}
-
+	if (array_key_exists("chapter",$_GET)){
+		echo "<h2>End of Chapter $chapterNumber</h2>";
+	}
 	if ($totalChapters > 0){
 		echo "	<div class='listCard'>\n";
 		echo "		<a id='all' class='button' href='?#all'>All</a>\n";
