@@ -727,6 +727,15 @@ function processRepo(){
 			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/$repoName/repoHistory.webm"
 		else
 			INFO "$repoName : Skip video rendering..."
+			# remove any video generated when the setting was set to yes
+			if test -f "$webDirectory/repos/$repoName/repoHistory.webm";then
+				# remove generated video
+				rm -v "$webDirectory/repos/$repoName/repoHistory.webm"
+			fi
+			if test -f "$webDirectory/repos/$repoName/repoHistory.png";then
+				# remove generated thumbnail
+				rm -v "$webDirectory/repos/$repoName/repoHistory.png"
+			fi
 		fi
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
 		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support
@@ -824,9 +833,18 @@ webUpdate(){
 
 	echo "$totalrepos" > "$webDirectory/repos/totalrepos.cfg"
 
-	if echo "$@" | grep -q -e "--no-video";then
-		INFO "Skip combined video rendering..."
+
+	# check if the video should be rendered
+	renderCombinedVideo="yes"
+	if yesNoCfgCheck "/etc/2web/repos/renderVideo.cfg";then
+		renderCombinedVideo="yes"
 	else
+		renderCombinedVideo="no"
+	fi
+	if echo "$@" | grep -q -e "--no-video";then
+		renderCombinedVideo="no"
+	fi
+	if echo "$renderCombinedVideo" | grep -q "yes";then
 		INFO "Writing combined Gource video..."
 		if checkFileDataSum "$webDirectory" "$webDirectory/repos/repos.index";then
 			# combine the gource logs to make a combined repo video
@@ -839,6 +857,12 @@ webUpdate(){
 			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/allHistory.webm"
 
 			setFileDataSum "$webDirectory" "$webDirectory/repos/repos.index"
+		fi
+	else
+		INFO "Skip combined video rendering..."
+		# remove existing old versions of video
+		if test -f "$webDirectory/repos/allHistory.webm";then
+			rm -v "$webDirectory/repos/allHistory.webm"
 		fi
 	fi
 
