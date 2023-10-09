@@ -115,14 +115,14 @@ if (file_exists("finished.cfg")){
 if ($finishedVersions < $totalVersions){
 	if (array_key_exists("autoRefresh",$_GET)){
 		echo "<img class='localPulse' src='/pulse.gif'>\n";
-		echo "<hr>";
-		echo "<hr>";
+		echo "<div class='listCard'>";
 		echo "<a class='button' href='?'>⏹️ Stop Refresh</a>\n";
 	}else{
+		echo "<div class='listCard'>";
 		echo "<a class='button' href='?autoRefresh'>▶️  Auto Refresh</a>\n";
 	}
 	echo "	<a class='button' href='?generateMore'>⚙️ Generate More Responses</a>";
-	echo "<hr>";
+	echo "</div>";
 
 	$executionTime = $_SERVER['REQUEST_TIME'] - (file_get_contents("started.cfg")) ;
 	$executionMinutes = floor($executionTime / 60);
@@ -257,9 +257,9 @@ if ($drawPrompt){
 	echo "<pre>";
 	echo file_get_contents("command.cfg");
 	echo "</pre>";
-	echo "<hr>";
-	echo "	<a class='button' href='?generateMore'>⚙️ Generate More Responses</a>";
-	echo "<hr>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' href='?generateMore'>⚙️ Generate More Responses</a>";
+	echo "	</div>";
 	echo "</div>";
 }
 
