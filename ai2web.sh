@@ -716,23 +716,23 @@ main(){
 		# - version 1.0.8 is still working on debain but 1.0.9 is broken
 		pip3 install --break-system-packages --upgrade "gpt4all==1.0.8"
 		# install whisper speech recognition
-		pip3 install --break-system-packages --upgrade openai-whisper
+		#pip3 install --break-system-packages --upgrade openai-whisper
 		# install stable diffusion diffusers library
-		pip3 install --break-system-packages --upgrade diffusers
+		#pip3 install --break-system-packages --upgrade diffusers
 		# install the huggingface transformers library
-		pip3 install --break-system-packages --upgrade transformers
-		pip3 install --break-system-packages --upgrade torch
+		#pip3 install --break-system-packages --upgrade transformers
+		#pip3 install --break-system-packages --upgrade torch
 		# tensor libaries
-		pip3 install --break-system-packages --upgrade safetensors
-		pip3 install --break-system-packages --upgrade xformers
-		pip3 install --break-system-packages --upgrade tensorflow
+		#pip3 install --break-system-packages --upgrade safetensors
+		#pip3 install --break-system-packages --upgrade xformers
+		#pip3 install --break-system-packages --upgrade tensorflow
 		# accelerate allows using cpu and gpu
-		pip3 install --break-system-packages --upgrade accelerate
+		#pip3 install --break-system-packages --upgrade accelerate
 		# 8bit support for accelerate to run larger models on smaller computers
-		pip3 install --break-system-packages --upgrade bitsandbytes
-		pip3 install --break-system-packages --upgrade tensorrt
+		#pip3 install --break-system-packages --upgrade bitsandbytes
+		#pip3 install --break-system-packages --upgrade tensorrt
 		# speech functions are provided by speechbrain, tts, stt
-		pip3 install --break-system-packages --upgrade speechbrain
+		#pip3 install --break-system-packages --upgrade speechbrain
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "ai2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
