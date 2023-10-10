@@ -40,7 +40,13 @@ function filesize_to_human($tempFileSize){
 if (array_key_exists("generateMore",$_GET)){
 	# increment the versions file
 	$versions=file_get_contents("versions.cfg");
-	$versions+=1;
+	if (stripos(file_get_contents("command.cfg"),"\n") !== false){
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+			$versions+=1;
+		}
+	}else{
+		$versions+=1;
+	}
 	file_put_contents("versions.cfg",$versions);
 	# update the elapsed time since prompt
 	file_put_contents("started.cfg",$_SERVER["REQUEST_TIME"]);

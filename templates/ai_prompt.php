@@ -52,9 +52,11 @@ if (array_key_exists("prompt",$_POST)){
 	if (! is_dir("/var/cache/2web/web/ai/prompt/".$fileSum."/")){
 		mkdir("/var/cache/2web/web/ai/prompt/".$fileSum."/");
 	}
+
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg")){
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg",$_POST["prompt"]);
 	}
+
 	# always write start time
 	file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg")){
@@ -75,18 +77,33 @@ if (array_key_exists("prompt",$_POST)){
 		}
 	}
 
-	if ($_POST["hidden"] == "yes"){
-		# if the post is set to hidden generate a hidden.cfg
-		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
+	if (array_key_exists("hidden",$_POST)){
+		if ($_POST["hidden"] == "yes"){
+			# if the post is set to hidden generate a hidden.cfg
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
+		}
 	}
 
 	if (is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg")){
 		# increment existing versions file
 		$foundVersions = file_get_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg");
-		$foundVersions += $_POST["versions"];
+		if ($_POST["model"] == "{ALL}"){
+			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+				$foundVersions += 1;
+			}
+		}else{
+			$foundVersions += $_POST["versions"];
+		}
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg", $foundVersions);
 	}else{
-		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$_POST["versions"]);
+		if ($_POST["model"] == "{ALL}"){
+			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+				$foundVersions += 1;
+			}
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$foundVersions);
+		}else{
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$_POST["versions"]);
+		}
 	}
 
 	# cleanup the prompt so it will work correctly
@@ -99,25 +116,48 @@ if (array_key_exists("prompt",$_POST)){
 	}
 
 	$command .= "' | at -M now";
-
-	if ($_POST["debug"] == "yes"){
-		echo "<div class='errorBanner'>\n";
-		echo "<hr>\n";
-		echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-		echo "<hr>\n";
-		echo "</div>\n";
-	}
 	# create the image view script link
 	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
 		symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php"));
 	}
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg")){
-			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$command);
+		if ($_POST["model"] == "{ALL}"){
+			$combinedFileData = "";
+			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+				$combinedFileData .= str_replace("{ALL}","$directoryPath",$command).";\n";
+			}
+			# write the combined commands used to generate all the prompts
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$combinedFileData);
+		}else{
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$_POST["prompt"]);
+		}
 	}
 	# launch a job on the queue for each version
 	foreach(range(1,$_POST["versions"]) as $index){
-		# launch the command
-		shell_exec($command);
+		# if the model is set to all
+		if ($_POST["model"] == "{ALL}"){
+			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
+				if ($_POST["debug"] == "yes"){
+					echo "<div class='errorBanner'>\n";
+					echo "<hr>\n";
+					echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+					echo "<hr>\n";
+					echo "</div>\n";
+				}
+				# for each model found launch a new command
+				shell_exec(str_replace("{ALL}","\"$directoryPath\"",$command));
+			}
+		}else{
+			if ($_POST["debug"] == "yes"){
+				echo "<div class='errorBanner'>\n";
+				echo "<hr>\n";
+				echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+				echo "<hr>\n";
+				echo "</div>\n";
+			}
+			# launch the command
+			shell_exec($command);
+		}
 	}
 	# delay 1 seconds to allow loading of database
 	if(array_key_exists("HTTPS",$_SERVER)){
@@ -156,6 +196,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # load each of the ai prompt models
 $discoveredPrompt=False;
 $discoveredPromptData="";
+$discoveredPromptData .= "<option value='{ALL}'>all</option>\n";
 foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
 	$niceDirectoryPath=str_replace(".bin","",$directoryPath);
 	$discoveredPromptData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
@@ -163,7 +204,7 @@ foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..
 }
 # add the toolbox to the top of the page
 include("/usr/share/2web/templates/ai_toolbox.php");
-#
+
 if ($discoveredPrompt){
 	echo "<div class='titleCard'>\n";
 	echo "	<h1>What Can Text <sup>a</sup>I Do?</h1>\n";
@@ -217,7 +258,7 @@ if ($discoveredPrompt){
 
 	echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
 	echo "<span class='groupedMenuItem'>\n";
-	echo "Unique Versions: <input class='numberBox' type='number' min='1' max='5' value='1' name='versions' placeholder='Number of versions to draw'>";
+	echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
 	echo "</span>\n";
 	echo "</span>\n";
 
@@ -322,7 +363,6 @@ if ($discoveredPrompt){
 
 	echo "</div>\n";
 }
-
 ?>
 <?php
 // add the footer

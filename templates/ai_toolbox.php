@@ -1,10 +1,10 @@
 <?PHP
 	# load each of the ai prompt models
 	$discoveredPrompt=False;
-	$discoveredPromptData="";
+	$discoveredPromptToolboxData="";
 	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
 		$niceDirectoryPath=str_replace(".bin","",$directoryPath);
-		$discoveredPromptData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
+		$discoveredPromptToolboxData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
 		$discoveredPrompt=True;
 	}
 	# load each of the ai txt2txt models
