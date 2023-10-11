@@ -55,7 +55,7 @@ include("settingsHeader.php");
 </div>
 
 <?php
-echo "<div id='serverWebsiteSources' class='inputCard'>\n";
+echo "<div id='serverWebsiteSources' class='titleCard'>\n";
 echo "<h2>Server Website Sources</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/ytdl/sources.cfg");
@@ -75,26 +75,6 @@ if ($data){
 echo "</pre>\n";
 echo "</div>";
 ?>
-
-<div id='ytdl_add_source' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Website Source</h2>
-<ul>
-	<li>
-		Website sources will be added as shows based on video links found on source pages.
-	</li>
-	<li>
-		Website sources will be grouped by website name.
-	</li>
-	<li>
-		Website sources can be search pages.
-	</li>
-</ul>
-<input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
-<button class='button' type='submit'>Add Source</button>
-</form>
-</div>
-
 <?php
 echo "<div id='ytdl_remove_source' class='settingListCard'>";
 echo "<h2>Website Sources</h2>\n";
@@ -132,31 +112,34 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
-echo "</div>\n";
-
-echo "<div id='serverUsernameSources' class='inputCard'>\n";
+?>
+	<div id='ytdl_add_source' class='inputCard'>
+	<form action='admin.php' method='post'>
+	<h2>Add Website Source</h2>
+	<ul>
+		<li>
+			Website sources will be added as shows based on video links found on source pages.
+		</li>
+		<li>
+			Website sources will be grouped by website name.
+		</li>
+		<li>
+			Website sources can be search pages.
+		</li>
+	</ul>
+	<input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
+	<button class='button' type='submit'>Add Source</button>
+	</form>
+	</div>
+</div>
+<?PHP
+echo "<div id='serverUsernameSources' class='titleCard'>\n";
 echo "<h2>Server Username Sources</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/ytdl/usernameSources.cfg");
 echo "</pre>\n";
 echo "</div>";
 ?>
-
-<div id='addUsernameSource' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Username Source</h2>
-<ul>
-	<li>
-		For websites with usernames, will create a show with all of that usernames content.
-	</li>
-	<li>
-		The same usernames on diffrent sites will link to the same generated show.
-	</li>
-</ul>
-<input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
-<button class='button' type='submit'>Add User</button>
-</form>
-</div>
 
 <?php
 echo "<div id='ytdl_remove_username_source' class='settingListCard'>";
@@ -196,6 +179,21 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addUsernameSource' class='inputCard'>
+	<form action='admin.php' method='post'>
+	<h2>Add Username Source</h2>
+	<ul>
+		<li>
+			For websites with usernames, will create a show with all of that usernames content.
+		</li>
+		<li>
+			The same usernames on diffrent sites will link to the same generated show.
+		</li>
+	</ul>
+	<input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
+	<button class='button' type='submit'>Add User</button>
+	</form>
+	</div>
 </div>
 <div id='episodeProcessingLimit' class='inputCard'>
 <h2>Episode Processing Limit</h2>

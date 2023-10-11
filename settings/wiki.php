@@ -45,18 +45,6 @@ include("settingsHeader.php");
 		<li><a href='#wikiPaths'>Wiki Paths</a></li>
 	</ul>
 </div>
-
-<div id='addWikiPath' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Wiki Path</h2>
-	<ul>
-		<li>Add the path of a directory containing .zim files</li>
-	</ul>
-	<input width='60%' type='text' name='addWikiPath' placeholder='/absolute/path/to/the/directory/'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='wikiServerPaths' class='settingListCard'>\n";
 echo "<h2>wiki Server scanSources Paths</h2>\n";
@@ -89,6 +77,16 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addWikiPath' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Wiki Path</h2>
+		<ul>
+			<li>Add the path of a directory containing .zim files</li>
+		</ul>
+		<input width='60%' type='text' name='addWikiPath' placeholder='/absolute/path/to/the/directory/'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 
 <?PHP

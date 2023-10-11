@@ -45,28 +45,6 @@ include("settingsHeader.php");
 		<li><a href='#currentLocations'>Current Configured Locations</a></li>
 	</ul>
 </div>
-
-<div id='addWeatherLocation' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Weather Location</h2>
-	<ul>
-		<li>
-			Add a location to show weather forcasts.
-		</li>
-		<li>
-			If a city returns no results add city after the city name.
-			<ul>
-				<li>
-					'springfield, NY' vs 'springfield city, NY'
-				</li>
-			</ul>
-		</li>
-	</ul>
-	<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
-	<button class='button' type='submit'>Add Location</button>
-</form>
-</div>
-
 <!-- create the theme picker based on installed themes -->
 <div id='setHomepageWeatherLocation' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
@@ -165,10 +143,27 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
-
-
-
 ?>
+	<div id='addWeatherLocation' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Weather Location</h2>
+		<ul>
+			<li>
+				Add a location to show weather forcasts.
+			</li>
+			<li>
+				If a city returns no results add city after the city name.
+				<ul>
+					<li>
+						'springfield, NY' vs 'springfield city, NY'
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
+		<button class='button' type='submit'>Add Location</button>
+	</form>
+	</div>
 </div>
 
 <?PHP

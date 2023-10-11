@@ -141,15 +141,6 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Setting</button>
 	</form>
 </div>
-
-<div id='addAiPromptModel' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add AI Libary Path</h2>
-	<input width='60%' type='text' name='addAiPromptModel' placeholder='example_gpt4all.bin'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";
 echo "<h2>AI Server Libary Paths</h2>\n";
@@ -183,6 +174,13 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addAiPromptModel' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add AI Libary Path</h2>
+		<input width='60%' type='text' name='addAiPromptModel' placeholder='example_gpt4all.bin'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

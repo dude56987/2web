@@ -52,17 +52,6 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='addPortalScanSource' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add portal scanSources Path</h2>
-	<ul>
-		<li>Use the base url of a server to scan for services</li>
-	</ul>
-	<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='portalServerscanSourcesPaths' class='settingListCard'>\n";
 echo "<h2>portal Server scanSources Paths</h2>\n";
@@ -95,18 +84,16 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div id='addPortalScanSources' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add portal Source Path</h2>
-	<ul>
-		<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
-		<li>Title,URL,Description</li>
-	</ul>
-	<input width='60%' type='text' name='addPortalSource' placeholder=''>
-	<button class='button' type='submit'>Add Path</button>
-</form>
+	<div id='addPortalScanSource' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add portal scanSources Path</h2>
+		<ul>
+			<li>Use the base url of a server to scan for services</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 
 <?php
@@ -141,18 +128,17 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div id='addPortalScanPort' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Scan Port</h2>
-	<ul>
-		<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
-		<li>Title,PORT,Description</li>
-	</ul>
-	<input width='60%' type='text' name='addPortalScanPort' placeholder=''>
-	<button class='button' type='submit'>Add Port</button>
-</form>
+	<div id='addPortalScanSources' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add portal Source Path</h2>
+		<ul>
+			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
+			<li>Title,URL,Description</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalSource' placeholder=''>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 
 <?php
@@ -187,18 +173,17 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
-<div id='addportalScanPath' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Scan Path</h2>
-	<ul>
-		<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
-		<li>Title,PATH,Description</li>
-	</ul>
-	<input width='60%' type='text' name='addPortalScanPath' placeholder=''>
-	<button class='button' type='submit'>Add Path</button>
-</form>
+	<div id='addPortalScanPort' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Scan Port</h2>
+		<ul>
+			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
+			<li>Title,PORT,Description</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalScanPort' placeholder=''>
+		<button class='button' type='submit'>Add Port</button>
+	</form>
+	</div>
 </div>
 
 <?php
@@ -233,9 +218,18 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addportalScanPath' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Scan Path</h2>
+		<ul>
+			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
+			<li>Title,PATH,Description</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalScanPath' placeholder=''>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
-
-
 
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

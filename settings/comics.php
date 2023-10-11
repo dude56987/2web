@@ -64,14 +64,6 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='addComicLibrary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Comic Library Path</h2>
-	<input width='60%' type='text' name='addComicLibrary' placeholder='/absolute/path/to/the/Library'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='comicServerLibraryPaths' class='settingListCard'>\n";
 echo "<h2>Comic Server Library Paths</h2>\n";
@@ -107,6 +99,13 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addComicLibrary' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Comic Library Path</h2>
+		<input width='60%' type='text' name='addComicLibrary' placeholder='/absolute/path/to/the/Library'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

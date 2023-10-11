@@ -46,19 +46,6 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='addMusicLibary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Music Libary Path</h2>
-	<ul>
-		<li>Only supports .mp3 files</li>
-		<li>Directory structure does not matter</li>
-		<li>Metadata is read from file tags</li>
-	</ul>
-	<input width='60%' type='text' name='addMusicLibary' placeholder='/absolute/path/to/the/libary'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <div id='generateVisualisationsForWeb' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<h2>Generate Visualizations</h2>
@@ -121,6 +108,18 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addMusicLibary' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Music Libary Path</h2>
+		<ul>
+			<li>Only supports .mp3 files</li>
+			<li>Directory structure does not matter</li>
+			<li>Metadata is read from file tags</li>
+		</ul>
+		<input width='60%' type='text' name='addMusicLibary' placeholder='/absolute/path/to/the/libary'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

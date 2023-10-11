@@ -80,18 +80,6 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Setting</button>
 	</form>
 </div>
-
-<div id='addRepoLibrary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Repo Library Path</h2>
-	<ul>
-		<li>Path is scanned recursively to look for GIT repositories</li>
-	</ul>
-	<input width='60%' type='text' name='addRepoLibrary' placeholder='/absolute/path/to/the/library'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='repoServerLibraryPaths' class='settingListCard'>\n";
 echo "<h2>Repo Server Library Paths</h2>\n";
@@ -124,16 +112,17 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addRepoLibrary' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Repo Library Path</h2>
+		<ul>
+			<li>Path is scanned recursively to look for GIT repositories</li>
+		</ul>
+		<input width='60%' type='text' name='addRepoLibrary' placeholder='/absolute/path/to/the/library'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
-
-<div id='addRepoLibrary' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add Repo Source Path</h2>
-	<input width='60%' type='text' name='addRepoSource' placeholder='/absolute/path/to/the/library'>
-	<button class='button' type='submit'>Add Path</button>
-</form>
-</div>
-
 <?php
 echo "<div id='repoServerSourcePaths' class='settingListCard'>\n";
 echo "<h2>Repo Server Source Paths</h2>\n";
@@ -166,6 +155,13 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+	<div id='addRepoLibrary' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Repo Source Path</h2>
+		<input width='60%' type='text' name='addRepoSource' placeholder='/absolute/path/to/the/library'>
+		<button class='button' type='submit'>Add Path</button>
+	</form>
+	</div>
 </div>
 
 <?PHP
