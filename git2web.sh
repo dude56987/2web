@@ -72,6 +72,57 @@ function libaryPaths(){
 	printf "$(generatedDir)/\n"
 }
 ################################################################################
+function buildBashDocstrings(){
+	# build the docstrings for bash functions like this docstring you are reading.
+	# docstrings in bash are successive comments after the function declartion
+	fileName=$1
+	# get all the function names
+	functionNames="$(cat "$fileName" | grep --ignore-case "^function" | cut -d' ' -f2 | cut -d'(' -f1)"
+	cleanName=$(echo "$fileName" | sed "s/\.\///g" | sed "s/\.sh//g")
+	# for each of the found function names get the block of comments below it
+	echo -e "NAME"
+	echo -e "    $cleanName"
+	echo
+	echo -e "FUNCTIONS"
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+	for functionName in $functionNames;do
+		# for each function name read the function
+		functionData=$(cat "$fileName" | sed -z "s/\n/;/g")
+		functionData=$(echo "$functionData" | grep -P --only-matching "$functionName\(\)\{.*?\}")
+		functionData=$(echo "$functionData" | sed "s/;/\n/g")
+		# extract the function and parse each line until you hit a line that is not a comment
+		echo "$functionData" | while read -r line;do
+			#echo $line
+			# read until you hit a non comment line
+			if echo "$line" | grep -q "$functionName()";then
+				# this is the function declaration draw the header
+				#echo "################################################################################"
+				echo
+				echo -e "    $functionName()"
+			elif echo "$line" | grep -q "^.*#.*$";then
+				# print the comment line
+				# add a extra tab and remove the # at the start of the comment line in the comment block
+				echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+			elif echo "$line" | grep -q "^#.*$";then
+				# print the comment line
+				echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+			else
+				#echo "NOT A COMMENT: $line"
+				# break on the first line not containing a comment
+				break
+			fi
+		done
+		#echo "################################################################################"
+		echo
+	done
+	echo
+	echo -e "FILE"
+	echo -e "\t$fileName"
+	# reset IFS
+	IFS=$IFSBACKUP
+}
+################################################################################
 function buildDiffGraph(){
 	timeFrame=$1
 	timeLength=$2
@@ -413,6 +464,8 @@ function processRepo(){
 		# create data directories inside the web directory
 		createDir "$webDirectory/repos/$repoName/"
 		createDir "$webDirectory/repos/$repoName/lint/"
+		createDir "$webDirectory/repos/$repoName/doc/"
+		createDir "$webDirectory/repos/$repoName/doc_count/"
 		createDir "$webDirectory/repos/$repoName/lint_time/"
 		createDir "$webDirectory/repos/$repoName/diff/"
 		createDir "$webDirectory/repos/$repoName/log/"
@@ -558,13 +611,15 @@ function processRepo(){
 				tempSourceSum=$(popPath "$sourceFilePath")
 				git log -1 --pretty="format:%ci" "$sourceFilePath" > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-					if echo "$@" | grep -q -e "--parallel";then
 						shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 						waitQueue 0.5 "$totalCPUS"
-					else
-						shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					fi
 				fi
+				# generate the documentation for the file
+				buildBashDocstrings "$sourceFilePath" > "$webDirectory/repos/$repoName/doc/$tempSourceSum.index" &
+				waitQueue 0.5 "$totalCPUS"
+				# count the number of functions
+				#cat "$fileName" | grep --ignore-case -c "^function" > "$webDirectory/repos/$repoName/doc_count/$tempSourceSum.index" &
+				#waitQueue 0.5 "$totalCPUS"
 			done
 		else
 			{
@@ -587,12 +642,8 @@ function processRepo(){
 				tempSourceSum=$(popPath "$sourceFilePath")
 				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-					if echo "$@" | grep -q -e "--parallel";then
-						weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-						waitQueue 0.5 "$totalCPUS"
-					else
-						weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					fi
+					weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
 		else
@@ -627,12 +678,8 @@ function processRepo(){
 				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					#eslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					if echo "$@" | grep -q -e "--parallel";then
-						/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-						waitQueue 0.5 "$totalCPUS"
-					else
-						/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					fi
+					/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
 		else
@@ -659,13 +706,12 @@ function processRepo(){
 				tempSourceSum=$(popPath "$sourceFilePath")
 				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-					if echo "$@" | grep -q -e "--parallel";then
-						pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
-						waitQueue 0.5 "$totalCPUS"
-					else
-						pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					fi
+					pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+					waitQueue 0.5 "$totalCPUS"
 				fi
+				# build the python docstrings
+				pydoc3 "$sourceFilePath" > "$webDirectory/repos/$repoName/doc/$tempSourceSum.index" &
+				waitQueue 0.5 "$totalCPUS"
 			done
 		else
 			{
@@ -929,7 +975,7 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "git2web"
 		# upgrade the jslint package
-		pip3 install --upgrade jslint
+		pip3 install --break-system-packages --upgrade "jslint"
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "git2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

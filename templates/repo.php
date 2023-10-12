@@ -121,6 +121,7 @@ function drawHeader(){
 	echo "			<a class='button' href='?graph'>📈 Graphs</a>\n";
 	echo "			<a class='button' href='?inspector'>🕵️ Inspector Data</a>\n";
 	echo "			<a class='button' href='?listLint'>🧹 Lint Data</a>\n";
+	echo "			<a class='button' href='?listDoc'>📓 Documentation</a>\n";
 	#$fileName = popPath(file_get_contents("source.index"));
 	#$fileName = str_replace(".index","",$fileName);
 	#echo "			<a class='button' href='/zip-gen?repo=".$fileName."'>\n";
@@ -132,6 +133,54 @@ function drawHeader(){
 	echo "			</a>\n";
 	echo "		</div>\n";
 	echo "	</div>\n";
+}
+################################################################################
+function drawDoc(){
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Docstrings</h2>\n";
+	echo "	<table>\n";
+	echo "	<tr>\n";
+	echo "		<th>File</th>\n";
+	echo "		<th>File Type</th>\n";
+	echo "		<th>Date</th>\n";
+	echo "	</tr>\n";
+	$totalFilesScanned=0;
+	$totalReportLines=0;
+	foreach(recursiveScan("doc/") as $sourceFile){
+		if (($sourceFile != "") && ($sourceFile != "lint/.index")){
+			if (($totalFilesScanned % 2) == 1){
+				echo "	<tr class='evenTableRow'>\n";
+			}else{
+				echo "	<tr>\n";
+			}
+			$fileName = popPath($sourceFile);
+			$fileTime = str_replace(".index","",$fileName);
+			$fileTime = "lint_time/".$fileTime.".index";
+			$fileTitle = str_replace(".index","",$fileName);
+			$fileExt = explode(".",$fileName)[1];
+
+			// read the index entry
+			echo "	<td><a href='?doc=$fileName'>$fileTitle</a></td>\n";
+			#echo "	<td>".$tempLineCount."</td>";
+			if ($fileExt == "sh"){
+				echo "	<td>ShellScript</td>";
+			}else if ($fileExt == "js"){
+				echo "	<td>Javascript</td>";
+			}else if ($fileExt == "php"){
+				echo "	<td>PHP</td>";
+			}else if ($fileExt == "html"){
+				echo "	<td>HTML</td>";
+			}else if ($fileExt == "py"){
+				echo "	<td>Python</td>";
+			}else{
+				echo "	<td>Unknown</td>";
+			}
+			echo "	<td>".file_get_contents($fileTime)."</td>\n";
+			echo "	</tr>\n";
+		}
+	}
+	echo "</table>\n";
+	echo "</div>\n";
 }
 ################################################################################
 function drawLint(){
@@ -339,6 +388,20 @@ if (array_key_exists("inspector",$_GET)){
 	echo "	</pre>";
 	echo "</div>\n";
 	drawLint();
+}else if (array_key_exists("listDoc",$_GET)){
+	drawHeader();
+	drawDoc();
+}else if (array_key_exists("doc",$_GET)){
+	$docFileName=$_GET['doc'];
+	$cleanDocFileName=str_replace(".index","",$docFileName);
+	drawHeader();
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Docstring Output for '$cleanDocFileName'</h2>\n";
+	echo "	<pre>";
+	echo file_get_contents("doc/".$docFileName);
+	echo "	</pre>";
+	echo "</div>\n";
+	drawDoc();
 }else if (array_key_exists("commit",$_GET)){
 	$commitName=$_GET['commit'];
 	drawHeader();
