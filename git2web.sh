@@ -22,6 +22,11 @@
 source /var/lib/2web/common
 ################################################################################
 function generatedDir(){
+	# Load the directory to store generated content
+	#
+	# - Path loaded from /etc/2web/repos/generated.cfg
+	#
+	# RETURN STDOUT
 	if [ ! -f /etc/2web/repos/generated.cfg ];then
 		# if no config exists create the default config
 		{
@@ -35,6 +40,11 @@ function generatedDir(){
 }
 ################################################################################
 function downloadDir(){
+	# Load the download directory for git2web
+	#
+	# - loaded from /etc/2web/repos/download.cfg
+	#
+	# RETURN STDOUT
 	if [ ! -f /etc/2web/repos/download.cfg ];then
 		# if no config exists create the default config
 		{
@@ -48,7 +58,13 @@ function downloadDir(){
 }
 ################################################################################
 function libaryPaths(){
-	# add the download directory to the paths
+	# Load local library paths for git2web
+	#
+	# - /etc/2web/repos/libaries.cfg
+	# - /etc/2web/repos/libaries.d/*.cfg
+	# - includes paths in generatedDir() and downloadDir()
+	#
+	# RETURN STDOUT
 	echo "$(downloadDir)"
 	# check for server libary config
 	if [ ! -f /etc/2web/repos/libaries.cfg ];then
@@ -73,8 +89,11 @@ function libaryPaths(){
 }
 ################################################################################
 function buildBashDocstrings(){
-	# build the docstrings for bash functions like this docstring you are reading.
-	# docstrings in bash are successive comments after the function declartion
+	# Build the docstrings for BASH functions like this docstring you are reading.
+	#
+	# - docstrings in BASH are successive comments after the function declaration
+	#
+	# RETURN STDOUT
 	fileName=$1
 	# get all the function names
 	functionNames="$(cat "$fileName" | grep --ignore-case "^function" | cut -d' ' -f2 | cut -d'(' -f1)"
@@ -124,6 +143,19 @@ function buildBashDocstrings(){
 }
 ################################################################################
 function buildDiffGraph(){
+	# Build a file change diff graph.
+	#
+	# The below example would graph diff data for the last 90 days
+	# ex. buildDiffGraph "days" 90 "graph_diff_year" "$repoName"
+	#
+	# $1 = timeFrame : The time increment to use. years, days, months, weeks
+	# $2 = timeLength : How many of the time increment to go back and graph
+	# $3 = outputFileName : The name of the graph to be created
+	# $4 = repoName : the name of the repo to read
+	#
+	# - The graph is scaled automatically to fit the tallest value.
+	#
+	# RETURN NULL, FILES
 	timeFrame=$1
 	timeLength=$2
 	outputFilename=$3
@@ -237,6 +269,19 @@ function buildDiffGraph(){
 }
 ################################################################################
 function buildCommitGraph(){
+	# Build graph of the commits over time.
+	#
+	# The below example would graph commit hdata for the last 90 days
+	# ex. buildCommitGraph "days" 90 "graph_diff_year" "$repoName"
+	#
+	# $1 = timeFrame : The time increment to use. years, days, months, weeks
+	# $2 = timeLength : How many of the time increment to go back and graph
+	# $3 = outputFileName : The name of the graph to be created
+	# $4 = repoName : the name of the repo to read
+	#
+	# - The graph is scaled automatically to fit the tallest value.
+	#
+	# RETURN NULL, FILES
 	timeFrame=$1
 	timeLength=$2
 	outputFilename=$3
@@ -316,6 +361,9 @@ function buildCommitGraph(){
 }
 ################################################################################
 function update(){
+	# Pull updates from local and remote repos into git2web server.
+	#
+	# RETURN NULL, FILES
 	addToLog "INFO" "STARTED Update" "$(date)"
 	#DEBUG
 	#set -x
@@ -826,6 +874,11 @@ function processRepo(){
 }
 ################################################################################
 webUpdate(){
+	# Update the webserver content for git2web, search for content in paths and generate webpages.
+	#
+	# - This make any content in paths accessable via the web interface.
+	#
+	# RETURN NULL, FILES
 	addToLog "INFO" "STARTED Webgen" "$(date)"
 	# read the download directory and convert repos into webpages
 	# - There are 2 types of directory structures for repos in the download directory
