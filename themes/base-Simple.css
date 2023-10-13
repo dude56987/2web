@@ -247,6 +247,9 @@ ol li{
 	color: orange;
 	font-weight: bold;
 }
+.logEntry{
+	background-color: var(--solidBackground);
+}
 .ERROR{
 	background-color: darkred;
 }
@@ -267,6 +270,9 @@ ol li{
 }
 .INFO{
 	background-color: darkslategray;
+}
+.ADMIN{
+	background-color: orange;
 }
 /*
 .seasonHeader {
