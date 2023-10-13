@@ -17,6 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 function createDir(){
+	# Create a path for use in the webserver
+	#
+	# $1 = directoryPath : The directory to create with webserver permissions
+	#
+	# - Create a directory with permissions for the web user www-data
+	# - Create path recursively if necessary
+	#
+	# RETURN FILES
 	if ! test -d "$1";then
 		mkdir -p "$1"
 		# set ownership of directory and subdirectories as www-data
@@ -26,6 +34,12 @@ function createDir(){
 }
 ########################################################################
 function readPathConfig(){
+	# Read a single path stored in a text file
+	#
+	# $1 = pathToConfig : The file where the path configuration file is stored
+	# $2 = defaultPath : The default location for this path config file to set if no path is set
+	#
+	# RETURN STDOUT
 	pathToConfig=$1
 	defaultPath=$2
 	# check for the config path
@@ -57,14 +71,25 @@ function readPathConfig(){
 }
 ########################################################################
 function webRoot(){
+	# read config for webserver root directory
+	#
+	# RETURN STDOUT
 	readPathConfig "/etc/2web/web.cfg" "/var/cache/2web/web_cache/"
 }
 ########################################################################
 function generatedRoot(){
+	# Read config for the directory where generated content is stored
+	#
+	# RETURN STDOUT
 	readPathConfig "/etc/2web/generated.cfg" "/var/cache/2web/generated_cache/"
 }
 ########################################################################
 function downloadRoot(){
+	# Read config for the location where all downloaded content is stored
+	#
+	# - This does not include the thumbnails downloaded
+	#
+	# RETURN STDOUT
 	readPathConfig "/etc/2web/download.cfg" "/var/cache/2web/downloads_cache/"
 }
 ########################################################################
@@ -113,6 +138,14 @@ function checkFileDataSum(){
 }
 ########################################################################
 function setFileDataSum(){
+	# Set the data sum of a file in the sums directory, for use with checkFileDataSum()
+	# This allows you to check the sum then run your code to update whatever needs changed.
+  # Then this function locks in those changes.
+	#
+	# $1 = webDirectory : The base root of the webserver returned by webRoot()
+	# $2 = filePath : The path to the file that was checked.
+	#
+	# RETURN NULL, FILES
 	webDirectory=$1
 	filePath=$2
 	# module name
@@ -125,7 +158,11 @@ function setFileDataSum(){
 }
 ########################################################################
 function buildHomePage(){
-
+	# Update all the statistics for the 2web homepage
+	#
+	# $1 = webDirectory : the base path of the web directory returned by webRoot()
+	#
+	# RETURN NULL, FILES
 	webDirectory=$1
 
 	INFO "Building home page..."
@@ -271,6 +308,15 @@ function buildHomePage(){
 }
 ########################################################################
 function cacheCheck(){
+	# Check if a file is more than x days old and needs updated.
+	#
+	# $1 = filePath : Path to the cached file to check for.
+	# $2 = cacheDays : The max age in days of the file
+	#
+	# - Will return true if the files does not exist or the file is older than $cacheDays
+	# - This should activate code that changes the file
+	#
+	# RETURN BOOL
 
 	filePath="$1"
 	cacheDays="$2"
@@ -299,6 +345,15 @@ function cacheCheck(){
 }
 ########################################################################
 function cacheCheckMin(){
+	# Check if a file is more than x minutes old and needs updated.
+	#
+	# $1 = filePath : Path to the cached file to check for.
+	# $2 = cacheMinutes : The max age in minutes of the file
+	#
+	# - Will return true if the files does not exist or the file is older than $cacheMinutes
+	# - This should activate code that changes the file
+	#
+	# RETURN BOOL
 
 	filePath="$1"
 	cacheMinutes="$2"
@@ -323,12 +378,23 @@ function cacheCheckMin(){
 }
 ########################################################################
 function linkFile(){
+	# Create a link if it does not yet exist
+	#
+	# $1 = target
+	# $2 = symlinkPath
+	#
+	# RETURN FILES
 	if ! test -L "$2";then
 		ln -sf "$1" "$2"
 	fi
 }
 ########################################################################
 function updateCerts(){
+	# Update the SSL certificates if they are more than 365 days old
+	#
+	# $1 = force : Force generating new certificates, ignore age check
+	#
+	# RETURN NULL, FILES
 	force=$1
 	genCert='no'
 	# if the cert exists
@@ -361,6 +427,22 @@ function updateCerts(){
 }
 ########################################################################
 function alterArticles(){
+	# Modify a text string so that articles are at the end of the title
+	#
+	# $1 = title : The title to alter the articles of
+	#
+	# - Articles are
+	#  - A
+	#  - An
+	#  - The
+	# - Leading Intergers are also treated as articles
+	#
+	# ex)
+	#    "The Big Man" becomes "Big Man, The"
+	# ex)
+	#    "A Big Adventure" becomes "Big Adventure, A"
+	#
+	# RETURN STDOUT
 	pageComicName=$1
 	# alter the title to make articles(a, an, the) sort correctly
 	if echo "$pageComicName" | grep --ignore-case -q "^the ";then
@@ -385,20 +467,30 @@ function alterArticles(){
 }
 ################################################################################
 function cpuCount(){
-		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-		# remove one cpu from the total cpu count, this will prevent service interuptions
-		totalCPUS=$(( $totalCPUS - 1 ))
-		if [ $totalCPUS -lt 2 ];then
-			totalCPUS=1
-		fi
-		# output the cpu count
-		echo $totalCPUS
+	# PARALLEL PROCESSING COMMAND
+	# List the total number of cores the system has available for multithreading
+	#
+	# RETURN STDOUT
+	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+	# remove one cpu from the total cpu count, this will prevent service interuptions
+	totalCPUS=$(( $totalCPUS - 1 ))
+	if [ $totalCPUS -lt 2 ];then
+		totalCPUS=1
+	fi
+	# output the cpu count
+	echo $totalCPUS
 }
 ################################################################################
 function waitQueue(){
 	# PARALLEL PROCESSING COMMAND
-	# - use system load and free cores to manage queue
-	# wait for queue to free up for next command
+	# Wait for queue to free up for next command
+	#
+	# $1 = sleepTime : The amount of seconds to wait between queue size checks
+	# $2 = totalCPUS : The number of cpus the system has from cpuCount()
+	#
+	# - Uses system load and free cores to manage queue
+	#
+	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
 	if [ $totalCPUS -eq 1 ];then
@@ -429,9 +521,15 @@ function waitQueue(){
 ################################################################################
 function waitSlowQueue(){
 	# PARALLEL PROCESSING COMMAND
-	# - use only the system load to manage queue
+	# Wait for system load to get below the totalCpus
+	#
+	# $1 = sleepTime : The amount of seconds to wait between queue size checks
+	# $2 = totalCPUS : The number of cpus the system has from cpuCount()
+	#
+	# - Use only the system load to manage queue
 	# - This is dangerous and will heavily tax the system in a uneven way
-	# wait for system load to get below the totalCpus
+	#
+	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
 	while true;do
@@ -446,8 +544,14 @@ function waitSlowQueue(){
 ################################################################################
 function waitFastQueue(){
 	# PARALLEL PROCESSING COMMAND
-	# - use only the free cpu cores to manage the queue
-	# wait for queue to free up for next command
+	# Wait for queue to free up for next command
+	#
+	# $1 = sleepTime : The amount of seconds to wait between queue size checks
+	# $2 = totalCPUS : The number of cpus the system has from cpuCount()
+	#
+	# - Use only the free cpu cores to manage the queue
+	#
+	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
 	while true;do
@@ -469,9 +573,31 @@ function waitFastQueue(){
 	done
 }
 ################################################################################
+function queueIsActive(){
+	# PARALLEL PROCESSING COMMAND
+	# This is to be used in the head of a while loop to run a queue while the jobs
+	# are actively processing.
+	#
+	# - Return true if the queue is still processing jobs
+	#
+	# RETURN NULL
+	if [ $(jobs -r | wc -l) -gt 0 ];then
+		# the queue is still active
+		return 0
+	else
+		# the queue is empty
+		return 1
+	fi
+}
+################################################################################
 function blockQueue(){
 	# PARALLEL PROCESSING COMMAND
-	# wait for all jobs in queue to finish
+	# Wait for all jobs in queue to finish
+	#
+	# - Place this after waitQueue() commands to make all jobs finish before
+	#   processing can continue
+	#
+	# RETURN NULL
 	sleepTime=$1
 	while true;do
 		if [ $(jobs -r | wc -l) -gt 0 ];then
@@ -483,11 +609,19 @@ function blockQueue(){
 }
 ################################################################################
 function ALERT(){
+	# Write output and move down to the next line. Keeps text on screen when using INFO()
+	#
+	# RETURN STDOUT
 	echo "$1";
 	echo
 }
 ################################################################################
 function startDebug(){
+	# Draw a debug header in the output and enable debug mode in BASH
+	#
+	# - All commands executed will be displayed after this command is ran
+	#
+	# RETURN NULL
 	echo
 	echo "################################################################################"
 	echo "#                              START DEBUG BLOCK                               #"
@@ -497,6 +631,10 @@ function startDebug(){
 }
 ################################################################################
 function stopDebug(){
+	# Stop debugging process started with startDebug(). This will reset BASH to its default
+	# non-debug state where commands are executed without printing to STDOUT.
+	#
+	# RETURN NULL
 	set +x
 	echo
 	echo "################################################################################"
@@ -506,6 +644,12 @@ function stopDebug(){
 }
 ################################################################################
 function INFO(){
+	# Output text on a single line and overwite that text with the next INFO() output.
+	#
+	# - This will prevent the terminal from scrolling down when outputing text.
+	# - Line length will be cut to the size of the active terminal
+	#
+	# RETURN STDOUT
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -518,6 +662,9 @@ function INFO(){
 }
 ################################################################################
 function ERROR(){
+	# Print text as error output. This will have a ERROR header.
+	#
+	# RETURN STDOUT
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
@@ -526,12 +673,24 @@ function ERROR(){
 	#   - cut one off the width in order to make space for the \r
 	output="$(echo -n "[ERROR]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
 	# print the line
+	echo
+	echo "################################################################################"
+	echo "#################################### ERROR! ####################################"
 	echo "################################################################################"
 	echo "$output"
 	echo "################################################################################"
+	echo
 }
 ################################################################################
 function lockProc(){
+	# Lock a module to a single process. This should prevent any module from running
+	# more than one process at a time.
+	#
+	# - Creates a trap to remove lock when the parent process dies
+	# - Creates a lockfile in the web directory path while the process is active.
+	# - Creates a activeGraph file to mark the activity graph
+	#
+	# RETURN FILES
 	procName=$1
 	webDirectory=$(webRoot)
 	ALERT "$webDirectory/${procName}.active"
@@ -554,6 +713,17 @@ function lockProc(){
 }
 ################################################################################
 function returnModStatus(){
+	# Check if a module is enabled
+	#
+	# $1 = moduleName : The name of the module to check the enable/disabled status of.
+	#
+	# - Return true if the module name is enabled
+	#
+	# ex)
+	#   returnModStatus "nfo2web"
+	# 	Will return true if nfo2web is enabled.
+	#
+	# RETURN BOOL
 	moduleName="$1"
 	# foreground color codes
 	redFG="\033[38;5;9m"
@@ -576,9 +746,15 @@ function returnModStatus(){
 }
 ################################################################################
 function checkModStatus(){
-	# check the status of a mod
-	# if the mod is enabled allow the module to keep running
-	# if the mod is disabled run the nuke command within that module
+	# For use at startup of a module, If mod is disabled the local module nuke() is
+	# launched to clear generated data from previous module runs.
+	#
+	# $1 = moduleName : name of the module to check.
+	#
+	# - If the mod is enabled allow the module to keep running
+	# - If the mod is disabled run the nuke command within that module
+	#
+	# RETURN NULL
 
 	moduleName=$1
 
@@ -608,20 +784,33 @@ function checkModStatus(){
 }
 ################################################################################
 function enableMod(){
-	# enable a module name
+	# Enable a module name
+	#
+	# $1 = moduleName : The name of the module to enable
+	#
+	# RETURN FILES
 	moduleName=$1
 	ALERT "Enabling the module $moduleName"
 	echo -n "enabled" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function disableMod(){
-	# disable a module name
+	# Disable a module name
+	#
+	# $1 = moduleName : The name of the module to disable
+	#
+	# RETURN FILES
 	moduleName=$1
 	ALERT "Disabling the module $moduleName"
 	echo -n "disabled" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function loadWithoutComments(){
+	# Load a file without comment lines starting in #
+	#
+	#	- $1 = fileName : The path of the file to load without comments
+	#
+	# RETURN STDOUT
 	grep -Ehv "^#" "$1"
 	return 0
 }
