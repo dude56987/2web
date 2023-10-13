@@ -78,7 +78,14 @@ include("/usr/share/2web/templates/ai_toolbox.php");
 # build the anwser header
 echo "<div class='titleCard'>\n";
 echo "<a href='".$_SERVER["REQUEST_URI"]."'>";
-echo "<h1>".file_get_contents("prompt.cfg")."</h1>";
+# limit title size to 100
+$promptData=file_get_contents("prompt.cfg");
+$bigString="";
+if (strlen($promptData) > 100){
+	echo "<h1>".substr($promptData,0,100)."..."."</h1>";
+}else{
+	echo "<h1>".$promptData."</h1>";
+}
 echo "</a>";
 echo "<div class=''>\n";
 $noDiscoveredImages=True;
