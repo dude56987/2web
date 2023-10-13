@@ -88,6 +88,96 @@ function libaryPaths(){
 	printf "$(generatedDir)/\n"
 }
 ################################################################################
+function buildPhpDocstrings(){
+	# Build the docstrings for PHP functions like this docstring you are reading.
+	#
+	# - docstrings in PHP are successive comments after the function declaration
+	#
+	# RETURN STDOUT
+	fileName=$1
+	outputFileName=$2
+	# get all the function names
+	#functionNames="$(cat "$fileName" | grep --ignore-case "^function" | cut -d' ' -f2 | cut -d'(' -f1)"
+	# add function names with proceeding spaces
+	#functionNames="$functionNames $(cat "$fileName" | grep --ignore-case "^.*function" | cut -d' ' -f2 | cut -d'(' -f1)"
+	startDebug
+	functionNames="$(cat "$fileName" | grep --ignore-case "^.*function " | cut -d' ' -f2 | cut -d'(' -f1)"
+	#functionCount="$(cat "$fileName" | grep -P --ignore-case -c "^.*function\(.*?\)\{")"
+	functionCount="$(cat "$fileName" | grep -P --ignore-case -c "^.*function ")"
+	stopDebug
+	# only write the file if there is at least one function
+	if [ $functionCount -gt 0 ];then
+		{
+			#
+			cleanName=$(echo "$fileName" | sed "s/\.\///g" | sed "s/\.php//g")
+			if echo "$cleanName" | grep "/";then
+				cleanName=$(echo "$cleanName" | rev | cut -d'/' -f1 | rev)
+			fi
+			# for each of the found function names get the block of comments below it
+			echo "NAME"
+			echo "    $cleanName"
+			echo
+			echo "DESCRIPTION"
+			# draw the file description header
+			cat "$fileName" | while read -r line;do
+				if echo "$line" | grep --ignore-case -q "<?PHP";then
+					# ignore the starting line
+					echo -n
+				elif echo "$line" | grep -q "^.*#.*$";then
+					# print the comment line
+					echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+				elif echo "$line" | grep -q "^#.*$";then
+					# print the comment line
+					echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+				else
+					# break on the first line not containing a comment
+					break
+				fi
+			done
+			# write the functions
+			echo
+			echo "FUNCTIONS"
+			IFSBACKUP=$IFS
+			IFS=$'\n'
+			for functionName in $functionNames;do
+				# for each function name read the function
+				functionData=$(cat "$fileName" | sed -z "s/\n/;/g")
+				functionData=$(echo "$functionData" | grep -P --only-matching "$functionName\(.*\)\{.*?\}")
+				functionData=$(echo "$functionData" | sed "s/;/\n/g")
+				# extract the function and parse each line until you hit a line that is not a comment
+				echo "$functionData" | while read -r line;do
+					#echo $line
+					# read until you hit a non comment line
+					if echo "$line" | grep -q "$functionName(){";then
+						# this is the function declaration draw the header
+						echo
+						echo -e "    $functionName()"
+					elif echo "$line" | grep -P -q "$functionName\(.*?\)\{";then
+						# this is the function declaration draw the header
+						echo
+						echo "    $functionName()"
+					elif echo "$line" | grep -q "^.*#.*$";then
+						# print the comment line
+						# add a extra tab and remove the # at the start of the comment line in the comment block
+						echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+					elif echo "$line" | grep -q "^#.*$";then
+						# print the comment line
+						echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+					else
+						# break on the first line not containing a comment
+						break
+					fi
+				done
+			done
+			echo
+			echo -e "FILE"
+			echo -e "\t$fileName"
+			# reset IFS
+			IFS=$IFSBACKUP
+		} > "$outputFileName"
+	fi
+}
+################################################################################
 function buildBashDocstrings(){
 	# Build the docstrings for BASH functions like this docstring you are reading.
 	#
@@ -95,51 +185,77 @@ function buildBashDocstrings(){
 	#
 	# RETURN STDOUT
 	fileName=$1
+	outputFileName=$2
 	# get all the function names
 	functionNames="$(cat "$fileName" | grep --ignore-case "^function" | cut -d' ' -f2 | cut -d'(' -f1)"
-	cleanName=$(echo "$fileName" | sed "s/\.\///g" | sed "s/\.sh//g")
-	# for each of the found function names get the block of comments below it
-	echo -e "NAME"
-	echo -e "    $cleanName"
-	echo
-	echo -e "FUNCTIONS"
-	IFSBACKUP=$IFS
-	IFS=$'\n'
-	for functionName in $functionNames;do
-		# for each function name read the function
-		functionData=$(cat "$fileName" | sed -z "s/\n/;/g")
-		functionData=$(echo "$functionData" | grep -P --only-matching "$functionName\(\)\{.*?\}")
-		functionData=$(echo "$functionData" | sed "s/;/\n/g")
-		# extract the function and parse each line until you hit a line that is not a comment
-		echo "$functionData" | while read -r line;do
-			#echo $line
-			# read until you hit a non comment line
-			if echo "$line" | grep -q "$functionName()";then
-				# this is the function declaration draw the header
+	functionCount="$(cat "$fileName" | grep -c --ignore-case "^function")"
+	if [ $functionCount -gt 0 ];then
+		{
+			cleanName=$(echo "$fileName" | sed "s/\.\///g" | sed "s/\.sh//g")
+			if echo "$cleanName" | grep "/";then
+				cleanName=$(echo "$cleanName" | rev | cut -d'/' -f1 | rev)
+			fi
+			# for each of the found function names get the block of comments below it
+			echo "NAME"
+			echo "    $cleanName"
+			echo
+			echo "DESCRIPTION"
+			# draw the file description header
+			cat "$fileName" | while read -r line;do
+				if echo "$line" | grep -q "#!";then
+					# ignore the starting line
+					echo -n
+				elif echo "$line" | grep -q "^.*#.*$";then
+					# print the comment line
+					echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+				elif echo "$line" | grep -q "^#.*$";then
+					# print the comment line
+					echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+				else
+					# break on the first line not containing a comment
+					break
+				fi
+			done
+			# write the functions
+			echo
+			echo "FUNCTIONS"
+			IFSBACKUP=$IFS
+			IFS=$'\n'
+			for functionName in $functionNames;do
+				# for each function name read the function
+				functionData=$(cat "$fileName" | sed -z "s/\n/;/g")
+				functionData=$(echo "$functionData" | grep -P --only-matching "$functionName\(\)\{.*?\}")
+				functionData=$(echo "$functionData" | sed "s/;/\n/g")
+				# extract the function and parse each line until you hit a line that is not a comment
+				echo "$functionData" | while read -r line;do
+					#echo $line
+					# read until you hit a non comment line
+					if echo "$line" | grep -q "$functionName(){";then
+						# this is the function declaration draw the header
+						echo
+						echo "    $functionName()"
+					elif echo "$line" | grep -q "^.*#.*$";then
+						# print the comment line
+						# add a extra tab and remove the # at the start of the comment line in the comment block
+						echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+					elif echo "$line" | grep -q "^#.*$";then
+						# print the comment line
+						echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
+					else
+						# break on the first line not containing a comment
+						break
+					fi
+				done
 				#echo "################################################################################"
 				echo
-				echo -e "    $functionName()"
-			elif echo "$line" | grep -q "^.*#.*$";then
-				# print the comment line
-				# add a extra tab and remove the # at the start of the comment line in the comment block
-				echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
-			elif echo "$line" | grep -q "^#.*$";then
-				# print the comment line
-				echo "$line" | sed "s/#/    /g" | sed "s/\t/    /g"
-			else
-				#echo "NOT A COMMENT: $line"
-				# break on the first line not containing a comment
-				break
-			fi
-		done
-		#echo "################################################################################"
-		echo
-	done
-	echo
-	echo -e "FILE"
-	echo -e "\t$fileName"
-	# reset IFS
-	IFS=$IFSBACKUP
+			done
+			echo
+			echo -e "FILE"
+			echo -e "\t$fileName"
+			# reset IFS
+			IFS=$IFSBACKUP
+		} > "$outputFileName"
+	fi
 }
 ################################################################################
 function buildDiffGraph(){
@@ -663,7 +779,7 @@ function processRepo(){
 						waitQueue 0.5 "$totalCPUS"
 				fi
 				# generate the documentation for the file
-				buildBashDocstrings "$sourceFilePath" > "$webDirectory/repos/$repoName/doc/$tempSourceSum.index" &
+				buildBashDocstrings "$sourceFilePath" "$webDirectory/repos/$repoName/doc/$tempSourceSum.index" &
 				waitQueue 0.5 "$totalCPUS"
 				# count the number of functions
 				#cat "$fileName" | grep --ignore-case -c "^function" > "$webDirectory/repos/$repoName/doc_count/$tempSourceSum.index" &
@@ -782,16 +898,16 @@ function processRepo(){
 				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					{
+						# use php syntax checking and weblint for lint output of php files
 						php --syntax-check "$sourceFilePath" | txt2html --extract --escape_HTML_chars
 						if test -f "/usr/bin/weblint";then
-							if echo "$@" | grep -q -e "--parallel";then
 								weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars &
 								waitQueue 0.5 "$totalCPUS"
-							else
-								weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars
-							fi
 						fi
 					} > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
+					# write php docstrings
+					buildPhpDocstrings "$sourceFilePath" "$webDirectory/repos/$repoName/doc/$tempSourceSum.index" &
+					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
 		fi
