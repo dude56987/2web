@@ -35,6 +35,7 @@ requireLogin();
 ini_set('display_errors', 1);
 # add the header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 ################################################################################
 if (is_dir("/var/cache/2web/web/views/")){
 	createViewsDatabase();

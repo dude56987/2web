@@ -178,6 +178,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if ($pageURL == "/views/index.php"){
+			echo "<a class='activeButton' href='/views/'>";
+		}else{
+			echo "<a class='button' href='/views/'>";
+		}
+		?>
+			👁️
+			<span class='headerText'>
+				Views
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/log/index.php"){
 			echo "<a class='activeButton' href='/log/'>";
 		}else{
