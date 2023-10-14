@@ -71,7 +71,7 @@ function libaryPaths(){
 		# if no config exists create the default config
 		{
 			# write the new config from the path variable
-			echo "/var/cache/2web/downloads/repos/"
+			cat /etc/2web/config_default/git2web_libraries.cfg
 		} >> "/etc/2web/repos/libaries.cfg"
 	fi
 	# write path to console
