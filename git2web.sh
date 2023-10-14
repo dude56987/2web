@@ -21,40 +21,15 @@
 ################################################################################
 source /var/lib/2web/common
 ################################################################################
-function generatedDir(){
-	# Load the directory to store generated content
-	#
-	# - Path loaded from /etc/2web/repos/generated.cfg
-	#
-	# RETURN STDOUT
-	if [ ! -f /etc/2web/repos/generated.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			echo "/var/cache/2web/generated/repos/"
-		} >> "/etc/2web/repos/generated.cfg"
-		createDir "/var/cache/2web/generated/repos/"
-	fi
-	# write path to console
-	cat "/etc/2web/repos/generated.cfg"
-}
-################################################################################
 function downloadDir(){
 	# Load the download directory for git2web
 	#
 	# - loaded from /etc/2web/repos/download.cfg
 	#
 	# RETURN STDOUT
-	if [ ! -f /etc/2web/repos/download.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			echo "/var/cache/2web/downloads/repos/"
-		} >> "/etc/2web/repos/download.cfg"
-		createDir "/var/cache/2web/downloads/repos/"
-	fi
+
 	# write path to console
-	cat "/etc/2web/repos/download.cfg"
+	echo "/var/cache/2web/downloads/repos/"
 }
 ################################################################################
 function libaryPaths(){
@@ -62,7 +37,7 @@ function libaryPaths(){
 	#
 	# - /etc/2web/repos/libaries.cfg
 	# - /etc/2web/repos/libaries.d/*.cfg
-	# - includes paths in generatedDir() and downloadDir()
+	# - includes paths in downloadDir()
 	#
 	# RETURN STDOUT
 	echo "$(downloadDir)"
@@ -84,8 +59,6 @@ function libaryPaths(){
 		# create a space just in case none exists
 		printf "\n"
 	done
-	# add the generated repos directories
-	printf "$(generatedDir)/\n"
 }
 ################################################################################
 function buildPhpDocstrings(){
@@ -500,7 +473,6 @@ function update(){
 	webDirectory=$(webRoot)
 	################################################################################
 	downloadDirectory="$(downloadDir)"
-	generatedDirectory="$(generatedDir)"
 	################################################################################
 	# make the download directory if is does not exist
 	createDir "$downloadDirectory"
