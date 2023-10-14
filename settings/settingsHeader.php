@@ -207,19 +207,13 @@ $pageURL = $_SERVER['REQUEST_URI'];
 <?PHP
 if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
 	$moduleName="iptv2web";
-	echo "	<div class='inputCard'>\n";
+	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Live Settings</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/tv.php'>📺TV</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/radio.php'>📻Radio</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/iptv_blocked.php'>🚫Blocked</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
+	echo "		<div class='listCard'>";
+	echo "			<a class='button' href='/settings/tv.php'>📺TV</a>\n";
+	echo "			<a class='button' href='/settings/radio.php'>📻Radio</a>\n";
+	echo "			<a class='button' href='/settings/iptv_blocked.php'>🚫Blocked</a>\n";
+	echo "		</div>";
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php")){
 	if ($pageURL == "/settings/nfo.php"){
@@ -227,16 +221,12 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	}else if ($pageURL == "/settings/ytdl2nfo.php"){
 		$moduleName="ytdl2nfo";
 	}
-	echo "	<div class='inputCard'>\n";
+	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Video On Demand Settings</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/nfo.php'>🎞️Libaries</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
+	echo "		<div class='listCard'>";
+	echo "				<a class='button' href='/settings/nfo.php'>🎞️Libaries</a>\n";
+	echo "				<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
+	echo "		</div>";
 	echo "	</div>\n";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
@@ -260,16 +250,12 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
-	echo "	<div class='inputCard'>\n";
+	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Comics Settings</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/comics.php'>📚Libaries</a>\n";
-	echo "			</li>\n";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/comicsDL.php'>↓Downloads</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
+	echo "		<div class='listCard'>";
+	echo "			<a class='button' href='/settings/comics.php'>📚Libaries</a>\n";
+	echo "			<a class='button' href='/settings/comicsDL.php'>↓Downloads</a>\n";
+	echo "		</div>";
 	echo "	</div>\n";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
