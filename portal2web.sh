@@ -112,14 +112,14 @@ function generateLink(){
 			echo "Type=Link"
 			echo "URL=$link"
 			echo "Icon=text-html"
-		} > "$webDirectory/kodi/portal/${domain}_$linkSum.desktop"
-		chmod +x "$webDirectory/kodi/portal/${domain}_$linkSum.desktop"
+		} > "$webDirectory/kodi/portal/${domain}_${name}.desktop"
+		chmod +x "$webDirectory/kodi/portal/${domain}_${name}.desktop"
 		# build the windows url file link
 		{
 			echo "[InternetShortcut]"
 			echo "URL=$link"
-		} > "$webDirectory/kodi/portal/${domain}_$linkSum.url"
-		chmod +x "$webDirectory/kodi/portal/${domain}_$linkSum.url"
+		} > "$webDirectory/kodi/portal/${domain}_${name}.url"
+		chmod +x "$webDirectory/kodi/portal/${domain}_${name}.url"
 		# link the portal info button to the portal page
 		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain.php"
 
