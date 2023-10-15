@@ -29,9 +29,9 @@ requireLogin();
 <?PHP
 	if (array_key_exists("refresh",$_GET)){
 		if ($_GET['refresh'] == 'true'){
-			// using javascript, reload the webpage every 20 seconds, time is in milliseconds
+			// using javascript, reload the webpage every 5 seconds
 			echo "<script>";
-			echo "setTimeout(function() { window.location=window.location;},(1000*20));";
+			echo "delayedRefresh(5)";
 			echo "</script>";
 		}
 	}
@@ -43,69 +43,58 @@ requireLogin();
 	include($_SERVER['DOCUMENT_ROOT'].'/settings/settingsHeader.php');
 	# add the javascript sorter controls
 ?>
-<div class='inputCard'>
-	<h2>Automatic Refresh</h2>
-	<hr>
-<?PHP
-	if (array_key_exists("limit", $_GET)){
-		if (is_numeric($_GET["limit"])){
-			$limitRefreshString="&limit=".$_GET["limit"];
-		}else{
-			$limitRefreshString="";
-		}
-	}else{
-		$limitRefreshString="";
-	}
-	if (array_key_exists("refresh",$_GET)){
-		if ($_GET['refresh'] == 'true'){
-			echo "<a class='activeButton' href='?refresh=false'>Disable</a>";
-		}else{
-			echo "<a class='button' href='?refresh=true".$limitRefreshString."#tableTop'>Enable</a>";
-		}
-	}else{
-		echo "<a class='button' href='?refresh=true".$limitRefreshString."#tableTop'>Enable</a>";
-	}
-	?>
-	<hr>
-</div>
-<div class='titleCard'>
-	<h2>Filter Log Entries</h2>
-	<input type='button' class='button' value='Info' onclick='toggleVisibleClass("INFO")'>
-	<input type='button' class='button' value='Error' onclick='toggleVisibleClass("ERROR")'>
-	<input type='button' class='button' value='Warning' onclick='toggleVisibleClass("WARNING")'>
-	<input type='button' class='button' value='Update' onclick='toggleVisibleClass("UPDATE")'>
-	<input type='button' class='button' value='New' onclick='toggleVisibleClass("NEW")'>
-	<input type='button' class='button' value='Debug' onclick='toggleVisibleClass("DEBUG")'>
-	<input type='button' class='button' value='Download' onclick='toggleVisibleClass("DOWNLOAD")'>
-</div>
 <div class='titleCard'>
 	<h2>Limit Shown Entries</h2>
 	<div class='listCard'>
 		<form method="get">
-		<?PHP
-		if (array_key_exists("limit", $_GET)){
-			if (is_numeric($_GET["limit"])){
-				echo "<input type='number' name='limit' max=1000 min=5 value='".$_GET["limit"]."' placeholder='X'>";
+			<?PHP
+			if (array_key_exists("limit", $_GET)){
+				if (is_numeric($_GET["limit"])){
+					echo "<input type='number' name='limit' max=5000 min=5 value='".$_GET["limit"]."' placeholder='X'>";
+				}else{
+					echo "<input type='number' name='limit' max=5000 min=5 value='50'>";
+				}
 			}else{
-				echo "<input type='number' name='limit' max=1000 min=5 value='50'>";
+				echo "<input type='number' name='limit' max=5000 min=5 value='50'>";
 			}
-		}else{
-			echo "<input type='number' name='limit' max=1000 min=5 value='50'>";
-		}
-		?>
-		<button class='button' type="submit">Change Limit</button>
-		<!--
-		<input class='button' type="submit" value="Change Limit">
-		-->
+			?>
+			<button class='button' type="submit">Change Limit</button>
 		</form>
-		<hr>
-		<a class='button' href='?limit=500' >😕 Default</a>
-		<a class='button' href='?limit=all' >∞ Unlimited</a>
+	</div>
+	<div class='listCard'>
+		<a class='button' href='?limit=500' >😕 Default Log Limit</a>
+		<a class='button' href='?limit=all' >∞ Unlimited Log Entries</a>
+		<?PHP
+			# debug set the limit to max thirty during refresh
+			if (array_key_exists("refresh",$_GET)){
+				if ($_GET['refresh'] == 'true'){
+					echo "<a class='activeButton' href='?refresh=false'>⏹️ Stop Refresh</a>";
+				}else{
+					echo "<a class='button' href='?refresh=true&limit=30#tableTop'>▶️ Auto Refresh</a>";
+				}
+			}else{
+				echo "<a class='button' href='?refresh=true&limit=30#tableTop'>▶️ Auto Refresh</a>";
+			}
+		?>
+	</div>
+	<h2>Select Log Entries by Type</h2>
+	<div class='listCard'>
+		<a class='button' href='?search=admin'>Admin</a>
+		<a class='button' href='?search=info'>Info</a>
+		<a class='button' href='?search=error'>Error</a>
+		<a class='button' href='?search=warning'>Warning</a>
+		<a class='button' href='?search=update'>Update</a>
+		<a class='button' href='?search=download'>Download</a>
+		<a class='button' href='?search=debug'>Debug</a>
+		<a class='button' href='?search=new'>New</a>
 	</div>
 </div>
 <hr>
 <!--  add the search box -->
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("logEntry")' placeholder='Search...' >
+<form class='searchBoxForm' method='get'>
+	<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Log Entry Search...' >
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+</form>
 <hr>
 <div class='settingsListCard'>
 	<div class='settingsTable'>
@@ -115,7 +104,15 @@ requireLogin();
 			<th>Module</th>
 			<th>Type</th>
 			<th>Description</th>
-			<th>Debug</th>
+			<th>Debug<br>
+			<?PHP
+			if (array_key_exists("refresh",$_GET)){
+				if ($_GET['refresh'] == 'true'){
+					echo "<img class='localPulse' src='/pulse.gif'>\n";
+				}
+			}
+			?>
+			</th>
 			<th>Date</th>
 			<th>Time</th>
 		</tr>
@@ -124,6 +121,10 @@ requireLogin();
 		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
 		# set the timeout to 1 minute since most webbrowsers timeout loading before this
 		$databaseObj->busyTimeout(60000);
+		if (array_key_exists("search", $_GET)){
+			# set the search limit to all if it is a search
+			$_GET["limit"] = "all";
+		}
 		# get the limit for how many items are displayed from the log
 		if (array_key_exists("limit", $_GET)){
 			if ($_GET["limit"] == "all"){
@@ -167,10 +168,17 @@ requireLogin();
 			$data .= $row['time'];
 			$data .= "</td>";
 			$data .= "</tr>";
-			//echo "sourceFile = $sourceFile<br>\n";
-			// read the index entry
-			// write the index entry
-			echo "$data";
+			# if a search has been set search loaded data for the search string
+			if (array_key_exists("search",$_GET)){
+				# remove tags and search for search terms in data row
+				if (stripos(strip_tags($data), $_GET["search"]) !== false){
+					# write matching found data
+					echo "$data";
+				}
+			}else{
+				# write all the index entries
+				echo "$data";
+			}
 			flush();
 			ob_flush();
 		}
@@ -183,7 +191,8 @@ requireLogin();
 		# read the array in reverse order
 		#while (count($foundLogs) > 0){
 		#	echo file_get_contents(array_pop($foundLogs));
-		#}
+#}
+#
 
 		# reverse entries so newest logs are on top, oldest on the bottom
 		#$foundLogs = array_reverse($foundLogs);

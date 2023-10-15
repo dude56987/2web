@@ -236,8 +236,9 @@ function stopVideo(){
 	document.getElementById("video").stop();
 }
 ////////////////////////////////////////////////////////////////////////////////
-/* View in fullscreen */
 function openFullscreen() {
+	// View in fullscreen
+
 	// check the window orientation
 	if (window.orientation != 90 && window.orientation != -90){
 		// if the window is in portrat mode switch to landscape mode
@@ -257,8 +258,8 @@ function openFullscreen() {
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/* Close fullscreen */
 function closeFullscreen() {
+	// Close fullscreen
 	if (document.exitFullscreen) {
 		document.exitFullscreen();
 	} else if (document.webkitExitFullscreen) { /* Safari */
@@ -271,6 +272,10 @@ function closeFullscreen() {
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
+function delayedRefresh(timeout) {
+	// reload the page after a timeout
+	setTimeout(function() { location.reload();},(1000*timeout));
+}
 /*
 //-----------------------------------------------------------------------------
 function startVideoUpdateLoop(){
