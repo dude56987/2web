@@ -296,6 +296,10 @@ function buildHomePage(){
 		subAi=$(find "/var/cache/2web/downloads/ai/subtitles/" -type f -name "*.pt" | wc -l)
 		echo "$subAi" > "$webDirectory/subAi.index"
 	fi
+	if cacheCheck "$webDirectory/ytdlShows.index" "1";then
+		ytdlShows=$(find "/var/cache/2web/downloads/nfo/" -maxdepth 2 -type f -name "tvshow.nfo" | wc -l)
+		echo "$ytdlShows" > "$webDirectory/ytdlShows.index"
+	fi
 	if cacheCheck "$webDirectory/localAi.index" "1";then
 		# the total number of AIs
 		localAi=0

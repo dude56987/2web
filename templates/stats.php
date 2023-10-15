@@ -59,6 +59,7 @@ if (detectEnabledStatus("nfo2web")){
 	getStat("totalEpisodes.index", "Episodes");
 	getStat("totalShows.index", "Shows");
 	getStat("totalMovies.index", "Movies");
+	getStat("ytdlShows.index", "YTDL Shows");
 }
 if (detectEnabledStatus("comic2web")){
 	getStat("totalComics.index", "Books/Comics");
