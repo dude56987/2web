@@ -67,11 +67,6 @@ if (array_key_exists("home",$_GET)){
 		echo "<title>".$wikiTitle."</title>";
 	}
 	?>
-	<style>
-		html{
-			font-size: 1rem;
-		}
-	</style>
 </head>
 <body>
 <?php
@@ -89,10 +84,11 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		?>
 		<img id='spinner' src='/spinner.gif' />
 	</h1>
-	<a class='button' href='?home'>⛵ Wiki Homepage</a>
-	<a class='button' href='?random'>🎲 Random Article</a>
-	<a class='button' href='?index'>📋 Article Index</a>
-	<hr>
+	<div class='listCard'>
+		<a class='button' href='?home'>⛵ Wiki Homepage</a>
+		<a class='button' href='?random'>🎲 Random Article</a>
+		<a class='button' href='?index'>📋 Article Index</a>
+	</div>
 	<form class='searchBoxForm' method='get'>
 		<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Wiki Search...' >
 	</form>
@@ -308,6 +304,8 @@ if (array_key_exists("search",$_GET)){
 		# remove all unknown tags
 		#$cleanFileData = strip_tags($cleanFileData,"<meta><script><span><p><table><td><th><tr><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
 		$cleanFileData = strip_tags($cleanFileData,"<meta><script><span><p><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
+		# remove viewport resizing meta tags
+		$cleanFileData = str_ireplace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',"",$cleanFileData);
 		#$cleanFileData = strip_tags($cleanFileData,"<meta><span><p><div><hr><img><video><source><a><ul><li><ol><pre><code><details><summary>");
 		# write the clean file data of the article
 		echo $cleanFileData;
