@@ -244,6 +244,9 @@ if "--output-dir" in sys.argv:
 else:
 	file_put_contents("started.cfg", datetime.datetime.now().strftime("%s"))
 
+if "--set-model" in sys.argv:
+	activeModel = sys.argv[(sys.argv.index("--set-model")+1)]
+
 # loop the prompt until ctrl-c is hit
 while versions > 0:
 	# generate a new chat session for each version of the output
@@ -309,7 +312,11 @@ while versions > 0:
 			print("Writing file to ", fileTitle+".txt")
 			# save the output as a cache file since one does not exist
 			fileObject = open((fileTitle+".txt"), "w")
+			# write the anwser
 			fileObject.write(anwser)
+			# write the llm used to anwser the question
+			fileObject.write("\n\nLLM: "+activeModel+"\n")
+			# close the file
 			fileObject.close()
 		else:
 			# for every failure increase the temperature to generate more random anwsers
