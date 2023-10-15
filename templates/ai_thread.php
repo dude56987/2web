@@ -246,7 +246,7 @@ if ($finishedVersions < $totalVersions){
 	if (array_key_exists("autoRefresh",$_GET)){
 		// using javascript, reload the webpage every 60 seconds, time is in milliseconds
 		echo "<script>";
-		echo "setTimeout(function() { window.location=window.location;},(1000*10));";
+		echo "delayedRefresh(10)";
 		echo "</script>";
 	}else{
 		$drawPrompt=True;
