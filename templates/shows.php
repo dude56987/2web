@@ -40,7 +40,7 @@ drawPosterWidget("shows",False);
 <div class='settingListCard'>
 <h1>
 	Shows
-	<img id='spinner' src='/spinner.gif' />
+	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <?php
 flush();
