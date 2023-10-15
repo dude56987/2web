@@ -129,7 +129,7 @@ if (array_key_exists("prompt",$_POST)){
 			# write the combined commands used to generate all the prompts
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$combinedFileData);
 		}else{
-			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$_POST["prompt"]);
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$command);
 		}
 	}
 	# launch a job on the queue for each version
