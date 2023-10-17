@@ -58,6 +58,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
+		if (($pageURL == "/settings/rss.php")){
+			echo "<a class='activeButton' href='/settings/rss.php'>";
+		}else{
+			echo "<a class='button' href='/settings/rss.php'>";
+		}
+		?>
+			📶
+			<span class='headerText'>
+				RSS
+			</span>
+		</a>
+		<?PHP
 		if ($pageURL == "/settings/music.php"){
 			echo "<a class='activeButton' href='/settings/music.php'>";
 		}else{
@@ -240,6 +252,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "				<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
 	echo "		</div>";
 	echo "	</div>\n";
+}else if (($pageURL == "/settings/rss.php")){
+	$moduleName="rss2nfo";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 	echo "	<div class='inputCard'>\n";

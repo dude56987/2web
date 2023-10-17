@@ -775,6 +775,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");
 }else if(array_key_exists("removeMusicLibary",$_POST)){
 	removeCustomConfig("removeMusicLibary","/etc/2web/music/libaries.d/","music.php");
+}else if (array_key_exists("addRssSource",$_POST)){
+	addCustomConfig("addRssSource","/etc/2web/rss/sources.d/","rss.php");
+}else if(array_key_exists("removeRssSource",$_POST)){
+	removeCustomConfig("removeRssSource","/etc/2web/rss/sources.d/","rss.php");
 }else if (array_key_exists("addRepoLibrary",$_POST)){
 	addCustomConfig("addRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
 }else if(array_key_exists("removeRepoLibrary",$_POST)){

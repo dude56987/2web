@@ -257,6 +257,9 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/ytdl2nfo
 	cat build/sh_head.txt > debian/usr/bin/ytdl2nfo
 	grep --invert-match "^[[:blank:]]*#" ytdl2nfo.sh | tr -s '\n' >> debian/usr/bin/ytdl2nfo
+	echo "#! /bin/bash" > debian/usr/bin/rss2nfo
+	cat build/sh_head.txt > debian/usr/bin/rss2nfo
+	grep --invert-match "^[[:blank:]]*#" rss2nfo.sh | tr -s '\n' >> debian/usr/bin/rss2nfo
 	# build the man pages for the command line tools
 	#pandoc -s help/man_2web_header.md help/man_copyright.md help/man_licence.md help/man_2web_content.md -t man -o debian/usr/share/man1/2web.gz
 	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1.gz
@@ -270,6 +273,7 @@ build-deb: upgrade-hls
 	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1.gz
 	pandoc --standalone help/man_git2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/git2web.1.gz
 	#pandoc --standalone help/man_ai2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/ai2web.1.gz
+	#pandoc --standalone help/man_rss2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/rss2nfo.1.gz
 	# build the web versions of the man pages
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
 	pandoc help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
@@ -282,6 +286,7 @@ build-deb: upgrade-hls
 	pandoc help/man_graph2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/graph2web.html
 	pandoc help/man_git2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/git2web.html
 	#pandoc help/man_ai2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/ai2web.html
+	#pandoc help/man_rss2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/rss2nfo.html
 	# build the text only render of the manual
 	w3m debian/usr/share/2web/help/2web.html > debian/usr/share/2web/help/2web.txt
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
@@ -294,6 +299,7 @@ build-deb: upgrade-hls
 	w3m debian/usr/share/2web/help/graph2web.html > debian/usr/share/2web/help/graph2web.txt
 	w3m debian/usr/share/2web/help/git2web.html > debian/usr/share/2web/help/git2web.txt
 	#w3m debian/usr/share/2web/help/ai2web.html > debian/usr/share/2web/help/ai2web.txt
+	#w3m debian/usr/share/2web/help/rss2nfo.html > debian/usr/share/2web/help/rss2nfo.txt
 	# build the readme
 	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
@@ -399,6 +405,8 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ wiki2web.sh" | wc -l >> debian/usr/share/2web/version_wiki2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_ai2web.cfg
 	/usr/bin/git log --stat | grep "^ ai2web.sh" | wc -l >> debian/usr/share/2web/version_ai2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_rss2nfo.cfg
+	/usr/bin/git log --stat | grep "^ rss2nfo.sh" | wc -l >> debian/usr/share/2web/version_rss2nfo.cfg
 	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg

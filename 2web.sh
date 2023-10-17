@@ -465,6 +465,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
 	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
 	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
+	linkFile "/usr/share/2web/settings/rss.php" "$webDirectory/settings/rss.php"
 	linkFile "/usr/share/2web/settings/music.php" "$webDirectory/settings/music.php"
 	linkFile "/usr/share/2web/settings/repos.php" "$webDirectory/settings/repos.php"
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/settings/portal.php"
@@ -969,6 +970,7 @@ main(){
 		returnModStatus "wiki2web"
 		returnModStatus "weather2web"
 		returnModStatus "ytdl2nfo"
+		returnModStatus "rss2nfo"
 		returnModStatus "ai2web"
 		returnModStatus "epg2web"
 		returnModStatus "kodi2web"
@@ -1008,6 +1010,7 @@ main(){
 		rm -v $webDirectory/wiki2web.active
 		rm -v $webDirectory/kodi2web.active
 		rm -v $webDirectory/ytdl2nfo.active
+		rm -v $webDirectory/rss2nfo.active
 		rm -v $webDirectory/portal2web.active
 		rm -v $webDirectory/git2web.active
 		rm -v $webDirectory/ai2web.active
@@ -1058,6 +1061,10 @@ main(){
 		###########################################################################
 		ALERT "Launching git2web..."
 		/usr/bin/git2web --parallel &
+		waitQueue 1 "$totalCPUS"
+		###########################################################################
+		ALERT "Launching rss2nfo..."
+		/usr/bin/rss2nfo --parallel &
 		waitQueue 1 "$totalCPUS"
 		###########################################################################
 		ALERT "Launching ai2web..."
@@ -1143,6 +1150,7 @@ main(){
 		comic2web --upgrade
 		git2web --upgrade
 		ai2web --upgrade
+		rss2nfo --upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web nuke
@@ -1366,6 +1374,8 @@ main(){
 		cat /usr/share/2web/version_music2web.cfg
 		echo -n "ytdl2nfo : "
 		cat /usr/share/2web/version_ytdl2nfo.cfg
+		echo -n "rss2nfo : "
+		cat /usr/share/2web/version_rss2nfo.cfg
 	else
 		# update main components
 		# - this builds the base site without anything enabled
