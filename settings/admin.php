@@ -30,7 +30,6 @@ requireLogin();
 
 <?php
 include($_SERVER['DOCUMENT_ROOT'].'/header.php');
-//include('settingsHeader.php');
 ?>
 
 <div class='settingListCard'>
@@ -42,9 +41,9 @@ ini_set("display_errors", 1);
 error_reporting(E_ALL);
 ////////////////////////////////////////////////////////////////////////////////
 function clear(){
-	/**
-	 * Flush output to the users webpage.
-	 */
+	# Flush output to the users webpage.
+	#
+	# RETURN OUTPUT
 	flush();
 	ob_flush();
 }
@@ -63,11 +62,12 @@ function countdown($countdownTime){
 	sleep(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * This function checks the value of a configuration file and returns true if the file is set to yes.
- * If no config file exists a new one will be created.
- */
 function yesNoCfgCheck($configPath){
+	# This function checks the value of a configuration file and returns true if the file is set to yes.
+	# If no config file exists a new one will be created.
+	#
+	# RETURN BOOL
+
 	# check if the config file exists
 	if (path_exists($configPath)){
 		if (stripos(strtolower(file_get_contents($configPath)), 'yes')){
@@ -85,10 +85,10 @@ function yesNoCfgCheck($configPath){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
- */
 function yesNoCfgSet($configPath, $newConfigSetting){
+	# Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
+	#
+	# RETURN FILES
 	if (strtolower($newConfigSetting) == "yes"){
 		file_put_contents($configPath , "yes");
 	}else{
@@ -98,10 +98,11 @@ function yesNoCfgSet($configPath, $newConfigSetting){
 	return True;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * Write output and do three dots with randomized delays to simulate processing
- */
 function outputLog($stringData){
+	# Write output and do three dots with randomized delays to simulate processing
+	#
+	# RETURN OUTPUT
+
 	# write $stringData to the log then to the webpage
 	addToLog("ADMIN","Running Admin Action","$stringData");
 	echo "$stringData";
@@ -123,10 +124,10 @@ function outputLog($stringData){
 	echo "<br>\n";
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * Enable/Disable a module
- */
 function setModStatus($modName,$modStatus){
+	# Enable/Disable a module
+	#
+	# RETURN FILES
 	outputLog("Setting $modName status to ".$modStatus);
 	# read the link and create a custom config
 	$configPath="/etc/2web/mod_status/".$modName.".cfg";
@@ -150,54 +151,11 @@ function setModStatus($modName,$modStatus){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * Add a log entry
- */
-function addToLog($errorType, $errorDescription, $errorDetails){
-	# set the module name to admin
-	$moduleName="WEB";
-	# create identifier date to organize the data, this is really accurate
-	$logIdentifier=$_SERVER["REQUEST_TIME_FLOAT"];
-	$logDate=date("d\/m\/y");
-	$logTime=date("h:i:s");
-	#
-	$logDescription=str_replace("'", "''", $errorDescription);
-	#
-	#echo "error details = $errorDetails <br>\n";
-
-	$logDetails=str_replace("'", "''", "$errorDetails");
-
-	# load database
-	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
-	# set the timeout to 1 minute since most webbrowsers timeout loading before this
-	$databaseObj->busyTimeout(60000);
-	# get the list of tables in the sql database
-	$result = $databaseObj->query("select name from sqlite_master where type='table';");
-	# check if the database has been created yet
-	if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/log/log.db")){
-		# setup the base function of the database
-		$databaseObj->query("PRAGMA journal_mode=WAL;");
-		$databaseObj->query("PRAGMA wal_autocheckpoint=20;");
-		# create the database table structure
-		$databaseObj->query("create table log(logIdentifier text primary key,module,type,description,details,date,time);");
-	}
-	# add the log entry
-	$databaseObj->query("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');");
-
-	#echo ("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');<br>\n");
-
-	# clear up memory of database file
-	$databaseObj->close();
-	unset($databaseObj);
-}
-////////////////////////////////////////////////////////////////////////////////
-/**
- * Add a custom config file for a list in a 2web module
- * - $link is the link to be added to this location
- * - $settingsWebpage is a webpage name from the settings directory in the webserver
- *  - Example: "radio.php"
- */
 function addCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
+	# Add a custom config file for a list in a 2web module
+	# - $link is the link to be added to this location
+	# - $settingsWebpage is a webpage name from the settings directory in the webserver
+	#  - Example: "radio.php"
 	$data=$_POST[$keyName];
 	outputLog("Running ".$keyName." on ".$data);
 	$sumOfLink=md5($data);
@@ -214,10 +172,10 @@ function addCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	clear();
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * Remove custom config file
- */
 function removeCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
+	# Remove custom config file
+	#
+	# RETURN FILES
 	$data=$_POST[$keyName];
 	outputLog("Running ".$keyName." on ".$data);
 	$sumOfLink=md5($data);
@@ -234,14 +192,6 @@ function removeCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	clear();
 }
 ////////////////////////////////////////////////////////////////////////////////
-function checkUsernamePass($userName, $password){
-	$passSum = file_get_contents("/etc/2web/users/".md5($userName));
-	if ( $passSum == md5($password) ){
-		return true;
-	}else{
-		return false;
-	}
-}
 # clean up the post input before processing
 cleanPostInput();
 ////////////////////////////////////////////////////////////////////////////////

@@ -1049,4 +1049,57 @@ if( ! function_exists("requireLogin")){
 	}
 }
 ########################################################################
+if( ! function_exists("getIdentity")){
+	function getIdentity(){
+		# Get the user agent and the ip address of the currently connected user
+		#
+		# RETURN STRING
+		return $_SERVER["HTTP_USER_AGENT"]."; ".$_SERVER["REMOTE_ADDR"].";";
+	}
+}
+########################################################################
+if( ! function_exists("addToLog")){
+	function addToLog($errorType, $errorDescription, $errorDetails){
+		# Add a log entry
+		#
+		# RETURN FILES
+
+		# set the module name to admin
+		$moduleName="WEB";
+		# create identifier date to organize the data, this is really accurate
+		$logIdentifier=$_SERVER["REQUEST_TIME_FLOAT"];
+		$logDate=date("d\/m\/y");
+		$logTime=date("h:i:s");
+		#
+		$logDescription=str_replace("'", "''", $errorDescription);
+		#
+		#echo "error details = $errorDetails <br>\n";
+
+		$logDetails=str_replace("'", "''", "$errorDetails");
+
+		# load database
+		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
+		# set the timeout to 1 minute since most webbrowsers timeout loading before this
+		$databaseObj->busyTimeout(60000);
+		# get the list of tables in the sql database
+		$result = $databaseObj->query("select name from sqlite_master where type='table';");
+		# check if the database has been created yet
+		if ( ! file_exists($_SERVER['DOCUMENT_ROOT']."/log/log.db")){
+			# setup the base function of the database
+			$databaseObj->query("PRAGMA journal_mode=WAL;");
+			$databaseObj->query("PRAGMA wal_autocheckpoint=20;");
+			# create the database table structure
+			$databaseObj->query("create table log(logIdentifier text primary key,module,type,description,details,date,time);");
+		}
+		# add the log entry
+		$databaseObj->query("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');");
+
+		#echo ("replace into log values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');<br>\n");
+
+		# clear up memory of database file
+		$databaseObj->close();
+		unset($databaseObj);
+	}
+}
+########################################################################
 ?>
