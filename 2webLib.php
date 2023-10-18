@@ -1058,6 +1058,29 @@ if( ! function_exists("getIdentity")){
 	}
 }
 ########################################################################
+if( ! function_exists("getStat")){
+	function getStat($totalPath, $label){
+		# get a value from a file and print a stat on a webpage
+		#
+		# RETURN OUTPUT
+		if (file_exists($totalPath)){
+			$total = file_get_contents($totalPath);
+		}else{
+			$total= 0;
+		}
+		if (is_numeric($total)){
+			# add commas
+			$total=number_format($total);
+		}
+		# only draw stats that are greater than zero
+		if ($total > 0){
+			echo "		<span class='singleStat'>";
+			echo "			$label:$total";
+			echo "		</span>";
+		}
+	}
+}
+########################################################################
 if( ! function_exists("addToLog")){
 	function addToLog($errorType, $errorDescription, $errorDetails){
 		# Add a log entry

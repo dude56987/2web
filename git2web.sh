@@ -230,6 +230,68 @@ function buildBashDocstrings(){
 		} > "$outputFileName"
 	fi
 }
+function buildDiffStats(){
+	# Build a file change diff graph.
+	#
+	# The below example would graph diff data for the last 90 days
+	# ex. buildDiffGraph "days" 90 "graph_diff_year" "$repoName"
+	#
+	# $1 = timeFrame : The time increment to use. years, days, months, weeks
+	# $2 = timeLength : How many of the time increment to go back and graph
+	# $3 = outputFileName : The name of the graph to be created
+	# $4 = repoName : the name of the repo to read
+	#
+	# - The graph is scaled automatically to fit the tallest value.
+	#
+	# RETURN NULL, FILES
+	timeFrame=$1
+	timeLength=$2
+	repoName=$3
+	# - build a svg graph by building a single bar for each month for the past 30 months
+	# - each commit on a day should make the bar 1px higher
+	textGap=100
+	barWidth=20
+	#graphHeight=$(( 50 + $barWidth ))
+	graphHeight=$(( $textGap + $barWidth ))
+	graphData=""
+	graphWidth=$(($timeLength * $barWidth ))
+	emptyGraph="yes"
+	graphScale=0
+	largestValue=0
+
+	# totals
+	totalAddedLines=0
+	totalRemovedLines=0
+	totalModifiedLines=0
+	totalLinesInProject=0
+
+	for index in $( seq $timeLength );do
+		# get commits within a time frame
+		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
+		for commitName in $commits;do
+			tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
+			tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
+
+			# add to the total added and removed lines
+			totalAddedLines=$(( totalAddedLines + tempAddedLines ))
+			totalRemovedLines=$(( totalRemovedLines + tempRemovedLines ))
+
+			# do the total lines in the project
+			totalLinesInProject=$((totalLinesInProjectLines - tempRemovedLines ))
+			totalLinesInProject=$((totalLinesInProjectLines + tempAddedLines))
+
+			# do the total changed lines
+			totalModifiedLines=$((totalModifiedLines + tempRemovedLines ))
+			totalModifiedLines=$((totalModifiedLines + tempAddedLines))
+		done
+	done
+	# store the generated stats
+	echo "$totalAddedLines" > "$webDirectory/repos/$repoName/stat_added.cfg"
+	echo "$totalRemovedLines" > "$webDirectory/repos/$repoName/stat_removed.cfg"
+	echo "$totalModifiedLines" > "$webDirectory/repos/$repoName/stat_modified.cfg"
+	echo "$totalLinesInProject" > "$webDirectory/repos/$repoName/stat_total.cfg"
+}
+
 ################################################################################
 function buildDiffGraph(){
 	# Build a file change diff graph.
@@ -695,49 +757,37 @@ function processRepo(){
 			fi
 		fi
 		INFO "$repoName : Rendering Graphs"
-		if echo "$@" | grep -q -e "--parallel";then
-			buildCommitGraph "days" 365 "graph" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-
-			buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildCommitGraph "days" 365 "graph_commit_365" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildCommitGraph "months" 90 "graph_commit_month" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "months" 90 "graph_diff_month" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildCommitGraph "years" 90 "graph_commit_year" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-			buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
-			waitQueue 0.5 "$totalCPUS"
-		else
-			buildCommitGraph "days" 365 "graph" "$repoName"
-			buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName"
-			buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName"
-			buildCommitGraph "days" 365 "graph_commit_365" "$repoName"
-			buildDiffGraph "days" 365 "graph_diff_365" "$repoName"
-			buildCommitGraph "days" 90 "graph_commit_day" "$repoName"
-			buildDiffGraph "days" 90 "graph_diff_day" "$repoName"
-			buildCommitGraph "months" 90 "graph_commit_month" "$repoName"
-			buildDiffGraph "months" 90 "graph_diff_month" "$repoName"
-			buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName"
-			buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName"
-			buildCommitGraph "years" 90 "graph_commit_year" "$repoName"
-			buildDiffGraph "years" 90 "graph_diff_year" "$repoName"
-		fi
+		# build the pulse graph
+		buildCommitGraph "days" 365 "graph" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		# build the rest of the graphs
+		buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "days" 365 "graph_commit_365" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "months" 90 "graph_commit_month" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "months" 90 "graph_diff_month" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "years" 90 "graph_commit_year" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		# build the stats for the totals of the last 90 years
+		buildDiffStats "years" 90 "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
 
 		INFO "$repoName : Building lint data for shellscripts"
 		# run lint on all the existing files that support it

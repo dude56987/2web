@@ -18,20 +18,6 @@
 ########################################################################
 ?>
 <?PHP
-function getStat($totalPath, $label){
-	if (file_exists($totalPath)){
-		$total = file_get_contents($totalPath);
-	}else{
-		$total= 0;
-	}
-	# only draw stats that are greater than zero
-	if ($total > 0){
-		echo "		<span class='singleStat'>";
-		echo "			$label:$total";
-		echo "		</span>";
-	}
-
-}
 # modules array
 $moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ytdl2nfo","epg2web","ai2web","portal2web","wiki2web", "git2web","kodi2web");
 # check for active processes

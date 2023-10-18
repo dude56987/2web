@@ -476,6 +476,12 @@ if (array_key_exists("inspector",$_GET)){
 		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
 		echo "	</video>\n";
 	}
+	# draw the repo stats
+	getStat("stat_added.cfg", "Added Lines");
+	getStat("stat_removed.cfg", "Removed Lines");
+	getStat("stat_modified.cfg", "Modified Lines");
+	getStat("stat_total.cfg", "Total Lines of Code");
+
 	#echo "	<a href='graph_month.png' class='indexSeries right'>";
 	#echo "		<img class='gitRepoGraphMonth' src='graph_month.png' />";
 	#echo "		<div>";
