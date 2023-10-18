@@ -58,18 +58,6 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
-		if (($pageURL == "/settings/rss.php")){
-			echo "<a class='activeButton' href='/settings/rss.php'>";
-		}else{
-			echo "<a class='button' href='/settings/rss.php'>";
-		}
-		?>
-			📶
-			<span class='headerText'>
-				RSS
-			</span>
-		</a>
-		<?PHP
 		if ($pageURL == "/settings/music.php"){
 			echo "<a class='activeButton' href='/settings/music.php'>";
 		}else{
@@ -239,17 +227,20 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "			<a class='button' href='/settings/iptv_blocked.php'>🚫Blocked</a>\n";
 	echo "		</div>";
 	echo "	</div>\n";
-}else if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php")){
+}else if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php") || ($pageURL == "/settings/rss.php")){
 	if ($pageURL == "/settings/nfo.php"){
 		$moduleName="nfo2web";
 	}else if ($pageURL == "/settings/ytdl2nfo.php"){
 		$moduleName="ytdl2nfo";
+	}else if ($pageURL == "/settings/rss.php"){
+		$moduleName="rss2nfo";
 	}
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Video On Demand Settings</h2>\n";
 	echo "		<div class='listCard'>";
-	echo "				<a class='button' href='/settings/nfo.php'>🎞️Libaries</a>\n";
-	echo "				<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
+	echo "			<a class='button' href='/settings/nfo.php'>🎞️Libaries</a>\n";
+	echo "			<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
+	echo "			<a class='button' href='/settings/rss.php'>📶 RSS</a>\n";
 	echo "		</div>";
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
