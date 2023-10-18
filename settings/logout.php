@@ -31,22 +31,27 @@ echo "</head>";
 echo "<body>";
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 # no login is detected draw the login window
-$tempURL=$_SERVER["HTTP_REFERER"];
+if (array_key_exists("HTTP_REFERER",$_SERVER)){
+	$tempURL=$_SERVER["HTTP_REFERER"];
+}
 echo "<div class='inputCard'>";
 echo "<h1>Logged out of ".gethostname()."</h1>";
 echo "You have been logged out!";
-echo "<hr>";
-echo "<a class='button' href='$tempURL'>Return to Last Page</a>";
-echo "<hr>";
-echo "<hr>";
+if (array_key_exists("HTTP_REFERER",$_SERVER)){
+	echo "<div class='listCard'>";
+	# only return to the last page if the last page exists
+	echo "	<a class='button' href='$tempURL'>Return to Last Page</a>";
+	echo "</div>";
+}
+echo "<div class='listCard'>";
 $homeURL="https://".$_SERVER["HTTP_HOST"]."/";
-echo "<a class='button' href='$homeURL'>Return to Homepage</a>";
-echo "<hr>";
-echo "<hr>";
+echo "	<a class='button' href='$homeURL'>Return to Homepage</a>";
+echo "</div>";
+echo "<div class='listCard'>";
 $loginURL="https://".$_SERVER["HTTP_HOST"]."/login.php";
-echo "<a class='button' href='$loginURL'>Log Back In</a>";
-echo "<hr>";
-echo "<hr>";
+echo "	<a class='button' href='$loginURL'>Log Back In</a>";
+echo "</div>";
+
 echo "</div>";
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 echo "</body>";

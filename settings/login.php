@@ -24,14 +24,19 @@ if (array_key_exists("userLogout",$_POST)){
 			# set the session variables
 			$_SESSION["user"]=$username;
 			$_SESSION["admin"]=true;
+			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
+			sleep(2);
 		}else{
 			$errorMessages .= errorBanner("LOGIN FAILED INCORRECT PASSWORD!", true);
+			addToLog("ADMIN", "FAILED LOGIN", "LOGIN FAILED INCORRECT PASSWORD! Username='".$username."'<br>\n".getIdentity());
 			# sleep the login script to prevent overloading
-			sleep(1);
+			sleep(3);
 		}
 	}else{
 		# the username does not exist at all
-		$errorMessages .= errorBanner("The user name ".$username." does not exist.", true);
+		$errorMessages .= errorBanner("The username '".$username."' does not exist.", true);
+		addToLog("ADMIN", "FAILED LOGIN", "NO USERNAME EXISTS! Username='".$username."'<br>\n".getIdentity());
+		sleep(3);
 	}
 }
 $loggedIn=false;
@@ -81,7 +86,13 @@ if ($loggedIn){
 	echo "$errorMessages";
 	echo "<hr>";
 	if ($noLogins){
-		echo "<a class='button' href='/settings/system.php'>Add Administrator Login</a>";
+		echo "<div class='listCard'>";
+		echo "	<a class='button' href='/settings/system.php'>Add Administrator Login</a>";
+		echo "</div>";
+		echo "<div class='listCard'>";
+		echo "	<a class='button' href='/logout.php'>Logout</a>";
+		echo "</div>";
+
 	}else{
 		echo "<div>Logged in as ".$_SESSION["user"]."</div>";
 		echo "<hr>";
