@@ -24,8 +24,9 @@ $moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","w
 foreach($moduleNames as $moduleName){
 	if ( file_exists("$moduleName.active")){
 		echo "<span class='activeProcess'>";
-		echo " ⚙️: $moduleName";
-		echo "</span>";
+		echo " ⚙️: $moduleName : ";
+		timeElapsedToHuman(file_get_contents("$moduleName.active"));
+		echo "</span>\n";
 	}
 }
 # check last update time

@@ -706,7 +706,7 @@ function lockProc(){
 	else
 		ALERT "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
-		touch "$webDirectory/${procName}.active"
+		echo "$(date "+%s")" > "$webDirectory/${procName}.active"
 		# the activegraph file will be removed when the graph is updated
 		# - this detects when  a module runs but is finished before the graph is updated
 		touch "$webDirectory/${procName}.activeGraph"
@@ -1078,6 +1078,11 @@ function setDirSum(){
 }
 ########################################################################
 function downloadThumbnail(){
+	# downloadThumbnail $thumbnailLink $thumbnailPath $thumbnailExt
+	#
+	# Download the thumbnail and store it in the cache, link the downloaded thumb in the main website
+	#
+	# RETURN FILES
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
