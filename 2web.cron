@@ -52,16 +52,19 @@
 # update graph2web
 0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
 ################################################################################
-# Update weather info once per hour on the half hour
+# Update weather info once per hour
 0 * * * *	root /usr/bin/weather2web &> /dev/null
 ################################################################################
 # Update ytdl2nfo, Individual channels have individual delays
 0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo &> /dev/null
 ################################################################################
-# Check for changes to git repos
-0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
+# Update rss2nfo
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/rss2nfo &> /dev/null
 ################################################################################
-# every 6 hours check the links in the portal
+# Check for changes to git repos
+0 */3 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
+################################################################################
+# every 6 hours check the links in the portal, this also scans ports for services
 0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
