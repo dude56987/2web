@@ -29,49 +29,16 @@ ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
-function runExternalProc($command){
-	$client= new GearmanClient();
-	$client->addServer();
-	$client->addFunction();
-}
-################################################################################
-function runShellCommand($command){
-	if (array_key_exists("debug",$_GET)){
-		//echo 'Running command %echo "'.$command.'" | at now<br>';
-		echo 'Running command %'.$command.'<br>';
-	}
-	################################################################################
-	//exec($command);
-	//$output=shell_exec('echo "'.$command.'" | at now >> RESOLVER-CACHE/resolver.log');
-	$output=shell_exec($command);
-	debug("OUTPUT=".$output."<br>");
-}
-################################################################################
-function redirect($url){
-	if (array_key_exists("debug",$_GET)){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo '<div>';
-		echo '<video controls>';
-		echo '<source src="'.$url.'" type="video/mp4">';
-		echo '</video>';
-		echo '</div>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-		exit();
-		die();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-		exit();
-		die();
-	}
-}
-################################################################################
 function m3u_gen($section,$title){
-	# - section can be music,shows
-	# - title can be a artist
+	# Build a m3u playlist file for title in a section of 2web
+	#
+	# - section can be music,shows, movies
+	# - title should be the media title under that section
+	# - ?sort=random will shuffle the playlist
+	# - ?playat=episodeName.mkv can be used to make a playlist starting at that
+	#   specific episode with the generated playlist
+	#
+	# RETURN FILES
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
 	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
 
@@ -89,15 +56,11 @@ function m3u_gen($section,$title){
 		$showPath = "$rootPath/music/".strtolower($showTitle)."/";
 	}else if($section == 'movies'){
 		$showPath = "$rootPath/movies/";
-	#}else if($section == 'music'){
-	#	$showPath = "$rootPath/music/";
 	}else{
 		$showPath = "$rootPath/$section/$showTitle/";
 	}
 
 	echo "Checking $showPath is a directory...<br>\n";
-
-	//var_dump(recursiveScan($showPath));
 
 	echo "Show path is a directory...<br>\n";
 	# create the cache if it does not exist
@@ -159,17 +122,6 @@ function m3u_gen($section,$title){
 			}
 		}
 	}
-
-	#var_dump($totalFileList);
-	# check for playAt and concat array
-	#if (array_key_exists("playAt",$_GET)){
-	#	# if the playAt is set start the playlist at this discovered file cut the file paths array at that filename
-	#	$searchResults=array_search($_GET["playAt"], array_keys($totalFileList));
-	#	var_dump($searchResults);
-	#	if($searchResults != false){
-	#		$totalFileList = array_slice($totalFileList,$searchResults);
-	#	}
-	#}
 
 	if (array_key_exists("sort",$_GET)){
 		if ($_GET['sort'] == 'random'){
@@ -235,11 +187,6 @@ if (array_key_exists("artist",$_GET)){
 	echo "Building Movies...<br>\n";
 	m3u_gen("movies","all");
 	exit();
-#}else if (array_key_exists("music",$_GET)){
-#	echo "Building Music...<br>\n";
-#	m3u_gen("music","all");
-#	exit();
-#
 }else{
 	// no url was given at all
 	echo "<html>";

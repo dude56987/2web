@@ -29,44 +29,15 @@ ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
-function runExternalProc($command){
-	$client= new GearmanClient();
-	$client->addServer();
-	$client->addFunction();
-}
-################################################################################
-function runShellCommand($command){
-	if (array_key_exists("debug",$_GET)){
-		//echo 'Running command %echo "'.$command.'" | at now<br>';
-		echo 'Running command %'.$command.'<br>';
-	}
-	################################################################################
-	//exec($command);
-	//$output=shell_exec('echo "'.$command.'" | at now >> RESOLVER-CACHE/resolver.log');
-	$output=shell_exec($command);
-	debug("OUTPUT=".$output."<br>");
-}
-################################################################################
-function redirect($url){
-	if (array_key_exists("debug",$_GET)){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-		exit();
-		die();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-		exit();
-		die();
-	}
-}
-################################################################################
 function zip_gen($title){
-	# - section can be music,shows
-	# - title can be a artist
+	# Generate a zip file and cache it on the fly, redirect to the generated zip file
+	#
+	# zip_gen($title)
+	#
+	# - Comic Book zip files
+	# - Repo zip files
+	#
+	# RETURN FILES
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
 	if (array_key_exists("comic",$_GET)){
 		$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
@@ -83,7 +54,6 @@ function zip_gen($title){
 			$comicPath = "$rootPath/comics_tank/$title/";
 		}
 	}else if (array_key_exists("repo",$_GET)){
-		#$comicPath = file_get_contents("$rootPath/repos/$title/source.index");
 		$comicPath = "$rootPath/repos/$title/source/";
 	}
 
@@ -155,9 +125,7 @@ function zip_gen($title){
 					}
 				}
 			}else if (array_key_exists("repo",$_GET)){
-				#$internalFilePath=$filePath;
 				$internalFilePath=str_replace("/repos/$title/source","",$filePath);
-				#$internalFilePath=str_replace("/repos/$title","",$filePath);
 				debug("file path: $filePath<br>\n");
 				debug("full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n");
 				debug("internal file path: $internalFilePath<br>\n");
@@ -165,11 +133,8 @@ function zip_gen($title){
 			}
 		}
 		$data->close();
-		#$data->close();
 	}
 
-	// close the file
-	#fclose($data);
 	// redirect to episode path
 	redirect($cacheFilePath);
 }
