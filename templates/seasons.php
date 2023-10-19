@@ -56,25 +56,25 @@ echo "</h1>";
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"'>";
 ?>
-	▶️ Play All<sup>(External)<sup>
+	▶️ Play All<sup>External</sup>
 </a>
 
 <?PHP
 echo "<a class='button vlcButton' href='vlc://".$_SERVER['SERVER_ADDR']."/m3u-gen.php?showTitle=\"$showTitle\"'>";
 ?>
-	▶️ Play All<sup>(<span id='vlcIcon'>&#9650;</span>VLC)<sup>
+	▶️ Play All<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>
 </a>
 
 <?PHP
 echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
 ?>
-	🔀 Play Random<sup>(External)<sup>
+	🔀 Play Random<sup>External</sup>
 </a>
 
 <?PHP
 echo "<a class='button vlcButton' href='vlc://".$_SERVER['SERVER_ADDR']."/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'>";
 ?>
-	🔀 Play Random<sup>(<span id='vlcIcon'>&#9650;</span>VLC)<sup>
+	🔀 Play Random<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>
 </a>
 </div>
 
