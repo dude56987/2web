@@ -73,11 +73,9 @@ function buildPhpDocstrings(){
 	#functionNames="$(cat "$fileName" | grep --ignore-case "^function" | cut -d' ' -f2 | cut -d'(' -f1)"
 	# add function names with proceeding spaces
 	#functionNames="$functionNames $(cat "$fileName" | grep --ignore-case "^.*function" | cut -d' ' -f2 | cut -d'(' -f1)"
-	startDebug
 	functionNames="$(cat "$fileName" | grep --ignore-case "^.*function " | cut -d' ' -f2 | cut -d'(' -f1)"
 	#functionCount="$(cat "$fileName" | grep -P --ignore-case -c "^.*function\(.*?\)\{")"
 	functionCount="$(cat "$fileName" | grep -P --ignore-case -c "^.*function ")"
-	stopDebug
 	# only write the file if there is at least one function
 	if [ $functionCount -gt 0 ];then
 		{
@@ -230,6 +228,7 @@ function buildBashDocstrings(){
 		} > "$outputFileName"
 	fi
 }
+################################################################################
 function buildDiffStats(){
 	# Build a file change diff graph.
 	#
@@ -244,20 +243,7 @@ function buildDiffStats(){
 	# - The graph is scaled automatically to fit the tallest value.
 	#
 	# RETURN NULL, FILES
-	timeFrame=$1
-	timeLength=$2
-	repoName=$3
-	# - build a svg graph by building a single bar for each month for the past 30 months
-	# - each commit on a day should make the bar 1px higher
-	textGap=100
-	barWidth=20
-	#graphHeight=$(( 50 + $barWidth ))
-	graphHeight=$(( $textGap + $barWidth ))
-	graphData=""
-	graphWidth=$(($timeLength * $barWidth ))
-	emptyGraph="yes"
-	graphScale=0
-	largestValue=0
+	repoName=$1
 
 	# totals
 	totalAddedLines=0
@@ -265,31 +251,53 @@ function buildDiffStats(){
 	totalModifiedLines=0
 	totalLinesInProject=0
 
-	for index in $( seq $timeLength );do
-		# get commits within a time frame
-		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
-		for commitName in $commits;do
-			tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
-			tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
+	# get all commit identifier sums
+	commits=$(git log --oneline | cut -d' ' -f1)
 
-			# add to the total added and removed lines
-			totalAddedLines=$(( totalAddedLines + tempAddedLines ))
-			totalRemovedLines=$(( totalRemovedLines + tempRemovedLines ))
+	# first commit
+	firstCommit=$(echo "$commits" | tail -1 )
+	# last commit
+	lastCommit=$(echo "$commits" | head -1 )
 
-			# do the total lines in the project
-			totalLinesInProject=$((totalLinesInProjectLines - tempRemovedLines ))
-			totalLinesInProject=$((totalLinesInProjectLines + tempAddedLines))
+	# get the date of the first and last commit in seconds
+	# - store dates in seconds and convert in webpage to x days ago
+	projectStartDate="$(git log "$firstCommit" --no-patch --no-notes --pretty="%ct" | head -1)"
+	lastProjectUpdate="$(git log "$lastCommit" --no-patch --no-notes --pretty="%ct" | head -1)"
 
-			# do the total changed lines
-			totalModifiedLines=$((totalModifiedLines + tempRemovedLines ))
-			totalModifiedLines=$((totalModifiedLines + tempAddedLines))
-		done
+	# get the total number of commits in the repo
+	totalCommits=$(echo "$commits" | wc -l)
+
+	# for each of the gathered commits generate stats
+	for commitName in $commits;do
+		tempAddedLines=$(git diff "$commitName" --stat | grep "insertions" | cut -d',' -f2 | cut -d' ' -f2)
+		tempRemovedLines=$(git diff "$commitName" --stat | grep "deletions" | cut -d',' -f3 | cut -d' ' -f2)
+
+		# add to the total added and removed lines
+		totalAddedLines=$(( totalAddedLines + tempAddedLines ))
+		totalRemovedLines=$(( totalRemovedLines + tempRemovedLines ))
+
+		# do the total lines in the project
+		totalLinesInProject=$((totalLinesInProjectLines - tempRemovedLines ))
+		totalLinesInProject=$((totalLinesInProjectLines + tempAddedLines))
+
+		# do the total changed lines
+		totalModifiedLines=$((totalModifiedLines + tempRemovedLines ))
+		totalModifiedLines=$((totalModifiedLines + tempAddedLines))
 	done
+
+	# figure out the total number of estimated work hours placed in the project
+	# - assume that 1 day of work is per 500 lines of code
+	estimatedWorkDays=$(bc <<< "$totalModifiedLines / 500")
+
 	# store the generated stats
 	echo "$totalAddedLines" > "$webDirectory/repos/$repoName/stat_added.cfg"
 	echo "$totalRemovedLines" > "$webDirectory/repos/$repoName/stat_removed.cfg"
 	echo "$totalModifiedLines" > "$webDirectory/repos/$repoName/stat_modified.cfg"
 	echo "$totalLinesInProject" > "$webDirectory/repos/$repoName/stat_total.cfg"
+	echo "$projectStartDate" > "$webDirectory/repos/$repoName/stat_start.cfg"
+	echo "$lastProjectUpdate" > "$webDirectory/repos/$repoName/stat_end.cfg"
+	echo "$totalCommits" > "$webDirectory/repos/$repoName/stat_commits.cfg"
+	echo "$estimatedWorkDays" > "$webDirectory/repos/$repoName/stat_work.cfg"
 }
 
 ################################################################################
@@ -730,7 +738,7 @@ function processRepo(){
 				waitQueue 0.5 "$totalCPUS"
 				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
 				waitQueue 0.5 "$totalCPUS"
@@ -741,7 +749,7 @@ function processRepo(){
 			else
 				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
 				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%cd' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
 				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
@@ -786,7 +794,7 @@ function processRepo(){
 		buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
 		# build the stats for the totals of the last 90 years
-		buildDiffStats "years" 90 "$repoName" &
+		buildDiffStats "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
 
 		INFO "$repoName : Building lint data for shellscripts"
@@ -795,7 +803,7 @@ function processRepo(){
 		if test -f "/usr/bin/shellcheck";then
 			find "." -type f -name "*.sh" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
-				git log -1 --pretty="format:%ci" "$sourceFilePath" > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				git log -1 --pretty="%ct" "$sourceFilePath" > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 						shellcheck "$sourceFilePath" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 						waitQueue 0.5 "$totalCPUS"
@@ -826,7 +834,7 @@ function processRepo(){
 		if test -f "/usr/bin/weblint";then
 			find "." -type f -name "*.html" -o -name "*.htm" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
-				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					weblint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 					waitQueue 0.5 "$totalCPUS"
@@ -861,7 +869,7 @@ function processRepo(){
 		if test -f "/usr/local/bin/jslint";then
 			find "." -type f -name "*.js" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
-				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					#eslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
 					/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
@@ -890,7 +898,7 @@ function processRepo(){
 		if test -f "/usr/bin/pylint";then
 			find "." -type f -name "*.py" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
-				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					pylint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 					waitQueue 0.5 "$totalCPUS"
@@ -917,7 +925,7 @@ function processRepo(){
 		if test -f "/usr/bin/php";then
 			find "." -type f -name "*.php" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
-				git log -1 --pretty="format:%ci" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
+				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
 					{
 						# use php syntax checking and weblint for lint output of php files

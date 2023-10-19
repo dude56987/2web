@@ -37,7 +37,7 @@ function buildCommitTable($entriesToRead=-1){
 		echo "		<th>Message</th>\n";
 		echo "		<th>Log</th>\n";
 		echo "		<th>Diff</th>\n";
-		echo "		<th>Date</th>\n";
+		echo "		<th>Commit Time</th>\n";
 		echo "	</tr>\n";
 		$totalFilesScanned=0;
 		foreach($sourceFiles as $sourceFile){
@@ -54,7 +54,10 @@ function buildCommitTable($entriesToRead=-1){
 			echo "		<td class='commitMessageCell'>".file_get_contents("msg/$sourceFile.index")."</td>\n";
 			echo "		<td><a href='?commit=$sourceFile#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
 			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
-			echo "		<td><span class='tableShrink'>📅 </span>".file_get_contents("date/$sourceFile.index")."</td>\n";
+			echo "		<td><span class='tableShrink'>📅 </span>";
+			# convert the elapsed time to a human readable format
+			timeElapsedToHuman(file_get_contents("date/$sourceFile.index"));
+			echo "</td>\n";
 			// write the index entry
 			echo "	</tr>\n";
 			flush();
@@ -142,7 +145,7 @@ function drawDoc(){
 	echo "	<tr>\n";
 	echo "		<th>File</th>\n";
 	echo "		<th>File Type</th>\n";
-	echo "		<th>Date</th>\n";
+	echo "		<th>Updated</th>\n";
 	echo "	</tr>\n";
 	$totalFilesScanned=0;
 	$totalReportLines=0;
@@ -175,7 +178,10 @@ function drawDoc(){
 			}else{
 				echo "	<td>Unknown</td>";
 			}
-			echo "	<td>".file_get_contents($fileTime)."</td>\n";
+			echo "	<td>";
+			# write the file last edited time in human readable format
+			timeElapsedToHuman(file_get_contents($fileTime));
+			echo "</td>\n";
 			echo "	</tr>\n";
 		}
 	}
@@ -191,7 +197,7 @@ function drawLint(){
 	echo "		<th>File</th>\n";
 	echo "		<th>Report Length</th>\n";
 	echo "		<th>File Type</th>\n";
-	echo "		<th>Date</th>\n";
+	echo "		<th>Updated</th>\n";
 	echo "	</tr>\n";
 	#foreach(scanDir("lint/") as $sourceFile){
 	$totalFilesScanned=0;
@@ -226,7 +232,10 @@ function drawLint(){
 			}else{
 				echo "	<td>Unknown</td>";
 			}
-			echo "	<td>".file_get_contents($fileTime)."</td>\n";
+			echo "	<td>";
+			# write the file last edited time in human readable format
+			timeElapsedToHuman(file_get_contents($fileTime));
+			echo "	</td>\n";
 			echo "	</tr>\n";
 			$totalReportLines += $tempLineCount;
 			$totalFilesScanned += 1;
@@ -416,7 +425,7 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<th>Message</th>\n";
 	echo "		<th>Log</th>\n";
 	echo "		<th>Diff</th>\n";
-	echo "		<th>Date</th>\n";
+	echo "		<th>Commit Time</th>\n";
 	echo "	</tr>\n";
 	echo "	<tr>\n";
 	echo "		<td><a href='?commit=$commitName'>$commitName</a></td>\n";
@@ -471,17 +480,24 @@ if (array_key_exists("inspector",$_GET)){
 	}
 	#include("graph.svg");
 	echo "</div>";
-	if (file_exists("repoHistory.webm")){
-		echo "	<video controls poster='repoHistory.png'>\n";
-		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
-		echo "	</video>\n";
-	}
+
 	# draw the repo stats
 	getStat("stat_added.cfg", "Added Lines");
 	getStat("stat_removed.cfg", "Removed Lines");
 	getStat("stat_modified.cfg", "Modified Lines");
 	getStat("stat_total.cfg", "Total Lines of Code");
+	getStat("stat_work.cfg", "Estimated Work Days");
+	getStat("stat_commits.cfg", "Total Commits");
+	getDateStat("stat_start.cfg", "Project Started");
+	getDateStat("stat_end.cfg", "Project Last Updated");
 
+	if (file_exists("repoHistory.webm")){
+		echo "<hr>\n";
+		echo "	<video controls poster='repoHistory.png'>\n";
+		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
+		echo "	</video>\n";
+		# add a rule here to space stats below the video
+	}
 	#echo "	<a href='graph_month.png' class='indexSeries right'>";
 	#echo "		<img class='gitRepoGraphMonth' src='graph_month.png' />";
 	#echo "		<div>";

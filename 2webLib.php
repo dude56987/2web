@@ -1081,6 +1081,96 @@ if( ! function_exists("getStat")){
 	}
 }
 ########################################################################
+if( ! function_exists("timeElapsedToHuman")){
+	function timeElapsedToHuman($timestamp){
+		# remove newlines in timestamp
+		$timestamp=str_replace("\n","",$timestamp);
+
+		$currentTime=time();
+		logPrint("currentTime=".$currentTime);
+		logPrint("timeStamp=".$timestamp);
+		$elapsedTime=( $currentTime - $timestamp );
+		logPrint("elapsedTime=".$elapsedTime);
+
+		$yearInSeconds=(((60 * 60) * 24) * 365);
+		$dayInSeconds=((60 * 60) * 24);
+		$hourInSeconds=(60 * 60);
+		$minuteInSeconds=(60);
+
+		$yearsPassed=0;
+		$daysPassed=0;
+		$hoursPassed=0;
+		$minutesPassed=0;
+
+		if ($elapsedTime > $yearInSeconds ){
+			$yearsPassed=floor( $elapsedTime / $yearInSeconds );
+			$elapsedTime -= $yearsPassed * $yearInSeconds;
+			if ($yearsPassed > 0){
+				echo "$yearsPassed years ";
+			}
+		}
+
+		if ($elapsedTime > $dayInSeconds ){
+			$daysPassed=floor( $elapsedTime / $dayInSeconds );
+			$elapsedTime -= $daysPassed * $dayInSeconds;
+			if ($daysPassed > 0){
+				echo "$daysPassed days ";
+			}
+			if ($yearsPassed > 0){
+				echo "ago";
+				return true;
+			}
+		}
+
+		if ($elapsedTime > $hourInSeconds ){
+			$hoursPassed=floor( $elapsedTime / $hourInSeconds );
+			$elapsedTime -= $hoursPassed * $hourInSeconds;
+			if ($hoursPassed > 0){
+				echo "$hoursPassed hours ";
+			}
+			if ($daysPassed > 0){
+				echo "ago";
+				return true;
+			}
+		}
+
+		if ($elapsedTime > $minuteInSeconds ){
+			$minutesPassed=floor( $elapsedTime / $minuteInSeconds );
+			$elapsedTime -= $minutesPassed * $minuteInSeconds;
+			if ($minutesPassed > 0){
+				echo "$minutesPassed minutes ";
+			}
+			if ($hoursPassed > 0){
+				echo "ago";
+				return true;
+			}
+		}
+
+		# write out the remaining seconds
+		echo "$elapsedTime seconds ago";
+	}
+}
+########################################################################
+if( ! function_exists("getDateStat")){
+	function getDateStat($totalPath, $label){
+		# get a date from a file stored as seconds since the unix epoch and print a stat on a webpage
+		#
+		# RETURN OUTPUT
+		if (file_exists($totalPath)){
+			$total = file_get_contents($totalPath);
+		}else{
+			$total= 0;
+		}
+		# only draw stats that are greater than zero
+		if ($total > 0){
+			echo "<span class='singleStat'>";
+			echo "$label:";
+			timeElapsedToHuman($total);
+			echo "</span>\n";
+		}
+	}
+}
+########################################################################
 if( ! function_exists("addToLog")){
 	function addToLog($errorType, $errorDescription, $errorDetails){
 		# Add a log entry
