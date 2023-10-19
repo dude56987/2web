@@ -156,68 +156,48 @@ include("settingsHeader.php");
 	</form>
 </div>
 <div id='homepageFortuneStatus' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Fortune</h2>
-			<ul>
-				<li>
-					Enable or disable the fortune message on the homepage.
-				</li>
-				<li>
-					You can use the package manager to add or remove fortunes. The following packages contain the fortune databases.
-					<ul>
-						<li>fortunes-off<sup>(Offensive To the Senses)</sup></li>
-						<li>fortunes-mario<sup>(Video Game Quotes)</sup></li>
-						<li>fortunes-spam<sup>(BBS Spam)</sup></li>
-						<li>fortunes-bofh-excuses<sup>(Admin Excuses)</sup></li>
-						<li>fortunes-ubuntu-server<sup>(Ubuntu Server Tips)</sup></li>
-						<li>fortunes-debian-hints<sup>(Debian Server Tips)</sup></li>
-						<li>fortunes-min<sup>(Basic Default Fortunes)</sup></li>
-					</ul>
-				</li>
-			</ul>
-			<select name='homepageFortuneStatus'>
-				<?PHP
-				// if the fortuneStatus.cfg file exists that means the fortune is enabled
-				if (file_exists("/etc/2web/fortuneStatus.cfg")){
-					echo "<option value='enabled' selected>Enabled</option>";
-					echo "<option value='disabled' >Disabled</option>";
-				}else{
-					echo "<option value='disabled' selected>Disabled</option>";
-					echo "<option value='enabled' >Enabled</option>";
-				}
-				?>
-			</select>
-			<button class='button' type='submit'>Set Status</button>
-	</form>
+	<h2>Fortune</h2>
+		<ul>
+			<li>
+				Enable or disable the fortune message on the homepage.
+			</li>
+			<li>
+				You can use the package manager to add or remove fortunes. The following packages contain the fortune databases.
+				<ul>
+					<li>fortunes-off<sup>(Offensive To the Senses)</sup></li>
+					<li>fortunes-mario<sup>(Video Game Quotes)</sup></li>
+					<li>fortunes-spam<sup>(BBS Spam)</sup></li>
+					<li>fortunes-bofh-excuses<sup>(Admin Excuses)</sup></li>
+					<li>fortunes-ubuntu-server<sup>(Ubuntu Server Tips)</sup></li>
+					<li>fortunes-debian-hints<sup>(Debian Server Tips)</sup></li>
+					<li>fortunes-min<sup>(Basic Default Fortunes)</sup></li>
+				</ul>
+			</li>
+		</ul>
+			<?PHP
+			// if the fortuneStatus.cfg file exists that means the fortune is enabled
+			if (file_exists("/etc/2web/fortuneStatus.cfg")){
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='homepageFortuneStatus' value='disabled'>🟢 Disable Fortune</button>\n";
+				echo "	</form>\n";
+			}else{
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='homepageFortuneStatus' value='enabled'>◯ Enable Fortune</button>\n";
+				echo "	</form>\n";
+			}
+		?>
 </div>
 
 <div id='randomTheme' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Randomize Theme</h2>
-			<ul>
-				<li>
-					Change theme randomly every 30 minutes.
-				</li>
-			</ul>
-		<select name='randomTheme'>
-			<?php
-			if (file_exists("/etc/2web/randomTheme.cfg")){
-				$selected=file_get_contents("/etc/2web/randomTheme.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Randomize Theme</h2>
+		<ul>
+			<li>
+				Change theme randomly every 30 minutes.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/randomTheme.cfg","Random Theme","randomTheme");
+		?>
 </div>
 
 <div id='additionalDictionaryResults' class='inputCard'>

@@ -47,32 +47,15 @@ include("settingsHeader.php");
 </div>
 
 <div id='generateVisualisationsForWeb' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Generate Visualizations</h2>
-			<ul>
-				<li>
-					Generate visualisations for each track.
-				</li>
-			</ul>
-		<select name='generateVisualisationsForWeb'>
-			<?php
-			if (file_exists("/etc/2web/music/generateVisualisationsForWeb.cfg")){
-				$selected=file_get_contents("/etc/2web/music/generateVisualisationsForWeb.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Generate Visualizations</h2>
+		<ul>
+			<li>
+				Generate visualisations for each track.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/music/generateVisualisationsForWeb.cfg","Visualizations","generateVisualisationsForWeb");
+		?>
 </div>
 
 <?php

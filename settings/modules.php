@@ -65,7 +65,6 @@ foreach($modules as $module){
 <?PHP
 foreach($modules as $module){
 	echo "<div id='".$module."Status' class='inputCard'>";
-	echo "	<form action='admin.php' class='buttonForm' method='post'>";
 	echo "		<h2>$module Module Status</h2>";
 	echo "			<ul>";
 	echo "				<li>";
@@ -160,18 +159,16 @@ foreach($modules as $module){
 		echo "				</li>";
 	}
 	echo "			</ul>";
-	echo "			<select name='".$module."Status'>";
 	// check the status of the module for the dropdown
 	if (detectEnabledStatus($module)){
-		echo "				<option value='enabled' selected>Enabled</option>";
-		echo "				<option value='disabled' >Disabled</option>";
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<button class='button' type='submit' name='".$module."Status' value='disabled'>🟢 Disable Module</button>\n";
+		echo "	</form>\n";
 	}else{
-		echo "				<option value='disabled' selected>Disabled</option>";
-		echo "				<option value='enabled' >Enabled</option>";
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<button class='button' type='submit' name='".$module."Status' value='enabled'>◯ Enable Module</button>\n";
+		echo "	</form>\n";
 	}
-	echo "			</select>";
-	echo "			<button class='button' type='submit'>Set Status</button>";
-	echo "	</form>";
 	echo "</div>";
 }
 ?>

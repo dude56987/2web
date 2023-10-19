@@ -50,96 +50,45 @@ include("settingsHeader.php");
 </div>
 
 <div id='aiLyricsGenerate' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Generate Lyrics</h2>
-			<ul>
-				<li>
-					Generate lyrics for music2web tracks.
-				</li>
-			</ul>
-		<select name='aiLyricsGenerate'>
-			<?php
-			if (file_exists("/etc/2web/ai/aiLyricsGenerate.cfg")){
-				$selected=file_get_contents("/etc/2web/ai/aiLyricsGenerate.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Generate Lyrics</h2>
+		<ul>
+			<li>
+				Generate lyrics for music2web tracks.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/ai/aiLyricsGenerate.cfg","Lyrics Generation","aiLyricsGenerate");
+		?>
 </div>
 
 <div id='aiSubsGenerate' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Generate Subtitles</h2>
-			<ul>
-				<li>
-					Generate subtitles using AI for movies and shows added by nfo2web module.
-				</li>
-			</ul>
-		<select name='aiSubsGenerate'>
-			<?php
-			if (file_exists("/etc/2web/ai/aiSubsGenerate.cfg")){
-				$selected=file_get_contents("/etc/2web/ai/aiSubsGenerate.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Generate Subtitles</h2>
+		<ul>
+			<li>
+				Generate subtitles using AI for movies and shows added by nfo2web module.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/ai/aiSubsGenerate.cfg","Subs Generation","aiSubsGenerate");
+		?>
 </div>
 
 <div id='aiCompareGenerate' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Generate Comparisons</h2>
-			<ul>
-				<li>
-					Generate comparisons for related videos section of webpages.
-				</li>
-				<li>
-					This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
-				</li>
-				<li>
-					<span class='disabledSetting'>Webpages do NOT support this yet.</span>
-				</li>
-			</ul>
-		<select name='aiCompareGenerate'>
-			<?php
-			if (file_exists("/etc/2web/ai/aiCompareGenerate.cfg")){
-				$selected=file_get_contents("/etc/2web/ai/aiCompareGenerate.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Generate Comparisons</h2>
+		<ul>
+			<li>
+				Generate comparisons for related videos section of webpages.
+			</li>
+			<li>
+				This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
+			</li>
+			<li>
+				<span class='disabledSetting'>Webpages do NOT support this yet.</span>
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/ai/aiCompareGenerate.cfg","Comparison Generation","aiCompareGenerate");
+		?>
 </div>
 <?php
 echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";

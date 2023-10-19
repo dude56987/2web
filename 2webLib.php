@@ -1081,6 +1081,30 @@ if( ! function_exists("getStat")){
 	}
 }
 ########################################################################
+if( ! function_exists("buildYesNoCfgButton")){
+	function buildYesNoCfgButton($configPath,$buttonText,$buttonName){
+		# Check if a yes/no config file is enabled and draw a button to set it to the opposite value
+		#
+		# RETURN FILES
+		if (file_exists($configPath)){
+			$selected=file_get_contents($configPath);
+			if ($selected == "yes"){
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='$buttonName' value='no'>🟢 Disable $buttonText</button>\n";
+				echo "	</form>\n";
+			}else{
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='$buttonName' value='yes'>◯ Enable $buttonText</button>\n";
+				echo "	</form>\n";
+			}
+		}else{
+			echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+			echo "	<button class='button' type='submit' name='$buttonName' value='yes'>◯ Enable $buttonText</button>\n";
+			echo "	</form>\n";
+		}
+	}
+}
+########################################################################
 if( ! function_exists("timeElapsedToHuman")){
 	function timeElapsedToHuman($timestamp){
 		# remove newlines in timestamp

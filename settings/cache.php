@@ -202,63 +202,27 @@ include("settingsHeader.php");
 </div>
 
 <div id='cacheNewEpisodes' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache New Episodes</h2>
-			<ul>
-				<li>
-					Automatically cache episodes that first aired this month.
-				</li>
-			</ul>
-		<select name='cacheNewEpisodes'>
-			<?php
-			// figure out the currently selected theme
-			if (file_exists("/etc/2web/cacheNewEpisodes.cfg")){
-				$selected=file_get_contents("/etc/2web/cacheNewEpisodes.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Cache New Episodes</h2>
+		<ul>
+			<li>
+				Automatically cache episodes that first aired this month.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/cacheNewEpisodes.cfg","Caching New Episodes","cacheNewEpisodes");
+		?>
 </div>
 
 <div id='transcodeForWebpages' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Transcode</h2>
-			<ul>
-				<li>
-					Automatically transcode videos into a format that can be played though the webplayer.
-				</li>
-			</ul>
-		<select name='transcodeForWebpages'>
-			<?php
-			// figure out the currently selected theme
-			if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
-				$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
-				if ($selected == "yes"){
-					echo "<option value='yes' selected>Yes</option>";
-					echo "<option value='no'>No</option>";
-				}else{
-					echo "<option value='no' selected>No</option>";
-					echo "<option value='yes'>Yes</option>";
-				}
-			}else{
-				echo "<option value='no' selected>No</option>";
-				echo "<option value='yes'>Yes</option>";
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Setting</button>
-	</form>
+	<h2>Transcode</h2>
+		<ul>
+			<li>
+				Automatically transcode videos into a format that can be played though the webplayer.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/transcodeForWebpages.cfg","Webpage Transcoding","transcodeForWebpages");
+		?>
 </div>
 
 <?PHP
