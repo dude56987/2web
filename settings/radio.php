@@ -53,33 +53,18 @@ echo file_get_contents("/etc/2web/iptv/radioSources.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div class='settingListCard'>";
-echo "<h2>Custom Radio Links</h2>\n";
-
-echo "</div>";
-
-
 echo "<div id='radioLinks' class='settingListCard'>";
 echo "<h2>Radio Links</h2>\n";
 $sourceFiles = scandir("/etc/2web/iptv/radioSources.d/");
-//print_r($sourceFiles);
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/iptv/radioSources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
-//print_r($sourceFiles);
-//echo "<table class='settingsTable'>";
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	//$sourceFileName = array_reverse(explode("/",$sourceFile))[0];
-	//$sourceFile = "/etc/2web/iptv/sources.d/".$sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
-				//echo "<hr>\n";
-				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
 
 				# try to find a icon for the link
@@ -106,33 +91,39 @@ foreach($sourceFiles as $sourceFile){
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
-				//echo "</div>";
 			}
 		}
 	}
 }
+?>
 
+	<div id='addRadioLink' class='inputCard'>
+		<form action='admin.php' method='post'>
+			<h2>Add Radio Link</h2>
+			<ul>
+				<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
+			</ul>
+			<input width='60%' type='text' name='addRadioLink' placeholder='http://example.com/playlist.m3u'>
+			<button class='button' type='submit'>Add Link</button>
+		</form>
+	</div>
+</div>
+
+<?php
+echo "<div id='radioLinks' class='settingListCard'>";
+echo "<h2>Custom Radio Stations</h2>";
 # read the custom links
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/iptv/radioSources.d/*.m3u"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
-//print_r($sourceFiles);
-//echo "<table class='settingsTable'>";
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
-			//echo "[DEBUG]: It is a file...<br>\n";
 			if (strpos($sourceFile,".m3u")){
-				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				# get the link, it should be the second line of the file
 				$fileData = file_get_contents($sourceFile);
-				# DEBUG DRAW THE ARRAY
-				//print_r($link);
 				$fileData = explode('\n',$fileData);
-				//print_r($link);
 				$title = explode(',',$fileData[1])[1];
 				$link = $fileData[2];
 				echo "<div class='settingsEntry'>\n";
@@ -151,43 +142,30 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 }
-//echo "</table>";
-echo "</div>";
 ?>
-
-<div id='addRadioLink' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add Radio Link</h2>
-		<ul>
-			<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
-		</ul>
-		<input width='60%' type='text' name='addRadioLink' placeholder='http://example.com/playlist.m3u'>
-		<button class='button' type='submit'>Add Link</button>
-	</form>
-</div>
-
-<div id='addRadioStation' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add Radio Station</h2>
-		<ul>
-			<li>Add the direct path to the remote audio stream
-				<ul>
-					<li><input width='60%' type='text' name='addCustomRadioLink' placeholder='http://example.com/player?stream=example'></li>
-				</ul>
-			</li>
-			<li>Add the title of this channel
-				<ul>
-					<li><input width='60%' type='text' name='addCustomRadioTitle' placeholder='Channel Title'></li>
-				</ul>
-			</li>
-			<li>Add the remote link path to the custom channel icon
-				<ul>
-					<li><input width='60%' type='text' name='addCustomRadioIcon' placeholder='http://example.com/Link.png'></li>
-				</ul>
-			</li>
-		</ul>
-		<button class='button' type='submit'>Add Channel</button>
-	</form>
+	<div id='addRadioStation' class='inputCard'>
+		<form action='admin.php' method='post'>
+			<h2>Add Radio Station</h2>
+			<ul>
+				<li>Add the direct path to the remote audio stream
+					<ul>
+						<li><input width='60%' type='text' name='addCustomRadioLink' placeholder='http://example.com/player?stream=example'></li>
+					</ul>
+				</li>
+				<li>Add the title of this channel
+					<ul>
+						<li><input width='60%' type='text' name='addCustomRadioTitle' placeholder='Channel Title'></li>
+					</ul>
+				</li>
+				<li>Add the remote link path to the custom channel icon
+					<ul>
+						<li><input width='60%' type='text' name='addCustomRadioIcon' placeholder='http://example.com/Link.png'></li>
+					</ul>
+				</li>
+			</ul>
+			<button class='button' type='submit'>Add Channel</button>
+		</form>
+	</div>
 </div>
 <?PHP
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");

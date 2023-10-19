@@ -247,14 +247,6 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="rss2nfo";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
-	echo "	<div class='inputCard'>\n";
-	echo "		<h2>Music</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/music.php'>Local Music</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
-	echo "	</div>\n";
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
 	echo "	<div class='inputCard'>\n";

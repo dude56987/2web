@@ -63,7 +63,7 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-echo "<div id='serverBlockedGroups' class='inputCard'>";
+echo "<div id='serverBlockedGroups' class='titleCard'>";
 echo "<h2>Server Blocked Groups</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/iptv/blockedGroups.cfg");

@@ -62,17 +62,6 @@ include("settingsHeader.php");
 ?>
 </div>
 
-<div id='addComicDownloadLink' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Comic Download Link</h2>
-<ul>
-	<li>Add webpage links from <a href='#gallery-dl_links'>supported websites</a></li>
-</ul>
-<input width='60%' type='text' name='addComicDownloadLink' placeholder='http://link.com/test'>
-<button class='button' type='submit'>Add Link</button>
-</form>
-</div>
-
 <?PHP
 echo "<div id='serverDownloadLinkConfig' class='settingListCard'>\n";
 echo "<h2>Server Comic Download Link Config</h2>\n";
@@ -113,18 +102,18 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
-
 
 <div id='addComicDownloadLink' class='inputCard'>
 <form action='admin.php' method='post'>
-<h2>Add WebComic By Name</h2>
+<h2>Add Comic Download Link</h2>
 <ul>
-	<li>Add a webcomic by name path from <a href='#dosage_links'>supported comics</a>.</li>
+	<li>Add webpage links from <a href='#gallery-dl_links'>supported websites</a></li>
 </ul>
-<input width='60%' type='text' name='addWebComicDownload' placeholder='xkcd'>
+<input width='60%' type='text' name='addComicDownloadLink' placeholder='http://link.com/test'>
 <button class='button' type='submit'>Add Link</button>
 </form>
+</div>
+
 </div>
 
 <?PHP
@@ -167,6 +156,18 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
+
+<div id='addComicDownloadLink' class='inputCard'>
+<form action='admin.php' method='post'>
+<h2>Add WebComic By Name</h2>
+<ul>
+	<li>Add a webcomic by name path from <a href='#dosage_links'>supported comics</a>.</li>
+</ul>
+<input width='60%' type='text' name='addWebComicDownload' placeholder='xkcd'>
+<button class='button' type='submit'>Add Link</button>
+</form>
+</div>
+
 </div>
 
 <div id='gallery-dl_links' class='settingListCard'>

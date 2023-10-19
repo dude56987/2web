@@ -133,44 +133,44 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-</div>
 
-<div id='addLink' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Link</h2>
-<ul>
-	<li>Add a link directly to a livestream webpage</li>
-	<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
-</ul>
-<input width='60%' type='text' name='addLink' placeholder='http://example.com/playlist.m3u'>
-<button class='button' type='submit'>Add Link</button>
-</form>
-</div>
+	<div id='addLink' class='inputCard'>
+	<form action='admin.php' method='post'>
+	<h2>Add Link</h2>
+	<ul>
+		<li>Add a link directly to a livestream webpage</li>
+		<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
+	</ul>
+	<input width='60%' type='text' name='addLink' placeholder='http://example.com/playlist.m3u'>
+	<button class='button' type='submit'>Add Link</button>
+	</form>
+	</div>
 
-<div id='addCustomLink' class='inputCard'>
-<form action='admin.php' method='post'>
-<h2>Add Custom Link</h2>
-<ul>
-	<li>Add the direct path to the remote video stream
-		<ul>
-			<li><input width='60%' type='text' name='addCustomLink' placeholder='http://example.com/player?stream=example'></li>
-		</ul>
-	</li>
-	<li>Add the title of this channel
-		<ul>
-			<li><input width='60%' type='text' name='addCustomTitle' placeholder='Channel Title'></li>
-		</ul>
-	</li>
-	<li>Add the remote link path to the custom channel icon
-		<ul>
-			<li><input width='60%' type='text' name='addCustomIcon' placeholder='http://example.com/Link.png'></li>
-		</ul>
-	</li>
-</ul>
-<button class='button' type='submit'>Add Channel</button>
-</form>
-</div>
+	<div id='addCustomLink' class='inputCard'>
+	<form action='admin.php' method='post'>
+	<h2>Add Custom Link</h2>
+	<ul>
+		<li>Add the direct path to the remote video stream
+			<ul>
+				<li><input width='60%' type='text' name='addCustomLink' placeholder='http://example.com/player?stream=example'></li>
+			</ul>
+		</li>
+		<li>Add the title of this channel
+			<ul>
+				<li><input width='60%' type='text' name='addCustomTitle' placeholder='Channel Title'></li>
+			</ul>
+		</li>
+		<li>Add the remote link path to the custom channel icon
+			<ul>
+				<li><input width='60%' type='text' name='addCustomIcon' placeholder='http://example.com/Link.png'></li>
+			</ul>
+		</li>
+	</ul>
+	<button class='button' type='submit'>Add Channel</button>
+	</form>
+	</div>
 
+</div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
