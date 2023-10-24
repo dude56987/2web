@@ -22,41 +22,23 @@
 source /var/lib/2web/common
 ################################################################################
 function downloadDir(){
-	if [ ! -f /etc/2web/comics/download.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			echo "/var/cache/2web/downloads/comics/"
-		} >> "/etc/2web/comics/download.cfg"
-		createDir "/var/cache/2web/downloads/comics/"
-	fi
 	# write path to console
-	cat "/etc/2web/comics/download.cfg"
+	echo "/var/cache/2web/downloads/comics/"
 }
 ################################################################################
 function generatedDir(){
-	if [ ! -f /etc/2web/comics/generated.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			echo "/var/cache/2web/generated/comics/"
-		} >> "/etc/2web/comics/generated.cfg"
-		createDir "/var/cache/2web/generated/comics/"
-	fi
 	# write path to console
-	cat "/etc/2web/comics/generated.cfg"
+	echo "/var/cache/2web/generated/comics/"
 }
 ################################################################################
 function libaryPaths(){
-	# add the download directory to the paths
-	echo "$(downloadDir)"
 	# check for server libary config
 	if [ ! -f /etc/2web/comics/libaries.cfg ];then
 		# if no config exists create the default config
 		{
-			# write the new config from the path variable
-			echo "/var/cache/2web/comics/"
-		} >> "/etc/2web/comics/libaries.cfg"
+			# write the new config from the default config
+			cat /etc/2web/config_default/comic2web_libraries.cfg
+		} > "/etc/2web/comics/libaries.cfg"
 	fi
 	# write path to console
 	cat "/etc/2web/comics/libaries.cfg"
@@ -64,12 +46,10 @@ function libaryPaths(){
 	printf "\n"
 	# read the additional configs
 	find "/etc/2web/comics/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		cat "$libaryConfigPath"
+		grep -v "^#" "$libaryConfigPath"
 		# create a space just in case none exists
 		printf "\n"
 	done
-	# add the generated comics directories
-	printf "$(generatedDir)/\n"
 }
 ################################################################################
 function processPdfPageToImage(){
