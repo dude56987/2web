@@ -718,8 +718,16 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	outputLog("Changing theme to ".$theme);
+	# write the new theme to the config file
 	file_put_contents("/etc/2web/theme.cfg",$theme);
-	echo "<hr><a class='button' href='/settings/system.php#webTheme'>BACK</a><hr>";
+	# remove existing symlinks
+	if (file_exists("/var/cache/2web/web/style.css")){
+		unlink("/var/cache/2web/web/style.css");
+	}
+	# recreate the symlink to update the website
+	symlink(("/usr/share/2web/themes/".$theme),"/var/cache/2web/web/style.css");
+	# draw the back button
+	echo "<hr><a class='button' href='/settings/themes.php#webTheme'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
 	addCustomConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");

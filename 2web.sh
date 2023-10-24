@@ -463,6 +463,8 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
 	linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
 	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
+	linkFile "/usr/share/2web/settings/themes.php" "$webDirectory/settings/themes.php"
+	linkFile "/usr/share/2web/settings/themeExample.php" "$webDirectory/settings/themeExample.php"
 	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
 	linkFile "/usr/share/2web/settings/ytdl2nfo.php" "$webDirectory/settings/ytdl2nfo.php"
 	linkFile "/usr/share/2web/settings/rss.php" "$webDirectory/settings/rss.php"

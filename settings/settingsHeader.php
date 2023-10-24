@@ -42,7 +42,7 @@ $pageURL = $_SERVER['REQUEST_URI'];
 		?>
 			🎛️
 			<span class='headerText'>
-				General
+				System
 			</span>
 		</a>
 		<?PHP
@@ -166,30 +166,6 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
-		if ($pageURL == "/settings/cache.php"){
-			echo "<a class='activeButton' href='/settings/cache.php'>";
-		}else{
-			echo "<a class='button' href='/settings/cache.php'>";
-		}
-		?>
-			📥
-			<span class='headerText'>
-				Cache
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/views/index.php"){
-			echo "<a class='activeButton' href='/views/'>";
-		}else{
-			echo "<a class='button' href='/views/'>";
-		}
-		?>
-			👁️
-			<span class='headerText'>
-				Views
-			</span>
-		</a>
-		<?PHP
 		if ($pageURL == "/log/index.php"){
 			echo "<a class='activeButton' href='/log/'>";
 		}else{
@@ -249,14 +225,6 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
-	echo "	<div class='inputCard'>\n";
-	echo "		<h2>Graphs</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/graphs.php'>Graphs</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
-	echo "	</div>\n";
 }else if (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
 	echo "	<div class='titleCard'>\n";
@@ -272,8 +240,18 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="graph2web";
 }else if ($pageURL == "/settings/modules.php"){
 	$moduleName="none";
-}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1)){
+}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php")){
 	$moduleName="none";
+	echo "	<div class='titleCard'>\n";
+	echo "		<h2>System Settings</h2>\n";
+	echo "		<div class='listCard'>";
+	echo "			<a class='button' href='/settings/system.php'>🎛️ General</a>\n";
+	echo "			<a class='button' href='/settings/themes.php'>🎨 Themes</a>\n";
+	echo "			<a class='button' href='/settings/cache.php'>📥 Cache</a>\n";
+	echo "			<a class='button' href='/log/'>📋 Log</a>\n";
+	echo "			<a class='button' href='/views/'>👁️ Views</a>\n";
+	echo "		</div>";
+	echo "	</div>";
 }else if ($pageURL == "/settings/weather.php"){
 	$moduleName="weather2web";
 	echo "	<div class='inputCard'>\n";
