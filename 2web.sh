@@ -938,13 +938,15 @@ function buildPulseGif(){
 function screenshot(){
 	webPath=$1
 	localPath=$2
-	mkdir -p "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
+	mkdir -p "/var/cache/2web/generated/comics/2web/2web Screenshots/"
 	# make desktop screenshot
-	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 1920 --disable-smart-width --height 1080 \
-		"$webPath" "/var/cache/2web/downloads/comics/generated/2web Screenshots/desktop_$localPath"
+	wkhtmltoimage --cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
+		--format jpg --enable-javascript --javascript-delay 2000 --width 1920 --disable-smart-width --height 1080 \
+		"$webPath" "/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_$localPath"
 	# make phone screenshot
-	wkhtmltoimage --format jpg --enable-javascript --javascript-delay 2000 --width 800 --disable-smart-width --height 2000 \
-		"$webPath" "/var/cache/2web/downloads/comics/generated/2web Screenshots/phone_$localPath"
+	wkhtmltoimage --cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
+	  --format jpg --enable-javascript --javascript-delay 2000 --width 800 --disable-smart-width --height 2000 \
+		"$webPath" "/var/cache/2web/generated/comics/2web/2web Screenshots/phone_$localPath"
 }
 ################################################################################
 main(){
@@ -1196,6 +1198,11 @@ main(){
 		restoreSettings "$2"
 	elif [ "$1" == "-S" ] || [ "$1" == "--screenshots" ] || [ "$1" == "screenshots" ] ;then
 		totalCPUs=$(cpuCount)
+		# remove existing cookie file
+		# - cookie file allows screenshots of admin section when no admin is yet configured
+		if test -f "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg";then
+			rm -v "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg"
+		fi
 		################################################################################
 		screenshot  "http://localhost/" "01_home.jpg" &
 		waitQueue 0.5 "$totalCPUs"
@@ -1222,6 +1229,12 @@ main(){
 		# weather index
 		screenshot "http://localhost/weather/" "03_index_weather.jpg" &
 		waitQueue 0.5 "$totalCPUs"
+		# portal index
+		screenshot "http://localhost/portal/" "03_index_portal.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		# repo index
+		screenshot "http://localhost/repos/" "03_index_repos.jpg" &
+		waitQueue 0.5 "$totalCPUs"
 		# graph index
 		screenshot "http://localhost/graphs/" "03_index_graphs.jpg" &
 		waitQueue 0.5 "$totalCPUs"
@@ -1238,6 +1251,10 @@ main(){
 		################################################################################
 		# search
 		################################################################################
+		screenshot "http://localhost/search.php?q=" "06_index_search.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/search.php?q=!help" "06_search_bang_help.jpg" &
+		waitQueue 0.5 "$totalCPUs"
 		screenshot "http://localhost/search.php?q=the" "06_search_the.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "http://localhost/search.php?q=a" "06_search_a.jpg" &
@@ -1271,11 +1288,38 @@ main(){
 		# graph view commit
 		screenshot "http://localhost/repos/2web/?graph=commit_month" "08_repos_2web_graph_commit.jpg" &
 		waitQueue 0.5 "$totalCPUs"
+		# documentation
+		screenshot "http://localhost/repos/2web/?listDoc" "08_repos_2web_docs.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/repos/2web/?doc=2webLib.sh.index" "08_repos_2web_doc_example.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# ai2web index
+		################################################################################
+		screenshot "http://localhost/ai/" "08_ai_2web_index.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/ai/prompt/" "08_ai_2web_prompt.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# portal2web index
+		################################################################################
+		screenshot "http://localhost/portal/" "08_portal_2web_portal.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "http://localhost/portal/localhost.php" "08_portal_2web_portal_localhost.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# graph2web index
+		################################################################################
+		screenshot "http://localhost/graphs/cpu/" "08_graph_2web_cpu.jpg" &
+		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# settings screenshots, 2web must be in passwordless mode, e.g. no admin users
 		# settings required https
 		################################################################################
+		ALERT "Screenshots of Admin locations only work if no admin is set."
 		screenshot "https://localhost/views/" "10_settings_views.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/log/" "10_settings_log.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "https://localhost/settings/modules.php" "10_settings_modules.jpg" &
 		waitQueue 0.5 "$totalCPUs"
@@ -1299,10 +1343,24 @@ main(){
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "https://localhost/settings/weather.php" "10_settings_weather.jpg" &
 		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/ai.php" "10_settings_ai.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/portal.php" "10_settings_portal.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/settings/repos.php" "10_settings_repos.jpg" &
+		waitQueue 0.5 "$totalCPUs"
 		screenshot "https://localhost/settings/graphs.php" "10_settings_graphs.jpg" &
 		waitQueue 0.5 "$totalCPUs"
 		screenshot "https://localhost/settings/about.php" "10_settings_about.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/logout.php" "10_settings_logout.jpg" &
+		waitQueue 0.5 "$totalCPUs"
+		screenshot "https://localhost/login.php" "10_settings_login.jpg" &
+		waitQueue 0.5 "$totalCPUs"
 		blockQueue 1
+		# remove the cookies used in the screenshots
+		rm -v "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg"
+		# change ownership
 		chown -R www-data:www-data "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		ALERT "Finished building the 2web screenshots"
 		ALERT "Screenshots are stored in /var/cache/2web/downloads/comics/generated/2web Screenshots/"
