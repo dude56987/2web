@@ -649,6 +649,49 @@ function processRepo(){
 	repoStatusSum=$(git -P log --oneline -1 | md5sum | cut -d' ' -f1)
 	INFO "$repoName : Checking git repo source data sum: $repoName"
 
+	# configure how multithreading will be handled
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
+	fi
+
+	# update the graph info at least once per day even if the repo is unchanged
+	if cacheCheck "$webDirectory/repos/$repoName/graph_diff_year.png" "1";then
+		# create the base directory if it does not yet exist
+		createDir "$webDirectory/repos/$repoName/"
+		#
+		INFO "$repoName : Rendering Graphs"
+		# build the pulse graph
+		buildCommitGraph "days" 365 "graph" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		# build the rest of the graphs
+		buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "days" 365 "graph_commit_365" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "months" 90 "graph_commit_month" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "months" 90 "graph_diff_month" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "years" 90 "graph_commit_year" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+	fi
+
 	# check if the data sum of the source has changed
 	if [ "$repoStatusSum" == "$oldRepoStatusSum" ];then
 		ALERT "The Repo $repoName has not changed and will not be updated..."
@@ -660,12 +703,6 @@ function processRepo(){
 
 		# move into the cloned repo, so all work is done on the cloned repo
 		cd "$webDirectory/repos/$repoName/source/"
-
-		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(cpuCount)
-		else
-			totalCPUS=1
-		fi
 
 		# create data directories inside the web directory
 		createDir "$webDirectory/repos/$repoName/"
@@ -706,6 +743,9 @@ function processRepo(){
 			> "$webDirectory/repos/$repoName/inspector.html" &
 			waitQueue 0.5 "$totalCPUS"
 		fi
+		# build the stats for the repo
+		buildDiffStats "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
 
 		INFO "$repoName : Generating zip file"
 		generateZip "$webDirectory" "$repoName" &
@@ -733,27 +773,18 @@ function processRepo(){
 			commitCount=$(( commitCount + 1 ))
 			INFO "$repoName : Building commit page $commitCount/$totalCommits for $commitAddress "
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
-			if echo "$@" | grep -q -e "--parallel";then
-				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
-				waitQueue 0.5 "$totalCPUS"
-			else
-				timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index"
-				timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index"
-				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index"
-			fi
+			timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
+			timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
+			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
+			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
+			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
+			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+			waitQueue 0.5 "$totalCPUS"
 		done
 		INFO "$repoName : Building README.md"
 		# generate html from README.md if found in repo
@@ -764,38 +795,6 @@ function processRepo(){
 				markdown "$repoSource/README.md" > "$webDirectory/repos/$repoName/readme.index"
 			fi
 		fi
-		INFO "$repoName : Rendering Graphs"
-		# build the pulse graph
-		buildCommitGraph "days" 365 "graph" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		# build the rest of the graphs
-		buildCommitGraph "days" 365 "graph_commit_365_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "days" 365 "graph_diff_365_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "days" 365 "graph_commit_365" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "months" 90 "graph_commit_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "months" 90 "graph_diff_month" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "weeks" 90 "graph_commit_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "weeks" 90 "graph_diff_week" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildCommitGraph "years" 90 "graph_commit_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		buildDiffGraph "years" 90 "graph_diff_year" "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
-		# build the stats for the totals of the last 90 years
-		buildDiffStats "$repoName" &
-		waitQueue 0.5 "$totalCPUS"
 
 		INFO "$repoName : Building lint data for shellscripts"
 		# run lint on all the existing files that support it
