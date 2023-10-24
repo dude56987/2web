@@ -25,7 +25,7 @@ foreach($moduleNames as $moduleName){
 	if ( file_exists("$moduleName.active")){
 		echo "<span class='activeProcess'>";
 		echo " ⚙️: $moduleName : ";
-		timeElapsedToHuman(file_get_contents("$moduleName.active"));
+		timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
 		echo "</span>\n";
 	}
 }

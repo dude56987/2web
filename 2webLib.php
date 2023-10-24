@@ -1105,16 +1105,10 @@ if( ! function_exists("buildYesNoCfgButton")){
 	}
 }
 ########################################################################
-if( ! function_exists("timeElapsedToHuman")){
-	function timeElapsedToHuman($timestamp){
+if( ! function_exists("timeToHuman")){
+	function timeToHuman($timestamp){
 		# remove newlines in timestamp
 		$timestamp=str_replace("\n","",$timestamp);
-
-		$currentTime=time();
-		logPrint("currentTime=".$currentTime);
-		logPrint("timeStamp=".$timestamp);
-		$elapsedTime=( $currentTime - $timestamp );
-		logPrint("elapsedTime=".$elapsedTime);
 
 		$yearInSeconds=(((60 * 60) * 24) * 365);
 		$dayInSeconds=((60 * 60) * 24);
@@ -1126,52 +1120,74 @@ if( ! function_exists("timeElapsedToHuman")){
 		$hoursPassed=0;
 		$minutesPassed=0;
 
-		if ($elapsedTime > $yearInSeconds ){
-			$yearsPassed=floor( $elapsedTime / $yearInSeconds );
-			$elapsedTime -= $yearsPassed * $yearInSeconds;
-			if ($yearsPassed > 0){
+		if ($timestamp > $yearInSeconds ){
+			$yearsPassed=floor( $timestamp / $yearInSeconds );
+			$timestamp -= $yearsPassed * $yearInSeconds;
+			if ($yearsPassed == 1){
+				echo "$yearsPassed year ";
+			}else if ($yearsPassed > 1){
 				echo "$yearsPassed years ";
 			}
 		}
 
-		if ($elapsedTime > $dayInSeconds ){
-			$daysPassed=floor( $elapsedTime / $dayInSeconds );
-			$elapsedTime -= $daysPassed * $dayInSeconds;
-			if ($daysPassed > 0){
+		if ($timestamp > $dayInSeconds ){
+			$daysPassed=floor( $timestamp / $dayInSeconds );
+			$timestamp -= $daysPassed * $dayInSeconds;
+			if ($daysPassed == 1){
+				echo "$daysPassed day ";
+			}else if ($daysPassed > 1){
 				echo "$daysPassed days ";
 			}
 			if ($yearsPassed > 0){
-				echo "ago";
 				return true;
 			}
 		}
 
-		if ($elapsedTime > $hourInSeconds ){
-			$hoursPassed=floor( $elapsedTime / $hourInSeconds );
-			$elapsedTime -= $hoursPassed * $hourInSeconds;
-			if ($hoursPassed > 0){
+		if ($timestamp > $hourInSeconds ){
+			$hoursPassed=floor( $timestamp / $hourInSeconds );
+			$timestamp -= $hoursPassed * $hourInSeconds;
+			if ($hoursPassed == 1){
+				echo "$hoursPassed hour";
+			}else if ($hoursPassed > 1){
 				echo "$hoursPassed hours ";
 			}
 			if ($daysPassed > 0){
-				echo "ago";
 				return true;
 			}
 		}
 
-		if ($elapsedTime > $minuteInSeconds ){
-			$minutesPassed=floor( $elapsedTime / $minuteInSeconds );
-			$elapsedTime -= $minutesPassed * $minuteInSeconds;
-			if ($minutesPassed > 0){
+		if ($timestamp > $minuteInSeconds ){
+			$minutesPassed=floor( $timestamp / $minuteInSeconds );
+			$timestamp -= $minutesPassed * $minuteInSeconds;
+			if ($minutesPassed == 1){
+				echo "$minutesPassed minute ";
+			}else if ($minutesPassed > 1){
 				echo "$minutesPassed minutes ";
 			}
 			if ($hoursPassed > 0){
-				echo "ago";
 				return true;
 			}
 		}
-
 		# write out the remaining seconds
-		echo "$elapsedTime seconds ago";
+		if ($timestamp == 1){
+			echo "$timestamp second ";
+		}else{
+			echo "$timestamp seconds ";
+		}
+	}
+}
+########################################################################
+if( ! function_exists("timeElapsedToHuman")){
+	function timeElapsedToHuman($timestamp,$postText=" ago"){
+		# remove newlines in timestamp
+		$timestamp=str_replace("\n","",$timestamp);
+
+		$currentTime=time();
+		$elapsedTime=( $currentTime - $timestamp );
+
+		# convert the elapsed time to human
+		timeToHuman($elapsedTime);
+		echo $postText;
 	}
 }
 ########################################################################
