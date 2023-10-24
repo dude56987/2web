@@ -17,6 +17,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 $pageURL = $_SERVER['REQUEST_URI'];
+########################################################################
+function drawSettingsHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLink){
+	if (detectEnabledStatus("$moduleName")){
+		if ($_SERVER['REQUEST_URI'] == "$buttonLink"){
+			echo "<a class='activeButton' href='$buttonLink'>";
+		}else{
+			echo "<a class='button' href='$buttonLink'>";
+		}
+		echo "	$buttonIcon";
+		echo "	<span class='headerText'>";
+		echo "		$buttonText";
+		echo "	</span>";
+		echo "</a>";
+	}
+}
+########################################################################
 ?>
 <div class='titleCard'>
 	<h2>Settings</h2>
@@ -46,125 +62,18 @@ $pageURL = $_SERVER['REQUEST_URI'];
 			</span>
 		</a>
 		<?PHP
-		if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php")){
-			echo "<a class='activeButton' href='/settings/nfo.php'>";
-		}else{
-			echo "<a class='button' href='/settings/nfo.php'>";
-		}
+		# draw the module buttons if the module is enabled
+		drawSettingsHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php");
+		drawSettingsHeaderButton("music2web","🎧","Music","/settings/comics.php");
+		drawSettingsHeaderButton("comic2web","📚","Comics","/settings/comics.php");
+		drawSettingsHeaderButton("iptv2web","📡","Live","/settings/tv.php");
+		drawSettingsHeaderButton("wiki2web","⛵","Wiki","/settings/wiki.php");
+		drawSettingsHeaderButton("git2web","💾","Repos","/settings/repos.php");
+		drawSettingsHeaderButton("portal2web","🚪","Portal","/settings/portal.php");
+		drawSettingsHeaderButton("weather2web","🌤️","Weather","/settings/weather.php");
+		drawSettingsHeaderButton("ai2web","🧠","AI","/settings/ai.php");
+		drawSettingsHeaderButton("graph2web","📊","Graphs","/settings/graphs.php");
 		?>
-			🎞️
-			<span class='headerText'>
-				Video On Demand
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/music.php"){
-			echo "<a class='activeButton' href='/settings/music.php'>";
-		}else{
-			echo "<a class='button' href='/settings/music.php'>";
-		}
-		?>
-			🎧
-			<span class='headerText'>
-				Music
-			</span>
-		</a>
-		<?PHP
-		if (($pageURL == "/settings/comics.php") || ($pageURL == "/settings/comicsDL.php")){
-			echo "<a class='activeButton' href='/settings/comics.php'>";
-		}else{
-			echo "<a class='button' href='/settings/comics.php'>";
-		}
-		?>
-			📚
-			<span class='headerText'>
-				Comics
-			</span>
-		</a>
-		<?PHP
-		if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
-			echo "<a class='activeButton' href='/settings/tv.php'>";
-		}else{
-			echo "<a class='button' href='/settings/tv.php'>";
-		}
-		?>
-			📡
-			<span class='headerText'>
-				Live
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/wiki.php"){
-			echo "<a class='activeButton' href='/settings/wiki.php'>";
-		}else{
-			echo "<a class='button' href='/settings/wiki.php'>";
-		}
-		?>
-			⛵
-			<span class='headerText'>
-				Wiki
-			</span>
-		</a>
-		<?PHP
-		if (($pageURL == "/settings/repos.php")){
-			echo "<a class='activeButton' href='/settings/repos.php'>";
-		}else{
-			echo "<a class='button' href='/settings/repos.php'>";
-		}
-		?>
-			💾
-			<span class='headerText'>
-				Repos
-			</span>
-		</a>
-		<?PHP
-		if (($pageURL == "/settings/portal.php")){
-			echo "<a class='activeButton' href='/settings/portal.php'>";
-		}else{
-			echo "<a class='button' href='/settings/portal.php'>";
-		}
-		?>
-			🚪
-			<span class='headerText'>
-				Portal
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/weather.php"){
-			echo "<a class='activeButton' href='/settings/weather.php'>";
-		}else{
-			echo "<a class='button' href='/settings/weather.php'>";
-		}
-		?>
-			🌤️
-			<span class='headerText'>
-				Weather
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/ai.php"){
-			echo "<a class='activeButton' href='/settings/ai.php'>";
-		}else{
-			echo "<a class='button' href='/settings/ai.php'>";
-		}
-		?>
-			🧠
-			<span class='headerText'>
-				AI
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/graphs.php"){
-			echo "<a class='activeButton' href='/settings/graphs.php'>";
-		}else{
-			echo "<a class='button' href='/settings/graphs.php'>";
-		}
-		?>
-			📊
-			<span class='headerText'>
-				Graphs
-			</span>
-		</a>
 		<?PHP
 		if ($pageURL == "/log/index.php"){
 			echo "<a class='activeButton' href='/log/'>";
