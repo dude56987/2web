@@ -40,7 +40,6 @@ include("settingsHeader.php");
 	<ul>
 		<li><a href='#addNewUser'>Add New Administrator</a></li>
 		<li><a href='#removeUser'>Remove Administrator</a></li>
-		<li><a href='#webTheme'>Change Web Theme</a></li>
 		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
 	</ul>
 </div>
@@ -78,21 +77,15 @@ include("settingsHeader.php");
 			<?PHP
 			# build theme list
 			$themePath="/etc/2web/theme.cfg";
-			//echo "THEME PATH = ".$themePath."<br>";
 			if (file_exists($themePath)){
 				$activeTheme=file_get_contents($themePath);
 				$activeTheme=str_replace("\n","",$activeTheme);
-				//echo "ACTIVE THEME = ".$activeTheme."<br>";
 				# read in theme files in /usr/share/2web/
 				$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/users/*.cfg"));
-				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
 				foreach($sourceFiles as $sourceFile){
 					if (strpos($sourceFile,".cfg")){
-						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
 						$tempTheme=str_replace("/etc/2web/users/","",$sourceFile);
 						$themeName=str_replace(".cfg","",$tempTheme);
-						//echo "TEMP THEME = ".$tempTheme."<br>\n";
-						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
 						if ($tempTheme == $activeTheme){
 							# mark the active theme as selected
 							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
@@ -109,52 +102,6 @@ include("settingsHeader.php");
 	</form>
 </div>
 
-<!-- create the theme picker based on installed themes -->
-<div id='webTheme' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Web Theme</h2>
-			<ul>
-				<li>
-					Custom themes can be installed in /usr/share/2web/themes/
-				</li>
-				<li>
-					Theme will change next time website updates.
-				</li>
-			</ul>
-			<select name='theme'>
-			<?PHP
-			# build theme list
-			$themePath="/etc/2web/theme.cfg";
-			//echo "THEME PATH = ".$themePath."<br>";
-			if (file_exists($themePath)){
-				$activeTheme=file_get_contents($themePath);
-				$activeTheme=str_replace("\n","",$activeTheme);
-				//echo "ACTIVE THEME = ".$activeTheme."<br>";
-				# read in theme files in /usr/share/2web/
-				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/2web/themes/*.css"));
-				//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
-				foreach($sourceFiles as $sourceFile){
-					if (strpos($sourceFile,".css")){
-						//echo "SOURCE FILE = ".$sourceFile."<br>\n";
-						$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
-						$themeName=str_replace(".css","",$tempTheme);
-						//echo "TEMP THEME = ".$tempTheme."<br>\n";
-						echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
-						if ($tempTheme == $activeTheme){
-							# mark the active theme as selected
-							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
-						}else{
-							# add other theme options found
-							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
-						}
-					}
-				}
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Change Theme</button>
-	</form>
-</div>
 <div id='homepageFortuneStatus' class='inputCard'>
 	<h2>Fortune</h2>
 		<ul>
@@ -185,18 +132,6 @@ include("settingsHeader.php");
 				echo "	<button class='button' type='submit' name='homepageFortuneStatus' value='enabled'>◯ Enable Fortune</button>\n";
 				echo "	</form>\n";
 			}
-		?>
-</div>
-
-<div id='randomTheme' class='inputCard'>
-	<h2>Randomize Theme</h2>
-		<ul>
-			<li>
-				Change theme randomly every 30 minutes.
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/randomTheme.cfg","Random Theme","randomTheme");
 		?>
 </div>
 
