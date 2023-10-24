@@ -1006,8 +1006,8 @@ function processRepo(){
 		SQLaddToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/data.db" "all"
 
 		#
-		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "all_fanart"
-		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/data.db" "repos_fanart"
+		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/backgrounds.db" "all_fanart"
+		SQLaddToIndex "/repos/$repoName/repoHistory.png" "$webDirectory/backgrounds.db" "repos_fanart"
 
 		#
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"

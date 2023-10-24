@@ -409,9 +409,9 @@ function processTrack(){
 				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "music_poster"
 				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "artist_poster"
 
-				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "all_fanart"
-				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "music_fanart"
-				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/data.db" "artist_fanart"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/backgrounds.db" "all_fanart"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/backgrounds.db" "music_fanart"
+				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/backgrounds.db" "artist_fanart"
 
 				# add artist to the main music index
 				touchFile "$webDirectory/music/music.index"
@@ -463,9 +463,9 @@ function processTrack(){
 				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "music_poster"
 				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "albums_poster"
 
-				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "all_fanart"
-				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "music_fanart"
-				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/data.db" "albums_fanart"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/backgrounds.db" "all_fanart"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/backgrounds.db" "music_fanart"
+				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/backgrounds.db" "albums_fanart"
 
 				# add album to the artist index
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/music/$artist/albums.index"

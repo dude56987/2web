@@ -703,12 +703,12 @@ processMovie(){
 		SQLaddToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/data.db" "all"
 
 		# add to the poster and fanart indexes
-		SQLaddToIndex "/movies/$movieWebPath/poster.png" "$webDirectory/data.db" "all_poster"
-		SQLaddToIndex "/movies/$movieWebPath/fanart.png" "$webDirectory/data.db" "all_fanart"
+		SQLaddToIndex "/movies/$movieWebPath/poster.png" "$webDirectory/backgrounds.db" "all_poster"
+		SQLaddToIndex "/movies/$movieWebPath/fanart.png" "$webDirectory/backgrounds.db" "all_fanart"
 
 		# add poster and fanart for this section
-		SQLaddToIndex "/movies/$movieWebPath/poster.png" "$webDirectory/data.db" "movies_poster"
-		SQLaddToIndex "/movies/$movieWebPath/fanart.png" "$webDirectory/data.db" "movies_fanart"
+		SQLaddToIndex "/movies/$movieWebPath/poster.png" "$webDirectory/backgrounds.db" "movies_poster"
+		SQLaddToIndex "/movies/$movieWebPath/fanart.png" "$webDirectory/backgrounds.db" "movies_fanart"
 
 		# add the movie to the main movie index since it has been updated
 		addToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/movies.index"
@@ -1722,12 +1722,12 @@ processShow(){
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "all"
 
 	# add show poster and fanart information
-	SQLaddToIndex "/shows/$showTitle/poster.png" "$webDirectory/data.db" "all_poster"
-	SQLaddToIndex "/shows/$showTitle/fanart.png" "$webDirectory/data.db" "all_fanart"
+	SQLaddToIndex "/shows/$showTitle/poster.png" "$webDirectory/backgrounds.db" "all_poster"
+	SQLaddToIndex "/shows/$showTitle/fanart.png" "$webDirectory/backgrounds.db" "all_fanart"
 
 	# create section specific poster and fanart indexes
-	SQLaddToIndex "/shows/$showTitle/poster.png" "$webDirectory/data.db" "shows_poster"
-	SQLaddToIndex "/shows/$showTitle/fanart.png" "$webDirectory/data.db" "shows_fanart"
+	SQLaddToIndex "/shows/$showTitle/poster.png" "$webDirectory/backgrounds.db" "shows_poster"
+	SQLaddToIndex "/shows/$showTitle/fanart.png" "$webDirectory/backgrounds.db" "shows_fanart"
 
 	# add the show to the main show index since it has been updated
 	addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/shows.index"

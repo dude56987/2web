@@ -920,10 +920,10 @@ renderPage(){
 
 		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
 
-		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "comics_poster"
-		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "comics_fanart"
-		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "poster_all"
-		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/data.db" "fanart_all"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "comics_poster"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "comics_fanart"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "poster_all"
+		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "fanart_all"
 
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"

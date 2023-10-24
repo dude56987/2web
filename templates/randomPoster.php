@@ -28,7 +28,7 @@
 	$filterType="_$filterType";
 
 	# load database
-	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/backgrounds.db");
 	# set the timeout to 1 minute since most webbrowsers timeout loading before this
 	$databaseObj->busyTimeout(60000);
 
