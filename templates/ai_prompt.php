@@ -286,82 +286,82 @@ if ($discoveredPrompt){
 	echo "</form>\n";
 	echo "</div>\n";
 
-	echo "<div class='titleCard'>\n";
-	echo "<h1>Previous Prompts</h1>\n";
 	# draw the threads discovered
 	$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/prompt/"),array(".","..","index.php"));
-	# shuffle the items in the index
-	#shuffle($promptIndex);
 	sort($promptIndex);
 	# order newest prompts first
 	$promptIndex=array_reverse($promptIndex);
-	# split into pages and grab only the first page
-	#
-	$promptIndex=array_chunk($promptIndex,10);
-	$totalPages=( count($promptIndex) - 1);
-	# grab the page if the page number is set
-	if (array_key_exists("page",$_GET)){
-		# decrement page number since array 0 is page 1
-		$promptIndex=$promptIndex[$_GET['page']];
-	}else{
-		$_GET["page"]=0;
-		$promptIndex=$promptIndex[0];
-	}
-	foreach($promptIndex as $directoryPath){
-		# if the hidden cfg file does not exist use this in the index
-		if ( ! file_exists($directoryPath."/hidden.cfg")){
-			echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
-			echo file_get_contents($directoryPath."/prompt.cfg");
-			echo "<div>Responses: ";
-			$finishedResponses=0;
-			foreach(scandir($directoryPath."/") as $responseFileName){
-				if(strpos($responseFileName,".txt") !== false){
-					$finishedResponses += 1;
-				}
-			}
-			echo "$finishedResponses";
-			echo "/";
-			echo file_get_contents($directoryPath."/versions.cfg");
-			echo "</div>";
-
-			# check for failures
-			if (file_exists($directoryPath."/failures.cfg")){
-				echo "<hr>";
-				echo "Failures: ";
-				echo file_get_contents($directoryPath."/failures.cfg");
-				echo "<hr>";
-			}
-
-			echo "</a>";
-		}
-	}
-	echo "<div class='listCard'>";
-	if (array_key_exists("page",$_GET)){
-		# build the page buttons
-		if($_GET["page"] > 0){
-			# add previous page button
-			echo "<a class='button' href='?page=".($_GET['page'] - 1)."'>Previous</a>";
-		}
-	}
-	# add the pages index at the bottom of the page
-	foreach(range(0,$totalPages) as $indexCounter){
-		if ( $_GET["page"] == $indexCounter){
-			echo "<a class='button activeButton' href='?page=$indexCounter'>".($indexCounter + 1)."</a>";
+	# if any previous prompts are found
+	if (count($promptIndex) > 0){
+		echo "<div class='titleCard'>\n";
+		echo "<h1>Previous Prompts</h1>\n";
+		# split into pages and grab only the first page
+		$promptIndex=array_chunk($promptIndex,10);
+		$totalPages=( count($promptIndex) - 1);
+		# grab the page if the page number is set
+		if (array_key_exists("page",$_GET)){
+			# decrement page number since array 0 is page 1
+			$promptIndex=$promptIndex[$_GET['page']];
 		}else{
-			echo "<a class='button' href='?page=$indexCounter'>".($indexCounter + 1)."</a>";
+			$_GET["page"]=0;
+			$promptIndex=$promptIndex[0];
 		}
-	}
-	if (array_key_exists("page",$_GET)){
-		if($_GET["page"] < $totalPages){
-			# add next page button
-			echo "<a class='button' href='?page=".($_GET['page'] + 1)."'>Next</a>";
-		}
-	}else{
-		echo "<a class='button' href='?page=1'>Next</a>";
-	}
-	echo "</div>\n";
+		foreach($promptIndex as $directoryPath){
+			# if the hidden cfg file does not exist use this in the index
+			if ( ! file_exists($directoryPath."/hidden.cfg")){
+				echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+				echo file_get_contents($directoryPath."/prompt.cfg");
+				echo "<div>Responses: ";
+				$finishedResponses=0;
+				foreach(scandir($directoryPath."/") as $responseFileName){
+					if(strpos($responseFileName,".txt") !== false){
+						$finishedResponses += 1;
+					}
+				}
+				echo "$finishedResponses";
+				echo "/";
+				echo file_get_contents($directoryPath."/versions.cfg");
+				echo "</div>";
 
-	echo "</div>\n";
+				# check for failures
+				if (file_exists($directoryPath."/failures.cfg")){
+					echo "<hr>";
+					echo "Failures: ";
+					echo file_get_contents($directoryPath."/failures.cfg");
+					echo "<hr>";
+				}
+
+				echo "</a>";
+			}
+		}
+		echo "<div class='listCard'>";
+		if (array_key_exists("page",$_GET)){
+			# build the page buttons
+			if($_GET["page"] > 0){
+				# add previous page button
+				echo "<a class='button' href='?page=".($_GET['page'] - 1)."'>Previous</a>";
+			}
+		}
+		# add the pages index at the bottom of the page
+		foreach(range(0,$totalPages) as $indexCounter){
+			if ( $_GET["page"] == $indexCounter){
+				echo "<a class='button activeButton' href='?page=$indexCounter'>".($indexCounter + 1)."</a>";
+			}else{
+				echo "<a class='button' href='?page=$indexCounter'>".($indexCounter + 1)."</a>";
+			}
+		}
+		if (array_key_exists("page",$_GET)){
+			if($_GET["page"] < $totalPages){
+				# add next page button
+				echo "<a class='button' href='?page=".($_GET['page'] + 1)."'>Next</a>";
+			}
+		}else{
+			echo "<a class='button' href='?page=1'>Next</a>";
+		}
+		echo "</div>\n";
+
+		echo "</div>\n";
+	}
 }
 ?>
 <?php

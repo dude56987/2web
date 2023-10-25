@@ -900,8 +900,6 @@ if (array_key_exists("loadConvo",$_GET)){
 	echo "</div>";
 
 	if ($discoveredPrompt){
-		echo "<div class='titleCard'>\n";
-		echo "<h1>Random Prompts</h1>\n";
 		# draw the threads discovered
 		$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/prompt/"),array(".","..","index.php"));
 		# shuffle the items in the index
@@ -910,27 +908,33 @@ if (array_key_exists("loadConvo",$_GET)){
 		# order newest prompts first
 		$promptIndex=array_reverse($promptIndex);
 		# split into pages and grab only the first page
-		$promptIndex=array_chunk($promptIndex,6)[0];
-		foreach($promptIndex as $directoryPath){
-			# if the hidden cfg file does not exist use this in the index
-			if ( ! file_exists("prompt/".$directoryPath."/hidden.cfg")){
-				echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
-				echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
-				echo "<div>Responses: ";
-				$finishedResponses=0;
-				foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
-					if(strpos($responseFileName,".txt") !== false){
-						$finishedResponses += 1;
+		$promptIndex=array_chunk($promptIndex,6);
+		if(count($promptIndex) > 0){
+			$promptIndex=$promptIndex[0];
+			# if there are any entries draw the random prompt questions widget
+			echo "<div class='titleCard'>\n";
+			echo "<h1>Random Prompts</h1>\n";
+			foreach($promptIndex as $directoryPath){
+				# if the hidden cfg file does not exist use this in the index
+				if ( ! file_exists("prompt/".$directoryPath."/hidden.cfg")){
+					echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+					echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
+					echo "<div>Responses: ";
+					$finishedResponses=0;
+					foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
+						if(strpos($responseFileName,".txt") !== false){
+							$finishedResponses += 1;
+						}
 					}
+					echo "$finishedResponses";
+					echo "/";
+					echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
+					echo "</div>";
+					echo "</a>";
 				}
-				echo "$finishedResponses";
-				echo "/";
-				echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
-				echo "</div>";
-				echo "</a>";
 			}
+			echo "</div>\n";
 		}
-		echo "</div>\n";
 	}
 
 	if ($discoveredTxt2Txt){
