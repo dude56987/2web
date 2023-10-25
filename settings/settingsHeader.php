@@ -64,7 +64,7 @@ function drawSettingsHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLin
 		<?PHP
 		# draw the module buttons if the module is enabled
 		drawSettingsHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php");
-		drawSettingsHeaderButton("music2web","🎧","Music","/settings/comics.php");
+		drawSettingsHeaderButton("music2web","🎧","Music","/settings/music.php");
 		drawSettingsHeaderButton("comic2web","📚","Comics","/settings/comics.php");
 		drawSettingsHeaderButton("iptv2web","📡","Live","/settings/tv.php");
 		drawSettingsHeaderButton("wiki2web","⛵","Wiki","/settings/wiki.php");
