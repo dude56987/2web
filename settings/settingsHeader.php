@@ -124,8 +124,12 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "		<h2>Video On Demand Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	echo "			<a class='button' href='/settings/nfo.php'>🎞️Libaries</a>\n";
-	echo "			<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
-	echo "			<a class='button' href='/settings/rss.php'>📶 RSS</a>\n";
+	if (detectEnabledStatus("ytdl2nfo")){
+		echo "			<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
+	}
+	if (detectEnabledStatus("rss2nfo")){
+		echo "			<a class='button' href='/settings/rss.php'>📶 RSS</a>\n";
+	}
 	echo "		</div>";
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
