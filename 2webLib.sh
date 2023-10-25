@@ -1082,22 +1082,28 @@ function downloadThumbnail(){
 	#
 	# Download the thumbnail and store it in the cache, link the downloaded thumb in the main website
 	#
+	# - Downloaded thumbnails are stored in $(webRoot)/downloads/$moduleName/
+	#
 	# RETURN FILES
 	thumbnailLink=$1
 	thumbnailPath=$2
 	thumbnailExt=$3
 	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
+	# get the module name
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# if the link has already been downloaded then dont download it
 	webDirectory=$(webRoot)
 	# if it dont exist download it
-	if ! test -f "$webDirectory/thumbnails/$sumName$thumbnailExt";then
+	if ! test -f "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt";then
+		# create the download directory if it does not exist
+		createDir "/var/cache/2web/downloads/${moduleName}/thumbnails/"
 		# generated the sum for the thumbnail name
-		timeout 120 curl -L --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
+		timeout 120 curl -L --silent "$thumbnailLink" | convert -quiet - "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt"
 		# sleep for one second after each thumbnail download
 		#sleep 1
 	fi
 	if ! test -f "$thumbnailPath$thumbnailExt";then
-		linkFile "$webDirectory/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
+		linkFile "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
 
 		# save the thumbnail to a download path, and link to that downloaded thumbnail
 		#curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"

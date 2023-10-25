@@ -392,7 +392,7 @@ processMovie(){
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/poster"
 
 		# check for the thumbnail and link it
-		#checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
+		#checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath"
 
 		# copy over subtitles
 		if [ $(find "$movieDir" -type f -name '*.srt' | wc -l) -gt 0 ] ;then
@@ -749,52 +749,53 @@ getThumbnailExt(){
 	return 0
 }
 ########################################################################
-downloadThumbnail(){
-	thumbnailLink=$1
-	thumbnailPath=$2
-	thumbnailExt=$3
-	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
-	# if the link has already been downloaded then dont download it
-	webDirectory=$(webRoot)
-	# if it dont exist download it
-	if ! test -f "$webDirectory/thumbnails/$sumName$thumbnailExt";then
-		# generated the sum for the thumbnail name
-		curl --silent "$thumbnailLink" | convert -quiet - "$webDirectory/thumbnails/$sumName$thumbnailExt"
-		# sleep for one second after each thumbnail download
-		#sleep 1
-	fi
-	if ! test -f "$thumbnailPath$thumbnailExt";then
-		linkFile "$webDirectory/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
-
-		# save the thumbnail to a download path, and link to that downloaded thumbnail
-		#curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"
-	fi
-}
-########################################################################
 checkForThumbnail(){
-	#checkForThumbnail $episode
 	thumbnail=$1
 	thumbnailPath=$2
 	thumbnailPathKodi=$3
+	videoPath=$4
+	nfoInfo=$5
 	########################################################################
-	#INFO "new thumbnail path = $thumbnailPath"
+	tempFileSize=0
+	ALERT "Looking for thumbnail paths"
 	# check for a local thumbnail
 	if test -f "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
-		#INFO "Thumbnail already linked..."
+		ALERT "Thumbnail already linked..."
+	elif test -L "$thumbnailPath.jpg";then
+		thumbnailExt=".jpg"
+		ALERT "Thumbnail already linked..."
 	elif test -f "$thumbnailPath.png";then
 		thumbnailExt=".png"
-		#INFO "Thumbnail already linked..."
+		ALERT "Thumbnail already linked..."
+	elif test -L "$thumbnailPath.png";then
+		thumbnailExt=".png"
+		ALERT "Thumbnail already linked..."
 	else
 		# no thumbnail has been linked or downloaded
-		if test -f "$thumbnail.png";then
-			#INFO "found PNG thumbnail..."
+		if test -L "$thumbnail.png";then
+			ALERT "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.png" "$thumbnailPath.png"
 			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
+		elif test -f "$thumbnail.png";then
+			ALERT "found PNG thumbnail..."
+			thumbnailExt=".png"
+			# link thumbnail into output directory
+			linkFile "$thumbnail.png" "$thumbnailPath.png"
+			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
+		elif test -L "$thumbnail.jpg";then
+			ALERT "found JPG thumbnail..."
+			thumbnailExt=".jpg"
+			# link thumbnail into output directory
+			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
+			linkFile "$thumbnail.jpg" "$thumbnailPathKodi.jpg"
+			if ! test -f "$thumbnailPath.png";then
+				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
+			fi
 		elif test -f "$thumbnail.jpg";then
-			#INFO "found JPG thumbnail..."
+			ALERT "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
@@ -803,33 +804,44 @@ checkForThumbnail(){
 				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
 			fi
 		else
+			# look inside the nfo data for a thumbnail link
 			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
+				ALERT "genrating thumbnail from thumbnailLink='$thumbnailLink'"
 				addToLog "DOWNLOAD" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 				thumbnailExt=".png"
 				# download the thumbnail
 				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
-
+				# link the downloaded thumbnail to the kodi directory
 				linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 			fi
-			touch "$thumbnailPath$thumbnailExt"
+			#touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
-			tempFileSize=$(wc --bytes < "$thumbnailPath$thumbnailExt")
-			#INFO "[DEBUG]: file size $tempFileSize"
-			if [ "$tempFileSize" -eq 0 ];then
-				addToLog "DOWNLOAD" "Generating Thumbnail" "$videoPath" "$logPagePath"
-				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
-				# try to generate a thumbnail from video file
-				#INFO "Attempting to create thumbnail from video source..."
-				#tempFileSize=0
+		fi
+		#INFO "[DEBUG]: file size $tempFileSize"
+		# if the downloaded file
+		if test -s $thumbnailPath$thumbnailExt;then
+			ALERT "[INFO]: Existing thumbnail file found!"
+		elif test -L $thumbnailPath$thumbnailExt;then
+			ALERT "[INFO]: Existing thumbnail was linked already!"
+		else
+			addToLog "DOWNLOAD" "Generating Thumbnail" "Using media link: $videoPath" "$logPagePath"
+			ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
+			ALERT "thumbnail path = $thumbnailPath"
+			# try to generate a thumbnail from video file
+			#INFO "Attempting to create thumbnail from video source..."
+			#tempFileSize=0
+			# check if this is a video file using mediainfo
+			#startDebug
+			if mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "video";then
 				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$videoPath")
 				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$videoPath")
 				if echo "$tempFrameRate" | grep -q ".";then
 					# remove any found decimal places in the frame rate
 					tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
 				fi
-				tempTimeCode=$(( $tempTotalFrames / 5 ))
-				tempTimeCode=$(($tempTimeCode / $tempFrameRate))
+				tempTimeCode=$(bc -l <<< "$tempTotalFrames / 5")
+				tempTimeCode=$(bc -l <<< "$tempTimeCode / $tempFrameRate")
 				# - force the filesize to be large enough to be a complex descriptive thumbnail
 				# - filesize of images is directly related to visual complexity
 				largestFileSize=15000
@@ -870,7 +882,24 @@ checkForThumbnail(){
 						tempFileSize=16000
 					fi
 				done
+			else
+				ALERT "This is a audio file, generate a audio waveform..."
+				# only render a waveform is no other thumbnail is found
+				# - ffmpeg requires downloading the entire file for creating the thumbnail
+				# create a thumbnail for the mp3 links inside streams
+				episodeThumbSum=$(echo "$episodeVideoPath" | md5sum | cut -d' ' -f1)
+				# generate the waveform thumbnail for audio files
+				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.jpg";then
+					ALERT "No waveform file exists, creating one..."
+					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex "showwavespic=colors=white" -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.jpg"
+				fi
+				ALERT "Linking generated waveform thumbnails..."
+				# and the web thumbnail link
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$thumbnailPath.jpg"
+				# add kodi thumbnail link link
+				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$thumbnailPathKodi.jpg"
 			fi
+			#stopDebug
 		fi
 	fi
 }
@@ -1061,7 +1090,6 @@ processEpisode(){
 		# start rendering the html
 		{
 			# the style variable must be set inline, not in head, this may be a bug in firefox
-			#echo "<html id='top' class='seriesBackground' style='$tempStyle'>"
 			echo "<html id='top' class='seriesBackground'>"
 			echo "<head>"
 			echo "<title>$episodeShowTitle - ${episodeSeason}x${episodeNumber}</title>"
@@ -1094,15 +1122,18 @@ processEpisode(){
 			echo "</div>"
 		} > "$episodePagePath"
 		# link the episode nfo file
-		#INFO "linking $episode to $webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		linkFile "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		linkFile "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# show info gathered
-		#INFO "mediaType = $mediaType"
-		#INFO "mimeType = $mimeType"
-		#INFO "videoPath = $videoPath"
 		episodeVideoPath="${episode//.nfo/$sufix}"
-		#INFO "episodeVideoPath = $videoPath"
+
+		# remove .nfo extension and create thumbnail path
+		thumbnail="${episode//.nfo}-thumb"
+		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+
+		# check for the thumbnail and link it
+		checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath" "$nfoInfo"
 
 		resolverUrl=""
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
@@ -1111,50 +1142,35 @@ processEpisode(){
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
 			# change the video path into a video id to make it embedable
-			#yt_id=${videoPath//*video_id=}
-			#INFO "yt-id = $yt_id"
-			#ytLink="https://youtube.com/watch?v=$yt_id"#
 			# get the contents of the stream file as the link
-			#ytLink="$(cat "$videoPath")"
 			ytLink="$videoPath"
 
-			# generate a link to the local caching resolver
-			# - cache new links in batch processing mode
-			# check the ytlink for .mp3 file extension and if it contains .mp3 do not run it through the resolver and use the .strm as a direct link
-			if echo "$ytLink" | grep -q "\.mp3";then
+			# check the .strm link to see if it is a video link, a audio link or a link that must be ran though the resolver
+			if mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "video";then
+				# direct link to video
 				resolverUrl="$ytLink"
-				# create a thumbnail for the mp3 links inside streams
-				episodeThumbSum=$(echo "$episodePath" | md5sum | cut -d' ' -f1)
-				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.jpg";then
-					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex showwavespic -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.jpg"
-				fi
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.jpg"
-				# add kodi link
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb.jpg"
+			elif mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "audio";then
+				# direct link to audio
+				resolverUrl="$ytLink"
 			else
+				# redirect to the resolver
 				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 			fi
 
 			# if the config option is set to cache new episodes
+			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
 				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
 				# split up airdate data to check if caching should be done
 				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 				airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
-				#ALERT "[DEBUG]: Checking if file was released in the last month"
-				#ALERT "[DEBUG]: aired year $airedYear == current year $(date +"%Y")"
-				#ALERT "[DEBUG]: aired month $airedMonth == current month $(date +"%m")"
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
-					#addToLog "DEBUG" "Episode matches year" "$showTitle - $episodePath\n $((10#$airedYear)) ?= $((10#$(date +"%Y")))" "$logPagePath"
 					# if the airdate was this month
 					if [ $((10#$airedMonth)) -eq "$((10#$(date +"%m")))" ];then
-						#addToLog "DEBUG" "Episode matches month" "$showTitle - $episodePath\n $((10#$airedMonth)) ?= $((10#$(date +"%m")))" "$logPagePath"
 						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath" "$logPagePath"
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
-						#ALERT "[DEBUG]:  Caching episode '$episodeTitle'"
-						#tempSum=$(echo -n "$ytLink" | tr -d '"' | tr -d "'" | sha512sum | cut -d' ' -f1)
 						tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
 						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						echo "Video link cached with nfo2web" > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
@@ -1163,40 +1179,22 @@ processEpisode(){
 						echo "SHA Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						echo "SHA Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
-						#timeout 20 curl --silent "$resolverUrl&batch=true" > /dev/null
 						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
-						#timeout 20 curl --silent "$resolverUrl" > /dev/null
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 					fi
 				fi
 			fi
-			#if [ "$episodeAired" == "$(date +"%Y-%m-%d")" ];then
-			#	echo "[INFO]: airdate $episodeAired == todays date $(date +'%Y-%m-%d') ]"
-			#	# if the episode aired today cache the episode
-			#	# - timeout will stop the download after 0.1 seconds
-			#	timeout 0.1 curl "$resolverUrl" > /dev/null
-			#fi
-			#INFO "building resolver url for plugin link..."
+			# build the strm file
 			echo "$resolverUrl" > "$tempPath"
 		else
 			# link the video from the libary to the generated website
-			#INFO "linking '$episodeVideoPath' to '$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'"
 			linkFile "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			linkFile "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 		fi
-		# remove .nfo extension and create thumbnail path
-		thumbnail="${episode//.nfo}-thumb"
-		#INFO "thumbnail template = $thumbnail"
-		#INFO "thumbnail path 1 = $thumbnail.png"
-		#INFO "thumbnail path 2 = $thumbnail.jpg"
-		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
-		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
-		# check for the thumbnail and link it
-		checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi"
+
 		# get the extension
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		# convert the found episode thumbnail into a web thumb
-		#INFO "building episode thumbnail: convert \"$thumbnailPath$thumbnailExt\" -resize \"200x100\" \"$thumbnailPath-web.png\""
 		thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
 		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
 			# store the thumbnail inside the thumbnails directory

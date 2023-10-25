@@ -53,7 +53,11 @@ function processEpisode(){
 	fi
 	# get the air date
 	airDate=$(echo "$rssObject" | jq -r ".timestamp")
+	# get airdate info from airDate timestamp
 	airDateYear=$(date --date="@$airDate" "+%Y")
+	airDateMonth=$(date --date="@$airDate" "+%m")
+	airDateDay=$(date --date="@$airDate" "+%d")
+	airDate="$airDateDay/$airDateMonth/$airDateYear"
 	# get the episode title
 	episodeTitle=$(echo "$rssObject" | jq -r ".title")
 	# get the episode number
@@ -62,18 +66,21 @@ function processEpisode(){
 	#episodeNumber=$(echo "$rssObject" | jq -r ".playlist_index")
 
 	# build the episode if the episode files do not exist
-	if ! test -f "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle.nfo";then
+	if test -f "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle.strm";then
+		INFO "Shows:[$finishedSources/$totalSources] Episodes:[$finishedEpisodes/$totalEpisodes] - $showTitle : Episode Already Processed $episodeTitle"
+	else
 		INFO "Shows:[$finishedSources/$totalSources] Episodes:[$finishedEpisodes/$totalEpisodes] - $showTitle : Adding Episode $episodeTitle"
 
 		plot=$(echo "$rssObject" | jq -r ".description")
 		runtime=$(echo "$rssObject" | jq -r ".duration")
-
+		startDebug
 		# get thumbnail data if it is available
 		thumbnail=$(echo "$rssObject" | jq -r ".thumbnail")
-
-		if [ 5 -lt $(expr length "$thumbnail") ];then
+		# check the thumbnail is a real link
+		if echo "$thumbnail" | grep -q "http" | grep -q "://";then
 			downloadThumbnail "$thumbnail" "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle-thumb" ".jpg"
 		fi
+		stopDebug
 		# create the season directory
 		createDir "/var/cache/2web/generated/rss/$showTitle/$airDateYear/"
 		{
@@ -85,10 +92,6 @@ function processEpisode(){
 			echo "<showtitle>$showTitle</showtitle>"
 			# Set the title grabed previously to build the filename
 			echo "<title>$episodeTitle</title>"
-			# write the thumbnail if a remote one is given
-			#if [ 5 -lt $(expr length "$thumbnail") ];then
-			#	echo "<thumb>$thumbnail</thumb>"
-			#fi
 			# get the director information
 			echo "<director>$showTitle</director>"
 			echo "<credits>$showTitle</credits>"
@@ -147,8 +150,8 @@ rss2nfo_update(){
 
 	################################################################################
 	# create show and cache directories
-	createDir "/var/cache/2web/downloads/rss/"
-	createDir "/var/cache/2web/downloads/rss/cache/"
+	createDir "/var/cache/2web/downloads/rss2nfo/"
+	createDir "/var/cache/2web/downloads/rss2nfo/cache/"
 	# generated directory
 	createDir "/var/cache/2web/generated/rss/"
 
@@ -166,23 +169,23 @@ rss2nfo_update(){
 		# generate a sum for the source
 		rssSum=$(echo "$rssSource" | sha512sum | cut -d' ' -f1)
 		# check for existing cached rss json data limited to once per day
-		if cacheCheck "/var/cache/2web/downloads/rss/cache/$rssSum.cfg" "1";then
+		if cacheCheck "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg" "1";then
 			# use yt-dlp to download the rss and convert it into json
 			INFO "Shows:[$finishedSources/$totalSources] - Downloading rss and converting to json from $rssSource"
-			rssAsJson=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
+			rssAsJson=$(timeout 120 /usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
 			# only write valid rss data to the cache
 			if [ 5 -lt $(echo "$rssAsJson" | wc -c) ];then
 				# cache the rss that has been convered to json
-				echo "$rssAsJson" > "/var/cache/2web/downloads/rss/cache/$rssSum.cfg"
+				echo "$rssAsJson" > "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg"
 			else
 				# log failed downloads
 				addToLog "ERROR" "Failed Download" "The download of RSS from '$rssSource' has failed!"
 				# load the cached json data
-				rssAsJson="$(cat "/var/cache/2web/downloads/rss/cache/$rssSum.cfg")"
+				rssAsJson="$(cat "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg")"
 			fi
 		else
 			# load the cached json data
-			rssAsJson="$(cat "/var/cache/2web/downloads/rss/cache/$rssSum.cfg")"
+			rssAsJson="$(cat "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg")"
 		fi
 		# read each item in the json array
 		totalEpisodes=$(echo "$rssAsJson" | wc -l)
@@ -241,7 +244,7 @@ main(){
 		lockProc "rss2nfo"
 		rss2nfo_update $@
 		drawLine
-		echo "NFO Library generated at /var/cache/2web/downloads/rss/"
+		echo "NFO Library generated at /var/cache/2web/generated/rss/"
 		drawLine
 	fi
 }
