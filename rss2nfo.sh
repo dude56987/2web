@@ -73,16 +73,15 @@ function processEpisode(){
 
 		plot=$(echo "$rssObject" | jq -r ".description")
 		runtime=$(echo "$rssObject" | jq -r ".duration")
-		startDebug
 		# get thumbnail data if it is available
 		thumbnail=$(echo "$rssObject" | jq -r ".thumbnail")
-		# check the thumbnail is a real link
-		if echo "$thumbnail" | grep -q "http" | grep -q "://";then
-			downloadThumbnail "$thumbnail" "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle-thumb" ".jpg"
-		fi
-		stopDebug
 		# create the season directory
 		createDir "/var/cache/2web/generated/rss/$showTitle/$airDateYear/"
+		# check the thumbnail is a real link
+		#if echo "$thumbnail" | grep -q --ignore-case "http" | grep -q --ignore-case "://";then
+		if [ $(echo "$thumbnail" | wc --bytes) -gt 6 ];then
+			downloadThumbnail "$thumbnail" "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle-thumb" ".jpg"
+		fi
 		{
 			#echo "<?xml version='1.0' encoding='UTF-8'?>"
 			echo "<episodedetails>"
