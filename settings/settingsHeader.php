@@ -134,6 +134,10 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
 	$moduleName="rss2nfo";
+}else if (($pageURL == "/settings/ai.php")){
+	$moduleName="ai2web";
+}else if (($pageURL == "/settings/portal.php")){
+	$moduleName="portal2web";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
@@ -153,6 +157,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="graph2web";
 }else if ($pageURL == "/settings/modules.php"){
 	$moduleName="none";
+}else if ($pageURL == "/settings/repos.php"){
+	$moduleName="git2web";
 }else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php")){
 	$moduleName="none";
 	echo "	<div class='titleCard'>\n";
@@ -175,8 +181,6 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "			</li>\n";
 	echo "		</ul>";
 	echo "	</div>\n";
-}else if ($pageURL == "/settings/repos.php"){
-	$moduleName="git2web";
 }else{
 	$moduleName="none";
 }
