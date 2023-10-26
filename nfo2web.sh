@@ -729,6 +729,9 @@ processMovie(){
 			# if the path is not in the file add it to the file
 			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg"
 		fi
+		# update update times for playlists
+		date "+%s" > /var/cache/2web/web/new/all.cfg
+		date "+%s" > /var/cache/2web/web/new/movies.cfg
 	else
 		ALERT "[WARNING]: The file '$moviePath' could not be found!"
 	fi
@@ -1453,6 +1456,9 @@ processEpisode(){
 		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/data.db" "episodes"
 		SQLaddToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/data.db" "all"
 
+		date "+%s" > /var/cache/2web/web/new/episodes.cfg
+		date "+%s" > /var/cache/2web/web/new/all.cfg
+
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/new/episodes.index"
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/new/all.index"
 		# random indexes
@@ -1731,6 +1737,9 @@ processShow(){
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "all"
+	# update the last updated times
+	date "+%s" > /var/cache/2web/web/new/all.cfg
+	date "+%s" > /var/cache/2web/web/new/shows.cfg
 
 	# add show poster and fanart information
 	SQLaddToIndex "/shows/$showTitle/poster.png" "$webDirectory/backgrounds.db" "all_poster"
@@ -1763,6 +1772,9 @@ processShow(){
 	# update the libary sum
 	touch "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
 	getDirSum "$show" > "$webDirectory/shows/$showTitle/state_$pathSum.cfg"
+
+	date "+%s" > /var/cache/2web/web/new/all.cfg
+	date "+%s" > /var/cache/2web/web/new/episodes.cfg
 }
 ########################################################################
 getLibSum(){

@@ -125,6 +125,9 @@ function update(){
 
 			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "graphs"
 			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "all"
+			# update last updated times
+			date "+%s" > /var/cache/2web/web/new/all.cfg
+			date "+%s" > /var/cache/2web/web/new/graphs.cfg
 
 			# copy over the php template for the graphs
 			linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"

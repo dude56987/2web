@@ -1012,6 +1012,9 @@ function processRepo(){
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"
+		# update update times
+		date "+%s" > /var/cache/2web/web/new/all.cfg
+		date "+%s" > /var/cache/2web/web/new/repos.cfg
 
 		# update the repo status sum
 		echo -n "$repoStatusSum" > "$webDirectory/repos/$repoName/status.cfg"

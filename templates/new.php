@@ -32,7 +32,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='titleCard'>
 	<h2>
 		Playlists
-		<img id='spinner' src='/spinner.gif' />
 	</h2>
 	<div class='listCard'>
 			<a class='activeButton' href='/new/'>
@@ -81,10 +80,18 @@ drawPlaylistButton($filterType,"repos","💾 Repos");
 
 
 <div class='settingListCard'>
+<img class='globalPulse' src='/pulse.gif'>
 <?php
 $emptyMessage = "<ul>";
 $emptyMessage .= "<li>No $filterType items found!</li>";
 $emptyMessage .= "</ul>";
+# draw the last updated time
+if (file_exists($filterType.".cfg")){
+	echo "<div>Last Updated : ";
+	timeElapsedToHuman(file_get_contents($filterType.".cfg"));
+	echo "</div>";
+}
+# loop though and display the playlist index
 displayIndexWithPages($filterType.".index",$emptyMessage,48,"reverse");
 ?>
 </div>

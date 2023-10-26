@@ -428,9 +428,15 @@ function processTrack(){
 				touchFile "$webDirectory/new/artists.index"
 				touchFile "$webDirectory/new/music.index"
 				touchFile "$webDirectory/new/all.index"
+
 				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/artists.index"
 				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/music.index"
 				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/all.index"
+
+				# update last updated times
+				date "+%s" > /var/cache/2web/web/new/all.cfg
+				date "+%s" > /var/cache/2web/web/new/music.cfg
+				date "+%s" > /var/cache/2web/web/new/artists.cfg
 			fi
 			# album data
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/album.nfo";then
@@ -479,6 +485,11 @@ function processTrack(){
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/albums.index"
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/music.index"
 				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/all.index"
+
+				# update content found times
+				date "+%s" > /var/cache/2web/web/new/all.cfg
+				date "+%s" > /var/cache/2web/web/new/music.cfg
+				date "+%s" > /var/cache/2web/web/new/albums.cfg
 			fi
 			# build the track thumbnail
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.png";then
@@ -533,6 +544,9 @@ function processTrack(){
 
 			SQLaddToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/data.db" "tracks"
 			SQLaddToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/data.db" "all"
+			# update content found times
+			date "+%s" > /var/cache/2web/web/new/all.cfg
+			date "+%s" > /var/cache/2web/web/new/tracks.cfg
 
 			# add track to album track index
 			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/music/$artist/$album/tracks.index"

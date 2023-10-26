@@ -1199,6 +1199,9 @@ rebuildComicIndex(){
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
 		# random indexes
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
+		# update last updated times
+		date "+%s" > /var/cache/2web/web/new/all.cfg
+		date "+%s" > /var/cache/2web/web/new/comics.cfg
 	done
 }
 ################################################################################
