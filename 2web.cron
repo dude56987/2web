@@ -67,6 +67,12 @@
 # every 6 hours check the links in the portal, this also scans ports for services
 0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
 ################################################################################
+# update kodi2web to update all remote kodi clients
+# - This runs every time new content is detected
+# - Cron job is weekly for clients who have been powered off when updates were
+#   found
+@weekly root /usr/bin/nice -n 10 /usr/bin/kodi2web &> /dev/null
+################################################################################
 # once a day check for updates to fast moving metadata extraction packages
 @daily root /usr/bin/2web upgrade &> /dev/null
 ################################################################################

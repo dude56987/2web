@@ -450,6 +450,12 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
 	echo "<hr><a class='button' href='/settings/system.php#randomTheme'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("addKodiLocation",$_POST)){
+	# add kodi location
+	addCustomConfig("addKodiLocation","/etc/2web/kodi/location.d/","kodi.php");
+}else if (array_key_exists("removeKodiLocation",$_POST)){
+	# remove kodi location
+	removeCustomConfig("removeKodiLocation","/etc/2web/kodi/location.d/","kodi.php");
 }else if (array_key_exists("addPortalScanSource",$_POST)){
 	# add portal scan source
 	addCustomConfig("addPortalScanSource","/etc/2web/portal/scanSources.d/","portal.php");

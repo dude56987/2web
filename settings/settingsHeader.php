@@ -73,6 +73,7 @@ function drawSettingsHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLin
 		drawSettingsHeaderButton("weather2web","🌤️","Weather","/settings/weather.php");
 		drawSettingsHeaderButton("ai2web","🧠","AI","/settings/ai.php");
 		drawSettingsHeaderButton("graph2web","📊","Graphs","/settings/graphs.php");
+		drawSettingsHeaderButton("kodi2web","🇰","Kodi","/settings/kodi.php");
 		?>
 		<?PHP
 		if ($pageURL == "/log/index.php"){
@@ -134,6 +135,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
 	$moduleName="rss2nfo";
+}else if (($pageURL == "/settings/kodi.php")){
+	$moduleName="kodi2web";
 }else if (($pageURL == "/settings/ai.php")){
 	$moduleName="ai2web";
 }else if (($pageURL == "/settings/portal.php")){

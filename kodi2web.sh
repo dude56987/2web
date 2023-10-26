@@ -28,15 +28,15 @@ function update(){
 	# this will launch a processing queue that downloads updates to comics
 	INFO "Loading up locations..."
 	# check for defined sources
-	if ! test -f /etc/2web/kodi/location.cfg;then
+	if ! test -f /etc/2web/kodi/locations.cfg;then
 		# if no config exists create the default config
 		{
-			cat /etc/2web/config_default/kodi2web_location.cfg
-		} > /etc/2web/kodi/location.cfg
+			cat /etc/2web/config_default/kodi2web_locations.cfg
+		} > /etc/2web/kodi/locations.cfg
 	fi
 
 	# load sources
-	kodiLocations=$(grep -v "^#" /etc/2web/kodi/location.cfg)
+	kodiLocations=$(grep -v "^#" /etc/2web/kodi/locations.cfg)
 	kodiLocations=$(echo -e "$kodiLocations\n$(grep -v --no-filename "^#" /etc/2web/kodi/location.d/*.cfg)")
 	################################################################################
 	webDirectory=$(webRoot)
