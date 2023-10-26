@@ -81,27 +81,27 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		<?PHP
 		echo "<a class='button' href='/m3u-gen.php?artist=\"$artist\"'>";
 		?>
-			▶️ Play All<sup>(External)<sup>
+			▶️ Play All<sup>External</sup>
 		</a>
 
 		<?PHP
 		echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist\"'>";
 		?>
 			<span id='vlcIcon'>&#9650;</span> VLC
-			Play All<sup>(External)<sup>
+			Play All<sup>External</sup>
 		</a>
 
 		<?PHP
 		echo "<a class='button' href='/m3u-gen.php?artist=\"$artist\"&sort=random'>";
 		?>
-			▶️ Play Random<sup>(External)<sup>
+			▶️ Play Random<sup>External</sup>
 		</a>
 
 		<?PHP
 		echo "<a class='button vlcButton' href='vlc://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist\"&sort=random'>";
 		?>
 			<span id='vlcIcon'>&#9650;</span> VLC
-			Play Random<sup>(External)<sup>
+			Play Random<sup>External</sup>
 		</a>
 		</div>
 	</div>
