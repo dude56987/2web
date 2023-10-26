@@ -58,6 +58,7 @@ foreach($modules as $module){
 	<ul>
 		<li>Enabled modules will be updated automatically by the CRON scheduler</li>
 		<li>Disabled modules will have cached data removed and no updates will be done</li>
+		<li>When a module is disabled the web settings section will be hidden.</li>
 	</ul>
 </div>
 
