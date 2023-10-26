@@ -852,7 +852,7 @@ if( ! function_exists("drawPlaylistButton")){
 		# check if the playlist index exists
 		if (file_exists($filterName.".index")){
 			# check the file has more than 2 entries
-			if (count(file("$filterName.index")) > 2){
+			if (count(file("$filterName.index")) > 0){
 				if ($activeFilter == $filterName){
 					#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
@@ -1147,7 +1147,7 @@ if( ! function_exists("timeToHuman")){
 			$hoursPassed=floor( $timestamp / $hourInSeconds );
 			$timestamp -= $hoursPassed * $hourInSeconds;
 			if ($hoursPassed == 1){
-				echo "$hoursPassed hour";
+				echo "$hoursPassed hour ";
 			}else if ($hoursPassed > 1){
 				echo "$hoursPassed hours ";
 			}
