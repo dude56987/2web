@@ -472,6 +472,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/repos.php" "$webDirectory/settings/repos.php"
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/settings/portal.php"
 	linkFile "/usr/share/2web/settings/wiki.php" "$webDirectory/settings/wiki.php"
+	linkFile "/usr/share/2web/settings/kodi.php" "$webDirectory/settings/kodi.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 	linkFile "/usr/share/2web/settings/login.php" "$webDirectory/login.php"
