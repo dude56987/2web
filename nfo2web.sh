@@ -759,27 +759,34 @@ checkForThumbnail(){
 	tempFileSize=0
 	ALERT "Looking for thumbnail paths"
 	# check for a local thumbnail
-	if test -f "$thumbnailPath.jpg";then
+	if test -s "$thumbnailPath.jpg";then
+		thumbnailExt=".jpg"
+		ALERT "Thumbnail already linked..."
+	elif test -s "$thumbnailPath.jpeg";then
 		thumbnailExt=".jpg"
 		ALERT "Thumbnail already linked..."
 	elif test -L "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
 		ALERT "Thumbnail already linked..."
-	elif test -f "$thumbnailPath.png";then
+	elif test -L "$thumbnailPath.jpeg";then
+		thumbnailExt=".jpg"
+		ALERT "Thumbnail already linked..."
+	elif test -s "$thumbnailPath.png";then
 		thumbnailExt=".png"
 		ALERT "Thumbnail already linked..."
 	elif test -L "$thumbnailPath.png";then
 		thumbnailExt=".png"
 		ALERT "Thumbnail already linked..."
 	else
-		# no thumbnail has been linked or downloaded
+		# no thumbnail has been linked or downloaded already
+		# check for thumbnails in the same directory as the media path
 		if test -L "$thumbnail.png";then
 			ALERT "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.png" "$thumbnailPath.png"
 			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
-		elif test -f "$thumbnail.png";then
+		elif test -s "$thumbnail.png";then
 			ALERT "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
@@ -794,7 +801,7 @@ checkForThumbnail(){
 			if ! test -f "$thumbnailPath.png";then
 				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
 			fi
-		elif test -f "$thumbnail.jpg";then
+		elif test -s "$thumbnail.jpg";then
 			ALERT "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
@@ -804,7 +811,9 @@ checkForThumbnail(){
 				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
 			fi
 		else
+			# no existing thumbnail file was found or linked
 			# look inside the nfo data for a thumbnail link
+			# then download that thumbnail
 			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
 				ALERT "genrating thumbnail from thumbnailLink='$thumbnailLink'"
@@ -819,21 +828,21 @@ checkForThumbnail(){
 			# check if the thumb download failed
 		fi
 		#INFO "[DEBUG]: file size $tempFileSize"
-		# if the downloaded file
 		if test -s $thumbnailPath$thumbnailExt;then
 			ALERT "[INFO]: Existing thumbnail file found!"
 		elif test -L $thumbnailPath$thumbnailExt;then
 			ALERT "[INFO]: Existing thumbnail was linked already!"
 		else
-			addToLog "DOWNLOAD" "Generating Thumbnail" "Using media link: $videoPath" "$logPagePath"
+			# if the downloaded file is blank use mediainfo to determine if it is a video or audio link
+			addToLog "DOWNLOAD" "Generating Thumbnail" "Creating video thumbnail using media link: $videoPath" "$logPagePath"
 			ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 			ALERT "thumbnail path = $thumbnailPath"
 			# try to generate a thumbnail from video file
 			#INFO "Attempting to create thumbnail from video source..."
 			#tempFileSize=0
 			# check if this is a video file using mediainfo
-			#startDebug
-			if mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "video";then
+			if mediainfo "$videoPath" | grep -q --ignore-case "^video";then
+				# if this is a video link create a thumb from the video
 				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$videoPath")
 				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$videoPath")
 				if echo "$tempFrameRate" | grep -q ".";then
@@ -882,24 +891,28 @@ checkForThumbnail(){
 						tempFileSize=16000
 					fi
 				done
-			else
+			elif mediainfo "$videoPath" | grep -q --ignore-case "^audio";then
+				#
 				ALERT "This is a audio file, generate a audio waveform..."
+				addToLog "DOWNLOAD" "Generating Thumbnail" "Creating audio waveform using media link: $videoPath" "$logPagePath"
 				# only render a waveform is no other thumbnail is found
 				# - ffmpeg requires downloading the entire file for creating the thumbnail
 				# create a thumbnail for the mp3 links inside streams
 				episodeThumbSum=$(echo "$episodeVideoPath" | md5sum | cut -d' ' -f1)
 				# generate the waveform thumbnail for audio files
-				if ! test -f "$webDirectory/thumbnails/$episodeThumbSum.jpg";then
+				if ! test -f "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg";then
 					ALERT "No waveform file exists, creating one..."
-					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex "showwavespic=colors=white" -frames:v 1 "$webDirectory/thumbnails/$episodeThumbSum.jpg"
+					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex "showwavespic=colors=white" -frames:v 1 "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg"
 				fi
 				ALERT "Linking generated waveform thumbnails..."
 				# and the web thumbnail link
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$thumbnailPath.jpg"
+				linkFile "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg" "$thumbnailPath.jpg"
 				# add kodi thumbnail link link
-				linkFile "$webDirectory/thumbnails/$episodeThumbSum.jpg" "$thumbnailPathKodi.jpg"
+				linkFile "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg" "$thumbnailPathKodi.jpg"
+			else
+				ALERT "This media could not be determined to be any type of media try 'mediainfo \"$videoPath\"'"
+				addToLog "ERROR" "Could not create Thumbnail" "This media could not be determined to be any type of media try 'mediainfo $videoPath'"
 			fi
-			#stopDebug
 		fi
 	fi
 }
