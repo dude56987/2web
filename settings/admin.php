@@ -202,18 +202,34 @@ if (array_key_exists("newUserName",$_POST)){
 	$userName=strtolower($_POST['newUserName']);
 	outputLog("Creating new user '$userName'");
 	if (array_key_exists("newUserPass",$_POST)){
-		if ( ! file_exists("/etc/2web/users/")){
-			mkdir("/etc/2web/users/");
-		}
-		if (file_exists("/etc/2web/users/".$userName.".cfg")){
-			# the username has already exists
-			outputLog("The user ".$userName."username already exists!");
-			outputLog("Processing failed!");
+		# Verify the password is the same in both fields
+		if (array_key_exists("newUserPassVerify",$_POST)){
+			if($_POST["newUserPass"] == $_POST["newUserPassVerify"]){
+				# the passwords are the same, build the user account
+				if ( ! file_exists("/etc/2web/users/")){
+					# create the users directory if it does not exist
+					mkdir("/etc/2web/users/");
+				}
+				# check if the username already exists
+				if (file_exists("/etc/2web/users/".$userName.".cfg")){
+					# the username has already exists
+					outputLog("The user '".$userName."' already exists!");
+					outputLog("Processing failed!");
+				}else{
+					# build the password hash
+					$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
+					# save the password
+					file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
+				}
+			}else{
+				# the passwords are diffrent, fail out
+				outputLog("The passwords given are diffrent, You must verify the password to create a new account!");
+				outputLog("Processing failed!");
+			}
 		}else{
-			# build the password hash
-			$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
-			# save the password
-			file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
+			# no verification was given for the password entered
+			outputLog("You did not verify the password given, Please verify the password to create a account!");
+			outputLog("Processing failed!");
 		}
 	}else{
 		outputLog("No password was given for the new user!");

@@ -56,6 +56,9 @@ include("settingsHeader.php");
 			<li>
 				<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
 			</li>
+			<li>
+				<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
+			</li>
 		</ul>
 	</ul>
 	<button class='button' type='submit'>Add New Administrator</button>
@@ -111,13 +114,13 @@ include("settingsHeader.php");
 			<li>
 				You can use the package manager to add or remove fortunes. The following packages contain the fortune databases.
 				<ul>
-					<li>fortunes-off<sup>(Offensive To the Senses)</sup></li>
-					<li>fortunes-mario<sup>(Video Game Quotes)</sup></li>
-					<li>fortunes-spam<sup>(BBS Spam)</sup></li>
-					<li>fortunes-bofh-excuses<sup>(Admin Excuses)</sup></li>
-					<li>fortunes-ubuntu-server<sup>(Ubuntu Server Tips)</sup></li>
-					<li>fortunes-debian-hints<sup>(Debian Server Tips)</sup></li>
-					<li>fortunes-min<sup>(Basic Default Fortunes)</sup></li>
+					<li>fortunes-off<sup>Offensive To the Senses</sup></li>
+					<li>fortunes-mario<sup>Video Game Quotes</sup></li>
+					<li>fortunes-spam<sup>BBS Spam</sup></li>
+					<li>fortunes-bofh-excuses<sup>Admin Excuses</sup></li>
+					<li>fortunes-ubuntu-server<sup>Ubuntu Server Tips</sup></li>
+					<li>fortunes-debian-hints<sup>Debian Server Tips</sup></li>
+					<li>fortunes-min<sup>Basic Default Fortunes</sup></li>
 				</ul>
 			</li>
 		</ul>
