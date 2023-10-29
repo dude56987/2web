@@ -188,6 +188,12 @@ ytdl2kodi_channel_extractor(){
 	# set the show title based on the data from the latest video posted on the channel playlist
 	if echo "$@" | grep "\-\-username";then
 		showTitle=""
+
+		#if ! validString "$showTitle";then
+		#	echo "Reading '.playlist_title' from playlist entry"
+		#	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_title" | head -1 )
+		#	echo "Show title set to '$showTitle' from .playlist_title"
+		#fi
 		if ! validString "$showTitle";then
 			echo "Reading '.playlist_uploader' from playlist entry"
 			showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
@@ -952,15 +958,6 @@ ytdl2kodi_video_extractor(){
 	#set -x
 	# check the length of the source url is long enough to be a link
 	if [ 5 -gt "$(echo "$selection" | wc -c)" ];then
-		# check if a custom resolver has been specified with a custom url
-		#if test -f /etc/2web/ytdl/customResolverUrl.cfg;then
-			# custom resolver should take presidence over system default resolvers
-		#	resolverString=$(cat /etc/2web/ytdl/customResolverUrl.cfg)
-			# - This should not affect the $selection variable since it is
-			#   also used for thumbnail generation
-			# - Wrap the selection in quotes for the custom resolver
-		#	echo "$resolverString\"$selection\"" > "$fileName.strm"
-		#else
 		echo "[INFO]: There is no video link available!"
 		echo "[INFO]: Skipping..."
 		#fi
@@ -975,98 +972,18 @@ ytdl2kodi_video_extractor(){
 		addProcessedSum "$selection" "$channelSum"
 		echo
 	fi
-	#set +x
-	################################################################################
-	# create the file if it dont exist
-	#touch $foundLinksPath
-	# check the discoverd video url
-	#if grep "$selection" "$foundLinksPath";then
-	#	# if download was found to already have been processed
-	#	echo "[INFO]: This download has already been processed..."
-	#	echo "[INFO]: '$selection' matches another previously downloaded video in this series..."
-	#	echo
-	#	return
-	#else
-	#	# if the url has not been added, add it
-	#	touch $foundLinksPath
-	#	echo "[INFO]: Writing video URL to $foundLinksPath"
-	#	echo "$selection"
-	#	echo "$selection" >> "$foundLinksPath"
-	#	addProcessedSum "$selection" "$channelSum"
-	#fi
 	################################################################################
 	# get thumbnail data if it is available
 	thumbnail=$(echo "$info" | jq -r ".thumbnail")
 	################################################################################
 	# if the thumbnail lists nothing or returned in error generate a thumbnail from the webpage link
 	echo "[INFO]: Analyzing thumbnail '$thumbnail'"
-	#echo "5 is greater than $(expr length "$thumbnail")"
-	# if the thumbnail get fails
-	# try to create a thumbnail from the discovered video url using ffmpeg
-	#if ! validString "$thumbnail";then
-	#	echo "[INFO]: Attempting to create thumbnail from video source..."
-	#	touch "$fileName-thumb.png"
-	#	tempFileSize=0
-	#	tempTimeCode=1
-	#	# - force the filesize to be large enough to be a complex descriptive thumbnail
-	#	# - filesize of images is directly related to visual complexity
-	#	while [ $tempFileSize -lt 15000 ];do
-	#		# - place -ss in front of -i for speed boost in seeking to correct frame of source
-	#		# - tempTimeCode is in seconds
-	#		# - '-y' to force overwriting the empty file
-	#		ffmpeg -y -ss $tempTimeCode -i "$selection" -vframes 1 "$fileName-thumb.png"
-	#		# resize the image before checking the filesize
-	#		convert "$fileName-thumb.png" -resize 400x200\! "$fileName-thumb.png"
-	#		# get the size of the file, after it has been created
-	#		tempFileSize=$(cat "$fileName-thumb.png" | wc --bytes)
-	#		# - increment the timecode to get from the video to find a thumbnail that is not
-	#		#   a blank screen
-	#		tempTimeCode=$(($tempTimeCode + 1))
-	#		# if there is no file large enough after 60 attempts, the first 60 seconds of video
-	#		if [ $tempTimeCode -gt 60 ];then
-	#			# break the loop
-	#			tempFileSize=16000
-	#			rm "$fileName-thumb.png"
-	#		elif [ $tempFileSize -eq 0 ];then
-	#			# break the loop, no thumbnail could be generated at all
-	#			# - Blank white or black space takes up more than 0 bytes
-	#			# - A webpage generated thumbnail will be created as a alternative
-	#			rm "$fileName-thumb.png"
-	#			tempFileSize=16000
-	#		fi
-	#	done
-	#fi
-	# if ffmpeg can not create a thumbnail, generate a thumbnail from the webpage
-	#if ! validString "$thumbnail";then
-	#	writeCaption=""
-	#	# generate a image from the webpage for the thumbnail
-	#	webpageUrl=$(echo "$info" | jq -r ".webpage_url" | sed "s/http:/https:/g")
-	#	echo "[INFO]: Creating thumbnail from webpage '$webpageUrl'"
-	#	# complex commands are made easier to debug when you can see the contents being fed in
-	#	if ! test -f "$fileName-thumb.png";then
-	#		echo "wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 \"$webpageUrl\" \"$fileName-thumb.png\""
-	#		wkhtmltoimage --format png --enable-javascript --javascript-delay 1000 --width 1920 --disable-smart-width --height 1080 "$webpageUrl" "$fileName-thumb.png"
-	#		# if the file was created successfully, write title over webpage image
-	#		writeCaption="yes"
-	#	fi
-	#	if ! test -f "$fileName-thumb.png";then
-	#		echo "[INFO]: Webpage thumbnail could not be downloaded, generating plasma image"
-	#		# if no webpage was downloaded
-	#		convert -size 400x200 plasma: "$fileName-thumb.png"
-	#		# write the title over the plasma
-	#		writeCaption="yes"
-	#	fi
-	#	# resize the thumbnail
-	#	convert "$fileName-thumb.png" -resize 400x200\! "$fileName-thumb.png"
-	#	# write the caption if no real thumbnail could be found
-	#	if echo "$writeCaption" | grep "yes";then
-	#		# add a caption of the video title to the downloaded image of the webpage
-	#		# the caption must be smaller than the image to prevent cutting off edges
-	#		convert "$fileName-thumb.png" -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -style Bold -size 300x100 -gravity center caption:"$title" -composite "$fileName-thumb.png"
-	#	fi
-	#else
-	#	echo "[INFO]: Thumbnail was found with extractor!"
-	#fi
+	# if the thumbnail link is valid
+	if validString "$thumbnail";then
+		# download the thumbnail via the cache from the found link data
+		downloadThumbnail "$thumbnail" "${fileName}-thumb" ".png"
+		echo "[WARNING]: Thumbnail link broken '$thumbnail'"
+	fi
 	################################################################################
 	# save nfo file
 	touch "$fileName.nfo"

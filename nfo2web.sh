@@ -760,43 +760,43 @@ checkForThumbnail(){
 	nfoInfo=$5
 	########################################################################
 	tempFileSize=0
-	ALERT "Looking for thumbnail paths"
+	#ALERT "Looking for thumbnail paths"
 	# check for a local thumbnail
 	if test -s "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	elif test -s "$thumbnailPath.jpeg";then
 		thumbnailExt=".jpg"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	elif test -L "$thumbnailPath.jpg";then
 		thumbnailExt=".jpg"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	elif test -L "$thumbnailPath.jpeg";then
 		thumbnailExt=".jpg"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	elif test -s "$thumbnailPath.png";then
 		thumbnailExt=".png"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	elif test -L "$thumbnailPath.png";then
 		thumbnailExt=".png"
-		ALERT "Thumbnail already linked..."
+		#ALERT "Thumbnail already linked..."
 	else
 		# no thumbnail has been linked or downloaded already
 		# check for thumbnails in the same directory as the media path
 		if test -L "$thumbnail.png";then
-			ALERT "found PNG thumbnail..."
+			#ALERT "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.png" "$thumbnailPath.png"
 			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
 		elif test -s "$thumbnail.png";then
-			ALERT "found PNG thumbnail..."
+			#ALERT "found PNG thumbnail..."
 			thumbnailExt=".png"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.png" "$thumbnailPath.png"
 			linkFile "$thumbnail.png" "$thumbnailPathKodi.png"
 		elif test -L "$thumbnail.jpg";then
-			ALERT "found JPG thumbnail..."
+			#ALERT "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
@@ -805,7 +805,7 @@ checkForThumbnail(){
 				convert -quiet "$thumbnail.jpg" "$thumbnailPath.png"
 			fi
 		elif test -s "$thumbnail.jpg";then
-			ALERT "found JPG thumbnail..."
+			#ALERT "found JPG thumbnail..."
 			thumbnailExt=".jpg"
 			# link thumbnail into output directory
 			linkFile "$thumbnail.jpg" "$thumbnailPath.jpg"
@@ -819,7 +819,6 @@ checkForThumbnail(){
 			# then download that thumbnail
 			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
-				ALERT "genrating thumbnail from thumbnailLink='$thumbnailLink'"
 				addToLog "DOWNLOAD" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 				thumbnailExt=".png"
 				# download the thumbnail
@@ -832,9 +831,9 @@ checkForThumbnail(){
 		fi
 		#INFO "[DEBUG]: file size $tempFileSize"
 		if test -s $thumbnailPath$thumbnailExt;then
-			ALERT "[INFO]: Existing thumbnail file found!"
+			INFO "Existing thumbnail file found '$thumbnailPath$thumbnailExt'!"
 		elif test -L $thumbnailPath$thumbnailExt;then
-			ALERT "[INFO]: Existing thumbnail was linked already!"
+			INFO "Existing thumbnail was linked already '$thumbnailPath$thumbnailExt'!"
 		else
 			# if the downloaded file is blank use mediainfo to determine if it is a video or audio link
 			addToLog "DOWNLOAD" "Generating Thumbnail" "Creating video thumbnail using media link: $videoPath" "$logPagePath"
@@ -843,8 +842,9 @@ checkForThumbnail(){
 			# try to generate a thumbnail from video file
 			#INFO "Attempting to create thumbnail from video source..."
 			#tempFileSize=0
+			mediaData="$(mediainfo "$videoPath")"
 			# check if this is a video file using mediainfo
-			if mediainfo "$videoPath" | grep -q --ignore-case "^video";then
+			if echo "$mediaData" | grep -q --ignore-case "^video";then
 				# if this is a video link create a thumb from the video
 				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$videoPath")
 				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$videoPath")
@@ -867,7 +867,7 @@ checkForThumbnail(){
 					#ALERT "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
 					#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
 					# store the image inside a variable
-					image=$(ffmpeg -y -ss $tempTimeCode -i "$episodeVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
+					image=$(ffmpeg -y -ss $tempTimeCode -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
 					# resize the image before checking the filesize
 					convert -quiet "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
 					tempFileSize=$(echo "$image" | wc --bytes)
@@ -894,14 +894,14 @@ checkForThumbnail(){
 						tempFileSize=16000
 					fi
 				done
-			elif mediainfo "$videoPath" | grep -q --ignore-case "^audio";then
+			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
 				#
 				ALERT "This is a audio file, generate a audio waveform..."
 				addToLog "DOWNLOAD" "Generating Thumbnail" "Creating audio waveform using media link: $videoPath" "$logPagePath"
 				# only render a waveform is no other thumbnail is found
 				# - ffmpeg requires downloading the entire file for creating the thumbnail
 				# create a thumbnail for the mp3 links inside streams
-				episodeThumbSum=$(echo "$episodeVideoPath" | md5sum | cut -d' ' -f1)
+				episodeThumbSum=$(echo "$videoPath" | md5sum | cut -d' ' -f1)
 				# generate the waveform thumbnail for audio files
 				if ! test -f "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg";then
 					ALERT "No waveform file exists, creating one..."
@@ -1143,6 +1143,19 @@ processEpisode(){
 		# show info gathered
 		episodeVideoPath="${episode//.nfo/$sufix}"
 
+		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files in plugin format
+		if echo "$videoPath" | grep -q --ignore-case "plugin://plugin.video.youtube";then
+			ALERT "$videoPath"
+			# convert the plugin .strm link to a regular youtube link
+			#plugin://plugin.video.youtube/play/?video_id=
+			# change the video path into a video id to make it embedable
+			videoPath=${videoPath//*video_id=}
+			videoPath=${videoPath//*watch?v=}
+			videoPath=${videoPath//*shorts\/}
+			# create final plugin video path
+			videoPath="https://youtube.com/watch?v=$videoPath"
+		fi
+
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
 		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
@@ -1157,15 +1170,16 @@ processEpisode(){
 			createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 
+			mediaData="$(mediainfo "$videoPath")"
+
 			# change the video path into a video id to make it embedable
 			# get the contents of the stream file as the link
 			ytLink="$videoPath"
-
 			# check the .strm link to see if it is a video link, a audio link or a link that must be ran though the resolver
-			if mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "video";then
+			if echo "$mediaData" | grep -q --ignore-case "^video";then
 				# direct link to video
 				resolverUrl="$ytLink"
-			elif mediainfo "$videoPath" | grep -q --ignore-case "^format" | grep -q --ignore-case "audio";then
+			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
 				# direct link to audio
 				resolverUrl="$ytLink"
 			else
@@ -1220,7 +1234,6 @@ processEpisode(){
 			# link the thumbnail into the web directory
 			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$thumbnailPath-web.png"
 		fi
-		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
 		if echo "$videoPath" | grep -q --ignore-case "youtube.com";then
 			# change the video path into a video id to make it embedable
 			yt_id=${videoPath//*video_id=}
