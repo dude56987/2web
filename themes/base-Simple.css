@@ -34,10 +34,6 @@ body{
 	margin: 0px;
 	min-height: 100%;
 }
-select{
-	font-size: 1rem;
-	max-width: 100%;
-}
 sup{
 	font-size: 0.5rem;
 	/*
@@ -723,18 +719,6 @@ ol{
 	box-shadow: none !important;
 }
 @media all and (display-mode: fullscreen){
-	/*
-	@media (hover: none){
-		/*Fullscreen and touchscreen only*/
-		/*
-		.videoPlayerControls .button{
-			font-size: 2dvh !important;
-		}
-		.videoPlayerControls{
-			font-size: 1dvh !important;
-		}
-	}
-	*/
 	#videoPlayerContainer #video{
 		width: 100% !important;
 		height: 95% !important;
@@ -752,11 +736,6 @@ ol{
 		background-color: black;
 	}
 }
-/*
-input{
-	font-size: 1rem;
-}
-*/
 .dropBox{
 	height: 2rem;
 	vertical-align: middle;
@@ -772,15 +751,6 @@ input{
 	width: 2rem;
 	height: 2rem;
 	vertical-align: middle;
-}
-.inputBox form .button{
-	width: 45%;
-}
-.inputBox form input{
-	width: 45%;
-}
-button{
-	width: 50%;
 }
 .button{
 	font-size: 1rem;
@@ -2180,3 +2150,12 @@ details{
 	width: 90%;
 	font-size: 1rem;
 }
+input{
+	font-size: 1.5rem;
+	width: 90%;
+}
+select{
+	font-size: 1.5rem;
+	width: 90%;
+}
+

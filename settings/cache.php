@@ -178,7 +178,7 @@ include("settingsHeader.php");
 			<li>
 				The forever option should only be used for archive purposes.
 			</li>
-		<ul>
+		</ul>
 		<select name='cacheDelay'>
 			<?php
 				// add the cache Mode as a option
