@@ -135,17 +135,7 @@ rss2nfo_update(){
 	# this will launch a processing queue that downloads updates to rsss
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! test -f /etc/2web/rss/sources.cfg;then
-		mkdir -p "/etc/2web/rss/"
-		createDir "/etc/2web/rss/sources.d/"
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/rss2nfo_sources.cfg
-		} > /etc/2web/rss/sources.cfg
-	fi
-	# load sources
-	rssSources=$(grep -v "^#" /etc/2web/rss/sources.cfg)
-	rssSources=$(echo -e "$rssSources\n$(grep -v --no-filename "^#" /etc/2web/rss/sources.d/*.cfg)")
+	rssSources=$(loadConfigs "/etc/2web/rss/sources.cfg" "/etc/2web/rss/sources.d/" "/etc/2web/config_default/rss2nfo_sources.cfg")
 
 	################################################################################
 	# create show and cache directories
