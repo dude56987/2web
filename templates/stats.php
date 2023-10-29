@@ -30,14 +30,38 @@ foreach($moduleNames as $moduleName){
 	}
 }
 # check last update time
-if (file_exists("lastUpdate.index")){
+if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
 	echo "	<div>";
-	echo "		Last updated : ";
-	timeElapsedToHuman(file_get_contents("lastUpdate.index"));
+	echo "<span class='singleStat'>";
+	echo "		Last Updated : ";
+	timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
+	echo "</span>";
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
+		echo "<span class='singleStat'>";
+		echo "		Last Update Check : ";
+		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "</span>";
+	}else{
+		echo "<span class='singleStat'>";
+		echo "		Last Update Check : Never";
+		echo "</span>";
+	}
 	echo "	</div>";
 }else{
 	echo "	<div>";
+	echo "<span class='singleStat'>";
 	echo "		Last updated : Never";
+	echo "</span>";
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
+		echo "<span class='singleStat'>";
+		echo "		Last Update Check : ";
+		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "</span>";
+	}else{
+		echo "<span class='singleStat'>";
+		echo "		Last Update Check : Never";
+		echo "</span>";
+	}
 	echo "	</div>";
 }
 
