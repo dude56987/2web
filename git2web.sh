@@ -32,35 +32,6 @@ function downloadDir(){
 	echo "/var/cache/2web/downloads/repos/"
 }
 ################################################################################
-function libaryPaths(){
-	# Load local library paths for git2web
-	#
-	# - /etc/2web/repos/libaries.cfg
-	# - /etc/2web/repos/libaries.d/*.cfg
-	# - includes paths in downloadDir()
-	#
-	# RETURN STDOUT
-	echo "$(downloadDir)"
-	# check for server libary config
-	if [ ! -f /etc/2web/repos/libaries.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			cat /etc/2web/config_default/git2web_libraries.cfg
-		} >> "/etc/2web/repos/libaries.cfg"
-	fi
-	# write path to console
-	cat "/etc/2web/repos/libaries.cfg"
-	# create a space just in case none exists
-	printf "\n"
-	# read the additional configs
-	find "/etc/2web/repos/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		cat "$libaryConfigPath"
-		# create a space just in case none exists
-		printf "\n"
-	done
-}
-################################################################################
 function buildPhpDocstrings(){
 	# Build the docstrings for PHP functions like this docstring you are reading.
 	#
@@ -524,21 +495,8 @@ function update(){
 	#
 	# RETURN NULL, FILES
 	addToLog "INFO" "STARTED Update" "$(date)"
-	#DEBUG
-	#set -x
-	# this will launch a processing queue that downloads updates to repos
 	INFO "Loading up sources..."
-	# check for defined sources
-	if ! test -f /etc/2web/repos/sources.cfg;then
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/git2web_sources.cfg
-		} > /etc/2web/repos/sources.cfg
-	fi
-	# load sources
-	reposources=$(grep -v "^#" /etc/2web/repos/sources.cfg)
-	reposources=$(echo -e "$reposources\n$(grep -v --no-filename "^#" /etc/2web/repos/sources.d/*.cfg)")
-
+	reposources=$(loadConfigs "/etc/2web/repos/sources.cfg" "/etc/2web/repos/sources.d/" "/etc/2web/config_default/git2web_sources.cfg")
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -1034,7 +992,8 @@ webUpdate(){
 	#   + gitWebsite/gitName/image.png
 
 	webDirectory=$(webRoot)
-	downloadDirectory="$(libaryPaths | tr -s '\n' | shuf )"
+
+	downloadDirectory="$(loadConfigs "/etc/2web/repos/libaries.cfg" "/etc/2web/repos/libaries.d/" "/etc/2web/config_default/git2web_libraries.cfg" | tr -s '\n' | shuf)"
 
 	ALERT "$downloadDirectory"
 

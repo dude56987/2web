@@ -1199,3 +1199,34 @@ function yesNoCfgCheck(){
 	fi
 }
 ########################################################################
+function loadConfigs(){
+	# load a config from a path, if no config is found copy the default config path to the config
+	#
+	# $1 = configPath : The path to the config file to load
+	# $2 = configDirectory : A path on the system where .cfg files exist that will be combined with the config file
+	# $3 = defaultConfigPath : The path to the default config file
+	#
+	# RETURN OUTPUT
+	configPath=$1
+	configDirectory=$2
+	defaultConfigPath=$3
+	# check for server libary config
+	if ! test -f "$configPath";then
+		# if no config exists create the default config
+		{
+			cat "$defaultConfigPath"
+		} > "$configPath"
+	fi
+	# write path to console
+	grep -v "^#" "$configPath"
+	# create a space just in case none exists
+	printf "\n"
+	# read the additional configs
+	find "$configDirectory" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libraryConfigPath;do
+		# load up config without comments
+		grep -v "^#" "$libraryConfigPath"
+		# create a space just in case none exists
+		printf "\n"
+	done
+}
+########################################################################
