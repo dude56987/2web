@@ -98,13 +98,14 @@ function yesNoCfgSet($configPath, $newConfigSetting){
 	return True;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function outputLog($stringData){
+function outputLog($stringData,$class="outputLog"){
 	# Write output and do three dots with randomized delays to simulate processing
 	#
 	# RETURN OUTPUT
 
 	# write $stringData to the log then to the webpage
 	addToLog("ADMIN","Running Admin Action","$stringData");
+	echo "<div class='$class'>";
 	echo "$stringData";
 	$index=0;
 	$waitTime=3;
@@ -121,7 +122,7 @@ function outputLog($stringData){
 		sleep(1);
 		clear();
 	}
-	echo "<br>\n";
+	echo "</div>";
 }
 ////////////////////////////////////////////////////////////////////////////////
 function setModStatus($modName,$modStatus){
@@ -133,20 +134,100 @@ function setModStatus($modName,$modStatus){
 	$configPath="/etc/2web/mod_status/".$modName.".cfg";
 	if ( $modStatus == "enabled"){
 		# enable the module
-		outputLog("Enabling $modName");
+		outputLog("Enabling $modName","goodLog");
 		# write status to module config
 		file_put_contents($configPath,$modStatus);
-		outputLog("$modName has been set to $modStatus");
+		outputLog("$modName has been set to $modStatus","goodLog");
 	}else{
 		# disable the module
-		outputLog("Disabling $modName");
+		outputLog("Disabling $modName", "goodLog");
 		# if the file exists
 		if (file_exists($configPath)){
 			# remove the config file to disable the module
 			unlink($configPath);
-			outputLog("$modName has been set to $modStatus");
+			outputLog("$modName has been set to $modStatus", "goodLog");
 		}else{
-			outputLog("$modName status is already $modStatus");
+			outputLog("$modName status is already $modStatus", "badLog");
+		}
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+function usablePath($path){
+	# check if the file path exists
+	#if (! file_exists($path)){
+	#	outputLog("'$path' does not exist!");
+	#	return False;
+	#}
+	# check the path info
+	$path=explode("/",$path);
+	$pathCollector="/";
+	foreach($path as $pathPart){
+		# if the path is not empty
+		if($pathPart != ""){
+			# check the pathpart
+			$pathCollector .= $pathPart."/";
+			if(is_executable($pathCollector)){
+				outputLog("$pathCollector is executable path, this is good", "goodLog");
+			}else{
+				outputLog("$pathCollector is NOT a executable path, this is bad", "badLog");
+				outputLog("$pathCollector may not even exist on the server, this is bad", "badLog");
+				outputLog("The path given has incorrect permissions", "badLog");
+				$tempOutputData="Use ";
+				$tempOutputData.="<pre>";
+				$tempOutputData.="mkdir -p \"$pathCollector\"\n";
+				$tempOutputData.="chmod +X \"$pathCollector\"\n";
+				$tempOutputData.="</pre>";
+			 	$tempOutputData.="on the server to create the directory and fix the permissions. Then try to add the path again.";
+				outputLog($tempOutputData, "badLog");
+				$errorMessage="Use <pre>chmod +X $pathCollector</pre> on the server to fix the permissions. Then try to add the path again.";
+				addToLog("ERROR","Incorrect Permissions", $errorMessage);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+function addCustomPathConfig($keyName, $baseConfigPath, $settingsWebpage){
+	# check if the path is usable
+	if (usablePath($_POST[$keyName])){
+		# if the path is usable add it
+		addCustomConfig($keyName, $baseConfigPath, $settingsWebpage);
+	}else{
+		# if the check failed check if the force set config was set
+		if (array_key_exists("forceSetConfig",$_POST)){
+			if ($_POST["forceSetConfig"] == "yes"){
+				outputLog("Force setting the configuration");
+				# if the bypass has been set create the config anyway
+				addCustomConfig($keyName, $baseConfigPath, $settingsWebpage);
+			}else{
+				outputLog("ForceSetConfig was not enabled");
+				# draw the back button
+				echo "<div class='listCard'>";
+				echo "<a class='button' href='$settingsWebpage'>Back</a>";
+				echo "</div>";
+			}
+		}else{
+			# draw the override button to ignore the path errors
+			echo "<div class='titleCard'>";
+			echo "	<form action='admin.php' method='post'>";
+			echo "		<h2>Override Path Checking</h2>";
+			echo "		<ul>";
+			echo "			<li>This will force adding the path to the system.</li>";
+			echo "			<li>This will cause the server to upgrade some random requests to HTTPS from HTTP.</li>";
+			echo "			<li>This will most likely break the VLC player buttons on mobile devices for anything added from this path.</li>";
+			echo "			<li>It is recomended that your administrator fix permissions for this directory before you add this path.</li>";
+			echo "		</ul>";
+			echo "		<input width='60%' type='text' name='".$keyName."' value='".$_POST[$keyName]."' hidden />";
+			echo "		<input width='60%' type='text' name='forceSetConfig' value='yes' hidden />";
+			echo "		<button class='button' type='submit'>🪠 Force Adding the Path</button>";
+			echo "	</form>";
+			echo "</div>";
+
+			# draw the back button
+			echo "<div class='listCard'>";
+			echo "<a class='button' href='$settingsWebpage'>Back</a>";
+			echo "</div>";
 		}
 	}
 }
@@ -157,18 +238,22 @@ function addCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	# - $settingsWebpage is a webpage name from the settings directory in the webserver
 	#  - Example: "radio.php"
 	$data=$_POST[$keyName];
-	outputLog("Running ".$keyName." on ".$data);
+	outputLog("Running ".$keyName." on ".$data, "goodLog");
 	$sumOfLink=md5($data);
 	# read the link and create a custom config
 	$configPath=$baseConfigPath.$sumOfLink.".cfg";
-	echo "Checking for Config file ".$configPath."<br>\n";
+	outputLog("Checking for Config file ".$configPath, "goodLog");
 	# write the data to a file at the configPath if the path does not already exist
 	if ( ! file_exists($configPath)){
-		outputLog("Adding ".$data);
+		outputLog("Adding ".$data, "goodLog");
 		# write the config file
 		file_put_contents($configPath,$data);
+	}else{
+		outputLog("File already exists at ".$configPath, "badLog");
 	}
+	echo "<div class='listCard'>";
 	echo "<hr><a class='button' href='/settings/".$settingsWebpage."#".$keyName."'>BACK</a><hr>";
+	echo "</div>";
 	clear();
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,16 +262,18 @@ function removeCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	#
 	# RETURN FILES
 	$data=$_POST[$keyName];
-	outputLog("Running ".$keyName." on ".$data);
+	outputLog("Running ".$keyName." on ".$data, "goodLog");
 	$sumOfLink=md5($data);
 	# read the link and create a custom config
 	$configPath=$baseConfigPath.$sumOfLink.".cfg";
-	echo "Checking for Config file ".$configPath."<br>\n";
+	outputLog("Checking for Config file ".$configPath, "goodLog");
 	# write the data to a file at the configPath if the path does not already exist
 	if ( file_exists($configPath)){
-		outputLog("Removing ".$data." from ".$configPath);
+		outputLog("Removing ".$data." from ".$configPath, "goodLog");
 		# delete the custom config created for the link
 		unlink($configPath);
+	}else{
+		outputLog("Can not remove non existing file from ".$configPath, "badLog");
 	}
 	echo "<hr><a class='button' href='/settings/".$settingsWebpage."#".$keyName."'>BACK</a><hr>";
 	clear();
@@ -213,27 +300,28 @@ if (array_key_exists("newUserName",$_POST)){
 				# check if the username already exists
 				if (file_exists("/etc/2web/users/".$userName.".cfg")){
 					# the username has already exists
-					outputLog("The user '".$userName."' already exists!");
-					outputLog("Processing failed!");
+					outputLog("The user '".$userName."' already exists!", "badLog");
+					outputLog("Processing failed!", "badLog");
 				}else{
 					# build the password hash
 					$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
 					# save the password
 					file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
+					outputLog("The user '".$userName."' has been created!", "goodLog");
 				}
 			}else{
 				# the passwords are diffrent, fail out
-				outputLog("The passwords given are diffrent, You must verify the password to create a new account!");
-				outputLog("Processing failed!");
+				outputLog("The passwords given are diffrent, You must verify the password to create a new account!", "badLog");
+				outputLog("Processing failed!", "badLog");
 			}
 		}else{
 			# no verification was given for the password entered
-			outputLog("You did not verify the password given, Please verify the password to create a account!");
-			outputLog("Processing failed!");
+			outputLog("You did not verify the password given, Please verify the password to create a account!", "badLog");
+			outputLog("Processing failed!", "badLog");
 		}
 	}else{
-		outputLog("No password was given for the new user!");
-		outputLog("Processing failed!");
+		outputLog("No password was given for the new user!", "badLog");
+		outputLog("Processing failed!", "badLog");
 	}
 	echo ("<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>");
 }else if (array_key_exists("removeUser",$_POST)){
@@ -519,7 +607,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("ytdl_remove_username_source",$_POST)){
 	removeCustomConfig("ytdl_remove_username_source","/etc/2web/ytdl/usernameSources.d/","ytdl2nfo.php");
 }else if (array_key_exists("addLibary",$_POST)){
-	addCustomConfig("addLibary","/etc/2web/nfo/libaries.d/","nfo.php");
+	addCustomPathConfig("addLibary","/etc/2web/nfo/libaries.d/","nfo.php");
 }else if (array_key_exists("addWeatherLocation",$_POST)){
 	$link=$_POST['addWeatherLocation'];
 	outputLog("Running addWeatherLocation on link ".$link);
@@ -684,11 +772,11 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("removeComicDownloadLink",$_POST)){
 	removeCustomConfig("removeComicDownloadLink","/etc/2web/comics/sources.d/","comicsDL.php");
 }else if (array_key_exists("addComicLibrary",$_POST)){
-	addCustomConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
+	addCustomPathConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if(array_key_exists("removeComicLibrary",$_POST)){
 	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if (array_key_exists("addWikiPath",$_POST)){
-	addCustomConfig("addWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
+	addCustomPathConfig("addWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
 }else if(array_key_exists("removeWikiPath",$_POST)){
 	removeCustomConfig("removeWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
 }else if (array_key_exists("moveToBottom",$_POST)){
@@ -752,7 +840,7 @@ if (array_key_exists("newUserName",$_POST)){
 	echo "<hr><a class='button' href='/settings/themes.php#webTheme'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
-	addCustomConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");
+	addCustomPathConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");
 }else if(array_key_exists("removeMusicLibary",$_POST)){
 	removeCustomConfig("removeMusicLibary","/etc/2web/music/libaries.d/","music.php");
 }else if (array_key_exists("addRssSource",$_POST)){
@@ -760,7 +848,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if(array_key_exists("removeRssSource",$_POST)){
 	removeCustomConfig("removeRssSource","/etc/2web/rss/sources.d/","rss.php");
 }else if (array_key_exists("addRepoLibrary",$_POST)){
-	addCustomConfig("addRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
+	addCustomPathConfig("addRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
 }else if(array_key_exists("removeRepoLibrary",$_POST)){
 	removeCustomConfig("removeRepoLibrary","/etc/2web/repos/libaries.d/","repos.php");
 }else if (array_key_exists("addRepoSource",$_POST)){

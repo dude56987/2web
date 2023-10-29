@@ -274,6 +274,48 @@ ol li{
 .ADMIN{
 	background-color: fuchsia;
 }
+.outputLog{
+	background: white;
+	color: black;
+	border: solid;
+	border-bottom: none;
+	border-top: none;
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: left;
+}
+.goodLog{
+	background: green;
+	color: black;
+	border: solid;
+	border-bottom: none;
+	border-top: none;
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: left;
+}
+.goodLog pre{
+	color: var(--textColor);
+}
+.badLog pre{
+	color: var(--textColor);
+}
+.outputLog pre{
+	color: var(--textColor);
+}
+.badLog{
+	background: red;
+	color: black;
+	border: solid;
+	border-bottom: none;
+	border-top: none;
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: left;
+}
 /*
 .seasonHeader {
 	box-shadow: 0px 0px 10px black;
