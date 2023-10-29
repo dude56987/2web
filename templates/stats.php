@@ -31,13 +31,15 @@ foreach($moduleNames as $moduleName){
 }
 # check last update time
 if (file_exists("lastUpdate.index")){
-	$lastUpdate = file_get_contents("lastUpdate.index");
+	echo "	<div>";
+	echo "		Last updated : ";
+	timeElapsedToHuman(file_get_contents("lastUpdate.index"));
+	echo "	</div>";
 }else{
-	$lastUpdate = "Never";
+	echo "	<div>";
+	echo "		Last updated : Never";
+	echo "	</div>";
 }
-echo "	<div>";
-echo "		Last updated on $lastUpdate";
-echo "	</div>";
 
 # build the stats section
 echo "	<div>";

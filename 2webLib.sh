@@ -174,7 +174,6 @@ function buildHomePage(){
 	# - stats generation is IO intense, so it only needs ran ONCE at the end
 	# - each element in the stats is ran on a diffrent schedule based on its intensity and propensity to lock up the system
 	# - update the "last update on" data every run, this is simply to show the freshness of the content since updates are a batch process
-	echo "$(date)" > "$webDirectory/lastUpdate.index"
 	# set the timeout
 	timeout=60000
 	databasePath="$(webRoot)/data.db"
@@ -713,6 +712,8 @@ function lockProc(){
 		ALERT "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
 		trap "rm $webDirectory/${procName}.active" EXIT
+		# set the last updated time
+		date "+%s" > "$webDirectory/lastUpdate.index"
 	fi
 }
 ################################################################################
