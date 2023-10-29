@@ -287,7 +287,7 @@ ol li{
 }
 .goodLog{
 	background: green;
-	color: black;
+	color: white;
 	border: solid;
 	border-bottom: none;
 	border-top: none;
@@ -307,7 +307,7 @@ ol li{
 }
 .badLog{
 	background: red;
-	color: black;
+	color: white;
 	border: solid;
 	border-bottom: none;
 	border-top: none;
