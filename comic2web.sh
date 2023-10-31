@@ -63,12 +63,10 @@ function processPdfPageToImage(){
 	pdfImageFilePath="${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName/$pdfComicName-$pageNumber.jpeg"
 	# render the page
 	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName"
-	startDebug
 	# trim the whitespace
 	convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 	# add a border to the edge of the image
 	convert "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
-	stopDebug
 }
 ################################################################################
 function update(){

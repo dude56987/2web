@@ -738,30 +738,6 @@ webUpdateCheck(){
 	fi
 }
 ################################################################################
-loadSources(){
-	# check for defined sources
-	if ! test -f "/etc/2web/iptv/sources.cfg";then
-		# if no config exists create the default config from the template
-		{
-			cat /etc/2web/config_default/live_sources.cfg
-		} > /etc/2web/iptv/sources.cfg
-	fi
-	# load the link list
-	echo "$(loadWithoutComments /etc/2web/iptv/sources.cfg)"
-}
-################################################################################
-loadRadioSources(){
-	# build the radio sources cfg file if it does not exist
-	if ! test -f "/etc/2web/iptv/radioSources.cfg";then
-		# if no config exists create the default config from the template
-		{
-			cat /etc/2web/config_default/live_radioSources.cfg
-		} > /etc/2web/iptv/radioSources.cfg
-	fi
-	# load the radio link list
-	echo "$(loadWithoutComments /etc/2web/iptv/radioSources.cfg)"
-}
-################################################################################
 function updateEPG(){
 	webDirectory=$1
 	channelsPath="$webDirectory/live/channels.index"
@@ -813,9 +789,9 @@ fullUpdate(){
 	# scan sources config file and fetch each source
 	################################################################################
 	INFO "Loading up sources..."
-	linkList="$(loadSources)"
+	linkList=$(loadConfigs "/etc/2web/iptv/sources.cfg" "/etc/2web/iptv/sources.d/" "/etc/2web/config_default/live_sources.cfg" | tr -s '\n')
 	INFO "Loading up radio sources..."
-	radioLinkList="$(loadRadioSources)"
+	radioLinkList=$(loadConfigs "/etc/2web/iptv/radioSources.cfg" "/etc/2web/iptv/radioSources.d/" "/etc/2web/config_default/live_radioSources.cfg" | tr -s '\n')
 	################################################################################
 
 	INFO "Building Web Root directories"

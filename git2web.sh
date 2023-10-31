@@ -496,7 +496,7 @@ function update(){
 	# RETURN NULL, FILES
 	addToLog "INFO" "STARTED Update" "$(date)"
 	INFO "Loading up sources..."
-	reposources=$(loadConfigs "/etc/2web/repos/sources.cfg" "/etc/2web/repos/sources.d/" "/etc/2web/config_default/git2web_sources.cfg")
+	repoSources=$(loadConfigs "/etc/2web/repos/sources.cfg" "/etc/2web/repos/sources.d/" "/etc/2web/config_default/git2web_sources.cfg" | tr -s '\n' | shuf)
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -507,9 +507,8 @@ function update(){
 	# make repos directory
 	createDir "$webDirectory/repos/"
 	# scan the sources
-	ALERT "git Download Sources: $reposources"
-	#for reposource in $reposources;do
-	echo "$reposources" | while read repoSource;do
+	ALERT "git Download Sources: $repoSources"
+	echo "$repoSources" | while read repoSource;do
 		# generate a sum for the source
 		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
 		# create the repo directory, limit new repo pulls to once per day

@@ -38,17 +38,13 @@ ytdl2kodi_caption(){
 }
 ################################################################################
 getDownloadPath(){
-	# check for a user defined download path
-	if test -f /etc/2web/ytdl/downloadPath.cfg;then
-		# load the config file
-		downloadPath=$(cat /etc/2web/ytdl/downloadPath.cfg)
-	else
-		# if no config exists create the default config
-		downloadPath="/var/cache/2web/downloads/nfo/"
-		# write the new config from the path variable
-		echo "$downloadPath" > /etc/2web/ytdl/downloadPath.cfg
-	fi
-	echo "$downloadPath"
+	# Print the download path
+	#
+	# - This function needs removed because 2web now has a global download path
+	#   that can be accessed with downloadRoot()
+	#
+	# RETURN OUTPUT
+	echo "/var/cache/2web/downloads/nfo/"
 }
 ################################################################################
 ytdl2kodi_channel_extractor(){
@@ -489,48 +485,6 @@ ytdl2kodi_sleep(){
 	return
 }
 ################################################################################
-function sitePaths(){
-	# check for server libary config
-	if ! test -f /etc/2web/ytdl/sources.cfg;then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			cat /etc/2web/config_default/ytdl2nfo_websiteSources.cfg
-		} >> "/etc/2web/ytdl/sources.cfg"
-	fi
-	# write path to console
-	grep -v "^#"  "/etc/2web/ytdl/sources.cfg"
-	# create a space just in case none exists
-	printf "\n"
-	# read the additional configs
-	find "/etc/2web/ytdl/sources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		grep -v "^#" "$libaryConfigPath"
-		# create a space just in case none exists
-		printf "\n"
-	done
-}
-################################################################################
-function userPaths(){
-	# check for server libary config
-	if ! test -f /etc/2web/ytdl/usernameSources.cfg;then
-		# if no config exists create the default config
-		{
-			# write the new config from the path variable
-			cat /etc/2web/config_default/ytdl2nfo_usernameSources.cfg
-		} >> "/etc/2web/ytdl/usernameSources.cfg"
-	fi
-	# write path to console
-	grep -v "^#" "/etc/2web/ytdl/usernameSources.cfg"
-	# create a space just in case none exists
-	printf "\n"
-	# read the additional configs
-	find "/etc/2web/ytdl/usernameSources.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		grep -v "^#" "$libaryConfigPath"
-		# create a space just in case none exists
-		printf "\n"
-	done
-}
-################################################################################
 ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
@@ -557,7 +511,7 @@ ytdl2kodi_update(){
 	currentlyProcessing=0
 	################################################################################
 	# for each link in the sources
-	siteLinkList=$(sitePaths)
+	siteLinkList=$(loadConfigs "/etc/2web/ytdl/sources.cfg" "/etc/2web/ytdl/sources.d/" "/etc/2web/config_default/ytdl2nfo_websiteSources.cfg" | shuf)
 	echo "Processing sources..."
 	echo "Site Link List = '$siteLinkList'"
 	siteLinkList="$(echo "$siteLinkList" | tr -s '\n')"
@@ -584,7 +538,7 @@ ytdl2kodi_update(){
 	currentlyProcessing=0
 	################################################################################
 	# for each link in the users sources
-	userlinkList=$(userPaths)
+	userlinkList=$(loadConfigs "/etc/2web/ytdl/usernameSources.cfg" "/etc/2web/ytdl/usernameSources.d/" "/etc/2web/config_default/ytdl2nfo_usernameSources.cfg" | shuf)
 	echo "Processing user sources..."
 	echo "User Link List = '$userlinkList'"
 	userlinkList="$(echo "$userlinkList" | tr -s '\n')"

@@ -27,7 +27,6 @@ function scanLink(){
 	webDirectory="$4"
 	# scan ports
 	echo "$scanPorts" | shuf | while read -r scanPort;do
-		startDebug
 		name=$(echo "$scanPort" | cut -d',' -f1)
 		port=$(echo "$scanPort" | cut -d',' -f2)
 		description=$(echo "$scanPort" | cut -d',' -f3)
@@ -43,7 +42,6 @@ function scanLink(){
 		fi
 		# reset port
 		port=""
-		stopDebug
 	done
 	# scan paths
 	echo "$scanPaths" | shuf | while read -r scanPath;do
@@ -138,19 +136,7 @@ function generateLink(){
 ################################################################################
 function update(){
 	addToLog "INFO" "STARTED Update" "$(date)"
-	# this will launch a processing queue that downloads updates to portal
-	echo "Loading up sources..."
-	# check for defined sources
-	if ! test -f /etc/2web/portal/sources.cfg;then
-		createDir "/etc/2web/portal/sources.d/"
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/portal2web_sources.cfg
-		} > /etc/2web/portal/sources.cfg
-	fi
-	# load sources
-	portalSources=$(grep -v "^#" /etc/2web/portal/sources.cfg)
-	portalSources=$(echo -en "$portalSources\n$(grep --invert-match --no-filename "^#" /etc/2web/portal/sources.d/*.cfg)")
+	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/kodi/sources.d/" "/etc/2web/config_default/kodi2web_locations.cfg")
 	# remove empty lines and other problems in sources
 	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
 

@@ -2083,26 +2083,6 @@ function buildMovieIndex(){
 	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
 }
 ########################################################################
-function libaryPaths(){
-	# check for server libary config
-	if ! test -f /etc/2web/nfo/libaries.cfg;then
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/nfo2web_libaries.cfg
-		} > "/etc/2web/nfo/libaries.cfg"
-	fi
-	# write path to console
-	grep -v "^#" "/etc/2web/nfo/libaries.cfg"
-	# create a space just in case none exists
-	printf "\n"
-	# read the additional configs
-	find "/etc/2web/nfo/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libaryConfigPath;do
-		grep -v "^#" "$libaryConfigPath"
-		# create a space just in case none exists
-		printf "\n"
-	done
-}
-################################################################################
 function cleanMediaSection(){
 	mediaSectionLibaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort)
 	IFS=$'\n'
@@ -2192,71 +2172,24 @@ function update(){
 	# run 2web to build the default website if it does not exist
 	/usr/bin/2web
 	# load the libary directory
-	libaries=$(libaryPaths | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
+	libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
 	# create the log path
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# create the homepage path
-	#homePagePath="$webDirectory/index.php"
 	showIndexPath="$webDirectory/shows/index.php"
 	movieIndexPath="$webDirectory/movies/index.php"
 	# build the movie index
 	buildMovieIndex "$webDirectory"
 	# build the show index
 	buildShowIndex "$webDirectory"
-	#touch "$showIndexPath"
-	#touch "$movieIndexPath"
 	touch "$logPagePath"
-	#touch "$homePagePath"
-	# build log page
-	#{
-	#	echo "<html id='top' class='randomFanart'>"
-	#	echo "<head>"
-	#	echo "<link rel='stylesheet' href='/style.css' />"
-	#	echo "<style>"
-	#	echo "</style>"
-	#	echo "<link rel='icon' type='image/png' href='/favicon.png'>"
-	#	echo "<script src='/2web.js'></script>"
-	#	echo "</head>"
-	#	echo "<body>"
-	#	echo "<?PHP";
-	#	echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
-	#	echo "include('settingsHeader.php');";
-	#	echo "?>";
-	#	# add the javascript sorter controls
-	#	echo "<div class='inputCard'>"
-	#	echo "<h2>Filter Log Entries</h2>"
-	#	echo -n "<input type='button' class='button' value='Info'"
-	#	echo    " onclick='toggleVisibleClass(\"INFO\")'>"
-	#	echo -n "<input type='button' class='button' value='Error'"
-	#	echo    " onclick='toggleVisibleClass(\"ERROR\")'>"
-	#	echo -n "<input type='button' class='button' value='Warning'"
-	#	echo    " onclick='toggleVisibleClass(\"WARNING\")'>"
-	#	echo -n "<input type='button' class='button' value='Update'"
-	#	echo    " onclick='toggleVisibleClass(\"UPDATE\")'>"
-	#	echo -n "<input type='button' class='button' value='New'"
-	#	echo    " onclick='toggleVisibleClass(\"NEW\")'>"
-	#	echo -n "<input type='button' class='button' value='Debug'"
-	#	echo    " onclick='toggleVisibleClass(\"DEBUG\")'>"
-	#	echo -n "<input type='button' class='button' value='Download'"
-	#	echo    " onclick='toggleVisibleClass(\"DOWNLOAD\")'>"
-	#	echo "</div>"
-	#	echo "<hr>"
-	#	echo "<!--  add the search box -->"
-	#	echo "<input id='searchBox' class='searchBox' type='text' onkeyup='filter(\"logEntry\")' placeholder='Search...' >"
-	#	echo "<hr>"
-	#	echo "<div class='settingsListCard'>"
-	#	# start the table
-	#	echo "<div class='settingsTable'>"
-	#	echo "<table>"
-	#} > "$logPagePath"
 	addToLog "INFO" "STARTED Update" "$(date)" "$webDirectory/log/$(date "+%s").log"
 	# sleep one second to seprate the logs
 	sleep 1
 	# create new log after start so start log message is at start of log
 	logPagePath="$webDirectory/log/$(date "+%s").log"
-	#addToLog "INFO" "Libaries:" "$libaries" "$logPagePath"
 	# figure out the total number of CPUS for parallel processing
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(cpuCount)
@@ -2265,8 +2198,6 @@ function update(){
 	fi
 	# read each libary from the libary config, single path per line
 	ALERT "LIBARIES: $libaries"
-	#echo -e "LIBARIES: \n$libaries"
-	#for libary in $libaries;do
 
 	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
 		# clean the database of broken entries
@@ -2275,7 +2206,6 @@ function update(){
 	fi
 
 	IFS=$'\n'
-	#echo "$libaries" | while read libary;do
 	for libary in $libaries;do
 		ALERT "libary = $libary"
 		# check if the libary directory exists
@@ -2291,21 +2221,13 @@ function update(){
 			addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
 			echo "library exists at '$libary'"
 			# read each tvshow directory from the libary
-			#for show in "$libary"/*;do
-			#addToLog "DEBUG" "Found show paths" "$(find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | sed -z 's/\n/\n\n/g' )" "$logPagePath"
-
 			foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
 
-			#find "$libary" -type 'd' -maxdepth 1 -mindepth 1 | shuf | while read -r show;do
-
 			for show in $foundLibaryPaths;do
-				#addToLog "DEBUG" "Found show path in libary" "$show" "$logPagePath"
-				#ALERT "show path = '$show'"
 				################################################################################
 				# process page metadata
 				################################################################################
 				# if the show directory contains a nfo file defining the show
-				#INFO "searching for metadata at '$show/tvshow.nfo'"
 				if test -f "$show/tvshow.nfo";then
 					#INFO "found metadata at '$show/tvshow.nfo'"
 					# load update the tvshow.nfo file and get the metadata required for
@@ -2338,9 +2260,6 @@ function update(){
 						addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
 					fi
 				elif grep -q "<movie>" "$show"/*.nfo;then
-					#ALERT "ADDING MOVIE $show"
-					#ALERT "ADDING NEW PROCESS TO QUEUE"
-					#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
 					# this is a move directory not a show
 					processMovie "$show" "$webDirectory" &
 					# pause execution while no cpus are open
@@ -2363,17 +2282,6 @@ function update(){
 		# update video libaries on all kodi clients, if no video playback is detected
 		/usr/bin/kodi2web video
 	fi
-	#{
-	#	echo "</table>"
-	#	echo "</div>"
-	#	echo "</div>"
-	#	# add footer
-	#	echo "<?PHP";
-	#	echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
-	#	echo "?>";
-	#	echo "</body>"
-	#	echo "</html>"
-	#} >> "$logPagePath"
 	################################################################################
 	# - sort and clean main indexes
 	# - cleanup the new indexes by limiting the lists to 200 entries
