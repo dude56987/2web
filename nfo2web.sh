@@ -655,7 +655,7 @@ processMovie(){
 			{
 				# build the html5 media player for local and remotly accessable media
 				#echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls preload>"
-				echo "<$mediaType id='nfoMediaPlayer' poster='poster.png' controls preload>"
+				echo "<$mediaType class='nfoMediaPlayer' poster='poster.png' controls preload>"
 				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
@@ -1247,7 +1247,7 @@ processEpisode(){
 				# check if a file is cached
 				tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
 				echo "if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4\")){"
-				echo "	echo \"<video id='nfoMediaPlayer' class='' poster='$poster' controls>\";"
+				echo "	echo \"<video class='nfoMediaPlayer' class='' poster='$poster' controls>\";"
 				echo "	echo \"	<source src='/RESOLVER-CACHE/$tempSum/$tempSum.mp4' type='video/mp4'>\";"
 				echo "	echo \"</video>\";";
 				echo "}else if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.m3u\")){"
@@ -1280,7 +1280,7 @@ processEpisode(){
 				echo "}else{";
 				echo " 	echo \"<source src='$videoPath' type='$mimeType'>\";"
 				# embed the youtube player
-				echo "	echo \"<iframe id='nfoMediaPlayer' width='560' height='315'\";"
+				echo "	echo \"<iframe class='nfoMediaPlayer' width='560' height='315'\";"
 				echo "	echo \"src='https://www.youtube-nocookie.com/embed/$yt_id'\";"
 				echo "	echo \"frameborder='0'\";"
 				echo "	echo \"allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'\";"
@@ -1323,9 +1323,9 @@ processEpisode(){
 				tempStyle="background-image: url(\"$episodePath-thumb$thumbnailExt\") !important;"
 				# build the html5 media player for local and remotly accessable media
 				if echo $mediaType | grep -q "audio";then
-					echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' style='$tempStyle' controls preload>"
+					echo "<$mediaType class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' style='$tempStyle' controls preload>"
 				else
-					echo "<$mediaType id='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
+					echo "<$mediaType class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
 				fi
 				# redirect mkv files to the transcoder to cache the video file for the webplayer
 				if echo "$videoPath" | grep -qE ".mkv|.avi";then

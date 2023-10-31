@@ -126,35 +126,107 @@ if (file_exists("artist.cfg")){
 </div>
 
 <?php
+function buildPlayer($track,$player){
+	if ($player == "video"){
+		#echo "<video id='nfoMediaPlayer' controls loop autoplay poster='$track.png' data-setup='{ \"inactivityTimeout\": 0 }'>";
+		if (array_key_exists("loop",$_GET)){
+			echo "<video id='mediaPlayer' class='nfoMediaPlayer' controls loop autoplay data-setup='{ \"inactivityTimeout\": 0 }'>\n";
+		}else{
+			echo "<video id='mediaPlayer' class='nfoMediaPlayer' controls autoplay data-setup='{ \"inactivityTimeout\": 0 }'>\n";
+		}
+		echo "	<source src='$track.webm' type='video/webm'>\n";
+		echo "</video>\n";
+		$extension=".webm";
+	}else if ($player == "audio"){
+		if (array_key_exists("loop",$_GET)){
+			echo "<audio id='mediaPlayer' class='albumPlayer' controls loop autoplay>\n";
+		}else{
+			echo "<audio id='mediaPlayer' class='albumPlayer' controls autoplay>\n";
+		}
+		echo "	<source src='$track.mp3' type='audio/mpeg'>\n";
+		echo "</audio>\n";
+		$extension=".mp3";
+	}
+	# if not looping a single file
+	if (! array_key_exists("loop",$_GET)){
+		# loop the album
+		if (file_exists(str_pad(($track + 1), 3, "0", STR_PAD_LEFT).$extension)){
+			# play the next track at the end of this one
+			echo "<script>\n";
+			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
+			echo "function playNext(){\n";
+			echo "	window.location='?play=".str_pad(($track + 1), 3, "0", STR_PAD_LEFT)."&player=$player';\n";
+			echo "}\n";
+			echo "</script>\n";
+		}else{
+			# go back to the first track
+			echo "<script>\n";
+			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
+			echo "function playNext(){\n";
+			echo "	window.location='?play=001&player=$player';\n";
+			echo "}\n";
+			echo "</script>\n";
+		}
+	}
+	echo "<div class='titleCard'>";
+	echo "	<div class='listCard'>";
+	echo "		<a class='button' href='$track.mp3'>";
+	echo "			🔗Direct Link";
+	echo "		</a>";
+	if ($player == "video"){
+		echo "		<a class='button' href='?play=$track&player=audio'>";
+		echo "			🎶 Audio Player";
+		echo "		</a>";
+	}else if ($player == "audio"){
+		if (file_exists("$track.webm")){
+			echo "		<a class='button' href='?play=$track&player=video'>";
+			echo "			🕺💃 Visualisation Player";
+			echo "		</a>";
+		}
+	}
+	if (array_key_exists("loop",$_GET)){
+		echo "<noscript>";
+		echo "Loop album does not work without javascript enabled on the browser. Use the external player links to play the album without javascript.";
+		echo "</noscript>";
+		echo "		<a class='button' href='?play=$track&player=$player'>";
+		echo "			➿ Loop Album";
+		echo "		</a>";
+	}else{
+		echo "		<a class='button' href='?play=$track&player=$player&loop'>";
+		echo "			➰ Loop Track";
+		echo "		</a>";
+	}
+	echo "	</div>";
+	echo "</div>";
+	if (file_exists($track."-lyrics.txt")){
+		echo "<div class='titleCard'>";
+		echo "<h1>Lyrics</h1>";
+		echo "<pre>";
+		echo file_get_contents($track."-lyrics.txt");
+		echo "</pre>";
+		echo "</div>";
+	}
+}
 # build the player for the current track
 # - player should automatically loop all tracks and play from the currently chosen track
 # ?play=track_number
 if (array_key_exists("play",$_GET)){
 	$track=($_GET['play']);
-	if (file_exists("$track.mp3")){
-		if (file_exists("$track.webm")){
-			echo "<video id='nfoMediaPlayer' controls loop autoplay poster='$track.png' data-setup='{ \"inactivityTimeout\": 0 }'>";
-			echo "	<source src='$track.webm' type='video/webm'>";
-			echo "</video>";
-		}else{
-			echo "<audio class='albumPlayer' controls loop autoplay>";
-			echo "	<source src='$track.mp3' type='audio/mpeg'>";
-			echo "</audio>";
+	if (array_key_exists("player",$_GET)){
+		$player=($_GET['player']);
+		if ($player == "audio"){
+			buildPlayer($track,"audio");
+		}else if ($player == "video"){
+			buildPlayer($track,"video");
 		}
-		echo "<div class='titleCard'>";
-		echo "	<div class='listCard'>";
-		echo "		<a class='button' href='$track.mp3'>";
-		echo "			🔗Direct Link";
-		echo "		</a>";
-		echo "	</div>";
-		echo "</div>";
-		if (file_exists($track."-lyrics.txt")){
-			echo "<div class='titleCard'>";
-			echo "<h1>Lyrics</h1>";
-			echo "<pre>";
-			echo file_get_contents($track."-lyrics.txt");
-			echo "</pre>";
-			echo "</div>";
+	}else{
+		# default load the video before the audio player
+		if (file_exists("$track.mp3")){
+			if (file_exists("$track.webm")){
+				buildPlayer($track,"video");
+			}else{
+				buildPlayer($track,"audio");
+			}
 		}
 	}
 }

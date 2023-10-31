@@ -584,7 +584,7 @@ ol{
 		margin-left: auto;
 		margin-right: auto;
 	}
-	#nfoMediaPlayer, video, audio{
+	.nfoMediaPlayer, video, audio{
 		background-size: 100% 100%;
 		margin: 0px !important;
 		width: 100% !important;
@@ -663,7 +663,7 @@ ol{
 		display: none;
 	}
 }
-#nfoMediaPlayer, video, audio{
+.nfoMediaPlayer, video, audio{
 	background-size: 100% 100%;
 	margin: 15px;
 	/*
