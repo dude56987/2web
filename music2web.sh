@@ -572,7 +572,6 @@ function buildVisual(){
 	mp3FilePath=$1
 	mp3FileName=$2
 	webDirectory=$3
-	totalCPUS=$4
 	# generate the visualization, with white waveforms at 12 fps ( the lowest framerate human eyes can handle )
 	# if the ffmpeg process was successfull mark the render as complete with setFileDataSum
 	# NOTE: webm codec is not multithreaded so only one CPU will be used, This might be something that the FFMPEG project needs to fix
@@ -674,7 +673,7 @@ function update(){
 				#ALERT "Processing Track $musicPath"
 				processTrack "$musicPath" "$processedTracks/$totalTracks [$processedSources/$totalSources]" "$@" &
 				processedTracks=$(( $processedTracks + 1 ))
-				waitQueue 0.2 "$totalCPUS"
+				waitFastQueue 0.2 "$totalCPUS"
 			done
 			setDirSum "$webDirectory" "$musicSource"
 		fi
@@ -683,16 +682,22 @@ function update(){
 
 	# check config file but default to "no"
 	if yesNoCfgCheck "/etc/2web/music/generateVisualisationsForWeb.cfg" "no";then
+		foundFiles=$(find "/var/cache/2web/web/music/" -name '*.mp3')
+		totalVisuals=$(echo "$foundFiles" | wc -l)
+		visualCounter=0
 		# generate visualizations for music tracks after the base mp3 processing and webpage generation has been completed, this is the longest processing task
-		find "/var/cache/2web/web/music/" -name '*.mp3' | shuf | while read mp3FilePath;do
+		echo "$foundFiles" | shuf | while read mp3FilePath;do
+			visualCounter=$((visualCounter + 1))
+			INFO "[$visualCounter/$totalVisuals] Visuals Generated..."
 			mp3FileName=$(echo "$mp3FilePath" | sed "s/.mp3//g")
 			# extract the cbz file to the download directory
-			INFO "Found track '$mp3FileName', Checking visualization..."
+			INFO "[$visualCounter/$totalVisuals] Found track '$mp3FileName', Checking visualization..."
 			if checkFileDataSum "$webDirectory" "$mp3FilePath";then
-				INFO "Found track '$mp3FileName', Generating visualization..."
-				buildVisual "$mp3FilePath" "$mp3FileName" "$webDirectory" "$totalCPUS" &
-				waitQueue 2 "$totalCPUS"
+				INFO "[$visualCounter/$totalVisuals] Found track '$mp3FileName', Generating visualization..."
+				buildVisual "$mp3FilePath" "$mp3FileName" "$webDirectory" &
+				waitFastQueue 0.2 "$totalCPUS"
 			fi
+			blockQueue 1
 		done
 	fi
 
