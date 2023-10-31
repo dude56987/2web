@@ -492,14 +492,10 @@ function processTrack(){
 				date "+%s" > /var/cache/2web/web/new/albums.cfg
 			fi
 			# build the track thumbnail
-			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.png";then
-				# create a waveform with ffmpeg for the track
-				# generate the thumbnail
-				#ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic=colors=blue|white|yellow|green|orange" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
-				#ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
-				ffmpeg -loglevel quiet -y -i "$webDirectory/music/$artist/$album/$track.mp3" -filter_complex "showwavespic=colors=white" -frames:v 1 "$webDirectory/music/$artist/$album/$track.png"
-				convert -quiet "$webDirectory/music/$artist/$album/$track.png" -adaptive-resize 200x50\! "$webDirectory/music/$artist/$album/web-$track.png"
-			fi
+			# create a waveform with ffmpeg for the track
+			generateWaveform "$webDirectory/music/$artist/$album/$track.mp3" "$webDirectory/music/$artist/$album/$track" "$webDirectory/kodi/music/$artist/$album/$track"
+			# generate the thumbnail
+			convert -quiet "$webDirectory/music/$artist/$album/$track.png" -adaptive-resize 200x50\! "$webDirectory/music/$artist/$album/web-$track.png"
 			# track data
 			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.index";then
 				# create the track link

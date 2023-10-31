@@ -1078,6 +1078,40 @@ function setDirSum(){
 
 }
 ########################################################################
+function generateWaveform(){
+	# Generate a waveform from a audio source
+	#
+	# - ffmpeg requires downloading the entire file for creating the thumbnail
+	# create a thumbnail for the mp3 links inside streams
+	#
+	# RETURN FILES
+	videoPath=$1
+	thumbnailPath=$2
+	thumbnailPathKodi=$3
+	# get the module name
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	thumbSum=$(echo "$videoPath" | md5sum | cut -d' ' -f1)
+	# check if the links exist already, and skip if the links are found
+	# generate the waveform thumbnail for audio files
+	if ! test -f "/var/cache/2web/downloads/thumbnails/$moduleName/$thumbSum-wave.png";then
+		createDir /var/cache/2web/downloads/thumbnails/$moduleName/
+		# create the log entry to mark a new download
+		addToLog "DOWNLOAD" "Generating Thumbnail" "Creating audio waveform using media link: $videoPath"
+		ALERT "No waveform file exists, creating one..."
+		ffmpeg -loglevel quiet -y -i "$videoPath" -filter_complex "showwavespic=colors=white" -frames:v 1 "/var/cache/2web/downloads/thumbnails/$moduleName/$thumbSum-wave.png"
+	fi
+	if ! test -s "$thumbnailPath.png";then
+		ALERT "Linking generated waveform thumbnail..."
+		# and the web thumbnail link
+		linkFile "/var/cache/2web/downloads/thumbnails/$moduleName/$thumbSum-wave.png" "$thumbnailPath.png"
+	fi
+	if ! test -s "$thumbnailPathKodi.png";then
+		ALERT "Linking generated waveform kodi thumbnail..."
+		# add kodi thumbnail link link
+		linkFile "/var/cache/2web/downloads/thumbnails/$moduleName/$thumbSum-wave.png" "$thumbnailPathKodi.png"
+	fi
+}
+########################################################################
 function downloadThumbnail(){
 	# downloadThumbnail $thumbnailLink $thumbnailPath $thumbnailExt
 	#
@@ -1092,19 +1126,17 @@ function downloadThumbnail(){
 	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
 	# get the module name
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
-	# if the link has already been downloaded then dont download it
-	webDirectory=$(webRoot)
 	# if it dont exist download it
-	if ! test -f "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt";then
+	if ! test -f "/var/cache/2web/downloads/thumbnails/${moduleName}/$sumName$thumbnailExt";then
 		# create the download directory if it does not exist
-		createDir "/var/cache/2web/downloads/${moduleName}/thumbnails/"
+		createDir "/var/cache/2web/downloads/thumbnails/${moduleName}/"
 		# generated the sum for the thumbnail name
-		timeout 120 curl -L --silent "$thumbnailLink" | convert -quiet - "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt"
+		timeout 120 curl -L --silent "$thumbnailLink" | convert -quiet - "/var/cache/2web/downloads/thumbnails/${moduleName}/$sumName$thumbnailExt"
 		# sleep for one second after each thumbnail download
 		#sleep 1
 	fi
 	if ! test -f "$thumbnailPath$thumbnailExt";then
-		linkFile "/var/cache/2web/downloads/${moduleName}/thumbnails/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
+		linkFile "/var/cache/2web/downloads/thumbnails/${moduleName}/$sumName$thumbnailExt" "$thumbnailPath$thumbnailExt"
 
 		# save the thumbnail to a download path, and link to that downloaded thumbnail
 		#curl --silent "$thumbnailLink" | convert -quiet - "$thumbnailPath$thumbnailExt"

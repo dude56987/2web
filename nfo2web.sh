@@ -895,23 +895,8 @@ checkForThumbnail(){
 					fi
 				done
 			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
-				#
 				ALERT "This is a audio file, generate a audio waveform..."
-				addToLog "DOWNLOAD" "Generating Thumbnail" "Creating audio waveform using media link: $videoPath" "$logPagePath"
-				# only render a waveform is no other thumbnail is found
-				# - ffmpeg requires downloading the entire file for creating the thumbnail
-				# create a thumbnail for the mp3 links inside streams
-				episodeThumbSum=$(echo "$videoPath" | md5sum | cut -d' ' -f1)
-				# generate the waveform thumbnail for audio files
-				if ! test -f "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg";then
-					ALERT "No waveform file exists, creating one..."
-					ffmpeg -loglevel quiet -y -i "$ytLink" -filter_complex "showwavespic=colors=white" -frames:v 1 "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg"
-				fi
-				ALERT "Linking generated waveform thumbnails..."
-				# and the web thumbnail link
-				linkFile "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg" "$thumbnailPath.jpg"
-				# add kodi thumbnail link link
-				linkFile "/var/cache/2web/generated/nfo2web/thumbnails/$episodeThumbSum-wave.jpg" "$thumbnailPathKodi.jpg"
+				generateWaveform "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
 			else
 				ALERT "This media could not be determined to be any type of media try 'mediainfo \"$videoPath\"'"
 				addToLog "ERROR" "Could not create Thumbnail" "This media could not be determined to be any type of media try 'mediainfo $videoPath'"
