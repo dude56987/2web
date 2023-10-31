@@ -63,20 +63,20 @@ displayIndexWithPages($indexFilePath,$emptyMessage);
 <div class='titleCard'>
 	<h1>Playlists</h1>
 	<div class='listCard'>
-		<a class="button" href="?page=all">∞ All<sup>(web)</sup></a>
-		<a class="button" href="/new/?filter=movies">📜 New<sup>(web)</sup></a>
-		<a class="button" href="/random/?filter=movies">🔀 Random<sup>(web)</sup></a>
-		<a class="button" href="/m3u-gen.php?movies=all">▶️  All<sup>(External)</sup></a>
-		<a class="button" href="/m3u-gen.php?movies=all&sort=random">🔀 Random<sup>(External)</sup></a>
+		<a class="button" href="?page=all">∞ All<sup>web</sup></a>
+		<a class="button" href="/new/?filter=movies">📜 New<sup>web</sup></a>
+		<a class="button" href="/random/?filter=movies">🔀 Random<sup>web</sup></a>
+		<a class="button" href="/m3u-gen.php?movies=all">▶️ Play All<sup>External</sup></a>
+		<a class="button" href="/m3u-gen.php?movies=all&sort=random">🔀 Play Random<sup>External</sup></a>
 		<?PHP
 		# play all vlc link
 		$tempLink="vlc://".$_SERVER["SERVER_ADDR"]."/m3u-gen.php?movies=all";
 		$tempLink=str_replace(" ","%20",$tempLink);
-		echo "<a class='button vlcButton' href='$tempLink'><span id='vlcIcon'>&#9650;</span> All<sup>(VLC)</sup></a>";
+		echo "<a class='button vlcButton' href='$tempLink'>▶️ Play All<sup><span id='vlcIcon'>&#9650;</span> VLC</sup></a>";
 		# random vlc link
 		$tempLink="vlc://".$_SERVER["SERVER_ADDR"]."/m3u-gen.php?movies=all&sort=random";
 		$tempLink=str_replace(" ","%20",$tempLink);
-		echo "<a class='button vlcButton' href='$tempLink'><span id='vlcIcon'>&#9650;</span> Random<sup>(VLC)</sup></a>";
+		echo "<a class='button vlcButton' href='$tempLink'>🔀 Play Random<sup><span id='vlcIcon'>&#9650;</span> VLC</sup></a>";
 		?>
 	</div>
 </div>

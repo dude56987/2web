@@ -645,7 +645,7 @@ processMovie(){
 					tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 					echo "?>"
-					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 					echo "</a>"
 				fi
 				echo "$moviePlot"
@@ -668,7 +668,7 @@ processMovie(){
 				tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
 				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
 				echo "?>"
-				echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+				echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 				echo "</a>"
 				echo "$moviePlot"
 				echo "</div>"
@@ -1308,7 +1308,7 @@ processEpisode(){
 				echo "	echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 				echo "?>";
 
-				echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+				echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 				echo "</a>"
 
 				echo "<div class='aired'>"
@@ -1357,7 +1357,7 @@ processEpisode(){
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 					echo "</a>"
 				else
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
@@ -1375,21 +1375,21 @@ processEpisode(){
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink' href='/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
-					echo "	🔁 Continue<sup>(External)</sup>"
+					echo "	🔁 Continue<sup>External</sup>"
 					echo "</a>"
 
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempEpisodePath'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	▶️ Direct Play<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 					echo "</a>"
 
 					echo "<?PHP";
 					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
 					echo "?>"
 					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	🔁 Continue<sup>(<span id='vlcIcon'>&#9650;</span>VLC)</sup>"
+					echo "	🔁 Continue<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 					echo "</a>"
 				fi
 
