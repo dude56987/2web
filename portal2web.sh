@@ -136,7 +136,7 @@ function generateLink(){
 ################################################################################
 function update(){
 	addToLog "INFO" "STARTED Update" "$(date)"
-	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/kodi/sources.d/" "/etc/2web/config_default/kodi2web_locations.cfg")
+	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/kodi/sources.d/" "/etc/2web/config_default/portal2web_sources.cfg")
 	# remove empty lines and other problems in sources
 	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
 
