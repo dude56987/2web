@@ -181,7 +181,7 @@ rss2nfo_update(){
 		finishedEpisodes=1
 		# for each item read the json data and put it into a nfo file
 		# - reverse line sorting order to be oldest to newest
-		echo "$rssAsJson" | jq -c | tac | while read -r rssObject;do
+		echo "$rssAsJson" | tac | while read -r rssObject;do
 			# process rss episode
 			processEpisode "$rssObject" "$processedEpisodes" "$totalEpisodes" "$finishedSources" "$totalSources" &
 			waitQueue 0.5 "$totalCPUS"
