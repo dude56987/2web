@@ -1242,6 +1242,9 @@ function loadConfigs(){
 	configPath=$1
 	configDirectory=$2
 	defaultConfigPath=$3
+	# create the default config path for the web page if it does not yet exist
+	# - createDir() makes a directory with www-data as the owner for web settings
+	createDir "$configDirectory"
 	# check for server libary config
 	if ! test -f "$configPath";then
 		# if no config exists create the default config
