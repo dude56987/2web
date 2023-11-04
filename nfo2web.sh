@@ -1496,7 +1496,9 @@ processShow(){
 			if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
 				# create the block to lockout updates from kodi clients after 1 weeks
 				# - this should reset when the software is updated and all content will be rescanned by clients
-				echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+				if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
+					echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+				fi
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
 			#INFO "[DEBUG]: $currentSum == $libarySum"
@@ -1644,7 +1646,9 @@ processShow(){
 				if cacheCheck "$webDirectory/shows/$showTitle/$seasonName.index" 7;then
 					# create the block to lockout updates from kodi clients after 1 weeks
 					# - this should reset when the software is updated and all content will be rescanned by clients
-					echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+					if ! test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
+						echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+					fi
 				fi
 				################################################################################
 				#INFO "Season Unchanged $season"
