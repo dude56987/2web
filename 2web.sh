@@ -154,24 +154,19 @@ function checkActiveStatusForGraph(){
 ########################################################################
 function recordActivityGraph(){
 	webDirectory=$(webRoot)
+	# use loadmodules for unified module list
+	moduleNames=$(loadModules)
 	# record a round robin CSV database of active services in 30 minute intervals
 	if cacheCheckMin "/var/cache/2web/activityGraphData.index" 30;then
-		# store the current activity status in the graph
-		nfo2webStatus=$(checkActiveStatusForGraph "nfo2web" "$webDirectory")
-		music2webStatus=$(checkActiveStatusForGraph "music2web" "$webDirectory")
-		iptv2webStatus=$(checkActiveStatusForGraph "iptv2web" "$webDirectory")
-		wiki2webStatus=$(checkActiveStatusForGraph "wiki2web" "$webDirectory")
-		comic2webStatus=$(checkActiveStatusForGraph "comic2web" "$webDirectory")
-		git2webStatus=$(checkActiveStatusForGraph "git2web" "$webDirectory")
-		weather2webStatus=$(checkActiveStatusForGraph "weather2web" "$webDirectory")
-		graph2webStatus=$(checkActiveStatusForGraph "graph2web" "$webDirectory")
-		portal2webStatus=$(checkActiveStatusForGraph "portal2web" "$webDirectory")
-		ai2webStatus=$(checkActiveStatusForGraph "ai2web" "$webDirectory")
-		ytdl2nfoStatus=$(checkActiveStatusForGraph "ytdl2nfo" "$webDirectory")
-		epg2webStatus=$(checkActiveStatusForGraph "epg2web" "$webDirectory")
-		{
-			echo "$nfo2webStatus,$music2webStatus,$iptv2webStatus,$wiki2webStatus,$comic2webStatus,$git2webStatus,$weather2webStatus,$graph2webStatus,$portal2webStatus,$ai2webStatus,$ytdl2nfoStatus,$epg2webStatus"
-		} >> "/var/cache/2web/activityGraphData.index"
+		# reset the line string to be generated
+		lineData=""
+		for module in $moduleNames;do
+			module="$(echo "$module" | cut -d'=' -f1)"
+			# store the current activity status in the graph
+			lineData="$lineData$(checkActiveStatusForGraph "$module" "$webDirectory"),"
+		done
+		# write the line but remove endline comma
+		echo "$lineData" | sed "s/,$//g" >> "/var/cache/2web/activityGraphData.index"
 		# limit log to last 36 entries, this is because this log is updated every 30 minutes
 		# - You can not > pipe a file directly with tail, so it is stored in memory fist
 		# - 48 should be 24 hours worth of stats
@@ -182,9 +177,10 @@ function recordActivityGraph(){
 }
 ########################################################################
 function buildFakeActivityGraph(){
+	totalModules=$(loadModules | wc -l)
 	{
 		for index in $(seq 48);do
-			for index in $(seq 11);do
+			for index in $(seq $totalModules);do
 				# randomize anwser
 				if [[ $(( $RANDOM % 2 )) -eq 0 ]];then
 					# build each line
@@ -201,6 +197,48 @@ function buildFakeActivityGraph(){
 			fi
 		done
 	} > "/var/cache/2web/activityGraphData.index"
+}
+########################################################################
+function buildFullFakeActivityGraph(){
+	totalModules=$(loadModules | wc -l)
+	{
+		for index in $(seq 48);do
+			line=""
+			for index in $(seq $totalModules);do
+				# build each line
+				line="${line}1,"
+			done
+			# remove trailing comma in fake graph lines
+			echo "$line" | sed "s/,$//g"
+		done
+	} > "/var/cache/2web/activityGraphData.index"
+}
+########################################################################
+function loadModules(){
+	# List the modules as lines with thier color and number data
+	#
+	# RETURN STDOUT
+
+	# setup the modules and thier colors in the graph
+	# - this is used by the loops that draw the graph elements in SVG
+	moduleNames=$'2web=black=1\n'
+	moduleNames=$moduleNames$'kodi2web=aqua=2\n'
+	moduleNames=$moduleNames$'nfo2web=red=3\n'
+	moduleNames=$moduleNames$'ytdl2nfo=teal=4\n'
+	moduleNames=$moduleNames$'rss2nfo=slateblue=5\n'
+	moduleNames=$moduleNames$'music2web=yellow=6\n'
+	moduleNames=$moduleNames$'wiki2web=green=7\n'
+	moduleNames=$moduleNames$'comic2web=orange=8\n'
+	moduleNames=$moduleNames$'ai2web=lime=9\n'
+	moduleNames=$moduleNames$'git2web=purple=10\n'
+	moduleNames=$moduleNames$'portal2web=seagreen=11\n'
+	moduleNames=$moduleNames$'graph2web=chocolate=12\n'
+	moduleNames=$moduleNames$'iptv2web=greenyellow=13\n'
+	moduleNames=$moduleNames$'epg2web=olive=14\n'
+	moduleNames=$moduleNames$'weather2web=hotpink=15\n'
+
+	# Display the data
+	echo -n "$moduleNames"
 }
 ########################################################################
 function buildActivityGraph(){
@@ -222,22 +260,9 @@ function buildActivityGraph(){
 
 	# setup the modules and thier colors in the graph
 	# - this is used by the loops that draw the graph elements in SVG
-	moduleNames=$'nfo2web=red=1\n'
-	moduleNames=$moduleNames$'music2web=yellow=2\n'
-	moduleNames=$moduleNames$'iptv2web=blue=3\n'
-	moduleNames=$moduleNames$'wiki2web=green=4\n'
-	moduleNames=$moduleNames$'comic2web=orange=5\n'
-	moduleNames=$moduleNames$'git2web=purple=6\n'
-	moduleNames=$moduleNames$'weather2web=pink=7\n'
-	moduleNames=$moduleNames$'graph2web=burlywood=8\n'
-	moduleNames=$moduleNames$'portal2web=coral=9\n'
-	moduleNames=$moduleNames$'ai2web=lime=10\n'
-	moduleNames=$moduleNames$'ytdl2nfo=teal=11\n'
-	moduleNames=$moduleNames$'epg2web=olive=12\n'
+	moduleNames="$(loadModules)"
 
-	ALERT "MODULE NAMES =\n$moduleNames"
-
-	#moduleNames=$(echo "$moduleNames")
+	ALERT "MODULE NAMES ='$moduleNames'"
 
 	# storage varable for active modules
 	enabledModules=""
@@ -250,11 +275,16 @@ function buildActivityGraph(){
 			graphHeightCounter=$(( graphHeightCounter + 1 ))
 			graphHeaderData="$graphHeaderData<text x=\"$(( 0 ))\" y=\"$(( barWidth * ( graphHeightCounter ) ))\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;\" >$module</text>\n"
 			# add the module to the enabled modules variable
-			enabledModules="$enabledModules $module"
+			enabledModules="$enabledModules$module "
 		fi
 	done
+	# remove spaces at the end of lines
+	enabledModules=$(echo "$enabledModules" | sed "s/ $//g")
 
-	ALERT "ENABLED MODULES =\n$enabledModules"
+	ALERT "ENABLED MODULES ='$enabledModules'"
+
+	# add to the height for the time codes
+	graphHeightCounter=$(( graphHeightCounter + 3 ))
 
 	textGap=$(( barWidth * 8 ))
 	graphHeight=$(( (barWidth * graphHeightCounter) + (barWidth / 4) ))
@@ -292,6 +322,62 @@ function buildActivityGraph(){
 			done
 
 		done
+		# write the times on the bottom of the graph
+		timeCounterHours="$(date "+%H")"
+		timeCounterMinutes="$(date "+%M")"
+		if [[ $timeCounterMinutes -gt 30 ]];then
+			timeCounter="$timeCounterHours.5"
+		else
+			timeCounter="$timeCounterHours.0"
+		fi
+		index="0"
+		for line in $graphData;do
+			index=$(( index + 1 ))
+			graphX=$(( ( $index * $barWidth ) ))
+			#
+			x=$(( textGap + graphX - barWidth ))
+			y=$(( (barWidth * graphHeightCounter ) ))
+			#
+			timeHour=$(echo "$timeCounter" | sed "s/\.0//g")
+			timeHour=$(echo "$timeHour" | sed "s/\.5//g")
+
+			# if the timecounter is greater than 24
+			timeCounter=$(bc <<< "$timeCounter % 24")
+			#timeCounter="$(bc <<< "$timeCounter % 12")"
+
+			# add am/pm and adjust time hour code
+			#if [[ $timeHour -eq 0 ]];then
+			#	timeText="$timeCounter PM"
+			#elif [[ $timeCounter -eq 0 ]];then
+			#	timeText="00.0 PM"
+			#elif [[ $timeHour -gt 12 ]];then
+			#	timeText="$timeCounter PM"
+			#elif [[ $timeHour -lt 0 ]];then
+			#	timeText="$timeCounter PM"
+			#else
+			#	timeText="$timeCounter AM"
+			#fi
+
+			# set the minutes
+			if echo "$timeCounter" | grep -q "\.0";then
+				timeText=$(echo "$timeCounter" | sed "s/\.0/:00/g")
+			elif echo "$timeCounter" | grep -q "\.5";then
+				timeText=$(echo "$timeCounter" | sed "s/\.5/:30/g")
+			fi
+
+			# for numbers less than ten add the zero
+			if [[ $( echo "$timeText" | cut -d':' -f1 ) -eq 0 ]];then
+				timeText="24:00"
+			elif [[ $( echo "$timeText" | cut -d':' -f1 ) -lt 10 ]];then
+				timeText="0$timeText"
+			fi
+
+			# write the time code
+			echo "<text x=\"$x\" y=\"$y\" font-size=\"$barWidth\" style=\"fill:black;stroke:white;stroke-width:1\" transform=\"rotate(90,$x,$y)\" >$timeText</text>\n"
+			# decrement the time counter to make it go back an hour
+			timeCounter=$(bc <<< "$timeCounter + 0.5")
+		done
+
 		echo "</svg>"
 	} > "$generatedSvgPath"
 
@@ -965,20 +1051,14 @@ main(){
 		/usr/bin/git2web
 		rebootCheck
 	elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ];then
-		returnModStatus "nfo2web"
-		returnModStatus "music2web"
-		returnModStatus "comic2web"
-		returnModStatus "git2web"
-		returnModStatus "graph2web"
-		returnModStatus "portal2web"
-		returnModStatus "iptv2web"
-		returnModStatus "wiki2web"
-		returnModStatus "weather2web"
-		returnModStatus "ytdl2nfo"
-		returnModStatus "rss2nfo"
-		returnModStatus "ai2web"
-		returnModStatus "epg2web"
-		returnModStatus "kodi2web"
+		# read all the modules from loadModules
+		moduleNames=$(loadModules)
+		# figure out enabled modules and build header text
+		for module in $moduleNames;do
+			module="$(echo "$module" | cut -d'=' -f1)"
+			# figure out enabled modules and build header text
+			returnModStatus "$module"
+		done
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
 		# wait for all background services to stop
@@ -1004,21 +1084,14 @@ main(){
 		echo "Finished Verifying database."
 	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
 		webDirectory=$(webRoot)
-		# clean all temp lock files
-		rm -v $webDirectory/nfo2web.active
-		rm -v $webDirectory/iptv2web.active
-		rm -v $webDirectory/epg2web.active
-		rm -v $webDirectory/graph2web.active
-		rm -v $webDirectory/weather2web.active
-		rm -v $webDirectory/music2web.active
-		rm -v $webDirectory/comic2web.active
-		rm -v $webDirectory/wiki2web.active
-		rm -v $webDirectory/kodi2web.active
-		rm -v $webDirectory/ytdl2nfo.active
-		rm -v $webDirectory/rss2nfo.active
-		rm -v $webDirectory/portal2web.active
-		rm -v $webDirectory/git2web.active
-		rm -v $webDirectory/ai2web.active
+		# read all the modules from loadModules
+		moduleNames=$(loadModules)
+		# figure out enabled modules and build header text
+		for module in $moduleNames;do
+			module="$(echo "$module" | cut -d'=' -f1)"
+			# clean all temp lock files
+			rm -v $webDirectory/$module.active
+		done
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		ALERT "================================================================================"
 		ALERT "PARALLEL MODE"
@@ -1181,6 +1254,20 @@ main(){
 		else
 			echo "[ERROR]: graph2web is disabled so no fake graph was generated."
 		fi
+	elif [ "$1" == "-FF" ] || [ "$1" == "--full-fake-graph" ] || [ "$1" == "full-fake-graph" ];then
+		if returnModStatus "graph2web";then
+			buildFullFakeActivityGraph
+			buildActivityGraph
+		else
+			echo "[ERROR]: graph2web is disabled so no fake graph was generated."
+		fi
+	elif [ "$1" == "-F" ] || [ "$1" == "--fake-log" ] || [ "$1" == "fake-log" ];then
+		# does the black hole still exist
+		while : ;do
+			addToLog "DEBUG" "Fake log test" "This is for checking log functionality, Random Number $RANDOM$RANDOM$RANDOM"
+			INFO "Writing to log once per second, Use [ CTRL + C ] to exit..."
+			sleep 1
+		done
 	elif [ "$1" == "-rc" ] || [ "$1" == "--reboot-check" ] || [ "$1" == "rebootcheck" ];then
 		rebootCheck
 	elif [ "$1" == "-b" ] || [ "$1" == "--backup" ] || [ "$1" == "backup" ] ;then
@@ -1418,25 +1505,20 @@ main(){
 		cat /usr/share/2web/buildDate.cfg
 		drawLine
 		echo "Module Versions"
+		# read all the modules from loadModules
+		moduleNames=$(loadModules)
+		# figure out enabled modules
+		for module in $moduleNames;do
+			module="$(echo "$module" | cut -d'=' -f1)"
+			# write the module version
+			echo -n "$module : "
+			cat /usr/share/2web/version_$module.cfg
+		done
 		drawLine
-		echo -n "2web : "
-		cat /usr/share/2web/version_2web.cfg
-		echo -n "nfo2web : "
-		cat /usr/share/2web/version_nfo2web.cfg
-		echo -n "comic2web : "
-		cat /usr/share/2web/version_comic2web.cfg
-		echo -n "iptv2web : "
-		cat /usr/share/2web/version_iptv2web.cfg
-		echo -n "weather2web : "
-		cat /usr/share/2web/version_weather2web.cfg
-		echo -n "graph2web : "
-		cat /usr/share/2web/version_graph2web.cfg
-		echo -n "music2web : "
-		cat /usr/share/2web/version_music2web.cfg
-		echo -n "ytdl2nfo : "
-		cat /usr/share/2web/version_ytdl2nfo.cfg
-		echo -n "rss2nfo : "
-		cat /usr/share/2web/version_rss2nfo.cfg
+	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+		enableMod "2web"
+	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+		disableMod "2web"
 	else
 		# update main components
 		# - this builds the base site without anything enabled
