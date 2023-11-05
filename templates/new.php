@@ -68,6 +68,7 @@ drawPlaylistButton($filterType,"shows","📺 shows");
 drawPlaylistButton($filterType,"movies","🎥 Movies");
 drawPlaylistButton($filterType,"comics","📚 Comics");
 drawPlaylistButton($filterType,"music","🎧 Music");
+drawPlaylistButton($filterType,"channels","📡 Channels");
 drawPlaylistButton($filterType,"albums","💿 Albums");
 drawPlaylistButton($filterType,"artists","🎤 Artists");
 drawPlaylistButton($filterType,"tracks","🎵 Tracks");
