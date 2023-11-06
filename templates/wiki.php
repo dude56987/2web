@@ -169,7 +169,7 @@ if (array_key_exists("search",$_GET)){
 	echo "</li>";
 	echo "</ul>";
 	# build the link to the extrnal link
-	echo "<a class='button' href=".$_GET['redirect'].">".$_GET['redirect']."</a>";
+	echo "<a class='button' rel='noreferer' href=".$_GET['redirect'].">".$_GET['redirect']."</a>";
 }else if (array_key_exists("article",$_GET)){
 	# load the article
 	$article=($_GET['article']);
