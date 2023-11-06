@@ -120,6 +120,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/iptv/blockedLinks.d/;
 	mkdir -p debian/etc/2web/weather/;
 	mkdir -p debian/etc/2web/weather/location.d/;
+	mkdir -p debian/etc/2web/rss/;
+	mkdir -p debian/etc/2web/rss/sources.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-available/;
@@ -160,6 +162,7 @@ build-deb: upgrade-hls
 	touch debian/etc/2web/comics/libaries.d/.placeholder
 	touch debian/etc/2web/comics/sources.d/.placeholder
 	touch debian/etc/2web/weather/location.d/.placeholder
+	touch debian/etc/2web/rss/sources.d/.placeholder
 	touch debian/var/cache/2web/cache/.placeholder
 	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/usr/share/2web/themes/.placeholder
@@ -182,7 +185,6 @@ build-deb: upgrade-hls
 	# copy the certInfo default script
 	cp certInfo.cnf debian/etc/2web/
 	# add the base bash lib used across all modules
-	#cp 2webLib.sh debian/var/lib/2web/common
 	echo "#! /bin/bash" > debian/var/lib/2web/common
 	cat build/sh_head.txt > debian/var/lib/2web/common
 	# remove all comment lines from the code to reduce package size and disk read on execution
@@ -220,7 +222,8 @@ build-deb: upgrade-hls
 	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
 	grep --invert-match "^[[:blank:]]*#" ai2web_img2img.py | tr -s '\n' >> debian/usr/bin/ai2web_img2img
 	# build the shell scripts
-	# add the gpl header on the top
+	# - add the gpl header on the top
+	# - copy the file but remove the comments and blank lines
 	echo "#! /bin/bash" > debian/usr/bin/ai2web
 	cat build/sh_head.txt > debian/usr/bin/ai2web
 	grep --invert-match "^[[:blank:]]*#" ai2web.sh | tr -s '\n' >> debian/usr/bin/ai2web
@@ -310,64 +313,31 @@ build-deb: upgrade-hls
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# get the latest hls.js from npm and include it in the package
 	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/iptv/hls.js
-	# build the default themes
-	# user themes can be any self contained .css file
 	# copy over the main javascript libary
 	cp 2webLib.js debian/usr/share/2web/
 	# copy over the main php libary
 	cp 2webLib.php debian/usr/share/2web/
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
-	# copy the resolvers
-	#grep --invert-match "^[[:blank:]]*#" ytdl-resolver.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/ytdl-resolver.php
-	#grep --invert-match "^[[:blank:]]*#" iptv-resolver.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/iptv-resolver.php
-	#grep --invert-match "^[[:blank:]]*#" m3u-gen.php | grep --invert-match "^[[:blank:]]*//" | grep --invert-match "^[[:blank:]]*#" | sed "s/\;\n/;/g" | tr -s '\n' > debian/usr/share/2web/m3u-gen.php
-	cp resolvers/ytdl-resolver.php debian/usr/share/2web/
-	cp resolvers/m3u-gen.php debian/usr/share/2web/
-	cp resolvers/zip-gen.php debian/usr/share/2web/
-	cp resolvers/kodi-player.php debian/usr/share/2web/
-	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
-	cp resolvers/transcode.php debian/usr/share/2web/
-	cp resolvers/search.php debian/usr/share/2web/
+	# copy the resolvers over
+	cp resolvers/*.php debian/usr/share/2web/resolvers/
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
 	chmod u+rwx debian/usr/bin/*
 	chmod go-rwx debian/usr/bin/*
-	# make kodi2web_player executable by other users for web interface
-	chmod u+rwx debian/usr/bin/kodi2web_player
-	chmod go-w debian/usr/bin/kodi2web_player
-	chmod go+x debian/usr/bin/kodi2web_player
-	# make ai2web_prompt executable by other users for web interface
-	chmod u+rwx debian/usr/bin/ai2web_prompt
-	chmod go-w debian/usr/bin/ai2web_prompt
-	chmod go+x debian/usr/bin/ai2web_prompt
-	# text anwsering
-	chmod u+rwx debian/usr/bin/ai2web_q2a
-	chmod go-w debian/usr/bin/ai2web_q2a
-	chmod go+x debian/usr/bin/ai2web_q2a
-	# text generation
-	chmod u+rwx debian/usr/bin/ai2web_txt2txt
-	chmod go-w debian/usr/bin/ai2web_txt2txt
-	chmod go+x debian/usr/bin/ai2web_txt2txt
-	#	txt2img
-	chmod u+rwx debian/usr/bin/ai2web_txt2img
-	chmod go-w debian/usr/bin/ai2web_txt2img
-	chmod go+x debian/usr/bin/ai2web_txt2img
-	#	img2img
-	chmod u+rwx debian/usr/bin/ai2web_img2img
-	chmod go-w debian/usr/bin/ai2web_img2img
-	chmod go+x debian/usr/bin/ai2web_img2img
+	# fix permissions for helper applications that are used by the webserver
+	chmod u+rwx debian/usr/bin/*_*
+	chmod go-w debian/usr/bin/*_*
+	chmod go+x debian/usr/bin/*_*
 	# copy over the cron job
 	cp 2web.cron debian/usr/share/2web/cron
 	# copy over all the AI personas
 	cp -v ai/personas/*.cfg debian/etc/2web/ai/personas/
 	cp -v ai/negative_prompts/*.cfg debian/etc/2web/ai/negative_prompts/
 	# copy over apache configs
-	#cp -v systemConf/0000-2web-ports.conf debian/etc/apache2/conf-available/
 	cp -v systemConf/0000-2web-website.conf debian/etc/apache2/sites-available/
 	cp -v systemConf/0000-2web-website-SSL.conf debian/etc/apache2/sites-available/
-	#cp -v systemConf/0000-2web-website-compat.conf debian/etc/apache2/sites-available/
 	# copy over the zeroconf configs to anounce the service
 	cp -v systemConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
 	#cp -v systemConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
@@ -414,11 +384,9 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ ai2web.sh" | wc -l >> debian/usr/share/2web/version_ai2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_rss2nfo.cfg
 	/usr/bin/git log --stat | grep "^ rss2nfo.sh" | wc -l >> debian/usr/share/2web/version_rss2nfo.cfg
-	#/usr/bin/git log --oneline >> debian/usr/share/2web/version.cfg
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg
 	date > debian/usr/share/2web/buildDate.cfg
-	#/usr/bin/git log -1 >> debian/usr/share/2web/versionDate.cfg
 	# Create the md5sums file
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk
@@ -428,24 +396,12 @@ build-deb: upgrade-hls
 	rm -v ./debian/DEBIAN/md5sums.bak
 	# figure out the package size, cut off the filename
 	du -sx --exclude DEBIAN ./debian/ | cut -f1 > Installed-Size.txt
-	#SIZE="$(shell du -sx --exclude DEBIAN ./debian/ | cut -d' ' -f1)"
-	#INSTALL_SIZE := $(SHELL cat Installed-Size.txt)
 	# copy over package data
 	cp -rv debdata/. debian/DEBIAN/
 	# modify the control data to set the installed size and the version number
-	#sed "s/<INSTALLED_SIZE>/$(shell cat Installed-Size.txt)/g" debian/DEBIAN/control
 	sed -i "s/<INSTALLED_SIZE>/$(shell cat Installed-Size.txt)/g" debian/DEBIAN/control
 	# read the simple version
-	# V1
-	#cat simple_version.txt
-	#sed "s/<VERSION_NUMBER>/$(shell cat simple_version.txt)/g" debian/DEBIAN/control
 	sed -i "s/<VERSION_NUMBER>/$(shell cat simple_version.txt)/g" debian/DEBIAN/control
-	# V2
-	#cat debian/usr/share/2web/simple_version.cfg
-	#echo "$(shell cat 'debian/usr/share/2web/simple_version.cfg')"
-	#echo "$(shell cat debian/usr/share/2web/simple_version.cfg)"
-	#sed "s/<VERSION_NUMBER>/$(shell cat debian/usr/share/2web/simple_version.cfg)/g" debian/DEBIAN/control
-	#sed -i "s/<VERSION_NUMBER>/$(shell cat debian/usr/share/2web/simple_version.cfg)/g" debian/DEBIAN/control
 	# write the changelog
 	/usr/bin/git log --date short > ./debian/DEBIAN/changelog
 	# remove build directory from safe directory list in git configuration

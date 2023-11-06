@@ -569,11 +569,11 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/support.php" "$webDirectory/support.php"
 	linkFile "/usr/share/2web/templates/viewCounter.php" "$webDirectory/views/index.php"
 	# caching resolvers
-	linkFile "/usr/share/2web/search.php" "$webDirectory/search.php"
-	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
-	linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
-	linkFile "/usr/share/2web/zip-gen.php" "$webDirectory/zip-gen.php"
-	linkFile "/usr/share/2web/kodi-player.php" "$webDirectory/kodi-player.php"
+	linkFile "/usr/share/2web/resolvers/search.php" "$webDirectory/search.php"
+	linkFile "/usr/share/2web/resolvers/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+	linkFile "/usr/share/2web/resolvers/m3u-gen.php" "$webDirectory/m3u-gen.php"
+	linkFile "/usr/share/2web/resolvers/zip-gen.php" "$webDirectory/zip-gen.php"
+	linkFile "/usr/share/2web/resolvers/kodi-player.php" "$webDirectory/kodi-player.php"
 	# error documents
 	linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
 	linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
@@ -702,7 +702,7 @@ function update2web(){
 
 	# install the php streaming script
 	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
-	linkFile "/usr/share/2web/transcode.php" "$webDirectory/transcode.php"
+	linkFile "/usr/share/2web/resolvers/transcode.php" "$webDirectory/transcode.php"
 
 	# link the randomFanart.php script
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/randomFanart.php"

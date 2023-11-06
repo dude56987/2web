@@ -1068,7 +1068,7 @@ webGen(){
 	# copy over the stylesheet
 	linkFile "$webDirectory/style.css" "$webDirectory/live/style.css"
 	# copy over the resolver
-	linkFile "/usr/share/2web/iptv/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
+	linkFile "/usr/share/2web/resolvers/iptv-resolver.php" "$webDirectory/live/iptv-resolver.php"
 
 	# build the background lists for random background
 	cat "$webDirectory/fanart.cfg" | sed "s/^/..\//g" > "$webDirectory/live/fanart.cfg"
