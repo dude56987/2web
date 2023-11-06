@@ -240,6 +240,11 @@ function addCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	$data=$_POST[$keyName];
 	outputLog("Running ".$keyName." on ".$data, "goodLog");
 	$sumOfLink=md5($data);
+	# Create the config containing directory
+	if (! is_dir($baseConfigPath)){
+		# create directory for config if it does not exist
+		mkdir($baseConfigPath);
+	}
 	# read the link and create a custom config
 	$configPath=$baseConfigPath.$sumOfLink.".cfg";
 	outputLog("Checking for Config file ".$configPath, "goodLog");
@@ -544,6 +549,12 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("removeKodiLocation",$_POST)){
 	# remove kodi location
 	removeCustomConfig("removeKodiLocation","/etc/2web/kodi/location.d/","kodi.php");
+}else if (array_key_exists("addKodiPlayer",$_POST)){
+	# set the player for building play on kodi links
+	addCustomConfig("addKodiPlayer","/etc/2web/kodi/players.d/","kodi.php");
+}else if (array_key_exists("removeKodiPlayer",$_POST)){
+	# set the player that play on kodi links will send playback commands to
+	removeCustomConfig("removeKodiPlayer","/etc/2web/kodi/players.d/","kodi.php");
 }else if (array_key_exists("addPortalScanSource",$_POST)){
 	# add portal scan source
 	addCustomConfig("addPortalScanSource","/etc/2web/portal/scanSources.d/","portal.php");

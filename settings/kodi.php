@@ -78,11 +78,65 @@ foreach($sourceFiles as $sourceFile){
 		<h2>Add kodi Location Path</h2>
 		<ul>
 			<li>
-				Add a remote kodi client to update content on.
+				Add a remote kodi client to automatically update content on.
+			</li>
+			<li>
+				Remote clients will update when new content is added to the server.
+			</li>
+			<li>
+				Remote clients will be updated periodically for clients who are disconnected when the server updates.
+			</li>
+			<li>
+				You must still manually link libraries on the client for updates to add content. KODI currently has no way to remotely add sources to a client. This can be overcome by adding a client as a player below.
 			</li>
 		</ul>
 		<input width='60%' type='text' name='addKodiLocation' placeholder='kodi:pass@localhost.local:8080'>
 		<button class='button' type='submit'>Add Location</button>
+	</form>
+	</div>
+</div>
+
+<?PHP
+echo "<div id='kodiPlayerPaths' class='settingListCard'>";
+echo "<h2>kodi player Paths</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/kodi/players.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				$link=file_get_contents($sourceFile);
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='removeKodiPlayer' value='".$link."'>Remove player</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+			}
+		}
+	}
+}
+?>
+	<div id='addkodiPlayer' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add kodi player Path</h2>
+		<ul>
+			<li>
+				Add a remote kodi client that the "Play on KODI" button will play media on.
+			</li>
+			<li>
+				Requires you enable "Allow remote control via HTTP" in the kodi client under services settings section. Also you may need to enable "Allow remote control from applications on other systems" in order to play videos this way."
+			</li>
+			<li>
+				If this section is empty then the "Play on KODI" button will be hidden on ALL the pages.
+			</li>
+		</ul>
+		<input width='60%' type='text' name='addKodiPlayer' placeholder='kodi:pass@localhost.local:8080'>
+		<button class='button' type='submit'>Add player</button>
 	</form>
 	</div>
 </div>

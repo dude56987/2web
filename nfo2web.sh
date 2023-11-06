@@ -633,10 +633,14 @@ processMovie(){
 				echo "<div class='descriptionCard'>"
 				# create a hard link
 				if [ "$sufix" = ".strm" ];then
+					# check for and draw kodi playback links
+					drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "🔗Direct Link"
 					echo "</a>"
 				else
+					# check for and draw kodi playback links
+					drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 					echo "🔗Direct Link"
 					echo "</a>"
@@ -659,6 +663,8 @@ processMovie(){
 				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
 				echo "</$mediaType>"
 				echo "<div class='descriptionCard'>"
+				# check for and draw kodi playback links
+				drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 				# create a hard link
 				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
 				echo "🔗Direct Link"
@@ -903,6 +909,29 @@ checkForThumbnail(){
 			fi
 		fi
 	fi
+}
+########################################################################
+function drawKodiPlayerButton(){
+	# drawKodiPlayerButton $link
+	#
+	# write php code to draw the kodi playback buttons for pages
+	#
+	# RETURN STDOUT
+	link=$1
+	# cleanup any quotations from the link because they will break the entire generated webpage
+	link=$(echo "$link" | sed 's/\"/\\"/g')
+	echo "<?PHP"
+	# if the kodi2web mod is enabled
+	echo "if(detectEnabledStatus('kodi2web')){"
+	# if the count of players is greater than zero
+	echo "if(count(scanDir('/etc/2web/kodi/players.d/')) > 2){"
+	# draw the play on kodi button using the resolver
+	echo "echo \"<a class='button hardLink' href='/kodi-player.php?url=http://$(hostname).local$link'>\";"
+	echo "echo \"	🇰Play on KODI\";"
+	echo "echo \"</a>\";"
+	echo "}"
+	echo "}"
+	echo "?>"
 }
 ########################################################################
 processEpisode(){
@@ -1280,6 +1309,8 @@ processEpisode(){
 			{
 				echo "<div class='descriptionCard'>"
 				echo "<h2>$episodeTitle</h2>"
+				# check for and draw kodi playback links
+				drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 				# create a hard link
 				echo "<a class='button hardLink' href='$ytLink'>"
 				echo "	🔗Direct Link"
@@ -1331,6 +1362,9 @@ processEpisode(){
 				if [ "$sufix" = ".strm" ];then
 					cacheRedirect="/ytdl-resolver.php?url=\"$videoPath\""
 					vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$videoPath\\\""
+					# check for and draw kodi playback links
+					drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+					# direct link
 					echo "<a class='button hardLink' href='$videoPath'>"
 					echo "	🔗Direct Link"
 					echo "</a>"
@@ -1345,6 +1379,9 @@ processEpisode(){
 					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
 					echo "</a>"
 				else
+					# check for and draw kodi playback links
+					drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+					# draw the direct link
 					echo "<a class='button hardLink' href='$episodePath$sufix'>"
 					echo "	🔗Direct Link"
 					echo "</a>"

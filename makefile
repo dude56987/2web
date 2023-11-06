@@ -251,6 +251,8 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/kodi2web
 	cat build/sh_head.txt > debian/usr/bin/kodi2web
 	grep --invert-match "^[[:blank:]]*#" kodi2web.sh | tr -s '\n' >> debian/usr/bin/kodi2web
+	cat build/sh_head.txt > debian/usr/bin/kodi2web_player
+	grep --invert-match "^[[:blank:]]*#" kodi2web_player.sh | tr -s '\n' >> debian/usr/bin/kodi2web_player
 	echo "#! /bin/bash" > debian/usr/bin/weather2web
 	cat build/sh_head.txt > debian/usr/bin/weather2web
 	grep --invert-match "^[[:blank:]]*#" weather2web.sh | tr -s '\n' >> debian/usr/bin/weather2web
@@ -323,6 +325,7 @@ build-deb: upgrade-hls
 	cp resolvers/ytdl-resolver.php debian/usr/share/2web/
 	cp resolvers/m3u-gen.php debian/usr/share/2web/
 	cp resolvers/zip-gen.php debian/usr/share/2web/
+	cp resolvers/kodi-player.php debian/usr/share/2web/
 	cp resolvers/iptv-resolver.php debian/usr/share/2web/iptv/
 	cp resolvers/transcode.php debian/usr/share/2web/
 	cp resolvers/search.php debian/usr/share/2web/
@@ -331,7 +334,11 @@ build-deb: upgrade-hls
 	# make the script executable only by root
 	chmod u+rwx debian/usr/bin/*
 	chmod go-rwx debian/usr/bin/*
-	# make ai2web_prompt executable by other users
+	# make kodi2web_player executable by other users for web interface
+	chmod u+rwx debian/usr/bin/kodi2web_player
+	chmod go-w debian/usr/bin/kodi2web_player
+	chmod go+x debian/usr/bin/kodi2web_player
+	# make ai2web_prompt executable by other users for web interface
 	chmod u+rwx debian/usr/bin/ai2web_prompt
 	chmod go-w debian/usr/bin/ai2web_prompt
 	chmod go+x debian/usr/bin/ai2web_prompt

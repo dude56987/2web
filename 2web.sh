@@ -573,6 +573,7 @@ function update2web(){
 	linkFile "/usr/share/2web/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 	linkFile "/usr/share/2web/m3u-gen.php" "$webDirectory/m3u-gen.php"
 	linkFile "/usr/share/2web/zip-gen.php" "$webDirectory/zip-gen.php"
+	linkFile "/usr/share/2web/kodi-player.php" "$webDirectory/kodi-player.php"
 	# error documents
 	linkFile "/usr/share/2web/templates/404.php" "$webDirectory/404.php"
 	linkFile "/usr/share/2web/templates/403.php" "$webDirectory/403.php"
