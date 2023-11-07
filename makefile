@@ -77,6 +77,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/usr/share/2web/nfo;
 	mkdir -p debian/usr/share/2web/iptv;
 	mkdir -p debian/usr/share/2web/;
+	mkdir -p debian/usr/share/2web/resolvers/;
 	mkdir -p debian/usr/share/2web/help/;
 	mkdir -p debian/usr/share/man/man1/;
 	mkdir -p debian/usr/share/2web/themes;
