@@ -282,13 +282,24 @@ if ($writeFile){
 			}
 		}
 	}
+	// check for the kodi remote
+	if (detectEnabledStatus("kodi2web")){
+		if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+			$fileData .= formatText("<a class='footerButton' href='/kodi-player.php'>",2);
+			$fileData .= formatText("🇰",3);
+			$fileData .= formatText("<span class='footerText'>",3);
+			$fileData .= formatText("KODI REMOTE",4);
+			$fileData .= formatText("</span>",3);
+			$fileData .= formatText("</a> ",2);
+		}
+	}
 	if ($reposFound){
 		$fileData .= formatText("<a class='footerButton' href='/repos/'>",2);
 		$fileData .= formatText("💾",3);
 		$fileData .= formatText("<span class='footerText'>",3);
 		$fileData .= formatText("REPOS",4);
 		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
+		$fileData .= formatText("</a> ",2);
 	}
 	if ($aiFound){
 		$fileData .= formatText("<a class='footerButton' href='/ai/'>",2);
@@ -296,7 +307,7 @@ if ($writeFile){
 		$fileData .= formatText("<span class='footerText'>",3);
 		$fileData .= formatText("AI",4);
 		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
+		$fileData .= formatText("</a> ",2);
 	}
 	if ($portalsFound){
 		$fileData .= formatText("<a class='footerButton' href='/portal/'>",2);
@@ -304,7 +315,7 @@ if ($writeFile){
 		$fileData .= formatText("<span class='footerText'>",3);
 		$fileData .= formatText("PORTAL",4);
 		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
+		$fileData .= formatText("</a> ",2);
 	}
 	if ($graphsFound){
 		$fileData .= "<a class='footerButton' href='/graphs/'>";

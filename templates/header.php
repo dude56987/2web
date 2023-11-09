@@ -222,6 +222,18 @@ if ($writeFile){
 			}
 		}
 	}
+	// check for the kodi remote
+	if (detectEnabledStatus("kodi2web")){
+		if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+			$fileData .= formatText("<a class='button' href='/kodi-player.php'>",2);
+			$fileData .= formatText("🇰",3);
+			$fileData .= formatText("<span class='headerText'>",3);
+			$fileData .= formatText("KODI REMOTE",4);
+			$fileData .= formatText("</span>",3);
+			$fileData .= formatText("</a>",2);
+		}
+	}
+
 	# write all data in buffer
 	fwrite($fileObj,"$fileData");
 	// close the file

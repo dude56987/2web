@@ -1822,6 +1822,13 @@ pre{
 .footer{
 	min-height: 2rem;
 }
+.footerButton{
+	text-decoration: none;
+	white-space: nowrap;
+}
+.footerButton:hover{
+	text-shadow: 0px 0px 10px var(--highlightBackground);
+}
 .navbox{
 	background: var(--solidBackground) !important;
 }
