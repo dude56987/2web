@@ -2159,11 +2159,13 @@ select{
 	width: 90%;
 }
 .kodiPlayerButton{
+	/*
 	width: 30dvw;
 	height: 20dvh;
+	*/
 	display: block;
 	border: none;
-	font-size: 10dvh;
+	font-size: 8dvh;
 	text-decoration: none;
 }
 .kodiPlayerButton:hover{
@@ -2175,7 +2177,7 @@ select{
 }
 .kodiPlayerButtonGrid{
 	border: none;
-	height: 80dvh;
+	height: 100dvh;
 }
 .kodiPlayerButtonGrid tr td{
 	border: none;

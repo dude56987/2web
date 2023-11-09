@@ -25,6 +25,19 @@ error_reporting(E_ALL);
 ################################################################################
 include("/usr/share/2web/2webLib.php");
 ################################################################################
+function remoteRedirect(){
+	# redirect back to the remote after the button is sent
+	#
+	# - Store the referer url that opened the remote control
+	#
+	# RETURN REDIRECT
+	if (array_key_exists("ref",$_GET)){
+		redirect("/kodi-player.php?ref=".$_GET["ref"]);
+	}else{
+		redirect("/kodi-player.php");
+	}
+}
+# Parse inputs
 if (array_key_exists("url",$_GET)){
 	# play
 	$videoLink = $_GET['url'];
@@ -50,7 +63,33 @@ if (array_key_exists("url",$_GET)){
 	# go back to the page that sent the command
 	#redirect($_SERVER["HTTP_REFERER"]);
 	#echo $_SERVER["HTTP_REFERER"]."<br>\n";
-	redirect("/kodi-player.php");
+	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
+}else if (array_key_exists("playlist",$_GET)){
+	# play
+	$videoLink = $_GET['playlist'];
+	# remove parenthesis from video link if they exist
+	debug("Cleaning link ".$videoLink."<br>");
+	while(strpos($videoLink,'"')){
+		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+		$videoLink = preg_replace('"','',$videoLink);
+	}
+	while(strpos($videoLink,"'")){
+		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+		$videoLink = preg_replace("'","",$videoLink);
+	}
+	# build the command to play on all the players
+	$command = "kodi2web_player openplaylist '".$videoLink."'";
+	#$command = "echo \"kodi2web_player play '".$videoLink."'\"";
+	# set the command to run in the scheduler
+	#$command = $command." | /usr/bin/at -M -q a now";
+	# debug info
+	# fork the process
+	shell_exec($command);
+	#echo "$command"."<br>\n";
+	# go back to the page that sent the command
+	#redirect($_SERVER["HTTP_REFERER"]);
+	#echo $_SERVER["HTTP_REFERER"]."<br>\n";
+	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
 }else if (array_key_exists("input",$_GET)){
 	$inputAction = (strtolower($_GET['input']));
 	if($inputAction == "select"){
@@ -73,40 +112,62 @@ if (array_key_exists("url",$_GET)){
 		# unknown input action
 		echo "UNKNOWN ACTION SENT TO API";
 	}
-	# redirect back to the remote after the button is sent
-	redirect("/kodi-player.php");
+	remoteRedirect();
 }else if (array_key_exists("volumeup",$_GET)){
 	# volume up
 	shell_exec("kodi2web_player --volumeup");
 	# redirect back to the remote
-	redirect("/kodi-player.php");
+	remoteRedirect();
 }else if (array_key_exists("volumedown",$_GET)){
 	# volume down
 	shell_exec("kodi2web_player --volumedown");
 	# redirect back to the remote
-	redirect("/kodi-player.php");
+	remoteRedirect();
 }else if (array_key_exists("mute",$_GET)){
 	# toggle mute
 	shell_exec("kodi2web_player --mute");
 	# redirect back to the remote
-	redirect("/kodi-player.php");
+	remoteRedirect();
 }else if (array_key_exists("play",$_GET) or array_key_exists("pause",$_GET)){
 	# play/pause the video
 	shell_exec("kodi2web_player --play");
 	# redirect back to the remote
-	redirect("/kodi-player.php");
+	remoteRedirect();
+}else if (array_key_exists("stop",$_GET)){
+	# play/pause the video
+	shell_exec("kodi2web_player --stop");
+	# redirect back to the remote
+	remoteRedirect();
 }else{
 	// no url was given at all draw the remote
-	echo "<html>";
+	echo "<html class='randomFanart'>";
 	echo "<head>";
 	echo "<link rel='stylesheet' href='/style.css'>";
 	echo "</head>";
-	echo "<body>";
-	echo "<div class='settingListCard'>";
-	echo "<a href='/'>";
-	echo "<h2>Close KODI Remote Control</h2>";
-	echo "</a>";
+	echo "<body class='settingListCard'>";
+	#echo "<div class='settingListCard'>";
+	#if (array_key_exists("ref",$_GET)){
+	#	# go back to the orignal page that lauched the file
+	#	echo "<a href='".$_GET["ref"]."'>";
+	#	echo "<h2>Close KODI Remote Control</h2>";
+	#	echo "</a>";
+	#}else{
+	#	echo "<a href='/'>";
+	#	echo "<h2>Close KODI Remote Control</h2>";
+	#	echo "</a>";
+	#}
 	echo "<table class='kodiPlayerButtonGrid'>";
+	echo "	<tr>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?input=home'>🏠<div>HOME</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>";
+	echo "		</td>";
+	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>";
 	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?input=back'>🔙<div>BACK</div></a>";
@@ -115,7 +176,7 @@ if (array_key_exists("url",$_GET)){
 	echo "			<a class='kodiPlayerButtonUp kodiPlayerButton ' href='kodi-player.php?input=up'>⬆️<div>UP</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?input=home'>🏠<div>HOME</div></a>";
+	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?input=context'>🔧<div>Context</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";
@@ -131,13 +192,13 @@ if (array_key_exists("url",$_GET)){
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play'>⏯️<div>Play/Pause</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?stop'>⏹️<div>STOP</div></a>";
 	echo "		</td>";
 	echo "		<td>";
 	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?input=down'>⬇️<div>DOWN</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?input=context'>🔧<div>Context</div></a>";
+	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play'>⏯️<div>Play/Pause</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";
@@ -153,7 +214,7 @@ if (array_key_exists("url",$_GET)){
 	echo "	</tr>";
 	echo "</table>";
 	#echo "NO URL WAS GIVEN";
-	echo "</div>";
+	#echo "</div>";
 	echo "</body>";
 	echo "</html>";
 }

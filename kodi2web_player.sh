@@ -239,7 +239,33 @@ function playPause(){
 	request="$request$(getPlayerId "$kodiLocation")"
 	tempString=' }, "id": 1}"'
 	request="$request$tempString"
+	# print request for debug
+	echo "$request" | jq
+	# cleaup the request
+	request=$(echo "$request" | jq)
+	# run playback for link on kodi client
+	curl --silent -H "content-type: application/json;" --data-binary "$request" "http://$kodiLocation/jsonrpc" | jq
 
+	stopDebug
+}
+################################################################################
+function stopPlayer(){
+	# Play or Pause the current video
+	#
+	# $1 = kodiLocation :
+	# $2 = link :
+	#
+	# RETURN REMOTE_ACTION
+	kodiLocation=$1
+	startDebug
+
+	# combine the request  string into a single string
+	request='{"jsonrpc": "2.0", "method": "Player.Stop", "params":{"playerid": '
+	request="$request$(getPlayerId "$kodiLocation")"
+	tempString=' }, "id": 1}"'
+	request="$request$tempString"
+	# print request for debug
+	echo "$request" | jq
 	# cleaup the request
 	request=$(echo "$request" | jq)
 	# run playback for link on kodi client
@@ -286,7 +312,7 @@ function loadPlayers(){
 	# load all the players configured in kodi2web
 	#
 	# RETURN REMOTE_ACTION
-	loadConfigs "/etc/2web/kodi/players.cfg" "/etc/2web/kodi/players.d/" "/etc/2web/config_default/kodi2web_players.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf
+	loadConfigs "/etc/2web/kodi/players.cfg" "/etc/2web/kodi/players.d/" "/etc/2web/config_default/kodi2web_players.cfg" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | tr -s "\n" | shuf
 }
 ################################################################################
 function main(){
@@ -305,6 +331,10 @@ function main(){
 	elif [ "$1" == "-P" ] || [ "$1" == "--pause" ] || [ "$1" == "pause" ] ;then
 		loadPlayers | while read -r player;do
 			playPause "$player"
+		done
+	elif [ "$1" == "-st" ] || [ "$1" == "--stop" ] || [ "$1" == "stop" ] ;then
+		loadPlayers | while read -r player;do
+			stopPlayer "$player"
 		done
 	elif [ "$1" == "-n" ] || [ "$1" == "--next" ] || [ "$1" == "next" ] ;then
 		loadPlayers | while read -r player;do
