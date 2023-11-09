@@ -431,6 +431,9 @@ function update(){
 								if echo "$timeOfForcast" | grep -q --ignore-case "MEMORIAL DAY";then
 									echo -n "	<h3>MEMORIAL <br>DAY"
 									echo -n " 🪖";
+								elif echo "$timeOfForcast" | grep -q --ignore-case "VETERANS DAY";then
+									echo -n "	<h3>VETERANS <br>DAY"
+									echo -n " 🪖";
 								elif echo "$timeOfForcast" | grep -q --ignore-case "CHRISTMAS";then
 									echo -n "	<h3>CHRISTMAS<br>DAY"
 									echo -n " 🎄"
