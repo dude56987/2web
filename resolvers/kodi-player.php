@@ -37,6 +37,7 @@ function remoteRedirect(){
 		redirect("/kodi-player.php");
 	}
 }
+################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	# play
@@ -139,77 +140,84 @@ if (array_key_exists("url",$_GET)){
 	# redirect back to the remote
 	remoteRedirect();
 }else{
+	# build the reference data to place in the buttons
+	if (array_key_exists("ref",$_GET)){
+		# store ref for links
+		$refData="&ref=".$_GET["ref"];
+	}else{
+		if (array_key_exists("HTTP_REFERER",$_SERVER)){
+			# store new ref for links
+			$refData="&ref=".$_SERVER["HTTP_REFERER"];
+			# store the referer in the get data for back button
+			$_GET["ref"]=$_SERVER["HTTP_REFERER"];
+		}else{
+			#
+			$refData="&ref=/";
+			#
+			$_GET["ref"]="/";
+		}
+	}
 	// no url was given at all draw the remote
 	echo "<html class='randomFanart'>";
 	echo "<head>";
 	echo "<link rel='stylesheet' href='/style.css'>";
 	echo "</head>";
 	echo "<body class='settingListCard'>";
-	#echo "<div class='settingListCard'>";
-	#if (array_key_exists("ref",$_GET)){
-	#	# go back to the orignal page that lauched the file
-	#	echo "<a href='".$_GET["ref"]."'>";
-	#	echo "<h2>Close KODI Remote Control</h2>";
-	#	echo "</a>";
-	#}else{
-	#	echo "<a href='/'>";
-	#	echo "<h2>Close KODI Remote Control</h2>";
-	#	echo "</a>";
-	#}
 	echo "<table class='kodiPlayerButtonGrid'>";
 	echo "	<tr>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>";
+	# link back to the launch location of the remote
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?input=home'>🏠<div>HOME</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?input=home$refData'>🏠<div>HOME</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>";
-	echo "		</td>";
-	echo "	</tr>";
-	echo "	<tr>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?input=back'>🔙<div>BACK</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonUp kodiPlayerButton ' href='kodi-player.php?input=up'>⬆️<div>UP</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?input=context'>🔧<div>Context</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonLeft kodiPlayerButton ' href='kodi-player.php?input=left'>⬅️<div>LEFT</div></a>";
+	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?input=back$refData'>🔙<div>BACK</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonSelect kodiPlayerButton ' href='kodi-player.php?input=select'>🔘<div>SELECT</div></a>";
+	echo "			<a class='kodiPlayerButtonUp kodiPlayerButton ' href='kodi-player.php?input=up$refData'>⬆️<div>UP</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonRight kodiPlayerButton ' href='kodi-player.php?input=right'>➡️<div>RIGHT</div></a>";
-	echo "		</td>";
-	echo "	</tr>";
-	echo "	<tr>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?stop'>⏹️<div>STOP</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?input=down'>⬇️<div>DOWN</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play'>⏯️<div>Play/Pause</div></a>";
+	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?input=context$refData'>🔧<div>Context</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?volumedown'>🔉<div>- Volume</div></a>";
+	echo "			<a class='kodiPlayerButtonLeft kodiPlayerButton ' href='kodi-player.php?input=left$refData'>⬅️<div>LEFT</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?mute'>🔇<div>Mute</div></a>";
+	echo "			<a class='kodiPlayerButtonSelect kodiPlayerButton ' href='kodi-player.php?input=select$refData'>🔘<div>SELECT</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?volumeup'>🔊<div>+ Volume</div></a>";
+	echo "			<a class='kodiPlayerButtonRight kodiPlayerButton ' href='kodi-player.php?input=right$refData'>➡️<div>RIGHT</div></a>";
+	echo "		</td>";
+	echo "	</tr>";
+	echo "	<tr>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?stop$refData'>⏹️<div>STOP</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?input=down$refData'>⬇️<div>DOWN</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play$refData'>⏯️<div>Play/Pause</div></a>";
+	echo "		</td>";
+	echo "	</tr>";
+	echo "	<tr>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?volumedown$refData'>🔉<div>- Volume</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?mute$refData'>🔇<div>Mute</div></a>";
+	echo "		</td>";
+	echo "		<td>";
+	echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='kodi-player.php?volumeup$refData'>🔊<div>+ Volume</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "</table>";
