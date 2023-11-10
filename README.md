@@ -1,7 +1,7 @@
 2web
 ====
 
-Your digital bookshelf, full of hardworking gnomes. A HTTP/HTTPS multimedia caching server for hosting content on your LAN. 2web was originally designed for the raspberry PI 2 but has since been refactored for Debian and Ubuntu Linux in general. 2web is focused on allowing you to access content from the local server without internet access wherever possible. 2web is designed to act as a server component to KODI for HTTP shares, but can be used though the web browser on any device. Almost all the processing is done on the server so the bigger the server the better the experience. Everything is designed so that this single server can offer a lot of services in a single unified interface without constantly connecting to the outside world.
+Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))! A HTTP/HTTPS multimedia caching server for hosting content on your LAN. 2web was originally designed for the raspberry PI 2 but has since been refactored for Debian and Ubuntu Linux in general. 2web is focused on allowing you to access content from the local server without internet access wherever possible. 2web is designed to act as a server component to KODI for HTTP shares, but can be used though the web browser on any device. Almost all the processing is done on the server so the bigger the server the better the experience. Everything is designed so that this single server can offer a lot of services in a single unified interface without constantly connecting to the outside world.
 
 ## Supported Content Types
 
