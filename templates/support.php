@@ -33,41 +33,26 @@
 <div class="titleCard">
 	<h2>Support the 2web Project</h2>
 	<p>
-		You can support the 2web project directly with monero or though these subscription services.
+		You can support the 2web project though kofi or librepay.
 	</p>
 	<ul>
 		<li>
-			<a href="https://www.subscribestar.com/">
-				SubscribeStar
-			</a>
-		</li>
-		<li>
-			<a href="https://www.patreon.com/">
-				Patreon
-			</a>
-		</li>
-		<li>
-			<a href="https://ko-fi.com/">
+			<a href="https://ko-fi.com/bluntsquid#">
 				Ko-Fi
 			</a>
 		</li>
 		<li>
-			<a href="https://liberapay.com/">
+			<a href="https://liberapay.com/bluntsquid/">
 				Librepay
 			</a>
 		</li>
+	</ul>
+	<h2>Source code available on Github</h2>
+	<ul>
 		<li>
-			<a href="https://buymeacoffee.com/">
-				BuyMeACoffee
+			<a href="https://github.com/dude56987/2web">
+				Github
 			</a>
-		</li>
-		<li>
-			<a href="https://backed.by/">
-				Backed.By
-			</a>
-		</li>
-		<li>
-				Monero Direct Donation:
 		</li>
 	</ul>
 </div>
