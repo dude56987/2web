@@ -139,6 +139,16 @@ if (array_key_exists("url",$_GET)){
 	shell_exec("kodi2web_player --stop");
 	# redirect back to the remote
 	remoteRedirect();
+}else if (array_key_exists("skipforward",$_GET)){
+	# play/pause the video
+	shell_exec("kodi2web_player --skip-forward");
+	# redirect back to the remote
+	remoteRedirect();
+}else if (array_key_exists("skipbackward",$_GET)){
+	# play/pause the video
+	shell_exec("kodi2web_player --skip-backward");
+	# redirect back to the remote
+	remoteRedirect();
 }else{
 	# build the reference data to place in the buttons
 	if (array_key_exists("ref",$_GET)){
@@ -170,10 +180,10 @@ if (array_key_exists("url",$_GET)){
 	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?input=home$refData'>🏠<div>HOME</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipbackward'>⏪<div>BACKWARD</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipforward'>⏩<div>FORWARD</div></a>";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";

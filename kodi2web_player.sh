@@ -249,6 +249,58 @@ function playPause(){
 	stopDebug
 }
 ################################################################################
+function skipForward(){
+	# Skip ahead one step in the video
+	#
+	# $1 = kodiLocation :
+	#
+	# RETURN REMOTE_ACTION
+	kodiLocation=$1
+	startDebug
+
+	# combine the request  string into a single string
+	request='{"jsonrpc": "2.0", "method": "Player.Seek", "params":{"playerid": '
+	request="$request$(getPlayerId "$kodiLocation")"
+	#tempString=', "step": "smallforward" }, "id": 1}"'
+	#tempString=', "value": { "seconds": 60 } }, "id": 1}"'
+	tempString=', "value": { "step": "smallforward" } }, "id": 1}"'
+	request="$request$tempString"
+	# print request for debug
+	echo "$request" | jq
+	# cleaup the request
+	request=$(echo "$request" | jq)
+	# run playback for link on kodi client
+	curl --silent -H "content-type: application/json;" --data-binary "$request" "http://$kodiLocation/jsonrpc" | jq
+
+	stopDebug
+}
+################################################################################
+function skipBackward(){
+	# Skip back one step in the video
+	#
+	# $1 = kodiLocation :
+	#
+	# RETURN REMOTE_ACTION
+	kodiLocation=$1
+	startDebug
+
+	# combine the request  string into a single string
+	request='{"jsonrpc": "2.0", "method": "Player.Seek", "params":{"playerid": '
+	request="$request$(getPlayerId "$kodiLocation")"
+	#tempString=', "step": "smallbackward" }, "id": 1}"'
+	#tempString=', "value": { "increment": -60 } }, "id": 1}"'
+	tempString=', "value": { "step": "smallbackward" } }, "id": 1}"'
+	request="$request$tempString"
+	# print request for debug
+	echo "$request" | jq
+	# cleaup the request
+	request=$(echo "$request" | jq)
+	# run playback for link on kodi client
+	curl --silent -H "content-type: application/json;" --data-binary "$request" "http://$kodiLocation/jsonrpc" | jq
+
+	stopDebug
+}
+################################################################################
 function stopPlayer(){
 	# Play or Pause the current video
 	#
@@ -326,75 +378,83 @@ function main(){
 		done
 	elif [ "$1" == "-p" ] || [ "$1" == "--play" ] || [ "$1" == "play" ] ;then
 		loadPlayers | while read -r player;do
-			playPause "$player"
+			playPause "$player" &
 		done
 	elif [ "$1" == "-P" ] || [ "$1" == "--pause" ] || [ "$1" == "pause" ] ;then
 		loadPlayers | while read -r player;do
-			playPause "$player"
+			playPause "$player" &
 		done
 	elif [ "$1" == "-st" ] || [ "$1" == "--stop" ] || [ "$1" == "stop" ] ;then
 		loadPlayers | while read -r player;do
-			stopPlayer "$player"
+			stopPlayer "$player" &
 		done
 	elif [ "$1" == "-n" ] || [ "$1" == "--next" ] || [ "$1" == "next" ] ;then
 		loadPlayers | while read -r player;do
-			next "$player"
+			next "$player" &
 		done
 	elif [ "$1" == "-pr" ] || [ "$1" == "--previous" ] || [ "$1" == "previous" ] ;then
 		loadPlayers | while read -r player;do
-			previous "$player"
+			previous "$player" &
 		done
 	elif [ "$1" == "-l" ] || [ "$1" == "--left" ] || [ "$1" == "left" ] ;then
 		loadPlayers | while read -r player;do
-			inputLeft "$player"
+			inputLeft "$player" &
 		done
 	elif [ "$1" == "-r" ] || [ "$1" == "--right" ] || [ "$1" == "right" ] ;then
 		loadPlayers | while read -r player;do
-			inputRight "$player"
+			inputRight "$player" &
 		done
 	elif [ "$1" == "-u" ] || [ "$1" == "--up" ] || [ "$1" == "up" ] ;then
 		loadPlayers | while read -r player;do
-			inputUp "$player"
+			inputUp "$player" &
 		done
 	elif [ "$1" == "-d" ] || [ "$1" == "--down" ] || [ "$1" == "down" ] ;then
 		loadPlayers | while read -r player;do
-			inputDown "$player"
+			inputDown "$player" &
 		done
 	elif [ "$1" == "-s" ] || [ "$1" == "--select" ] || [ "$1" == "select" ] ;then
 		loadPlayers | while read -r player;do
-			inputSelect "$player"
+			inputSelect "$player" &
 		done
 	elif [ "$1" == "-h" ] || [ "$1" == "--home" ] || [ "$1" == "home" ] ;then
 		loadPlayers | while read -r player;do
-			inputHome "$player"
+			inputHome "$player" &
 		done
 	elif [ "$1" == "-b" ] || [ "$1" == "--back" ] || [ "$1" == "back" ] ;then
 		loadPlayers | while read -r player;do
-			inputGoBack "$player"
+			inputGoBack "$player" &
 		done
 	elif [ "$1" == "-c" ] || [ "$1" == "--context" ] || [ "$1" == "context" ] ;then
 		loadPlayers | while read -r player;do
-			inputContext "$player"
+			inputContext "$player" &
 		done
 	elif [ "$1" == "-S" ] || [ "$1" == "--send" ] || [ "$1" == "send" ] ;then
 		loadPlayers | while read -r player;do
-			sendText "$player" "$2"
+			sendText "$player" "$2" &
 		done
 	elif [ "$1" == "-V" ] || [ "$1" == "--volumeup" ] || [ "$1" == "volumeup" ] ;then
 		loadPlayers | while read -r player;do
-			volumeUp "$player"
+			volumeUp "$player" &
 		done
 	elif [ "$1" == "-v" ] || [ "$1" == "--volumedown" ] || [ "$1" == "volumedown" ] ;then
 		loadPlayers | while read -r player;do
-			volumeDown "$player"
+			volumeDown "$player" &
 		done
 	elif [ "$1" == "-m" ] || [ "$1" == "--mute" ] || [ "$1" == "mute" ] ;then
 		loadPlayers | while read -r player;do
-			volumeMute "$player"
+			volumeMute "$player" &
+		done
+	elif [ "$1" == "-sf" ] || [ "$1" == "--skip-forward" ] || [ "$1" == "skip-forward" ] ;then
+		loadPlayers | while read -r player;do
+			skipForward "$player" &
+		done
+	elif [ "$1" == "-sb" ] || [ "$1" == "--skip-backward" ] || [ "$1" == "skip-backward" ] ;then
+		loadPlayers | while read -r player;do
+			skipBackward "$player" &
 		done
 	elif [ "$1" == "-I" ] || [ "$1" == "--id" ] || [ "$1" == "id" ] ;then
 		loadPlayers | while read -r player;do
-			getPlayerId "$player"
+			getPlayerId "$player" &
 		done
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		echo "Kodi Player Help"
