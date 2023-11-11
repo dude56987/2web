@@ -37,12 +37,12 @@
 	</p>
 	<ul>
 		<li>
-			<a href="https://ko-fi.com/bluntsquid#">
+			<a href="https://ko-fi.com/bluntsquid#" target="_blank">
 				Ko-Fi
 			</a>
 		</li>
 		<li>
-			<a href="https://liberapay.com/bluntsquid/">
+			<a href="https://liberapay.com/bluntsquid/" target="_blank">
 				Librepay
 			</a>
 		</li>
@@ -50,7 +50,7 @@
 	<h2>Source code available on Github</h2>
 	<ul>
 		<li>
-			<a href="https://github.com/dude56987/2web">
+			<a href="https://github.com/dude56987/2web" target="_blank">
 				Github
 			</a>
 		</li>
