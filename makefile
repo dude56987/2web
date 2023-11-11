@@ -123,6 +123,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/weather/location.d/;
 	mkdir -p debian/etc/2web/rss/;
 	mkdir -p debian/etc/2web/rss/sources.d/;
+	mkdir -p debian/etc/2web/kodi/locations.d/;
+	mkdir -p debian/etc/2web/kodi/players.d/;
 	mkdir -p debian/etc/cron.d/;
 	mkdir -p debian/etc/apache2/;
 	mkdir -p debian/etc/apache2/sites-available/;
@@ -164,6 +166,8 @@ build-deb: upgrade-hls
 	touch debian/etc/2web/comics/sources.d/.placeholder
 	touch debian/etc/2web/weather/location.d/.placeholder
 	touch debian/etc/2web/rss/sources.d/.placeholder
+	touch debian/etc/2web/kodi/locations.d/.placeholder
+	touch debian/etc/2web/kodi/players.d/.placeholder
 	touch debian/var/cache/2web/cache/.placeholder
 	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/usr/share/2web/themes/.placeholder
