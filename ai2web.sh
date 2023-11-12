@@ -94,6 +94,7 @@ function update(){
 	INFO "Loading up prompt models..."
 	# load up the configs
 	aiPromptModels=$(loadConfigs "/etc/2web/ai/promptModels.cfg" "/etc/2web/ai/promptModels.d/" "/etc/2web/config_default/ai2web_promptModels.cfg" | tr -s '\n' | shuf)
+	txt2imgModels=$(loadConfigs "/etc/2web/ai/txt2imgModels.cfg" "/etc/2web/ai/txt2imgModels.d/" "/etc/2web/config_default/ai2web_txt2imgModels.cfg" | tr -s '\n' | shuf)
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -119,31 +120,48 @@ function update(){
 	# used for whisper to convert voice to text locally
 	createDir "/var/cache/2web/downloads/ai/subtitles/"
 	# scan the sources
-	ALERT "AI Download Model Sources: $aiPromptModels"
+	ALERT "AI Download Prompt Model Sources: $aiPromptModels"
 	echo "$aiPromptModels" | while read aiSource;do
 		# generate a sum for the source
 		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
-		# create the ai directory
-		createDir "$webDirectory/ai/$aiName/"
 		# link the individual index page for this ai model in the web interface
 		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
 		# do not process the ai if it is still in the cache
-		#if ! test -f "/var/cache/2web/downloads/ai/prompt/$aiName";then
 		ALERT "checking for existance of lock file that blocks further download  '$webDirectory/sums/ai2web_model_prompt_$aiName.cfg'"
 		if ! test -f "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg";then
 			ALERT "No block file found downloading with wget..."
 			# download the ai model from remote location
 			wget --continue "https://gpt4all.io/models/$aiSource" -O "/var/cache/2web/downloads/ai/prompt/$aiName"
-			# set correct ownership of files
-			chown www-data:www-data "/var/cache/2web/downloads/ai/prompt/$aiName"
 			if [ $? -eq 0 ];then
 				# the download finished successfully
 				touch "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg"
 			fi
-			#curl -C - "https://gpt4all.io/models/$aiSource" > "/var/cache/2web/downloads/ai/prompt/$aiName"
 		fi
-		#fi
 	done
+	# set correct ownership of files
+	chown www-data:www-data "/var/cache/2web/downloads/ai/prompt/*"
+	################################################################################
+	ALERT "AI Download txt2img Model Sources: $txt2imgModels"
+	echo "$txt2imgModels" | while read aiSource;do
+		aiName=$(echo "$aiSource" | md5sum | cut -d' ' -f1)
+		# link the individual index page for this ai model in the web interface
+		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
+		# do not process the ai if it is still in the cache
+		ALERT "checking for existance of lock file that blocks further download  '$webDirectory/sums/ai2web_model_txt2img_$aiName.cfg'"
+		if ! test -f "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg";then
+			# disable download telemetry
+			export DISABLE_TELEMETRY=YES
+			# download the ai model from remote location using the huggingface API
+			ai2web_txt2img --download-model "$aiSource"
+			if [ $? -eq 0 ];then
+				# the download finished successfully
+				touch "$webDirectory/sums/ai2web_model_txt2img_$aiName.cfg"
+			fi
+		fi
+	done
+	# set correct ownership of files
+	chown -R www-data:www-data "/var/cache/2web/downloads/ai/txt2img/*"
+	################################################################################
 }
 ################################################################################
 function getWeight(){
@@ -534,8 +552,8 @@ webUpdate(){
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
 	# link the prompting interface
 	linkFile "/usr/share/2web/templates/ai_prompt.php" "$webDirectory/ai/prompt/index.php"
+	linkFile "/usr/share/2web/templates/ai_imgs.php" "$webDirectory/ai/txt2img/index.php"
 
-	startDebug
 	################################################################################
 	# generate lyrics for mp3 tracks in music2web
 	################################################################################
@@ -578,8 +596,6 @@ webUpdate(){
 			done
 		fi
 	fi
-	stopDebug
-
 	################################################################################
 	# build the comparisons in the database for machine learning comparison match database
 	# - This will build comparisons for related videos style comparisons
@@ -636,27 +652,34 @@ main(){
 		lockProc "ai2web"
 		checkModStatus "ai2web"
 		update "$@"
+	elif [ "$1" == "-Uv" ] || [ "$1" == "--upgrade-versions" ] || [ "$1" == "upgrade-versions" ] ;then
+		echo "ACTIVE VERSION: GPT4All=1.0.8"
+		pip3 install --break-system-packages --upgrade "gpt4all==showAllVersionNumbers"
+		echo "ACTIVE VERSION: diffusers=0.21.4"
+		pip3 install --break-system-packages --upgrade "diffusers==showAllVersionNumbers"
+		echo "ACTIVE VERSION: openai-whisper=0.0.0"
+		pip3 install --break-system-packages --upgrade "openai-whisper==showAllVersionNumbers"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "ai2web"
 		# install gpt4all for base text prompt generation
 		# - version 1.0.8 is still working on debain but 1.0.9 is broken
 		pip3 install --break-system-packages --upgrade "gpt4all==1.0.8"
 		# install whisper speech recognition
-		#pip3 install --break-system-packages --upgrade openai-whisper
+		pip3 install --break-system-packages --upgrade "openai-whisper"
 		# install stable diffusion diffusers library
-		#pip3 install --break-system-packages --upgrade diffusers
-		# install the huggingface transformers library
-		#pip3 install --break-system-packages --upgrade transformers
-		#pip3 install --break-system-packages --upgrade torch
+		pip3 install --break-system-packages --upgrade "diffusers=0.21.4"
+		# install the huggingface transformers library, required by diffusers based on the running model
+		pip3 install --break-system-packages --upgrade transformers
+		pip3 install --break-system-packages --upgrade torch
+		pip3 install --break-system-packages --upgrade tensorrt
 		# tensor libaries
-		#pip3 install --break-system-packages --upgrade safetensors
-		#pip3 install --break-system-packages --upgrade xformers
-		#pip3 install --break-system-packages --upgrade tensorflow
+		pip3 install --break-system-packages --upgrade safetensors
+		pip3 install --break-system-packages --upgrade xformers
+		pip3 install --break-system-packages --upgrade tensorflow
 		# accelerate allows using cpu and gpu
 		#pip3 install --break-system-packages --upgrade accelerate
 		# 8bit support for accelerate to run larger models on smaller computers
 		#pip3 install --break-system-packages --upgrade bitsandbytes
-		#pip3 install --break-system-packages --upgrade tensorrt
 		# speech functions are provided by speechbrain, tts, stt
 		#pip3 install --break-system-packages --upgrade speechbrain
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then

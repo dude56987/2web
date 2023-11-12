@@ -92,14 +92,14 @@ include("settingsHeader.php");
 </div>
 <?php
 echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";
-echo "<h2>AI Server Libary Paths</h2>\n";
+echo "<h2>AI Prompt Models</h2>\n";
 echo "<pre>\n";
 echo (file_get_contents("/etc/2web/ai/promptModels.cfg"));
 echo "</pre>\n";
 echo "</div>";
 
 echo "<div id='aiLibaryPaths' class='settingListCard'>";
-echo "<h2>AI Libary Paths</h2>\n";
+echo "<h2>AI Prompt Models</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ai/promptModels.d/*.cfg"));
 sort($sourceFiles);
 # write each config file as a editable entry
@@ -125,12 +125,55 @@ foreach($sourceFiles as $sourceFile){
 ?>
 	<div id='addAiPromptModel' class='inputCard'>
 	<form action='admin.php' method='post'>
-		<h2>Add AI Libary Path</h2>
+		<h2>Add AI Prompt Models</h2>
 		<input width='60%' type='text' name='addAiPromptModel' placeholder='example_gpt4all.bin'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>Add Model</button>
 	</form>
 	</div>
 </div>
+<?PHP
+echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";
+echo "<h2>AI Text To Image Models</h2>\n";
+echo "<pre>\n";
+echo (file_get_contents("/etc/2web/ai/txt2imgModels.cfg"));
+echo "</pre>\n";
+echo "</div>";
+
+
+echo "<div id='aiLibaryPaths' class='settingListCard'>";
+echo "<h2>AI Text To Image Models</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ai/txt2imgModels.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				$link=(file_get_contents($sourceFile));
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='remove_ai_txt2img_model' value='".$link."'>Remove Model</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+				//echo "</div>";
+			}
+		}
+	}
+}
+?>
+	<div id='add_ai_txt2img_model' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add AI Text To Image Models</h2>
+		<input width='60%' type='text' name='add_ai_txt2img_model' placeholder='runwayml/stable-diffusion-v1-5'>
+		<button class='button' type='submit'>Add Model</button>
+	</form>
+	</div>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

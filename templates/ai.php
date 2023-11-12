@@ -936,6 +936,48 @@ if (array_key_exists("loadConvo",$_GET)){
 			echo "</div>\n";
 		}
 	}
+	if ($discoveredTxt2Img){
+		# draw the threads discovered
+		$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/txt2img/"),array(".","..","index.php"));
+		# shuffle the items in the index
+		shuffle($promptIndex);
+		#sort($promptIndex);
+		# order newest prompts first
+		$promptIndex=array_reverse($promptIndex);
+		# split into pages and grab only the first page
+		$promptIndex=array_chunk($promptIndex,6);
+		if(count($promptIndex) > 0){
+			$promptIndex=$promptIndex[0];
+			# if there are any entries draw the random prompt questions widget
+			echo "<div class='titleCard'>\n";
+			echo "<h1>Random Generated Images</h1>\n";
+			foreach($promptIndex as $directoryPath){
+				# if the hidden cfg file does not exist use this in the index
+				if ( ! file_exists("txt2img/".$directoryPath."/hidden.cfg")){
+					echo "<a class='inputCard textList' href='/ai/txt2img/$directoryPath'>";
+					echo file_get_contents("txt2img/".$directoryPath."/prompt.cfg");
+					echo "<div>Responses: ";
+					$finishedResponses=0;
+					foreach(scandir("txt2img/".$directoryPath."/") as $responseFileName){
+						if(strpos($responseFileName,".png") !== false){
+							$finishedResponses += 1;
+						}
+					}
+					echo "$finishedResponses";
+					echo "/";
+					echo file_get_contents("txt2img/".$directoryPath."/versions.cfg");
+					echo "</div>";
+					echo "</a>";
+				}
+			}
+			echo "</div>\n";
+		}
+	}
+
+
+
+
+
 
 	if ($discoveredTxt2Txt){
 		echo "<div class='titleCard'>\n";
@@ -978,76 +1020,76 @@ if (array_key_exists("loadConvo",$_GET)){
 		echo "</div>\n";
 	}
 
-	if ($discoveredImg2Img || $discoveredTxt2Img){
-		echo "<div class='titleCard'>\n";
-		echo "	<h1>What Can Image <sup>a</sup>I Do?</h1>\n";
-		echo "	<div class='listCard'>\n";
-		$helpTexts=Array();
-		$helpTexts=array_merge($helpTexts,["Generate images from text descriptions"]);
-		$helpTexts=array_merge($helpTexts,["Generate images from text tags"]);
-		$helpTexts=array_merge($helpTexts,["Different Models generate extremely different results"]);
-		$helpTexts=array_merge($helpTexts,["Edit existing images"]);
-		$helpTexts=array_merge($helpTexts,["Cartoonize images"]);
-		$helpTexts=array_merge($helpTexts,["Convert to anime"]);
-		$helpTexts=array_merge($helpTexts,["Change objects in images"]);
-		$helpTexts=array_merge($helpTexts,["Insert a rough sketch and fill in the details"]);
-		$helpTexts=array_merge($helpTexts,["Remove or add details into the image"]);
-		$helpTexts=array_merge($helpTexts,["Enhance zoom the size of the image"]);
-		$helpTexts=array_merge($helpTexts,["Describe what you don't want using negative prompts"]);
-		foreach($helpTexts as $helpText ){
-			echo "		<div class='inputCard textList'>\n";
-			echo "			<p>$helpText</p>\n";
-			echo "		</div>\n";
-		}
-		echo "	</div>\n";
-		echo "</div>\n";
-	}
+	#if ($discoveredImg2Img || $discoveredTxt2Img){
+	#	echo "<div class='titleCard'>\n";
+	#	echo "	<h1>What Can Image <sup>a</sup>I Do?</h1>\n";
+	#	echo "	<div class='listCard'>\n";
+	#	$helpTexts=Array();
+	#	$helpTexts=array_merge($helpTexts,["Generate images from text descriptions"]);
+	#	$helpTexts=array_merge($helpTexts,["Generate images from text tags"]);
+	#	$helpTexts=array_merge($helpTexts,["Different Models generate extremely different results"]);
+	#	$helpTexts=array_merge($helpTexts,["Edit existing images"]);
+	#	$helpTexts=array_merge($helpTexts,["Cartoonize images"]);
+	#	$helpTexts=array_merge($helpTexts,["Convert to anime"]);
+	#	$helpTexts=array_merge($helpTexts,["Change objects in images"]);
+	#	$helpTexts=array_merge($helpTexts,["Insert a rough sketch and fill in the details"]);
+	#	$helpTexts=array_merge($helpTexts,["Remove or add details into the image"]);
+	#	$helpTexts=array_merge($helpTexts,["Enhance zoom the size of the image"]);
+	#	$helpTexts=array_merge($helpTexts,["Describe what you don't want using negative prompts"]);
+	#	foreach($helpTexts as $helpText ){
+	#		echo "		<div class='inputCard textList'>\n";
+	#		echo "			<p>$helpText</p>\n";
+	#		echo "		</div>\n";
+	#	}
+	#	echo "	</div>\n";
+	#	echo "</div>\n";
+	#}
 
-	if ($discoveredTxt2Img){
-		# draw the image generator
-		echo "<div class='titleCard'>\n";
-		echo "<h1>Generate a image from text 🎨</h1>\n";
-		echo "<form method='post' enctype='multipart/form-data'>\n";
+	#if ($discoveredTxt2Img){
+	#	# draw the image generator
+	#	echo "<div class='titleCard'>\n";
+	#	echo "<h1>Generate a image from text 🎨</h1>\n";
+	#	echo "<form method='post' enctype='multipart/form-data'>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo " Models:\n";
-		echo "<select name='model'>\n";
-		echo $discoveredTxt2imgData;
-		echo "</select>\n";
-		echo "</span>\n";
+	#	echo "<span class='groupedMenuItem'>\n";
+	#	echo " Models:\n";
+	#	echo "<select name='model'>\n";
+	#	echo $discoveredTxt2imgData;
+	#	echo "</select>\n";
+	#	echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo " Base Negative Prompt:";
-		echo "<select name='baseNegativePrompt'>\n";
-		# load each of the ai models
-		foreach(array_diff(scanDir("/etc/2web/ai/negative_prompts/"),array(".","..")) as $directoryPath){
-			$directoryPath=str_replace(".cfg","",$directoryPath);
-			echo "<option value='$directoryPath'>$directoryPath</option>\n";
-		}
-		echo "</select>\n";
-		echo "</span>\n";
+	#	echo "<span class='groupedMenuItem'>\n";
+	#	echo " Base Negative Prompt:";
+	#	echo "<select name='baseNegativePrompt'>\n";
+	#	# load each of the ai models
+	#	foreach(array_diff(scanDir("/etc/2web/ai/negative_prompts/"),array(".","..")) as $directoryPath){
+	#		$directoryPath=str_replace(".cfg","",$directoryPath);
+	#		echo "<option value='$directoryPath'>$directoryPath</option>\n";
+	#	}
+	#	echo "</select>\n";
+	#	echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Versions: <input class='imageVersionsInput' type='number' min='1' max='10' value='1' name='imageGenVersions' placeholder='Number of versions to draw'>";
-		echo "</span>\n";
+	#	echo "<span class='groupedMenuItem'>\n";
+	#	echo "Versions: <input class='imageVersionsInput' type='number' min='1' max='10' value='1' name='imageGenVersions' placeholder='Number of versions to draw'>";
+	#	echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Width : <input class='imageWidth' type='number' min='360' max='1920' value='360' name='imageWidth' placeholder='Image Width in pixels'>";
-		echo "</span>\n";
-		echo "<span class='groupedMenuItem'>\n";
-		echo "Height : <input class='imageHeight' type='number' min='240' max='1080' value='240' name='imageHeight' placeholder='Image Height in pixels'>";
-		echo "</span>\n";
+	#	echo "<span class='groupedMenuItem'>\n";
+	#	echo "Width : <input class='imageWidth' type='number' min='360' max='1920' value='360' name='imageWidth' placeholder='Image Width in pixels'>";
+	#	echo "</span>\n";
+	#	echo "<span class='groupedMenuItem'>\n";
+	#	echo "Height : <input class='imageHeight' type='number' min='240' max='1080' value='240' name='imageHeight' placeholder='Image Height in pixels'>";
+	#	echo "</span>\n";
 
-		echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
+	#	echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
 
-		echo "<hr>\n";
+	#	echo "<hr>\n";
 
-		echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'></textarea>";
-		echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...' maxlength='120'></textarea>";
-		echo "<button class='aiSubmit' type='submit'><span class='footerText'>Generate</span> ↩️</button>";
-		echo "</form>";
-		echo "</div>";
-	}
+	#	echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'></textarea>";
+	#	echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...' maxlength='120'></textarea>";
+	#	echo "<button class='aiSubmit' type='submit'><span class='footerText'>Generate</span> ↩️</button>";
+	#	echo "</form>";
+	#	echo "</div>";
+	#}
 	if ($discoveredImg2ImgData){
 		# draw edit image prompt
 		echo "<div class='titleCard'>";

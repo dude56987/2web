@@ -16,14 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-try:
-	import gpt4all
-except:
-	print("ERROR: GPT4All is not installed ai2web_prompt needs missing dependency!")
-	print("You can install it with 'ai2web --upgrade'")
-	print("ai2web_prompt will now close...")
-	exit()
-########################################################################
 # import libaries
 import sys, os, json, hashlib, sqlite3, time
 sys.path.append("/usr/share/2web/")
@@ -55,6 +47,14 @@ if "--help" in sys.argv:
 import torch
 # stable diffusion image generating code
 from diffusers import StableDiffusionPipeline
+
+# check for download argument and if given only download the model and exit
+if "--download-model" in sys.argv:
+	modelPath = sys.argv[(sys.argv.index("--download-model")+1)]
+	# load the model, download if missing
+	StableDiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/")
+	exit()
+
 if "--list-negative-prompts" in sys.argv:
 	h1("Looking for default prompts in: /etc/2web/ai/negative_prompts/")
 	# set the default negative prompt created by stable diffusion
@@ -63,6 +63,19 @@ if "--list-negative-prompts" in sys.argv:
 		h1(str(negativePromptBase))
 		print(file_get_contents(os.path.join("/etc/2web/ai/negative_prompts/",negativePromptBase)))
 	exit()
+
+# if --set-model is called change the model
+if "--set-model" in sys.argv:
+	modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
+else:
+	modelPath = "runwayml/stable-diffusion-v1-5"
+
+if "--sfw" in sys.argv:
+	# enable safety checker
+	safetyCheck=True
+else:
+	# the safety checker is disabled by default
+	safetyCheck=None
 
 if "--base-negative-prompt" in sys.argv:
 	baseNegativePrompt = sys.argv[(sys.argv.index("--base-negative-prompt")+1)]
@@ -118,7 +131,7 @@ if "--width" in sys.argv:
 else:
 	imageWidth = 512
 
-# if the prompt is greater than 120 characters have the gpt4all ai rewrite it
+# if the prompt is greater than 120 characters exit with error
 if len(promptText) > 120:
 	print("[ERROR]: This prompt is to long, Rewrite the prompt with less than 120 characters.")
 	exit()
@@ -139,12 +152,7 @@ if len(baseFileTitle) > 100:
 	baseFileTitle = hashlib.md5((baseFileTitle).encode('utf-8')).hexdigest()
 
 versionNumber = 1
-
-# fix the version number
-if versionNumber < 10:
-	tempVersionNumber = "00"+str(versionNumber)
-elif versionNumber < 100:
-	tempVersionNumber = "0"+str(versionNumber)
+tempVersionNumber = "001"
 
 if "--output-dir" in sys.argv:
 	fileTitle = os.path.join(outputDir, (baseFileTitle + "_v" + str(tempVersionNumber)))
@@ -177,33 +185,23 @@ while versions > 0:
 			versionNumber += 1
 			#print("File Title: "+fileTitle)
 
-	print("Creating image from prompt: "+fileTitle+".png")
+	deviceToUse = "cpu"
 
-	# if --set-model is called change the model
-	if "--set-model" in sys.argv:
-		modelPath = sys.argv[(sys.argv.index("--set-model")+1)]
+	if "--gpu" in sys.argv:
+		deviceToUse = "gpu"
+	elif "--cpu" in sys.argv:
+		deviceToUse = "cpu"
 	else:
-		modelPath = "runwayml/stable-diffusion-v1-5"
-
-	if "--offline" in sys.argv:
-		use_only_local = True
-	else:
-		use_only_local = False
-
-	# enable safety checker
-	if "--sfw" in sys.argv:
-		#pipe = StableDiffusionPipeline.from_pretrained(modelPath, revision="fp16", torch_dtype=torch.float16)
-		#pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16)
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
+		if torch.cuda.is_available():
+			deviceToUse = "gpu"
 		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
-	else:
-		# the safety checker is disabled by default
-		if "--gpu" in sys.argv:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, torch_dtype=torch.float16, safety_checker=None, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
-		else:
-			pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=None, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=use_only_local)
+			deviceToUse = "cpu"
+
+	# local_files_only should always be true to prevent unwanted internet connections
+	if deviceToUse == "cpu":
+		pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
+	elif deviceToUse == "gpu":
+		pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
 
 	if "--debug-pipe-components" in sys.argv:
 		print("Pipe components: "+str(pipe.components))
@@ -222,7 +220,7 @@ while versions > 0:
 	# generate image from prompt and get the generated image from the generated images array
 	image = pipe(prompt=promptText, height=int(imageHeight), width=int(imageWidth), negative_prompt=negativePromptText).images[0]
 
-# check if the output directory has been set
+	# check if the output directory has been set
 	if "--output-dir" in sys.argv:
 		# save the created image to the specified output directory
 		tempFilePath = (os.path.join(outputDir, (fileTitle+".png")))

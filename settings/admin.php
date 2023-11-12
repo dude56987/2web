@@ -601,6 +601,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomConfig("addAiPromptModel","/etc/2web/ai/promptModels.d/","ai.php");
 }else if (array_key_exists("removeAiPromptModel",$_POST)){
 	removeCustomConfig("removeAiPromptModel","/etc/2web/ai/promptModels.d/","ai.php");
+}else if (array_key_exists("add_ai_txt2img_model",$_POST)){
+	addCustomConfig("add_ai_txt2img_model","/etc/2web/ai/txt2imgModels.d/","ai.php");
+}else if (array_key_exists("remove_ai_txt2img_model",$_POST)){
+	removeCustomConfig("remove_ai_txt2img_model","/etc/2web/ai/txt2imgModels.d/","ai.php");
 }else if (array_key_exists("generateVisualisationsForWeb",$_POST)){
 	outputLog("Setting music2web visual generation status to ".$_POST['generateVisualisationsForWeb']);
 	# run the ai comparison generators
