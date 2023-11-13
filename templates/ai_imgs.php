@@ -32,11 +32,11 @@ if (array_key_exists("prompt",$_POST)){
 	# prompt for image generation from text
 
 	$fileSumString  = ($_POST['prompt']);
-	$fileSumString .= ($_POST['model']);
+	#$fileSumString .= ($_POST['model']);
 	#$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
-	$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
+	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
 
 	# launch the process with a background scheduler
 	$command = "echo '";
@@ -72,12 +72,8 @@ if (array_key_exists("prompt",$_POST)){
 		$command .= '/usr/bin/ai2web_txt2img ';
 	}
 	$command .= '--output-dir "/var/cache/2web/web/ai/txt2img/'.$fileSum.'/" ';
-	if (array_key_exists("versions",$_POST)){
-		if ($_POST["versions"] != "NONE"){
-			#$command .= '--versions "'.$_POST["versions"].'" ';
-			$command .= '--versions "1" ';
-		}
-	}
+	# generate a version
+	$command .= '--versions "1" ';
 
 	if (array_key_exists("hidden",$_POST)){
 		if ($_POST["hidden"] == "yes"){
@@ -91,17 +87,21 @@ if (array_key_exists("prompt",$_POST)){
 		$foundVersions = file_get_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg");
 		if ($_POST["model"] == "{ALL}"){
 			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				$foundVersions += 1;
+				if(is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
+					$foundVersions += 1;
+				}
 			}
 		}else{
-			$foundVersions += $_POST["versions"];
+			$foundVersions = 1;
 		}
 		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg", $foundVersions);
 	}else{
 		if ($_POST["model"] == "{ALL}"){
 			$foundVersions = 0;
 			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				$foundVersions += 1;
+				if(is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
+					$foundVersions += 1;
+				}
 			}
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg",$foundVersions);
 		}else{
@@ -127,7 +127,13 @@ if (array_key_exists("prompt",$_POST)){
 		if ($_POST["model"] == "{ALL}"){
 			$combinedFileData = "";
 			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				$combinedFileData .= str_replace("{ALL}","$directoryPath",$command).";\n";
+				# fix the path in the command
+				$directoryPath=str_replace("--","/",$directoryPath);
+				$directoryPath=str_replace("models/","",$directoryPath);
+				# add the command to the command config
+				$newCommand=str_replace("{ALL}","$directoryPath",$command);
+				# add the filtered line
+				$combinedFileData .= $newCommand.";\n";
 			}
 			# write the combined commands used to generate all the prompts
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/command.cfg",$combinedFileData);
@@ -140,15 +146,24 @@ if (array_key_exists("prompt",$_POST)){
 		# if the model is set to all
 		if ($_POST["model"] == "{ALL}"){
 			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				if ($_POST["debug"] == "yes"){
-					echo "<div class='errorBanner'>\n";
-					echo "<hr>\n";
-					echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-					echo "<hr>\n";
-					echo "</div>\n";
+				# check that this is a directory
+				if (is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
+					# cleanup the model name
+					$directoryPath=str_replace("--","/",$directoryPath);
+					$directoryPath=str_replace("models/","",$directoryPath);
+					# replace all in the command
+					$newCommand=str_replace("{ALL}","$directoryPath",$command);
+					# print debug info
+					if ($_POST["debug"] == "yes"){
+						echo "<div class='errorBanner'>\n";
+						echo "<hr>\n";
+						echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
+						echo "<hr>\n";
+						echo "</div>\n";
+					}
+					# for each model found launch a new command
+					shell_exec($newCommand);
 				}
-				# for each model found launch a new command
-				shell_exec(str_replace("{ALL}","\"$directoryPath\"",$command));
 			}
 		}else{
 			if ($_POST["debug"] == "yes"){
@@ -278,7 +293,22 @@ if ($discoveredTxt2Img){
 
 	# draw the threads discovered
 	$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/txt2img/"),array(".","..","index.php"));
-	sort($promptIndex);
+	#sort($promptIndex);
+
+	# generate an array where the keys are the file modification dates of the the directories listed
+	$sortedPromptIndex=Array();
+	# read each directory in the list
+	foreach($promptIndex as $directoryPath){
+		# get the file modification time
+		$modificationDate=filemtime($directoryPath);
+		# add the path to the array with the key as the file modification time
+		$sortedPromptIndex[$modificationDate]=$directoryPath;
+	}
+	# sort the array by the key values
+	ksort($sortedPromptIndex);
+	# replace the original array with the sorted one
+	$promptIndex=$sortedPromptIndex;
+
 	# order newest prompts first
 	$promptIndex=array_reverse($promptIndex);
 	# if any previous prompts are found

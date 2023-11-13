@@ -38,7 +38,7 @@ if (array_key_exists("prompt",$_POST)){
 	#$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
-	$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
+	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
 
 	# launch the process with a background scheduler
 	$command = "echo '";
@@ -288,7 +288,22 @@ if ($discoveredPrompt){
 
 	# draw the threads discovered
 	$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/prompt/"),array(".","..","index.php"));
-	sort($promptIndex);
+	#sort($promptIndex);
+
+	# generate an array where the keys are the file modification dates of the the directories listed
+	$sortedPromptIndex=Array();
+	# read each directory in the list
+	foreach($promptIndex as $directoryPath){
+		# get the file modification time
+		$modificationDate=filemtime($directoryPath);
+		# add the path to the array with the key as the file modification time
+		$sortedPromptIndex[$modificationDate]=$directoryPath;
+	}
+	# sort the array by the key values
+	ksort($sortedPromptIndex);
+	# replace the original array with the sorted one
+	$promptIndex=$sortedPromptIndex;
+
 	# order newest prompts first
 	$promptIndex=array_reverse($promptIndex);
 	# if any previous prompts are found

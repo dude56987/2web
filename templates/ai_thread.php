@@ -50,6 +50,8 @@ if (array_key_exists("generateMore",$_GET)){
 	file_put_contents("versions.cfg",$versions);
 	# update the elapsed time since prompt
 	file_put_contents("started.cfg",$_SERVER["REQUEST_TIME"]);
+	# update the ordering by changing the modification time of the directory
+	touch(".");
 	# launch the command again to generate more versions of the output
 	shell_exec(file_get_contents("command.cfg"));
 	# redirect back to this page in refresh mode
