@@ -579,7 +579,7 @@ function checkForBangs($searchQuery){
 	################################################################################
 	# check for !bang help command in search query
 	$bangHelp = "";
-	if ( strpos($searchQuery,"!help") || ($searchQuery == "!help") ){
+	if ( ($searchQuery == "!help") || strpos($searchQuery,"!help") || ($searchQuery == "!bang") || strpos($searchQuery,"!bang") ){
 		# print out all the bang commands and the links they generate
 		$bangHelp .= "<h1>Bang Command List</h1>";
 		$bangHelp .= "<table>";
@@ -599,16 +599,9 @@ function checkForBangs($searchQuery){
 	}
 	return $bangHelp;
 }
-# check for bangs prior to building any part of the webpage
-# - This must be done before anything is writen to the page for the redirect to work
-if (array_key_exists("q",$_GET)){
-	$searchQuery = $_GET["q"];
-	# check for bang commands
-	$bangHelp=checkForBangs($searchQuery);
-}
 ################################################################################
-# start building the webpage
 function drawHead(){
+	# start building the webpage
 	echo "<html class='randomFanart'>";
 	echo "<head>";
 	echo " <title>2web Search</title>";
@@ -618,12 +611,80 @@ function drawHead(){
 	echo " <link rel='search' type='application/opensearchdescription+xml' title='2web' href='/opensearch.xml'>";
 	echo "</head>";
 	echo "<body>";
-	# add the header document after building the document start
-	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+}
+################################################################################
+function checkSpelling($searchQuery){
+	# check the spelling and draw links to other sections
+
+	# set the max execution time to 15 minutes
+	# additional searches will display the results found by this running process
+	set_time_limit(900);
+
+	$pspell = pspell_new("en");
+	$pspellData="";
+	# if the query string contains a space
+	if (strpos($searchQuery," ")){
+		# explode the string into an array split based on the spaces
+		$searchTerms=explode( " " , $searchQuery );
+		$correctedQuery="";
+		$correctedQueryHTML="";
+		$foundErrors=False;
+		# for each word seprated by a space create a search link
+		foreach($searchTerms as $searchTerm){
+			# check the spelling of each search term and include spelling sugestions
+			if (! pspell_check($pspell, $searchTerm)){
+				$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
+				foreach($spellingSuggestions as $word){
+					# create a search for corrected spelling of each word
+					#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+					# add the word to the corrected query
+					$foundErrors=True;
+					$correctedQuery .= $word." ";
+					$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
+					break;
+				}
+			}else{
+				$correctedQuery .= $searchTerm." ";
+				$correctedQueryHTML .= $searchTerm." ";
+				#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+			}
+		}
+		if ($foundErrors){
+			echo "<div class='titleCard'>";
+			echo "	<h2>Did you mean?</h2>";
+			echo "	<div class='listcard'>";
+			echo "		<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
+			echo "	</div>";
+			echo "</div>";
+		}
+	}else{
+		if (! pspell_check($pspell, $_GET['q'])){
+			echo "<div class='titleCard'>";
+			echo "<h2>";
+			echo "Did you mean?";
+			echo "</h2>";
+			echo "<div class='listCard'>";
+			$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
+			foreach($spellingSuggestions as $word){
+				echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+			}
+			echo "</div>";
+			echo "</div>";
+		}
+	}
 }
 ################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
+	# check for bangs prior to building any part of the webpage
+	# - This must be done before anything is writen to the page for the redirect to work
+	if (array_key_exists("q",$_GET)){
+		$searchQuery = $_GET["q"];
+		# check for bang commands
+		$bangHelp=checkForBangs($searchQuery);
+	}
 	drawHead();
+	# add the header document after building the document start
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# create md5sum for the query to store output
 	$querySum = md5($searchQuery);
 
@@ -632,6 +693,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "Searching  for '$searchQuery'";
 	echo "<img class='globalPulse' src='/pulse.gif'>";
 	echo "</h1>\n";
+	# draw the bang help if it exists
+	echo $bangHelp;
 
 	$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
@@ -648,15 +711,37 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "Search completed ";
 			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_finished.index"));
 			echo "</p>";
-
+			checkSpelling($_GET["q"]);
+			# draw the jump buttons
+			$noFoundCategories=true;
+			foreach($discoveredFiles as $filePath ){
+				if (stripos($filePath,"$querySum") !== false){
+					if ($noFoundCategories){
+						$noFoundCategories=False;
+						echo "<div class='listCard'>";
+						echo "<h2>Categories</h2>";
+					}
+					$headerTitle=str_replace($querySum."_","",$filePath);
+					$headerTitle=str_replace(".index","",$headerTitle);
+					$jumpLink=$headerTitle;
+					$headerTitle=str_replace("_"," ",$headerTitle);
+					$headerTitle=ucwords($headerTitle);
+					# draw the link
+					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>";
+				}
+			}
+			if ($noFoundCategories == false){
+				echo "</div>";
+			}
 			# load the page as is with the auto refresh buttons
 			foreach($discoveredFiles as $filePath ){
 				if (stripos($filePath,"$querySum") !== false){
 					$headerTitle=str_replace($querySum."_","",$filePath);
 					$headerTitle=str_replace(".index","",$headerTitle);
+					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					echo "<h2>$headerTitle</h2>";
+					echo "<h2 id='$jumpLink'>$headerTitle</h2>";
 					# draw the matching search content
 					echo file_get_contents($webDirectory."/search/".$filePath);
 				}
@@ -667,6 +752,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "Search started ";
 			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_started.index"));
 			echo "</p>";
+			checkSpelling($_GET["q"]);
 			# build the refresh
 			if (array_key_exists("autoRefresh",$_GET)){
 				echo "<img class='localPulse' src='/pulse.gif'>\n";
@@ -677,14 +763,37 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
 			}
 			echo "</div>";
+
+			$noFoundCategories=true;
+			# draw the jump buttons
+			foreach($discoveredFiles as $filePath ){
+				if (stripos($filePath,"$querySum") !== false){
+					if ($noFoundCategories){
+						$noFoundCategories=False;
+						echo "<div class='listCard'>";
+						echo "<h2>Categories</h2>";
+					}
+					$headerTitle=str_replace($querySum."_","",$filePath);
+					$headerTitle=str_replace(".index","",$headerTitle);
+					$jumpLink=$headerTitle;
+					$headerTitle=str_replace("_"," ",$headerTitle);
+					$headerTitle=ucwords($headerTitle);
+					# draw the link
+					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>";
+				}
+			}
+			if ($noFoundCategories == false){
+				echo "</div>";
+			}
 			# load the page as is with the auto refresh buttons
 			foreach($discoveredFiles as $filePath ){
 				if (stripos($filePath,"$querySum") !== false){
 					$headerTitle=str_replace($querySum."_","",$filePath);
 					$headerTitle=str_replace(".index","",$headerTitle);
+					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					echo "<h2>$headerTitle</h2>";
+					echo "<h2 id='$jumpLink'>$headerTitle</h2>";
 					# draw the matching search content
 					echo file_get_contents($webDirectory."/search/".$filePath);
 				}
@@ -713,7 +822,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		# launch the process with a background scheduler
 		$command = "echo '";
 		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 2 --id 2web_search ';
-		$command .= '/usr/bin/2web_search "'.$_GET["q"].'" "'.$querySum.'" ';
+		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
 		$command .= "' | at -M now";
 
 		#echo "<pre>";
@@ -724,7 +833,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		shell_exec($command);
 
 		# write the started file
-		file_put_contents($webDirectory."/search/".$querySum."_started.index","");
+		file_put_contents($webDirectory."/search/".$querySum."_started.index","$command");
 
 		#redirect("?autoRefresh=true&q=".$_GET["q"]);
 
@@ -1074,6 +1183,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "</div>";
 
 }else{
+	drawHead();
+	# add the header document after building the document start
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# no search made, the search has been loaded, steal focus for the search bar
 	echo "<script>";
 	echo "	window.onload = function(){";

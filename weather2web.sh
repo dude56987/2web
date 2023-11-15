@@ -147,7 +147,7 @@ function update(){
 				if cacheCheck "$webDirectory/weather/data/station_$locationSum.cfg" 60;then
 					{
 						# create the index entry
-						echo -n "<a class='button' href='#$weatherLocation'>$weatherLocation</a>"
+						echo -n "<a class='button' href='/weather/#$weatherLocation'>$weatherLocation</a>"
 					} > "$webDirectory/weather/data/station_$locationSum.index"
 				fi
 				# fetch the weather info

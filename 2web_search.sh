@@ -98,8 +98,45 @@ function searchEpisodes(){
 	webDirectory=$1
 	searchQuery=$2
 	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_episodes.index"
-	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_old_episodes.index"
+	indexPath="/var/cache/2web/web/data.db"
+	outputPath="$webDirectory/search/${searchSum}_old_episodes.index"
+	INFO "Scanning $indexPath for $searchQuery"
+	# if the output path does not yet exist then build it
+	if ! test -f "$outputPath";then
+		# if the index path exists
+		if test -f "$indexPath";then
+			# get all the index files
+			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"_episodes\";")"
+			indexDataLength=$(echo "$indexData" | wc -l)
+			indexDataCounter=0
+			# search though each of the index files
+			echo "$indexData" | while read episode;do
+				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
+				#
+				found="false"
+				# scan each index entry for the search term in the filename
+				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+					# write the data
+					cat "$episode" >> "$outputPath"
+					found="true"
+				fi
+				# only search the index file if the filename does not match
+				if echo "$found" | grep -q "false";then
+					# scan the contents of each .index file
+					# - cache episode read
+					episodeData="$(cat "$episode")"
+					# search the contents of the index file
+					if echo "$episodeData" | grep -q --ignore-case "$searchQuery";then
+						# show the found data
+						echo "$episodeData" >> "$outputPath"
+					fi
+				fi
+				# increment the counter
+				indexDataCounter=$(( indexDataCounter + 1 ))
+			done
+		fi
+	fi
 }
 ################################################################################
 function searchGraphs(){
@@ -132,6 +169,142 @@ function searchRepos(){
 	searchSum=$3
 	outputPath="$webDirectory/search/${searchSum}_repos.index"
 	searchIndex "$webDirectory" "$webDirectory/repos/repos.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchChannels(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_live_channels.index"
+	#indexPath="/var/cache/2web/web/live/index/"
+	indexPath="/var/cache/2web/web/data.db"
+	INFO "Scanning $indexPath for $searchQuery"
+	# if the output path does not yet exist then build it
+	if ! test -f "$outputPath";then
+		# if the index path exists
+		if test -f "$indexPath";then
+			# get all the index files
+			#indexData="$(find "$indexPath" -type f)"
+			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"_channels\";")"
+			indexDataLength=$(echo "$indexData" | wc -l)
+			indexDataCounter=0
+			# search though each of the index files
+			echo "$indexData" | while read episode;do
+				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
+				#
+				found="false"
+				# scan each index entry for the search term in the filename
+				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+					# write the data
+					cat "$episode" >> "$outputPath"
+					found="true"
+				fi
+				# only search the index file if the filename does not match
+				if echo "$found" | grep -q "false";then
+					# scan the contents of each .index file
+					# - cache episode read
+					episodeData="$(cat "$episode")"
+					# search the contents of the index file
+					if echo "$episodeData" | grep -q --ignore-case "$searchQuery";then
+						# show the found data
+						echo "$episodeData" >> "$outputPath"
+					fi
+				fi
+				# increment the counter
+				indexDataCounter=$(( indexDataCounter + 1 ))
+			done
+		fi
+	fi
+}
+################################################################################
+function searchWeather(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_weather_stations.index"
+	# check for any stations
+	foundStations=$(find "/var/cache/2web/web/weather/data/" -type f -name "station_*.index")
+	# if there are any stations
+	foundData="no"
+	# draw the stations in a listcard for correct scaling
+	# read all the weather station names
+	echo "$foundStations" | while read stationFilePath;do
+		fileData="$(cat "$stationFilePath")"
+		# search the contents of the index file
+		if echo "$fileData" | grep -q --ignore-case "$searchQuery";then
+			if echo "$foundData" | grep -q "no";then
+				foundData="yes"
+				echo "<div class='listCard'>" > "$outputPath"
+			fi
+			# show the found data
+			echo "$fileData" >> "$outputPath"
+		fi
+	done
+	# close the
+	if echo "$foundData" | grep -q "yes";then
+		echo "</div>" >> "$outputPath"
+	fi
+}
+################################################################################
+function searchDict(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	# search the dict server
+	outputPath="$webDirectory/search/${searchSum}_definitions.index"
+	#	# build the dict data
+	definitionData=$(dict "$searchQuery" | tr -s '\n')
+	firstDef="yes"
+	firstLine="yes"
+	# only build if there are found definitions
+	if [[ $(echo "$definitionData" | wc -l) -gt 3 ]];then
+		{
+			echo "<div class='settingListCard'>"
+			echo "<div class='listCard'>"
+		} > "$outputPath"
+		#
+		definitionCounter=0
+		#
+		echo "$definitionData" | while read line;do
+			# ignore the first line since it only lists the number of found definitions
+			#if echo "$line" | grep -q --ignore-case "^.*defintions found$";then
+			if echo "$firstLine" | grep -q --ignore-case "yes";then
+				firstLine="no"
+			elif echo "$line" | grep -q --ignore-case "^From.*:$";then
+				# increment the counter
+				definitionCounter=$(( definitionCounter + 1 ))
+				# check if this is the first def or if a footer is needed
+				if echo "$firstDef" | grep -q "yes";then
+					firstDef="no"
+				else
+					{
+					echo "</pre>"
+					echo "</div>"
+					} >> "$outputPath"
+				fi
+
+				# this is a line starting a new definition
+				{
+					echo "<div class='searchDef'>"
+					echo "<h3>Definition $definitionCounter</h3>"
+					echo "<pre class=''>"
+					echo "$line"
+				} >> "$outputPath"
+			else
+				# draw the line of text from inside the definition
+				{
+					echo "$line"
+				} >> "$outputPath"
+			fi
+		done
+		# close the last def found
+		{
+			echo "</pre>"
+			echo "</div>"
+			echo "</div>"
+			echo "</div>"
+		} >> "$outputPath"
+	fi
 }
 ################################################################################
 function searchIndex(){
@@ -179,10 +352,10 @@ function searchIndex(){
 function search(){
 	# lauch a search of all database infomation
 	searchQuery=$1
+	searchQuery=$(echo "$searchQuery" | sed "s/_/ /g")
 	addToLog "INFO" "Starting Search" "$searchQuery"
 	webDirectory=$(webRoot)
 
-	#searchSum="$(echo "$searchQuery" | md5sum | cut -d' ' -f1)"
 	searchSum="$2"
 
 	# check for parallel processing and count the cpus
@@ -194,34 +367,45 @@ function search(){
 
 	# launch each of the search types in a parallel queue so sections can be processed in parallel
 
-	#echo " " >  "$webDirectory/search/${searchSum}_started.index"
-
+	# search the dictionary server
+	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the shows
+	searchShows "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the portal
+	searchPortal "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the enabled graphs
+	searchGraphs "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the music
+	searchMusic "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the repos
+	searchRepos "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the new playlists
+	searchNew "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the weather stations
+	searchWeather "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the channels and radio channels
+	searchChannels "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	# search all episodes
 	searchEpisodes "$webDirectory" "$searchQuery" "$searchSum" &
 	waitQueue 0.2 "$totalCPUS"
 
-	searchShows "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
-
-	searchPortal "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
-
-	searchGraphs "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
-
-	searchMusic "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
-
-	searchRepos "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
-
-	searchNew "$webDirectory" "$searchQuery" "$searchSum" &
-	waitQueue 0.2 "$totalCPUS"
+	# search the wiki pages
 
 	# block the queue
-	blockQueue 0.2
+	blockQueue 1
 
-	# mark the search as complete
-	echo " " >  "$webDirectory/search/${searchSum}_finished.index"
+	# mark the search as complete this will stop the page refresh
+
+	date "+%s" > "$webDirectory/search/${searchSum}_finished.index"
 
 }
 ################################################################################
