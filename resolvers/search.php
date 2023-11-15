@@ -608,22 +608,22 @@ if (array_key_exists("q",$_GET)){
 }
 ################################################################################
 # start building the webpage
-?>
-<html class='randomFanart'>
-<head>
-	<title>2web Search</title>
-	<script src='/2webLib.js'></script>
-	<link rel='stylesheet' type='text/css' href='/style.css'>
-	<link rel='icon' type='image/png' href='/favicon.png'>
-	<link rel="search" type="application/opensearchdescription+xml" title="2web" href="/opensearch.xml">
-</head>
-<body>
-<?PHP
-include("/usr/share/2web/2webLib.php");
-include($_SERVER['DOCUMENT_ROOT']."/header.php");
-
+function drawHead(){
+	echo "<html class='randomFanart'>";
+	echo "<head>";
+	echo " <title>2web Search</title>";
+	echo " <script src='/2webLib.js'></script>";
+	echo " <link rel='stylesheet' type='text/css' href='/style.css'>";
+	echo " <link rel='icon' type='image/png' href='/favicon.png'>";
+	echo " <link rel='search' type='application/opensearchdescription+xml' title='2web' href='/opensearch.xml'>";
+	echo "</head>";
+	echo "<body>";
+	# add the header document after building the document start
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+}
 ################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
+	drawHead();
 	# create md5sum for the query to store output
 	$querySum = md5($searchQuery);
 
@@ -632,324 +632,427 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "Searching  for '$searchQuery'";
 	echo "<img class='globalPulse' src='/pulse.gif'>";
 	echo "</h1>\n";
-	if (stripos($searchQuery,"http://") || stripos($searchQuery,"https://")){
-		echo "<div class='titleCard'>";
-		echo "	<h2>Direct Link</h2>";
-		echo "		<a class='button' href='$searchQuery'>$searchQuery</a>";
-		echo "</div>";
-	}else if (stripos($searchQuery,"www.") || stripos($searchQuery,".com") || stripos($searchQuery,".net") || stripos($searchQuery,".org")){
-		# if this is a direct link make a link directly to the link
-		echo "<div class='titleCard'>";
-		echo "	<h2>Direct Link</h2>";
-		echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
-		echo "</div>";
-	}
-	echo "$bangHelp\n";
-	# write blank space to bypass buffering and start loading of the search results
-	# if this is not done page will hang on a difficult search
-	for($index=0; $index<5000; $index++){
-		echo " ";
-	}
 
-	# draw the top of the search results to prevent long searches from timing out
-	flush();
-	ob_flush();
+	$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 
-	$foundResults=false;
+	logPrint($webDirectory."/search/".$querySum."_started.index");
 
-	$indexPaths=Array();
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/movies/movies.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/shows/shows.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/music/music.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/random/albums.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/comics/comics.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/episodes.index"));
-	$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/repos.index"));
+	if(file_exists($webDirectory."/search/".$querySum."_started.index")){
+		logPrint("the search has been started");
+		$discoveredFiles=array_diff(scanDir($webDirectory."/search/"), Array($querySum."_started.index",$querySum."_finished.index"));
+		if(file_exists($webDirectory."/search/".$querySum."_finished.index")){
+			logPrint("the search has finished");
 
-	$searchCacheFilePath="search/".$querySum.".index";
+			# write when the search was completed
+			echo "<p>";
+			echo "Search completed ";
+			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_finished.index"));
+			echo "</p>";
 
-	# search weather stations first
-	# - weather results can not be cached because they update every 15 minutes
-	$weatherResults=searchWeather($searchCacheFilePath);
-
-	if (file_exists($searchCacheFilePath)){
-		$fullCacheOutput="";
-		$searchFinished=False;
-		# load the cached search results
-		$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
-		while( ! feof($searchCacheFileHandle)){
-			$tempLineData=fgets($searchCacheFileHandle);
-			# send a line of the cache file
-			#echo $tempLineData;
-			$fullCacheOutput .= $tempLineData;
-			if (strpos($tempLineData,"No Search Results for '")){
-				if (strpos($tempLineData,"' after search time of ")){
-					$searchFinished=True;
+			# load the page as is with the auto refresh buttons
+			foreach($discoveredFiles as $filePath ){
+				if (stripos($filePath,"$querySum") !== false){
+					$headerTitle=str_replace($querySum."_","",$filePath);
+					$headerTitle=str_replace(".index","",$headerTitle);
+					$headerTitle=str_replace("_"," ",$headerTitle);
+					$headerTitle=ucwords($headerTitle);
+					echo "<h2>$headerTitle</h2>";
+					# draw the matching search content
+					echo file_get_contents($webDirectory."/search/".$filePath);
 				}
 			}
-			if (strpos($tempLineData,"Search Complete in ")){
-				$searchFinished=True;
-			}
-		}
-		$dataSize=filesize($searchCacheFilePath);
-		$dataSize=filesize_to_human($dataSize);
-
-		echo "<div class='searchCacheFileDateSize'>Found ".$dataSize." / ".file_get_contents("mediaSize.index")." of related results on ".date("F d Y h:i:s a",filemtime($searchCacheFilePath))."</div>\n";
-		# if the search loaded from memory and was completed
-		if ($searchFinished){
-			echo $fullCacheOutput;
 		}else{
-			if ( ! array_key_exists("stopRefresh",$_GET)){
+			logPrint("the search has not finished");
+			echo "<p>";
+			echo "Search started ";
+			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_started.index"));
+			echo "</p>";
+			# build the refresh
+			if (array_key_exists("autoRefresh",$_GET)){
 				echo "<img class='localPulse' src='/pulse.gif'>\n";
-				echo "<hr>";
-				echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
-				echo "<hr>";
+				echo "<div class='listCard'>";
+				echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
 			}else{
-				echo "<hr>";
-				echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
-				echo "<hr>";
+				echo "<div class='listCard'>";
+				echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
 			}
-
-			if ( ! array_key_exists("stopRefresh",$_GET)){
-				# the search was not completed so reload the page every 60 seconds until it is
+			echo "</div>";
+			# load the page as is with the auto refresh buttons
+			foreach($discoveredFiles as $filePath ){
+				if (stripos($filePath,"$querySum") !== false){
+					$headerTitle=str_replace($querySum."_","",$filePath);
+					$headerTitle=str_replace(".index","",$headerTitle);
+					$headerTitle=str_replace("_"," ",$headerTitle);
+					$headerTitle=ucwords($headerTitle);
+					echo "<h2>$headerTitle</h2>";
+					# draw the matching search content
+					echo file_get_contents($webDirectory."/search/".$filePath);
+				}
+			}
+			# using javascript, reload the webpage every 60 seconds, time is in milliseconds
+			if (array_key_exists("autoRefresh",$_GET)){
 				echo "<script>";
-				echo "setTimeout(function() { window.location=window.location;},(1000*15));";
+				echo "delayedRefresh(10)";
 				echo "</script>";
 			}
-			echo $fullCacheOutput;
 		}
 	}else{
-		# if the file does not exist cache the search results
-		# ignore user aborts after the cacheing has begun
-		ignore_user_abort(true);
+		#logPrint("the search has not been started");
 
-		# write the cache file as a lock file
-		appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
-		if ( ! array_key_exists("stopRefresh",$_GET)){
+		# build the refresh
+		if (array_key_exists("autoRefresh",$_GET)){
 			echo "<img class='localPulse' src='/pulse.gif'>\n";
-			echo "<hr>";
-			echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
-			echo "<hr>";
+			echo "<div class='listCard'>";
+			echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
 		}else{
-			echo "<hr>";
-			echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
-			echo "<hr>";
+			echo "<div class='listCard'>";
+			echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
 		}
-		if ( ! array_key_exists("stopRefresh",$_GET)){
-			# reload the page for the user
-			echo "<script>";
-			echo "window.location=window.location;";
-			echo "</script>";
-		}
+		echo "</div>";
 
-		$startSearchTime=microtime(True);
-		# tell apache to not compress search results so streaming search results will work
-		#apache_setenv("no-gzip", "1");
+		# launch the process with a background scheduler
+		$command = "echo '";
+		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 2 --id 2web_search ';
+		$command .= '/usr/bin/2web_search "'.$_GET["q"].'" "'.$querySum.'" ';
+		$command .= "' | at -M now";
 
-		# set the max execution time to 15 minutes
-		# additional searches will display the results found by this running process
-		set_time_limit(900);
+		#echo "<pre>";
+		#echo "$command";
+		#echo "</pre>";
 
-		$pspell = pspell_new("en");
-		$pspellData="";
-		# if the query string contains a space
-		if (strpos($_GET['q']," ")){
-			# explode the string into an array split based on the spaces
-			$searchTerms=explode( " " , $searchQuery );
-			$correctedQuery="";
-			$correctedQueryHTML="";
-			$foundErrors=False;
-			# for each word seprated by a space create a search link
-			foreach($searchTerms as $searchTerm){
-				# check the spelling of each search term and include spelling sugestions
-				if (! pspell_check($pspell, $searchTerm)){
-					$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
-					foreach($spellingSuggestions as $word){
-						# create a search for corrected spelling of each word
-						#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
-						# add the word to the corrected query
-						$foundErrors=True;
-						$correctedQuery .= $word." ";
-						$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
-						break;
-					}
-				}else{
-					$correctedQuery .= $searchTerm." ";
-					$correctedQueryHTML .= $searchTerm." ";
-					#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
-				}
-			}
-			if ($foundErrors){
-				$pspellData .= "<div class='titleCard'>";
-				//echo "	<h2>Expand Search</h2>";
-				$pspellData .= "	<h2>Did you mean?</h2>";
-				$pspellData .= "	<div class='listcard'>";
-				$pspellData .= "		<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
-				$pspellData .= "	</div>";
-				$pspellData .= "</div>";
-			}
-		}else{
-			if (! pspell_check($pspell, $_GET['q'])){
-				$pspellData .= "<div class='titleCard'>";
-				$pspellData .= "<h2>";
-				$pspellData .= "Did you mean?";
-				$pspellData .= "</h2>";
-				$pspellData .= "<div class='listCard'>";
-				$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
-				foreach($spellingSuggestions as $word){
-					$pspellData .= "		<a class='button' href='/search.php?q=$word'>$word</a>";
-				}
-				$pspellData .= "</div>";
-				$pspellData .= "</div>";
-			}
-		}
-		# cache found data and display it
-		echo "$pspellData";
-		appendFile($searchCacheFilePath,$pspellData);
+		# launch the command
+		shell_exec($command);
 
-		# build the dict data
-		$dictData="";
-		$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
-		if ( $definitionData ){
-			$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
-			# build the definition data
-			$definitionData = explode("\n",$definitionData);
+		# write the started file
+		file_put_contents($webDirectory."/search/".$querySum."_started.index","");
 
-			$dictData .= "<div class='settingListCard'>\n";
-			$dictData .= "<h2>";
-			$dictData .= "Definition";
-			$dictData .= "</h2>";
-			$dictData .= "<div class='listCard'>\n";
-			//echo "<div class='titleCard'>\n";
+		#redirect("?autoRefresh=true&q=".$_GET["q"]);
 
-			$tempDefinition="";
-			$allDefinitions=Array();
-			foreach($definitionData as $definitionLine){
-				# check the tab depth
-				if (stripos($definitionLine,"definitions found")){
-					# this is the header and should be skipped
-					echo " ";
-				}else if (strlen($definitionLine) >= 2){
-					if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
-						# this is the start of a new definition
-						# append the previous definition to the definition array
-						$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
-						# blank the temp definition out for adding the new definiton
-						$tempDefinition = "";
-						# add the discovered line to the new definition entry
-						$tempDefinition .= $definitionLine."\n";
-					}else{
-						# this is part of the current definition
-						$tempDefinition .= $definitionLine."\n";
-					}
-				}else{
-					$tempDefinition .= $definitionLine."\n";
-				}
-			}
-			# for each definition draw a definition box object
-			$definitionCounter=1;
-			foreach($allDefinitions as $definition){
-				if (strlen($definition) >= 2){
-					if (($definition[0] != " ") && ($definition[1] != " ")){
-						$dictData .= "<div class='searchDef'>";
-						$dictData .= "<h3>Definition $definitionCounter</h3>";
-						$dictData .= "<pre class=''>";
-						$dictData .= $definition;
-						$dictData .= "</pre>";
-						$dictData .= "</div>";
-						$definitionCounter+=1;
-					}
-				}
-			}
-			$dictData .= "</div>";
-			$dictData .= "</div>";
-		}
-
-		appendFile($searchCacheFilePath,$dictData);
-		echo $dictData;
-
-		foreach( $indexPaths as $indexPath ){
-			# output space to prevent timeout
-			echo " ";
-			$indexInfo=searchIndex($indexPath,$searchQuery,$searchCacheFilePath);
-			if ( $indexInfo[0] ){
-				echo "<hr>";
-				appendFile($searchCacheFilePath,"<hr>");
-				$foundResults = true;
-			}
-		}
-		# search all the live channel names
-		$channelResults=searchChannels($searchCacheFilePath);
-		if ($channelResults[0]){
-			echo "<hr>";
-			appendFile($searchCacheFilePath,"<hr>");
-		}
-
-		echo "<hr>";
-		# sql episode search
-		# load database
-		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
-		# set the timeout to 1 minute since most webbrowsers timeout loading before this
-		$databaseObj->busyTimeout(60000);
-
-		# run query to get a list of all episodes
-		$result = $databaseObj->query('select * from "_episodes";');
-
-		$resultLimit=100;
-		$resultCounter=0;
-		$episodeSearchResultsFound=False;
-		# fetch each row data individually and display results
-		while($row = $result->fetchArray()){
-			$sourceFile = $row['title'];
-			# search each episode file
-			if (file_exists($sourceFile)){
-				if (is_file($sourceFile)){
-					if (stripos($sourceFile,".index")){
-						// read the index entry
-						$data=file_get_contents($sourceFile);
-						if (stripos($data,$searchQuery)){
-							if ($episodeSearchResultsFound == False){
-								$headerData="<h2 id='old_episodes'>Old Episodes</h2>";
-								appendFile($searchCacheFilePath, $headerData);
-								echo $headerData;
-								$episodeSearchResultsFound=True;
-							}
-							if($resultCounter >= $resultLimit){
-								# break the loop there are to many results
-								break;
-							}else{
-								$resultCounter+=1;
-								// write the index entry
-								appendFile($searchCacheFilePath, $data);
-								echo $data;
-								flush();
-								ob_flush();
-							}
-						}
-					}
-				}
-			}
-		}
-
-		# search all the wikis
-		$wikiSearchResults = searchAllWiki($_GET['q'],$searchCacheFilePath);
-		if ($wikiSearchResults[0]){
-			echo "<hr>";
-			appendFile($searchCacheFilePath,"<hr>");
-		}
-		# calc the total search time
-		$totalSearchTime= round((microtime(True) - $startSearchTime), 4);
-		if ( $foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) || ($weatherResults[0] == true) ){
-			$tempEndString="<h1>Search Complete in $totalSearchTime seconds</h1>";
-			echo $tempEndString;
-			appendFile($searchCacheFilePath,$tempEndString);
-		}else{
-			$tempEndString="<h1>No Search Results for '$searchQuery' after search time of $totalSearchTime seconds</h1>";
-			echo $tempEndString;
-			appendFile($searchCacheFilePath,$tempEndString);
-		}
+		# redirect to the results page
+		echo "<script>";
+		echo "location.replace('?autoRefresh&q=".$_GET["q"]."')";
+		#echo "delayedRefresh(10)";
+		echo "</script>";
 	}
+
+	#if (stripos($searchQuery,"http://") || stripos($searchQuery,"https://")){
+	#	echo "<div class='titleCard'>";
+	#	echo "	<h2>Direct Link</h2>";
+	#	echo "		<a class='button' href='$searchQuery'>$searchQuery</a>";
+	#	echo "</div>";
+	#}else if (stripos($searchQuery,"www.") || stripos($searchQuery,".com") || stripos($searchQuery,".net") || stripos($searchQuery,".org")){
+	#	# if this is a direct link make a link directly to the link
+	#	echo "<div class='titleCard'>";
+	#	echo "	<h2>Direct Link</h2>";
+	#	echo "		<a class='button' href='https://$searchQuery'>https://$searchQuery</a>";
+	#	echo "</div>";
+	#}
+	#echo "$bangHelp\n";
+	## write blank space to bypass buffering and start loading of the search results
+	## if this is not done page will hang on a difficult search
+	#for($index=0; $index<5000; $index++){
+	#	echo " ";
+	#}
+
+	## draw the top of the search results to prevent long searches from timing out
+	#flush();
+	#ob_flush();
+
+	#$foundResults=false;
+
+	#$indexPaths=Array();
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/movies/movies.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/shows/shows.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/music/music.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/random/albums.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/comics/comics.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/graphs/graphs.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/episodes.index"));
+	#$indexPaths=array_merge($indexPaths, Array("/var/cache/2web/web/new/repos.index"));
+
+	#$searchCacheFilePath="search/".$querySum.".index";
+
+	## search weather stations first
+	## - weather results can not be cached because they update every 15 minutes
+	#$weatherResults=searchWeather($searchCacheFilePath);
+
+	#if (file_exists($searchCacheFilePath)){
+	#	$fullCacheOutput="";
+	#	$searchFinished=False;
+	#	# load the cached search results
+	#	$searchCacheFileHandle = fopen($searchCacheFilePath,"r");
+	#	while( ! feof($searchCacheFileHandle)){
+	#		$tempLineData=fgets($searchCacheFileHandle);
+	#		# send a line of the cache file
+	#		#echo $tempLineData;
+	#		$fullCacheOutput .= $tempLineData;
+	#		if (strpos($tempLineData,"No Search Results for '")){
+	#			if (strpos($tempLineData,"' after search time of ")){
+	#				$searchFinished=True;
+	#			}
+	#		}
+	#		if (strpos($tempLineData,"Search Complete in ")){
+	#			$searchFinished=True;
+	#		}
+	#	}
+	#	$dataSize=filesize($searchCacheFilePath);
+	#	$dataSize=filesize_to_human($dataSize);
+
+	#	echo "<div class='searchCacheFileDateSize'>Found ".$dataSize." / ".file_get_contents("mediaSize.index")." of related results on ".date("F d Y h:i:s a",filemtime($searchCacheFilePath))."</div>\n";
+	#	# if the search loaded from memory and was completed
+	#	if ($searchFinished){
+	#		echo $fullCacheOutput;
+	#	}else{
+	#		if ( ! array_key_exists("stopRefresh",$_GET)){
+	#			echo "<img class='localPulse' src='/pulse.gif'>\n";
+	#			echo "<hr>";
+	#			echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
+	#			echo "<hr>";
+	#		}else{
+	#			echo "<hr>";
+	#			echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
+	#			echo "<hr>";
+	#		}
+
+	#		if ( ! array_key_exists("stopRefresh",$_GET)){
+	#			# the search was not completed so reload the page every 60 seconds until it is
+	#			echo "<script>";
+	#			echo "setTimeout(function() { window.location=window.location;},(1000*15));";
+	#			echo "</script>";
+	#		}
+	#		echo $fullCacheOutput;
+	#	}
+	#}else{
+	#	# if the file does not exist cache the search results
+	#	# ignore user aborts after the cacheing has begun
+	#	ignore_user_abort(true);
+
+	#	# write the cache file as a lock file
+	#	appendFile($searchCacheFilePath,"<!-- Search Started -->\n");
+	#	if ( ! array_key_exists("stopRefresh",$_GET)){
+	#		echo "<img class='localPulse' src='/pulse.gif'>\n";
+	#		echo "<hr>";
+	#		echo "<a class='button' href='?".$_SERVER["QUERY_STRING"]."'>⏹️ Stop Refresh</a>\n";
+	#		echo "<hr>";
+	#	}else{
+	#		echo "<hr>";
+	#		echo "<a class='button' href='?stopRefresh&".$_SERVER["QUERY_STRING"]."'>▶️  Auto Refresh</a>\n";
+	#		echo "<hr>";
+	#	}
+	#	if ( ! array_key_exists("stopRefresh",$_GET)){
+	#		# reload the page for the user
+	#		echo "<script>";
+	#		echo "window.location=window.location;";
+	#		echo "</script>";
+	#	}
+
+	#	$startSearchTime=microtime(True);
+	#	# tell apache to not compress search results so streaming search results will work
+	#	#apache_setenv("no-gzip", "1");
+
+	#	# set the max execution time to 15 minutes
+	#	# additional searches will display the results found by this running process
+	#	set_time_limit(900);
+
+	#	$pspell = pspell_new("en");
+	#	$pspellData="";
+	#	# if the query string contains a space
+	#	if (strpos($_GET['q']," ")){
+	#		# explode the string into an array split based on the spaces
+	#		$searchTerms=explode( " " , $searchQuery );
+	#		$correctedQuery="";
+	#		$correctedQueryHTML="";
+	#		$foundErrors=False;
+	#		# for each word seprated by a space create a search link
+	#		foreach($searchTerms as $searchTerm){
+	#			# check the spelling of each search term and include spelling sugestions
+	#			if (! pspell_check($pspell, $searchTerm)){
+	#				$spellingSuggestions =  pspell_suggest($pspell, $searchTerm);
+	#				foreach($spellingSuggestions as $word){
+	#					# create a search for corrected spelling of each word
+	#					#echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+	#					# add the word to the corrected query
+	#					$foundErrors=True;
+	#					$correctedQuery .= $word." ";
+	#					$correctedQueryHTML .= "<span class='highlightText'>".$word."</span> ";
+	#					break;
+	#				}
+	#			}else{
+	#				$correctedQuery .= $searchTerm." ";
+	#				$correctedQueryHTML .= $searchTerm." ";
+	#				#echo "		<a class='button' href='/search.php?q=$searchTerm'>$searchTerm</a>";
+	#			}
+	#		}
+	#		if ($foundErrors){
+	#			$pspellData .= "<div class='titleCard'>";
+	#			//echo "	<h2>Expand Search</h2>";
+	#			$pspellData .= "	<h2>Did you mean?</h2>";
+	#			$pspellData .= "	<div class='listcard'>";
+	#			$pspellData .= "		<a class='button' href='/search.php?q=$correctedQuery'>$correctedQueryHTML</a>";
+	#			$pspellData .= "	</div>";
+	#			$pspellData .= "</div>";
+	#		}
+	#	}else{
+	#		if (! pspell_check($pspell, $_GET['q'])){
+	#			$pspellData .= "<div class='titleCard'>";
+	#			$pspellData .= "<h2>";
+	#			$pspellData .= "Did you mean?";
+	#			$pspellData .= "</h2>";
+	#			$pspellData .= "<div class='listCard'>";
+	#			$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
+	#			foreach($spellingSuggestions as $word){
+	#				$pspellData .= "		<a class='button' href='/search.php?q=$word'>$word</a>";
+	#			}
+	#			$pspellData .= "</div>";
+	#			$pspellData .= "</div>";
+	#		}
+	#	}
+	#	# cache found data and display it
+	#	echo "$pspellData";
+	#	appendFile($searchCacheFilePath,$pspellData);
+
+	#	# build the dict data
+	#	$dictData="";
+	#	$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
+	#	if ( $definitionData ){
+	#		$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
+	#		# build the definition data
+	#		$definitionData = explode("\n",$definitionData);
+
+	#		$dictData .= "<div class='settingListCard'>\n";
+	#		$dictData .= "<h2>";
+	#		$dictData .= "Definition";
+	#		$dictData .= "</h2>";
+	#		$dictData .= "<div class='listCard'>\n";
+	#		//echo "<div class='titleCard'>\n";
+
+	#		$tempDefinition="";
+	#		$allDefinitions=Array();
+	#		foreach($definitionData as $definitionLine){
+	#			# check the tab depth
+	#			if (stripos($definitionLine,"definitions found")){
+	#				# this is the header and should be skipped
+	#				echo " ";
+	#			}else if (strlen($definitionLine) >= 2){
+	#				if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
+	#					# this is the start of a new definition
+	#					# append the previous definition to the definition array
+	#					$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
+	#					# blank the temp definition out for adding the new definiton
+	#					$tempDefinition = "";
+	#					# add the discovered line to the new definition entry
+	#					$tempDefinition .= $definitionLine."\n";
+	#				}else{
+	#					# this is part of the current definition
+	#					$tempDefinition .= $definitionLine."\n";
+	#				}
+	#			}else{
+	#				$tempDefinition .= $definitionLine."\n";
+	#			}
+	#		}
+	#		# for each definition draw a definition box object
+	#		$definitionCounter=1;
+	#		foreach($allDefinitions as $definition){
+	#			if (strlen($definition) >= 2){
+	#				if (($definition[0] != " ") && ($definition[1] != " ")){
+	#					$dictData .= "<div class='searchDef'>";
+	#					$dictData .= "<h3>Definition $definitionCounter</h3>";
+	#					$dictData .= "<pre class=''>";
+	#					$dictData .= $definition;
+	#					$dictData .= "</pre>";
+	#					$dictData .= "</div>";
+	#					$definitionCounter+=1;
+	#				}
+	#			}
+	#		}
+	#		$dictData .= "</div>";
+	#		$dictData .= "</div>";
+	#	}
+
+	#	appendFile($searchCacheFilePath,$dictData);
+	#	echo $dictData;
+
+	#	foreach( $indexPaths as $indexPath ){
+	#		# output space to prevent timeout
+	#		echo " ";
+	#		$indexInfo=searchIndex($indexPath,$searchQuery,$searchCacheFilePath);
+	#		if ( $indexInfo[0] ){
+	#			echo "<hr>";
+	#			appendFile($searchCacheFilePath,"<hr>");
+	#			$foundResults = true;
+	#		}
+	#	}
+	#	# search all the live channel names
+	#	$channelResults=searchChannels($searchCacheFilePath);
+	#	if ($channelResults[0]){
+	#		echo "<hr>";
+	#		appendFile($searchCacheFilePath,"<hr>");
+	#	}
+
+	#	echo "<hr>";
+	#	# sql episode search
+	#	# load database
+	#	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+	#	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	#	$databaseObj->busyTimeout(60000);
+
+	#	# run query to get a list of all episodes
+	#	$result = $databaseObj->query('select * from "_episodes";');
+
+	#	$resultLimit=100;
+	#	$resultCounter=0;
+	#	$episodeSearchResultsFound=False;
+	#	# fetch each row data individually and display results
+	#	while($row = $result->fetchArray()){
+	#		$sourceFile = $row['title'];
+	#		# search each episode file
+	#		if (file_exists($sourceFile)){
+	#			if (is_file($sourceFile)){
+	#				if (stripos($sourceFile,".index")){
+	#					// read the index entry
+	#					$data=file_get_contents($sourceFile);
+	#					if (stripos($data,$searchQuery)){
+	#						if ($episodeSearchResultsFound == False){
+	#							$headerData="<h2 id='old_episodes'>Old Episodes</h2>";
+	#							appendFile($searchCacheFilePath, $headerData);
+	#							echo $headerData;
+	#							$episodeSearchResultsFound=True;
+	#						}
+	#						if($resultCounter >= $resultLimit){
+	#							# break the loop there are to many results
+	#							break;
+	#						}else{
+	#							$resultCounter+=1;
+	#							// write the index entry
+	#							appendFile($searchCacheFilePath, $data);
+	#							echo $data;
+	#							flush();
+	#							ob_flush();
+	#						}
+	#					}
+	#				}
+	#			}
+	#		}
+	#	}
+
+	#	# search all the wikis
+	#	$wikiSearchResults = searchAllWiki($_GET['q'],$searchCacheFilePath);
+	#	if ($wikiSearchResults[0]){
+	#		echo "<hr>";
+	#		appendFile($searchCacheFilePath,"<hr>");
+	#	}
+	#	# calc the total search time
+	#	$totalSearchTime= round((microtime(True) - $startSearchTime), 4);
+	#	if ( $foundResults || ($wikiSearchResults[0] == true) || ($channelResults[0] == true) || ($weatherResults[0] == true) ){
+	#		$tempEndString="<h1>Search Complete in $totalSearchTime seconds</h1>";
+	#		echo $tempEndString;
+	#		appendFile($searchCacheFilePath,$tempEndString);
+	#	}else{
+	#		$tempEndString="<h1>No Search Results for '$searchQuery' after search time of $totalSearchTime seconds</h1>";
+	#		echo $tempEndString;
+	#		appendFile($searchCacheFilePath,$tempEndString);
+	#	}
+	#}
 	moreSearchLinks($searchQuery);
 	moreDataLinks($searchQuery);
 

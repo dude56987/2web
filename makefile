@@ -226,6 +226,10 @@ build-deb: upgrade-hls
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_img2img
 	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
 	grep --invert-match "^[[:blank:]]*#" ai2web_img2img.py | tr -s '\n' >> debian/usr/bin/ai2web_img2img
+	# 2web_search global search helper
+	echo "#! /bin/bash" > debian/usr/bin/2web_search
+	cat build/sh_head.txt > debian/usr/bin/2web_search
+	grep --invert-match "^[[:blank:]]*#" 2web_search.sh | tr -s '\n' >> debian/usr/bin/2web_search
 	# build the shell scripts
 	# - add the gpl header on the top
 	# - copy the file but remove the comments and blank lines

@@ -1,0 +1,230 @@
+#! /bin/bash
+########################################################################
+# 2web_search scans links for services and creates a index for 2web
+# Copyright (C) 2023  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+# enable debug log
+#set -x
+source /var/lib/2web/common
+################################################################################
+function update(){
+	addToLog "INFO" "STARTED Update" "$(date)"
+
+	webDirectory=$(webRoot)
+
+	if test -f "/etc/2web/cache/cacheDelay.cfg";then
+		echo "Loading cache settings..."
+		cacheDelay=$(cat "/etc/2web/cache/cacheDelay.cfg")
+	else
+		echo "Using default cache settings..."
+		cacheDelay="14"
+	fi
+
+	# cleanup old searches
+
+	ALERT "Checking for cache files in $webDirectory/search/"
+	if test -d "$webDirectory/search/";then
+		find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
+	fi
+
+
+	# build searches based on names of content in database and substrings of those terms
+
+	addToLog "INFO" "Update FINISHED" "$(date)"
+}
+################################################################################
+function searchNew(){
+	# search through each of the new database
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+
+	outputPath="$webDirectory/search/${searchSum}_new_all.index"
+	searchIndex "$webDirectory" "$webDirectory/new/all.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_movies.index"
+	searchIndex "$webDirectory" "$webDirectory/new/movies.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_episodes.index"
+	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_comics.index"
+	searchIndex "$webDirectory" "$webDirectory/new/comics.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_music.index"
+	searchIndex "$webDirectory" "$webDirectory/new/music.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_graphs.index"
+	searchIndex "$webDirectory" "$webDirectory/new/graphs.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_graphs.index"
+	searchIndex "$webDirectory" "$webDirectory/new/graphs.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_tracks.index"
+	searchIndex "$webDirectory" "$webDirectory/new/tracks.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_artists.index"
+	searchIndex "$webDirectory" "$webDirectory/new/artists.index" "$searchQuery" "$outputPath"
+	outputPath="$webDirectory/search/${searchSum}_new_channels.index"
+	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery""$outputPath"
+}
+################################################################################
+function searchMovies(){
+	# search though the movies database
+
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_movies.index"
+	searchIndex "$webDirectory" "$webDirectory/movies/movies.index" "$searchQuery"
+}
+################################################################################
+function searchShows(){
+	# search though each of the shows
+
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_shows.index"
+	searchIndex "$webDirectory" "$webDirectory/shows/shows.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchEpisodes(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_episodes.index"
+	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchGraphs(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_graphs.index"
+	searchIndex "$webDirectory" "$webDirectory/graphs/graphs.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchPortal(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_portal.index"
+	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchMusic(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_music.index"
+	searchIndex "$webDirectory" "$webDirectory/music/music.index" "$searchQuery"  "$outputPath"
+}
+################################################################################
+function searchRepos(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	outputPath="$webDirectory/search/${searchSum}_repos.index"
+	searchIndex "$webDirectory" "$webDirectory/repos/repos.index" "$searchQuery" "$outputPath"
+}
+################################################################################
+function searchIndex(){
+	webDirectory=$1
+	indexPath=$2
+	searchQuery=$3
+	outputPath=$4
+	INFO "Scanning $indexPath for $searchQuery"
+	# if the output path does not yet exist then build it
+	if ! test -f "$outputPath";then
+		# if the index path exists
+		if test -f "$indexPath";then
+			indexData="$(cat "$indexPath" | uniq )"
+			indexDataLength=$(echo "$indexData" | wc -l)
+			indexDataCounter=0
+			# search though each of the index files
+			echo "$indexData" | while read episode;do
+				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
+				#
+				found="false"
+				# scan each index entry for the search term in the filename
+				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+					# write the data
+					cat "$episode" >> "$outputPath"
+					found="true"
+				fi
+				# only search the index file if the filename does not match
+				if echo "$found" | grep -q "false";then
+					# scan the contents of each .index file
+					# - cache episode read
+					episodeData="$(cat "$episode")"
+					# search the contents of the index file
+					if echo "$episodeData" | grep -q --ignore-case "$searchQuery";then
+						# show the found data
+						echo "$episodeData" >> "$outputPath"
+					fi
+				fi
+				# increment the counter
+				indexDataCounter=$(( indexDataCounter + 1 ))
+			done
+		fi
+	fi
+}
+################################################################################
+function search(){
+	# lauch a search of all database infomation
+	searchQuery=$1
+	addToLog "INFO" "Starting Search" "$searchQuery"
+	webDirectory=$(webRoot)
+
+	#searchSum="$(echo "$searchQuery" | md5sum | cut -d' ' -f1)"
+	searchSum="$2"
+
+	# check for parallel processing and count the cpus
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
+	fi
+
+	# launch each of the search types in a parallel queue so sections can be processed in parallel
+
+	#echo " " >  "$webDirectory/search/${searchSum}_started.index"
+
+	searchEpisodes "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchShows "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchPortal "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchGraphs "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchMusic "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchRepos "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	searchNew "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+
+	# block the queue
+	blockQueue 0.2
+
+	# mark the search as complete
+	echo " " >  "$webDirectory/search/${searchSum}_finished.index"
+
+}
+################################################################################
+# launch the search
+search "$1" "$2"
+exit
