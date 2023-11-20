@@ -225,7 +225,7 @@ include("/usr/share/2web/templates/ai_toolbox.php");
 
 if ($discoveredImg2Img || $discoveredTxt2Img){
 	echo "<div class='titleCard'>\n";
-	echo "	<h1>What Can Image <sup>a</sup>I Do?</h1>\n";
+	echo "	<h1>What Can Image <sup class='simpleSup'>a</sup>I Do?</h1>\n";
 	echo "	<div class='listCard'>\n";
 	$helpTexts=Array();
 	$helpTexts=array_merge($helpTexts,["Generate images from text descriptions"]);

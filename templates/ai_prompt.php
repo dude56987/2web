@@ -207,7 +207,7 @@ include("/usr/share/2web/templates/ai_toolbox.php");
 
 if ($discoveredPrompt){
 	echo "<div class='titleCard'>\n";
-	echo "	<h1>What Can Text <sup>a</sup>I Do?</h1>\n";
+	echo "	<h1>What Can Text <sup class='simpleSup'>a</sup>I Do?</h1>\n";
 	echo "	<div class='listCard'>\n";
 	$helpTexts=Array();
 	$helpTexts=array_merge($helpTexts,["Ask me anything."]);
