@@ -224,10 +224,18 @@ while versions > 0:
 	if "--output-dir" in sys.argv:
 		# save the created image to the specified output directory
 		tempFilePath = (os.path.join(outputDir, (fileTitle+".png")))
+		tempFileModelPath = (os.path.join(outputDir, (fileTitle+".model")))
 	else:
 		tempFilePath = (fileTitle+".png")
+		tempFileModelPath = (fileTitle+".model")
 
+	# save the image
 	image.save(tempFilePath)
+	# save the model used to generate this image
+	tempModelFileObject = open(tempFileModelPath, "w")
+	tempModelFileObject.write(modelPath)
+	tempModelFileObject.close()
+
 
 	# check if the version was created successfully
 	if os.path.exists(tempFilePath):
