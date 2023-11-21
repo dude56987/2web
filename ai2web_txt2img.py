@@ -24,7 +24,7 @@ from python2webLib import h1, hr, file_get_contents
 if "--help" in sys.argv:
 	print("--help")
 	print("\tDisplay this message")
-	print("--one-prompt")
+	print("--prompt")
 	print("\tThis must be called last. Everything after this will be used as the prompt for image generation.")
 	print("--height")
 	print("\theight of the generated image")
@@ -46,13 +46,14 @@ if "--help" in sys.argv:
 ################################################################################
 import torch
 # stable diffusion image generating code
-from diffusers import StableDiffusionPipeline
+#from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 
 # check for download argument and if given only download the model and exit
 if "--download-model" in sys.argv:
 	modelPath = sys.argv[(sys.argv.index("--download-model")+1)]
 	# load the model, download if missing
-	StableDiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/")
+	DiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/")
 	exit()
 
 if "--list-negative-prompts" in sys.argv:
@@ -98,7 +99,12 @@ if "--prompt" in sys.argv:
 	tempQuestion = " ".join(sys.argv)
 	argumentSearch = "--prompt "
 	# use all text after --prompt as the input prompt
+	#promptText = " ".join(sys.argv[(sys.argv.index("--prompt")+1):])
 	promptText = " ".join(sys.argv[(sys.argv.index("--prompt")+1):])
+elif "--prompt-file" in sys.argv:
+	# read the prompt text from a file
+	promptFile = sys.argv[(sys.argv.index("--prompt-file")+1)]
+	promptText = file_get_contents(promptFile)
 else:
 	print("[ERROR]:You must give a prompt with --prompt")
 	exit()
@@ -110,6 +116,10 @@ if "--negative-prompt" in sys.argv:
 	argumentSearch = "--negative-prompt "
 	# get value of negative prompt, use quotes for multi line
 	negativePromptText = sys.argv[(sys.argv.index("--negative-prompt")+1)]
+elif "--negative-prompt-file" in sys.argv:
+	# read the prompt text from a file
+	negativePromptFile = sys.argv[(sys.argv.index("--negative-prompt-file")+1)]
+	negativePromptText = file_get_contents(negativePromptFile)
 elif "--negative-prompt-plus" in sys.argv:
 	# negative prompt that adds to the default negative prompts
 	negativePromptText += "," + sys.argv[(sys.argv.index("--negative-prompt-plus")+1)]
@@ -199,9 +209,9 @@ while versions > 0:
 
 	# local_files_only should always be true to prevent unwanted internet connections
 	if deviceToUse == "cpu":
-		pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
+		pipe = DiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
 	elif deviceToUse == "gpu":
-		pipe = StableDiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
+		pipe = DiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
 
 	if "--debug-pipe-components" in sys.argv:
 		print("Pipe components: "+str(pipe.components))

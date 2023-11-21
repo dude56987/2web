@@ -28,18 +28,19 @@ if (array_key_exists("debug",$_POST)){
 	echo "<hr>\n";
 	echo "</div>\n";
 }
-if (array_key_exists("prompt",$_POST)){
+if (array_key_exists("imageInputPrompt",$_POST)){
 	# prompt for image generation from text
 
-	$fileSumString  = ($_POST['prompt']);
-	#$fileSumString .= ($_POST['model']);
+	$fileSumString  = ($_POST['imageInputPrompt']);
+	$fileSumString .= ($_POST['imageNegativeInputPrompt']);
+	$fileSumString .= ($_POST['model']);
 	#$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
 	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
 
 	# launch the process with a background scheduler
-	$command = "echo '";
+	$command = 'echo "';
 	# one at a time queue, but launch from atq right away
 	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
 	# default load order of models if found on system
@@ -52,7 +53,11 @@ if (array_key_exists("prompt",$_POST)){
 	}
 
 	if (! is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg")){
-		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg",$_POST["prompt"]);
+		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg",$_POST["imageInputPrompt"]);
+	}
+
+	if (! is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg")){
+		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg",$_POST["imageNegativeInputPrompt"]);
 	}
 
 	# always write start time
@@ -66,14 +71,14 @@ if (array_key_exists("prompt",$_POST)){
 		$modelName=str_replace("--","/",$_POST["model"]);
 		$modelName=str_replace("models/","",$modelName);
 		# set the model
-		$command .= '/usr/bin/ai2web_txt2img --set-model "'.$modelName.'" ';
+		$command .= "/usr/bin/ai2web_txt2img --set-model '".$modelName."' ";
 	}else{
 		# use the default model
 		$command .= '/usr/bin/ai2web_txt2img ';
 	}
-	$command .= '--output-dir "/var/cache/2web/web/ai/txt2img/'.$fileSum.'/" ';
+	$command .= "--output-dir '/var/cache/2web/web/ai/txt2img/".$fileSum."/' ";
 	# generate a version
-	$command .= '--versions "1" ';
+	$command .= "--versions '1' ";
 
 	if (array_key_exists("hidden",$_POST)){
 		if ($_POST["hidden"] == "yes"){
@@ -105,20 +110,19 @@ if (array_key_exists("prompt",$_POST)){
 			}
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg",$foundVersions);
 		}else{
-			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg",$_POST["versions"]);
+			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg","1");
 		}
 	}
 
-	# cleanup the prompt so it will work correctly
-	$_POST["prompt"] =	str_replace("'","",$_POST["prompt"]);
+	# cleanup the negative prompt so it will work correctly
+	$_POST["imageNegativeInputPrompt"] =	str_replace("'","",$_POST["imageNegativeInputPrompt"]);
 
-	if (array_key_exists("prompt",$_POST)){
-		if ($_POST["prompt"] != "NONE"){
-			$command .= '--prompt "'.$_POST["prompt"].'" ';
-		}
-	}
+	# load up the negative prompt file
+	$command .= "--negative-prompt-file '/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg' ";
+	# load up the written prompt file
+	$command .= "--prompt-file '/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg' ";
 
-	$command .= "' | at -M now";
+	$command .= '" | at -M now';
 	# create the image view script link
 	if (! is_link("/var/cache/2web/web/ai/txt2img/".$fileSum."/index.php")){
 		symlink("/usr/share/2web/templates/ai_img.php" ,("/var/cache/2web/web/ai/txt2img/".$fileSum."/index.php"));
@@ -127,13 +131,16 @@ if (array_key_exists("prompt",$_POST)){
 		if ($_POST["model"] == "{ALL}"){
 			$combinedFileData = "";
 			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				# fix the path in the command
-				$directoryPath=str_replace("--","/",$directoryPath);
-				$directoryPath=str_replace("models/","",$directoryPath);
-				# add the command to the command config
-				$newCommand=str_replace("{ALL}","$directoryPath",$command);
-				# add the filtered line
-				$combinedFileData .= $newCommand.";\n";
+				# only load valid directory models, ignore the temp files
+				if (is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath)){
+					# fix the path in the command
+					$directoryPath=str_replace("--","/",$directoryPath);
+					$directoryPath=str_replace("models/","",$directoryPath);
+					# add the command to the command config
+					$newCommand=str_replace("{ALL}","$directoryPath",$command);
+					# add the filtered line
+					$combinedFileData .= $newCommand.";\n";
+				}
 			}
 			# write the combined commands used to generate all the prompts
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/command.cfg",$combinedFileData);
@@ -141,41 +148,38 @@ if (array_key_exists("prompt",$_POST)){
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/command.cfg",$command);
 		}
 	}
-	# launch a job on the queue for each version
-	foreach(range(1,$_POST["versions"]) as $index){
-		# if the model is set to all
-		if ($_POST["model"] == "{ALL}"){
-			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-				# check that this is a directory
-				if (is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
-					# cleanup the model name
-					$directoryPath=str_replace("--","/",$directoryPath);
-					$directoryPath=str_replace("models/","",$directoryPath);
-					# replace all in the command
-					$newCommand=str_replace("{ALL}","$directoryPath",$command);
-					# print debug info
-					if ($_POST["debug"] == "yes"){
-						echo "<div class='errorBanner'>\n";
-						echo "<hr>\n";
-						echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
-						echo "<hr>\n";
-						echo "</div>\n";
-					}
-					# for each model found launch a new command
-					shell_exec($newCommand);
+	# if the model is set to all
+	if ($_POST["model"] == "{ALL}"){
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
+			# check that this is a directory
+			if (is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
+				# cleanup the model name
+				$directoryPath=str_replace("--","/",$directoryPath);
+				$directoryPath=str_replace("models/","",$directoryPath);
+				# replace all in the command
+				$newCommand=str_replace("{ALL}","$directoryPath",$command);
+				# print debug info
+				if ($_POST["debug"] == "yes"){
+					echo "<div class='errorBanner'>\n";
+					echo "<hr>\n";
+					echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
+					echo "<hr>\n";
+					echo "</div>\n";
 				}
+				# for each model found launch a new command
+				shell_exec($newCommand);
 			}
-		}else{
-			if ($_POST["debug"] == "yes"){
-				echo "<div class='errorBanner'>\n";
-				echo "<hr>\n";
-				echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-				echo "<hr>\n";
-				echo "</div>\n";
-			}
-			# launch the command
-			shell_exec($command);
 		}
+	}else{
+		if ($_POST["debug"] == "yes"){
+			echo "<div class='errorBanner'>\n";
+			echo "<hr>\n";
+			echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+			echo "<hr>\n";
+			echo "</div>\n";
+		}
+		# launch the command
+		shell_exec($command);
 	}
 	# delay 1 seconds to allow loading of database
 	if(array_key_exists("HTTPS",$_SERVER)){
@@ -216,9 +220,12 @@ $discoveredPrompt=False;
 $discoveredPromptData="";
 $discoveredPromptData .= "<option value='{ALL}'>all</option>\n";
 foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/txt2img/"),array(".","..")) as $directoryPath){
-	$niceDirectoryPath=str_replace(".bin","",$directoryPath);
-	$discoveredPromptData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
-	$discoveredPrompt=True;
+	if(is_dir("/var/cache/2web/downloads/ai/txt2img/".$directoryPath."/")){
+		$niceDirectoryPath=str_replace("--","/",$directoryPath);
+		$niceDirectoryPath=str_replace("models/","",$niceDirectoryPath);
+		$discoveredPromptData .= "<option value='$directoryPath'>$niceDirectoryPath</option>\n";
+		$discoveredPrompt=True;
+	}
 }
 # add the toolbox to the top of the page
 include("/usr/share/2web/templates/ai_toolbox.php");
@@ -268,24 +275,28 @@ if ($discoveredTxt2Img){
 	echo "</span>\n";
 	echo "</span>\n";
 
-	echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
-	echo "<span class='groupedMenuItem'>\n";
-	echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
-	echo "</span>\n";
-	echo "</span>\n";
+	#echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
+	#echo "<span class='groupedMenuItem'>\n";
+	#echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
+	#echo "</span>\n";
+	#echo "</span>\n";
 
 	echo "<span title='Hide the prompt output from the public indexes. Anyone can still access it with a direct link though.'>";
 	echo "<span class='groupedMenuItem'>🥸 Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
 	echo "</span>";
 
 	echo "<span title='Do not touch bugs! This is only for developers.'>";
-	echo "<span class='groupedMenuItem'> 🐛<span class='footerText'> Debug</span>:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
+	echo "<span class='groupedMenuItem'> 🐛:<input class='checkbox' type='checkbox' name='debug' value='yes'></input></span>\n";
 	echo "</span>";
 
 	echo "</div>\n";
 	echo "</span>";
 
-	echo "<textarea title='Input the prompt text here.' class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
+	#echo "<textarea title='Input the prompt text here.' class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
+
+	echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'></textarea>";
+	echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...'  maxlength='120'></textarea>";
+
 	echo "<button title='Submit the prompt to generate responses.' class='aiSubmit' type='submit'><span class='footerText'>Prompt</span> ↩️</button>";
 
 	echo "</form>\n";
@@ -331,7 +342,7 @@ if ($discoveredTxt2Img){
 			if ( ! file_exists($directoryPath."/hidden.cfg")){
 				echo "<a class='inputCard textList' href='/ai/txt2img/$directoryPath'>";
 				echo file_get_contents($directoryPath."/prompt.cfg");
-				echo "<div>Responses: ";
+				echo "<div>🖼️ Images: ";
 				$finishedResponses=0;
 				foreach(scandir($directoryPath."/") as $responseFileName){
 					if(strpos($responseFileName,".png") !== false){

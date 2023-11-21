@@ -205,6 +205,10 @@ if "--one-prompt" in sys.argv:
 	argumentSearch = "--one-prompt "
 	# use all text after --one-prompt as the input question
 	question = tempQuestion[tempQuestion.find(argumentSearch)+len(argumentSearch):]
+elif "--prompt-file" in sys.argv:
+	# get the prompt data from a file
+	promptFilePath = sys.argv[(sys.argv.index("--prompt-file")+1)]
+	question = file_get_contents(promptFilePath)
 
 samePromptBuffer = list()
 

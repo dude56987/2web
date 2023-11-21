@@ -70,12 +70,8 @@ if (array_key_exists("prompt",$_POST)){
 		$command .= '/usr/bin/ai2web_prompt ';
 	}
 	$command .= '--output-dir "/var/cache/2web/web/ai/prompt/'.$fileSum.'/" ';
-	if (array_key_exists("versions",$_POST)){
-		if ($_POST["versions"] != "NONE"){
-			#$command .= '--versions "'.$_POST["versions"].'" ';
-			$command .= '--versions "1" ';
-		}
-	}
+	# generate one version
+	$command .= '--versions "1" ';
 
 	if (array_key_exists("hidden",$_POST)){
 		if ($_POST["hidden"] == "yes"){
@@ -83,7 +79,6 @@ if (array_key_exists("prompt",$_POST)){
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
 		}
 	}
-
 	if (is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg")){
 		# increment existing versions file
 		$foundVersions = file_get_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg");
@@ -92,7 +87,7 @@ if (array_key_exists("prompt",$_POST)){
 				$foundVersions += 1;
 			}
 		}else{
-			$foundVersions += $_POST["versions"];
+			$foundVersions += 1;
 		}
 		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg", $foundVersions);
 	}else{
@@ -102,19 +97,15 @@ if (array_key_exists("prompt",$_POST)){
 			}
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$foundVersions);
 		}else{
-			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg",$_POST["versions"]);
+			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg","1");
 		}
 	}
 
 	# cleanup the prompt so it will work correctly
 	$_POST["prompt"] =	str_replace("'","",$_POST["prompt"]);
-
-	if (array_key_exists("prompt",$_POST)){
-		if ($_POST["prompt"] != "NONE"){
-			$command .= '--one-prompt "'.$_POST["prompt"].'" ';
-		}
-	}
-
+	# write the prompt file
+	$command .= '--prompt-file "/var/cache/2web/web/ai/prompt/'.$fileSum.'/prompt.cfg" ';
+	# end the command by passing it to the "at" queue
 	$command .= "' | at -M now";
 	# create the image view script link
 	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
@@ -133,21 +124,9 @@ if (array_key_exists("prompt",$_POST)){
 		}
 	}
 	# launch a job on the queue for each version
-	foreach(range(1,$_POST["versions"]) as $index){
-		# if the model is set to all
-		if ($_POST["model"] == "{ALL}"){
-			foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
-				if ($_POST["debug"] == "yes"){
-					echo "<div class='errorBanner'>\n";
-					echo "<hr>\n";
-					echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-					echo "<hr>\n";
-					echo "</div>\n";
-				}
-				# for each model found launch a new command
-				shell_exec(str_replace("{ALL}","\"$directoryPath\"",$command));
-			}
-		}else{
+	# if the model is set to all
+	if ($_POST["model"] == "{ALL}"){
+		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
 			if ($_POST["debug"] == "yes"){
 				echo "<div class='errorBanner'>\n";
 				echo "<hr>\n";
@@ -155,9 +134,19 @@ if (array_key_exists("prompt",$_POST)){
 				echo "<hr>\n";
 				echo "</div>\n";
 			}
-			# launch the command
-			shell_exec($command);
+			# for each model found launch a new command
+			shell_exec(str_replace("{ALL}","\"$directoryPath\"",$command));
 		}
+	}else{
+		if ($_POST["debug"] == "yes"){
+			echo "<div class='errorBanner'>\n";
+			echo "<hr>\n";
+			echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+			echo "<hr>\n";
+			echo "</div>\n";
+		}
+		# launch the command
+		shell_exec($command);
 	}
 	# delay 1 seconds to allow loading of database
 	if(array_key_exists("HTTPS",$_SERVER)){
@@ -256,11 +245,11 @@ if ($discoveredPrompt){
 	echo "</span>\n";
 	echo "</span>\n";
 
-	echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
-	echo "<span class='groupedMenuItem'>\n";
-	echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
-	echo "</span>\n";
-	echo "</span>\n";
+	#echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
+	#echo "<span class='groupedMenuItem'>\n";
+	#echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
+	#echo "</span>\n";
+	#echo "</span>\n";
 
 	#echo "<span class='groupedMenuItem'>\n";
 	#echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
@@ -326,7 +315,7 @@ if ($discoveredPrompt){
 			if ( ! file_exists($directoryPath."/hidden.cfg")){
 				echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
 				echo file_get_contents($directoryPath."/prompt.cfg");
-				echo "<div>Responses: ";
+				echo "<div>🗨️ Responses: ";
 				$finishedResponses=0;
 				foreach(scandir($directoryPath."/") as $responseFileName){
 					if(strpos($responseFileName,".txt") !== false){
@@ -341,7 +330,7 @@ if ($discoveredPrompt){
 				# check for failures
 				if (file_exists($directoryPath."/failures.cfg")){
 					echo "<hr>";
-					echo "Failures: ";
+					echo "⛔ Failures: ";
 					echo file_get_contents($directoryPath."/failures.cfg");
 					echo "<hr>";
 				}

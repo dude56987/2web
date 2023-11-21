@@ -182,11 +182,13 @@ if($discoveredImages > 0){
 	echo "		<th>Discovered Files</th>";
 	echo "		<th>Total Filesize</th>";
 	echo "		<th>Prompt</th>";
+	echo "		<th>Negative Prompt</th>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>$discoveredImages</td>";
 	echo "		<td>".filesize_to_human($totalFileSize)."</td>";
 	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
+	echo "		<td>".file_get_contents("negativePrompt.cfg")."</td>";
 	echo "	</tr>";
 	echo "</table>";
 }
@@ -278,10 +280,12 @@ if ($drawPrompt){
 	echo "	<tr>";
 	echo "		<th>Model</th>";
 	echo "		<th>Prompt</th>";
+	echo "		<th>Negative Prompt</th>";
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>".file_get_contents("model.cfg")."</td>";
 	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
+	echo "		<td>".file_get_contents("negativePrompt.cfg")."</td>";
 	echo "	</tr>";
 	echo "</table>";
 	echo "<pre>";

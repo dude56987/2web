@@ -919,7 +919,7 @@ if (array_key_exists("loadConvo",$_GET)){
 				if ( ! file_exists("prompt/".$directoryPath."/hidden.cfg")){
 					echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
 					echo file_get_contents("prompt/".$directoryPath."/prompt.cfg");
-					echo "<div>Responses: ";
+					echo "<div>🗨️ Responses: ";
 					$finishedResponses=0;
 					foreach(scandir("prompt/".$directoryPath."/") as $responseFileName){
 						if(strpos($responseFileName,".txt") !== false){
@@ -930,6 +930,13 @@ if (array_key_exists("loadConvo",$_GET)){
 					echo "/";
 					echo file_get_contents("prompt/".$directoryPath."/versions.cfg");
 					echo "</div>";
+					# check for failures
+					if (file_exists("prompt/".$directoryPath."/failures.cfg")){
+						echo "<hr>";
+						echo "⛔ Failures: ";
+						echo file_get_contents("prompt/".$directoryPath."/failures.cfg");
+						echo "<hr>";
+					}
 					echo "</a>";
 				}
 			}
@@ -956,7 +963,7 @@ if (array_key_exists("loadConvo",$_GET)){
 				if ( ! file_exists("txt2img/".$directoryPath."/hidden.cfg")){
 					echo "<a class='inputCard textList' href='/ai/txt2img/$directoryPath'>";
 					echo file_get_contents("txt2img/".$directoryPath."/prompt.cfg");
-					echo "<div>Responses: ";
+					echo "<div>🖼️ Images: ";
 					$finishedResponses=0;
 					foreach(scandir("txt2img/".$directoryPath."/") as $responseFileName){
 						if(strpos($responseFileName,".png") !== false){
