@@ -16,6 +16,8 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - Git Repositories
  - System Graphs
  - Weather Forecasts
+ - Prompting AI
+ - Image Generating AI
 
 ## Features
 
@@ -56,10 +58,11 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - NO phoning home, 2web can be isolated completely from the internet and local content will still be accessible
  - Opensearch compatible so you can add 2web local search as a search engine to web browsers supporting the opensearch standard.
  - Generate song lyrics and video subtitles with AI.
- - Prompt AI models locally with [GPT4All](https://gpt4all.io/).
+ - Prompt AI models for text responses locally with [GPT4All](https://gpt4all.io/).
+ - Generate AI images locally with [diffusers](https://github.com/huggingface/diffusers).
  - Prompt multiple AI models at once for more varied results.
  - Add [Munin](https://munin-monitoring.org/) graphs to the web interface.
- - Generate a activity for 2web modules.
+ - Generate a activity graph for 2web modules.
  - A unified 2web server log.
  - Generate a portal of links to other servers and sevices.
  - Scan ports and open web paths for services on remote servers and generate links in the web portal section. For adding links to other servers on your LAN to your 2web server or non intergrated services on the same server as 2web.
@@ -183,7 +186,6 @@ however be advised this will remove everything and require you to redownload thu
  - 2web is a large project, funding is the number one thing needed right now to make it sustainable. Any amount of funding you can provide will greatly help develop 2web further.
    - [Ko-Fi](https://ko-fi.com/bluntsquid#)
    - [LibrePay](https://liberapay.com/bluntsquid/)
- - If you are a debian or ubuntu package maintiner that can get this package into the multiverse repositories.
 
 ## License
 
