@@ -155,17 +155,10 @@ if (array_key_exists("url",$_GET)){
 		# store ref for links
 		$refData="&ref=".$_GET["ref"];
 	}else{
-		if (array_key_exists("HTTP_REFERER",$_SERVER)){
-			# store new ref for links
-			$refData="&ref=".$_SERVER["HTTP_REFERER"];
-			# store the referer in the get data for back button
-			$_GET["ref"]=$_SERVER["HTTP_REFERER"];
-		}else{
-			#
-			$refData="&ref=/";
-			#
-			$_GET["ref"]="/";
-		}
+		#
+		$refData="&ref=/";
+		#
+		$_GET["ref"]="/";
 	}
 	// no url was given at all draw the remote
 	echo "<html class='randomFanart'>";
