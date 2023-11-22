@@ -1582,7 +1582,9 @@ table{
 	margin: 1rem;
 	float: none;
 	min-height: 3rem;
+	/*
 	max-height: 45rem;
+	*/
 	vertical-align: top;
 	white-space: normal;
 	overflow: auto;
@@ -1976,12 +1978,8 @@ svg {
 	line-height: 2rem;
 }
 .homeActivityGraph{
-	/*
-	border: solid var(--borderColor) 0.2rem;
-	*/
-	border-radius: 0.2rem;
 	max-width: 98%;
-	max-height: 9rem;
+	border-radius: 0.2rem;
 }
 .logDetails{
 	word-break: break-all;
