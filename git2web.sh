@@ -745,11 +745,13 @@ function processRepo(){
 		done
 		INFO "$repoName : Building README.md"
 		# generate html from README.md if found in repo
+		# - convert the readme links pointing to github local resources to source directory sources
+		# - pandoc is how github renders markdown so use it if available with markdown as a backup
 		if test -f "$repoSource/README.md";then
 			if test -f /usr/bin/pandoc;then
-				pandoc "$repoSource/README.md" -t html -o "$webDirectory/repos/$repoName/readme.index"
+				cat "$repoSource/README.md" | sed -E "s/\(\.\//(.\/source\//g" | pandoc -t html -o "$webDirectory/repos/$repoName/readme.index"
 			elif test -f /usr/bin/markdown;then
-				markdown "$repoSource/README.md" > "$webDirectory/repos/$repoName/readme.index"
+				cat "$repoSource/README.md" | sed -E "s/\(\.\//(.\/source\//g" | markdown "$repoSource/README.md" > "$webDirectory/repos/$repoName/readme.index"
 			fi
 		fi
 
