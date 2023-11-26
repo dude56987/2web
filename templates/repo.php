@@ -471,7 +471,7 @@ if (array_key_exists("inspector",$_GET)){
 }else{
 	drawHeader();
 	echo "<div class='titleCard'>\n";
-	echo "	<h2>Repo</h2>\n";
+	echo "	<h2>Overview</h2>\n";
 	# draw first commit
 	buildCommitTable(0);
 	echo "<div>";
