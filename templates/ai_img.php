@@ -284,8 +284,16 @@ if ($drawPrompt){
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>".file_get_contents("model.cfg")."</td>";
-	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
-	echo "		<td>".file_get_contents("negativePrompt.cfg")."</td>";
+	$promptData=file_get_contents("prompt.cfg");
+	echo "		<td>";
+	echo "			<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($promptData)).");' ></button>";
+	echo $promptData;
+	echo "		</td>";
+	$negativePromptData=file_get_contents("negativePrompt.cfg");
+	echo "		<td>";
+	echo "			<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($negativePromptData)).");' ></button>";
+	echo $negativePromptData;
+	echo "		</td>";
 	echo "	</tr>";
 	echo "</table>";
 	echo "<pre>";

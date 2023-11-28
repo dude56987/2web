@@ -201,7 +201,9 @@ foreach( $discoveredImageList as $directoryPath){
 		$versionNumber -= 1;
 		#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
 		$tempAnwserData .= "<div>";
+		#logPrint($fileData);
 		$fileData=file_get_contents($directoryPath);
+		$tempAnwserData .= "<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($fileData)).");' ></button>";
 		if (strpos($fileData,"```") !== false){
 			$tempAnwserData .= "<pre>";
 			$tempAnwserData .= $fileData;
@@ -266,7 +268,11 @@ if ($drawPrompt){
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>".file_get_contents("model.cfg")."</td>";
-	echo "		<td>".file_get_contents("prompt.cfg")."</td>";
+	$promptData=file_get_contents("prompt.cfg");
+	echo "		<td>";
+	echo "			<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($promptData)).");' ></button>";
+	echo $promptData;
+	echo "		</td>";
 	echo "	</tr>";
 	echo "</table>";
 	echo "<pre>";

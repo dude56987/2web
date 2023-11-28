@@ -276,6 +276,13 @@ function delayedRefresh(timeout) {
 	// reload the page after a timeout
 	setTimeout(function() { location.reload();},(1000*timeout));
 }
+////////////////////////////////////////////////////////////////////////////////
+function copyToClipboard(copyText){
+	// copy text given as $copyText to the system clipboard
+
+	// write the text to the clipboard
+	navigator.clipboard.writeText(copyText);
+}
 /*
 //-----------------------------------------------------------------------------
 function startVideoUpdateLoop(){

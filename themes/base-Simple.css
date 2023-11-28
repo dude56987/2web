@@ -397,6 +397,10 @@ ol li{
 	sup{
 		display: inline-block;
 	}
+	/* hide copy buttons on touchscreens */
+	.copyButton{
+		display: none;
+	}
 }
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
@@ -1980,6 +1984,28 @@ svg {
 .homeActivityGraph{
 	max-width: 98%;
 	border-radius: 0.2rem;
+}
+.copyButton:before{
+	/*
+	content: "Copy   ";
+	*/
+	content: "✂️";
+}
+.copyButton{
+	width: 5rem;
+	float: right;
+	opacity: 0.1;
+}
+.copyButton:hover{
+	opacity: 1;
+}
+.copyButton:focus:before{
+	opacity: 1;
+	content: "Copied";
+	/*
+	content: "Copied 📋";
+	content: "📋";
+	*/
 }
 .logDetails{
 	word-break: break-all;
