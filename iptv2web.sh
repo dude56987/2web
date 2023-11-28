@@ -977,7 +977,7 @@ function buildPage(){
 	else
 		# build the page but dont write it, this function is intended to be
 		# piped into a file
-		echo -e "$tabs<script src='/2web.js'></script>"
+		echo -e "$tabs<script src='/2webLib.js'></script>"
 		echo -e "$tabs<script src='/live/hls.js'></script>"
 		echo -e "$tabs<video id='video' class='livePlayer' poster='$poster' autoplay muted></video>"
 		echo -e "$tabs<script>"
@@ -1134,8 +1134,8 @@ webGen(){
 					echo "<html onload='forcePlay()'  id='top' class='liveBackground'>"
 					echo "<head>"
 					echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"
-					echo " <title>$title</title>"
-					echo "	<script src='/2web.js'></script>"
+					echo "	<title>$title</title>"
+					echo "	<script src='/2webLib.js'></script>"
 					echo "</head>"
 					echo "<body>"
 					# place the header
