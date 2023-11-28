@@ -421,7 +421,9 @@ build-deb: upgrade-hls
 	chmod -Rv go-w debian/
 	chmod -Rv u+w debian/
 	# build the package
-	dpkg-deb -Z xz --build debian
+	# - Upgrade to zstd compression when debian 12 is the last supported version of debian
+	#  + Only debian 12+ has support for zstd compression which will make the package smaller
+	dpkg-deb -Z xz -z 9 --build debian
 	cp -v debian.deb 2web_UNSTABLE.deb
 	rm -v debian.deb
 	# remove the DEBIAN control directory for the .deb package
