@@ -686,6 +686,15 @@ main(){
 		enableMod "ai2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "ai2web"
+	elif [ "$1" == "-s" ] || [ "$1" == "--stop" ] || [ "$1" == "stop" ] ;then
+		# stop all jobs in the queue
+		allJobs=$(atq | cut -f1)
+		echo "$allJobs" | while read jobId;do
+			atrm "$jobId"
+		done
+		# kill any currently running jobs
+		killall ai2web_prompt
+		killall ai2web_txt2img
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
