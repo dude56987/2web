@@ -1992,18 +1992,24 @@ svg {
 	content: "✂️";
 }
 .copyButton{
+	/*
 	width: 5rem;
+	right: 2rem;
+	*/
 	float: right;
 	opacity: 0.1;
+	position: relative;
+	z-index: 10;
+	top: 0px;
 }
 .copyButton:hover{
 	opacity: 1;
 }
 .copyButton:focus:before{
 	opacity: 1;
-	content: "Copied";
-	/*
 	content: "Copied 📋";
+	/*
+	content: "Copied";
 	content: "📋";
 	*/
 }

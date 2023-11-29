@@ -508,6 +508,8 @@ if (array_key_exists("inspector",$_GET)){
 		echo 		file_get_contents("readme.index");
 	}
 	echo "</div>\n";
+	# add the copy buttons to the readme for pre tags
+	echo "<script>CreateCopyButtons();</script>";
 
 	/*
 	echo "<div class='titleCard'>\n";
