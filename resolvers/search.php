@@ -702,7 +702,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 	if(file_exists($webDirectory."/search/".$querySum."_started.index")){
 		logPrint("the search has been started");
-		$discoveredFiles=array_diff(scanDir($webDirectory."/search/"), Array($querySum."_started.index",$querySum."_finished.index"));
+		$discoveredFiles=array_diff(scanDir($webDirectory."/search/"), Array($querySum."_started.index",$querySum."_finished.index",$querySum."_progress.index",$querySum."_processing.index",$querySum."_total.index"));
 		if(file_exists($webDirectory."/search/".$querySum."_finished.index")){
 			logPrint("the search has finished");
 
@@ -764,6 +764,46 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			}
 			echo "</div>";
 
+			$searchQuery = $_GET["q"];
+			$querySum = md5($searchQuery);
+
+			if(file_exists($webDirectory."/search/".$querySum."_processing.index")){
+				$finishedVersions=file_get_contents($webDirectory."/search/".$querySum."_progress.index");
+				$totalVersions=file_get_contents($webDirectory."/search/".$querySum."_total.index");
+
+				$executionTime = $_SERVER['REQUEST_TIME'] - (file_get_contents($webDirectory."/search/".$querySum."_processing.index")) ;
+				$executionMinutes = floor($executionTime / 60);
+				$executionSeconds = floor($executionTime - floor($executionMinutes * 60));
+				# check for numbers less than 10
+				if ($executionMinutes < 10){
+					$executionMinutes = "0$executionMinutes" ;
+				}
+				if ($executionSeconds < 10){
+					$executionSeconds = "0$executionSeconds" ;
+				}
+				if($finishedVersions > 0){
+					$progress=floor(($finishedVersions/$totalVersions)*100);
+				}else{
+					$progress=0;
+				}
+				# draw the progress bar for the search
+				echo "<div class='progressBar'>\n";
+				if($finishedVersions > 0){
+					echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
+					echo ($finishedVersions."/".$totalVersions." %".$progress);
+				}else{
+					echo ($finishedVersions."/".$totalVersions." %".$progress);
+					echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
+				}
+				echo "\t</div>\n";
+				echo "</div>\n";
+
+				# list the time elapsed so far
+				echo "<div class='elapsedTime'>Elapsed Time since last prompt $executionMinutes:$executionSeconds</div>\n";
+			}else{
+				echo "<div class='elapsedTime'>Request has not yet started processing, Please wait for server to catch up...</div>\n";
+			}
+
 			$noFoundCategories=true;
 			# draw the jump buttons
 			foreach($discoveredFiles as $filePath ){
@@ -821,7 +861,6 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 		# launch the process with a background scheduler
 		$command = "echo '";
-		$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 2 --id 2web_search ';
 		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
 		$command .= "' | at -M now";
 

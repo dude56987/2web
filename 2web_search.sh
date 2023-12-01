@@ -327,6 +327,7 @@ function searchIndex(){
 				found="false"
 				# scan each index entry for the search term in the filename
 				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+					ALERT "Found Match in filename $episode"
 					# write the data
 					cat "$episode" >> "$outputPath"
 					found="true"
@@ -338,6 +339,7 @@ function searchIndex(){
 					episodeData="$(cat "$episode")"
 					# search the contents of the index file
 					if echo "$episodeData" | grep -q --ignore-case "$searchQuery";then
+						ALERT "Found Match in file data $episode"
 						# show the found data
 						echo "$episodeData" >> "$outputPath"
 					fi
@@ -347,6 +349,13 @@ function searchIndex(){
 			done
 		fi
 	fi
+}
+################################################################################
+incrementProgressFile(){
+	webDirectory="$1"
+	searchSum="$2"
+	# increment the progress file by 1
+	echo "$(( $(cat "$webDirectory/search/${searchSum}_progress.index") + 1 ))"  > "$webDirectory/search/${searchSum}_progress.index"
 }
 ################################################################################
 function search(){
@@ -366,38 +375,51 @@ function search(){
 	fi
 
 	# launch each of the search types in a parallel queue so sections can be processed in parallel
+	date "+%s" > "$webDirectory/search/${searchSum}_processing.index"
+
+	echo "0" > "$webDirectory/search/${searchSum}_progress.index"
+	echo "10" > "$webDirectory/search/${searchSum}_total.index"
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the shows
 	searchShows "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the portal
 	searchPortal "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the enabled graphs
 	searchGraphs "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the music
 	searchMusic "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the repos
 	searchRepos "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the new playlists
 	searchNew "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the weather stations
 	searchWeather "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the channels and radio channels
 	searchChannels "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search all episodes
 	searchEpisodes "$webDirectory" "$searchQuery" "$searchSum" &
+	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
-
 	# search the wiki pages
 
 	# block the queue
