@@ -378,7 +378,8 @@ function search(){
 	date "+%s" > "$webDirectory/search/${searchSum}_processing.index"
 
 	echo "0" > "$webDirectory/search/${searchSum}_progress.index"
-	echo "10" > "$webDirectory/search/${searchSum}_total.index"
+	# total number of threads to be launched below here +1 so 100% is complete
+	echo "11" > "$webDirectory/search/${searchSum}_total.index"
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
