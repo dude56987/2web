@@ -203,7 +203,7 @@ foreach( $discoveredImageList as $directoryPath){
 		$tempAnwserData .= "<div>";
 		#logPrint($fileData);
 		$fileData=file_get_contents($directoryPath);
-		$tempAnwserData .= "<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($fileData)).");' ></button>";
+		$tempAnwserData .= "<button class='button copyButton' onclick='copyToClipboard(".'"'.rawurlencode($fileData).'"'.");' ></button>";
 		if (strpos($fileData,"```") !== false){
 			$tempAnwserData .= "<pre>";
 			$tempAnwserData .= $fileData;
@@ -270,7 +270,7 @@ if ($drawPrompt){
 	echo "		<td>".file_get_contents("model.cfg")."</td>";
 	$promptData=file_get_contents("prompt.cfg");
 	echo "		<td>";
-	echo "			<button class='button copyButton' onclick='copyToClipboard(".str_replace("'","`",json_encode($promptData)).");' ></button>";
+	echo "			<button class='button copyButton' onclick='copyToClipboard(".'"'.rawurlencode($promptData).'"'.");' ></button>";
 	echo $promptData;
 	echo "		</td>";
 	echo "	</tr>";

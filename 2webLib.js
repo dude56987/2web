@@ -279,9 +279,11 @@ function delayedRefresh(timeout) {
 ////////////////////////////////////////////////////////////////////////////////
 function copyToClipboard(copyText){
 	// copy text given as $copyText to the system clipboard
-
+	// - Text should be passed to this function encoded by encodeURIComponent() or
+	//   by rawurlencode() in PHP
+	var decodedText = decodeURIComponent(copyText);
 	// write the text to the clipboard
-	navigator.clipboard.writeText(unescape(copyText));
+	navigator.clipboard.writeText(decodedText);
 }
 ////////////////////////////////////////////////////////////////////////////////
 function CreateCopyButtons(){
@@ -294,7 +296,9 @@ function CreateCopyButtons(){
 		clipboardData = clipboardData.replaceAll("<code>", "");
 		clipboardData = clipboardData.replaceAll("</code>", "");
 		// escape the string data for passing it to the clipboard
-		clipboardData = escape(clipboardData);
+		clipboardData = encodeURIComponent(clipboardData);
+		// convert characters that are not done by javascripts encodeURIComponent
+		clipboardData = clipboardData.replaceAll("'", "%27");
 		// build the copy button
 		elementArray[index].innerHTML = "<button class='copyButton' onclick='"+'copyToClipboard("' + clipboardData + '")' + ";return false;'></button>" + elementArray[index].innerHTML;
 	}
