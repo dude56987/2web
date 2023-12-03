@@ -347,6 +347,7 @@ ol li{
 	margin: 0px;
 	padding: 0px;
 	margin-bottom: 1rem;
+	cursor: pointer;
 }
 .menuButton{
 	background-color: var(--glassBackground);
@@ -776,6 +777,7 @@ ol{
 	border-width: 0.2rem;
 	text-decoration: none;
 	text-align: center;
+	cursor: pointer;
 }
 a .inputCard:hover{
 	color: var(--highlightText);
@@ -1562,6 +1564,7 @@ table{
 	border-width: 0.2rem;
 	text-decoration: none;
 	text-align: center;
+	cursor: pointer;
 }
 .searchbutton:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
@@ -2001,6 +2004,7 @@ svg {
 	position: relative;
 	z-index: 10;
 	top: 0px;
+	cursor: pointer;
 }
 .copyButton:hover{
 	opacity: 1;
@@ -2064,6 +2068,7 @@ details{
 	background-color: var(--glassBackground);
 	color: var(--textColor);
 	font-size: 100%;
+	cursor: pointer;
 }
 .aiSubmit:hover{
 	background-color: var(--highlightBackground);
@@ -2196,6 +2201,7 @@ details{
 input{
 	font-size: 1.5rem;
 	width: 90%;
+	cursor: pointer;
 }
 select{
 	font-size: 1.5rem;
