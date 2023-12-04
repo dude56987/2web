@@ -1100,6 +1100,9 @@ a:visited {
 	padding: 0.5rem;
 	min-height: 3rem;
 }
+.listCard form{
+	display: inline-block;
+}
 .listCard .button{
 	display: inline-block;
 	line-height: 3rem;

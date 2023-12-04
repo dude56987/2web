@@ -839,6 +839,33 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "location.replace('?autoRefresh&q=".$_GET["q"]."')";
 		echo "</script>";
 	}
+	# add ai search links if they exist
+	if (file_exists($webDirectory."/ai/txt2img/index.php") || file_exists($webDirectory."/ai/prompt/index.php")){
+		echo "<div class='titleCard'>";
+		echo "<h2>AI Tools</h2>";
+		echo "<div class='listCard'>";
+		if (file_exists($webDirectory."/ai/txt2img/index.php")){
+			echo "<form method='post' action='/ai/txt2img/index.php'>\n";
+			echo "<input type='text' name='model' value='{ALL}' hidden>\n";
+			echo "<input type='text' name='hidden' value='no' hidden>\n";
+			echo "<input type='text' name='debug' value='no' hidden>\n";
+			echo "<input type='text' name='imageInputPrompt' value='".$_GET["q"]."' hidden>";
+			echo "<input type='text' name='imageNegativeInputPrompt' hidden>";
+			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>Generate Image From Query 🎨</button>";
+			echo "</form>\n";
+		}
+		if (file_exists($webDirectory."/ai/prompt/index.php")){
+			echo "<form method='post' action='/ai/prompt/index.php'>\n";
+			echo "<input type='text' name='model' value='{ALL}' hidden>\n";
+			echo "<input type='text' name='hidden' value='no' hidden>\n";
+			echo "<input type='text' name='debug' value='no' hidden>\n";
+			echo "<input type='text' name='prompt' value='".$_GET["q"]."' hidden>";
+			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>Prompt AI Models with Query 👽</button>";
+			echo "</form>\n";
+		}
+		echo "</div>\n";
+		echo "</div>\n";
+	}
 
 	moreSearchLinks($searchQuery);
 	moreDataLinks($searchQuery);
