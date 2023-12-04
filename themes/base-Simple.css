@@ -1399,6 +1399,12 @@ table, th, td{
 	text-shadow: none;
 	text-align: center;
 }
+.kodiControlEmbededTable{
+	border: none;
+}
+.kodiControlEmbededTableButton{
+	width: 25dvw;
+}
 .commitMessageCell{
 	word-break: break-all;
 }

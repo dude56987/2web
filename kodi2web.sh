@@ -35,6 +35,8 @@ function update(){
 	createDir "$downloadDirectory"
 	# make comics directory
 	createDir "$webDirectory/kodi/"
+	# the kodi player cache
+	createDir "$webDirectory/kodi-player/"
 	#createDir "$webDirectory/kodi/data/"
 	# scan the sources
 	ALERT "kodi Locations: $kodiLocations"

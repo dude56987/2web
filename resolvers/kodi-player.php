@@ -40,8 +40,14 @@ function remoteRedirect(){
 ################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
-	# play
-	$videoLink = $_GET['url'];
+	# check if the link was passed with the web remote
+	if (array_key_exists("useYtdlResolver",$_GET)){
+		$videoLink = $_GET['url'];
+		# add the local resolver to the video link
+		$videoLink = "http://".$_SERVER["SERVER_ADDR"]."/ytdl-resolver.php?url=".$videoLink;
+	}else{
+		$videoLink = $_GET['url'];
+	}
 	# remove parenthesis from video link if they exist
 	debug("Cleaning link ".$videoLink."<br>");
 	while(strpos($videoLink,'"')){
@@ -65,6 +71,206 @@ if (array_key_exists("url",$_GET)){
 	#redirect($_SERVER["HTTP_REFERER"]);
 	#echo $_SERVER["HTTP_REFERER"]."<br>\n";
 	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
+}else if (array_key_exists("shareStreamURL",$_GET)){
+	# check if the link was passed with the web remote
+	$videoLink = $_GET['shareStreamURL'];
+	$videoLinkSum=md5($videoLink);
+	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
+		# remove parenthesis from video link if they exist
+		debug("Cleaning link ".$videoLink."<br>");
+		while(strpos($videoLink,'"')){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace('"','',$videoLink);
+		}
+		while(strpos($videoLink,"'")){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace("'","",$videoLink);
+		}
+
+		# get the title of the video
+		$videoTitle=shell_exec("yt-dlp --get-title '".$videoLink."' ");
+		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle);
+
+		# add the local resolver to the video link
+		$videoLink = "http://".gethostname().".local/live/iptv-resolver.php?url=".'"'.$videoLink.'"';
+		# write the temp file
+		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
+	}
+	# build the link for the generated .strm file
+	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
+	# build the command to play on all the players
+	$command = "kodi2web_player open '".$videoLink."'";
+	# fork the process
+	shell_exec($command);
+	# go back to the remote control page
+	redirect("/kodi-player.php");
+}else if (array_key_exists("shareURL",$_GET)){
+	# check if the link was passed with the web remote
+	$videoLink = $_GET['shareURL'];
+	$videoLinkSum=md5($videoLink);
+	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
+		# remove parenthesis from video link if they exist
+		debug("Cleaning link ".$videoLink."<br>");
+		while(strpos($videoLink,'"')){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace('"','',$videoLink);
+		}
+		while(strpos($videoLink,"'")){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace("'","",$videoLink);
+		}
+		# get the title of the video
+		$videoTitle=shell_exec("yt-dlp --get-title '".$videoLink."' ");
+		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle );
+
+		# add the local resolver to the video link
+		$videoLink = "http://".gethostname().".local/ytdl-resolver.php?url=".'"'.$videoLink.'"';
+		# write the temp file
+		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
+	}
+	# build the link for the generated .strm file
+	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
+	# build the command to play on all the players
+	$command = "kodi2web_player open '".$videoLink."'";
+	# fork the process
+	shell_exec($command);
+	# go back to the remote control page
+	redirect("/kodi-player.php");
+}else if (array_key_exists("share",$_GET)){
+	echo "<html class='randomFanart'>";
+	echo "<head>";
+	echo "<link rel='stylesheet' href='/style.css'>";
+	echo "</head>";
+	echo "<body class='settingListCard'>";
+	echo "<table class='kodiPlayerButtonGrid'>";
+	echo "	<tr>\n";
+	echo "		<td>\n";
+	# link back to the launch location of the remote
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/kodi-player.php'>🎛️ Remote</a>\n";
+	echo "		</td>\n";
+	echo "	</tr>\n";
+	echo "	<tr>\n";
+	echo "		<th>\n";
+	echo "			Load Previous Video\n";
+	echo "		</th>\n";
+	echo "	</tr>\n";
+	echo "	<tr>\n";
+	echo "		<td>\n";
+	echo "			<table class='kodiControlEmbededTable'>\n";
+	echo "				<form class=''>\n";
+	echo "					<td>\n";
+	echo "						<select name='url'>\n";
+	$linkPrefix="http://".gethostname().".local/kodi-player/";
+	$linkRemovePrefix="http://".gethostname().".local/ytdl-resolver.php?url=";
+	$previousLinkList=array_diff(scanDir("/var/cache/2web/web/kodi-player/"),array(".",".."));
+	$sortedLinkList=array();
+	# sort the link list by modification date
+	foreach($previousLinkList as $directoryPath){
+		# only include strm files
+		if (stripos($directoryPath,".strm") !== false){
+			$sortedLinkList[filemtime("kodi-player/".$directoryPath)]=$directoryPath;
+		}
+	}
+	#$sortedLinkList=ksort($sortedLinkList);
+	ksort($sortedLinkList);
+	$sortedLinkList=array_reverse($sortedLinkList);
+	# draw the previous links list
+	foreach($sortedLinkList as $directoryPath){
+		$tempText=str_replace($linkRemovePrefix,"",file_get_contents("kodi-player/".$directoryPath));
+		# use the sum generated for the filename
+		$titleDataPath="/var/cache/2web/web/kodi-player/".str_replace(".strm",".title",$directoryPath);
+		logPrint($titleDataPath);
+		if (file_exists($titleDataPath)){
+			logPrint("loading title");
+			# load the video title
+			$tempText=file_get_contents($titleDataPath);
+			echo "							<option value='".$linkPrefix.$directoryPath."'>".$tempText."</option>\n";
+		}else{
+			logPrint("could not find title");
+			echo "							<option value='".$linkPrefix.$directoryPath."'>".$tempText."</option>\n";
+		}
+	}
+	echo "						</select>\n";
+	echo "					</td>\n";
+	echo "					<td class='kodiControlEmbededTableButton'>\n";
+	echo "						<input class='button' type='submit' value='Load Video'>";
+	echo "					</td>\n";
+	echo "				</form>\n";
+	echo "			</table>";
+	echo "		</td>\n";
+	echo "	</tr>\n";
+	# form to use resolver for a url
+	echo "	<tr>\n";
+	echo "		<form method='get'>\n";
+	echo "			<th>\n";
+	echo "				Send To KODI via Resolver\n";
+	echo "			</th>\n";
+	echo "		</tr>\n";
+	echo "		<tr>\n";
+	echo "			<td>\n";
+	echo "				<table class='kodiControlEmbededTable'>\n";
+	echo "					<tr>\n";
+	# build the share url interface for posting urls into the resolver to be passed to kodi
+	echo "						<td>\n";
+	echo "							<input type='text' name='shareURL' placeholder='http://example.com/play.php?v=3d4D3ldK'>\n";
+	echo "						</td>\n";
+	echo "						<td class='kodiControlEmbededTableButton'>\n";
+	echo "							<input class='button' type='submit' value='Share URL'>\n";
+	echo "						</td>\n";
+	echo "					</tr>\n";
+	echo "				</table>\n";
+	echo "			</td>\n";
+	echo "		</form>\n";
+	echo "	</tr>\n";
+	# form to use resolver for a stream url
+	echo "	<form method='get'>\n";
+	echo "		<tr>\n";
+	echo "			<th>\n";
+	echo "				Send Stream to KODI via Resolver\n";
+	echo "			</th>\n";
+	echo "		</tr>\n";
+	echo "		<tr>\n";
+	echo "			<td>\n";
+	echo "				<table class='kodiControlEmbededTable'>\n";
+	echo "					<tr>\n";
+	echo "						<td>\n";
+	# build the share url interface for posting urls into the resolver to be passed to kodi
+	echo "							<input type='text' name='shareStreamURL' placeholder='http://example.com/user/3d4D3ldK/'>\n";
+	echo "						</td>\n";
+	echo "						<td class='kodiControlEmbededTableButton'>\n";
+	echo "							<input class='button' type='submit' value='Share Stream URL'>\n";
+	echo "						</td>\n";
+	echo "					</tr>\n";
+	echo "				</table>";
+	echo "			</td>\n";
+	echo "		</tr>\n";
+	echo "	</form>\n";
+	# form to use a direct link to content to send to kodi
+	echo "	<form method='get'>\n";
+	echo "		<tr>\n";
+	echo "			<th>\n";
+	echo "				Send To KODI Direct\n";
+	echo "			</th>\n";
+	echo "		</tr>\n";
+	echo "		<tr>\n";
+	echo "			<td>\n";
+	echo "				<table class='kodiControlEmbededTable'>\n";
+	echo "					<tr>\n";
+	echo "						<td>\n";
+	# build the share url interface for posting urls into the resolver to be passed to kodi
+	echo "							<input type='text' name='url' placeholder='http://example.com/media.mkv'>\n";
+	echo "						</td>\n";
+	echo "						<td class='kodiControlEmbededTableButton'>\n";
+	echo "							<input class='button' type='submit' value='Share Direct URL'>\n";
+	echo "						</td>\n";
+	echo "					</tr>\n";
+	echo "				</table>";
+	echo "			</td>\n";
+	echo "		</tr>\n";
+	echo "	</form>\n";
+	echo "</table>\n";
+	echo "</body>\n";
+	echo "</html>\n";
 }else if (array_key_exists("playlist",$_GET)){
 	# play
 	$videoLink = $_GET['playlist'];
@@ -161,24 +367,34 @@ if (array_key_exists("url",$_GET)){
 		$_GET["ref"]="/";
 	}
 	// no url was given at all draw the remote
-	echo "<html class='randomFanart'>";
-	echo "<head>";
-	echo "<link rel='stylesheet' href='/style.css'>";
-	echo "</head>";
-	echo "<body class='settingListCard'>";
-	echo "<table class='kodiPlayerButtonGrid'>";
-	echo "	<tr>";
-	echo "		<td>";
-	# link back to the launch location of the remote
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipbackward'>⏪<div>BACKWARD</div></a>";
-	echo "		</td>";
-	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipforward'>⏩<div>FORWARD</div></a>";
-	echo "		</td>";
-	echo "	</tr>";
+	echo "<html class='randomFanart'>\n";
+	echo "<head>\n";
+	echo "<link rel='stylesheet' href='/style.css'>\n";
+	echo "</head>\n";
+	echo "<body class='settingListCard'>\n";
+	echo "<table class='kodiPlayerButtonGrid'>\n";
+	echo "	<tr>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>\n";
+	echo "		</td>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton' href='kodi-player.php?share' title='Share Link'>⛓️<div>Share</div></a>\n";
+	echo "		</td>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='".$_GET["ref"]."'>❌<div>CLOSE</div></a>\n";
+	echo "		</td>\n";
+	echo "	</tr>\n";
+	echo "	<tr>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?input=home$refData'>🏠<div>HOME</div></a>\n";
+	echo "		</td>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?stop$refData'>⏹️<div>STOP</div></a>";
+	echo "		</td>\n";
+	echo "		<td>\n";
+	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play$refData'>⏯️<div>Play/Pause</div></a>";
+	echo "		</td>\n";
+	echo "	</tr>\n";
 	echo "	<tr>";
 	echo "		<td>";
 	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?input=back$refData'>🔙<div>BACK</div></a>";
@@ -203,13 +419,13 @@ if (array_key_exists("url",$_GET)){
 	echo "	</tr>";
 	echo "	<tr>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?stop$refData'>⏹️<div>STOP</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipbackward'>⏪<div>BACKWARD</div></a>\n";
 	echo "		</td>";
 	echo "		<td>";
 	echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='kodi-player.php?input=down$refData'>⬇️<div>DOWN</div></a>";
 	echo "		</td>";
 	echo "		<td>";
-	echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='kodi-player.php?play$refData'>⏯️<div>Play/Pause</div></a>";
+	echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='kodi-player.php?skipforward'>⏩<div>FORWARD</div></a>\n";
 	echo "		</td>";
 	echo "	</tr>";
 	echo "	<tr>";
