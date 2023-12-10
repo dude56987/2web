@@ -159,24 +159,28 @@ if (array_key_exists("imageInputPrompt",$_POST)){
 				# replace all in the command
 				$newCommand=str_replace("{ALL}","$directoryPath",$command);
 				# print debug info
-				if ($_POST["debug"] == "yes"){
-					echo "<div class='errorBanner'>\n";
-					echo "<hr>\n";
-					echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
-					echo "<hr>\n";
-					echo "</div>\n";
+				if (array_key_exists("debug",$_POST)){
+					if ($_POST["debug"] == "yes"){
+						echo "<div class='errorBanner'>\n";
+						echo "<hr>\n";
+						echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
+						echo "<hr>\n";
+						echo "</div>\n";
+					}
 				}
 				# for each model found launch a new command
 				shell_exec($newCommand);
 			}
 		}
 	}else{
-		if ($_POST["debug"] == "yes"){
-			echo "<div class='errorBanner'>\n";
-			echo "<hr>\n";
-			echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-			echo "<hr>\n";
-			echo "</div>\n";
+		if (array_key_exists("debug",$_POST)){
+			if ($_POST["debug"] == "yes"){
+				echo "<div class='errorBanner'>\n";
+				echo "<hr>\n";
+				echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
+				echo "<hr>\n";
+				echo "</div>\n";
+			}
 		}
 		# launch the command
 		shell_exec($command);
@@ -191,10 +195,15 @@ if (array_key_exists("imageInputPrompt",$_POST)){
 	}else{
 		$redirectUrl = ("http://".$_SERVER['HTTP_HOST']."/ai/txt2img/".$fileSum."/?autoRefresh");
 	}
-	if ($_POST["debug"] == "yes"){
-		echo "<p>".$redirectUrl."</p>\n";
-		echo "<a class='button' href='/ai/'>Back To Main Index</a>\n";
-		echo "</div>\n";
+	if (array_key_exists("debug",$_POST)){
+		if ($_POST["debug"] == "yes"){
+			echo "<p>".$redirectUrl."</p>\n";
+			echo "<a class='button' href='/ai/'>Back To Main Index</a>\n";
+			echo "</div>\n";
+		}else{
+			sleep(1);
+			redirect($redirectUrl);
+		}
 	}else{
 		sleep(1);
 		redirect($redirectUrl);
