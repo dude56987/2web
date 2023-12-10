@@ -96,33 +96,6 @@
 	</div>
 
 	<?php
-		if (file_exists("shows")){
-			drawPosterWidget("episodes");
-			drawPosterWidget("shows");
-		}
-		if (file_exists("movies")){
-			drawPosterWidget("movies");
-			# random movies
-			drawPosterWidget("movies", True);
-		}
-		if (file_exists("shows")){
-			# random
-			drawPosterWidget("shows", True);
-		}
-		if (file_exists("comics")){
-			drawPosterWidget("comics");
-			drawPosterWidget("comics", True);
-		}
-		if (file_exists("live")){
-			if (file_exists("updatedChannels.php")){
-				include($_SERVER['DOCUMENT_ROOT']."/updatedChannels.php");
-			}
-		}
-		if (file_exists("live")){
-			if (file_exists("randomChannels.php")){
-				include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
-			}
-		}
 		// add the footer
 		include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 	?>
