@@ -41,35 +41,29 @@ function remoteRedirect(){
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	# check if the link was passed with the web remote
-	if (array_key_exists("useYtdlResolver",$_GET)){
-		$videoLink = $_GET['url'];
-		# add the local resolver to the video link
-		$videoLink = "http://".$_SERVER["SERVER_ADDR"]."/ytdl-resolver.php?url=".$videoLink;
-	}else{
-		$videoLink = $_GET['url'];
+	$videoLink = $_GET['url'];
+	$videoLinkSum=md5($videoLink);
+	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
+		# remove parenthesis from video link if they exist
+		debug("Cleaning link ".$videoLink."<br>");
+		while(strpos($videoLink,'"')){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace('"','',$videoLink);
+		}
+		while(strpos($videoLink,"'")){
+			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
+			$videoLink = preg_replace("'","",$videoLink);
+		}
+		# write the temp file
+		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
 	}
-	# remove parenthesis from video link if they exist
-	debug("Cleaning link ".$videoLink."<br>");
-	while(strpos($videoLink,'"')){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-		$videoLink = preg_replace('"','',$videoLink);
-	}
-	while(strpos($videoLink,"'")){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-		$videoLink = preg_replace("'","",$videoLink);
-	}
+	# build the link for the generated .strm file
+	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
 	# build the command to play on all the players
 	$command = "kodi2web_player open '".$videoLink."'";
-	#$command = "echo \"kodi2web_player play '".$videoLink."'\"";
-	# set the command to run in the scheduler
-	#$command = $command." | /usr/bin/at -M -q a now";
-	# debug info
 	# fork the process
 	shell_exec($command);
-	#echo "$command"."<br>\n";
-	# go back to the page that sent the command
-	#redirect($_SERVER["HTTP_REFERER"]);
-	#echo $_SERVER["HTTP_REFERER"]."<br>\n";
+	# go back to the remote control page
 	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
 }else if (array_key_exists("shareStreamURL",$_GET)){
 	# check if the link was passed with the web remote
