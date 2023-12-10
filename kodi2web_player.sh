@@ -237,7 +237,7 @@ function playPause(){
 	# combine the request  string into a single string
 	request='{"jsonrpc": "2.0", "method": "Player.PlayPause", "params":{"playerid": '
 	request="$request$(getPlayerId "$kodiLocation")"
-	tempString=' }, "id": 1}"'
+	tempString=' }, "id": 1}'
 	request="$request$tempString"
 	# print request for debug
 	echo "$request" | jq
