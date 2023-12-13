@@ -678,14 +678,14 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_finished.index"));
 			echo "</p>";
 			checkSpelling($_GET["q"]);
-			# draw the jump buttons
 			$noFoundCategories=true;
+			# draw the jump buttons
 			foreach($discoveredFiles as $filePath ){
 				if (stripos($filePath,"$querySum") !== false){
 					if ($noFoundCategories){
 						$noFoundCategories=False;
-						echo "<div class='listCard'>";
-						echo "<h2>Categories</h2>";
+						echo "<h2>Categories</h2>\n";
+						echo "<div class='listCard'>\n";
 					}
 					$headerTitle=str_replace($querySum."_","",$filePath);
 					$headerTitle=str_replace(".index","",$headerTitle);
@@ -693,11 +693,11 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
 					# draw the link
-					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>";
+					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
 				}
 			}
 			if ($noFoundCategories == false){
-				echo "</div>";
+				echo "</div>\n";
 			}
 			# load the page as is with the auto refresh buttons
 			foreach($discoveredFiles as $filePath ){
@@ -776,8 +776,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				if (stripos($filePath,"$querySum") !== false){
 					if ($noFoundCategories){
 						$noFoundCategories=False;
-						echo "<div class='listCard'>";
-						echo "<h2>Categories</h2>";
+						echo "<h2>Categories</h2>\n";
+						echo "<div class='listCard'>\n";
 					}
 					$headerTitle=str_replace($querySum."_","",$filePath);
 					$headerTitle=str_replace(".index","",$headerTitle);
@@ -785,11 +785,11 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
 					# draw the link
-					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>";
+					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
 				}
 			}
 			if ($noFoundCategories == false){
-				echo "</div>";
+				echo "</div>\n";
 			}
 			# load the page as is with the auto refresh buttons
 			foreach($discoveredFiles as $filePath ){
@@ -799,16 +799,16 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					echo "<h2 id='$jumpLink'>$headerTitle</h2>";
+					echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
 					# draw the matching search content
 					echo file_get_contents($webDirectory."/search/".$filePath);
 				}
 			}
 			# using javascript, reload the webpage every 60 seconds, time is in milliseconds
 			if (array_key_exists("autoRefresh",$_GET)){
-				echo "<script>";
-				echo "delayedRefresh(10)";
-				echo "</script>";
+				echo "<script>\n";
+				echo "delayedRefresh(10);\n";
+				echo "</script>\n";
 			}
 		}
 	}else{
