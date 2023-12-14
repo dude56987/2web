@@ -38,22 +38,36 @@ function remoteRedirect(){
 	}
 }
 ################################################################################
+function cleanQuotes($videoLink){
+	# clean quotes from the video link
+	while(strpos($videoLink,'"')){
+		$videoLink = preg_replace('"','',$videoLink);
+	}
+	while(strpos($videoLink,"'")){
+		$videoLink = preg_replace("'","",$videoLink);
+	}
+	return $videoLink;
+}
+################################################################################
+function forkCommand($inputCommand){
+	# launch the process with a background scheduler
+	$command = 'echo "';
+	# one at a time queue, but launch from atq right away
+	$command .= '/usr/bin/nohup ';
+	$command .= $inputCommand;
+	$command .= '" | at -M now';
+	shell_exec($command);
+}
+################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	# check if the link was passed with the web remote
 	$videoLink = $_GET['url'];
-	$videoLinkSum=md5($videoLink);
+	# clean up the quotes
+	$videoLink = cleanQuotes($videoLink);
+	#	generate the sum from the cleaned link
+	$videoLinkSum = md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
-		# remove parenthesis from video link if they exist
-		debug("Cleaning link ".$videoLink."<br>");
-		while(strpos($videoLink,'"')){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace('"','',$videoLink);
-		}
-		while(strpos($videoLink,"'")){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace("'","",$videoLink);
-		}
 		# write the temp file
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
 	}
@@ -62,31 +76,23 @@ if (array_key_exists("url",$_GET)){
 	# build the command to play on all the players
 	$command = "kodi2web_player open '".$videoLink."'";
 	# fork the process
-	shell_exec($command);
+	forkCommand($command);
 	# go back to the remote control page
 	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
 }else if (array_key_exists("shareStreamURL",$_GET)){
 	# check if the link was passed with the web remote
-	$videoLink = $_GET['shareStreamURL'];
+	$OGvideoLink = $_GET['shareStreamURL'];
+	$videoLink = $OGvideoLink;
+	# clean up the quotes
+	$videoLink = cleanQuotes($videoLink);
+	# add the local resolver to the video link
+	$videoLink = "http://".gethostname().".local/live/iptv-resolver.php?url=".$videoLink;
+	# generate the hash
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
-		# remove parenthesis from video link if they exist
-		debug("Cleaning link ".$videoLink."<br>");
-		while(strpos($videoLink,'"')){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace('"','',$videoLink);
-		}
-		while(strpos($videoLink,"'")){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace("'","",$videoLink);
-		}
-
 		# get the title of the video
-		$videoTitle=shell_exec("yt-dlp --get-title '".$videoLink."' ");
+		$videoTitle=shell_exec("yt-dlp --get-title '".$OGvideoLink."' ");
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle);
-
-		# add the local resolver to the video link
-		$videoLink = "http://".gethostname().".local/live/iptv-resolver.php?url=".'"'.$videoLink.'"';
 		# write the temp file
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
 	}
@@ -95,30 +101,23 @@ if (array_key_exists("url",$_GET)){
 	# build the command to play on all the players
 	$command = "kodi2web_player open '".$videoLink."'";
 	# fork the process
-	shell_exec($command);
+	forkCommand($command);
 	# go back to the remote control page
 	redirect("/kodi-player.php");
 }else if (array_key_exists("shareURL",$_GET)){
 	# check if the link was passed with the web remote
-	$videoLink = $_GET['shareURL'];
+	$OGvideoLink = $_GET['shareURL'];
+	$videoLink = $OGvideoLink;
+	# clean up the quotes
+	$videoLink = cleanQuotes($videoLink);
+	# add the local resolver to the video link
+	$videoLink = "http://".gethostname().".local/ytdl-resolver.php?url=".$videoLink;
+	# generate the hash
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
-		# remove parenthesis from video link if they exist
-		debug("Cleaning link ".$videoLink."<br>");
-		while(strpos($videoLink,'"')){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace('"','',$videoLink);
-		}
-		while(strpos($videoLink,"'")){
-			debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-			$videoLink = preg_replace("'","",$videoLink);
-		}
 		# get the title of the video
-		$videoTitle=shell_exec("yt-dlp --get-title '".$videoLink."' ");
+		$videoTitle=shell_exec("yt-dlp --get-title '".$OGvideoLink."' ");
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle );
-
-		# add the local resolver to the video link
-		$videoLink = "http://".gethostname().".local/ytdl-resolver.php?url=".'"'.$videoLink.'"';
 		# write the temp file
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
 	}
@@ -127,7 +126,7 @@ if (array_key_exists("url",$_GET)){
 	# build the command to play on all the players
 	$command = "kodi2web_player open '".$videoLink."'";
 	# fork the process
-	shell_exec($command);
+	forkCommand($command);
 	# go back to the remote control page
 	redirect("/kodi-player.php");
 }else if (array_key_exists("share",$_GET)){
@@ -170,18 +169,18 @@ if (array_key_exists("url",$_GET)){
 	$sortedLinkList=array_reverse($sortedLinkList);
 	# draw the previous links list
 	foreach($sortedLinkList as $directoryPath){
-		$tempText=str_replace($linkRemovePrefix,"",file_get_contents("kodi-player/".$directoryPath));
+		$tempTitleText=str_replace($linkRemovePrefix,"",file_get_contents("kodi-player/".$directoryPath));
 		# use the sum generated for the filename
 		$titleDataPath="/var/cache/2web/web/kodi-player/".str_replace(".strm",".title",$directoryPath);
-		logPrint($titleDataPath);
+		$linkDataPath="/var/cache/2web/web/kodi-player/".$directoryPath;
+		# load the link itself from inside the .strm file
+		$tempLinkData=file_get_contents($linkDataPath);
 		if (file_exists($titleDataPath)){
-			logPrint("loading title");
 			# load the video title
-			$tempText=file_get_contents($titleDataPath);
-			echo "							<option value='".$linkPrefix.$directoryPath."'>".$tempText."</option>\n";
+			$tempTitleText=file_get_contents($titleDataPath);
+			echo "							<option value='".$tempLinkData."'>".$tempTitleText."</option>\n";
 		}else{
-			logPrint("could not find title");
-			echo "							<option value='".$linkPrefix.$directoryPath."'>".$tempText."</option>\n";
+			echo "							<option value='".$tempLinkData."'>".$tempTitleText."</option>\n";
 		}
 	}
 	echo "						</select>\n";
@@ -285,7 +284,7 @@ if (array_key_exists("url",$_GET)){
 	#$command = $command." | /usr/bin/at -M -q a now";
 	# debug info
 	# fork the process
-	shell_exec($command);
+	forkCommand($command);
 	#echo "$command"."<br>\n";
 	# go back to the page that sent the command
 	#redirect($_SERVER["HTTP_REFERER"]);
@@ -294,21 +293,21 @@ if (array_key_exists("url",$_GET)){
 }else if (array_key_exists("input",$_GET)){
 	$inputAction = (strtolower($_GET['input']));
 	if($inputAction == "select"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "up"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "down"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "left"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "right"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "back"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "home"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else if($inputAction == "context"){
-		shell_exec("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction);
 	}else{
 		# unknown input action
 		echo "UNKNOWN ACTION SENT TO API";
@@ -316,37 +315,37 @@ if (array_key_exists("url",$_GET)){
 	remoteRedirect();
 }else if (array_key_exists("volumeup",$_GET)){
 	# volume up
-	shell_exec("kodi2web_player --volumeup");
+	forkCommand("kodi2web_player --volumeup");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("volumedown",$_GET)){
 	# volume down
-	shell_exec("kodi2web_player --volumedown");
+	forkCommand("kodi2web_player --volumedown");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("mute",$_GET)){
 	# toggle mute
-	shell_exec("kodi2web_player --mute");
+	forkCommand("kodi2web_player --mute");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("play",$_GET) or array_key_exists("pause",$_GET)){
 	# play/pause the video
-	shell_exec("kodi2web_player --play");
+	forkCommand("kodi2web_player --play");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("stop",$_GET)){
 	# play/pause the video
-	shell_exec("kodi2web_player --stop");
+	forkCommand("kodi2web_player --stop");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("skipforward",$_GET)){
 	# play/pause the video
-	shell_exec("kodi2web_player --skip-forward");
+	forkCommand("kodi2web_player --skip-forward");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("skipbackward",$_GET)){
 	# play/pause the video
-	shell_exec("kodi2web_player --skip-backward");
+	forkCommand("kodi2web_player --skip-backward");
 	# redirect back to the remote
 	remoteRedirect();
 }else{
