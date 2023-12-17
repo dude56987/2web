@@ -67,12 +67,6 @@ if (array_key_exists("url",$_GET)){
 	$videoLink = cleanQuotes($videoLink);
 	#	generate the sum from the cleaned link
 	$videoLinkSum = md5($videoLink);
-	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
-		# write the temp file
-		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
-	}
-	# build the link for the generated .strm file
-	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
 	# build the command to play on all the players
 	$command = "kodi2web_player open '".$videoLink."'";
 	# fork the process
