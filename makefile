@@ -322,6 +322,7 @@ build-deb: upgrade-hls
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# get the latest hls.js from npm and include it in the package
 	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/iptv/hls.js
+	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/hls.js
 	# copy over the main javascript libary
 	cp 2webLib.js debian/usr/share/2web/
 	# copy over the main php libary

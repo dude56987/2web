@@ -163,17 +163,9 @@ checkMovieThumbPaths(){
 	possibleThumbPaths="${possibleThumbPaths}$thumbnailShort-thumb\n"
 	possibleThumbPaths=${possibleThumbPaths// /\ }
 	# scan all the possible thumbnail paths
-	#for thumbPathToCheck in $possibleThumbPaths;do
-	#addToLog "DEBUG" "Checking possible file paths for thumbnail" "'$possibleThumbPaths'" "$logPagePath"
 	echo -e "$possibleThumbPaths" | while read -r thumbPathToCheck;do
-		#ALERT "reading possible thumb path '$thumbPathToCheck'"
-		#addToLog "DEBUG" "Checking file path for thumbnail" "Checking file path '$thumbPathToCheck$thumbExtToCheck'" "$logPagePath"
 		possibleThumbExts=".jpg .png .tbn"
-		#echo "$possibleThumbExts" | shuf |  while read -r thumbExtToCheck;do
 		for thumbExtToCheck in $possibleThumbExts;do
-			#ALERT "Reading possible thumb extension '$thumbExtToCheck'"
-			#ALERT "Checking file path '$thumbPathToCheck$thumbExtToCheck'"
-			#addToLog "DEBUG" "Checking file path for thumbnail" "Checking file path '$thumbPathToCheck$thumbExtToCheck'" "$logPagePath"
 			if test -f "$thumbPathToCheck$thumbExtToCheck";then
 				addToLog "NEW" "Found thumbnail Path" "'$thumbPathToCheck$thumbExtToCheck'" "$logPagePath"
 				thumbnailExt="$thumbExtToCheck"
@@ -203,27 +195,22 @@ processMovie(){
 	moviePath=$(find "$moviePath"/*.nfo)
 	# create log path
 	logPagePath="$webDirectory/settings/log.php"
-	#INFO "Processing movie $moviePath"
 	# if moviepath exists
 	if test -f "$moviePath";then
 		# create the path sum for reconizing the libary path
 		pathSum=$(echo -n "$movieDir" | sha512sum | cut -d' ' -f1)
 		logPagePath="$webDirectory/log/$(date "+%s")_movie_${pathSum}.log"
-		#addToLog "DEBUG" "Path Sum Info" "Path Sum = '$pathSum' = sum data = movieDir = '$movieDir'" "$logPagePath"
 		################################################################################
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$moviePath")
 		# rip the movie title
 		movieTitle=$(cleanXml "$nfoInfo" "title")
 		movieTitle=$(alterArticles "$movieTitle" )
-		#INFO "movie title = '$movieTitle'"
 		movieYear=$(cleanXml "$nfoInfo" "year")
-		#INFO "movie year = '$movieYear'"
-		#moviePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
 		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
-		#INFO "movie plot = '$moviePlot'"
-		#moviePlot=$(echo "$moviePlot" | txt2html --extract )
-		#INFO "movie plot = '$moviePlot'"
+		movieTrailer=$(ripXmlTag "$nfoInfo" "trailer")
+		movieStudio=$(ripXmlTag "$nfoInfo" "studio")
+		movieGrade=$(ripXmlTag "$nfoInfo" "mpaa")
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
@@ -265,21 +252,16 @@ processMovie(){
 					echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
 				fi
 				# this means they are the same so no update needs run
-				#INFO "State is unchanged for $movieTitle, no update is needed."
-				#ALERT "[DEBUG]: $currentSum == $libarySum"
 				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
 				return
 			else
-				#INFO "States are diffrent, updating $movieTitle..."
 				# enable kodi client updates if the state has changed
 				if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
 					rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
 				fi
-				#ALERT "[DEBUG]: $currentSum != $libarySum"
 				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
 			fi
 		else
-			#ALERT "No movie state exists for $movieTitle, updating..."
 			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
 		fi
 		################################################################################
@@ -366,22 +348,14 @@ processMovie(){
 			mimeType="video"
 		fi
 		# link the movie nfo file
-		#INFO "linking $moviePath to $webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
 		linkFile "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		#INFO "linking $moviePath to $webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		linkFile "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
 		# show gathered info
-		#INFO "mediaType = $mediaType"
-		#INFO "mimeType = $mimeType"
-		#INFO "videoPath = $videoPath"
 		movieVideoPath="${moviePath//.nfo/$sufix}"
-		#INFO "movieVideoPath = $videoPath"
 
 		# link the video from the libary to the generated website
-		#INFO "linking '$movieVideoPath' to '$webDirectory/movies/$movieWebPath/$movieWebPath$sufix'"
 		linkFile "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
 
-		#INFO "linking '$movieVideoPath' to '$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix'"
 		linkFile "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
 
 		# remove .nfo extension and create thumbnail path template
@@ -390,9 +364,6 @@ processMovie(){
 		thumbnailShort="${moviePath//.nfo}"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/poster"
 		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/poster"
-
-		# check for the thumbnail and link it
-		#checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath"
 
 		# copy over subtitles
 		if [ $(find "$movieDir" -type f -name '*.srt' | wc -l) -gt 0 ] ;then
@@ -470,53 +441,15 @@ processMovie(){
 		tempStyle="$tempStyle --backgroundPoster: url(\"/movies/$movieTitle ($movieYear)/poster.png\");"
 		tempStyle="$tempStyle --backgroundFanart: url(\"/movies/$movieTitle ($movieYear)/fanart.png\");"
 		tempStyle="$tempStyle}"
-		# start rendering the html
-		{
-			echo "<html class='seriesBackground'>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='/style.css' />"
-			echo "<title>$movieTitle ($movieYear)</title>"
-			echo "<script src='/2webLib.js'></script>"
-			echo "<style>"
-			echo "$tempStyle"
-			echo "</style>"
-			echo "<link rel='icon' type='image/png' href='/favicon.png'>"
-			echo "</head>"
-			echo "<body>"
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
-			echo "?>";
-			echo "<div class='titleCard'>"
-			echo "<h1>$movieTitle ($movieYear)</h1>"
-			# add outside search links
-			echo "<div class='listCard'>"
-			echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$movieTitle ($movieYear)'>🔎 IMDB</a>"
-			echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$movieTitle ($movieYear)'>🔎 WIKIPEDIA</a>"
-			echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$movieTitle ($movieYear)'>🔎 ARCHIVE.ORG</a>"
-			echo "<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$movieTitle ($movieYear)'>🔎 YOUTUBE</a>"
-			echo "<a class='button' target='_new' href='https://odysee.com/$/search?q=$movieTitle ($movieYear)'>🔎 ODYSEE</a>"
-			echo "<a class='button' target='_new' href='https://rumble.com/search/video?q=$movieTitle ($movieYear)'>🔎 RUMBLE</a>"
-			echo "<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$movieTitle ($movieYear)'>🔎 BITCHUTE</a>"
-			echo "<a class='button' target='_new' href='https://www.twitch.tv/search?term=$movieTitle ($movieYear)'>🔎 TWITCH</a>"
-			echo "<a class='button' target='_new' href='https://veoh.com/find/$movieTitle ($movieYear)'>🔎 VEOH</a>"
-			echo "</div>"
-			echo "</div>"
-		} > "$moviePagePath"
-
 
 		thumbnailExt=".png"
 		# generate a thumbnail from the xml data if it can be retreved
 		if ! test -f "$thumbnailPath.png";then
 			if echo "$nfoInfo" | grep -q "fanart";then
 				# pull the double nested xml info for the movie thumb
-				#INFO "[DEBUG]: ThumbnailLink phase 1 = $thumbnailLink"
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "fanart")
-				#INFO "[DEBUG]: ThumbnailLink phase 2 = $thumbnailLink"
 				thumbnailLink=$(ripXmlTag "$thumbnailLink" "thumb")
-				#INFO "[DEBUG]: ThumbnailLink phase 3 = $thumbnailLink"
 				if validString "$thumbnailLink" -q;then
-					#INFO "Try to download movie thumbnail..."
-					#INFO "Thumbnail found at '$thumbnailLink'"
 					addToLog "WARNING" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
 					thumbnailExt=".png"
 					# download the thumbnail
@@ -537,13 +470,10 @@ processMovie(){
 			else
 				tempFileSize=0
 			fi
-			#ALERT "[DEBUG]: file size $tempFileSize"
 			if [ "$tempFileSize" -le 0 ];then
 				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 				addToLog "WARNING" "Generating Thumbnail from video file" "$movieVideoPath" "$logPagePath"
 				# try to generate a thumbnail from video file
-				#INFO "Attempting to create thumbnail from video source..."
-				#tempFileSize=0
 				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$movieVideoPath")
 				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$movieVideoPath")
 				if echo "$tempFrameRate" | grep -q ".";then
@@ -599,95 +529,25 @@ processMovie(){
 			# link thumb to web directory
 			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$webDirectory/movies/$movieWebPath/poster-web.png"
 		fi
-		#TODO: here is where .strm files need checked for Plugin: eg. youtube strm files
-		if echo "$videoPath" | grep -q --ignore-case "plugin://";then
-			# change the video path into a video id to make it embedable
-			#yt_id=${videoPath//*video_id=}
-			#yt_id=${videoPath//*watch?v=}
+		# store the movie title
+		echo -n "$movieWebPath" > "$webDirectory/movies/$movieWebPath/movie.title"
+		# store the movie plot
+		echo -n "$moviePlot" > "$moviePagePath.plot"
+		# store the direct link path
+		echo -n "$movieWebPath$sufix" > "$moviePagePath.directLink"
+		# build the cache link
+		echo -n "$movieWebPath$sufix" > "$moviePagePath.cacheLink"
+		# store the title
+		echo -n "$movieWebPath" > "$moviePagePath.title"
+		# get the link for the trailer of the show
+		echo -n "$movieTrailer" > "$webDirectory/movies/$movieWebPath/trailer.title"
+		# get the studio name
+		echo -n "$movieStudio" > "$webDirectory/movies/$movieWebPath/studio.title"
+		# get the movie grade like G,PG,PG13,R,NC-17
+		echo -n "$movieGrade" > "$webDirectory/movies/$movieWebPath/grade.title"
 
-			#INFO "yt-id = $yt_id"
-			#ytLink="https://youtube.com/watch?v=$yt_id"
-			{
-				# embed the youtube player
-				echo "<iframe width='560' height='315'"
-				echo "src='https://www.youtube-nocookie.com/embed/$yt_id'"
-				echo "frameborder='0'"
-				echo "allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'"
-				echo "allowfullscreen>"
-				echo "</iframe>"
-				echo "<div class='descriptionCard'>"
-				# create a hard link
-				echo "	<a class='button hardLink' href='$ytLink'>"
-				echo "		🔗Direct Link"
-				echo "	</a>"
-				echo "	$moviePlot"
-				echo "</div>"
-			} >> "$moviePagePath"
-		elif echo "$videoPath" | grep -q "http";then
-			{
-				# build the html5 media player for local and remotly accessable media
-				#echo "<$mediaType poster='$movieWebPath-poster$thumbnailExt' controls preload>"
-				echo "<$mediaType id='video' poster='poster.png' controls preload>"
-				echo "<source src='$videoPath' type='$mimeType'>"
-				echo "</$mediaType>"
-				echo "<div class='descriptionCard'>"
-				# create a hard link
-				if [ "$sufix" = ".strm" ];then
-					# check for and draw kodi playback links
-					drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
-					echo "<a class='button hardLink' href='$videoPath'>"
-					echo "🔗Direct Link"
-					echo "</a>"
-				else
-					# check for and draw kodi playback links
-					drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
-					echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
-					echo "🔗Direct Link"
-					echo "</a>"
-					echo "<?PHP";
-					tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
-					tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
-					echo "?>"
-					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-					echo "</a>"
-				fi
-				echo "$moviePlot"
-				echo "</div>"
-			} >> "$moviePagePath"
-		else
-			{
-				# build the html5 media player for local and remotly accessable media
-				#echo "<$mediaType id='nfoMediaPlayer' poster='$movieWebPath-poster$thumbnailExt' controls preload>"
-				echo "<$mediaType id='video' class='nfoMediaPlayer' poster='poster.png' controls preload>"
-				echo "<source src='$movieWebPath$sufix' type='$mimeType'>"
-				echo "</$mediaType>"
-				echo "<div class='descriptionCard'>"
-				# check for and draw kodi playback links
-				drawKodiPlayerButton "/kodi/movies/$movieWebPath/$movieWebPath$sufix"
-				# create a hard link
-				echo "<a class='button hardLink' href='$movieWebPath$sufix'>"
-				echo "🔗Direct Link"
-				echo "</a>"
-				echo "<?PHP";
-				tempMoviePath="/movies/$movieWebPath/$movieWebPath$sufix"
-				tempMoviePath=$(echo "$tempMoviePath" | sed "s/ /%20/g")
-				echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempMoviePath'>\";"
-				echo "?>"
-				echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-				echo "</a>"
-				echo "$moviePlot"
-				echo "</div>"
-			} >> "$moviePagePath"
-		fi
-		{
-			# add footer
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
-			echo "?>";
-			echo "</body>"
-			echo "</html>"
-		} >> "$moviePagePath"
+		# link the video player
+		linkFile "/usr/share/2web/templates/videoPlayer.php" "$moviePagePath"
 		################################################################################
 		# add the movie to the movie index page
 		################################################################################
@@ -920,6 +780,8 @@ function drawKodiPlayerButton(){
 	link=$1
 	# cleanup any quotations from the link because they will break the entire generated webpage
 	link=$(echo "$link" | sed 's/\"/\\"/g')
+	# new versions of kodi no longer can encode spaces in urls
+	link=$(echo "$link" | sed 's/ /%20/g')
 	echo "<?PHP"
 	# if the kodi2web mod is enabled
 	echo "if(detectEnabledStatus('kodi2web')){"
@@ -943,34 +805,25 @@ processEpisode(){
 	# create log path
 	logPagePath="$webDirectory/settings/log.php"
 	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
-	#INFO "checking if episode path exists $episode"
 	# check the episode file path exists before anything is done
 	if [ -f "$episode" ];then
-		#INFO "Processing Episode $episode"
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
-		#INFO "Episode show title = '$episodeShowTitle'"
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
 		episodeShowTitle=$(alterArticles "$episodeShowTitle")
-		#INFO "Episode show title after clean = '$episodeShowTitle'"
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
-		#INFO "Episode title = '$episodeShowTitle'"
-		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | txt2html --extract -p 10)
-		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html --eight_bit_clean --extract -p 10 )
-		#episodePlot=$(ripXmlTag "$nfoInfo" "plot" | recode ..php | txt2html -ec --eight_bit_clean --extract -p 10 )
 		episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
-		#INFO "episode plot = '$episodePlot'"
-		#episodePlot=$(echo "$episodePlot" | inline-detox -s "utf_8-only")
-		#episodePlot=$(echo "$episodePlot" | sed "s/_/ /g")
-		#INFO "episode plot = '$episodePlot'"
-		#episodePlot=$(echo "$episodePlot" | txt2html --extract )
-		#INFO "episode plot = '$episodePlot'"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
-		#INFO "Episode season = '$episodeSeason'"
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
-		#INFO "Episode air date = '$episodeAired'"
 		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,3\}//g")
+		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title";then
+			# get the tvshow.nfo data
+			tvshowData=$(cat "$webDirectory/shows/$episodeShowTitle/tvshow.nfo")
+			episodeStudio=$(ripXmlTag "$tvshowData" "studio")
+			# get the episode rating from the tvshow.nfo
+			episodeGrade=$(ripXmlTag "$tvshowData" "mpaa")
+		fi
 		if [ "$episodeSeason" -le 0 ];then
 			episodeSeason="0000"
 		elif [ "$episodeSeason" -lt 10 ];then
@@ -987,7 +840,6 @@ processEpisode(){
 			episodeSeason="0000"
 		fi
 		episodeSeasonPath="Season $episodeSeason"
-		#INFO "Episode season path = '$episodeSeasonPath'"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
 		# remove leading zeros
 		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,3\}//g")
@@ -1117,40 +969,7 @@ processEpisode(){
 		tempStyle="$tempStyle --backgroundPoster: url(\"/shows/$episodeShowTitle/poster.png\");"
 		tempStyle="$tempStyle --backgroundFanart: url(\"/shows/$episodeShowTitle/fanart.png\");"
 		tempStyle="$tempStyle}"
-		# start rendering the html
-		{
-			# the style variable must be set inline, not in head, this may be a bug in firefox
-			echo "<html id='top' class='seriesBackground'>"
-			echo "<head>"
-			echo "<title>$episodeShowTitle - ${episodeSeason}x${episodeNumber}</title>"
-			echo "<link rel='stylesheet' href='/style.css' />"
-			echo "<script src='/2webLib.js'></script>"
-			echo "<style>"
-			#add the fanart
-			echo "$tempStyle"
-			echo "</style>"
-			echo "<link rel='icon' type='image/png' href='/favicon.png'>"
-			echo "</head>"
-			echo "<body>"
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/header.php');";
-			echo "?>";
-			echo "<div class='titleCard'>"
-			echo "<h1><a href='/shows/$episodeShowTitle/?search=${episodeSeason}#Season ${episodeSeason}'>$episodeShowTitle</a> ${episodeSeason}x${episodeNumber}</h1>"
-			# add outside search links
-			echo "<div class='listCard'>"
-			echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$episodeShowTitle $episodeTitle'>🔎 IMDB</a>"
-			echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$episodeShowTitle $episodeTitle'>🔎 WIKIPEDIA</a>"
-			echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$episodeShowTitle $episodeTitle'>🔎 ARCHIVE.ORG</a>"
-			echo "<a class='button' target='_new' href='https://www.youtube.com/results?search_query=$episodeShowTitle $episodeTitle'>🔎 YOUTUBE</a>"
-			echo "<a class='button' target='_new' href='https://odysee.com/$/search?q=$episodeShowTitle $episodeTitle'>🔎 ODYSEE</a>"
-			echo "<a class='button' target='_new' href='https://rumble.com/search/video?q=$episodeShowTitle $episodeTitle'>🔎 RUMBLE</a>"
-			echo "<a class='button' target='_new' href='https://www.bitchute.com/search/?kind=video&query=$episodeShowTitle $episodeTitle'>🔎 BITCHUTE</a>"
-			echo "<a class='button' target='_new' href='https://www.twitch.tv/search?term=$episodeShowTitle $episodeTitle'>🔎 TWITCH</a>"
-			echo "<a class='button' target='_new' href='https://veoh.com/find/$episodeShowTitle $episodeTitle'>🔎 VEOH</a>"
-			echo "</div>"
-			echo "</div>"
-		} > "$episodePagePath"
+
 		# link the episode nfo file
 		linkFile "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		linkFile "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
@@ -1256,180 +1075,42 @@ processEpisode(){
 			#INFO "yt-id = $yt_id"
 			ytLink="https://youtube.com/watch?v=$yt_id"
 			ytLink="$videoPath"
-			{
-				echo "<?PHP"
-				# check if a file is cached
-				tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
-				echo "if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4\")){"
-				echo "	echo \"<video id='video' class='nfoMediaPlayer' class='' poster='$poster' controls>\";"
-				echo "	echo \"	<source src='/RESOLVER-CACHE/$tempSum/$tempSum.mp4' type='video/mp4'>\";"
-				echo "	echo \"</video>\";";
-				echo "}else if (is_file(\"$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.m3u\")){"
-				echo "	echo \"<script src='/2webLib.js'></script>\";"
-				echo "	echo \"<script src='/live/hls.js'></script>\";"
-				echo "	echo \"<video id='video' class='livePlayer' poster='$poster' controls></video>\";"
-				echo "	echo \"<script>\";"
-				echo "	echo \"	if(Hls.isSupported()) {\";"
-				echo "	echo \"		var video = document.getElementById('video');\";"
-				echo "	echo \"		var hls = new Hls({\";"
-				#echo "	echo \"			debug: true\";"
-				echo "	echo \"			startPosition: 0\";"
-				echo "	echo \"		});\";"
-				echo "	echo \"		hls.loadSource('/RESOLVER-CACHE/$tempSum/$tempSum.m3u');\";"
-				echo "	echo \"		hls.attachMedia(video);\";"
-				echo "	echo \"		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\";"
-				#echo "	echo \"			video.muted = false;\";"
-				echo "	echo \"			video.play();\";"
-				echo "	echo \"		});\";"
-				echo "	echo \"	}\";"
-				echo "	echo \"	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\";"
-				echo "	echo \"		video.src = '/RESOLVER-CACHE/$tempSum/$tempSum.m3u';\";"
-				echo "	echo \"		video.addEventListener('canplay',function() {\";"
-				echo "	echo \"			video.play();\";"
-				echo "	echo \"		});\";"
-				echo "	echo \"	}\";"
-				# start playback on page load
-				echo "	echo \"hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\";"
-				echo "	echo \"</script>\";"
-				echo "}else{";
-				echo " 	echo \"<source src='$videoPath' type='$mimeType'>\";"
-				# embed the youtube player
-				echo "	echo \"<iframe class='nfoMediaPlayer' width='560' height='315'\";"
-				echo "	echo \"src='https://www.youtube-nocookie.com/embed/$yt_id'\";"
-				echo "	echo \"frameborder='0'\";"
-				echo "	echo \"allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'\";"
-				echo "	echo \"allowfullscreen>\";"
-				echo "	echo \"</iframe>\";"
-				echo "}";
-				echo "?>"
-			} >> "$episodePagePath"
 
 			cacheRedirect="/ytdl-resolver.php?url=\"$ytLink\""
 			vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$ytLink\\\""
-			{
-				echo "<div class='descriptionCard'>"
-				echo "<h2>$episodeTitle</h2>"
-				# check for and draw kodi playback links
-				drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-				# create a hard link
-				echo "<a class='button hardLink' href='$ytLink'>"
-				echo "	🔗Direct Link"
-				echo "</a>"
-
-				echo "<a class='button hardLink' href='$cacheRedirect'>"
-				echo "	📥Cache Link"
-				echo "</a>"
-
-				echo "<?PHP";
-				echo "	echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
-				echo "?>";
-
-				echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-				echo "</a>"
-
-				echo "<div class='aired'>"
-				echo "$episodeAired"
-				echo "</div>"
-				echo "$episodePlot"
-				echo "</div>"
-			} >> "$episodePagePath"
+			echo "$episodeAired" > "$episodePagePath.date"
 		else
-			{
-				# for mp3 audio streams load the thumbnail as the background of the video
-				tempStyle="background-image: url(\"$episodePath-thumb$thumbnailExt\") !important;"
-				# build the html5 media player for local and remotly accessable media
-				if echo $mediaType | grep -q "audio";then
-					echo "<$mediaType id='video' class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' style='$tempStyle' controls preload>"
-				else
-					echo "<$mediaType id='video' class='nfoMediaPlayer' poster='$episodePath-thumb$thumbnailExt' controls preload>"
-				fi
-				# redirect mkv files to the transcoder to cache the video file for the webplayer
-				if echo "$videoPath" | grep -qE ".mkv|.avi";then
-					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-					# build the transcoder link
-					fullRedirect="/transcode.php?link=\"$tempEpisodePath\""
-					# transcoder converts everything into the webm format
-					echo "<source src='$fullRedirect' type='video/webm'>"
-					# TODO: transcode works but needs to be toggleable, above is correct code for the transcode.php script
-					echo "<source src='$videoPath' type='$mimeType'>"
-				else
-					echo "<source src='$videoPath' type='$mimeType'>"
-				fi
-				echo "</$mediaType>"
-				echo "<div class='descriptionCard'>"
-				echo "<h2>$episodeTitle</h2>"
-				# create a hard link
-				if [ "$sufix" = ".strm" ];then
-					cacheRedirect="/ytdl-resolver.php?url=\"$videoPath\""
-					vlcCacheRedirect="/ytdl-resolver.php?url=\\\"$videoPath\\\""
-					# check for and draw kodi playback links
-					drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-					# direct link
-					echo "<a class='button hardLink' href='$videoPath'>"
-					echo "	🔗Direct Link"
-					echo "</a>"
-					# cache link
-					echo "<a class='button hardLink' href='$cacheRedirect'>"
-					echo "	📥Cache Link"
-					echo "</a>"
-					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$vlcCacheRedirect'>\";"
-					echo "?>"
-					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-					echo "</a>"
-				else
-					# check for and draw kodi playback links
-					drawKodiPlayerButton "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-					# draw the direct link
-					echo "<a class='button hardLink' href='$episodePath$sufix'>"
-					echo "	🔗Direct Link"
-					echo "</a>"
-					# build the vlc direct link
-					#tempEpisodePath="vlc://http://$(hostname).local/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix'>"
-
-					tempEpisodePath="/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-					epNum="s${episodeSeason}e${episodeNumber}"
-
-					# replace blank spaces since it will break vlc:// links
-					tempEpisodePath=$(echo "$tempEpisodePath" | sed "s/ /%20/g")
-
-					echo "<?PHP";
-					echo "echo \"<a class='button hardLink' href='/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
-					echo "?>"
-					echo "	🔁 Continue<sup>External</sup>"
-					echo "</a>"
-
-					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"$tempEpisodePath'>\";"
-					echo "?>"
-					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	▶️ Direct Play<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-					echo "</a>"
-
-					echo "<?PHP";
-					echo "echo \"<a class='button hardLink vlcButton' href='vlc://http://\".\$_SERVER['HTTP_HOST'].\"/m3u-gen.php?playAt=$epNum&showTitle=$episodeShowTitle'>\";"
-					echo "?>"
-					#echo "<span id='vlcIcon'>&#9650;</span>"
-					echo "	🔁 Continue<sup><span id='vlcIcon'>&#9650;</span>VLC</sup>"
-					echo "</a>"
-				fi
-
-				echo "<div class='aired'>"
-				echo "$episodeAired"
-				echo "</div>"
-				echo "$episodePlot"
-				echo "</div>"
-			} >> "$episodePagePath"
+			# store the episode aired date
+			echo "$episodeAired" > "$episodePagePath.date"
+			# build variables
 		fi
-		{
-			# add footer
-			echo "<?PHP";
-			echo "include(\$_SERVER['DOCUMENT_ROOT'].'/footer.php');";
-			echo "?>";
-			echo "</body>"
-			echo "</html>"
-		} >> "$episodePagePath"
+
+		# build the values
+		epNum="s${episodeSeason}e${episodeNumber}"
+		# only write season data once
+		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title";then
+			# add the show name data
+			echo -n "$episodeShowTitle" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title"
+			# add the show studio
+			echo -n "$episodeStudio" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/studio.title"
+			# get the mpaa rating
+			echo -n "$episodeGrade" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/grade.title"
+		fi
+		# build the episode number
+		echo -n "$epNum" > "$episodePagePath.numTitle"
+		# build the season title
+		echo -n "$episodeSeason" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.title"
+		# build the title
+		echo -n "$episodeTitle" > "$episodePagePath.title"
+		# build the plot
+		echo -n "$episodePlot" > "$episodePagePath.plot"
+		# build the direct link
+		echo -n "$episodePath$sufix" > "$episodePagePath.directLink"
+		# build the cache link
+		echo -n "$episodePath$sufix" > "$episodePagePath.cacheLink"
+
+		# link the player
+		linkFile "/usr/share/2web/templates/videoPlayer.php" "$episodePagePath"
 
 		episodeSubSearch="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath/"
 		episodeSubSearchPath=$(echo "$episode" | rev | cut -d'/' -f2- | rev)

@@ -225,6 +225,20 @@ if( ! function_exists("logPrint")){
 		echo "</script>\n";
 	}
 }
+if( ! function_exists("is_in_array")){
+	function is_in_array($needle,$haystack){
+		# search for a needle in a string or array haystack
+		if (is_array($haystack)){
+			return in_array($needle, $haystack);
+		}else{
+			if (stripos($haystack,$needle) !== false){
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}
+}
 if( ! function_exists("listAllIndex")){
 	function listAllIndex($indexPath,$sortMethod="forward"){
 		# List all text files stored in a .index file

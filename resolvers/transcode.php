@@ -24,72 +24,102 @@ error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 
 ////////////////////////////////////////////////////////////////////////////////
-function redirect($url,$debug=false){
-	if ($debug){
-		echo "<hr>";
-		echo '<p>ResolvedUrl = <a href="'.$url.'">'.$url.'</a></p>';
-		echo "<hr>";
-		ob_flush();
-		flush();
-		exit();
-		die();
-	}else{
-		// temporary redirect
-		header('Location: '.$url,true,302);
-		exit();
-		die();
+$webServerPath = $_SERVER['DOCUMENT_ROOT'];
+////////////////////////////////////////////////////////////////////////////////
+$doTranscode = False;
+# check if the transcode is enabled
+if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
+	$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
+	if ($selected == "yes"){
+		$doTranscode = True;
 	}
 }
-////////////////////////////////////////////////////////////////////////////////
-$webServerPath = $_SERVER['DOCUMENT_ROOT'];
 ////////////////////////////////////////////////////////////////////////////////
 if (array_key_exists("link",$_GET)){
 	# pull the link from
 	$link = $_GET['link'];
-	$doTranscode = False;
-	# check if the transcode is enabled
-	if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
-		$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
-		if ($selected == "yes"){
-			$doTranscode = True;
-		}
-	}
 	# if the trancode is enabled run the transcode job
 	if ($doTranscode){
 		debug("Reading link for transcode : '".$link."'");
 		# create the sum of the link
 		$sum=md5($link);
-		if ( ! file_exists($webServerPath."/TRANSCODE-CACHE/$sum.webm")){
+		# make sure there is no existing stream available
+		if ( ! file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.m3u")){
 			if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
 				mkdir("$webServerPath/TRANSCODE-CACHE/");
 			}
-			# cleanup html string encoding of spaces in pathnames
+			# cleanup html string encoding of spaces and pathnames
 			$link = str_replace("%20"," ",$link);
 			$link = str_replace("%21"," ",$link);
 			$link = str_replace("'","",$link);
 			$link = str_replace('"',"",$link);
 			# build the command
-			//$command = "echo \" ffmpeg -i '".$webServerPath.$link."' -hls_playlist_type event -start_number 0 -master_pl_name ".$sum.".m3u -hls_time 20 -f hls 'RESOLVER-CACHE/".$sum."_stream.m3u'\" | at 'now'";
-			$command = "echo \"nice -n -5 ffmpeg -i '".$webServerPath."/".$link."' '".$webServerPath."/TRANSCODE-CACHE/$sum.webm'\" | at 'now'";
-			debug("Transcode Command : ".$command);
+			$fullLinkPath=$webServerPath.$link;
+			# create a transcode directory to store the hls stream if it does not exist
+			if ( ! file_exists("$webDirectory/TRANSCODE-CACHE/$sum/")){
+				mkdir("$webServerPath/TRANSCODE-CACHE/$sum/");
+			}
+			# remove doubled slashes to fix paths
+			$fullLinkPath=str_replace("//","/",$fullLinkPath);
+			$command = 'echo "';
+			$command .= "/usr/bin/ffmpeg -i '".$fullLinkPath."'";
+			#$command .= " -hls_segment_type fmp4";
+			#$command .= " -c:v libx264 -b:v 5000k";
+			$command .= " -preset superfast";
+			#$command .= " -hls_playlist_type event";
+			$command .= " -hls_list_size 0";
+			$command .= " -start_number 0";
+			$command .= " -master_pl_name 'play.m3u' -g 30 -hls_time 10 -f hls";
+			$command .= " '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u'";
+			# encode the stream into a mp4 file for compatibility with firefox
+			$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u' '".$webServerPath."/TRANSCODE-CACHE/".$sum."/play.mp4'";
+			$command .= '" | /usr/bin/at -M -q a now';
+
+			#$command = 'echo "';
+			#$command .= "/usr/bin/ffmpeg -i '".$fullLinkPath."'";
+			#$command .= " '".$webServerPath."/TRANSCODE-CACHE/".$sum."/".$sum.".mp4'";
+			#$command .= " touch '".$webServerPath."/TRANSCODE-CACHE/".$sum."/".$sum.".mp4.finished'";
+			#$command .= '" | /usr/bin/at -M -q a now';
+
+			# save the transcode command to a file
+			file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/command.cfg","$command");
 			# launch the command to post job in the queue
 			shell_exec($command);
+			# sleep to allow the transcode job to startup
+			# build and display a m3u file with a delay using the spinner gif
 			sleep(20);
 		}
-		redirect('TRANSCODE-CACHE/'.$sum.'.webm');
+		if (file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.mp4")){
+			# redirect to the mp4 file for the highest level of browser compatibility
+			redirect("/TRANSCODE-CACHE/$sum/play.mp4");
+		}else{
+			# redirect to the master playlist
+			redirect("/TRANSCODE-CACHE/$sum/play.m3u");
+		}
 	}else{
-		# the transcode should not happen so directly link to the file
-		redirect($link);
+		# transcoding is disabled redirect to the transcode page
+		redirect("/transcode.php");
 	}
 }else{
-	# no link was given to transcode, draw the interface
-	echo "<div class='settingListCard'>";
-	echo "<h1>Transcode links to webm in local cache</h1>";
-	echo "<form method='get'>";
-	echo "	<input class='button' width='60%' type='text' name='link' placeholder='/shows/showTitle/season 01/showTitle - s1e1 - episodeTitle.webm'>";
-	echo "	<input class='button' type='submit' value='Transcode link'>";
-	echo "</form>";
-	echo "</div>";
+	if ($doTranscode){
+		# no link was given to transcode, draw the interface
+		echo "<div class='settingListCard'>";
+		echo "<h1>Transcode links to webm in local cache</h1>";
+		echo "<form method='get'>";
+		echo "	<input class='button' width='60%' type='text' name='link' placeholder='/shows/showTitle/season 01/showTitle - s1e1 - episodeTitle.webm'>";
+		echo "	<input class='button' type='submit' value='Transcode link'>";
+		echo "</form>";
+		echo "</div>";
+	}else{
+		# if transcoding is disabled show a link to the settings
+		echo "<div class='settingListCard'>";
+		echo "<h1>Transcoding is Disabled</h1>";
+		echo "<p>A System Administrator can enable transcoding in the server settings.</p>";
+		echo "<a class='button' href='/settings/cache.php#transcodeForWebpages'>";
+		echo "Transcode Settings";
+		echo "</a>";
+		echo "</div>";
+	}
 }
 //////////////////////////////////////////////////////////////////////////////////
 //return $output;

@@ -269,6 +269,32 @@ function buildBump($sum){
 if (array_key_exists("url",$_GET)){
 	$videoLink = $_GET['url'];
 	debug("URL is ".$videoLink."<br>");
+	# make sure the url is a webpage
+	$videoMimeType=get_headers($videoLink, true);
+	$headerData=$videoMimeType;
+	# pull the content types
+	logPrint("Checking if this is an array.<br>");
+	if (is_array($videoMimeType)){
+		logPrint("This is an array.<br>");
+		logPrint("Checking mime type.<br>");
+		if (array_key_exists("Content-Type", $videoMimeType)){
+			logPrint("Key was found to exist.<br>");
+			$videoMimeType=$videoMimeType["Content-Type"];
+			logPrint("videoMimeType = $videoMimeType");
+		}else{
+			logPrint("Media Content Type could not be determined.<br>");
+		}
+	}else{
+		logPrint("No Header was returned.<br>");
+	}
+	# if the url is a link to media directly redirect to that media
+	#if (! is_in_array("text/html", $videoMimeType)){
+	if (is_in_array("audio/mpeg", $videoMimeType)){
+		redirect($videoLink);
+	}else if (is_in_array("video/mp4", $videoMimeType)){
+		redirect($videoLink);
+	}
+	# start translating the url
 	# remove parenthesis from video link if they exist
 	debug("Cleaning link ".$videoLink."<br>");
 	while(strpos($videoLink,'"')){

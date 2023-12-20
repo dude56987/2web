@@ -580,6 +580,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/401.php" "$webDirectory/401.php"
 	# global javascript libary
 	linkFile "/usr/share/2web/2webLib.js" "$webDirectory/2webLib.js"
+	linkFile "/usr/share/2web/hls.js" "$webDirectory/hls.js"
 	# link homepage
 	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
 	# link stats script
