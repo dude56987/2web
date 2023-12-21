@@ -435,6 +435,9 @@ ol li{
 	.vlcButton{
 		display: none;
 	}
+	.listCard .vlcButton{
+		display: none !important;
+	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
 	/*
