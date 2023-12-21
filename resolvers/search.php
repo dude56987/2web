@@ -643,11 +643,11 @@ function checkSpelling($searchQuery){
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# check for bangs prior to building any part of the webpage
 	# - This must be done before anything is writen to the page for the redirect to work
-	if (array_key_exists("q",$_GET)){
-		$searchQuery = $_GET["q"];
-		# check for bang commands
-		$bangHelp=checkForBangs($searchQuery);
-	}
+	$searchQuery = $_GET["q"];
+	# convert the search to lowercase
+	$searchQuery = strtolower($searchQuery);
+	# check for bang commands
+	$bangHelp=checkForBangs($searchQuery);
 	drawHead();
 	# add the header document after building the document start
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
