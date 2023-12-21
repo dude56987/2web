@@ -1616,6 +1616,12 @@ pre{
 	text-align: left;
 	overflow: auto;
 }
+td table tr td{
+	/*
+	Tables inside other tables should not have borders
+	*/
+	border: none;
+}
 table{
 	width: 100%;
 	padding: 0px !important;
