@@ -245,16 +245,15 @@ if ($discoveredImg2Img || $discoveredTxt2Img){
 	echo "	<div class='listCard'>\n";
 	$helpTexts=Array();
 	$helpTexts=array_merge($helpTexts,["Generate images from text descriptions"]);
-	$helpTexts=array_merge($helpTexts,["Generate images from text tags"]);
+	$helpTexts=array_merge($helpTexts,["Generate images from using comma seprated tags"]);
+	$helpTexts=array_merge($helpTexts,["Add 'in x style' to emulate a artistic style"]);
+	$helpTexts=array_merge($helpTexts,["Use more descriptive prompts for more detailed images"]);
+	$helpTexts=array_merge($helpTexts,["Any tags or descriptions entered into the negative prompt will NOT be in the image"]);
+	$helpTexts=array_merge($helpTexts,["Add 'Most Popular' or 'Highest Voted' as tags to improve image quality"]);
 	$helpTexts=array_merge($helpTexts,["Different Models generate extremely different results"]);
-	$helpTexts=array_merge($helpTexts,["Edit existing images"]);
-	$helpTexts=array_merge($helpTexts,["Cartoonize images"]);
-	$helpTexts=array_merge($helpTexts,["Convert to anime"]);
-	$helpTexts=array_merge($helpTexts,["Change objects in images"]);
-	$helpTexts=array_merge($helpTexts,["Insert a rough sketch and fill in the details"]);
-	$helpTexts=array_merge($helpTexts,["Remove or add details into the image"]);
-	$helpTexts=array_merge($helpTexts,["Enhance zoom the size of the image"]);
 	$helpTexts=array_merge($helpTexts,["Describe what you don't want using negative prompts"]);
+	$helpTexts=array_merge($helpTexts,["You may have to generate a lot of images to find one you like"]);
+	shuffle($helpTexts);
 	foreach($helpTexts as $helpText ){
 		echo "		<div class='inputCard textList'>\n";
 		echo "			<p>$helpText</p>\n";
