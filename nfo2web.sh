@@ -436,11 +436,6 @@ processMovie(){
 		if ! test -f "$webDirectory/kodi/movies/$movieWebPath/fanart.png";then
 			linkFile "$webDirectory/movies/$movieWebPath/fanart.png" "$webDirectory/kodi/movies/$movieWebPath/fanart.png"
 		fi
-		# build temp style
-		tempStyle=":root{"
-		tempStyle="$tempStyle --backgroundPoster: url(\"/movies/$movieTitle ($movieYear)/poster.png\");"
-		tempStyle="$tempStyle --backgroundFanart: url(\"/movies/$movieTitle ($movieYear)/fanart.png\");"
-		tempStyle="$tempStyle}"
 
 		thumbnailExt=".png"
 		# generate a thumbnail from the xml data if it can be retreved
@@ -964,11 +959,6 @@ processEpisode(){
 			mediaType="video"
 			mimeType="video"
 		fi
-		# build the temp style theme
-		tempStyle=":root{"
-		tempStyle="$tempStyle --backgroundPoster: url(\"/shows/$episodeShowTitle/poster.png\");"
-		tempStyle="$tempStyle --backgroundFanart: url(\"/shows/$episodeShowTitle/fanart.png\");"
-		tempStyle="$tempStyle}"
 
 		# link the episode nfo file
 		linkFile "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
@@ -1018,6 +1008,8 @@ processEpisode(){
 			else
 				# redirect to the resolver
 				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
+				# build the cache link
+				echo -n "$episodePath$sufix" > "$episodePagePath.cacheLink"
 			fi
 
 			# if the config option is set to cache new episodes
@@ -1106,8 +1098,6 @@ processEpisode(){
 		echo -n "$episodePlot" > "$episodePagePath.plot"
 		# build the direct link
 		echo -n "$episodePath$sufix" > "$episodePagePath.directLink"
-		# build the cache link
-		echo -n "$episodePath$sufix" > "$episodePagePath.cacheLink"
 
 		# link the player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$episodePagePath"
