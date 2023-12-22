@@ -86,15 +86,15 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
 
 ## Install with PPA
 
-	sudo curl -SsL --compressed -o '/etc/apt/trusted.gpg.d/2web_ppa.gpg' 'https://dude56987.github.io/2web_ppa/2web_ppa.gpg'
-	sudo curl -SsL --compressed -o '/etc/apt/sources.list.d/2web_ppa.list' 'https://dude56987.github.io/2web_ppa/2web_ppa.list'
+	sudo wget -q -O '/etc/apt/trusted.gpg.d/2web_ppa.gpg' 'https://dude56987.github.io/2web_ppa/2web_ppa.gpg'
+	sudo wget -q -O '/etc/apt/sources.list.d/2web_ppa.list' 'https://dude56987.github.io/2web_ppa/2web_ppa.list'
 	sudo apt update
 	sudo apt-get install 2web
 
-Or if you use wget instead of curl
+Or if you use curl instead of wget
 
-	sudo wget -q -O '/etc/apt/trusted.gpg.d/2web_ppa.gpg' 'https://dude56987.github.io/2web_ppa/2web_ppa.gpg'
-	sudo wget -q -O '/etc/apt/sources.list.d/2web_ppa.list' 'https://dude56987.github.io/2web_ppa/2web_ppa.list'
+	sudo curl -SsL --compressed -o '/etc/apt/trusted.gpg.d/2web_ppa.gpg' 'https://dude56987.github.io/2web_ppa/2web_ppa.gpg'
+	sudo curl -SsL --compressed -o '/etc/apt/sources.list.d/2web_ppa.list' 'https://dude56987.github.io/2web_ppa/2web_ppa.list'
 	sudo apt update
 	sudo apt-get install 2web
 
