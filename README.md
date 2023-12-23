@@ -3,6 +3,21 @@
 
 Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))! A HTTP/HTTPS multimedia caching server for hosting content on your LAN. 2web was originally designed for the raspberry PI 2 but has since been refactored for Debian and Ubuntu Linux in general. 2web is focused on allowing you to access content from the local server without internet access wherever possible. 2web is designed to act as a server component to KODI for HTTP shares, but can be used though the web browser on any device. Almost all the processing is done on the server so the bigger the server the better the experience. Everything is designed so that this single server can offer a lot of services in a single unified interface without constantly connecting to the outside world.
 
+- [Supported Content Types](#supported-content-types)
+- [Features](#features)
+- [Warnings](#warnings)
+- [Install With PPA](#install-with-ppa)
+- [Install From Source](#install-from-source)
+- [Uninstall](#uninstall)
+- [Access](#access)
+- [Settings](#settings)
+- [CLI](#cli)
+- [Supported Systems](#supported-systems)
+- [How To Help](#how-to-help)
+- [License](#license)
+
+<span id='supported-content-types' />
+
 ## Supported Content Types
 
  - Movies
@@ -18,6 +33,8 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - Weather Forecasts
  - Prompting AI
  - Image Generating AI
+
+<span id='features' />
 
 ## Features
 
@@ -76,6 +93,8 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - KODI remote control allows you to play content from the server without adding the server sources to the client.
  - KODI web remote controller allows you to control a KODI client.
 
+<span id='warnings' />
+
 ## Warnings
 
  - 2web is designed to be only accessable on your LAN.
@@ -83,6 +102,8 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - Do not use it unless behind a firewall.
  - AI prompting can take a very long time even on good hardware.
  - Global search will become slower as more content is added.
+
+<span id='install-with-ppa' />
 
 ## Install with PPA
 
@@ -98,6 +119,8 @@ Or if you use curl instead of wget
 	sudo apt update
 	sudo apt-get install 2web
 
+<span id='install-from-source' />
+
 ## Install from Source
 
 Copy and extract the source then run
@@ -107,6 +130,8 @@ Copy and extract the source then run
 	make install
 
 This should build and install the package on any Debian or Ubuntu based system.
+
+<span id='uninstall' />
 
 ## Uninstall
 
@@ -118,6 +143,8 @@ If you would like to purge config files generated use
 
 	sudo apt-get purge 2web
 
+<span id='access' />
+
 ## Access
 
 To access the web interface on the machine you have installed it on, go to
@@ -128,6 +155,8 @@ In the top right corner of the webpage click the login button. If no login butto
 
 	http://localhost/settings/
 
+<span id='settings' />
+
 ### Settings
 
 Nearly everything can be configured via the web interface.
@@ -137,6 +166,8 @@ Nearly everything can be configured via the web interface.
 If you have direct access to the server all the 2web settings are stored in text files in
 
 	/etc/2web/
+
+<span id='cli' />
 
 ## CLI
 
@@ -186,6 +217,8 @@ If things need reset completely you can run
 
 however be advised this will remove everything and require you to redownload thumbnails. No source data will be removed but all generated content will need to be recreated.
 
+<span id='supported-systems' />
+
 ## Supported Systems
  - Raspbery PI 4
 	 - DietPi
@@ -195,11 +228,15 @@ however be advised this will remove everything and require you to redownload thu
 	 - Ubuntu
 	 - Debian
 
+<span id='how-to-help' />
+
 ## How to Help
 
  - 2web is a large project, funding is the number one thing needed right now to make it sustainable. Any amount of funding you can provide will greatly help develop 2web further.
    - [Ko-Fi](https://ko-fi.com/bluntsquid#)
    - [LibrePay](https://liberapay.com/bluntsquid/)
+
+<span id='license' />
 
 ## License
 
