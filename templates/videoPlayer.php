@@ -184,9 +184,13 @@ function isTranscodeEnabled(){
 </div>
 	<?PHP
 		logPrint("directLinkPath = ".$directLinkPath."<br>");
-		logPrint("directLinkData = ".$directLinkData."<br>");
+		if (file_exists($directLinkPath)){
+			logPrint("directLinkData = ".$directLinkData."<br>");
+		}
 		logPrint("cacheLinkPath = ".$cacheLinkPath."<br>");
-		logPrint("cacheLinkData = ".$cacheLinkData."<br>");
+		if (file_exists($cacheLinkPath)){
+			logPrint("cacheLinkData = ".$cacheLinkData."<br>");
+		}
 		# get the cache link if it exists
 		if (file_exists($cacheLinkPath)){
 			$videoLink = $cacheLinkData;
@@ -396,8 +400,8 @@ function isTranscodeEnabled(){
 	# build the cache links
 	if (file_exists($cacheLinkPath)){
 		# if the cache link is a external link that means it is a real cache link
-		if ( (substr($cacheLinkData,0,8) == "https://") or (substr($cacheLinkData,0,7) == "http://") ){
-			echo "<a class='button hardLink' href='/ytdl-resolver.php?url=\"$cacheLinkData\"'>\n";
+		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			echo "<a class='button hardLink' href='$fullPathVideoLink'>\n";
 			echo "📥Cache Link\n";
 			echo "</a>\n";
 		}

@@ -531,7 +531,7 @@ processMovie(){
 		# store the direct link path
 		echo -n "$movieWebPath$sufix" > "$moviePagePath.directLink"
 		# build the cache link
-		echo -n "$movieWebPath$sufix" > "$moviePagePath.cacheLink"
+		#echo -n "$movieWebPath$sufix" > "$moviePagePath.cacheLink"
 		# store the title
 		echo -n "$movieWebPath" > "$moviePagePath.title"
 		# get the link for the trailer of the show
