@@ -390,29 +390,45 @@ function isTranscodeEnabled(){
 	echo $titleData;
 ?>
 </h2>
-
 <?PHP
+	$datePath=$_SERVER["SCRIPT_FILENAME"].".date";
+	if (file_exists($datePath)){
+		echo "<div class='aired'>";
+		echo file_get_contents($datePath);
+		echo "</div>";
+	}else{
+		logPrint("NO DATE FOUND AT $datePath<br>");
+	}
+
+	echo "<div class='hardLink'>";
 	# draw the direct links
+	echo "<div>";
 	echo "<a class='button hardLink' href='".$directLinkData."'>\n";
 	echo "🔗Direct Link\n";
 	echo "</a>\n";
+	echo "</div>";
 
 	# build the cache links
 	if (file_exists($cacheLinkPath)){
 		# if the cache link is a external link that means it is a real cache link
 		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			echo "<div>";
 			echo "<a class='button hardLink' href='$fullPathVideoLink'>\n";
 			echo "📥Cache Link\n";
 			echo "</a>\n";
+			echo "</div>";
 		}
 	}
 	# build the continue playing playlist links
 	if (file_exists("show.title")){
+		echo "<div>";
 		echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".$showTitle."'>";
 		echo "🔁 Continue<sup>External</sup>";
 		echo "</a>";
+		echo "</div>";
 	}
 
+	echo "<div>";
 	# build the play on kodi links
 	if (file_exists("show.title")){
 		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
@@ -426,7 +442,9 @@ function isTranscodeEnabled(){
 	}
 	echo "🇰Play on KODI\n";
 	echo "</a>\n";
+	echo "</div>";
 
+	echo "<div>";
 	# build the vlc links
 	if (file_exists("show.title")){
 		echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20","/shows/$showTitle/Season $seasonTitle/$directLinkData")."'>\n";
@@ -437,32 +455,30 @@ function isTranscodeEnabled(){
 	echo "▶️ Direct Play";
 	echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
 	echo "</a>\n";
+	echo "</div>";
 
 	if (file_exists($cacheLinkPath)){
 		if ( (substr($cacheLinkData,0,8) == "https://") or (substr($cacheLinkData,0,7) == "http://") ){
+			echo "<div>";
 			echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=\"$cacheLinkData\"'>\n";
 			echo "📥Cache Link\n";
 			echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
 			echo "</a>\n";
+			echo "</div>";
 		}
 	}
 
 	if (file_exists("show.title")){
+		echo "<div>";
 		echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".$showTitle."'>";
 		echo "🔁 Continue";
 		echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>";
 		echo "</a>";
+		echo "</div>";
 	}
+	echo "</div>";
 ?>
 <?PHP
-	$datePath=$_SERVER["SCRIPT_FILENAME"].".date";
-	if (file_exists($datePath)){
-		echo "<div class='aired'>";
-		echo file_get_contents($datePath);
-		echo "</div>";
-	}else{
-		logPrint("NO DATE FOUND AT $datePath<br>");
-	}
 	$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
 	if (file_exists($plotPath)){
 		echo "<div class='plot'>";

@@ -1446,7 +1446,7 @@ table{
 	text-align: left;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background-color: var(--glassBackground);
-	min-height: 8rem;
+	min-height: 30rem;
 }
 /*
 .descriptionCard h2{
