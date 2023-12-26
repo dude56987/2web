@@ -114,10 +114,18 @@ function m3u_gen($section,$title){
 			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
 
 			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
-				#$tempDataEntry = "#EXTINF:-1,$seasonPath - $filePath - $showTitle \n";
 				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
-				#$tempDataEntry = $tempDataEntry."..$filePath\n";
-				$tempDataEntry .= "http://".$_SERVER["HTTP_HOST"]."$filePath\n";
+				# convert .strm files into thier contents
+				if ( (substr($filePath,-5,5) == ".strm") ){
+					$filePath=str_replace("\n","",file_get_contents($_SERVER["DOCUMENT_ROOT"].$filePath));
+					# use the resolution call location for generating entries
+					$filePath=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$filePath);
+					#
+					$tempDataEntry .= "$filePath\n";
+				}else{
+					# write the link to the path
+					$tempDataEntry .= "http://".$_SERVER["HTTP_HOST"]."$filePath\n";
+				}
 				array_push($totalFileList,$tempDataEntry);
 			}
 		}
@@ -159,6 +167,7 @@ if (array_key_exists("artist",$_GET)){
 	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi/";
 
 	$showTitle = $_GET['artist'];
+	$showTitle = urldecode($showTitle);
 	$showTitle = str_replace('"','',$showTitle);
 
 	$showPath = "$rootPath/music/$showTitle";
@@ -175,6 +184,7 @@ if (array_key_exists("artist",$_GET)){
 	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
 
 	$showTitle = $_GET['showTitle'];
+	$showTitle = urldecode($showTitle);
 	//echo "showTitle pre replace=$showTitle<br>\n";
 	$showTitle = str_replace('"','',$showTitle);
 	//echo "showTitle=$showTitle<br>\n";

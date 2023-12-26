@@ -529,7 +529,7 @@ processMovie(){
 		# store the movie plot
 		echo -n "$moviePlot" > "$moviePagePath.plot"
 		# store the direct link path
-		echo -n "$movieWebPath$sufix" > "$moviePagePath.directLink"
+		echo -n "/kodi/movies/$movieWebPath/$movieWebPath$sufix" > "$moviePagePath.directLink"
 		# build the cache link
 		#echo -n "$movieWebPath$sufix" > "$moviePagePath.cacheLink"
 		# store the title
@@ -1009,8 +1009,11 @@ processEpisode(){
 				# redirect to the resolver
 				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
 				# build the cache link
-				echo -n "$episodePath$sufix" > "$episodePagePath.cacheLink"
+				echo -n "$resolverUrl" > "$episodePagePath.cacheLink"
 			fi
+			# this is used for generating kodi playback links, kodi has a easier time playing .strm files
+			strmUrl="http://$(hostname).local/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			echo -n "$strmUrl" > "$episodePagePath.strmLink"
 
 			# if the config option is set to cache new episodes
 			# - cache new links in batch processing mode
@@ -1041,10 +1044,14 @@ processEpisode(){
 			fi
 			# build the strm file
 			echo "$resolverUrl" > "$tempPath"
+			# build the direct link
+			echo -n "$videoPath" > "$episodePagePath.directLink"
 		else
 			# link the video from the libary to the generated website
 			linkFile "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			linkFile "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			# build the direct link
+			echo -n "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix" > "$episodePagePath.directLink"
 		fi
 
 		# get the extension
@@ -1096,8 +1103,6 @@ processEpisode(){
 		echo -n "$episodeTitle" > "$episodePagePath.title"
 		# build the plot
 		echo -n "$episodePlot" > "$episodePagePath.plot"
-		# build the direct link
-		echo -n "$episodePath$sufix" > "$episodePagePath.directLink"
 
 		# link the player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$episodePagePath"

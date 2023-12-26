@@ -13,6 +13,10 @@ if (file_exists("show.title")){
 	$movieTitle=file_get_contents("movie.title");
 	echo "<title>$movieTitle</title>";
 }
+# update the hostname
+if ( $_SERVER["HTTP_HOST"] == "localhost" ){
+	$_SERVER["HTTP_HOST"] == (gethostname().".local");
+}
 if (array_key_exists("HTTPS",$_SERVER)){
 	$proto="https://";
 }else{
@@ -123,12 +127,32 @@ function isTranscodeEnabled(){
 	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
 	if (file_exists($directLinkPath)){
 		$directLinkData=file_get_contents($directLinkPath);
+		$directLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$directLinkData);
+		$directLinkData=trim($directLinkData, "\r\n");
+		$directLinkExists=true;
+	}else{
+		$directLinkExists=false;
 	}
 	# check for cache link
 	$cacheLinkPath=$_SERVER["SCRIPT_FILENAME"].".cacheLink";
 	if (file_exists($cacheLinkPath)){
 		$cacheLinkData=file_get_contents($cacheLinkPath);
+		$cacheLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$cacheLinkData);
+		$cacheLinkData=trim($cacheLinkData, "\r\n");
+		$cacheLinkExists=true;
+	}else{
+		$cacheLinkExists=false;
 	}
+	# get the strmlink
+	$strmLinkPath=$_SERVER["SCRIPT_FILENAME"].".strmLink";
+	if (file_exists($strmLinkPath)){
+		$strmLinkData=file_get_contents($strmLinkPath);
+		$strmLinkData=trim($strmLinkData, "\r\n");
+		$strmLinkExists=true;
+	}else{
+		$strmLinkExists=false;
+	}
+
 	# get the video thumb path for the video player
 	# - check for PNG and JPG versions
 	$posterPath=str_replace(".php","-thumb.png",$_SERVER["SCRIPT_FILENAME"]);
@@ -184,70 +208,63 @@ function isTranscodeEnabled(){
 </div>
 	<?PHP
 		logPrint("directLinkPath = ".$directLinkPath."<br>");
-		if (file_exists($directLinkPath)){
+		if ($directLinkExists){
 			logPrint("directLinkData = ".$directLinkData."<br>");
 		}
 		logPrint("cacheLinkPath = ".$cacheLinkPath."<br>");
-		if (file_exists($cacheLinkPath)){
+		if ($cacheLinkExists){
 			logPrint("cacheLinkData = ".$cacheLinkData."<br>");
 		}
 		# get the cache link if it exists
-		if (file_exists($cacheLinkPath)){
+		if ($cacheLinkExists){
 			$videoLink = $cacheLinkData;
 			logPrint("videoLink cache link = ".$videoLink."<br>");
-		}else if (file_exists($directLinkPath)){
+		}else if ($directLinkExists){
 			# load the direct link to the video into the player
 			$videoLink = $directLinkData;
 			logPrint("videoLink direct link = ".$videoLink."<br>");
 		}
 		# make the full path
 		if (file_exists("show.title")){
-			logPrint("showTitle = ".$showTitle."<br>");
-			logPrint("seasonTitle = ".$seasonTitle."<br>");
-			logPrint("video link format = /kodi/shows/\$showTitle/Season \$seasonTitle/\$directLinkData<br>");
-			# load show episode
-			$videoLink = "/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData";
-			logPrint("videoLinkFix = ".$videoLink."<br>");
+			if (! ($cacheLinkExists)){
+				logPrint("showTitle = ".$showTitle);
+				logPrint("seasonTitle = ".$seasonTitle);
+				logPrint("video link format = \$directLinkData");
+				# load show episode
+				$videoLink = $directLinkData;
+				logPrint("videoLinkFix = ".$videoLink."<br>");
+			}
 		}else{
 			# load movie
-			logPrint("direct Link Data format = /kodi/movies/\$movieTitle/\$directLinkData<br>");
-			$videoLink = "/kodi/movies/$movieTitle/$directLinkData";
+			logPrint("direct Link Data format = \$directLinkData<br>");
+			$videoLink = "$directLinkData";
 			logPrint("videoLinkFix = ".$videoLink."<br>");
 		}
-		# if the video is a .strm file load the contents into the video link
-		if (substr($videoLink,-5,5) == ".strm"){
-			logPrint("loading data from the .strm file.<br>");
-			$fullPathVideoLink=file_get_contents($_SERVER["DOCUMENT_ROOT"].$videoLink);
-			# replace local links with the address used to access this page
-			$fullPathVideoLink=str_replace((gethostname().".local"), $_SERVER["HTTP_HOST"], $fullPathVideoLink);
-			# remove newlines added by file_get_contents(), .strm files should not have newlines
-			$fullPathVideoLink=trim($fullPathVideoLink, "\r\n");
-			# make sure the server is in https mode or redirect
-			if (substr($fullPathVideoLink,0,8) == "https://"){
-				# the link is https check the server
-				if (! array_key_exists("HTTPS",$_SERVER)){
-					# replace http with https if the server is using https
-					# - external links from redirects should use https by default since these links are from the server to the internet
-					$fullPathVideoLink=str_replace("http://","https://",$fullPathVideoLink);
-					# build the upgrade button
-					#echo "<a class='button' href='".("https://".$_SERVER["HTTP_HOST"].".local/".$_SERVER["REQUEST_URI"])."'>Upgrade to HTTPS</a>";
-				}
-				#redirect("https://".substr($_SERVER["REQUEST_URI"],7));
-			}
-			# set the header link
-			$headerLink=$fullPathVideoLink;
-			flush();
-			ob_flush();
-			# get the headers to read the mimetype of the media for building the correct player on the webpage
-			$videoMimeType=get_headers($headerLink, true);
+		flush();
+		ob_flush();
+		# check if the file exists and check the metadata
+		if ($cacheLinkExists){
+			# this is not a file but a external link so check the mime type of the video link
+			$videoMimeType=get_headers($cacheLinkData, true);
+			$fullPathVideoLink=$cacheLinkData;
 		}else{
-			# this is a local file path to load
-			# encode spaces in link
-			$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20",$videoLink);
-			# get the mime type of the local file
-			$videoMimeType=mime_content_type($_SERVER["DOCUMENT_ROOT"].$videoLink);
+			if ( (substr($directLinkData,0,8) == "https://") or (substr($directLinkData,0,7) == "http://") ){
+				# this is a external link
+				$videoMimeType=get_headers($directLinkData, true);
+				$fullPathVideoLink=$directLinkData;
+			}else{
+				# this is a file path
+				logPrint("direct link path = ".$_SERVER["DOCUMENT_ROOT"].$directLinkData);
+				$videoMimeType=mime_content_type($_SERVER["DOCUMENT_ROOT"].$directLinkData);
+				$fullPathVideoLink=$directLinkData;
+			}
 		}
-		# pull the content types
+		# generate https links for https connections
+		if (array_key_exists("HTTPS",$_SERVER)){
+			# the cache links that are linked to should be https anyway
+			$fullPathVideoLink=str_replace("http://","https://",$fullPathVideoLink);
+		}
+		# pull the content type based on the mime data
 		logPrint("Checking if this is an array.<br>");
 		if (is_array($videoMimeType)){
 			logPrint("This is an array.<br>");
@@ -393,39 +410,39 @@ function isTranscodeEnabled(){
 <?PHP
 	$datePath=$_SERVER["SCRIPT_FILENAME"].".date";
 	if (file_exists($datePath)){
-		echo "<div class='aired'>";
-		echo file_get_contents($datePath);
-		echo "</div>";
+		echo "<div class='aired'>\n";
+		echo file_get_contents($datePath)."\n";
+		echo "</div>\n";
 	}else{
 		logPrint("NO DATE FOUND AT $datePath<br>");
 	}
 
-	echo "<div class='hardLink'>";
+	echo "<div class='hardLink'>\n";
 	# draw the direct links
-	echo "<div>";
+	echo "<div>\n";
 	echo "<a class='button hardLink' href='".$directLinkData."'>\n";
 	echo "🔗Direct Link\n";
 	echo "</a>\n";
-	echo "</div>";
+	echo "</div>\n";
 
 	# build the cache links
-	if (file_exists($cacheLinkPath)){
+	if ($cacheLinkExists){
 		# if the cache link is a external link that means it is a real cache link
-		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
-			echo "<div>";
+		#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			echo "<div>\n";
 			echo "<a class='button hardLink' href='$fullPathVideoLink'>\n";
 			echo "📥Cache Link\n";
 			echo "</a>\n";
-			echo "</div>";
-		}
+			echo "</div>\n";
+		#}
 	}
 	# build the continue playing playlist links
 	if (file_exists("show.title")){
-		echo "<div>";
-		echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".$showTitle."'>";
-		echo "🔁 Continue<sup>External</sup>";
-		echo "</a>";
-		echo "</div>";
+		echo "<div>\n";
+		echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>\n";
+		echo "🔁 Continue<sup>External</sup>\n";
+		echo "</a>\n";
+		echo "</div>\n";
 	}
 
 	echo "<div>";
@@ -433,57 +450,81 @@ function isTranscodeEnabled(){
 	if (file_exists("show.title")){
 		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
 		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-		echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
+		if ($cacheLinkExists){
+			echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+		}else{
+			#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
+				echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+			}else{
+				echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+			}
+		}
 	}else{
 		# this is a movie
 		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
 		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-		echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
+		if ($cacheLinkExists){
+			echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$directLinkData")."'>\n";
+		}else{
+			echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+		}
 	}
 	echo "🇰Play on KODI\n";
 	echo "</a>\n";
-	echo "</div>";
+	echo "</div>\n";
 
 	echo "<div>";
 	# build the vlc links
 	if (file_exists("show.title")){
-		echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20","/shows/$showTitle/Season $seasonTitle/$directLinkData")."'>\n";
+		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			# if this is a external link
+			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
+		}else{
+			#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
+			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
+		}
 	}else{
-		# this is a movie
-		echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20","/movies/$movieTitle/$directLinkData")."'>\n";
-	}
-	echo "▶️ Direct Play";
-	echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
-	echo "</a>\n";
-	echo "</div>";
-
-	if (file_exists($cacheLinkPath)){
-		if ( (substr($cacheLinkData,0,8) == "https://") or (substr($cacheLinkData,0,7) == "http://") ){
-			echo "<div>";
-			echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=\"$cacheLinkData\"'>\n";
-			echo "📥Cache Link\n";
-			echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
-			echo "</a>\n";
-			echo "</div>";
+		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+			# if this is a external link
+			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
+		}else{
+			# this is a movie
+			#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
+			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 		}
 	}
+	echo "▶️ Direct Play\n";
+	echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
+	echo "</a>\n";
+	echo "</div>\n";
+
+	#if ($cacheLinkExists){
+	#	echo "<div>";
+	#	echo "<a class='button hardLink vlcButton' href='vlc://$fullPathVideoLink'>\n";
+	#	echo "📥Cache Link\n";
+	#	echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
+	#	echo "</a>\n";
+	#	echo "</div>";
+	#}
 
 	if (file_exists("show.title")){
-		echo "<div>";
-		echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".$showTitle."'>";
-		echo "🔁 Continue";
-		echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>";
-		echo "</a>";
-		echo "</div>";
+		echo "<div>\n";
+		#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>";
+		echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>\n";
+		echo "🔁 Continue\n";
+		echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
+		echo "</a>\n";
+		echo "</div>\n";
 	}
-	echo "</div>";
+	echo "</div>\n";
 ?>
 <?PHP
 	$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
 	if (file_exists($plotPath)){
-		echo "<div class='plot'>";
+		echo "<div class='plot'>\n";
 		echo file_get_contents($plotPath);
-		echo "</div>";
+		echo "</div>\n";
 	}else{
 		logPrint("NO PLOT FOUND AT $plotPath<br>");
 	}
@@ -507,7 +548,7 @@ function isTranscodeEnabled(){
 		array_push($externalSearchLinks, Array("https://veoh.com/find/","VEOH"));
 		# draw links for each of the search providers
 		foreach($externalSearchLinks as $linkData){
-			echo "<a class='button' rel='noreferer' target='_new' href='".$linkData[0].$titleData."'>🔎 ".$linkData[1]."</a>";
+			echo "<a class='button' rel='noreferer' target='_new' href='".$linkData[0].$titleData."'>🔎 ".$linkData[1]."</a>\n";
 		}
 	?>
 	</div>
