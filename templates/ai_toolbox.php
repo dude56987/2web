@@ -40,7 +40,8 @@
 	}
 
 	echo "<div class='titleCard'>";
-	echo "<h2>AI Tools</h2>";
+	echo "<details>";
+	echo "<summary><h2>AI Tools</h2></summary>";
 	if ($discoveredPrompt){
 		# ai prompting interface
 		echo "<a class='showPageEpisode' href='/ai/prompt/'>";
@@ -69,6 +70,6 @@
 		echo "	<div class='aiIcon'>🖌️</div>";
 		echo "</a>";
 	}
-
+	echo "</details>";
 	echo "</div>";
 ?>
