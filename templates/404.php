@@ -21,6 +21,7 @@
 <head>
 	<link rel="stylesheet" href="/style.css" />
 	<title>404</title>
+	<script src='/2webLib.js'></script>
 </head>
 <body>
 	<?PHP
