@@ -457,7 +457,11 @@ function isTranscodeEnabled(){
 			if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
 				echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
 			}else{
-				echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+				if($strmLinkExists){
+					echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+				}else{
+					echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+				}
 			}
 		}
 	}else{
