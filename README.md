@@ -1,7 +1,9 @@
 2web
 ====
 
-Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))! A HTTP/HTTPS multimedia caching server for hosting content on your LAN. 2web was originally designed for the raspberry PI 2 but has since been refactored for Debian and Ubuntu Linux in general. 2web is focused on allowing you to access content from the local server without internet access wherever possible. 2web is designed to act as a server component to KODI for HTTP shares, but can be used though the web browser on any device. Almost all the processing is done on the server so the bigger the server the better the experience. Everything is designed so that this single server can offer a lot of services in a single unified interface without constantly connecting to the outside world.
+Your digital domain, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))! 2web is focused on allowing you to access content from YOUR local LAN without internet access wherever possible. Designed for use with KODI, Phones, Tablets, and Desktop computers 2web acts as your freedom, privacy, and attention respecting frontend to the internet.
+
+Add multimedia, documents, and databases to 2web for a total offline experience or add your chosen media sources to use caching components. You can even use 2web as a frontend to link to other self hosted services on your network such as Nextcloud, Pi-Hole, or Tiny Tiny RSS. 2web can be used with tailscale to access your data from anywhere on earth or in space. 2web is heavily optimised to target running on the latest raspberry pi, currently the PI 4.
 
 - [Supported Content Types](#supported-content-types)
 - [Features](#features)
@@ -31,7 +33,7 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - Git Repositories
  - System Graphs
  - Weather Forecasts
- - Prompting AI
+ - Text Prompting AI
  - Image Generating AI
 
 <span id='features' />
@@ -42,7 +44,7 @@ Your digital bookshelf, full of hardworking [daemons](https://en.wikipedia.org/w
  - Written in [PHP](https://www.php.net), [Bash](https://www.gnu.org/software/bash/), and [Javascript](https://en.wikipedia.org/wiki/JavaScript)
  - WEB Access and Administration interface to all hosted data, compatible with PHONES, TABLETS, and DESKTOP
  - CLI (Command line interface) with man pages
- - Local Search for ALL hosted data, with external search links
+ - Offline Search for ALL hosted data, with external search links
  - Offline dictionary search results
  - Weather info via [weather-util](http://fungi.yuggoth.org/weather/) WITHOUT NEED FOR AN API KEY thanks to METAR data from the National Oceanic and Atmospheric Administration and forecasts from the National Weather Service.
  - Add wikis from locally downloaded [ZIM](https://wiki.openzim.org/wiki/OpenZIM) files
@@ -154,6 +156,12 @@ To access the web interface on the machine you have installed it on, go to
 In the top right corner of the webpage click the login button. If no login button exists click the encrypt button to switch to HTTPS. You may have to accept the custom SSL certificate used to encrypt the connection. Once you login the first time you will probably want to create a administrative user to password lock the settings. You can then enable the modules you want to run automatically in
 
 	http://localhost/settings/
+
+If you are on another computer on the local network you can use zeroconf to access by the servers hostname using the .local domain.
+
+	http://hostname.local/
+
+be sure to replace hostname with the hostname you have given the server.
 
 <span id='settings' />
 
