@@ -1521,6 +1521,10 @@ main(){
 		enableMod "2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "2web"
+	elif [ "$1" == "-R" ] || [ "$1" == "--rescan" ] || [ "$1" == "rescan" ] ;then
+		# set the flag to force the re processing of ALL media found on ALL modules.
+		date "+%s" > /etc/2web/forceRescan.cfg
+		ALERT "A RESCAN of content has been scheduled during the next update of each module."
 	else
 		# update main components
 		# - this builds the base site without anything enabled

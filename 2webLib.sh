@@ -1013,10 +1013,13 @@ function getDirSum(){
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
-	# add the version to the sum to update old versions
-	# - Disk caching on linux should make this repetative file read
-	#   not destroy the hard drive
-	totalList="$totalList$(cat /usr/share/2web/versionDate.cfg)"
+	# force rescan flag will be checked, when force rescan is set the
+	# date in seconds is wrote to the force rescan file. this will change the
+	# checksums for all directories across all modules
+	# - You can also write anything to this file by hand to force a rescan
+	if test -f /etc/2web/forceRescan.cfg;then
+		totalList="$totalList$(cat /etc/2web/forceRescan.cfg)"
+	fi
 	# convert lists into sum
 	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
 	# write the sum to stdout
