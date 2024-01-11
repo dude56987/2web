@@ -362,7 +362,7 @@ function search(){
 	# lauch a search of all database infomation
 	searchQuery=$1
 	searchQuery=$(echo "$searchQuery" | sed "s/_/ /g")
-	addToLog "INFO" "Starting Search" "$searchQuery"
+	addToLog "INFO" "Starting Search" "<a href='/search.php?q=$searchQuery'>$searchQuery</a>"
 	webDirectory=$(webRoot)
 
 	searchSum="$2"
@@ -427,8 +427,9 @@ function search(){
 	blockQueue 1
 
 	# mark the search as complete this will stop the page refresh
-
 	date "+%s" > "$webDirectory/search/${searchSum}_finished.index"
+
+	addToLog "INFO" "Finished Search" "<a href='/search.php?q=$searchQuery'>$searchQuery</a>"
 
 }
 ################################################################################
