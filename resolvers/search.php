@@ -669,13 +669,22 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	if(file_exists($webDirectory."/search/".$querySum."_started.index")){
 		logPrint("the search has been started");
 		$discoveredFiles=array_diff(scanDir($webDirectory."/search/"), Array($querySum."_started.index",$querySum."_finished.index",$querySum."_progress.index",$querySum."_processing.index",$querySum."_total.index"));
+		# get the started time it is used by both branches of the below split
+		$startedTime=trim(file_get_contents($webDirectory."/search/".$querySum."_started.index"),"\n\r");
 		if(file_exists($webDirectory."/search/".$querySum."_finished.index")){
 			logPrint("the search has finished");
-
-			# write when the search was completed
+			# get the finished time stamp
+			$finishedTime=trim(file_get_contents($webDirectory."/search/".$querySum."_finished.index"),"\n\r");
+			# figure out how long the search was processing for using start and end time stamps
+			$processingTime=$finishedTime - $startedTime;
+			# write when the search was completed in human readable format
 			echo "<p>";
-			echo "Search completed ";
-			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_finished.index"));
+			echo "Search completed: ";
+			timeElapsedToHuman($finishedTime);
+			echo "</p>";
+			echo "<p>";
+			echo "Search Processing Time: ";
+			timeToHuman($processingTime);
 			echo "</p>";
 			checkSpelling($_GET["q"]);
 			$noFoundCategories=true;
@@ -716,7 +725,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			logPrint("the search has not finished");
 			echo "<p>";
 			echo "Search started ";
-			timeElapsedToHuman(filemtime($webDirectory."/search/".$querySum."_started.index"));
+			timeElapsedToHuman($startedTime);
 			echo "</p>";
 			checkSpelling($_GET["q"]);
 			# build the refresh
