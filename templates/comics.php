@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("comic2web");
+?>
 <!--
 ########################################################################
 # 2web comic index webpage
@@ -26,8 +31,6 @@
 <body>
 
 <?php
-	ini_set('display_errors', 1);
-	include("/usr/share/2web/2webLib.php");
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 

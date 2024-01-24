@@ -796,6 +796,9 @@ function enableMod(){
 	# RETURN FILES
 	moduleName=$1
 	ALERT "Enabling the module $moduleName"
+	# create a group for the module when it is enabled
+	createDir "/etc/2web/groups/${moduleName}/"
+	# enable the module
 	echo -n "enabled" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################

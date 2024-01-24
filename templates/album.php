@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("music2web");
+?>
 <!--
 ########################################################################
 # 2web music album webpage
@@ -41,9 +46,6 @@
 <body>
 <?php
 ################################################################################
-ini_set('display_errors', 1);
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 if (file_exists("artist.cfg")){

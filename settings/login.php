@@ -23,7 +23,30 @@ if (array_key_exists("userLogout",$_POST)){
 			# start a new session if the password is verifyed
 			# set the session variables
 			$_SESSION["user"]=$username;
-			$_SESSION["admin"]=true;
+			# if this user is a administrator
+			if (file_exists("/etc/2web/groups/admin/".$username.".cfg")){
+				$is_admin=true;
+			}else{
+				$is_admin=false;
+			}
+			# scan the groups to build the user privileges in the session
+			$groups = scandir("/etc/2web/groups/");
+			# remove the up and current paths
+			$groups = array_diff($groups ,Array('..','.','.placeholder'));
+			# for each found directory list
+			foreach( $groups as $group ){
+				if ( $is_admin ){
+					# admin has all group privileges
+					$_SESSION[$group] = true;
+				}else{
+					# other users need privlages checked for each group
+					if (file_exists("/etc/2web/groups/".$group."/".$username.".cfg")){
+						$_SESSION[$group] = true;
+					}else{
+						$_SESSION[$group] = false;
+					}
+				}
+			}
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
 			sleep(2);
 		}else{
@@ -40,21 +63,17 @@ if (array_key_exists("userLogout",$_POST)){
 	}
 }
 $loggedIn=false;
-if (array_key_exists("admin",$_SESSION)){
-	if ($_SESSION["admin"]){
-		# the user is logged in with administrative privileges
-		$loggedIn=true;
-	}
+# check if the user is logged in by checking the session for a username
+if (array_key_exists("user", $_SESSION)){
+	$loggedIn=true;
 }
 # if the user is logged in
-if ($loggedIn){
-	# if the redirect has been given
-	if (array_key_exists("redirect",$_GET)){
-		# redirect the login back to the page it was sent from
-		redirect($_GET["redirect"]);
-	}
+if (array_key_exists("noPermission", $_GET)){
+	$errorMessages .= errorBanner("You do not have permissions to access this content! Please login to another account with the correct permissions.", true);
+	$errorMessages .= errorBanner("The group '".$_GET["noPermission"]."' is not accessable by the current user '".$_SESSION["user"]."'", true);
 }
 
+# check if users exist in the user settings
 $noLogins=false;
 if (count(array_diff(scanDir("/etc/2web/users/"),array(".","..",".placeholder"))) == 0){
 	# if there are no logins setup then create a user session as root
@@ -72,6 +91,18 @@ if (count(array_diff(scanDir("/etc/2web/users/"),array(".","..",".placeholder"))
 }
 
 if ($loggedIn){
+	# if the redirect has been given and the user is logged in correctly
+	if (array_key_exists("redirect",$_GET)){
+		# redirect if the user has permission
+		if (! array_key_exists("noPermission", $_GET)){
+			# redirect the login back to the page it was sent from
+			if ( ! ( stripos($_GET["redirect"], "/logout.php" ) !== false ) ){
+				# only redirect if the redirect is not set to the logout page, this prevents a login/logout loop
+				redirect($_GET["redirect"]);
+			}
+		}
+	}
+
 	# you are logged in show logout button
 	echo "<html class='randomFanart'>";
 	echo "<head>";
@@ -82,12 +113,12 @@ if ($loggedIn){
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# no login is detected draw the login window
 	echo "<div class='inputCard'>";
-	echo "<h1>Logout of ".gethostname()."</h1>";
+	echo "<h1>Logout of ".ucfirst(gethostname())."</h1>";
 	echo "$errorMessages";
 	echo "<hr>";
 	if ($noLogins){
 		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/settings/system.php'>Add Administrator Login</a>";
+		echo "	<a class='button' href='/settings/users.php'>Add Administrator Login</a>";
 		echo "</div>";
 		echo "<div class='listCard'>";
 		echo "	<a class='button' href='/logout.php'>Logout</a>";
@@ -114,15 +145,15 @@ if ($loggedIn){
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# no login is detected draw the login window
 	echo "<div class='inputCard'>";
-	echo "<h1>Login To ".gethostname()."</h1>";
+	echo "<h1>Login To ".ucfirst(gethostname())."</h1>";
 	echo "$errorMessages";
 	echo "<form method='post'>";
 	echo "<hr>";
-	echo "<input class='loginName' type='text' autocorrect='off' autocapitalize='none' name='userLogin' placeholder='username...'>";
+	echo "<input class='loginName' type='text' autocorrect='off' autocapitalize='none' name='userLogin' placeholder='Username...' autofocus>";
 	echo "<hr>";
-	echo "<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='password...'>";
+	echo "<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='Password...'>";
 	echo "<hr>";
-	echo "<input class='button' type='submit' value='login'>";
+	echo "<input class='button' type='submit' value='Login'>";
 	echo "</form>";
 	echo "</div>";
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

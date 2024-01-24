@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("kodi2web");
+?>
 <!--
 ########################################################################
 # 2web kodi player to launch playback on kodi clients
@@ -18,12 +23,6 @@
 ########################################################################
 -->
 <?PHP
-################################################################################
-ini_set('display_errors',1);
-ini_set('display_startup_errors',1);
-error_reporting(E_ALL);
-################################################################################
-include("/usr/share/2web/2webLib.php");
 ################################################################################
 function remoteRedirect(){
 	# redirect back to the remote after the button is sent

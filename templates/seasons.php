@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("nfo2web");
+?>
 <!--
 ########################################################################
 # 2web series seasons view
@@ -36,7 +41,6 @@
 </head>
 <body>
 <?PHP
-ini_set('display_errors', 1);
 // this file is to be placed in the show directory
 // - /shows/$showName/index.php
 $activeDir=getcwd();

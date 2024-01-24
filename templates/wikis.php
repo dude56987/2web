@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("wiki2web");
+?>
 <!--
 ########################################################################
 # 2web wiki index

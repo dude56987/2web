@@ -1405,6 +1405,15 @@ table, th, td{
 	text-shadow: none;
 	text-align: center;
 }
+.controlTable{
+	border: none !important;
+}
+.controlTable td{
+	border: none !important;
+}
+.controlTable tr{
+	border: none !important;
+}
 .kodiControlEmbededTable{
 	border: none;
 }
@@ -1460,6 +1469,7 @@ table{
 	background-color: var(--glassBackground);
 	min-height: 8rem;
 	text-align: center;
+	margin-bottom: 1rem;
 }
 #player{
 	box-shadow: 0px 0px 1rem var(--shadowColor);

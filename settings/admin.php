@@ -1,6 +1,6 @@
 <?PHP
 include("/usr/share/2web/2webLib.php");
-requireLogin();
+requireAdmin();
 ?>
 <!--
 ########################################################################
@@ -62,29 +62,6 @@ function countdown($countdownTime){
 	sleep(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
-function yesNoCfgCheck($configPath){
-	# This function checks the value of a configuration file and returns true if the file is set to yes.
-	# If no config file exists a new one will be created.
-	#
-	# RETURN BOOL
-
-	# check if the config file exists
-	if (path_exists($configPath)){
-		if (stripos(strtolower(file_get_contents($configPath)), 'yes')){
-			# the config file is set to yes
-			return True;
-		}else{
-			# set the file to "no" if anything other than yes is set
-			file_put_contents($configPath , "no");
-			return False;
-		}
-	}else{
-		# no file exists return false and create default no config
-		file_put_contents($configPath , "no");
-		return False;
-	}
-}
-////////////////////////////////////////////////////////////////////////////////
 function yesNoCfgSet($configPath, $newConfigSetting){
 	# Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
 	#
@@ -104,7 +81,7 @@ function outputLog($stringData,$class="outputLog"){
 	# RETURN OUTPUT
 
 	# write $stringData to the log then to the webpage
-	addToLog("ADMIN","Running Admin Action","$stringData");
+	addToLog("ADMIN","Admin Action by user '".$_SESSION["user"]."'","$stringData");
 	echo "<div class='$class'>";
 	echo "$stringData";
 	$index=0;
@@ -137,6 +114,10 @@ function setModStatus($modName,$modStatus){
 		outputLog("Enabling $modName","goodLog");
 		# write status to module config
 		file_put_contents($configPath,$modStatus);
+		# create the group if it does not exist
+		if (! file_exists("/etc/2web/groups/".$modName."/")){
+			mkdir("/etc/2web/groups/".$modName."/");
+		}
 		outputLog("$modName has been set to $modStatus","goodLog");
 	}else{
 		# disable the module
@@ -302,6 +283,12 @@ if (array_key_exists("newUserName",$_POST)){
 					# create the users directory if it does not exist
 					mkdir("/etc/2web/users/");
 				}
+				if ( ! file_exists("/etc/2web/groups/")){
+					mkdir("/etc/2web/groups/");
+				}
+				if ( ! file_exists("/etc/2web/groups/admin/")){
+					mkdir("/etc/2web/groups/admin/");
+				}
 				# check if the username already exists
 				if (file_exists("/etc/2web/users/".$userName.".cfg")){
 					# the username has already exists
@@ -312,6 +299,8 @@ if (array_key_exists("newUserName",$_POST)){
 					$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
 					# save the password
 					file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
+					# add admin to the admin group
+					touch("/etc/2web/groups/admin/".$userName.".cfg");
 					outputLog("The user '".$userName."' has been created!", "goodLog");
 				}
 			}else{
@@ -328,12 +317,97 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("No password was given for the new user!", "badLog");
 		outputLog("Processing failed!", "badLog");
 	}
-	echo ("<hr><a class='button' href='/settings/system.php#addNewUser'>BACK</a><hr>");
+	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
 }else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
 	outputLog("Removing user $userName from authorization list");
-	unlink("/etc/2web/users/$userName");
-	echo "<hr><a class='button' href='/settings/system.php#removeUser'>BACK</a><hr>";
+	unlink("/etc/2web/users/".$userName.".cfg");
+	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
+}else if (array_key_exists("addUserToGroup_userName",$_POST)){
+	$userName=$_POST['addUserToGroup_userName'];
+	$groupName=$_POST['addUserToGroup_groupName'];
+	# if the user name exists
+	if (file_exists("/etc/2web/users/".$userName.".cfg")){
+		# if the user is already in the group
+		if (file_exists("/etc/2web/groups/".$groupName."/".$userName.".cfg")){
+			# the user is already in the group
+			outputLog("The user '".$userName."' is already in this group '".$groupName."'","badLog");
+		}else{
+			# the user does not exist in the group yet
+			# add the user to the group by creating the file
+			outputLog("Adding the user '".$userName."' to the group '".$groupName."'","goodLog");
+			touch("/etc/2web/groups/".$groupName."/".$userName.".cfg");
+		}
+	}else{
+		outputLog("The user '".$userName."' does not yet exist so it can not be added to the group '".$groupName."'","badLog");
+	}
+	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
+}else if (array_key_exists("removeUserFromGroup_userName",$_POST)){
+	$userName=$_POST['removeUserFromGroup_userName'];
+	$groupName=$_POST['removeUserFromGroup_groupName'];
+	# if the user name exists
+	if (file_exists("/etc/2web/users/".$userName.".cfg")){
+		# if the user is already in the group
+		if (file_exists("/etc/2web/groups/".$groupName."/".$userName.".cfg")){
+			# the user is already in the group
+			# remove the user from the group
+			outputLog("Removing the user '".$userName."' from the group '".$groupName."'","goodLog");
+			unlink("/etc/2web/groups/".$groupName."/".$userName.".cfg");
+		}else{
+			# the user does not exist in the group yet
+			outputLog("The user '".$userName."' does not yet exist in this group. So it can not be added to the group '".$groupName."'","badLog");
+		}
+	}
+	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
+}else if (array_key_exists("newBasicUserName",$_POST)){
+	# make all chacters lowercase for password
+	$userName=strtolower($_POST['newBasicUserName']);
+	outputLog("Creating new user '$userName'");
+	if (array_key_exists("newUserPass",$_POST)){
+		# Verify the password is the same in both fields
+		if (array_key_exists("newUserPassVerify",$_POST)){
+			if($_POST["newUserPass"] == $_POST["newUserPassVerify"]){
+				# the passwords are the same, build the user account
+				if ( ! file_exists("/etc/2web/users/")){
+					# create the users directory if it does not exist
+					mkdir("/etc/2web/users/");
+				}
+				if ( ! file_exists("/etc/2web/groups/")){
+					mkdir("/etc/2web/groups/");
+				}
+				if ( ! file_exists("/etc/2web/groups/admin/")){
+					mkdir("/etc/2web/groups/admin/");
+				}
+				# check if the username already exists
+				if (file_exists("/etc/2web/users/".$userName.".cfg")){
+					# the username has already exists
+					outputLog("The user '".$userName."' already exists!", "badLog");
+					outputLog("Processing failed!", "badLog");
+				}else{
+					# build the password hash
+					$passSum=password_hash($_POST["newUserPass"],PASSWORD_DEFAULT);
+					# save the password
+					file_put_contents("/etc/2web/users/".$userName.".cfg",$passSum);
+					# add base users to the base 2web group, e.g. homepage, playlists, help
+					touch("/etc/2web/groups/2web/".$userName.".cfg");
+					# output log for user feedback
+					outputLog("The user '".$userName."' has been created!", "goodLog");
+				}
+			}else{
+				# the passwords are diffrent, fail out
+				outputLog("The passwords given are diffrent, You must verify the password to create a new account!", "badLog");
+				outputLog("Processing failed!", "badLog");
+			}
+		}else{
+			# no verification was given for the password entered
+			outputLog("You did not verify the password given, Please verify the password to create a account!", "badLog");
+			outputLog("Processing failed!", "badLog");
+		}
+	}else{
+		outputLog("No password was given for the new user!", "badLog");
+		outputLog("Processing failed!", "badLog");
+	}
+	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
 }else if (array_key_exists("all_update",$_POST)){
 	outputLog("Scheduling 2web update!");
 	shell_exec("echo '2web all' | /usr/bin/at -q b now");
@@ -715,6 +789,31 @@ if (array_key_exists("newUserName",$_POST)){
 		}
 	}
 	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("lockGroup",$_POST)){
+	$group=$_POST["lockGroup"];
+	if (file_exists("/etc/2web/lockedGroups/".$group.".cfg")){
+		outputLog("The group '".$group."' is already locked, Nothing is to be done.","badLog");
+	}else{
+		outputLog("Locking access to the group '".$group."'","goodLog");
+		touch("/etc/2web/lockedGroups/".$group.".cfg");
+	}
+	echo "<hr><a class='button' href='/settings/users.php'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("unlockGroup",$_POST)){
+	$group=$_POST["unlockGroup"];
+	if (file_exists("/etc/2web/lockedGroups/".$group.".cfg")){
+		outputLog("Unlocking access to the group '".$group."'","goodLog");
+		unlink("/etc/2web/lockedGroups/".$group.".cfg");
+	}else{
+		outputLog("The group '".$group."' is already unlocked, Nothing is to be done.","badLog");
+	}
+	echo "<hr><a class='button' href='/settings/users.php'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("rss2nfoStatus",$_POST)){
+	$status=$_POST['rss2nfoStatus'];
+	setModStatus("rss2nfo",$status);
+	echo "<hr><a class='button' href='/settings/modules.php#rss2nfoStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("wiki2webStatus",$_POST)){
 	$status=$_POST['wiki2webStatus'];

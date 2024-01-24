@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("nfo2web");
+?>
 <!--
 ########################################################################
 # 2web movie index
@@ -26,9 +31,6 @@
 <body>
 <?php
 ################################################################################
-ini_set('display_errors', 1);
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 # add the header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>

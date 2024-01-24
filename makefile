@@ -99,6 +99,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/ytdl/sources.d/
 	mkdir -p debian/etc/2web/ytdl/usernameSources.d/
 	mkdir -p debian/etc/2web/users/;
+	mkdir -p debian/etc/2web/groups/;
+	mkdir -p debian/etc/2web/lockedGroups/;
 	mkdir -p debian/etc/2web/nfo/;
 	mkdir -p debian/etc/2web/nfo/libaries.d/;
 	mkdir -p debian/etc/2web/music/;
@@ -172,9 +174,12 @@ build-deb: upgrade-hls
 	touch debian/usr/share/2web/settings/.placeholder
 	touch debian/usr/share/2web/themes/.placeholder
 	touch debian/etc/2web/users/.placeholder
+	touch debian/etc/2web/groups/.placeholder
 	touch debian/etc/2web/portal/.placeholder
 	# fix ownership
 	chown -R www-data:www-data debian/etc/2web/users/
+	chown -R www-data:www-data debian/etc/2web/groups/
+	chown -R www-data:www-data debian/etc/2web/lockedGroups/
 	chown -R www-data:www-data debian/etc/2web/ytdl/*.d/
 	chown -R www-data:www-data debian/etc/2web/iptv/*.d/
 	chown -R www-data:www-data debian/etc/2web/nfo/*.d/

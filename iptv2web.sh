@@ -1130,6 +1130,11 @@ webGen(){
 				# build individual channel webpage
 				################################################################################
 				{
+					echo "<?PHP"
+					echo "ini_set('display_errors', 1);"
+					echo "include('/usr/share/2web/2webLib.php');"
+					echo "requireGroup('iptv2web');"
+					echo "?>"
 					# build the page
 					echo "<html onload='forcePlay()'  id='top' class='liveBackground'>"
 					echo "<head>"

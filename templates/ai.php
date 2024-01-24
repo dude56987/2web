@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("ai2web");
+?>
 <?PHP
 ########################################################################
 # 2web AI services index
@@ -16,11 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-ini_set('display_errors', 1);
 ini_set('file_uploads', "On");
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
-
+########################################################################
 if (array_key_exists("debug",$_POST)){
 	echo "<div class='errorBanner'>\n";
 	echo "<hr>\n";

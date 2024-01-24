@@ -168,6 +168,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "		<h2>System Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	echo "			<a class='button' href='/settings/system.php'>🎛️ General</a>\n";
+	echo "			<a class='button' href='/settings/modules.php'>🧩 Modules</a>\n";
+	echo "			<a class='button' href='/settings/users.php'>👪 Users & Groups</a>\n";
 	echo "			<a class='button' href='/settings/themes.php'>🎨 Themes</a>\n";
 	echo "			<a class='button' href='/settings/cache.php'>📥 Cache</a>\n";
 	echo "			<a class='button' href='/log/'>📋 Log</a>\n";

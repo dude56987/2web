@@ -1,7 +1,7 @@
 <?PHP
 ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
-requireLogin();
+requireAdmin();
 ?>
 <!--
 ########################################################################

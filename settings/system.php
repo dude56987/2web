@@ -1,6 +1,6 @@
 <?PHP
 include("/usr/share/2web/2webLib.php");
-requireLogin();
+requireAdmin();
 ?>
 <!--
 ########################################################################
@@ -43,68 +43,7 @@ include("settingsHeader.php");
 		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
 	</ul>
 </div>
-
-<div id='addNewUser' class='inputCard'>
-<form action='admin.php' method='post'>
-	<h2>Add New System Administrator</h2>
-	<ul>
-		<li>Add at least one administrator to lock the settings in this web interface.</li>
-		<ul>
-			<li>
-				<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
-			</li>
-			<li>
-				<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
-			</li>
-			<li>
-				<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
-			</li>
-		</ul>
-	</ul>
-	<button class='button' type='submit'>Add New Administrator</button>
-</form>
 </div>
-
-<div id='removeUser' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Remove System Administrator</h2>
-			<ul>
-				<li>
-					Remove existing administrator from accessing the website
-				</li>
-				<li>
-					If at least one administrator exists all web interface settings will be locked, including this page.
-				</li>
-			</ul>
-			<select name='removeUser'>
-			<?PHP
-			# build theme list
-			$themePath="/etc/2web/theme.cfg";
-			if (file_exists($themePath)){
-				$activeTheme=file_get_contents($themePath);
-				$activeTheme=str_replace("\n","",$activeTheme);
-				# read in theme files in /usr/share/2web/
-				$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/users/*.cfg"));
-				foreach($sourceFiles as $sourceFile){
-					if (strpos($sourceFile,".cfg")){
-						$tempTheme=str_replace("/etc/2web/users/","",$sourceFile);
-						$themeName=str_replace(".cfg","",$tempTheme);
-						if ($tempTheme == $activeTheme){
-							# mark the active theme as selected
-							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
-						}else{
-							# add other theme options found
-							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
-						}
-					}
-				}
-			}
-			?>
-		</select>
-		<button class='button' type='submit'>Remove Administrator</button>
-	</form>
-</div>
-
 <div id='homepageFortuneStatus' class='inputCard'>
 	<h2>Fortune</h2>
 		<ul>

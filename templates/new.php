@@ -1,3 +1,36 @@
+<?PHP
+ini_set('display_errors', 1);
+include("/usr/share/2web/2webLib.php");
+# this is part of the default group
+requireGroup("2web");
+# check for group permissions in filter type
+if (array_key_exists("filter",$_GET)){
+	$filterType=$_GET['filter'];
+	if ($filterType == "graphs"){
+		requireGroup("graph2web");
+	}else if ($filterType == "comics"){
+		requireGroup("comic2web");
+	}else if ($filterType == "channels"){
+		requireGroup("iptv2web");
+	}else if ($filterType == "repos"){
+		requireGroup("git2web");
+	}else if ($filterType == "episodes"){
+		requireGroup("nfo2web");
+	}else if ($filterType == "movies"){
+		requireGroup("nfo2web");
+	}else if ($filterType == "shows"){
+		requireGroup("nfo2web");
+	}else if ($filterType == "music"){
+		requireGroup("music2web");
+	}else if ($filterType == "artists"){
+		requireGroup("music2web");
+	}else if ($filterType == "albums"){
+		requireGroup("music2web");
+	}else if ($filterType == "tracks"){
+		requireGroup("music2web");
+	}
+}
+?>
 <!--
 ########################################################################
 # 2web new playlists
@@ -26,7 +59,6 @@
 <body>
 <?php
 ################################################################################
-ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <div class='titleCard'>
@@ -40,7 +72,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		<?PHP
 		if (array_key_exists("filter",$_GET)){
 			$filterType=$_GET['filter'];
-			echo "<a class='button' href='/random/?filter=$filterType'>";
+				echo "<a class='button' href='/random/?filter=$filterType'>";
 		}else{
 			echo "<a class='button' href='/random/'>";
 		}
@@ -57,6 +89,25 @@ if (array_key_exists("filter",$_GET)){
 }else{
 	$filterType="all";
 	echo "<h2>Recently added Media</h2>";
+}
+# if any content is restricted the all group will be locked
+# the all group is default so a message will be shown below if all is locked
+if ($filterType == "all"){
+	$groups=Array("graph2web","comic2web","iptv2web","git2web","nfo2web","music2web");
+	# check each group permission
+	foreach($groups as $group){
+		$showOutput = requireGroup("graph2web", false);
+		# if any group requires permission lock out the 'all' playlist
+		if ($showOutput == false){
+			$hideFilter = true;
+			# break the loop since only one locked item means the all list is unaccessable
+			break;
+		}else{
+			$hideFilter = false;
+		}
+	}
+}else{
+	$hideFilter = false;
 }
 ?>
 <div class='listCard'>
@@ -83,17 +134,23 @@ drawPlaylistButton($filterType,"repos","💾 Repos");
 <div class='settingListCard'>
 <img class='globalPulse' src='/pulse.gif'>
 <?php
-$emptyMessage = "<ul>";
-$emptyMessage .= "<li>No $filterType items found!</li>";
-$emptyMessage .= "</ul>";
-# draw the last updated time
-if (file_exists($filterType.".cfg")){
-	echo "<div>Last Updated : ";
-	timeElapsedToHuman(file_get_contents($filterType.".cfg"));
-	echo "</div>";
+flush();
+ob_flush();
+if ($hideFilter){
+	echo "This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.";
+}else{
+	$emptyMessage = "<ul>";
+	$emptyMessage .= "<li>No $filterType items found!</li>";
+	$emptyMessage .= "</ul>";
+	# draw the last updated time
+	if (file_exists($filterType.".cfg")){
+		echo "<div>Last Updated : ";
+		timeElapsedToHuman(file_get_contents($filterType.".cfg"));
+		echo "</div>";
+	}
+	# loop though and display the playlist index
+	displayIndexWithPages($filterType.".index",$emptyMessage,48,"reverse");
 }
-# loop though and display the playlist index
-displayIndexWithPages($filterType.".index",$emptyMessage,48,"reverse");
 ?>
 </div>
 <?php

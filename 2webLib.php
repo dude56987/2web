@@ -20,6 +20,36 @@ ini_set('display_errors', 1);
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
 	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
+		# check for group permissions in filter type
+		if ($filterType == "graphs"){
+			$showOutput = requireGroup("graph2web", false);
+		}else if ($filterType == "comics"){
+			$showOutput = requireGroup("comic2web", false);
+		}else if ($filterType == "channels"){
+			$showOutput = requireGroup("iptv2web", false);
+		}else if ($filterType == "repos"){
+			$showOutput = requireGroup("git2web", false);
+		}else if ($filterType == "episodes"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "movies"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "shows"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "music"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "artists"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "albums"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "tracks"){
+			$showOutput = requireGroup("music2web", false);
+		}else{
+			$showOutput = true;
+		}
+		if ($showOutput == false){
+			# hide the output if group permissions are not available for this widget
+			return false;
+		}
 		# Draw the poster widget as HTML
 		if ($random){
 			$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/$filterType/$filterType.index";
@@ -1040,11 +1070,89 @@ if( ! function_exists("errorBanner")){
 	}
 }
 ########################################################################
-if( ! function_exists("requireLogin")){
-	function requireLogin(){
+if( ! function_exists("yesNoCfgCheck")){
+	function yesNoCfgCheck($configPath){
+		# This function checks the value of a configuration file and returns true if the file is set to yes.
+		# If no config file exists a new one will be created.
+		#
+		# RETURN BOOL
+
+		# check if the config file exists
+		if (path_exists($configPath)){
+			if (stripos(strtolower(file_get_contents($configPath)), 'yes')){
+				# the config file is set to yes
+				return True;
+			}else{
+				# set the file to "no" if anything other than yes is set
+				file_put_contents($configPath , "no");
+				return False;
+			}
+		}else{
+			# no file exists return false and create default no config
+			file_put_contents($configPath , "no");
+			return False;
+		}
+	}
+}
+########################################################################
+if( ! function_exists("requireGroup")){
+	function requireGroup($group, $redirect=true){
+		# check the logged in user has permissions for the group given or if the group is unlocked
+		// try to load a session in the current window
+		if (! isset($_SESSION)){
+			session_start();
+		}
+		# check if the group itself is locked
+		if (array_key_exists($group."_locked",$_SESSION)){
+			# the array key is set
+			if (! $_SESSION[$group."_locked"]){
+				# eject from the lock check and load the page without login
+				return true;
+			}
+		}else{
+			# the session has not yet been checked
+			# check if the group being checked requires a login
+			if (file_exists("/etc/2web/lockedGroups/".$group.".cfg")){
+				# if the group is unlocked let anyone enter and store the status in the current session
+				$_SESSION[$group."_locked"]=true;
+			}else{
+				# the group is not locked so set the session value
+				$_SESSION[$group."_locked"]=false;
+				# eject from the lock check and load the page without login
+				return true;
+			}
+		}
+		# check the user has logged in successfully
+		if (array_key_exists($group,$_SESSION)){
+			if ($_SESSION[$group]){
+				# if the user is logged in and has permissions to access the group, eject them from the group auth process
+				return true;
+			}else{
+				if ($redirect){
+					# if the user is not logged in redirect to the login page
+					redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?failedLogin=true&noPermission=".$group."&redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
+				}else{
+					return false;
+				}
+			}
+		}else{
+			if ($redirect){
+				# if the user is not logged in redirect to the login page
+				redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?failedLogin=true&redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
+			}else{
+				return false;
+			}
+		}
+	}
+}
+########################################################################
+if( ! function_exists("requireAdmin")){
+	function requireAdmin(){
 		# only load this page if the user is logged in, otherwise redirect to the login page
 		// try to load a session in the current window
-		session_start();
+		if (! isset($_SESSION)){
+			session_start();
+		}
 		# check the user has logged in successfully
 		if (array_key_exists("admin",$_SESSION)){
 			if ($_SESSION["admin"]){

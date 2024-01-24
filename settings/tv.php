@@ -1,6 +1,6 @@
 <?PHP
 include("/usr/share/2web/2webLib.php");
-requireLogin();
+requireAdmin();
 ?>
 <!--
 ########################################################################

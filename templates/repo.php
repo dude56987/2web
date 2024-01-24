@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("git2web");
+?>
 <!--
 ########################################################################
 # 2web git repo webpage
@@ -291,9 +296,6 @@ if (file_exists("repoHistory.webm")){
 <body>
 <?php
 ################################################################################
-ini_set('display_errors', 1);
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 

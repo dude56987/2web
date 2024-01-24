@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("weather2web");
+?>
 <!--
 ########################################################################
 # 2web weather index
@@ -26,16 +31,11 @@
 <body>
 
 <?php
-	ini_set('display_errors', 1);
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 
-
 <hr>
 
-<!--
-<div class='settingListCard'>
--->
 <div class='titleCard'>
 <h1>Stations</h1>
 <div class='listCard'>

@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("portal2web");
+?>
 <!--
 ########################################################################
 # 2web portal index
@@ -43,9 +48,6 @@ function replaceLink($search, $replace, $filePath){
 	return $tempText;
 }
 ################################################################################
-ini_set('display_errors', 1);
-# add the base php libary
-include("/usr/share/2web/2webLib.php");
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>

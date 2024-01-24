@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("iptv2web");
+?>
 <!--
 ########################################################################
 # 2web public help document
@@ -26,7 +31,6 @@
 <body>
 <?php
 ################################################################################
-ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 

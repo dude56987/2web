@@ -537,6 +537,7 @@ function update2web(){
 	# settings interface files
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
+	linkFile "/usr/share/2web/settings/users.php" "$webDirectory/settings/users.php"
 	linkFile "/usr/share/2web/settings/about.php" "$webDirectory/settings/about.php"
 	linkFile "/usr/share/2web/settings/serverServices.php" "$webDirectory/settings/serverServices.php"
 	linkFile "/usr/share/2web/settings/radio.php" "$webDirectory/settings/radio.php"

@@ -2,7 +2,7 @@
 # add the base php libary
 include("/usr/share/2web/2webLib.php");
 # verify the login before loading the page
-requireLogin();
+requireAdmin();
 ?>
 <!--
 ########################################################################
