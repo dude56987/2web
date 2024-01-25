@@ -226,6 +226,8 @@ function isTranscodeEnabled(){
 	$ratingData=file_get_contents($ratingPath);
 	if ( strlen($ratingData) > 0){
 		echo "<span class='button'>Rating : $ratingData</span>";
+	}else{
+		echo "<span class='button'>Rating : UNRATED</span>";
 	}
 	?>
 </div>
