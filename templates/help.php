@@ -69,7 +69,14 @@ For when you need more than the web interface can handle. This help section defi
 <div class='titleCard linkInfo'>
 	<h2 id="search">🔎 2web Search</h2>
 	<p>
-		At the top of each page is the 2web global search tool. This allows you to search all data stored on the 2web server including...
+		At the top of each page is the 2web global search tool.
+	</p>
+	<form class='searchBoxForm' action='/search.php' method='get'>
+		<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >
+		<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+	</form>
+	<p>
+		 This allows you to search all data stored on the 2web server including...
 	</p>
 	<ul>
 		<li>Episodes</li>
