@@ -18,6 +18,7 @@
 ########################################################################
 # import libaries
 import sys, os, json, hashlib, sqlite3, time
+import gc
 sys.path.append("/usr/share/2web/")
 from python2webLib import h1, hr, file_get_contents
 ################################################################################
@@ -54,6 +55,7 @@ if "--download-model" in sys.argv:
 	modelPath = sys.argv[(sys.argv.index("--download-model")+1)]
 	# load the model, download if missing
 	DiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/")
+	gc.collect()
 	exit()
 
 if "--list-negative-prompts" in sys.argv:
@@ -259,4 +261,7 @@ while versions > 0:
 		failures += 1
 		if failures > 10:
 			print("ERROR: Too many failures")
+			gc.collect()
 			exit()
+# collect garbage before exit
+gc.collect()
