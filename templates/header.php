@@ -248,23 +248,25 @@ if (session_status() != 2){
 	session_start();
 }
 # check the user has logged in successfully
-if (array_key_exists("admin",$_SESSION)){
-	if ($_SESSION["admin"]){
-		# admin settings
-		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
-		formatEcho("🛠️",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("SETTINGS",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
-		# logout
-		formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
-		formatEcho("🔒",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("LOGOUT",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+if (array_key_exists("user",$_SESSION)){
+	if (array_key_exists("admin",$_SESSION)){
+		if ($_SESSION["admin"]){
+			# admin settings
+			formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
+			formatEcho("🛠️",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("SETTINGS",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
+	# logout
+	formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
+	formatEcho("🔒",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("LOGOUT",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 }else if ($_SERVER['SERVER_PORT'] != 443){
 	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
 	formatEcho("🔑",3);
@@ -275,7 +277,7 @@ if (array_key_exists("admin",$_SESSION)){
 }else{
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
-		echo "<a class='button headerLoginButton' href='/settings/'>";
+		echo "<a class='button headerLoginButton' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>";
 		echo "🔓";
 		echo "<span class='headerText'>";
 		echo " LOGIN";
@@ -305,23 +307,25 @@ formatEcho('</script>',1);
 # if the path is in the settings draw the logout button
 
 echo "<div class='loginLogoutBox'>";
-if (array_key_exists("admin",$_SESSION)){
-	if ($_SESSION["admin"]){
-		echo "		<a class='button' href='/settings/'>";
-		echo "			🛠️";
-		echo "			<span class='headerText'>";
-		echo "				SETTINGS";
-		echo "			</span>";
-		echo "		</a>";
-		echo "	<hr>";
-		echo "		<a class='button' href='/logout.php'>";
-		echo "			🔒";
-		echo "			<span class='headerText'>";
-		echo "				LOGOUT";
-		echo "			</span>";
-		echo "		</a>";
-		// draw the help button
+if (array_key_exists("user",$_SESSION)){
+	if (array_key_exists("admin",$_SESSION)){
+		if ($_SESSION["admin"]){
+			echo "		<a class='button' href='/settings/'>";
+			echo "			🛠️";
+			echo "			<span class='headerText'>";
+			echo "				SETTINGS";
+			echo "			</span>";
+			echo "		</a>";
+			echo "	<hr>";
+		}
 	}
+	echo "		<a class='button' href='/logout.php'>";
+	echo "			🔒";
+	echo "			<span class='headerText'>";
+	echo "				LOGOUT";
+	echo "			</span>";
+	echo "		</a>";
+	// draw the help button
 }else if ($_SERVER['SERVER_PORT'] != 443){
 	echo "<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>";
 	echo "🔑";
@@ -332,7 +336,7 @@ if (array_key_exists("admin",$_SESSION)){
 }else{
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
-		echo "<a class='button' href='/settings/'>";
+		echo "<a class='button' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>";
 		echo "🔓";
 		echo "<span class='headerText'>";
 		echo " LOGIN";
