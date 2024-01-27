@@ -31,7 +31,7 @@ if (file_exists("show.title")){
 	# get the numeric title
 	$numericTitlePath=$_SERVER["SCRIPT_FILENAME"].".numTitle";
 	$numericTitleData=file_get_contents($numericTitlePath);
-	echo "<title>$showTitle - $numTitle</title>";
+	echo "<title>$showTitle - $numericTitleData</title>";
 }else{
 	# get the movie title
 	$movieTitle=file_get_contents("movie.title");
