@@ -897,6 +897,7 @@ renderPage(){
 		} > "$webDirectory/comics/$tempComicName/comics.index"
 
 		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
+		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "all"
 
 		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "comics_poster"
 		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "comics_fanart"
@@ -907,6 +908,7 @@ renderPage(){
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new comics index
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/all.index"
 		# random indexes
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 
@@ -1190,11 +1192,13 @@ rebuildComicIndex(){
 		fi
 
 		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
+		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "all"
 
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new shows index
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
+		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/all.index"
 		# random indexes
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 		# update last updated times
