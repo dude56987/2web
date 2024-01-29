@@ -570,12 +570,13 @@ function isTranscodeEnabled(){
 		array_push($externalSearchLinks, Array("https://www.imdb.com/find?q=","IMDB"));
 		array_push($externalSearchLinks, Array("https://en.wikipedia.org/w/?search=","Wikipedia"));
 		array_push($externalSearchLinks, Array("https://archive.org/details/movies?query=","Archive.org"));
-		array_push($externalSearchLinks, Array("https://www.youtube.com/results?search_query=","Youtube"));
+		array_push($externalSearchLinks, Array("https://piped.video/results?search_query=","Piped"));
 		array_push($externalSearchLinks, Array("https://odysee.com/$/search?q=","Odysee"));
 		array_push($externalSearchLinks, Array("https://rumble.com/search/video?q=","Rumble"));
 		array_push($externalSearchLinks, Array("https://www.bitchute.com/search/?kind=video&query=","BitChute"));
 		array_push($externalSearchLinks, Array("https://www.twitch.tv/search?term=","Twitch"));
 		array_push($externalSearchLinks, Array("https://veoh.com/find/","VEOH"));
+		array_push($externalSearchLinks, Array("https://www.youtube.com/results?search_query=","Youtube"));
 		# draw links for each of the search providers
 		foreach($externalSearchLinks as $linkData){
 			echo "<a class='button' rel='noreferer' target='_new' href='".$linkData[0].$titleData."'>🔎 ".$linkData[1]."</a>\n";

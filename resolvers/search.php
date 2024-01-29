@@ -91,13 +91,14 @@ function moreVideoLinks($searchQuery){
 	echo "		<a class='button' rel='noreferer' href='https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>";
 	echo "		<a class='button' rel='noreferer' href='https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>";
 	echo "		<a class='button' rel='noreferer' href='https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>";
-	echo "		<a class='button' rel='noreferer' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
+	echo "		<a class='button' rel='noreferer' href='https://piped.video/results?search_query=$searchQuery'>🔎 Piped</a>";
 	echo "		<a class='button' rel='noreferer' href='https://rumble.com/search/video?q=$searchQuery'>🔎 Rumble</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.twitch.tv/search?term=$searchQuery'>🔎 Twitch</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.bitchute.com/search/?kind=video&query=$searchQuery'>🔎 Bitchute</a>";
 	echo "		<a class='button' rel='noreferer' href='https://cozy.tv/$searchQuery'>🔎 Cozy.TV</a>";
 	echo "		<a class='button' rel='noreferer' href='https://veoh.com/find/$searchQuery'>🔎 Veoh</a>";
 	echo "		<a class='button' rel='noreferer' href='https://dailymotion.com/search/$searchQuery/videos'>🔎 Dailymotion</a>";
+	echo "		<a class='button' rel='noreferer' href='https://www.youtube.com/results?search_query=$searchQuery'>🔎 Youtube</a>";
 	echo "	</div>";
 	echo "</div>";
 }
@@ -506,8 +507,10 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
 	# youtube search
-	$bangCommands->append(array("!youtube","https://youtube.com/results?search_query="));
-	$bangCommands->append(array("!yt","https://youtube.com/results?search_query="));
+	$bangCommands->append(array("!youtube","https://piped.video/results?search_query="));
+	$bangCommands->append(array("!yt","https://piped.video/results?search_query="));
+	$bangCommands->append(array("!YOUTUBE","https://youtube.com/results?search_query="));
+	$bangCommands->append(array("!YT","https://youtube.com/results?search_query="));
 	# bitchute video search
 	$bangCommands->append(array("!bitchute","https://www.bitchute.com/search/?kind=video&query="));
 	$bangCommands->append(array("!bit","https://www.bitchute.com/search/?kind=video&query="));
