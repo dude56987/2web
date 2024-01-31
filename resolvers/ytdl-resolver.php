@@ -421,72 +421,88 @@ if (array_key_exists("url",$_GET)){
 		}
 	}
 }else{
+	# require admin privilages to access the manual resolver interface
+	requireAdmin();
 	// no url was given at all
-	echo "<html>";
-	echo "<head>";
-	echo "<link rel='stylesheet' href='style.css'>";
-	echo "</head>";
-	echo "<body>";
-	echo "<div class='settingListCard'>";
-	echo "<h2>Manual Video Cache Interface</h2>";
-	echo "No url was specified to the resolver!<br>";
-	echo "To Cache a video and play it from here you can use the below form.<br>";
-	echo "<form method='get'>";
-	echo "	<input width='60%' type='text' name='url'>";
-	echo "	<input class='button' type='submit' value='Cache Url'>";
-	echo "	<div>";
-	echo "		<span>Enable Debug Output<span>";
-	echo "		<input class='button' width='10%' type='checkbox' name='debug'>";
-	echo "	</div>";
-	echo "</form>";
-	echo '</a>';
-	echo "</div>";
-	echo "<hr>";
-	echo "<div class='settingListCard'>";
-	echo "	<h2>WEB API EXAMPLES</h2>";
-	echo "	<p>";
-	echo "		Replace the url api key with your video web link to be cached by youtube-dl.";
-	echo "		Debug=true will generate a webpage containing debug data and video output";
-	echo "	</p>";
-	echo "<ul>";
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"';
-	echo '	</li>';
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'l/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
-	echo '	</li>';
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
-	echo '	</li>';
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"';
-	echo '	</li>';
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true';
-	echo '	</li>';
-	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
-	echo '	</li>';
-	echo "</ul>";
-	echo "</div>";
-	echo "<div class='settingListCard'>";
-	echo "<h2>Random Cached Videos</h2>";
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<link rel='stylesheet' href='style.css'>\n";
+	echo "</head>\n";
+	echo "<body>\n";
+	echo "<div class='settingListCard'>\n";
+	echo "<h2>Manual Video Cache Interface</h2>\n";
+	echo "No url was specified to the resolver!<br>\n";
+	echo "To Cache a video and play it from here you can use the below form.<br>\n";
+	echo "<form method='get'>\n";
+	echo "	<input width='60%' type='text' name='url'>\n";
+	echo "	<input class='button' type='submit' value='Cache Url'>\n";
+	echo "	<div>\n";
+	echo "		<span>Enable Debug Output<span>\n";
+	echo "		<input class='button' width='10%' type='checkbox' name='debug'>\n";
+	echo "	</div>\n";
+	echo "</form>\n";
+	echo "</a>\n";
+	echo "</div>\n";
+	echo "<hr>\n";
+	echo "<div class='settingListCard'>"."\n";
+	echo "	<h2>WEB API EXAMPLES</h2>"."\n";
+	echo "	<p>"."\n";
+	echo "		Replace the url api key with your video web link to be cached by youtube-dl."."\n";
+	echo "		Debug=true will generate a webpage containing debug data and video output"."\n";
+	echo "	</p>"."\n";
+	echo "<ul>"."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"'."\n";
+	echo '	</li>'."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'l/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true'."\n";
+	echo '	</li>'."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true'."\n";
+	echo '	</li>'."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"'."\n";
+	echo '	</li>'."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="http://videoUrl/videoid/"&debug=true'."\n";
+	echo '	</li>'."\n";
+	echo '	<li>'."\n";
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true'."\n";
+	echo "	</li>\n";
+	echo "</ul>\n";
+	echo "</div>\n";
+	echo "<div class='settingListCard'>\n";
+	echo "<h2>Random Cached Videos</h2>\n";
 	$sourceFiles = recursiveScan($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/");
+	# randomize the video order
+	shuffle($sourceFiles);
 	# build the video index
 	foreach($sourceFiles as $sourceFile){
 		if (file_exists($sourceFile)){
 			if (is_file($sourceFile)){
 				if (stripos($sourceFile,".mp4")){
-					echo "<a class='showPageEpisode' href='".$sourceFile."'>";
-					if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace(".mp4",".jpg",$sourceFile)."' />";
-					}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace(".mp4",".webp",$sourceFile)."' />";
-					}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace(".mp4",".png",$sourceFile)."' />";
+					# check for a json file to load the video title
+					if (file_exists(str_replace(".mp4",".info.json",$sourceFile))){
+						# load the json title
+						$jsonData=file_get_contents(str_replace(".mp4",".info.json",$sourceFile));
+						$jsonData=json_decode($jsonData);
+						#echo "<hr>";
+						#var_dump($jsonData);
+						#echo "<hr>";
+						$videoTitle=$jsonData->title;
+					}else{
+						$videoTitle=$sourceFile;
 					}
-					echo "	<h3>".$sourceFile."</h3>";
-					echo "</a>";
+					echo "<a class='showPageEpisode' href='".str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourceFile)."'>\n";
+					if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".jpg",$sourceFile))."' />\n";
+					}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".webp",$sourceFile))."' />\n";
+					}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
+						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".png",$sourceFile))."' />\n";
+					}
+					echo "	<h3>".$videoTitle."</h3>\n";
+					echo "</a>\n";
 				}
 			}
 		}
