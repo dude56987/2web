@@ -355,10 +355,59 @@ if (array_key_exists("url",$_GET)){
 		$url = "/RESOLVER-CACHE/$sum/$sum.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
+		$cacheFile=false;
 		#check for the first x segments of the hls playback, ~30 seconds
 		if (file_exists("$webDirectory$url")){
+			# if the json data has not yet been verified to have downloaded the entire file
+			if (! file_exists($storagePath."verified.cfg")){
+				# check the file downloaded correctly by comparing the json data file length with local file length
+				if (file_exists($storagePath.$sum.".mp4")){
+					if (file_exists($storagePath.$sum.".info.json")){
+						# The json downloaded from the remote and stored by the resolver
+						$remoteJson= json_decode(file_get_contents($storagePath.$sum.".info.json"));
+						# the json data from reading the current downloaded file
+						$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath.$sum.".mp4"));
+						# compare the local file duration with the remote file duration by using cached remote metadata
+						if ($localJson->media->track[0]->Duration >= $remoteJson->duration){
+							debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+							# if the length is correct the file is verified to have downloaded completely
+							touch($storagePath."verified.cfg");
+						}else{
+							debug("The video was corrupt and could not be verified...");
+							$cacheFile=true;
+						}
+					}else{
+						# the mp4 was found but the json was not
+						$cacheFile=true;
+					}
+				}
+			}
+			if($cacheFile == true){
+				# delete the existing mp4 file so it will be recreated by the caching code
+				unlink($storagePath.$sum.".mp4");
+				# this means the download has failed and must be re-cached to get the full video
+				cacheUrl($sum,$videoLink);
+				# wait for either the bump or the file to be downloaded and redirect
+				while(true){
+					# if 60 seconds of the video has been downloaded then launch the video
+					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4")){
+						// file is fully downloaded and converted play instantly
+						redirect("RESOLVER-CACHE/$sum/$sum.mp4");
+					}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.m3u")){
+						# if the stream has x segments (segments start as 0)
+						# - currently 10 seconds of video
+						# - force loading of 3 segments before resolution
+						if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream2.ts")){
+							# redirect to the stream
+							redirect("RESOLVER-CACHE/$sum/$sum.m3u");
+						}
+						# if all else fails wait then restart the loop
+						sleep(1);
+					}
+				}
+			}
 			# touch the file to update the mtime and delay cache removal
-			touch($url);
+			#touch($url);
 			touch($storagePath);
 			redirect($url);
 		}else{
