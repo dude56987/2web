@@ -193,6 +193,13 @@ if($discoveredImages > 0){
 	echo "	</tr>";
 	echo "</table>";
 }
+# view switch buttons
+echo "<div class='listCard'>";
+echo "<a class='button' href='?view=default'>📑 Default View</a>";
+echo "<a class='button' href='?view=scroll'>📜 Scroll View</a>";
+echo "<a class='button' href='?view=real'>🖼️ Real View</a>";
+echo "</div>";
+
 $highestVotedAnwser="";
 $highestVoteValue=0;
 $allOtherAnwsers="";
@@ -200,58 +207,180 @@ $versionNumber=count($discoveredImageList);
 foreach( $discoveredImageList as $directoryPath){
 	if (strpos($directoryPath,".png")){
 		$tempAnwserData="";
-		$tempAnwserData .= "<div class='aiGenPreview' href='#$directoryPath' >\n";
-		if($versionNumber < 10){
-			$printVersionNumber = "00".$versionNumber;
-		}else if($versionNumber < 100){
-			$printVersionNumber = "0".$versionNumber;
+		$displayMode="default";
+		if (array_key_exists("view",$_GET)){
+			if ($_GET["view"] == "scroll"){
+				$displayMode="scroll";
+			}else if ($_GET["view"] == "real"){
+				$displayMode="real";
+			}else{
+				$displayMode="default";
+			}
 		}else{
-			$printVersionNumber = $versionNumber;
+			$displayMode="default";
 		}
-		$tempAnwserData .= "<h1>Version ".$printVersionNumber."</h1>";
-		# incremnt the version number
-		$versionNumber -= 1;
-		#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
-		$tempAnwserData .= "<div>";
-		$tempAnwserData .= "<a href='$directoryPath'>";
-		$tempAnwserData .= "<img class='aiGenPreviewImage' src='$directoryPath' >";
-		$tempAnwserData .= "</a>";
-		$tempAnwserData .= "</div>";
-		# check for a model path
-		$modelPath = str_replace(".png", ".model", $directoryPath);
-		if (file_exists($modelPath)){
+		if ($displayMode == "scroll"){
+			#$tempAnwserData .= "<div class='aiGenPreview' href='#$directoryPath' >\n";
+			if($versionNumber < 10){
+				$printVersionNumber = "00".$versionNumber;
+			}else if($versionNumber < 100){
+				$printVersionNumber = "0".$versionNumber;
+			}else{
+				$printVersionNumber = $versionNumber;
+			}
+			$tempAnwserData .= "<h1>Version ".$printVersionNumber."</h1>";
+			# incremnt the version number
+			$versionNumber -= 1;
+			#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
+			#$tempAnwserData .= "<div class='settingListCard'>";
+			$tempAnwserData .= "<a href='$directoryPath'>";
+			$tempAnwserData .= "<img class='comicScrollViewImg' src='$directoryPath' >";
+			$tempAnwserData .= "</a>";
+			#$tempAnwserData .= "</div>";
+			# check for a model path
+			$modelPath = str_replace(".png", ".model", $directoryPath);
+			if (file_exists($modelPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($modelPath);
+				$tempAnwserData .= "Model:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
 			$tempAnwserData .= "<hr>";
-			$tempAnwserVotes = file_get_contents($modelPath);
-			$tempAnwserData .= "Model:".$tempAnwserVotes;
-		}else{
-			# if no votes exist
-			$tempAnwserVotes = 0;
-		}
-		$tempAnwserData .= "<hr>";
-		# check for votes
-		$votesPath = str_replace(".png", ".votes", $directoryPath);
-		if (file_exists($votesPath)){
+			# check for votes
+			$votesPath = str_replace(".png", ".votes", $directoryPath);
+			if (file_exists($votesPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($votesPath);
+				$tempAnwserData .= "Votes:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
 			$tempAnwserData .= "<hr>";
-			$tempAnwserVotes = file_get_contents($votesPath);
-			$tempAnwserData .= "Votes:".$tempAnwserVotes;
+			# load the discovered file size from the array
+			$tempAnwserData .= filesize_to_human($discoveredFileSizes[$directoryPath]);
+			#$tempAnwserData .= "</div>\n";
+
+			# compare this to the highest voted anwser
+			if ($tempAnwserVotes > $highestVoteValue){
+				$highestVoteValue = $tempAnwserVotes;
+				# this is the new highest voted anwser set it
+				$highestVotedAnwser = $tempAnwserData;
+			}
+
+			# append the anwser to all other anwser data
+			$allOtherAnwsers .= $tempAnwserData;
+		}else if ($displayMode == "real"){
+			#$tempAnwserData .= "<div class='aiGenPreview' href='#$directoryPath' >\n";
+			if($versionNumber < 10){
+				$printVersionNumber = "00".$versionNumber;
+			}else if($versionNumber < 100){
+				$printVersionNumber = "0".$versionNumber;
+			}else{
+				$printVersionNumber = $versionNumber;
+			}
+			$tempAnwserData .= "<h1>Version ".$printVersionNumber."</h1>";
+			# incremnt the version number
+			$versionNumber -= 1;
+			#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
+			#$tempAnwserData .= "<div class='settingListCard'>";
+			$tempAnwserData .= "<a href='$directoryPath'>";
+			$tempAnwserData .= "<img class='comicScrollViewImgReal' src='$directoryPath' >";
+			$tempAnwserData .= "</a>";
+			#$tempAnwserData .= "</div>";
+			# check for a model path
+			$modelPath = str_replace(".png", ".model", $directoryPath);
+			if (file_exists($modelPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($modelPath);
+				$tempAnwserData .= "Model:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
+			$tempAnwserData .= "<hr>";
+			# check for votes
+			$votesPath = str_replace(".png", ".votes", $directoryPath);
+			if (file_exists($votesPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($votesPath);
+				$tempAnwserData .= "Votes:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
+			$tempAnwserData .= "<hr>";
+			# load the discovered file size from the array
+			$tempAnwserData .= filesize_to_human($discoveredFileSizes[$directoryPath]);
+			#$tempAnwserData .= "</div>\n";
+
+			# compare this to the highest voted anwser
+			if ($tempAnwserVotes > $highestVoteValue){
+				$highestVoteValue = $tempAnwserVotes;
+				# this is the new highest voted anwser set it
+				$highestVotedAnwser = $tempAnwserData;
+			}
+
+			# append the anwser to all other anwser data
+			$allOtherAnwsers .= $tempAnwserData;
+
+
 		}else{
-			# if no votes exist
-			$tempAnwserVotes = 0;
-		}
-		$tempAnwserData .= "<hr>";
-		# load the discovered file size from the array
-		$tempAnwserData .= filesize_to_human($discoveredFileSizes[$directoryPath]);
-		$tempAnwserData .= "</div>\n";
+			$tempAnwserData .= "<div class='aiGenPreview' href='#$directoryPath' >\n";
+			if($versionNumber < 10){
+				$printVersionNumber = "00".$versionNumber;
+			}else if($versionNumber < 100){
+				$printVersionNumber = "0".$versionNumber;
+			}else{
+				$printVersionNumber = $versionNumber;
+			}
+			$tempAnwserData .= "<h1>Version ".$printVersionNumber."</h1>";
+			# incremnt the version number
+			$versionNumber -= 1;
+			#$tempAnwserData .= "<h1>".$directoryPath."</h1>";
+			$tempAnwserData .= "<div>";
+			$tempAnwserData .= "<a href='$directoryPath'>";
+			$tempAnwserData .= "<img class='aiGenPreviewImage' src='$directoryPath' >";
+			$tempAnwserData .= "</a>";
+			$tempAnwserData .= "</div>";
+			# check for a model path
+			$modelPath = str_replace(".png", ".model", $directoryPath);
+			if (file_exists($modelPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($modelPath);
+				$tempAnwserData .= "Model:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
+			$tempAnwserData .= "<hr>";
+			# check for votes
+			$votesPath = str_replace(".png", ".votes", $directoryPath);
+			if (file_exists($votesPath)){
+				$tempAnwserData .= "<hr>";
+				$tempAnwserVotes = file_get_contents($votesPath);
+				$tempAnwserData .= "Votes:".$tempAnwserVotes;
+			}else{
+				# if no votes exist
+				$tempAnwserVotes = 0;
+			}
+			$tempAnwserData .= "<hr>";
+			# load the discovered file size from the array
+			$tempAnwserData .= filesize_to_human($discoveredFileSizes[$directoryPath]);
+			$tempAnwserData .= "</div>\n";
 
-		# compare this to the highest voted anwser
-		if ($tempAnwserVotes > $highestVoteValue){
-			$highestVoteValue = $tempAnwserVotes;
-			# this is the new highest voted anwser set it
-			$highestVotedAnwser = $tempAnwserData;
-		}
+			# compare this to the highest voted anwser
+			if ($tempAnwserVotes > $highestVoteValue){
+				$highestVoteValue = $tempAnwserVotes;
+				# this is the new highest voted anwser set it
+				$highestVotedAnwser = $tempAnwserData;
+			}
 
-		# append the anwser to all other anwser data
-		$allOtherAnwsers .= $tempAnwserData;
+			# append the anwser to all other anwser data
+			$allOtherAnwsers .= $tempAnwserData;
+		}
 	}
 }
 # print the highest voted anwser at the top of the list
