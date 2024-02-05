@@ -14,9 +14,41 @@ if test -f /etc/os-release;then
 else
 	keepBuilding="false"
 fi
+# check the info
+if echo "$@" | grep -q -e "--info";then
+	# write dependency report
+	# for each found dependency package in debdata/control list the package information
+	packages=$(grep "Depends:" debdata/control | sed "s/Depends://g" | tr -d ',')
+	packageData=""
+	totalPackages=$(echo "$packages" | wc -w)
+	packageCounter=0
+	for package in $packages;do
+		printf "\r $packageCounter/$totalPackages        "
+		#echo "================================================================================"
+		#echo "$package"
+		packageInfo=$(aptitude show $package)
+		#echo "$packageInfo"
+		packageData="$'$packageData\n$packageInfo'"
+		packageCounter=$(( packageCounter + 1 ))
+	done
+	echo
+	#echo "$packageData"
+
+	echo "Checking dependencies locations..."
+	echo "Mainline Packages: $(echo "$packageData" | grep "Section:" | grep -v "multiverse" | grep -v "universe" | grep -v "restricted" | wc -l)"
+	echo "The below packages are community maintained. These are less good to have as dependencies but are all open source."
+	echo "Universe Packages: $(echo "$packageData" | grep "Section:" | grep -c "universe")"
+	echo "The below should contain 0 packages in both types. These are non open source softwares and incompatible with the project."
+	echo "Multiverse Packages: $(echo "$packageData" | grep "Section:" | grep -c "multiverse")"
+	echo "Restricted Packages: $(echo "$packageData" | grep "Section:" | grep -c "restricted")"
+	# exit after info check
+	exit
+fi
+# check if the force flag is set to force building on a unsupported operating system
 if echo "$@" | grep -q -e "--force";then
 	keepBuilding="true"
 fi
+# create the build enviorment
 if [ "$keepBuilding" == "true" ];then
 	# install tools for building the manual pages for the package
 	apt-get install pandoc
@@ -31,3 +63,4 @@ else
 	echo "Only Debian, Ubuntu, Raspbian, and Dietpi builds are currently supported!"
 	echo "You can force configure to run if you add --force"
 fi
+
