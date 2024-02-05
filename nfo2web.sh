@@ -126,7 +126,9 @@ ripXmlTagMultiLine(){
 	data="${data//<$tag>}"
 	data="${data//<\/$tag>}"
 	# convert to html data after cleaning of tags is finished
-	data=$(echo "$data" | txt2html --extract | sed 's/____NEWLINE____/ <br> /g')
+	#data=$(echo "$data" | txt2html --extract | sed 's/____NEWLINE____/ <br> /g')
+	#data=$(echo "$data" | sed 's/____NEWLINE____/ <br> /g')
+	data=$(echo "$data" | txt2html --linkonly | sed 's/____NEWLINE____/ <br> /g')
 	# if multuple lines of tag info are given format them for html
 	if validString "$tag" -q;then
 		echo "$data"
