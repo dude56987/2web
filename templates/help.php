@@ -103,9 +103,11 @@ For when you need more than the web interface can handle. This help section defi
 	<p>
 		The below link will take you to the generated link index. This contains a organized hierarchy of links to all multimedia content on the server. This is used by 🇰 kodi to add content from the server to client machines.
 	</p>
+	<hr>
 	<a class='button' href='/kodi/'>
 		🇰 KODI
 	</a>
+	<hr>
 </div>
 
 <div class='titleCard linkInfo'>
@@ -144,9 +146,11 @@ For when you need more than the web interface can handle. This help section defi
 		echo " basic http indexes that can be used to link content into kodi.";
 		?>
 	</p>
+	<hr>
 	<a class='button' href='/kodi/'>
 		🇰 KODI
 	</a>
+	<hr>
 	<h3 id="kodi_live">📡 Live</h3>
 	<p>
 		To copy the live libary to be used on kodi you must have the iptv simple Client installed
