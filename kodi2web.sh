@@ -21,6 +21,25 @@ source /var/lib/2web/common
 # enable debug log
 #set -x
 ################################################################################
+function getPlayerId(){
+	# Get the kodi player id number
+	#
+	# $1 = kodiLocation :
+	#
+	# RETURN REMOTE_ACTION
+	kodiLocation=$1
+	# run json to get the player id
+	playerId=$(curl --silent -H "content-type: application/json;" --data-binary '{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 99}' "http://$kodiLocation/jsonrpc" | jq ".result" | jq ".[]" | jq ".playerid")
+	# if the playerid is a number
+	if echo "$playerId" | grep -q "[0-9]";then
+		# return the active player id
+		echo "$playerId"
+	else
+		# if no player can be found set the player as 0 for a new player
+		echo "0"
+	fi
+}
+################################################################################
 function update(){
 	# create the config directory if it does not exist
 	createDir /etc/2web/kodi/
@@ -57,7 +76,7 @@ function update(){
 		ALERT "Scanning location '$kodiLocation'"
 		if [ "$( echo "$kodiLocation" | wc -c )" -gt 1 ];then
 			# check if kodi is playing something
-			activePlayers=$(curl --silent --data-binary '{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 1}' -H 'content-type: application/json;' http://$kodiLocation/jsonrpc | jq ".results" | grep "id" | wc -l)
+			activePlayers=$(getPlayerId)
 			if [ $activePlayers -eq 0 ];then
 				ALERT "Scan the kodi client at '$kodiLocation'"
 				# if no players are active, scan the libary
