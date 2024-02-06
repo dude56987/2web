@@ -1147,14 +1147,14 @@ webGen(){
 					echo "<?PHP";
 					echo "include('/var/cache/2web/web/header.php')";
 					echo "?>";
-					echo "<div class='descriptionCard'>"
+					echo "<div class='titleCard'>"
 					echo "	<h1>"
 					echo "		$title"
 					echo "		<img id='spinner' src='/spinner.gif' />";
 					echo "	</h1>"
 					echo "<div class='listCard'>"
 					echo "	<a class='button' href='$link'>"
-					echo "		Direct Link"
+					echo "		🔗 Direct Link"
 					echo "	</a>"
 
 					newLink="$( echo ${link//\"/\\\"} )"
@@ -1231,7 +1231,7 @@ webGen(){
 					echo "		<img id='spinner' src='/spinner.gif' />";
 					echo "	</a>"
 					echo "	<a class='button hardLink' href='$link'>"
-					echo "		Direct Link"
+					echo "		🔗 Direct Link"
 					echo "	</a>"
 
 					newLink="$( echo ${link//\"/\\\"} )"
@@ -1244,9 +1244,8 @@ webGen(){
 					echo "?>"
 					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
 					echo "	</a>"
-
 					for group in $groupTitle;do
-						echo "	<a class='button groupButton tag' href='/live/?filter=$group'>$group</a>"
+						echo "		<a class='button groupButton tag' href='/live/?filter=$group'>👥 $group</a>"
 					done
 					echo "	<table>"
 					echo "		<tr>"
