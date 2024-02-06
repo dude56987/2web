@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 ########################################################################
 # 2webLib.py is a common python3 library for 2web utilities
-# Copyright (C) 2023  Carl J Smith
+# Copyright (C) 2024  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

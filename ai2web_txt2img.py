@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 ########################################################################
 # ai2web_image is a CLI tool to use stable diffusion language models
-# Copyright (C) 2023  Carl J Smith
+# Copyright (C) 2024  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

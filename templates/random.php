@@ -34,7 +34,7 @@ if (array_key_exists("filter",$_GET)){
 <!--
 ########################################################################
 # 2web random playlists
-# Copyright (C) 2023  Carl J Smith
+# Copyright (C) 2024  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
