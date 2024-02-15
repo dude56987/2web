@@ -726,10 +726,6 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			}
 		}else{
 			logPrint("the search has not finished");
-			echo "<p>";
-			echo "Search started ";
-			timeElapsedToHuman($startedTime);
-			echo "</p>";
 			checkSpelling($_GET["q"]);
 			# build the refresh
 			if (array_key_exists("autoRefresh",$_GET)){
@@ -777,7 +773,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				echo "</div>\n";
 
 				# list the time elapsed so far
-				echo "<div class='elapsedTime'>Searching for $executionMinutes:$executionSeconds</div>\n";
+				echo "<div class='elapsedTime'>Searching for ";
+				timeElapsedToHuman($startedTime,"");
+				echo "</div>\n";
 			}else{
 				echo "<div class='elapsedTime'>Request has not yet started processing, Please wait for server to catch up...</div>\n";
 			}
