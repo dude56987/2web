@@ -590,7 +590,7 @@ function processRepo(){
 	else
 		INFO "$repoName : Creating a clone of the repo..."
 		# add as a safe directory for service to be able to update in above git pull
-		git config --global --add safe.directory "$webDirectory/repos/$repoName/source/"
+		git config --global --add safe.directory "$webDirectory/repos/$repoName/source"
 		# clone the repo into the web directory
 		git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
 	fi
