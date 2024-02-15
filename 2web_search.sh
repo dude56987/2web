@@ -46,107 +46,6 @@ function update(){
 	addToLog "INFO" "Update FINISHED" "$(date)"
 }
 ################################################################################
-function searchNew(){
-	# search through each of the new database
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-
-	outputPath="$webDirectory/search/${searchSum}_new_all.index"
-	searchIndex "$webDirectory" "$webDirectory/new/all.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_movies.index"
-	searchIndex "$webDirectory" "$webDirectory/new/movies.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_episodes.index"
-	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_comics.index"
-	searchIndex "$webDirectory" "$webDirectory/new/comics.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_music.index"
-	searchIndex "$webDirectory" "$webDirectory/new/music.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_graphs.index"
-	searchIndex "$webDirectory" "$webDirectory/new/graphs.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_graphs.index"
-	searchIndex "$webDirectory" "$webDirectory/new/graphs.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_tracks.index"
-	searchIndex "$webDirectory" "$webDirectory/new/tracks.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_artists.index"
-	searchIndex "$webDirectory" "$webDirectory/new/artists.index" "$searchQuery" "$outputPath"
-	outputPath="$webDirectory/search/${searchSum}_new_channels.index"
-	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery""$outputPath"
-}
-################################################################################
-function searchMovies(){
-	# search though the movies database
-
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_movies.index"
-	searchIndex "$webDirectory" "$webDirectory/movies/movies.index" "$searchQuery"
-}
-################################################################################
-function searchShows(){
-	# search though each of the shows
-
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_shows.index"
-	searchIndex "$webDirectory" "$webDirectory/shows/shows.index" "$searchQuery" "$outputPath"
-}
-################################################################################
-function searchEpisodes(){
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_old_episodes.index"
-	indexPath="/var/cache/2web/web/data.db"
-	outputPath="$webDirectory/search/${searchSum}_old_episodes.index"
-	INFO "Scanning $indexPath for $searchQuery"
-	# if the output path does not yet exist then build it
-	if ! test -f "$outputPath";then
-		# if the index path exists
-		if test -f "$indexPath";then
-			# get all the index files
-			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"_episodes\";")"
-			indexDataLength=$(echo "$indexData" | wc -l)
-			indexDataCounter=0
-			# search though each of the index files
-			echo "$indexData" | while read episode;do
-				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
-				#
-				found="false"
-				# scan each index entry for the search term in the filename
-				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
-					# write the data
-					cat "$episode" >> "$outputPath"
-					found="true"
-				fi
-				# only search the index file if the filename does not match
-				if echo "$found" | grep -q "false";then
-					# scan the contents of each .index file
-					# - cache episode read
-					episodeData="$(cat "$episode")"
-					# search the contents of the index file
-					if echo "$episodeData" | grep -q --ignore-case "$searchQuery";then
-						# show the found data
-						echo "$episodeData" >> "$outputPath"
-					fi
-				fi
-				# increment the counter
-				indexDataCounter=$(( indexDataCounter + 1 ))
-			done
-		fi
-	fi
-}
-################################################################################
-function searchGraphs(){
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_graphs.index"
-	searchIndex "$webDirectory" "$webDirectory/graphs/graphs.index" "$searchQuery" "$outputPath"
-}
-################################################################################
 function searchPortal(){
 	webDirectory=$1
 	searchQuery=$2
@@ -155,27 +54,17 @@ function searchPortal(){
 	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$outputPath"
 }
 ################################################################################
-function searchMusic(){
+function searchSQL(){
+	# searchSQL $webDirectory $searchQuery $searchSum $outputPath $tableName
+	#
+	# Function to search the sql index for a search query in a specific table of the database
 	webDirectory=$1
 	searchQuery=$2
 	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_music.index"
-	searchIndex "$webDirectory" "$webDirectory/music/music.index" "$searchQuery"  "$outputPath"
-}
-################################################################################
-function searchRepos(){
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_repos.index"
-	searchIndex "$webDirectory" "$webDirectory/repos/repos.index" "$searchQuery" "$outputPath"
-}
-################################################################################
-function searchChannels(){
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_live_channels.index"
+	#outputPath="$webDirectory/search/${searchSum}_live_channels.index"
+	outputPath="$4"
+	# table name may need to be prefixed with a underscore
+	tableName="$5"
 	#indexPath="/var/cache/2web/web/live/index/"
 	indexPath="/var/cache/2web/web/data.db"
 	INFO "Scanning $indexPath for $searchQuery"
@@ -185,7 +74,7 @@ function searchChannels(){
 		if test -f "$indexPath";then
 			# get all the index files
 			#indexData="$(find "$indexPath" -type f)"
-			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"_channels\";")"
+			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"$tableName\";")"
 			indexDataLength=$(echo "$indexData" | wc -l)
 			indexDataCounter=0
 			# search though each of the index files
@@ -194,7 +83,7 @@ function searchChannels(){
 				#
 				found="false"
 				# scan each index entry for the search term in the filename
-				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+				if basename "$episode" | grep -q --ignore-case "$searchQuery";then
 					# write the data
 					cat "$episode" >> "$outputPath"
 					found="true"
@@ -216,6 +105,7 @@ function searchChannels(){
 		fi
 	fi
 }
+
 ################################################################################
 function searchWeather(){
 	webDirectory=$1
@@ -251,7 +141,7 @@ function searchDict(){
 	searchQuery=$2
 	searchSum=$3
 	# search the dict server
-	outputPath="$webDirectory/search/${searchSum}_definitions.index"
+	outputPath="$webDirectory/search/${searchSum}__definitions.index"
 	#	# build the dict data
 	definitionData=$(dict "$searchQuery" | tr -s '\n')
 	firstDef="yes"
@@ -326,7 +216,7 @@ function searchIndex(){
 				#
 				found="false"
 				# scan each index entry for the search term in the filename
-				if echo "$episode" | rev | cut -d'/' -f1 | rev | grep -q --ignore-case "$searchQuery";then
+				if basename "$episode" | grep -q --ignore-case "$searchQuery";then
 					ALERT "Found Match in filename $episode"
 					# write the data
 					cat "$episode" >> "$outputPath"
@@ -379,46 +269,92 @@ function search(){
 
 	echo "0" > "$webDirectory/search/${searchSum}_progress.index"
 	# total number of threads to be launched below here +1 so 100% is complete
-	echo "11" > "$webDirectory/search/${searchSum}_total.index"
+	echo "23" > "$webDirectory/search/${searchSum}_total.index"
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the shows
-	searchShows "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the portal
-	searchPortal "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the enabled graphs
-	searchGraphs "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the music
-	searchMusic "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the repos
-	searchRepos "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
-	waitQueue 0.2 "$totalCPUS"
-	# search the new playlists
-	searchNew "$webDirectory" "$searchQuery" "$searchSum" &
 	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the weather stations
 	searchWeather "$webDirectory" "$searchQuery" "$searchSum" &
 	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
-	# search the channels and radio channels
-	searchChannels "$webDirectory" "$searchQuery" "$searchSum" &
+	# search the portal
+	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$webDirectory/search/${searchSum}_portal_links.index" &
 	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
-	# search all episodes
-	searchEpisodes "$webDirectory" "$searchQuery" "$searchSum" &
+	# search the shows
+	searchIndex "$webDirectory" "$webDirectory/shows/shows.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_shows.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the movies
+	searchIndex "$webDirectory" "$webDirectory/movies/movies.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_movies.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the comics
+	searchIndex "$webDirectory" "$webDirectory/comics/comics.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_comics.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the graphs
+	searchIndex "$webDirectory" "$webDirectory/graphs/graphs.index" "$searchQuery" "$webDirectory/search/${searchSum}_graphs.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the repos
+	searchIndex "$webDirectory" "$webDirectory/repos/repos.index" "$searchQuery" "$webDirectory/search/${searchSum}_repos.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the music
+	searchIndex "$webDirectory" "$webDirectory/music/music.index" "$searchQuery"  "$webDirectory/search/${searchSum}_all_music.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# music artists
+	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_artists.index" "_artists" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# music albums
+	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_albums.index" "_albums" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# music tracks
+	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_tracks.index" "_tracks" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the channels and radio channels
+	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_live_channels.index" "_channels" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search the new playlists all in parallel
+	# - skip the combined playlist since this contains all the playlists and will split them into thier search results sections
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/movies.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_movies.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_episodes.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/comics.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_comics.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/music.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_music.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/tracks.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_tracks.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/artists.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_artists.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_channels.index" &
+	incrementProgressFile "$webDirectory" "$searchSum"
+	waitQueue 0.2 "$totalCPUS"
+	# search all episodes this will be a huge database
+	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_episodes.index" "_episodes" &
 	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the wiki pages
