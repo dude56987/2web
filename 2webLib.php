@@ -472,6 +472,10 @@ if( ! function_exists("readFileInPackets")){
 ################################################################################
 if( ! function_exists("displayIndexWithPages")){
 	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=45,$sortMethod="forward"){
+		if (! file_exists($indexFilePath)){
+			echo "$emptyMessage";
+			return false;
+		}
 		# Higher level display a display index with the pages buttons below the page
 		# - sort can be forward, reverse, and random
 		# - Default maxItemsPerPage is equilivent to the number of even rows on the default css setting
@@ -1302,6 +1306,7 @@ if( ! function_exists("timeToHuman")){
 if( ! function_exists("timeElapsedToHuman")){
 	function timeElapsedToHuman($timestamp,$postText=" ago"){
 		# remove newlines in timestamp
+		# - second argument is post time text default=" ago"
 		$timestamp=str_replace("\n","",$timestamp);
 
 		$currentTime=time();

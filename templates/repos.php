@@ -82,7 +82,7 @@ $indexFilePath="/var/cache/2web/web/repos/repos.index";
 # store the empty message
 $emptyMessage = "<ul>";
 $emptyMessage .= "<li>No repos have been scanned into the libary!</li>";
-$emptyMessage .= "<li>Add libary paths in the <a href='/settings/repos.php'>video on demand admin interface</a> to populate this page.</li>";
+$emptyMessage .= "<li>Add libary paths in the <a href='/settings/repos.php'>admin interface</a> to populate this page.</li>";
 $emptyMessage .= "</ul>";
 
 displayIndexWithPages($indexFilePath,$emptyMessage);
