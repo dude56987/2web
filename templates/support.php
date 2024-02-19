@@ -33,25 +33,13 @@
 <div class="titleCard">
 	<h2>Support the 2web Project</h2>
 	<p>
-		You can support the 2web project though kofi or librepay.
+		You can support the 2web project by using it in your homelab and sharing it with others.
 	</p>
-	<ul>
-		<li>
-			<a href="https://ko-fi.com/bluntsquid#" target="_blank">
-				Ko-Fi
-			</a>
-		</li>
-		<li>
-			<a href="https://liberapay.com/bluntsquid/" target="_blank">
-				Librepay
-			</a>
-		</li>
-	</ul>
 	<h2>Source code available on Github</h2>
 	<ul>
 		<li>
 			<a href="https://github.com/dude56987/2web" target="_blank">
-				Github
+				https://github.com/dude56987/2web
 			</a>
 		</li>
 	</ul>

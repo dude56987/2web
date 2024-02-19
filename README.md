@@ -1,16 +1,20 @@
 2web
 ====
 
-Your digital domain, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))! 2web is focused on allowing you to access content from YOUR local LAN without internet access wherever possible. Designed for use with KODI, Phones, Tablets, and Desktop computers 2web acts as your freedom, privacy, and attention respecting frontend to the internet.
+Your digital domain, full of hardworking [daemons](https://en.wikipedia.org/wiki/Daemon_(computing))!
 
-Add multimedia, documents, and databases to 2web for a total offline experience or add your chosen media sources to use caching components. You can even use 2web as a frontend to link to other self hosted services on your network such as Nextcloud, Pi-Hole, or Tiny Tiny RSS. 2web can be used with tailscale to access your data from anywhere on earth or in space. 2web is heavily optimised to target running on the latest raspberry pi, currently the PI 4.
+2web is focused on allowing you to access content from YOUR [local network](https://en.wikipedia.org/wiki/Local_area_network) without internet access wherever possible. Designed for use with KODI, Phones, Tablets, and Desktop computers. 2web acts as your freedom/privacy/attention respecting frontend to the internet and your local media.
 
+Add multimedia, documents, and databases to 2web for a total offline experience or add your chosen media sources to use caching components. You can even use 2web as a frontend to link to other self hosted services on your network such as Nextcloud, Pi-Hole, or Tiny Tiny RSS. 2web can be used with tailscale to access your data from anywhere on earth or in space. 2web is heavily optimized to target running on the latest raspberry pi, currently the PI 4.
+
+- [Modules](#modules)
 - [Supported Content Types](#supported-content-types)
 - [Features](#features)
 - [Warnings](#warnings)
-- [Install With PPA](#install-with-ppa)
-- [Install From Source](#install-from-source)
+- [Install With APT Repo](#install-with-apt-repo)
 - [Uninstall](#uninstall)
+- [Remove APT Repo](#remove-apt-repo)
+- [Install From Source](#install-from-source)
 - [Access](#access)
 - [Settings](#settings)
 - [CLI](#cli)
@@ -18,12 +22,21 @@ Add multimedia, documents, and databases to 2web for a total offline experience 
 - [How To Help](#how-to-help)
 - [License](#license)
 
+<span id='modules' />
+
+## Modules
+
+ - Modular design allows the complexity of the server to grow as your use does
+ - By DEFAULT all modules are disabled and all settings are hidden to reduce learning curve for new users
+ - Enable/Disable modules to show/hide settings and pages related to the content types you want on the server
+
 <span id='supported-content-types' />
 
 ## Supported Content Types
 
  - Movies
  - Shows
+ - Podcasts
  - Music
  - Live TV
  - Live Radio
@@ -46,6 +59,7 @@ Add multimedia, documents, and databases to 2web for a total offline experience 
  - CLI (Command line interface) with man pages
  - Offline Search for ALL hosted data, with external search links
  - Offline dictionary search results
+ - Add Video/Audio RSS feeds as shows
  - Weather info via [weather-util](http://fungi.yuggoth.org/weather/) WITHOUT NEED FOR AN API KEY thanks to METAR data from the National Oceanic and Atmospheric Administration and forecasts from the National Weather Service.
  - Add wikis from locally downloaded [ZIM](https://wiki.openzim.org/wiki/OpenZIM) files
  - Search all local wiki articles with 2web search.
@@ -105,9 +119,11 @@ Add multimedia, documents, and databases to 2web for a total offline experience 
  - AI prompting can take a very long time even on good hardware.
  - Global search will become slower as more content is added.
 
-<span id='install-with-ppa' />
+<span id='install-with-apt-repo' />
 
-## Install with PPA
+## Install with APT Repo
+
+This is a APT repo that is designed work like a PPA. This means it only contains and will only update the 2web software package. The first two commands will add the repo and the repo encryption key. The third line will update your packages to include the new repo. The last line installs the package and will ask for verification.
 
 	sudo wget -q -O '/etc/apt/trusted.gpg.d/2web_ppa.gpg' 'https://dude56987.github.io/2web_ppa/2web_ppa.gpg'
 	sudo wget -q -O '/etc/apt/sources.list.d/2web_ppa.list' 'https://dude56987.github.io/2web_ppa/2web_ppa.list'
@@ -121,18 +137,6 @@ Or if you use curl instead of wget
 	sudo apt update
 	sudo apt-get install 2web
 
-<span id='install-from-source' />
-
-## Install from Source
-
-Copy and extract the source then run
-
-	./configure
-	make
-	make install
-
-This should build and install the package on any Debian or Ubuntu based system.
-
 <span id='uninstall' />
 
 ## Uninstall
@@ -144,6 +148,27 @@ The install process creates and installs a .deb package file. So you can uninsta
 If you would like to purge config files generated use
 
 	sudo apt-get purge 2web
+
+<span id='remove-apt-repo' />
+
+## Remove APT repo
+
+If you installed the APT repo and want to remove it completely from your sources you can use the below commands. You will be prompted to confirm before removal of each of the two files.
+
+	sudo rm -i -v '/etc/apt/trusted.gpg.d/2web_ppa.gpg'
+	sudo rm -i -v '/etc/apt/sources.list.d/2web_ppa.list'
+
+<span id='install-from-source' />
+
+## Install from Source
+
+Copy and extract the source then in the extracted path run in a terminal
+
+	./configure
+	make
+	make install
+
+This should build and install the package on any Debian or Ubuntu based system. Installing in this way you will not receive security or feature updates unless you have also added the APT repo.
 
 <span id='access' />
 
@@ -228,21 +253,26 @@ however be advised this will remove everything and require you to redownload thu
 <span id='supported-systems' />
 
 ## Supported Systems
- - Raspbery PI 4
-	 - DietPi
-	 - Raspbian
-	 - Raspberry Pi OS
- - x86/x64
-	 - Ubuntu
-	 - Debian
+
+ - The 2web server will run on any debian or ubuntu based linux system but is tested on
+   - Raspbery PI 4
+   - DietPi
+   - Raspbian
+ - Raspberry Pi OS
+   - x86/x64
+   - Ubuntu
+   - Debian
+ - The 2web service is available on any devices that can run a webbrowser but is tested on
+   - Firefox
+   - Brave
 
 <span id='how-to-help' />
 
 ## How to Help
 
- - 2web is a large project, funding is the number one thing needed right now to make it sustainable. Any amount of funding you can provide will greatly help develop 2web further.
-   - [Ko-Fi](https://ko-fi.com/bluntsquid#)
-   - [LibrePay](https://liberapay.com/bluntsquid/)
+ - Use 2web in your homelab
+ - Share 2web with others
+   - [https://github.com/dude56987/2web](https://github.com/dude56987/2web)
 
 <span id='license' />
 
