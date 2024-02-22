@@ -31,8 +31,9 @@ requireAdmin();
 		if ($_GET['refresh'] == 'true'){
 			// using javascript, reload the webpage every 5 seconds
 			echo "<script>";
-			echo "delayedRefresh(5)";
+			echo "delayedRefresh(10)";
 			echo "</script>";
+			echo "<noscript><meta http-equiv='refresh' content='10'></noscript>";
 		}
 	}
 	?>

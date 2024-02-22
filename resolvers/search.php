@@ -819,6 +819,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				echo "<script>\n";
 				echo "delayedRefresh(10);\n";
 				echo "</script>\n";
+				echo "<noscript><meta http-equiv='refresh' content='10'></noscript>";
 			}
 		}
 	}else{
@@ -829,7 +830,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
 		}else{
 			echo "<div class='listCard'>";
-			echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
+			echo "<a class='button' href='search.php?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
 		}
 		echo "</div>";
 
@@ -848,6 +849,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "<script>";
 		echo "location.replace('?autoRefresh&q=".$_GET["q"]."')";
 		echo "</script>";
+		echo "<noscript><meta http-equiv='refresh' content='1;URL=search.php?autoRefresh=true&q=".$_GET["q"]."'></noscript>";
 	}
 	# add ai search links if they exist
 	if (file_exists($webDirectory."/ai/txt2img/index.php") || file_exists($webDirectory."/ai/prompt/index.php")){

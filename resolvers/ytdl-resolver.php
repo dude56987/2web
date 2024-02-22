@@ -167,8 +167,8 @@ function cacheUrl($sum,$videoLink){
 		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name ".$sum.".m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/$sum-stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		$command = 'echo "'.$command.'"';
-		$dlCommand = 'echo "'.$dlCommand.'"';
+		$command = 'echo "'.$command.";".$dlCommand.'"';
+		#$dlCommand = 'echo "'.$dlCommand.'"';
 	}
 	# - Place the higher quality download or the mp4 conversion in a batch queue
 	#   that adds a new task once every 60 seconds if system load is below 1.5
@@ -177,16 +177,16 @@ function cacheUrl($sum,$videoLink){
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
 			$command = $command." | /usr/bin/at -M -q b now";
-			$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
+			#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
 		}else{
 			// add command to next available slot in the queue
 			$command = $command." | /usr/bin/at -M -q a now";
-			$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
+			#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
 		}
 	}else{
 		// add command to next available slot in the queue
 		$command = $command." | /usr/bin/at -M -q a now";
-		$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
+		#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
 	}
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -202,7 +202,7 @@ function cacheUrl($sum,$videoLink){
 	fclose($logFile);
 	# fork the process with "at" scheduler command
 	runShellCommand($command);
-	runShellCommand($dlCommand);
+	#runShellCommand($dlCommand);
 	if (array_key_exists("batch",$_GET)){
 		if ($_GET["batch"] == "true") {
 			# exit connection after adding batch process to queue
@@ -362,23 +362,28 @@ if (array_key_exists("url",$_GET)){
 			if (! file_exists($storagePath."verified.cfg")){
 				# check the file downloaded correctly by comparing the json data file length with local file length
 				if (file_exists($storagePath.$sum.".mp4")){
-					if (file_exists($storagePath.$sum.".info.json")){
-						# The json downloaded from the remote and stored by the resolver
-						$remoteJson= json_decode(file_get_contents($storagePath.$sum.".info.json"));
-						# the json data from reading the current downloaded file
-						$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath.$sum.".mp4"));
-						# compare the local file duration with the remote file duration by using cached remote metadata
-						if ($localJson->media->track[0]->Duration >= $remoteJson->duration){
-							debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-							# if the length is correct the file is verified to have downloaded completely
-							touch($storagePath."verified.cfg");
+					# if the file was last modified more than 60 seconds ago
+					# - checks should wait for caching to complete in order to properly read file metadata
+					if (time()-filemtime($storagePath.$sum.".mp4") > 60){
+						if (file_exists($storagePath.$sum.".info.json")){
+							# The json downloaded from the remote and stored by the resolver
+							$remoteJson= json_decode(file_get_contents($storagePath.$sum.".info.json"));
+							# the json data from reading the current downloaded file
+							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath.$sum.".mp4"));
+							# compare the local file duration with the remote file duration by using cached remote metadata
+							debug($localJson->media->track[0]->Duration." >= ".$remoteJson->duration);
+							if ($localJson->media->track[0]->Duration >= $remoteJson->duration){
+								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+								# if the length is correct the file is verified to have downloaded completely
+								touch($storagePath."verified.cfg");
+							}else{
+								debug("The video was corrupt and could not be verified...");
+								$cacheFile=true;
+							}
 						}else{
-							debug("The video was corrupt and could not be verified...");
+							# the mp4 was found but the json was not
 							$cacheFile=true;
 						}
-					}else{
-						# the mp4 was found but the json was not
-						$cacheFile=true;
 					}
 				}
 			}

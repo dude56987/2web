@@ -397,6 +397,7 @@ if ($finishedVersions < $totalVersions){
 		echo "<script>";
 		echo "delayedRefresh(10)";
 		echo "</script>";
+		echo "<noscript><meta http-equiv='refresh' content='10'></noscript>";
 	}else{
 		$drawPrompt=True;
 	}

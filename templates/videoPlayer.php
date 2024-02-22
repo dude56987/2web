@@ -116,6 +116,17 @@ function isTranscodeEnabled(){
 	return $doTranscode;
 }
 #################################################################################
+function noscriptRefresh($seconds=10){
+	echo "<noscript>";
+	echo "<div class='titleCard'>";
+	echo "<img class='localPulse' src='/pulse.gif'>";
+	echo "<p>The video is still loading...</p>";
+	echo "<p>The page will refresh when the player loads...</p>";
+	echo "<noscript><meta http-equiv='refresh' content='$seconds'></noscript>";
+	echo "</div>";
+	echo "</noscript>";
+}
+#################################################################################
 ?>
 <link rel='stylesheet' href='/style.css' />
 <script src='/2webLib.js'></script>
@@ -330,8 +341,8 @@ function isTranscodeEnabled(){
 					echo "</video>\n";
 				}else if ("application/mpegurl" == $transcodePath[1]){
 					# draw the hls stream player webpage player
-					echo "<video id='video' class='livePlayer' poster='$posterPath' controls></video>\n";
 					echo "<script>\n";
+					echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
 					echo "	if(Hls.isSupported()) {\n";
 					echo "		var video = document.getElementById('video');\n";
 					echo "		var hls = new Hls({\n";
@@ -358,6 +369,7 @@ function isTranscodeEnabled(){
 					# start playback on page load
 					echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
 					echo "</script>\n";
+					noscriptRefresh(10);
 				}
 			}else{
 				# this is a mkv file that can not be played with the web player
@@ -370,8 +382,8 @@ function isTranscodeEnabled(){
 			logPrint("Loading HLS stream<br>");
 			logPrint("hls stream = ".$fullPathVideoLink);
 			# draw the hls stream player webpage player
-			echo "<video id='video' class='livePlayer' poster='$posterPath' controls></video>\n";
 			echo "<script>\n";
+			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
 			echo "	if(Hls.isSupported()) {\n";
 			echo "		var video = document.getElementById('video');\n";
 			echo "		var hls = new Hls({\n";
@@ -398,12 +410,13 @@ function isTranscodeEnabled(){
 			# start playback on page load
 			echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
 			echo "</script>\n";
+			noscriptRefresh(10);
 		}else{
 			logPrint("Loading Unknown media resource<br>");
 			logPrint("media = ".$fullPathVideoLink);
 			# draw the hls stream player webpage player
-			echo "<video id='video' class='livePlayer' poster='$posterPath' controls></video>\n";
 			echo "<script>\n";
+			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
 			echo "	if(Hls.isSupported()) {\n";
 			echo "		var video = document.getElementById('video');\n";
 			echo "		var hls = new Hls({\n";
@@ -425,6 +438,7 @@ function isTranscodeEnabled(){
 			# start playback on page load
 			echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
 			echo "</script>\n";
+			noscriptRefresh(10);
 		}
 	?>
 <div class='descriptionCard'>
