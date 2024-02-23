@@ -1114,16 +1114,21 @@ if( ! function_exists("requireGroup")){
 				return true;
 			}
 		}else{
-			# the session has not yet been checked
-			# check if the group being checked requires a login
-			if (file_exists("/etc/2web/lockedGroups/".$group.".cfg")){
-				# if the group is unlocked let anyone enter and store the status in the current session
+			if ($group == "admin"){
+				# always lock the admin group
 				$_SESSION[$group."_locked"]=true;
 			}else{
-				# the group is not locked so set the session value
-				$_SESSION[$group."_locked"]=false;
-				# eject from the lock check and load the page without login
-				return true;
+				# the session has not yet been checked
+				# check if the group being checked requires a login
+				if (file_exists("/etc/2web/lockedGroups/".$group.".cfg")){
+					# if the group is unlocked let anyone enter and store the status in the current session
+					$_SESSION[$group."_locked"]=true;
+				}else{
+					# the group is not locked so set the session value
+					$_SESSION[$group."_locked"]=false;
+					# eject from the lock check and load the page without login
+					return true;
+				}
 			}
 		}
 		# check the user has logged in successfully
@@ -1152,26 +1157,8 @@ if( ! function_exists("requireGroup")){
 ########################################################################
 if( ! function_exists("requireAdmin")){
 	function requireAdmin(){
-		# only load this page if the user is logged in, otherwise redirect to the login page
-		// try to load a session in the current window
-		if (! isset($_SESSION)){
-			session_start();
-		}
-		# check the user has logged in successfully
-		if (array_key_exists("admin",$_SESSION)){
-			if ($_SESSION["admin"]){
-				# draw the username at the top of the page
-				#echo ("<div class='loggedInUsername'>🧑‍💻 ".$_SESSION["user"]."</div>");
-				# if the user is logged in just load the page
-				return true;
-			}else{
-				# if the user is not logged in redirect to the login page
-				redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
-			}
-		}else{
-			# if the user is not logged in redirect to the login page
-			redirect("https://".$_SERVER["HTTP_HOST"]."/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
-		}
+		# check permissions for admin
+		requireGroup("admin");
 	}
 }
 ########################################################################

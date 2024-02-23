@@ -47,10 +47,14 @@ if (array_key_exists("userLogout",$_POST)){
 					}
 				}
 			}
+			# always lock the admin group
+			$_SESSION["admin_locked"] = true;
+			# post the login into the system log
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
 			sleep(2);
 		}else{
 			$errorMessages .= errorBanner("LOGIN FAILED INCORRECT PASSWORD!", true);
+			# log the failure to the system log
 			addToLog("ADMIN", "FAILED LOGIN", "LOGIN FAILED INCORRECT PASSWORD! Username='".$username."'<br>\n".getIdentity());
 			# sleep the login script to prevent overloading
 			sleep(3);
@@ -69,8 +73,15 @@ if (array_key_exists("user", $_SESSION)){
 }
 # if the user is logged in
 if (array_key_exists("noPermission", $_GET)){
-	$errorMessages .= errorBanner("You do not have permissions to access this content! Please login to another account with the correct permissions.", true);
-	$errorMessages .= errorBanner("The group '".$_GET["noPermission"]."' is not accessable by the current user '".$_SESSION["user"]."'", true);
+	if (array_key_exists($_GET["noPermission"], $_SESSION)){
+		# verify the current user session has no permissions for the noPermission group set in the GET request
+		if (! $_SESSION[$_GET["noPermission"]]){
+			$errorMessages .= errorBanner("You do not have permissions to access this content! Please login to a account with the correct permissions.", true);
+			#$errorMessages .= errorBanner("The group '".$_GET["noPermission"]."' is not accessable by the current user '".$_SESSION["user"]."'", true);
+		}
+	}else{
+		$errorMessages .= errorBanner("You do not have permissions to access this content! Please login to a account with the correct permissions.", true);
+	}
 }
 
 # check if users exist in the user settings
@@ -97,8 +108,11 @@ if ($loggedIn){
 		if (! array_key_exists("noPermission", $_GET)){
 			# redirect the login back to the page it was sent from
 			if ( ! ( stripos($_GET["redirect"], "/logout.php" ) !== false ) ){
-				# only redirect if the redirect is not set to the logout page, this prevents a login/logout loop
-				redirect($_GET["redirect"]);
+				# if there are no logins the redirect should not happen
+				if (! $noLogins){
+					# only redirect if the redirect is not set to the logout page, this prevents a login/logout loop
+					redirect($_GET["redirect"]);
+				}
 			}
 		}
 	}
