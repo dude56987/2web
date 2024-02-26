@@ -77,6 +77,7 @@ function searchSQL(){
 			indexData="$(sqlite3 -cmd ".timeout 60000" "$indexPath" "select * from \"$tableName\";")"
 			indexDataLength=$(echo "$indexData" | wc -l)
 			indexDataCounter=0
+			foundDataCounter=0
 			# search though each of the index files
 			echo "$indexData" | while read episode;do
 				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
@@ -86,6 +87,12 @@ function searchSQL(){
 				if basename "$episode" | grep -q --ignore-case "$searchQuery";then
 					# write the data
 					cat "$episode" >> "$outputPath"
+					foundDataCounter=$(( $foundDataCounter + 1 ))
+					# break the loop if more than 20 episodes are found
+					if [[ $foundDataCounter -ge 20 ]];then
+						break
+					fi
+					#
 					found="true"
 				fi
 				# only search the index file if the filename does not match
@@ -104,6 +111,7 @@ function searchSQL(){
 			done
 		fi
 	fi
+	incrementProgressFile "$webDirectory" "$searchSum"
 }
 
 ################################################################################
@@ -111,7 +119,7 @@ function searchWeather(){
 	webDirectory=$1
 	searchQuery=$2
 	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_weather_stations.index"
+	outputPath="$webDirectory/search/${searchSum}__weather_stations.index"
 	# check for any stations
 	foundStations=$(find "/var/cache/2web/web/weather/data/" -type f -name "station_*.index")
 	# if there are any stations
@@ -122,18 +130,19 @@ function searchWeather(){
 		fileData="$(cat "$stationFilePath")"
 		# search the contents of the index file
 		if echo "$fileData" | grep -q --ignore-case "$searchQuery";then
-			if echo "$foundData" | grep -q "no";then
-				foundData="yes"
-				echo "<div class='listCard'>" > "$outputPath"
-			fi
+			#if echo "$foundData" | grep -q "no";then
+			#	foundData="yes"
+			#	echo "<div class='listCard'>" > "$outputPath"
+			#fi
 			# show the found data
 			echo "$fileData" >> "$outputPath"
 		fi
 	done
 	# close the
-	if echo "$foundData" | grep -q "yes";then
-		echo "</div>" >> "$outputPath"
-	fi
+	#if echo "$foundData" | grep -q "yes";then
+	#	echo "</div>" >> "$outputPath"
+	#fi
+	incrementProgressFile "$webDirectory" "$searchSum"
 }
 ################################################################################
 function searchDict(){
@@ -195,6 +204,7 @@ function searchDict(){
 			echo "</div>"
 		} >> "$outputPath"
 	fi
+	incrementProgressFile "$webDirectory" "$searchSum"
 }
 ################################################################################
 function searchIndex(){
@@ -210,6 +220,7 @@ function searchIndex(){
 			indexData="$(cat "$indexPath" | uniq )"
 			indexDataLength=$(echo "$indexData" | wc -l)
 			indexDataCounter=0
+			foundDataCounter=0
 			# search though each of the index files
 			echo "$indexData" | while read episode;do
 				INFO "Scanning $indexPath for $searchQuery [$indexDataCounter/$indexDataLength]"
@@ -220,6 +231,12 @@ function searchIndex(){
 					ALERT "Found Match in filename $episode"
 					# write the data
 					cat "$episode" >> "$outputPath"
+					# increment the found data counter
+					foundDataCounter=$(( $foundDataCounter + 1 ))
+					# break the loop if more than 20 episodes are found
+					if [[ $foundDataCounter -ge 20 ]];then
+						break
+					fi
 					found="true"
 				fi
 				# only search the index file if the filename does not match
@@ -239,6 +256,87 @@ function searchIndex(){
 			done
 		fi
 	fi
+	incrementProgressFile "$webDirectory" "$searchSum"
+}
+#
+function singleWikiSearch(){
+	#singleWikiSearch "$webDirectory" "$searchSum" "$baseWikiName" "$wikiArticlePath" "$wikiPath" "$searchQuery"
+	webDirectory=$1
+	searchSum=$2
+	baseWikiName=$3
+	wikiPath=$4
+	searchQuery=$5
+	# try to get the wiki title
+	if test -f $wikiPath/M/Title;then
+		# Get the title directly from the file
+		wikiTitle=$(cat "$wikiPath/M/Title")
+	else
+		# Use the path base name as the name
+		wikiTitle="$baseWikiName"
+	fi
+	maxWikiArticles=20
+	foundWikiArticles=0
+	# search all articles for the search query
+	find "$wikiPath/A/" -type f | while read -r wikiArticlePath;do
+		# break loop if there are more than the max number of articles found
+		# - user should refine the search terms for more results
+		# - if wikis are scanned completely it takes a extreme amount of time
+		# check the article is a file
+		if test -f "$wikiArticlePath";then
+			# for each article in the wiki search the text of the wiki page
+			searchResult=$(cat "$wikiArticlePath" | sed -e 's/<[^>]*>//g' | fold --width=80 -s | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
+			#searchResult=$(cat "$wikiArticlePath" | sed -e 's/<[^>]*>//g' | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
+			#searchResult=$(w3m -T "text/html" "$wikiArticlePath" | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | sed -e 's/<[^>]*>//g' | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
+			#searchResult=$(w3m "$wikiArticlePath" | grep -m 4 --ignore-case "$searchQuery" | sed "s/${searchQuery}/<span class='selected'>${searchQuery}<\/span>/g")
+			#searchResult=$(w3m "$wikiArticlePath" | grep -m 4 --ignore-case "$searchQuery" | sed -e 's/<[^>]*>//g')
+			#searchResult=$(w3m "$wikiArticlePath" | grep --ignore-case "$searchQuery")
+			#searchResult=$(grep --ignore-case "$searchQuery" "$wikiArticlePath" )
+		else
+			# no search result should be found for anything that is not a file
+			searchResult=""
+		fi
+		if [ $(echo "$searchResult" | wc -c) -gt 7 ];then
+			# a article with the search query was found
+			baseArticleName=$(basename "$wikiArticlePath")
+			{
+			echo "<a href='/wiki/$baseWikiName/?article=$baseArticleName'>"
+			echo "<div class='titleCard'>"
+			echo "<h2>$baseArticleName</h2>"
+			echo "<pre>"
+			echo "$searchResult"
+			echo "</pre>"
+			echo "</div>"
+			echo "</a>"
+			} >> "$webDirectory/search/${searchSum}_wiki:_$wikiTitle.index"
+			# check if the max number of articles was found in this wiki
+			if [ $foundWikiArticles -ge $maxWikiArticles ];then
+				# break the loop if there are to many results
+				break
+			else
+				# increment the loop if a article is found
+				foundWikiArticles=$(( $foundWikiArticles + 1 ))
+			fi
+		fi
+	done
+	incrementProgressFile "$webDirectory" "$searchSum"
+}
+#
+function wikiSearch(){
+	#wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS"
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	totalCPUS=$4
+	#
+	wikis=$(find "/var/cache/2web/web/wiki/" -maxdepth 1 -mindepth 1 -type d)
+	# search each of the wikis
+	IFS=$'\n'
+	# search each wiki in parallel for matching articles
+	for wiki in $wikis;do
+		baseWikiName=$(basename "$wiki")
+		singleWikiSearch "$webDirectory" "$searchSum" "$baseWikiName" "$wiki" "$searchQuery" &
+		waitQueue 0.1 "$totalCPUS"
+	done
 }
 ################################################################################
 incrementProgressFile(){
@@ -269,95 +367,82 @@ function search(){
 
 	echo "0" > "$webDirectory/search/${searchSum}_progress.index"
 	# total number of threads to be launched below here +1 so 100% is complete
-	echo "23" > "$webDirectory/search/${searchSum}_total.index"
+	# add the wikis to the total
+	if test -d "$webDirectory/wiki/";then
+		totalWikis=$(find "$webDirectory/wiki/" -maxdepth 1 -mindepth 1 -type d | wc -l)
+	else
+		totalWikis=0
+	fi
+	echo "$(( 24 + $totalWikis ))" > "$webDirectory/search/${searchSum}_total.index"
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the weather stations
 	searchWeather "$webDirectory" "$searchQuery" "$searchSum" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the portal
 	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$webDirectory/search/${searchSum}_portal_links.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the shows
 	searchIndex "$webDirectory" "$webDirectory/shows/shows.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_shows.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the movies
 	searchIndex "$webDirectory" "$webDirectory/movies/movies.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_movies.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the comics
 	searchIndex "$webDirectory" "$webDirectory/comics/comics.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_comics.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the graphs
 	searchIndex "$webDirectory" "$webDirectory/graphs/graphs.index" "$searchQuery" "$webDirectory/search/${searchSum}_graphs.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the repos
 	searchIndex "$webDirectory" "$webDirectory/repos/repos.index" "$searchQuery" "$webDirectory/search/${searchSum}_repos.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the music
 	searchIndex "$webDirectory" "$webDirectory/music/music.index" "$searchQuery"  "$webDirectory/search/${searchSum}_all_music.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# music artists
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_artists.index" "_artists" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# music albums
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_albums.index" "_albums" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# music tracks
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_music_tracks.index" "_tracks" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the channels and radio channels
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_live_channels.index" "_channels" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the new playlists all in parallel
 	# - skip the combined playlist since this contains all the playlists and will split them into thier search results sections
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/movies.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_movies.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/episodes.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_episodes.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/comics.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_comics.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/music.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_music.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/tracks.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_tracks.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/artists.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_artists.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_channels.index" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search all episodes this will be a huge database
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_episodes.index" "_episodes" &
-	incrementProgressFile "$webDirectory" "$searchSum"
 	waitQueue 0.2 "$totalCPUS"
 	# search the wiki pages
+	wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS"
+
 
 	# block the queue
 	blockQueue 1

@@ -182,59 +182,6 @@ function moreSynLinks($searchQuery){
 	echo "</div>";
 }
 ################################################################################
-function searchIndex($indexPath,$searchQuery,$cacheFilePath){
-	$foundData=false;
-	$tempData="";
-	$resultLimit=100;
-	$resultCounter=0;
-	# if the search index exists
-	if ( file_exists( $indexPath ) ){
-		$fileHandle = fopen( $indexPath , "r" );
-		while( ! feof( $fileHandle ) ){
-			# read a line of the file
-			$fileData = fgets( $fileHandle );
-			#echo "The file path is '$fileData'<br>\n";
-			#remove newlines from extracted file paths in index
-			$fileData = str_replace( "\n" , "" , $fileData);
-			if ( file_exists( $fileData ) ){
-				# read the file
-				$tempFileData = file_get_contents($fileData);
-				$searchableData = strip_tags($tempFileData);
-				if ( stripos( $searchableData, $searchQuery ) ){
-					if ($foundData == false){
-						$headerData = popPath($indexPath);
-						$headerData = str_replace(".index","",$headerData);
-						$headerData = ucfirst($headerData);
-						$headerData = "<h2 id='$headerData'>".$headerData."</h2>";
-
-						$tempData .= $headerData;
-						echo $headerData;
-
-						$foundData = true;
-					}
-					# read each line of the file
-					$tempData .= $tempFileData;
-					echo $tempFileData;
-					ob_flush();
-					flush();
-					if($resultCounter >= $resultLimit){
-						# break the loop there are to many results
-						break;
-					}else{
-						$resultCounter+=1;
-					}
-				}
-			}
-		}
-	}
-	if ($foundData){
-		appendFile($cacheFilePath,$tempData);
-		return array(true,$tempData);
-	}else{
-		return array(false,$tempData);
-	}
-}
-################################################################################
 function scan_dir($directory){
 	if (is_dir($directory)){
 		$tempData = scandir($directory);
@@ -242,240 +189,6 @@ function scan_dir($directory){
 		return $tempData;
 	}else{
 		return false;
-	}
-}
-################################################################################
-function searchWeather($cacheFilePath){
-	# kill weather search if no data directory can be found
-	if (is_dir("/var/cache/2web/web/weather/data/")){
-		echo " ";
-	}else{
-		return array(false,"");
-	}
-
-	$weatherData=scanDir("/var/cache/2web/web/weather/data/");
-	$foundData=False;
-	$output="";
-	# search weather data and forecasts
-	foreach($weatherData as $weatherPath){
-		$fullWeatherPath="/var/cache/2web/web/weather/data/".$weatherPath;
-		#echo "$fullWeatherPath<br>";
-		# read the weather data from the file
-		if (stripos($fullWeatherPath,".index")){
-			if (file_exists($fullWeatherPath)){
-				if (is_file($fullWeatherPath)){
-					#echo "File is file...<br>";
-					$weatherFileData=file_get_contents($fullWeatherPath);
-					# remove all html from the weather data file
-					$weatherFileSearchData=strip_tags($weatherFileData);
-					#echo $weatherFileData."<br>";
-					if (stripos($weatherFileSearchData,$_GET['q'])){
-						if (stripos($fullWeatherPath,"current_")){
-							# check current weather conditions
-							$tempOutput="<div class='titleCard'>";
-							$tempOutput.=$weatherFileData;
-							$tempOutput.="</div>"."\n";
-							$output.=$tempOutput;
-							echo $tempOutput;
-							flush();
-							ob_flush();
-							$foundData=True;
-							#appendFile($cacheFilePath,$tempOutput);
-						}else if(stripos($fullWeatherPath,"forcast_")){
-							# check forcast
-							$tempOutput=$weatherFileData;
-							$output.=$tempOutput."\n";
-							echo $tempOutput;
-							flush();
-							ob_flush();
-							$foundData=True;
-							#appendFile($cacheFilePath,$tempOutput);
-						}
-					}
-				}
-			}
-		}
-	}
-	if ($foundData){
-		return array(true,$output);
-	}else{
-		return array(false,$output);
-	}
-}
-################################################################################
-function searchAllWiki($wikiPath,$cacheFilePath){
-	# search all wiki content
-	$output = "";
-	$foundData = false;
-	$wikiPaths = scan_dir($_SERVER['DOCUMENT_ROOT']."/wiki/");
-	if ($wikiPaths){
-		foreach($wikiPaths as $wikiPath){
-			# read each wiki and search for content
-			$wikiSearchResults = searchWiki($_SERVER['DOCUMENT_ROOT']."/wiki/".$wikiPath,$cacheFilePath);
-			if ($wikiSearchResults[0]){
-				# if the wiki found search results add them to the output
-				$output .= $wikiSearchResults[1];
-				$foundData = true;
-			}
-		}
-	}
-	if ($foundData){
-		return array(true,$output);
-	}else{
-		return array(false,$output);
-	}
-}
-################################################################################
-function searchChannels($cacheFilePath){
-	$output = "";
-	$foundData = false;
-	# search though the article files for the search term
-	$foundFiles = scan_dir($_SERVER['DOCUMENT_ROOT']."/live/index/");
-	#
-	if ($foundFiles){
-		foreach($foundFiles as $foundFile){
-			# open the .index file and search inside it
-			$serverPath=$_SERVER['DOCUMENT_ROOT']."/live/index/";
-			#
-			$foundFileData=file_get_contents($serverPath.$foundFile);
-			#
-			if (stripos($foundFileData,$_GET['q'])){
-				$tempOutput = "";
-
-				if ($foundData == false){
-					$headerData="<h2 id='channels'>Channels</h2>";
-					$tempOutput .= $headerData;
-					$foundData = true;
-				}
-
-				# check each filename for the search term
-				$tempOutput .= $foundFileData;
-
-				$output .= $tempOutput;
-
-				appendFile($cacheFilePath,$tempOutput);
-
-				echo $tempOutput;
-				flush();
-				ob_flush();
-			}
-		}
-	}
-	if ($foundData){
-		return array(true,$output);
-	}else{
-		return array(false,$output);
-	}
-}
-################################################################################
-function searchWiki($wikiPath,$cacheFilePath){
-	$output = "";
-	$foundData = false;
-	# search though the article files for the search term
-	$foundFiles = scan_dir($wikiPath."/A/");
-	#
-	$wikiName=explode("/",$wikiPath);
-	$wikiName=array_pop($wikiName);
-	$articleCount=0;
-	if ($foundFiles){
-		foreach($foundFiles as $foundFile){
-			if ($articleCount > 100){
-				break;
-			}else if (stripos($foundFile,$_GET['q'])){
-				$articleCount += 1;
-				# check each filename for the search term
-				$tempOutput = "";
-
-				$tempOutput .= "<div class='inputCard button'>";
-				$tempOutput .= "<h2>";
-				$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>";
-				$tempOutput .= "</h2>";
-				$tempOutput .= "</div>\n";
-
-				$output .= $tempOutput;
-
-				appendFile($cacheFilePath,$tempOutput);
-
-				echo $tempOutput;
-				flush();
-				ob_flush();
-			}else if(is_file($wikiPath."/A/".$foundFile)){
-				# read each file and search line by line
-				$articleHandle = fopen($wikiPath."/A/".$foundFile,'r');
-				while(! feof($articleHandle)){
-					# get a single line of the file
-					$lineData = fgets($articleHandle);
-					# remove html tags
-					$lineData = strip_tags($lineData);
-					#$lineData = file_get_contents($wikiPath."/A/".$foundFile);
-					# remove html tags
-					$lineData = strip_tags($lineData);
-					# make string all lowercase
-					$lineData = strtolower($lineData);
-					# highlight found search terms
-					$lineData = str_replace($_GET['q'],("<span class='highlightText'>".$_GET['q']."</span>"),$lineData);
-					#$lineData = str_replace(strtoupper($_GET['q']),("<span class='highlightText'>".strtoupper($_GET['q'])."</span>"),$lineData);
-					if(stripos($lineData,$_GET['q'])){
-
-						$articleCount += 1;
-
-						$foundPosition=stripos($lineData,$_GET['q']);
-
-						$startCut=$foundPosition - 10;
-						if ($startCut < 0){
-							$startCut=0;
-						}
-
-						$endCut = $foundPosition + 10;
-						if ($endCut > strlen($lineData)){
-							$endCut=strlen($lineData);
-						}
-
-						$tempOutput = "";
-
-						$foundStringPreview = substr($lineData,$startCut,$endCut);
-						if ($foundData == false){
-							$foundData = true;
-							# write once header
-							$tempOutput .= "<h2>Local Wiki Articles</h2>";
-						}
-
-						# check each files contents for the search term
-						#$tempOutput .= "<div class='titleCard button'>";
-						$tempOutput .= "<div class='inputCard button'>";
-						$tempOutput .= "<h2>";
-						$tempOutput .= "<a href='/wiki/$wikiName/?article=".$foundFile."'>".$foundFile."</a>";
-						$tempOutput .= "</h2>";
-
-						$tempOutput .= "<div class='foundSearchContentPreview'>";
-						$tempOutput .= str_replace("\n","",$lineData);
-						#$tempOutput .= $foundStringPreview;
-						$tempOutput .= "</div>";
-
-						$tempOutput .= "<div class='wikiPublisher'>";
-						$tempOutput .= "Publisher : ";
-						$tempOutput .= str_replace("\n","",file_get_contents($_SERVER['DOCUMENT_ROOT']."/wiki/$wikiName/M/Title"));
-						$tempOutput .= "</div>";
-
-						$tempOutput .= "</div>\n";
-
-						$output .= $tempOutput;
-
-						appendFile($cacheFilePath,$tempOutput);
-
-						echo $tempOutput;
-						flush();
-						ob_flush();
-						break;
-					}
-				}
-			}
-		}
-	}
-	if ($foundData){
-		return array(true,$output);
-	}else{
-		return array(false,$output);
 	}
 }
 ################################################################################
@@ -647,10 +360,11 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# check for bangs prior to building any part of the webpage
 	# - This must be done before anything is writen to the page for the redirect to work
 	$searchQuery = $_GET["q"];
-	# convert the search to lowercase
-	$searchQuery = strtolower($searchQuery);
 	# check for bang commands
 	$bangHelp=checkForBangs($searchQuery);
+	# convert the search to lowercase
+	$searchQuery = strtolower($searchQuery);
+	#
 	drawHead();
 	# add the header document after building the document start
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
@@ -721,7 +435,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$headerTitle=ucwords($headerTitle);
 					echo "<h2 id='$jumpLink'>$headerTitle</h2>";
 					# draw the matching search content
+					echo "<div>";
 					echo file_get_contents($webDirectory."/search/".$filePath);
+					echo "</div>";
 				}
 			}
 		}else{
@@ -738,13 +454,10 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			}
 			echo "</div>";
 
-			$searchQuery = $_GET["q"];
-			$querySum = md5($searchQuery);
-
 			if(file_exists($webDirectory."/search/".$querySum."_processing.index")){
 				$finishedVersions=str_replace("\n","",file_get_contents($webDirectory."/search/".$querySum."_progress.index"));
 				$totalVersions=str_replace("\n","",file_get_contents($webDirectory."/search/".$querySum."_total.index"));
-
+				#
 				$executionTime = $_SERVER['REQUEST_TIME'] - str_replace("\n","",file_get_contents($webDirectory."/search/".$querySum."_processing.index")) ;
 				$executionMinutes = floor($executionTime / 60);
 				$executionSeconds = floor($executionTime - floor($executionMinutes * 60));
@@ -811,7 +524,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$headerTitle=ucwords($headerTitle);
 					echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
 					# draw the matching search content
+					echo "<div>";
 					echo file_get_contents($webDirectory."/search/".$filePath);
+					echo "</div>";
 				}
 			}
 			# using javascript, reload the webpage every 60 seconds, time is in milliseconds
