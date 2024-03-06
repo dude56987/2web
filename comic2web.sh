@@ -390,15 +390,18 @@ convertImage(){
 }
 ################################################################################
 cleanText(){
-	echo "$1" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
-	return
-	# remove punctuation from text, remove leading whitespace, and double spaces
-	if [ -f /usr/bin/inline-detox ];then
-		echo "$1" | inline-detox --remove-trailing | sed "s/-/ /g" | sed -e "s/^[ \t]*//g" | tr -s ' ' | sed "s/\ /_/g" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
-	else
-		# use sed to remove punctuation
-		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g" | sed "s/\ /_/g" | tr -d '#`'
-	fi
+	# clean up the text for use in web urls and directory paths
+	cleanedText="$1"
+	# remove bangs as they break URLS
+	cleanedText=$(echo "$cleanedText" | tr -d '#`')
+	cleanedText=$(echo "$cleanedText" | tr -d "'" )
+	cleanedText=$(echo "$cleanedText" | sed "s/_/ /g" )
+	# convert question marks into wide question marks so they look
+	# the same but wide question marks do not break URLS
+	cleanedText=$(echo "$cleanedText" | sed "s/?/？/g" )
+	cleanedText=$(echo "$cleanedText" | tr -s ' ')
+	# print the cleaned up text
+	echo "$cleanedText"
 }
 ################################################################################
 getTitle(){
