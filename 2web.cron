@@ -68,6 +68,10 @@
 # check the links in the portal, this also scans ports for services
 0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
 ################################################################################
+# Once a month verify all entries in the database
+# - This removes deleted entries
+@monthly root /usr/bin/nice -n 10 /usr/bin/2web --verify &> /dev/null
+################################################################################
 # update kodi2web to update all remote kodi clients
 # - This runs every time new content is detected
 # - Cron job is weekly for clients who have been powered off when updates were
