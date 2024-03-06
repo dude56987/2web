@@ -18,6 +18,7 @@
 ########################################################################
 ?>
 <!-- create top jump button -->
+<img class='globalPulse' src='/pulse.gif'>
 <a href='#' id='topButton' class='button'>&uarr;<div><div id='scrollProgress'></div></div></a>
 
 <script>
@@ -104,7 +105,6 @@ if ($writeFile){
 	$fileData .= formatText("<hr class='menuButton'/>",2);
 	$fileData .= formatText("<hr class='menuButton'/>",2);
 	$fileData .= formatText("<hr class='menuButton'/>",2);
-	$fileData .= formatText("<img class='globalPulse' src='/pulse.gif'>");
 	$fileData .= formatText("</div>",1);
 
 	//$fileData .= formatText('<div class="headerButtons" onload="hideVisibleClass(\'headerButtons\')">',1);

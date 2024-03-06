@@ -348,6 +348,8 @@ ol li{
 	padding: 0px;
 	margin-bottom: 1rem;
 	cursor: pointer;
+	position: relative;
+	z-index: 1;
 }
 .menuButton{
 	background-color: var(--glassBackground);
@@ -1987,12 +1989,21 @@ pre{
 	float: right;
 }
 .globalPulse{
-	width: 100%;
-	height: 0.3rem;
+	position: fixed;
+	width: 100dvw;
+	height: 0.4rem;
+	left: 0px;
+	border-bottom: solid var(--borderColor) 0.1rem;
+	background-color: var(--glassBackground);
 }
 .localPulse{
-	width: 100%;
-	height: 0.3rem;
+	position: fixed;
+	width: 100dvw;
+	height: 0.4rem;
+	left: 0px;
+	top: 0px;
+	border-bottom: solid var(--borderColor) 0.1rem;
+	background-color: var(--glassBackground);
 }
 .gitRepoGraph{
 	border: solid var(--borderColor) 0.1rem;
