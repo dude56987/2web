@@ -922,6 +922,10 @@ renderPage(){
 		# random indexes
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 
+		# update last updated times
+		date "+%s" > /var/cache/2web/web/new/all.cfg
+		date "+%s" > /var/cache/2web/web/new/comics.cfg
+
 		# start building the comic index since this is the last page
 		{
 			echo "<html>"
