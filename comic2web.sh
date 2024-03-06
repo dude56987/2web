@@ -80,8 +80,7 @@ function extractCBZ(){
 }
 ################################################################################
 function update(){
-	#DEBUG
-	#set -x
+	addToLog "INFO" "STARTED Update" "$(date)"
 	# this will launch a processing queue that downloads updates to comics
 	INFO "Loading up sources..."
 	# check for defined sources
@@ -143,6 +142,7 @@ function update(){
 			# do not process the comic if it is still in the cache
 			# - Cache removes files older than x days
 			if ! test -f "$webDirectory/comicCache/download_$comicSum.index";then
+				addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with gallery-dl from '$comicSource'"
 				# if the comic is not cached it should be downloaded
 				/usr/local/bin/gallery-dl --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "$webDirectory/comicCache/download_$comicSum.index"
 			fi
@@ -153,6 +153,7 @@ function update(){
 			# do not process the comic if it is still in the cache
 			# - Cache removes files older than x days
 			if ! test -f "$webDirectory/comicCache/webDownload_$comicSum.index";then
+				addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with Dosage, comic titled '$comicSource'"
 				# if the comic is not cached it should be downloaded
 				if echo "$comicSource" | grep "/";then
 					totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
@@ -209,6 +210,7 @@ function update(){
 				mkdir -p "${generatedDirectory}/comics/txt2comic/$txtComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found txt '$txtComicName', converting to comic book..."
+				addToLog "UPDATE" "Generating Comic" "Converting text documents to PDF format from '$txtFilePath'"
 				# convert epub files into pdf files to be converted below
 				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" > "${generatedDirectory}/comics/txt2comic/$txtComicName/$txtComicName.html"
 				chown -R www-data:www-data "${generatedDirectory}/comics/txt2comic/$txtComicName/"
@@ -225,6 +227,7 @@ function update(){
 				mkdir -p "${generatedDirectory}/comics/ps2comic/$psComicName/"
 				# extract the .ps file to the download directory
 				INFO "Found ps '$psComicName', converting to comic book..."
+				addToLog "UPDATE" "Generating Comic" "Converting postscript documents to PDF format from '$psComicName'"
 				# convert postscript files into pdf files
 				ps2pdf "$psFilePath" "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf"
 				chown -R www-data:www-data "${generatedDirectory}/comics/ps2comic/$psComicName/"
@@ -238,6 +241,7 @@ function update(){
 			markdownComicName=$(popPath "$markdownFilePath" | sed "s/.md//g")
 			# only extract the cbz once
 			if ! test -d "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.pdf";then
+				addToLog "UPDATE" "Generating Comic" "Converting markdown documents to PDF format from '$markdownComicName'"
 				mkdir -p "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found markdown '$markdownComicName', converting to comic book..."
@@ -268,6 +272,7 @@ function update(){
 			htmlComicName=$(popPath "$htmlFilePath" | sed "s/.html//g")
 			# only extract the cbz once
 			if ! test -d "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf";then
+				addToLog "UPDATE" "Generating Comic" "Converting HTML documents to PDF format from '$htmlComicName'"
 				mkdir -p "${generatedDirectory}/comics/html2comic/$htmlComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found html'$htmlComicName', converting to comic book..."
@@ -286,6 +291,7 @@ function update(){
 				epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
 				# only extract the cbz once
 				if ! test -d "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf";then
+					addToLog "UPDATE" "Generating Comic" "Converting EPUB documents to PDF format from '$epubComicName'"
 					mkdir -p "${generatedDirectory}/comics/epub2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found epub '$epubComicName', converting to comic book..."
@@ -297,6 +303,7 @@ function update(){
 			done
 		done
 	fi
+
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each pdf file found in the pdf libary locations
 		find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
@@ -306,6 +313,7 @@ function update(){
 				createDir "${generatedDirectory}/comics/pdf2comic/$pdfComicName/"
 				# extract the pdf file to the download directory
 				ALERT "Found pdf '$pdfComicName', converting to comic book..."
+				addToLog "UPDATE" "Generating Comic" "Converting PDF document to PNG images from '$epubComicName'"
 				# create the page counter
 				pageCounter=1
 				# get the page count from the pdf file using pdfInfo
@@ -328,6 +336,7 @@ function update(){
 			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
 			# only extract the cbz once
 			if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+				addToLog "UPDATE" "Extracting Comic" "Converting CBZ file to image directory from '$cbzComicName'"
 				createDir "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
 				# extract the cbz file to the download directory
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
@@ -343,6 +352,7 @@ function update(){
 			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
 			# only extract the cbz once
 			if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+				addToLog "UPDATE" "Extracting Comic" "Converting ZIP file to image directory from '$cbzComicName'"
 				mkdir -p "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
 				# extract the zip file to the download directory
 				INFO "Found zip '$cbzComicName', converting to comic book..."
@@ -369,6 +379,7 @@ function update(){
 		tempList=$(cat "$webDirectory/new/comics.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
+	addToLog "INFO" "FINISHED Update" "$(date)"
 }
 ################################################################################
 convertImage(){
@@ -917,6 +928,9 @@ renderPage(){
 		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "poster_all"
 		SQLaddToIndex "/comics/$tempComicName/thumb.png" "$webDirectory/backgrounds.db" "fanart_all"
 
+		# add new comic to log
+		addToLog "NEW" "Adding Comic" "Adding comic '$tempComicName'"
+
 		# add the comic to the main comic index since it has been updated
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
 		# add the updated show to the new comics index
@@ -1283,6 +1297,7 @@ function buildDosageList(){
 }
 ################################################################################
 webUpdate(){
+	addToLog "INFO" "STARTED Web Update" "$(date)"
 	# read the download directory and convert comics into webpages
 	# - There are 2 types of directory structures for comics in the download directory
 	#   + comicWebsite/comicName/chapter/image.png
@@ -1407,6 +1422,7 @@ webUpdate(){
 	done
 	# the random index simply uses the main index for comics
 	linkFile "$webDirectory/comics/comics.index" "$webDirectory/random/comics.index"
+	addToLog "INFO" "FINISHED Web Update" "$(date)"
 }
 ################################################################################
 function resetCache(){
