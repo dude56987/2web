@@ -41,7 +41,7 @@ function libaryPaths(){
 		} > "/etc/2web/comics/libaries.cfg"
 	fi
 	# write path to console
-	cat "/etc/2web/comics/libaries.cfg"
+	grep -v "^#" "/etc/2web/comics/libaries.cfg"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
@@ -67,6 +67,16 @@ function processPdfPageToImage(){
 	convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 	# add a border to the edge of the image
 	convert "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
+}
+function extractCBZ(){
+	# extractCBZ $generatedDirectory" "$cbzFilePath" "$cbzComicName"
+	# extract a CBZ comic book zip file to the generated directory
+	generatedDirectory=$1
+	cbzFilePath=$2
+	cbzComicName=$3
+	#
+	unzip "$cbzFilePath" -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
+	chown -R www-data:www-data "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
 }
 ################################################################################
 function update(){
@@ -312,8 +322,6 @@ function update(){
 			fi
 		done
 	done
-	# stop the queue outside of the loop to wait for rendering to finish
-	blockQueue 1
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each cbz file found in the cbz libary locations
 		find "$comicLibaryPath" -type f -name '*.cbz' | sort | while read cbzFilePath;do
@@ -324,8 +332,8 @@ function update(){
 				# extract the cbz file to the download directory
 				INFO "Found cbz '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
-				unzip "$cbzFilePath" -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
-				chown -R www-data:www-data "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
+				extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
+				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
 	done
@@ -339,11 +347,13 @@ function update(){
 				# extract the zip file to the download directory
 				INFO "Found zip '$cbzComicName', converting to comic book..."
 				# - load the cbz file with its filename as the comic name into the comic download directory
-				unzip "$cbzFilePath" -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
-				chown -R www-data:www-data "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
+				extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
+				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
 	done
+	# stop the queue outside of the loop to wait for rendering to finish
+	blockQueue 1
 	# scan the new comics into the index
 	#rebuildComicIndex "$webDirectory"
 
