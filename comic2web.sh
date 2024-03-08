@@ -730,9 +730,13 @@ renderPage(){
 	if [ $isChapter = true ];then
 		# link the image file into the web directory
 		pagePath="$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.html"
+		#
+		linkFile "/usr/share/2web/templates/comic_page.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.php"
 	else
 		# single chapter comic
 		pagePath="$webDirectory/comics/$pageComicName/$pageNumber.html"
+		#
+		linkFile "/usr/share/2web/templates/comic_page.php" "$webDirectory/comics/$pageComicName/$pageNumber.php"
 	fi
 	# if no zip directory exists then create the zip directory
 	createDir "$webDirectory/kodi/comics_tank/$pageComicName/"
@@ -767,124 +771,6 @@ renderPage(){
 	fi
 	# check next and previous pages to make sure they can be linked to
 	# write the webpage for the individual image
-	{
-		echo "<html class='comicPageBackground'>"
-		echo "<head>"
-	} > "$pagePath"
-	if [ $isChapter = true ];then
-		echo "<title>$pageComicName - Chapter $((10#$pageChapter))/$totalChapters - Page $((10#$pageNumber))/$totalPages</title>" >> "$pagePath"
-		echo "<link rel='stylesheet' href='/style.css'>" >> "$pagePath"
-	else
-		echo "<title>$pageComicName - Page $((10#$pageNumber))/$totalPages</title>" >> "$pagePath"
-		echo "<link rel='stylesheet' href='/style.css'>" >> "$pagePath"
-	fi
-	{
-		echo "<script src='/2webLib.js'></script>"
-		echo "<script>"
-		# add a listener to pass the key event into a function
-		echo "function setupKeys() {"
-		echo "	document.body.addEventListener('keydown', function(event){"
-		echo "		const key = event.key;"
-		echo "		switch (key){"
-		echo "			case 'ArrowLeft':"
-		echo "				window.location.href='./$previousPage.html';"
-		echo "				break;"
-		echo "			case 'ArrowRight':"
-		echo "				window.location.href='./$nextPage.html';"
-		echo "				break;"
-		echo "			case 'ArrowUp':"
-		echo "				window.location.href='index.php';"
-		echo "				break;"
-		echo "			"
-		echo "		}"
-		echo "	});"
-		echo "}"
-		# fullscreen function
-		echo "function toggleFullScreen() {"
-		echo "	if (!document.fullscreenElement) {"
-		echo "			document.documentElement.requestFullscreen();"
-		echo "	} else {"
-		echo "		if (document.exitFullscreen) {"
-		echo "			document.exitFullscreen();"
-		echo "		}"
-		echo "	}"
-		echo "}"
-		echo "</script>"
-		echo "</head>"
-		echo "<body onload='setupKeys();'>"
-	} >> "$pagePath"
-	if [ $width -gt $height ];then
-		#echo "[DEBUG]: landscape image found WxH $width > $height"
-		{
-			echo "<div id='comicPane' class='comicWidePane' style='$tempStyleThumb'>"
-			echo "<div id='comicThumbPane' class='comicThumbWidePane' style='$tempStyle'>"
-		} >> "$pagePath"
-	else
-		#echo "[DEBUG]: portrait image found  WxH $width < $height"
-		{
-			echo "<div id='comicPane' class='comicPane' style='$tempStyleThumb'>"
-			echo "<div id='comicThumbPane' class='comicThumbPane' style='$tempStyle'>"
-		} >> "$pagePath"
-	fi
-	{
-		if [ $((10#$previousPage)) -eq 0 ];then
-			echo "	<a href='index.php' class='comicPageButton left'>"
-			echo "		&#8617;"
-			echo "	<br>"
-			echo "		Back"
-			echo "	</a>"
-		else
-			echo "	<a href='$previousPage.html' class='comicPageButton left'>"
-			echo "		&#8617;"
-			echo "		<br>"
-			echo "		<span class='comicPageNumbers'>"
-			#echo "			$((10#$pageNumber))/$totalPages"
-			echo "			$previousPage"
-			echo "		</span>"
-			echo "	</a>"
-		fi
-		if [  $((10#$nextPage)) -gt $totalPages ];then
-			echo "	<a href='index.php' class='comicPageButton right'>"
-			echo "		&#8618;"
-			echo "		<br>"
-			echo "		Back"
-			echo "	</a>"
-		else
-			echo "	<a href='$nextPage.html' class='comicPageButton right'>"
-			echo "		&#8618;"
-			echo "		<br>"
-			echo "		<span class='comicPageNumbers'>"
-			#echo "			$((10#$pageNumber))/$totalPages"
-			echo "			$nextPage"
-			echo "		</span>"
-			echo "	</a>"
-		fi
-		#echo "	<a class='comicHomeButton comicPageButton center' href='../../..'>"
-		#echo "		HOME"
-		#echo "	</a>"
-		echo "	<a class='comicIndexButton comicPageButton center' href='index.php#$pageNumber'>"
-		echo "		&uarr;"
-		echo "	</a>"
-
-		if [ $isChapter = true ];then
-			echo "	<div class='comicPagePopup center' href='index.php'>"
-			echo "		Chapter $((10#$pageChapter))/$totalChapters <hr> Page $((10#$pageNumber))/$totalPages"
-			echo "	</div>"
-		else
-			echo "	<div class='comicPagePopup center' href='index.php'>"
-			echo "		Page $((10#$pageNumber))/$totalPages"
-			echo "	</div>"
-		fi
-
-		#echo "<div class='comicFooter'>"
-		#echo "	$pageNumber"
-		#echo "</div>"
-		echo "</div>"
-		echo "</div>"
-		echo "<span id='bottom'></span>"
-		echo "</body>"
-		echo "</html>"
-	} >> "$pagePath"
 	################################################################################
 	# set the default index value
 	buildPagesIndex=false
@@ -944,91 +830,11 @@ renderPage(){
 		date "+%s" > /var/cache/2web/web/new/comics.cfg
 
 		# start building the comic index since this is the last page
-		{
-			echo "<html>"
-			echo "<head>"
-			echo "<link rel='stylesheet' href='../style.css'>"
-			echo "<script src='/2webLib.js'></script>"
-			echo "<style>"
-			echo "html{ background-image: url(\"thumb.png\") }"
-			echo "</style>"
-			echo "<script>"
-			# add a listener to pass the key event into a function
-			echo "function setupKeys() {"
-			echo "	document.body.addEventListener('keydown', function(event){"
-			echo "		const key = event.key;"
-			echo "		switch (key){"
-			echo "			case 'ArrowRight':"
-			# if it is a chapter
-			if [ $isChapter = true ];then
-				echo "				window.location.href='0001/';"
-			else
-				echo "				window.location.href='0001.html';"
-			fi
-			echo "				break;"
-			echo "			case 'ArrowUp':"
-			echo "				window.location.href='..';"
-			echo "				break;"
-			echo "			case 'ArrowDown':"
-			if [ $isChapter = true ];then
-				echo "				window.location.href='0001/';"
-			else
-				echo "				window.location.href='0001.html';"
-			fi
-			echo "				break;"
-			echo "			"
-			echo "		}"
-			echo "	});"
-			echo "}"
-			echo "</script>"
-			echo "</head>"
-			echo "<body onload='setupKeys();'>"
-			echo "<?PHP";
-			echo "include('../../header.php')";
-			echo "?>";
-			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
-			echo "<div class='titleCard'>"
-			echo "	<h1>$pageComicName</h1>"
-			echo "	<div class='listCard'>"
-			echo "		<a class='button' href='/zip-gen.php?comic=$pageComicName'>"
-			echo "			<span class='downloadIcon'>↓</span>"
-			echo "			Download ZIP"
-			echo "		</a>"
-			echo "		<a class='button' href='/zip-gen.php?comic=$pageComicName&cbz'>"
-			echo "			<span class='downloadIcon'>↓</span>"
-			echo "			Download CBZ"
-			echo "		</a>"
-			echo "	</div>"
-			echo "	<div class='listCard'>"
-			echo "		<a class='button' href='scroll.php'>"
-			echo "			📜 Scroll View"
-			echo "		</a>"
-			echo "		<a class='button' href='scroll.php?real'>"
-			echo "			🖼️ Real Size View"
-			echo "		</a>"
-			echo "	</div>"
-			# also link the scroll view page
-			linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/scroll.php"
-			# get the total comic book pages, pages are jpg files, thumbnails are png files
-			totalComicBookPages=0
-			if [ $isChapter = true ];then
-				#find "$webDirectory/comics/$pageComicName/" -type f -name 'totalPages.cfg' | while read comicPageTotalEntry;do
-				for comicPageTotalEntry in "$webDirectory/comics/$pageComicName/"*/totalPages.cfg;do
-					tempTotalComicPages=$(cat "$comicPageTotalEntry" )
-					if [ $tempTotalComicPages -gt 0 ];then
-						totalComicBookPages=$(( "$totalComicBookPages" + "$tempTotalComicPages" ))
-					fi
-				done
-			else
-				tempTotalComicPages=$(cat "$webDirectory/comics/$pageComicName/totalPages.cfg" )
-				if [ $tempTotalComicPages -gt 0 ];then
-					totalComicBookPages=$(( "$totalComicBookPages" + "$tempTotalComicPages" ))
-				fi
-			fi
-			echo "<div>Total Pages: $totalComicBookPages </div>"
-			echo "</div>"
-			echo "<div class='settingListCard'>"
-		} > "$webDirectory/comics/$pageComicName/index.php"
+		# also link the scroll view page
+		linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/scroll.php"
+		# link the comic overview page
+		linkFile "/usr/share/2web/templates/comic_overview.php" "$webDirectory/comics/$pageComicName/index.php"
+
 		#if echo "$pageType" | grep "chapter";then
 		if [ $isChapter = true ];then
 			INFO "Building index links to each chapter of the comic..."
@@ -1056,144 +862,10 @@ renderPage(){
 				fi
 				# build the comic chapter link in the main comic index
 				trueChapterTitle=$(cat "$webDirectory/comics/$pageComicName/$tempChapterName/chapterTitle.cfg")
-				{
-					echo "<a href='./$tempChapterName/' class='indexSeries' >"
-					echo "<img loading='lazy' src='./$tempChapterName/thumb.png' />"
-					if echo "$trueChapterTitle" | grep -q "[[:alpha:]]";then
-						# this is a text title
-						echo "<div>"
-						echo "$trueChapterTitle"
-					else
-						# this is a number only
-						echo "<div>Chapter "
-						echo "$tempChapterName"
-					fi
-					echo "</div>"
-					echo "</a>"
-				} >> "$webDirectory/comics/$pageComicName/index.php"
 				# build the index for the chapter displaying all the images
-				{
-					echo "<html>"
-					echo "<head>"
-					if [ $isChapter = true ];then
-						echo "<title>$pageComicName - Chapter $((10#$pageChapter))/$totalChapters</title>"
-					else
-						echo "<title>$pageComicName Oneshot</title>"
-					fi
-					echo "</title>"
-					echo "<style>"
-					echo "html{ background-image: url(\"thumb.png\") }"
-					echo "</style>"
-					echo "<link rel='stylesheet' href='../../style.css'>"
-					echo "<script src='/2webLib.js'></script>"
-					echo "<script>"
-					# add a listener to pass the key event into a function
-					echo "function setupKeys() {"
-					echo "	document.body.addEventListener('keydown', function(event){"
-					echo "		const key = event.key;"
-					echo "		switch (key){"
-					echo "			case 'ArrowUp':"
-					echo "				window.location.href='..';"
-					echo "				break;"
-					echo "			case 'ArrowLeft':"
-					echo "				window.location.href='../$tempPreviousChapterName';"
-					echo "				break;"
-					echo "			case 'ArrowRight':"
-					echo "				window.location.href='../$tempNextChapterName';"
-					echo "				break;"
-					echo "			case 'ArrowDown':"
-					echo "				window.location.href='0001.html';"
-					echo "				break;"
-					echo "			"
-					echo "		}"
-					echo "	});"
-					echo "}"
-					echo "</script>"
-					echo "</head>"
-					echo "<body onload='setupKeys();'>"
-					echo "<?PHP";
-					echo "include('../../../header.php')";
-					echo "?>";
-					#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g"
-					echo "<div class='titleCard'>"
-					echo "<a class='left button' href='../$tempPreviousChapterName'>Back</a>"
-					echo "<a class='right button' href='../$tempNextChapterName'>Next</a>"
-					echo "<div>"
-					echo "	<a class='button comicTitleButton' href='..'>$pageComicName</a>"
-					echo "	<h2>Chapter $(( 10#$tempChapterName ))/$totalChapters</h2>"
-					echo "	<div class='listCard'>"
-					echo "		<a class='button' href='/zip-gen.php?comic=$pageComicName&chapter=$tempChapterName'>"
-					echo "			<span class='downloadIcon'>↓</span>"
-					echo "			Download ZIP"
-					echo "		</a>"
-					echo "		<a class='button' href='/zip-gen.php?comic=$pageComicName&chapter=$tempChapterName&cbz'>"
-					echo "			<span class='downloadIcon'>↓</span>"
-					echo "			Download CBZ"
-					echo "		</a>"
-					echo "	</div>"
-					echo "	<div class='listCard'>"
-					echo "		<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName'>"
-					echo "			📜 Scroll View"
-					echo "		</a>"
-					echo "		<a class='button' href='/comics/$pageComicName/scroll.php?chapter=$tempChapterName&real'>"
-					echo "			🖼️ Real Size View"
-					echo "		</a>"
-					echo "	</div>"
-					echo "<div class='chapterTitleBox'>"
-					if echo "$trueChapterTitle" | grep -q "[[:alpha:]]";then
-						echo "$trueChapterTitle"
-					fi
-					#cat "$webDirectory/comics/$pageComicName/$tempChapterName/chapterTitle.cfg"
-					echo "</div>"
-					echo "</div>"
-					echo "</div>"
-					echo "<div class='settingListCard'>"
-				} > "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
-				# build the individual image index for this chapter
-				find -L "$webDirectory/comics/$pageComicName/$tempChapterName/" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | sort | while read imagePath;do
-					# single chapter of a multi chapter comic
-					tempImageName="$(popPath "$imagePath" | sed "s/\.jpg//g")"
-
-					{
-						echo "<a id='$tempImageName' href='./$tempImageName.html' class='indexSeries' >"
-						echo "<img loading='lazy' src='./$tempImageName-thumb.png' />"
-						echo "<div>$tempImageName</div>"
-						echo "</a>"
-					} >> "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
-				done
-				# finish the chapter index
-				{
-					echo "</div>"
-					echo "<?PHP";
-					echo "include('../../../footer.php')";
-					echo "?>";
-					#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\/..\//g"
-					echo "</body>"
-					echo "</html>"
-				} >> "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
-			done
-		else
-			# if it is not a chapter and is only a page link
-			find -L "$webDirectory/comics/$pageComicName/" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | sort | while read imagePath;do
-				# single chapter comic image
-				tempName="$(popPath "$imagePath" | sed "s/\.jpg//g")"
-				{
-					echo "<a id='$tempName' href='./$tempName.html' class='indexSeries' >"
-					echo "<img loading='lazy' src='./$tempName-thumb.png' />"
-					echo "<div>$tempName</div>"
-					echo "</a>"
-				} >> "$webDirectory/comics/$pageComicName/index.php"
+				linkFile "/usr/share/2web/templates/comic_overview.php" "$webDirectory/comics/$pageComicName/$tempChapterName/index.php"
 			done
 		fi
-		{
-			echo "</div>"
-			#cat "$webDirectory/header.html" | sed "s/href='/href='..\/..\//g"
-			echo "<?PHP";
-			echo "include('../../footer.php')";
-			echo "?>";
-			echo "</body>"
-			echo "</html>"
-		} >> "$webDirectory/comics/$pageComicName/index.php"
 		# move into the web directory so paths from below searches are relative
 		cd "$webDirectory/comics/"
 		# build the poster list from the thumbnails
