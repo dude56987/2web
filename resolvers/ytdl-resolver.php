@@ -101,10 +101,10 @@ function cacheUrl($sum,$videoLink){
 	$command = $command." --continue --write-info-json";
 	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
 		$dlCommand = $command." --all-subs --sub-format srt --embed-subs --no-part";
-		$dlCommand = $dlCommand." --write-thumbnail";
+		$dlCommand = $dlCommand." --write-thumbnail --convert-thumbnails png";
 	}else{
 		$dlCommand = $command." --all-subs --sub-format srt --embed-subs";
-		$dlCommand = $dlCommand." --write-thumbnail";
+		$dlCommand = $dlCommand." --write-thumbnail --convert-thumbnails png";
 	}
 	# check for manually set quality
 	if (array_key_exists("res",$_GET)){
@@ -364,23 +364,30 @@ if (array_key_exists("url",$_GET)){
 				if (file_exists($storagePath.$sum.".mp4")){
 					# if the file was last modified more than 60 seconds ago
 					# - checks should wait for caching to complete in order to properly read file metadata
-					if (time()-filemtime($storagePath.$sum.".mp4") > 60){
+					if ( ( time() - filemtime($storagePath.$sum.".mp4") ) > 60){
 						if (file_exists($storagePath.$sum.".info.json")){
 							# The json downloaded from the remote and stored by the resolver
-							$remoteJson= json_decode(file_get_contents($storagePath.$sum.".info.json"));
+							$remoteJson = json_decode(file_get_contents($storagePath.$sum.".info.json"));
+							$remoteJsonValue=(int)$remoteJson->duration;
+							# reduce the value to add variance for rounding errors
+							# - Depending on the json data and how it was generated the rounding of time may go up or down by one
+							$remoteJsonValue-=1;
 							# the json data from reading the current downloaded file
 							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath.$sum.".mp4"));
-							# compare the local file duration with the remote file duration by using cached remote metadata
-							debug($localJson->media->track[0]->Duration." >= ".$remoteJson->duration);
-							if ($localJson->media->track[0]->Duration >= $remoteJson->duration){
+							$localJsonValue= (int)$localJson->media->track[0]->Duration;
+							# compare the lenght in the remote json to the local file, including the variance above
+							if ($localJsonValue >= $remoteJsonValue){
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was verified");
 								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
 								# if the length is correct the file is verified to have downloaded completely
 								touch($storagePath."verified.cfg");
 							}else{
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because the length was incorrect<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
 								debug("The video was corrupt and could not be verified...");
 								$cacheFile=true;
 							}
 						}else{
+							addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with");
 							# the mp4 was found but the json was not
 							$cacheFile=true;
 						}
