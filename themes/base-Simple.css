@@ -390,10 +390,11 @@ ol li{
 		font-size: 2rem;
 	}
 }
-.headerButtons{
-	visibility: hidden;
-}
 */
+.headerButtons{
+	width: 90dvw;
+	text-align: left;
+}
 /* Media check for touchscreens */
 @media (pointer: coarse){
 	/* show sup content on touchscreens */
@@ -714,6 +715,7 @@ ol{
 .videoPlayerControls{
 	font-size: 100% !important;
 }
+/*
 .videoPlayerControls .button{
 	padding: 0px !important;
 	margin: 0px !important;
@@ -724,6 +726,10 @@ ol{
 	height: 2rem;
 	width: 2rem;
 	vertical-align: top;
+}
+*/
+#video{
+	min-height: 20rem;
 }
 #videoPlayerContainer{
 	background-color: var(--glassBackground);
@@ -945,33 +951,7 @@ a:visited {
 /*
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
-@media only screen and (max-width: 800px), (orientation: portrait){
-	.dropBox{
-		display: block;
-		width: 100%;
-	}
-	.numberBox{
-		display: block;
-		width: 100%;
-	}
-	.graphLink{
-		width: 100% !important;
-	}
-	.videoPlayerControls{
-		font-size: 1rem;
-	}
-	/***********************************************/
-	/*This means the web browser is in portrat mode*/
-	/***********************************************/
-	.titlecard .button{
-		/*
-		display: inline-block;
-		width: -webkit-fill-available;
-		*/
-	}
-	.activeProcess{
-		display: block;
-	}
+@media only screen and (orientation: portrait){
 	.comicPane{
 		/*This means the picture is a portrat picture*/
 		font-size: 0.5rem;
@@ -1026,7 +1006,34 @@ a:visited {
 		width: -webkit-fill-available !important;
 		height: 60dvh !important;
 	}
-
+}
+@media only screen and (max-width: 800px), (orientation: portrait){
+	.dropBox{
+		display: block;
+		width: 100%;
+	}
+	.numberBox{
+		display: block;
+		width: 100%;
+	}
+	.graphLink{
+		width: 100% !important;
+	}
+	.videoPlayerControls{
+		font-size: 1rem;
+	}
+	/***********************************************/
+	/*This means the web browser is in portrat mode*/
+	/***********************************************/
+	.titlecard .button{
+		/*
+		display: inline-block;
+		width: -webkit-fill-available;
+		*/
+	}
+	.activeProcess{
+		display: block;
+	}
 }
 .center{
 	text-align: center;
@@ -1092,6 +1099,14 @@ a:visited {
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+}
+.comicPageButtonLeft{
+	position: absolute;
+	left: 0px;
+}
+.comicPageButtonRight{
+	position: absolute;
+	right: 0px;
 }
 .indexBody{
 	text-align: center;
@@ -1450,7 +1465,7 @@ table{
 	width: 50%;
 	min-width: 0px;
 	margin: 0px;
-	height: 20rem;
+	height: 16rem;
 }
 .descriptionCard{
 	margin-top: 1rem;
@@ -1767,6 +1782,12 @@ th{
 		 For the inbetween state of all and small
 		 - this moves the login and settings buttons to the top right of the screen
 	*/
+	.comicPageButtonLeft{
+		position: inline-block;
+	}
+	.comicPageButtonRight{
+		position: inline-block;
+	}
 	.headerText{
 		display: inline !important;
 		/*
@@ -1993,6 +2014,7 @@ pre{
 	width: 100dvw;
 	height: 0.4rem;
 	left: 0px;
+	top: 0px;
 	border-bottom: solid var(--borderColor) 0.1rem;
 	background-color: var(--glassBackground);
 }
@@ -2240,7 +2262,6 @@ details{
 input{
 	font-size: 1.5rem;
 	width: 90%;
-	cursor: pointer;
 }
 select{
 	font-size: 1.5rem;

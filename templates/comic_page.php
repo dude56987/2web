@@ -107,6 +107,19 @@
 					case 'ArrowUp':
 					window.location.href='index.php';
 					break;
+					case 'Home':
+					window.location.href='index.php';
+					break;
+					case 'PageDown':
+					<?PHP
+					echo "window.location.href='./$nextPage';";
+					?>
+					break;
+					case 'PageUp':
+					<?PHP
+					echo "window.location.href='./$lastPage';";
+					?>
+					break;
 				}
 			});
 		}
@@ -123,6 +136,9 @@
 </head>
 <img class='globalPulse' src='/pulse.gif'>
 <?PHP
+	# send the loading bar code while the page loads the rest of the content
+	flush();
+	ob_flush();
 	if(file_exists($page.".jpg")){
 		$imageSizeData=getimagesize($page.".jpg");
 	}else{
