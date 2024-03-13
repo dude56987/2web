@@ -39,12 +39,8 @@ function remoteRedirect(){
 ################################################################################
 function cleanQuotes($videoLink){
 	# clean quotes from the video link
-	while(strpos($videoLink,'"')){
-		$videoLink = preg_replace('"','',$videoLink);
-	}
-	while(strpos($videoLink,"'")){
-		$videoLink = preg_replace("'","",$videoLink);
-	}
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
 	return $videoLink;
 }
 ################################################################################
@@ -79,7 +75,7 @@ if (array_key_exists("url",$_GET)){
 	# clean up the quotes
 	$videoLink = cleanQuotes($videoLink);
 	# add the local resolver to the video link
-	$videoLink = "http://".gethostname().".local/live/iptv-resolver.php?url=".$videoLink;
+	$videoLink = "http://".gethostname().'.local/live/iptv-resolver.php?url="'.$videoLink.'"';
 	# generate the hash
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
@@ -104,7 +100,7 @@ if (array_key_exists("url",$_GET)){
 	# clean up the quotes
 	$videoLink = cleanQuotes($videoLink);
 	# add the local resolver to the video link
-	$videoLink = "http://".gethostname().".local/ytdl-resolver.php?url=".$videoLink;
+	$videoLink = "http://".gethostname().'.local/ytdl-resolver.php?url="'.$videoLink.'"';
 	# generate the hash
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){

@@ -66,11 +66,14 @@ function yesNoCfgSet($configPath, $newConfigSetting){
 	# Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
 	#
 	# RETURN FILES
+	outputLog("Setting $configPath status to $newConfigSetting");
 	if (strtolower($newConfigSetting) == "yes"){
 		file_put_contents($configPath , "yes");
+		outputLog("$configPath saved as 'yes'");
 	}else{
 		# set the file to disabled if anything other than yes is set
 		file_put_contents($configPath, "no");
+		outputLog("$configPath saved as 'no'");
 	}
 	return True;
 }
@@ -772,23 +775,13 @@ if (array_key_exists("newUserName",$_POST)){
 	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
 	$link=$_POST['homepageFortuneStatus'];
-	echo "Running homepageFortuneStatus on location ".$link."<br>\n";
-	# read the link and create a custom config
-	$configPath="/etc/2web/fortuneStatus.cfg";
-	outputLog("Checking for Config file ".$configPath);
-	if ( $link == "disabled"){
-		outputLog("Disabled Homepage fortune");
-		# this means to remove the link
-		unlink($configPath);
-	}else{
-		# write the libary path to a file at the configPath if the path does not already exist
-		if ( ! file_exists($configPath)){
-			outputLog("Setting homepage fortune to ".$link);
-			# write the config file
-			file_put_contents($configPath,$link);
-		}
-	}
+	yesNoCfgSet("/etc/2web/fortuneStatus.cfg", $_POST['homepageFortuneStatus']);
 	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("webPlayerStatus",$_POST)){
+	$link=$_POST['webPlayerStatus'];
+	yesNoCfgSet("/etc/2web/webPlayer.cfg", $_POST['webPlayerStatus']);
+	echo "<hr><a class='button' href='/settings/system.php#webpagePlayerStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("lockGroup",$_POST)){
 	$group=$_POST["lockGroup"];

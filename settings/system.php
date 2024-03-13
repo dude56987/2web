@@ -44,6 +44,22 @@ include("settingsHeader.php");
 	</ul>
 </div>
 </div>
+
+<div id='webPlayerStatus' class='inputCard'>
+	<h2>Web Player</h2>
+		<ul>
+			<li>
+				Enable or disable the <a href='/web-player.php'>Web Player Page</a>.
+			</li>
+			<li>
+				Play videos from the cache by submiting links.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/webPlayer.cfg","Web Player","webPlayerStatus");
+		?>
+</div>
+
 <div id='homepageFortuneStatus' class='inputCard'>
 	<h2>Fortune</h2>
 		<ul>
@@ -63,17 +79,8 @@ include("settingsHeader.php");
 				</ul>
 			</li>
 		</ul>
-			<?PHP
-			// if the fortuneStatus.cfg file exists that means the fortune is enabled
-			if (file_exists("/etc/2web/fortuneStatus.cfg")){
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='homepageFortuneStatus' value='disabled'>🟢 Disable Fortune</button>\n";
-				echo "	</form>\n";
-			}else{
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='homepageFortuneStatus' value='enabled'>◯ Enable Fortune</button>\n";
-				echo "	</form>\n";
-			}
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/fortuneStatus.cfg","Homepage Fortunes","homepageFortuneStatus");
 		?>
 </div>
 
@@ -109,7 +116,6 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 </div>
-
 <div id='channelCacheUpdateDelay' class='inputCard'>
 <h2>2web Website Cache Path</h2>
 <ul>

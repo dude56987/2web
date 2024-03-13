@@ -1,7 +1,27 @@
 <?php
-	ini_set('display_errors', 1);
+	#ini_set('display_errors', 1);
+	#ini_set('openssl.cafile', "/var/cache/2web/ssl-cert.crt");
 	include("/usr/share/2web/2webLib.php");
-	requireGroup("nfo2web");
+	########################################################################
+	# get the title data
+	$titlePath=$_SERVER["SCRIPT_FILENAME"].".title";
+	if (file_exists($titlePath)){
+		$titleData=file_get_contents($titlePath);
+		$useJson=false;
+		$jsonPath="";
+	}else{
+		$titleData=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
+		$jsonSum=$titleData;
+		$useJson=true;
+		# build the json path
+		$jsonPath=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.info.json";
+	}
+	# check group permissions based on what the player is being used for
+	if($useJson){
+		requireGroup("webPlayer");
+	}else{
+		requireGroup("nfo2web");
+	}
 ?>
 <!--
 ########################################################################
@@ -22,9 +42,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 -->
-<html id='top' class='seriesBackground'>
-<head>
 <?PHP
+
+if($useJson){
+	# use random fanart if this is loading from the json
+	echo "<html id='top' class='randomFanart'>";
+}else{
+	echo "<html id='top' class='seriesBackground'>";
+}
+
 if (file_exists("show.title")){
 	# get the show title
 	$showTitle=file_get_contents("show.title");
@@ -34,18 +60,30 @@ if (file_exists("show.title")){
 	echo "<title>$showTitle - $numericTitleData</title>";
 }else{
 	# get the movie title
-	$movieTitle=file_get_contents("movie.title");
-	echo "<title>$movieTitle</title>";
+	if(file_exists("movie.title")){
+		$movieTitle=file_get_contents("movie.title");
+		echo "<title>$movieTitle</title>";
+	}else{
+		# set the title from the script name
+		$movieTitle=str_replace(".php","",basename($_SERVER["PHP_SELF"]));
+	}
 }
 # update the hostname
 if ( $_SERVER["HTTP_HOST"] == "localhost" ){
 	$_SERVER["HTTP_HOST"] == (gethostname().".local");
 }
 if (array_key_exists("HTTPS",$_SERVER)){
-	$proto="https://";
+	if ($_SERVER["HTTPS"]){
+		$proto="https://";
+	}else{
+		$proto="http://";
+	}
 }else{
 	$proto="http://";
 }
+?>
+<head>
+<?PHP
 #################################################################################
 function transcodeVideo($link){
 	# The function for transcoding a file for playback in the browser
@@ -151,18 +189,52 @@ function noscriptRefresh($seconds=10){
 <link rel='icon' type='image/png' href='/favicon.png'>
 </head>
 <body>
+<script>
+function pageKeys() {
+	document.body.addEventListener('keydown', function(event){
+		const key = event.key;
+		switch (key){
+			case " ":
+			event.preventDefault();
+			playPause();
+			break;
+			case "Spacebar":
+			event.preventDefault();
+			playPause();
+			break;
+			case "ArrowDown":
+			event.preventDefault();
+			volumeDown();
+			break;
+			case "ArrowUp":
+			event.preventDefault();
+			volumeUp();
+			break;
+			case "ArrowRight":
+			event.preventDefault();
+			seekForward();
+			break;
+			case "ArrowLeft":
+			event.preventDefault();
+			seekBackward();
+			break;
+		}
+	});
+}
+// launch the function
+pageKeys();
+</script>
 <?PHP
 	include("/usr/share/2web/templates/header.php");
 ?>
 <?PHP
-	# get the title data
-	$titlePath=$_SERVER["SCRIPT_FILENAME"].".title";
-	$titleData=file_get_contents($titlePath);
 	# check for direct link
 	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
 	if (file_exists($directLinkPath)){
 		$directLinkData=file_get_contents($directLinkPath);
-		$directLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$directLinkData);
+		if ($_SERVER["HTTP_HOST"] != "localhost"){
+			$directLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$directLinkData);
+		}
 		$directLinkData=trim($directLinkData, "\r\n");
 		$directLinkExists=true;
 	}else{
@@ -187,20 +259,62 @@ function noscriptRefresh($seconds=10){
 	}else{
 		$strmLinkExists=false;
 	}
-
-	# get the video thumb path for the video player
-	# - check for PNG and JPG versions
-	$posterPath=str_replace(".php","-thumb.png",$_SERVER["SCRIPT_FILENAME"]);
-	$posterPathJPG=str_replace(".php","-thumb.jpg",$_SERVER["SCRIPT_FILENAME"]);
-	logPrint("posterPath = ".$posterPath);
-	if (file_exists($posterPath)){
-		$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPath);
-		logPrint("posterPath = ".$posterPath);
-	}else if (file_exists($posterPathJPG)){
-		$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPathJPG);
-		logPrint("posterPath = ".$posterPath);
+	# load data from the json file
+	if(file_exists($jsonPath)){
+		$jsonData=json_decode(file_get_contents($jsonPath));
+		# get the title
+		if(is_string($jsonData->title)){
+			$titleData=$jsonData->title;
+		}
+		# get the plot data
+		#if(array_key_exists("description",$jsonData)){
+		if(property_exists($jsonData, "description")){
+			$plotData="<div class='plot'>\n";
+			$plotData.=$jsonData->description;
+			$plotData.="</div>\n";
+		}else{
+			# there is no description so blank it out
+			$plotData="";
+		}
+		if(property_exists($jsonData, "age_limit")){
+			$ratingText="<span class='button'>Required Viewing Age: ".$jsonData->age_limit."</span>";
+		}else{
+			# there is no description so it is unrated
+			$ratingText="<span class='button'>Rating : UNRATED</span>";
+		}
+		# get the thumbnail
+		$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
 	}else{
-		$posterPath="poster.png";
+		# get the video thumb path for the video player
+		# - check for PNG and JPG versions
+		$posterPath=str_replace(".php","-thumb.png",$_SERVER["SCRIPT_FILENAME"]);
+		$posterPathJPG=str_replace(".php","-thumb.jpg",$_SERVER["SCRIPT_FILENAME"]);
+		if (file_exists($posterPath)){
+			$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPath);
+		}else if (file_exists($posterPathJPG)){
+			$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPathJPG);
+		}else{
+			$posterPath="poster.png";
+		}
+		$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
+		$plotData="";
+		if (file_exists($plotPath)){
+			$plotData.="<div class='plot'>\n";
+			$plotData.=file_get_contents($plotPath);
+			$plotData.="</div>\n";
+		}
+		# get the rating
+		$ratingPath="grade.title";
+		if (file_exists($ratingPath)){
+			$ratingData=file_get_contents($ratingPath);
+			if ( strlen($ratingData) > 0){
+				$ratingText="<span class='button'>Rating : $ratingData</span>";
+			}else{
+				$ratingText="<span class='button'>Rating : UNRATED</span>";
+			}
+		}else{
+			$ratingText="<span class='button'>Rating : UNRATED</span>";
+		}
 	}
 ?>
 <div class='titleCard'>
@@ -209,6 +323,9 @@ function noscriptRefresh($seconds=10){
 	if (file_exists("show.title")){
 		# write the data
 		echo "<a href='/shows/".$showTitle."/?search=".$seasonTitle."#Season ".$seasonTitle."'>".$showTitle."</a> $numericTitleData";
+	}else if($useJson){
+		# use the title data if this is a video in the cache
+		echo $titleData;
 	}else{
 		# write the movie data
 		echo "<a href='/movies/".$movieTitle."/'>".$movieTitle."</a>";
@@ -221,69 +338,86 @@ function noscriptRefresh($seconds=10){
 	if (! file_exists("show.title")){
 		# get the trailer if it is a movie
 		$trailerPath="trailer.title";
-		$trailerData=file_get_contents($trailerPath);
-		echo "<a class='button' rel='noreferer' target='_new' href='$trailerData'>";
-		echo "🔗 Trailer";
-		echo "</a>";
+		if (file_exists($trailerPath)){
+			$trailerData=file_get_contents($trailerPath);
+			echo "<a class='button' rel='noreferer' target='_new' href='$trailerData'>";
+			echo "🔗 Trailer";
+			echo "</a>";
+		}
 	}
 	# get the production studio
 	$studioPath="studio.title";
-	$studioData=file_get_contents($studioPath);
-	if ( strlen($studioData) > 0){
-		echo "<span class='button'>Studio : $studioData</span>";
+	if (file_exists($studioPath)){
+		$studioData=file_get_contents($studioPath);
+		if ( strlen($studioData) > 0){
+			echo "<span class='button'>Studio : $studioData</span>";
+		}
 	}
-	# get the rating
-	$ratingPath="grade.title";
-	$ratingData=file_get_contents($ratingPath);
-	if ( strlen($ratingData) > 0){
-		echo "<span class='button'>Rating : $ratingData</span>";
-	}else{
-		echo "<span class='button'>Rating : UNRATED</span>";
-	}
+	echo $ratingText;
+
 	?>
 </div>
 </div>
 	<?PHP
-		logPrint("directLinkPath = ".$directLinkPath."<br>");
-		if ($directLinkExists){
-			logPrint("directLinkData = ".$directLinkData."<br>");
-		}
-		logPrint("cacheLinkPath = ".$cacheLinkPath."<br>");
-		if ($cacheLinkExists){
-			logPrint("cacheLinkData = ".$cacheLinkData."<br>");
-		}
 		# get the cache link if it exists
 		if ($cacheLinkExists){
+			# check if the mp4 file is already in the cache
 			$videoLink = $cacheLinkData;
-			logPrint("videoLink cache link = ".$videoLink."<br>");
 		}else if ($directLinkExists){
 			# load the direct link to the video into the player
 			$videoLink = $directLinkData;
-			logPrint("videoLink direct link = ".$videoLink."<br>");
 		}
 		# make the full path
 		if (file_exists("show.title")){
 			if (! ($cacheLinkExists)){
-				logPrint("showTitle = ".$showTitle);
-				logPrint("seasonTitle = ".$seasonTitle);
-				logPrint("video link format = \$directLinkData");
 				# load show episode
 				$videoLink = $directLinkData;
-				logPrint("videoLinkFix = ".$videoLink."<br>");
 			}
 		}else{
 			# load movie
-			logPrint("direct Link Data format = \$directLinkData<br>");
 			$videoLink = "$directLinkData";
-			logPrint("videoLinkFix = ".$videoLink."<br>");
 		}
 		flush();
 		ob_flush();
+		# get headers to use the local certificate
+		$streamContextParams=[
+			'ssl' => [
+				'cafile' => "/var/cache/2web/ssl-cert.crt",
+				'verify_peer' => true,
+				'verify_peer_name' => true,
+				'allow_self_signed' => true,
+			],
+		];
+		$streamContext=stream_context_create($streamContextParams);
 		# check if the file exists and check the metadata
 		if ($cacheLinkExists){
-			# this is not a file but a external link so check the mime type of the video link
-			$videoMimeType=get_headers($cacheLinkData, true);
-			$fullPathVideoLink=$cacheLinkData;
+			# check if the mp4 file is already in the cache
+			if(file_exists($jsonPath)){
+				# if the json data exists
+				$mp4FilePath = $_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4";
+				$strmFilePath = $_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.m3u";
+				# if the mp4 exists load the file directly without reading the headers
+				if(file_exists($mp4FilePath)){
+					# build the video link directly to the mp4 file
+					$videoLink = $proto.$_SERVER["HTTP_HOST"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4" ;
+					$videoMimeType=Array();
+					$videoMimeType["Content-Type"]="video/mp4";
+					$fullPathVideoLink=$videoLink;
+				#}else if(file_exists($strmFilePath)){
+				}else{
+					# try the stream link
+					$videoLink = $proto.$_SERVER["HTTP_HOST"]."/RESOLVER-CACHE/".$jsonSum."/video.m3u" ;
+					$videoMimeType=Array();
+					$videoMimeType["Content-Type"]="application/mpegurl";
+					$fullPathVideoLink=$videoLink;
+				}
+			}else{
+				# this is not a file but a external link so check the mime type of the video link
+				#$videoMimeType=get_headers($cacheLinkData, true, $streamContext);
+				# the mimetype should be gathered from the local resolver location
+				$videoMimeType=get_headers($proto.gethostname().".local/ytdl-resolver.php?url=".$directLinkData, true, $streamContext);
+				$fullPathVideoLink=$cacheLinkData;
+			}
 		}else{
 			if ( (substr($directLinkData,0,8) == "https://") or (substr($directLinkData,0,7) == "http://") ){
 				# this is a external link
@@ -291,7 +425,6 @@ function noscriptRefresh($seconds=10){
 				$fullPathVideoLink=$directLinkData;
 			}else{
 				# this is a file path
-				logPrint("direct link path = ".$_SERVER["DOCUMENT_ROOT"].$directLinkData);
 				$videoMimeType=mime_content_type($_SERVER["DOCUMENT_ROOT"].$directLinkData);
 				$fullPathVideoLink=$directLinkData;
 			}
@@ -302,23 +435,13 @@ function noscriptRefresh($seconds=10){
 			$fullPathVideoLink=str_replace("http://","https://",$fullPathVideoLink);
 		}
 		# pull the content type based on the mime data
-		logPrint("Checking if this is an array.<br>");
 		if (is_array($videoMimeType)){
-			logPrint("This is an array.<br>");
-			logPrint("Checking mime type.<br>");
 			if (array_key_exists("Content-Type", $videoMimeType)){
-				logPrint("Key was found to exist.<br>");
 				$videoMimeType=$videoMimeType["Content-Type"];
-			}else{
-				logPrint("Media Content Type could not be determined.<br>");
 			}
-		}else{
-			logPrint("No Header was returned.<br>");
 		}
-		logPrint("Checking the mime type to build video player.<br>");
 		# draw the player based on the video link mime type
 		if (is_in_array("video/mp4", $videoMimeType)){
-			logPrint("Discovered MP4 video file<br>");
 			echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 			echo "</video>\n";
@@ -327,7 +450,6 @@ function noscriptRefresh($seconds=10){
 			echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
 			echo "</audio>\n";
 		}else if (is_in_array("video/x-matroska", $videoMimeType)){
-			logPrint("Loading MKV file into transcoder");
 			# if the trancode is enabled run the transcode job
 			if (isTranscodeEnabled()){
 				# use the transcode function in order to transcode the video if transcoding is enabled
@@ -379,8 +501,6 @@ function noscriptRefresh($seconds=10){
 			}
 		}else if (is_in_array("application/mpegurl", $videoMimeType)){
 			# hls stream
-			logPrint("Loading HLS stream<br>");
-			logPrint("hls stream = ".$fullPathVideoLink);
 			# draw the hls stream player webpage player
 			echo "<script>\n";
 			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
@@ -412,8 +532,6 @@ function noscriptRefresh($seconds=10){
 			echo "</script>\n";
 			noscriptRefresh(10);
 		}else{
-			logPrint("Loading Unknown media resource<br>");
-			logPrint("media = ".$fullPathVideoLink);
 			# draw the hls stream player webpage player
 			echo "<script>\n";
 			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
@@ -453,8 +571,6 @@ function noscriptRefresh($seconds=10){
 		echo "<div class='aired'>\n";
 		echo file_get_contents($datePath)."\n";
 		echo "</div>\n";
-	}else{
-		logPrint("NO DATE FOUND AT $datePath<br>");
 	}
 
 	echo "<div class='hardLink'>\n";
@@ -491,16 +607,16 @@ function noscriptRefresh($seconds=10){
 		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
 		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
 		if ($cacheLinkExists){
-			echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
 		}else{
 			#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
 			if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
-				echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+				echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
 			}else{
 				if($strmLinkExists){
-					echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
 				}else{
-					echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
 				}
 			}
 		}
@@ -509,9 +625,9 @@ function noscriptRefresh($seconds=10){
 		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
 		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
 		if ($cacheLinkExists){
-			echo "<a class='button hardLink' href='/kodi-player.php?url=".str_replace(" ","%20","$directLinkData")."'>\n";
+			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
 		}else{
-			echo "<a class='button hardLink' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
 		}
 	}
 	echo "🇰Play on KODI\n";
@@ -564,14 +680,8 @@ function noscriptRefresh($seconds=10){
 	echo "</div>\n";
 ?>
 <?PHP
-	$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
-	if (file_exists($plotPath)){
-		echo "<div class='plot'>\n";
-		echo file_get_contents($plotPath);
-		echo "</div>\n";
-	}else{
-		logPrint("NO PLOT FOUND AT $plotPath<br>");
-	}
+
+	echo $plotData;
 ?>
 </div>
 <div class='titleCard'>

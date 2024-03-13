@@ -148,6 +148,31 @@ function forcePlay(){
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
+function seekForward(){
+	// get the current time and the total duration to not exceed the end of the video
+	var currentTime = document.getElementById("video").currentTime;
+	var duration = document.getElementById("video").duration;
+	// increment the time forward
+	document.getElementById("video").currentTime += 10;
+	if ( currentTime > duration ){
+		// dont let volume go beyond the duration
+		document.getElementById("video").currentTime = duration;
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function seekBackward(){
+	// get the current time and the total duration to not exceed the end of the video
+	var currentTime = document.getElementById("video").currentTime;
+	// increment the time forward
+	document.getElementById("video").currentTime -= 10;
+	if ( currentTime < 0 ){
+		// dont let volume go beyond the duration
+		document.getElementById("video").currentTime = 0;
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
 function volumeUp(){
 	var tempVolume = document.getElementById("video").volume;
 	if ( (tempVolume + 0.05) > 1 ){

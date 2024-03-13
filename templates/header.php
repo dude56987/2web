@@ -233,6 +233,14 @@ if ($writeFile){
 			$fileData .= formatText("</a>",2);
 		}
 	}
+	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+		$fileData .= formatText("<a class='button' href='/web-player.php'>",2);
+		$fileData .= formatText("📥",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("WEB PLAYER",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 
 	# write all data in buffer
 	fwrite($fileObj,"$fileData");

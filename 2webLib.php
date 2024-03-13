@@ -971,7 +971,17 @@ if( ! function_exists("appendFile")){
 ################################################################################
 if( ! function_exists("recursiveScan")){
 	function recursiveScan($directoryPath){
+		# recursiveScan($directoryPath,$sort="none",$filterMimeType="none",$maxDepth)
+		#
 		# Recursively scan a directory and all subdirectories and return an array of the full paths to all discovered files.
+		#
+		# - $directoryPath
+		#   - This is required or the function will fail
+		#   - Use a relative or absolute system path
+		# - $maxDepth
+		#   - A interger that determines how deep into the directories the scan should go
+		# - $currentDepth
+		#   - Do not use this, this is used by the function internally
 		// scan the directory
 		$foundPaths = scandir($directoryPath);
 		# remove the up and current paths
@@ -999,6 +1009,62 @@ if( ! function_exists("recursiveScan")){
 			}
 		}
 		return $finalFoundLinks;
+	}
+}
+if( ! function_exists("sortPathsByDate")){
+	function sortPathsByDate($finalFoundLinks){
+		# sort the files by mtime
+		$sortedList=Array();
+		# sort the link list by modification date
+		foreach($finalFoundLinks as $sourceFile){
+			# get the timestamp for the file modification date
+			$tempTimeStamp=lstat($sourceFile)["mtime"];
+			# check if the timestamp exists in the sorted array
+			if(! array_key_exists($tempTimeStamp,$sortedList)){
+				# the time stamp array does not yet exist, create it
+				$sortedList[$tempTimeStamp]=Array();
+			}
+			# append the new entry to the array storing files in that timestamp
+			$sortedList[$tempTimeStamp]=array_merge($sortedList[$tempTimeStamp],Array($sourceFile));
+		}
+		ksort($sortedList);
+		# clear the final found links for the sort process to remerge them
+		$finalFoundLinks=Array();
+		# after the ksort sorts the arrays of files by time, remerge the arrays in order
+		# - this must be done in order to keep the order correct for files created in the same secondS
+		foreach($sortedList as $fileList){
+			$finalFoundLinks=array_merge($finalFoundLinks,$fileList);
+		}
+		# reverse the link list to order newest to oldest by default
+		$finalFoundLinks=array_reverse($finalFoundLinks);
+
+		return $finalFoundLinks;
+	}
+}
+if( ! function_exists("filterPathsByMime")){
+	function filterPathsByMime($finalFoundLinks, $filterMimeType){
+		#filterPathsByMime($finalFoundLinks, $filterMimeType)
+		#
+		# filter an array of paths by a mime type
+		#
+		# - $filterMimeType
+		#   - Can take any mime type from unix system mime types
+		#   - Examples
+		#     - video/mp4
+		#     - text/x-php
+		#   - Uses the mime_content_type() function in PHP to determine type
+
+		# filter output by mimetype if a mimetype is given in the function call
+		# sort the files by mtime
+		$filteredList=array();
+		foreach($finalFoundLinks as $filePath){
+			# check the file mime type to see if it should be in the list
+			if (mime_content_type($filePath) == $filterMimeType){
+				# merge into the filtered list files with the correct mime type
+				$filteredList=array_merge($filteredList,Array($filePath));
+			}
+		}
+		return $filteredList;
 	}
 }
 ################################################################################
@@ -1082,19 +1148,20 @@ if( ! function_exists("yesNoCfgCheck")){
 		# RETURN BOOL
 
 		# check if the config file exists
-		if (path_exists($configPath)){
-			if (stripos(strtolower(file_get_contents($configPath)), 'yes')){
+		if (file_exists($configPath)){
+			$selected=file_get_contents($configPath);
+			$selected=strtolower($selected);
+			if ($selected == "yes"){
 				# the config file is set to yes
-				return True;
+				return true;
 			}else{
-				# set the file to "no" if anything other than yes is set
-				file_put_contents($configPath , "no");
-				return False;
+				# the config is set to anything other than yes it is false
+				return false;
 			}
 		}else{
 			# no file exists return false and create default no config
 			file_put_contents($configPath , "no");
-			return False;
+			return false;
 		}
 	}
 }

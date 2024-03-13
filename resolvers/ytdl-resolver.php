@@ -123,13 +123,13 @@ function cacheUrl($sum,$videoLink){
 			}else{
 				$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
 			}
-			$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4' -c '".$videoLink."'";
+			$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 		}else{
 			# if no server settings are configured use the default
 			# the dl command should simply convert the downloaded m3u file with the m3u file
 			if ( (! file_exists("/etc/2web/cache/cacheResize.cfg")) AND (! file_exists("/etc/2web/cache/cacheFramerate.cfg")) ){
 				# if no upgrade quality is set and no hls rescaling or frame dropping then convert the file to mp4 directly
-				$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4'";
+				$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4'";
 			}else{
 				# if custom postprocessing is set then the download command should be the same as the input
 				# - This is because postprocessing can only decrease the quality, this is to upgrade from those decreases
@@ -138,7 +138,7 @@ function cacheUrl($sum,$videoLink){
 				}else{
 					$dlCommand = $dlCommand." -S '".$quality."'";
 				}
-				$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4' -c '".$videoLink."'";
+				$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 			}
 		}
 		# by default use the option set in the web interface it it exists
@@ -164,7 +164,7 @@ function cacheUrl($sum,$videoLink){
 		$command = $command." -o - -c '".$videoLink."'";
 		$command = 'echo "'.$command.'"';
 	}else{
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name ".$sum.".m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/$sum-stream.m3u'";
+		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
 		$command = 'echo "'.$command.";".$dlCommand.'"';
@@ -229,43 +229,6 @@ function runShellCommand($command){
 	debug("OUTPUT=".$output."<br>");
 }
 ################################################################################
-function buildBump($sum){
-	$sum="BASEBUMP";
-	################################################################################
-	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/baseBump.png")){
-		# build the base bump image if it does not exist yet, this is the longest part of the process, so cache it
-		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --retries 0 --jobs 1 --id thumbQueue ';
-		//$command = "";
-		$command = $command."/usr/bin/convert -size 400x200 plasma:green-black \"$webDirectory/RESOLVER-CACHE/baseBump.png\"";
-		################################################################################
-		runShellCommand($command);
-	}
-	################################################################################
-	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum.png")){
-		# create the bump as a thumbnail of the downloading video
-		$sourceUrl="$webDirectory/RESOLVER-CACHE/$sum.mp4.part";
-		# create thumbnail from downloading video
-		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
-		//$command = "";
-		if (file_exists("$webDirectory/RESOLVER-CACHE/$sum.mp4")){
-			$command = $command."/usr/bin/ffmpeg -y -ss 1 -i '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4 -vframes 1 $webDirectory/RESOLVER-CACHE/$sum.png";
-		}else{
-			$command = $command."/usr/bin/ffmpeg -y -ss 1 -i '$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4.part -vframes 1 $webDirectory/RESOLVER-CACHE/$sum.png";
-		}
-		debug("Running command '".$command."'<br>");
-		shell_exec($command);
-	}
-	################################################################################
-	# build the loading image if it does not exist yet
-	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/".$sum.".png")){
-		# convert thumbnail into video bump
-		$command = '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --retries 0 --jobs 1 --id thumbQueue ';
-		//$command = "";
-		$command = $command."/usr/bin/convert '$webDirectory/RESOLVER-CACHE/baseBump.png' -background none -font 'OpenDyslexic-Bold' -fill white -stroke black -strokewidth 2 -style Bold -size 300x100 -gravity center caption:'Loading...' -composite '$webDirectory/RESOLVER-CACHE/".$sum.".png'";
-		runShellCommand($command);
-	}
-}
-################################################################################
 if (array_key_exists("url",$_GET)){
 	$videoLink = $_GET['url'];
 	debug("URL is ".$videoLink."<br>");
@@ -296,21 +259,12 @@ if (array_key_exists("url",$_GET)){
 	}
 	# start translating the url
 	# remove parenthesis from video link if they exist
-	debug("Cleaning link ".$videoLink."<br>");
-	while(strpos($videoLink,'"')){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-		$videoLink = preg_replace('"','',$videoLink);
-	}
-	while(strpos($videoLink,"'")){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
-		$videoLink = preg_replace("'","",$videoLink);
-	}
-	debug("Cleaning link ".$videoLink."<br>");
-	//$videoLink = '"'.$videoLink.'"';
-	debug("Cleaning link ".$videoLink."<br>");
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+
 	# create the sum of the file
-	#$sum = md5($videoLink);
 	$sum = hash("sha512",$videoLink,false);
+
 	debug("[DEBUG]: SUM is ".$sum."<br>");
 	# libsyn will resolve properly with only the link, so resolve but do not cache
 	if (strpos($videoLink,"libsyn.com")){
@@ -352,7 +306,7 @@ if (array_key_exists("url",$_GET)){
 		debug("Creating resolver cache<br>");
 		// craft the url to the cache link
 		$storagePath = "$webDirectory/RESOLVER-CACHE/$sum/";
-		$url = "/RESOLVER-CACHE/$sum/$sum.mp4";
+		$url = "/RESOLVER-CACHE/$sum/video.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
 		$cacheFile=false;
@@ -361,19 +315,19 @@ if (array_key_exists("url",$_GET)){
 			# if the json data has not yet been verified to have downloaded the entire file
 			if (! file_exists($storagePath."verified.cfg")){
 				# check the file downloaded correctly by comparing the json data file length with local file length
-				if (file_exists($storagePath.$sum.".mp4")){
+				if (file_exists($storagePath."video.mp4")){
 					# if the file was last modified more than 60 seconds ago
 					# - checks should wait for caching to complete in order to properly read file metadata
-					if ( ( time() - filemtime($storagePath.$sum.".mp4") ) > 60){
-						if (file_exists($storagePath.$sum.".info.json")){
+					if ( ( time() - filemtime($storagePath."video.mp4") ) > 60){
+						if (file_exists($storagePath."video.info.json")){
 							# The json downloaded from the remote and stored by the resolver
-							$remoteJson = json_decode(file_get_contents($storagePath.$sum.".info.json"));
+							$remoteJson = json_decode(file_get_contents($storagePath."video.info.json"));
 							$remoteJsonValue=(int)$remoteJson->duration;
 							# reduce the value to add variance for rounding errors
 							# - Depending on the json data and how it was generated the rounding of time may go up or down by one
 							$remoteJsonValue-=1;
 							# the json data from reading the current downloaded file
-							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath.$sum.".mp4"));
+							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.mp4"));
 							$localJsonValue= (int)$localJson->media->track[0]->Duration;
 							# compare the lenght in the remote json to the local file, including the variance above
 							if ($localJsonValue >= $remoteJsonValue){
@@ -396,22 +350,22 @@ if (array_key_exists("url",$_GET)){
 			}
 			if($cacheFile == true){
 				# delete the existing mp4 file so it will be recreated by the caching code
-				unlink($storagePath.$sum.".mp4");
+				unlink($storagePath."video.mp4");
 				# this means the download has failed and must be re-cached to get the full video
 				cacheUrl($sum,$videoLink);
 				# wait for either the bump or the file to be downloaded and redirect
 				while(true){
 					# if 60 seconds of the video has been downloaded then launch the video
-					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4")){
+					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
 						// file is fully downloaded and converted play instantly
-						redirect("RESOLVER-CACHE/$sum/$sum.mp4");
-					}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.m3u")){
+						redirect("RESOLVER-CACHE/$sum/video.mp4");
+					}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
 						# if the stream has x segments (segments start as 0)
 						# - currently 10 seconds of video
 						# - force loading of 3 segments before resolution
-						if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream2.ts")){
+						if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
 							# redirect to the stream
-							redirect("RESOLVER-CACHE/$sum/$sum.m3u");
+							redirect("RESOLVER-CACHE/$sum/video.m3u");
 						}
 						# if all else fails wait then restart the loop
 						sleep(1);
@@ -447,10 +401,10 @@ if (array_key_exists("url",$_GET)){
 			for ($index=1;$index <= 30;$index+=1){
 				# write 20 lines of the bump
 				fwrite($playlist,"#EXTINF:1,Loading... $index/30\n");
-				fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/$sum-stream1.ts\n");
+				fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video-stream1.ts\n");
 			}
 			fwrite($playlist,"#EXTINF:1,\n");
-			fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/$sum.m3u\n");
+			fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video.m3u\n");
 			fclose($playlist);
 			# cache the url if no log has been created, otherwise jump to the redirect
 			if(! file_exists("$webDirectory/RESOLVER-CACHE/$sum/data.log")){
@@ -464,16 +418,16 @@ if (array_key_exists("url",$_GET)){
 			# wait for either the bump or the file to be downloaded and redirect
 			while(true){
 				# if 60 seconds of the video has been downloaded then launch the video
-				if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.mp4")){
+				if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
 					// file is fully downloaded and converted play instantly
 					redirect("RESOLVER-CACHE/$sum/$sum.mp4");
-				}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum.m3u")){
+				}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
 					# if the stream has x segments (segments start as 0)
 					# - currently 10 seconds of video
 					# - force loading of 3 segments before resolution
-					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/$sum-stream2.ts")){
+					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
 						# redirect to the stream
-						redirect("RESOLVER-CACHE/$sum/$sum.m3u");
+						redirect("RESOLVER-CACHE/$sum/video.m3u");
 					}
 				}
 				# if all else fails wait then restart the loop
@@ -532,43 +486,47 @@ if (array_key_exists("url",$_GET)){
 	echo "	</li>\n";
 	echo "</ul>\n";
 	echo "</div>\n";
+
+
 	echo "<div class='settingListCard'>\n";
-	echo "<h2>Random Cached Videos</h2>\n";
-	$sourceFiles = recursiveScan($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/");
-	# randomize the video order
-	shuffle($sourceFiles);
-	# build the video index
+	echo "<h2>All Cached Videos</h2>\n";
+	$sourceFiles = scanDir($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/");
+	# remove navigation directory paths
+	$sourceFiles = array_diff($sourceFiles,Array(".",".."));
+	$tempSourceFiles=Array();
 	foreach($sourceFiles as $sourceFile){
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (stripos($sourceFile,".mp4")){
-					# check for a json file to load the video title
-					if (file_exists(str_replace(".mp4",".info.json",$sourceFile))){
-						# load the json title
-						$jsonData=file_get_contents(str_replace(".mp4",".info.json",$sourceFile));
-						$jsonData=json_decode($jsonData);
-						#echo "<hr>";
-						#var_dump($jsonData);
-						#echo "<hr>";
-						$videoTitle=$jsonData->title;
-					}else{
-						$videoTitle=$sourceFile;
-					}
-					echo "<a class='showPageEpisode' href='".str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourceFile)."'>\n";
-					if (file_exists(str_replace(".mp4",".jpg",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".jpg",$sourceFile))."' />\n";
-					}else if (file_exists(str_replace(".mp4",".webp",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".webp",$sourceFile))."' />\n";
-					}else if (file_exists(str_replace(".mp4",".png",$sourceFile))){
-						echo "<img loading='lazy' src='".str_replace($_SERVER["DOCUMENT_ROOT"],"",str_replace(".mp4",".png",$sourceFile))."' />\n";
-					}
-					echo "	<h3>".$videoTitle."</h3>\n";
-					echo "</a>\n";
-				}
-			}
+		# add the video.mp4 to the path, this is the file the dates will be sorted by
+		$tempSourceFile=$_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/video.mp4";
+		# add the path if it contains a cached video
+		if (file_exists($tempSourceFile)){
+			$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
+			#$tempSourceFiles=array_merge($tempSourceFiles,Array($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/video.mp4"));
 		}
 	}
-	echo "</div>";
+	# sort the diretories by date
+	$sourceFiles = sortPathsByDate($tempSourceFiles);
+
+	foreach($sourceFiles as $sourceFile){
+		# remove file name left from date sort
+		$sourcePath=str_replace("video.mp4","",$sourceFile);
+		$sourceWebPath=str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourcePath);
+		# draw the entries for each directory
+		# check for a json file to load the video title
+		if (file_exists($sourcePath."video.info.json")){
+			# load the json title
+			$jsonData=file_get_contents($sourcePath."video.info.json");
+			$jsonData=json_decode($jsonData);
+			$videoTitle=$jsonData->title;
+		}else{
+			$videoTitle=$sourceFile;
+		}
+		echo "<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
+		echo "<img loading='lazy' src='".$sourceWebPath."video.png"."' />\n";
+		echo "	<h3>".$videoTitle."</h3>\n";
+		echo "</a>\n";
+
+	}
+	echo "</div>\n";
 	echo "</body>";
 	echo "</html>";
 }

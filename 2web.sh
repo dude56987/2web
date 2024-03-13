@@ -691,14 +691,41 @@ function update2web(){
 			echo "$data" > "/etc/at.deny"
 		fi
 	fi
+
 	# build the fortune if the config is set
-	if cacheCheck "$webDirectory/fortune.index" "1";then
-		# write the fortune for this processing run...
-		if test -f /usr/games/fortune;then
-			#todaysFortune=$(/usr/games/fortune -a | txt2html --extract)
-			# replace tabs with spaces
-			todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
-			echo "$todaysFortune" > "$webDirectory/fortune.index"
+	if yesNoCfgCheck "/etc/2web/fortuneStatus.cfg";then
+		# only build a new fortune once every 24 hours
+		if cacheCheck "$webDirectory/fortune.index" "1";then
+			# write the fortune for this processing run...
+			if test -f /usr/games/fortune;then
+				# replace tabs with spaces for ascii art
+				todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
+				echo "$todaysFortune" > "$webDirectory/fortune.index"
+			fi
+		fi
+	else
+		# the config is disabled check for any cached fortunes
+		if test -f "$webDirectory/fortune.index";then
+			# remove the fortune index file
+			rm -v "$webDirectory/fortune.index"
+		fi
+	fi
+
+	# check for the web player config
+	if yesNoCfgCheck "/etc/2web/webPlayer.cfg";then
+		# create the group
+		# - This group must be removed manually from the /etc/2web/groups/ section
+		# - This allows locking the web player to users logged in with permissions
+		createDir "/etc/2web/groups/webPlayer/"
+		# enable the web player
+		linkFile "/usr/share/2web/resolvers/web-player.php" "$webDirectory/web-player.php"
+		createDir "$webDirectory/web_player/"
+	else
+		# remove web player if it is disabled
+		if test -L "$webDirectory/web-player.php";then
+			rm -v "$webDirectory/web-player.php"
+			# also remove the web player directory
+			rm -vr "$webDirectory/web_player/"
 		fi
 	fi
 
