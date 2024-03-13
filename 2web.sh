@@ -1007,26 +1007,27 @@ function buildPulseGif(){
 	newSize="100x10"
 
 	# pulse to right side
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_01.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_02.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_03.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 3,0' -scale $newSize "${outputPathPrefix}_04.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 4,0' -scale $newSize "${outputPathPrefix}_05.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 5,0' -scale $newSize "${outputPathPrefix}_06.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 6,0' -scale $newSize "${outputPathPrefix}_07.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 7,0' -scale $newSize "${outputPathPrefix}_08.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 8,0' -scale $newSize "${outputPathPrefix}_09.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 9,0' -scale $newSize "${outputPathPrefix}_10.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_01.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_02.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_03.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 3,0' -scale $newSize "${outputPathPrefix}_04.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 4,0' -scale $newSize "${outputPathPrefix}_05.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 5,0' -scale $newSize "${outputPathPrefix}_06.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 6,0' -scale $newSize "${outputPathPrefix}_07.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 7,0' -scale $newSize "${outputPathPrefix}_08.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 8,0' -scale $newSize "${outputPathPrefix}_09.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 9,0' -scale $newSize "${outputPathPrefix}_10.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 10,0' -scale $newSize "${outputPathPrefix}_11.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 11,0' -scale $newSize "${outputPathPrefix}_12.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 12,0' -scale $newSize "${outputPathPrefix}_13.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 13,0' -scale $newSize "${outputPathPrefix}_14.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 14,0' -scale $newSize "${outputPathPrefix}_15.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 15,0' -scale $newSize "${outputPathPrefix}_16.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 16,0' -scale $newSize "${outputPathPrefix}_17.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 17,0' -scale $newSize "${outputPathPrefix}_18.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 18,0' -scale $newSize "${outputPathPrefix}_19.gif"
+	convert -size 20x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 19,0' -scale $newSize "${outputPathPrefix}_20.gif"
 	# pulse back to start
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 8,0' -scale $newSize "${outputPathPrefix}_11.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 7,0' -scale $newSize "${outputPathPrefix}_12.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 6,0' -scale $newSize "${outputPathPrefix}_13.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 5,0' -scale $newSize "${outputPathPrefix}_14.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 4,0' -scale $newSize "${outputPathPrefix}_15.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 3,0' -scale $newSize "${outputPathPrefix}_16.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_17.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_18.gif"
-	convert -size 10x1 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_19.gif"
 
 	# convert frames into transparent gif
 	convert -delay 16 -dispose Background \
@@ -1049,6 +1050,26 @@ function buildPulseGif(){
 		-page +0+0 "${outputPathPrefix}_17.gif" \
 		-page +0+0 "${outputPathPrefix}_18.gif" \
 		-page +0+0 "${outputPathPrefix}_19.gif" \
+		-page +0+0 "${outputPathPrefix}_20.gif" \
+		-page +0+0 "${outputPathPrefix}_19.gif" \
+		-page +0+0 "${outputPathPrefix}_18.gif" \
+		-page +0+0 "${outputPathPrefix}_17.gif" \
+		-page +0+0 "${outputPathPrefix}_16.gif" \
+		-page +0+0 "${outputPathPrefix}_15.gif" \
+		-page +0+0 "${outputPathPrefix}_14.gif" \
+		-page +0+0 "${outputPathPrefix}_13.gif" \
+		-page +0+0 "${outputPathPrefix}_12.gif" \
+		-page +0+0 "${outputPathPrefix}_11.gif" \
+		-page +0+0 "${outputPathPrefix}_10.gif" \
+		-page +0+0 "${outputPathPrefix}_09.gif" \
+		-page +0+0 "${outputPathPrefix}_08.gif" \
+		-page +0+0 "${outputPathPrefix}_07.gif" \
+		-page +0+0 "${outputPathPrefix}_06.gif" \
+		-page +0+0 "${outputPathPrefix}_05.gif" \
+		-page +0+0 "${outputPathPrefix}_04.gif" \
+		-page +0+0 "${outputPathPrefix}_03.gif" \
+		-page +0+0 "${outputPathPrefix}_02.gif" \
+		-page +0+0 "${outputPathPrefix}_01.gif" \
 		-loop 0 "/var/cache/2web/pulse.gif"
 }
 ################################################################################
