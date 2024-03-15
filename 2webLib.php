@@ -1171,6 +1171,26 @@ if( ! function_exists("requireGroup")){
 		# check the logged in user has permissions for the group given or if the group is unlocked
 		// try to load a session in the current window
 		if (! isset($_SESSION)){
+			# load the minutes and convert into seconds
+			if (file_exists("/etc/2web/loginTimeoutMinutes.cfg")){
+				$timeOutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
+				$timeOutMinutes = (int)$timeOutMinutes;
+				$timeOutMinutes = ( ($timeOutMinutes * 60));
+			}else{
+				file_put_contents("/etc/2web/loginTimeoutMinutes.cfg","30");
+				$timeOutMinutes = 0;
+			}
+			if (file_exists("/etc/2web/loginTimeoutHours.cfg")){
+				# load the hours and convert into seconds
+				$timeOutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
+				$timeOutHours = (int)$timeOutHours;
+				$timeOutHours = (60 * ($timeOutHours * 60));
+			}else{
+				file_put_contents("/etc/2web/loginTimeoutHours.cfg","1");
+				$timeOutHours = 0;
+			}
+			# set the session timeout and then start the session
+			ini_set('session.gc_maxlifetime', ( $timeOutHours + $timeOutMinutes ) );
 			session_start();
 		}
 		# check if the group itself is locked

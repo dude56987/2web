@@ -38,12 +38,66 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
+		<li><a href='#loginInactivityTimeout'>Login Inactivity Timeout</a></li>
+		<li><a href='#manageUsers'>Manage Users</a></li>
 		<li><a href='#addNewUser'>Add New Administrator</a></li>
-		<li><a href='#removeUser'>Remove Administrator</a></li>
-		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
+		<li><a href='#addNewBasicUser'>Add New Basic User</a></li>
+		<li><a href='#lockUnlockGroups'>Lock Unlock Groups</a></li>
 	</ul>
 </div>
-<div class='settingListCard'>
+
+
+<div id='loginInactivityTimeout' class='inputCard'>
+<h2>Login Inactivity Timeout</h2>
+<ul>
+	<li>
+		Set the time before a session is automatically ended from inactivity and the user must log in again.
+	</li>
+<?PHP
+	$currentTimeoutSeconds=ini_get('session.gc_maxlifetime');
+
+	$currentTimeoutHours=floor(floor($currentTimeoutSeconds / 60) / 60);
+	# subtract new found number of seconds in hours
+	$currentTimeoutSeconds-=floor(($currentTimeoutHours * 60) * 60);
+	$currentTimeoutMinutes=$currentTimeoutSeconds / 60;
+	$currentTimeoutSeconds-=($currentTimeoutMinutes * 60);
+	echo "<li>";
+	echo "The session will currently timeout after ".$currentTimeoutHours." hours, ".$currentTimeoutMinutes." minutes, and ".$currentTimeoutSeconds." seconds.";
+	echo "</li>";
+?>
+</ul>
+<form action='admin.php' method='post' class='buttonForm'>
+	<?PHP
+		echo "<h3>Set Session Timeout</h3>";
+		$timeoutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
+		$timeoutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
+		echo "<table class='controlTable'>";
+		echo "<tr>";
+		echo "	<th>";
+		echo "		Hours";
+		echo "	</th>";
+		echo "	<th>";
+		echo "		Minutes";
+		echo "	</th>";
+		echo "</tr>";
+		echo "<tr>";
+		echo "	<td>";
+		echo "		<input type='number' name='setSessionTimeoutHours' placeholder='Session Timeout Hours...' min='0' max='72' value='".$timeoutHours."' />";
+		echo "	</td>";
+		echo "	<td>";
+		echo "		<input type='number' name='setSessionTimeoutMinutes' placeholder='Session Timeout Minutes...' min='0' max='59' value='".$timeoutMinutes."' />";
+		echo "	</td>";
+		echo "<tr>";
+		echo "</table>";
+	?>
+	<button type='submit' class='button'>Change Session Timeout</button>
+</form>
+
+</div>
+
+
+
+<div class='settingListCard' id='manageUsers'>
 <h2>Active Users</h2>
 <?PHP
 	# get a list of the groups
@@ -59,6 +113,14 @@ include("settingsHeader.php");
 		echo "<div class='inputCard'>";
 		echo "<h1>".$foundUser."</h1>";
 		echo "<table class='controlTable'>";
+		echo "<tr>";
+		echo "	<th>";
+		echo "		Group";
+		echo "	</th>";
+		echo "	<th>";
+		echo "		Access Permissions";
+		echo "	</th>";
+		echo "</tr>";
 		foreach( $groups as $group){
 			echo "<tr>";
 			echo "	<td>";
@@ -138,7 +200,7 @@ include("settingsHeader.php");
 </div>
 
 
-<div class='settingListCard'>
+<div class='settingListCard' id='lockUnlockGroups'>
 	<h2>Locked Groups</h2>
 <?PHP
 	# list the lock status of each group permisssions

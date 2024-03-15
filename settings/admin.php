@@ -436,6 +436,16 @@ if (array_key_exists("newUserName",$_POST)){
 	shell_exec("echo 'weather2web' | /usr/bin/at -q b now");
 	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("setSessionTimeoutMinutes",$_POST)){
+	$timeoutMinutes=$_POST['setSessionTimeoutMinutes'];
+	$timeoutHours=$_POST['setSessionTimeoutHours'];
+	outputLog("Setting Session Timeout minutes to $timeoutMinutes");
+	file_put_contents("/etc/2web/loginTimeoutMinutes.cfg",$timeoutMinutes);
+	outputLog("Setting Session Timeout hours to $timeoutHours");
+	file_put_contents("/etc/2web/loginTimeoutHours.cfg",$timeoutHours);
+	outputLog("Set to timeout after ".$timeoutHours." hours and ".$timeoutMinutes." minutes", "goodLog");
+	echo "<hr><a class='button' href='/settings/users.php#loginInactivityTimeout'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addCustomRadioLink",$_POST)){
 	# this will add a custom m3u file with a single entry
 	$link=$_POST['addCustomRadioLink'];
