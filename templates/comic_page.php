@@ -51,7 +51,6 @@
 		$totalPages=file_get_contents("totalPages.cfg");
 		# convert total pages into a interger
 		$totalPages=(int)$totalPages;
-		#$totalChapters=count($discoveredDirs);
 		# next and last page numbers
 		# build the next page button info
 		$nextPage = (int)$page;
@@ -89,48 +88,46 @@
 	?>
 	</style>
 	<script src='/2webLib.js'></script>
-	<script>
+		<script>
+		// setup keyboard controls
 		function setupKeys() {
 			document.body.addEventListener('keydown', function(event){
 				const key = event.key;
 				switch (key){
 					case 'ArrowLeft':
+					event.preventDefault();
 					<?PHP
 					echo "window.location.href='./$lastPage';";
 					?>
 					break;
 					case 'ArrowRight':
+					event.preventDefault();
 					<?PHP
 					echo "window.location.href='./$nextPage';";
 					?>
 					break;
 					case 'ArrowUp':
+					event.preventDefault();
 					window.location.href='index.php';
 					break;
 					case 'Home':
+					event.preventDefault();
 					window.location.href='index.php';
 					break;
 					case 'PageDown':
+					event.preventDefault();
 					<?PHP
 					echo "window.location.href='./$nextPage';";
 					?>
 					break;
 					case 'PageUp':
+					event.preventDefault();
 					<?PHP
 					echo "window.location.href='./$lastPage';";
 					?>
 					break;
 				}
 			});
-		}
-		function toggleFullScreen() {
-			if (!document.fullscreenElement) {
-				document.documentElement.requestFullscreen();
-			} else {
-				if (document.exitFullscreen) {
-					document.exitFullscreen();
-				}
-			}
 		}
 	</script>
 </head>
@@ -177,18 +174,44 @@
 	echo "	<a class='comicIndexButton comicPageButton center' href='index.php#$page'>\n";
 	echo "		&uarr;\n";
 	echo "	</a>\n";
-	echo "	<div class='comicPagePopup center' href='index.php'>\n";
+	echo "	<div id='comicPagePopup' class='comicPagePopup center'>\n";
 	echo "		Page $page / ".prefixNumbers($totalPages)."\n";
-	echo "	</div>\n";
+	# convert to intergers for use with the scroll view API
+	# and for calculating the reading progress
+	$page=(int)$page;
+	# draw the progress bar
+	$progress=floor(($page/$totalPages)*100);
+	# Draw the progress bar showing reading progress of the comic
+	echo "<div class='progressBar'>\n";
+	echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
+	echo ($progress."%");
+	echo "\t</div>\n";
+	echo "</div>\n";
+	#
 	echo "</div>\n";
 	echo "</div>\n";
 	echo "<span id='bottom'></span>\n";
-	# hide the pulse after the page has loaded
-	echo "<style>";
-	echo "	.globalPulse{";
-	echo "		visibility: hidden;";
-	echo "	}";
-	echo "</style>";
-	echo "</body>\n";
 ?>
+	<script>
+		// show the progress popup with javascript when the page is loaded, then hide it again
+		function reHidePopup(){
+			console.log("Re hiding the popup")
+			// hide the popup
+			document.getElementById('comicPagePopup').style.cssText="";
+		}
+		console.log("Showing the popup")
+		// show the popup by changing the inline style text
+		document.getElementById('comicPagePopup').style.cssText="opacity: 1 !important;";
+		// hide the popup after a delay
+		setTimeout(reHidePopup, 1000);
+	</script>
+	<?PHP
+	# hide the pulse after the page has loaded everything
+	?>
+	<style>
+		.globalPulse{
+			visibility: hidden;
+		}
+	</style>
+</body>
 </html>

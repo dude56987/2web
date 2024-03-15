@@ -64,10 +64,11 @@ function processPdfPageToImage(){
 	# render the page
 	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName"
 	# trim the whitespace
-	convert "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+	convert -quiet "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 	# add a border to the edge of the image
-	convert "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
+	convert -quiet "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
 }
+################################################################################
 function extractCBZ(){
 	# extractCBZ $generatedDirectory" "$cbzFilePath" "$cbzComicName"
 	# extract a CBZ comic book zip file to the generated directory
@@ -166,12 +167,12 @@ function update(){
 					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
 						# convert each png file to a jpg file
-						convert "$imageToConvert" "$newImagePath"
+						convert -quiet "$imageToConvert" "$newImagePath"
 					done
 					find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
 						# convert each png file to a jpg file
-						convert "$imageToConvert" "$newImagePath"
+						convert -quiet "$imageToConvert" "$newImagePath"
 					done
 				else
 					totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
@@ -184,12 +185,12 @@ function update(){
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
 						# convert each png file to a jpg file
-						convert "$imageToConvert" "$newImagePath"
+						convert -quiet "$imageToConvert" "$newImagePath"
 					done
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
 						# convert each png file to a jpg file
-						convert "$imageToConvert" "$newImagePath"
+						convert -quiet "$imageToConvert" "$newImagePath"
 					done
 				fi
 			fi
@@ -394,7 +395,7 @@ convertImage(){
 
 	if ! test -f "$newName";then
 		# convert the filename
-		convert "$fileName" "$newName"
+		convert -quiet "$fileName" "$newName"
 	fi
 
 	return 0
@@ -410,6 +411,15 @@ cleanText(){
 	# convert question marks into wide question marks so they look
 	# the same but wide question marks do not break URLS
 	cleanedText=$(echo "$cleanedText" | sed "s/?/？/g" )
+	# cleanup ampersands, they break URLs
+	cleanedText=$(echo "$cleanedText" | sed "s/&/＆/g" )
+	# cleanup @ symbols, they break URLs
+	cleanedText=$(echo "$cleanedText" | sed "s/@/＠/g" )
+	# remove percent signs they break print functions
+	cleanedText=$(echo "$cleanedText" | sed "s/%/％/g" )
+	# hyphens break grep searches
+	cleanedText=$(echo "$cleanedText" | sed "s/-/－/g" )
+	# squeeze double spaces into single spaces
 	cleanedText=$(echo "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
 	echo "$cleanedText"
@@ -644,7 +654,7 @@ renderPage(){
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png";then
-			convert "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
+			convert -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
 		fi
 		# get page width and height
 		tempImageData=$(identify -verbose "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg" | grep "Geometry" |  cut -d':' -f2 | sed "s/+0//g")
@@ -662,7 +672,7 @@ renderPage(){
 
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png";then
-			convert "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
+			convert -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
 		fi
 		# link the image
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
@@ -714,16 +724,16 @@ renderPage(){
 			# create chapter specific thumbnails
 			if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png";then
 				# create a thumb for the comic
-				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
+				convert -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
 			fi
 		fi
 		# if no thumbnail exists then
 		if ! test -f "$webDirectory/comics/$pageComicName/thumb.png";then
 			if [ $isChapter = true ];then
 				# create a thumb for the comic
-				convert "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			else
-				convert "$webDirectory/comics/$pageComicName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert -quiet "$webDirectory/comics/$pageComicName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			fi
 		fi
 	fi

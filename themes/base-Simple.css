@@ -18,7 +18,7 @@
 ########################################################################
 */
 html{
-	height: 100%;
+	height: 100dvh;
 	font-variant-emoji: unicode;
 }
 ::selection{
@@ -1053,20 +1053,24 @@ a:visited {
 	border-style: solid;
 	border-color: var(--borderColor);
 	opacity: 0 !important;
-	transition: opacity 1s ease;
+	transition: opacity 1s ease-in-out;
 	background-color: var(--glassBackground);
 	/*
 	font-size: 2rem;
 	*/
-	padding-bottom: 2rem;
+	padding-bottom: 0.5rem;
+	border-bottom: none;
 }
 .comicPagePopup:hover{
 	opacity: 1 !important;
 	box-shadow: 0px 0px 0px var(--shadowColor);
+	/*
 	color: var(--highlightText);
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+	*/
+	border-bottom: none;
 }
 .comicPageButton{
 	width: 20%;
@@ -1095,9 +1099,11 @@ a:visited {
 	width: 20%;
 	opacity: 1;
 	box-shadow: 0px 0px 0px var(--shadowColor);
+	/*
 	color: var(--highlightText);
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
+	*/
 	border-style: inset !important;
 }
 .comicPageButtonLeft{
@@ -1301,7 +1307,9 @@ a{
 a:hover{
 	text-decoration: none;
 	color: var(--highlightText);
+	/*
 	background-color: var(--hightlightBackground);
+	*/
 }
 p:before {
 	content: " ";
@@ -2212,6 +2220,7 @@ details{
 	background-color: var(--highlightBackground);
 	color: var(--solidBackground);
 	min-width: 10%;
+	word-wrap: normal;
 }
 .searchCacheFileDateSize{
 	margin: 0px;

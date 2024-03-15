@@ -240,19 +240,23 @@ function setupKeys() {
 		const key = event.key;
 		switch (key){
 			case 'ArrowUp':
+			event.preventDefault();
 			window.location.href='..';
 			break;
 			case 'ArrowLeft':
+			event.preventDefault();
 			<?PHP
 			echo "window.location.href='../$previousDir';";
 			?>
 			break;
 			case 'ArrowRight':
+			event.preventDefault();
 			<?PHP
 			echo "window.location.href='../$nextDir';";
 			?>
 			break;
 			case 'ArrowDown':
+			event.preventDefault();
 			<?PHP
 			if(is_dir("0001/")){
 				echo "window.location.href='0001/';";
@@ -278,7 +282,9 @@ echo "$previousDirButton";
 ?>
 <div>
 	<?PHP
-	echo "<a class='button comicTitleButton' href='..'>⬆️</a>";
+	echo "<a class='button comicTitleButton' href='..'>";
+	echo "⬆️";
+	echo "</a>";
 	if($topLevel){
 		echo "	<h2>".$comicTitle."</h2>";
 	}else{
@@ -287,6 +293,11 @@ echo "$previousDirButton";
 			echo "<h2>".file_get_contents("chapterTitle.cfg")."</h2>";
 		}
 	}
+	echo "<hr>";
+	echo "<a class='button indexSeries' href='0001.php'>";
+	echo "<img loading='lazy' src='thumb.png' />";
+	echo "</a>";
+	echo "<hr>";
 	?>
 	<div class='listCard'>
 		<?PHP
