@@ -1,6 +1,5 @@
 <?php
 	#ini_set('display_errors', 1);
-	#ini_set('openssl.cafile', "/var/cache/2web/ssl-cert.crt");
 	include("/usr/share/2web/2webLib.php");
 	########################################################################
 	# get the title data
@@ -50,7 +49,6 @@ if($useJson){
 }else{
 	echo "<html id='top' class='seriesBackground'>";
 }
-
 if (file_exists("show.title")){
 	# get the show title
 	$showTitle=file_get_contents("show.title");
@@ -58,15 +56,16 @@ if (file_exists("show.title")){
 	$numericTitlePath=$_SERVER["SCRIPT_FILENAME"].".numTitle";
 	$numericTitleData=file_get_contents($numericTitlePath);
 	echo "<title>$showTitle - $numericTitleData</title>";
+}else	if(file_exists("movie.title")){
+	$movieTitle=file_get_contents("movie.title");
+	echo "<title>$movieTitle</title>";
+}else if(file_exists($_SERVER["SCRIPT_FILENAME"].".title")){
+	# set the title from the title file
+	$movieTitle=file_get_contents($_SERVER["SCRIPT_FILENAME"].".title");
+	echo "<title>".$movieTitle."</title>";
 }else{
-	# get the movie title
-	if(file_exists("movie.title")){
-		$movieTitle=file_get_contents("movie.title");
-		echo "<title>$movieTitle</title>";
-	}else{
-		# set the title from the script name
-		$movieTitle=str_replace(".php","",basename($_SERVER["PHP_SELF"]));
-	}
+	# set the title from the script name
+	$movieTitle=str_replace(".php","",basename($_SERVER["PHP_SELF"]));
 }
 # update the hostname
 if ( $_SERVER["HTTP_HOST"] == "localhost" ){
@@ -85,7 +84,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 <head>
 <?PHP
 #################################################################################
-function transcodeVideo($link){
+function transcodeVideo($link, $proto){
 	# The function for transcoding a file for playback in the browser
 	#
 	# - This function does not check if transcoding is enabled use isTranscodeEnabled()
@@ -96,16 +95,64 @@ function transcodeVideo($link){
 	# create the sum of the link
 	$sum=md5($link);
 	$webServerPath=$_SERVER["DOCUMENT_ROOT"];
+
+	# set the default cache value
+	$cacheFile=false;
+	# set the storage path
+	$storagePath=$webServerPath."/TRANSCODE-CACHE/".$sum."/";
+	# if the json data has not yet been verified to have downloaded the entire file
+	if (! file_exists($storagePath."verified.cfg")){
+		# check the file downloaded correctly by comparing the json data file length with local file length
+		if (file_exists($storagePath."video.mp4")){
+			# if the file was last modified more than 60 seconds ago
+			# - checks should wait for caching to complete in order to properly read file metadata
+			if ( ( time() - filemtime($storagePath."video.mp4") ) > 60){
+				if (file_exists($storagePath."video.info.json")){
+					# The json downloaded from the remote and stored by the resolver
+					$remoteJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.info.json"));
+					$remoteJsonValue= (int)$remoteJson->media->track[0]->Duration;
+					# reduce the value to add variance for rounding errors
+					# - Depending on the json data and how it was generated the rounding of time may go up or down by one
+					$remoteJsonValue-=1;
+					# the json data from reading the current downloaded file
+					$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.mp4"));
+					$localJsonValue= (int)$localJson->media->track[0]->Duration;
+					# compare the lenght in the remote json to the local file, including the variance above
+					if ($localJsonValue >= $remoteJsonValue){
+						addToLog("WARNING","Attempt to Verify Track Length","Track was verified in /TRANSCODE-CACHE/$sum/");
+						debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+						# if the length is correct the file is verified to have downloaded completely
+						touch($storagePath."verified.cfg");
+					}else{
+						addToLog("WARNING","Attempt to Verify Transcoded Track Length","Track was NOT verified because the length was incorrect<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
+						debug("The video was corrupt and could not be verified...");
+						$cacheFile=true;
+					}
+				}else{
+					addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with");
+					# the mp4 was found but the json was not
+					$cacheFile=true;
+				}
+			}
+		}
+	}
 	# make sure there is no existing stream available
 	if ( ! file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.m3u")){
+		$cacheFile=true;
+	}
+	if ($cacheFile){
+		addToLog("WARNING", "Transcode Job was Started", "A transcode job was started for '$link'");
 		if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
 			mkdir("$webServerPath/TRANSCODE-CACHE/");
 		}
 		# cleanup html string encoding of spaces and pathnames
-		$link = str_replace("%20"," ",$link);
-		$link = str_replace("%21"," ",$link);
+		#$link = str_replace("%20"," ",$link);
+		#$link = str_replace("%21"," ",$link);
+		#
 		$link = str_replace("'","",$link);
 		$link = str_replace('"',"",$link);
+		# decode the link
+		$link = urldecode($link);
 		# build the command
 		$fullLinkPath=$webServerPath.$link;
 		# create a transcode directory to store the hls stream if it does not exist
@@ -133,12 +180,36 @@ function transcodeVideo($link){
 		# build and display a m3u file with a delay using the spinner gif
 		sleep(10);
 	}
+
+	#
+	$playbackUrl="";
+	$playbackMime="";
+	#
+	$plabackAvailable=false;
+	#
 	if (file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.mp4")){
+		$playbackUrl="/TRANSCODE-CACHE/$sum/play.mp4";
+		$playbackMime="video/mp4";
 		# redirect to the mp4 file for the highest level of browser compatibility
-		return Array("/TRANSCODE-CACHE/$sum/play.mp4","video/mp4");
-	}else{
+		if (filesize($_SERVER["DOCUMENT_ROOT"].$playbackUrl) > 10){
+			$plabackAvailable=true;
+			$playbackUrl=$proto.$_SERVER["HTTP_HOST"]."/TRANSCODE-CACHE/$sum/play.mp4";
+		}
+	}else if (file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.m3u")){
+		$playbackUrl="/TRANSCODE-CACHE/$sum/play.m3u";
+		$playbackMime="application/mpegurl";
 		# redirect to the master playlist
-		return Array("/TRANSCODE-CACHE/$sum/play.m3u","application/mpegurl");
+		if (filesize($_SERVER["DOCUMENT_ROOT"].$playbackUrl) > 10){
+			$plabackAvailable=true;
+			$playbackUrl=$proto.$_SERVER["HTTP_HOST"]."/TRANSCODE-CACHE/$sum/play.m3u";
+		}
+	}
+	if($plabackAvailable){
+		return Array($playbackUrl, $playbackMime);
+	}else{
+		# the transcode job failed completely so add it to the system log
+		addToLog("ERROR", "A transcode Job Failed", "The transcode job for '$link' has failed. The path '$webServerPath/TRANSCODE-CACHE/$sum/' does not contain any playable video content.");
+		return false;
 	}
 }
 #################################################################################
@@ -259,12 +330,29 @@ pageKeys();
 	}else{
 		$strmLinkExists=false;
 	}
+	# this should always be set even if it is empty
+	$videoChannelUrl="";
 	# load data from the json file
 	if(file_exists($jsonPath)){
 		$jsonData=json_decode(file_get_contents($jsonPath));
 		# get the title
-		if(is_string($jsonData->title)){
+		if(property_exists($jsonData, "title")){
 			$titleData=$jsonData->title;
+		}
+		# get the uploder url
+		if(property_exists($jsonData, "uploader_url")){
+			$videoChannelUrl=$jsonData->uploader_url;
+			# Build the html for the bottom of the page
+			$tempVideoChannelUrl="<table>";
+			$tempVideoChannelUrl.="<tr>";
+			$tempVideoChannelUrl.="<th>Channel Source</th>";
+			$tempVideoChannelUrl.="</tr>";
+			$tempVideoChannelUrl.="<tr>";
+			$tempVideoChannelUrl.="<td>".$videoChannelUrl."</td>";
+			$tempVideoChannelUrl.="</tr>";
+			$tempVideoChannelUrl.="</table>";
+			#
+			$videoChannelUrl=$tempVideoChannelUrl;
 		}
 		# get the plot data
 		#if(array_key_exists("description",$jsonData)){
@@ -449,49 +537,63 @@ pageKeys();
 			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
 			echo "</audio>\n";
+		}else if (is_in_array("video/webm", $videoMimeType)){
+			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+			echo "	<source src='$fullPathVideoLink' type='video/webm'>\n";
+			echo "</audio>\n";
+		}else if (is_in_array("video/ogg", $videoMimeType)){
+			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+			echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
+			echo "</audio>\n";
 		}else if (is_in_array("video/x-matroska", $videoMimeType)){
 			# if the trancode is enabled run the transcode job
 			if (isTranscodeEnabled()){
 				# use the transcode function in order to transcode the video if transcoding is enabled
-				$transcodePath=transcodeVideo(str_replace(" ","%20", $videoLink));
-				# create the generated transcode path localy
-				#$transcodePath=$videoMimeType["Location"];
-				if ("video/mp4" == $transcodePath[1]){
-					# draw the mp4 player
-					echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
-					echo "	<source src='".$transcodePath[0]."' type='video/mp4'>\n";
-					echo "</video>\n";
-				}else if ("application/mpegurl" == $transcodePath[1]){
-					# draw the hls stream player webpage player
-					echo "<script>\n";
-					echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
-					echo "	if(Hls.isSupported()) {\n";
-					echo "		var video = document.getElementById('video');\n";
-					echo "		var hls = new Hls({\n";
-					echo "			startPosition: 0,\n";
-					echo "			enableWebVTT: true,\n";
-					echo "			enableWorker: true,\n";
-					echo "			enableSoftwareAES: true,\n";
-					echo "			autoStartLoad: true,\n";
-					echo "			debug: true\n";
-					echo "		});\n";
-					echo "		hls.loadSource('".$transcodePath[0]."');\n";
-					echo "		hls.attachMedia(video);\n";
-					echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
-					echo "			video.muted = false;\n";
-					echo "			video.play();\n";
-					echo "		});\n";
-					echo "	}\n";
-					echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
-					echo "		video.src = '".$transcodePath[0]."';\n";
-					echo "		video.addEventListener('canplay',function() {\n";
-					echo "			video.play();\n";
-					echo "		});\n";
-					echo "	}\n";
-					# start playback on page load
-					echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
-					echo "</script>\n";
-					noscriptRefresh(10);
+				$transcodePath=transcodeVideo(str_replace(" ","%20", $videoLink), $proto);
+				if ($transcodePath == false){
+					echo "<div class='titleCard'>\n";
+					echo "The trancode job is currently running but is unfinished...\n";
+					echo "</div>\n";
+				}else{
+					# create the generated transcode path localy
+					#$transcodePath=$videoMimeType["Location"];
+					if ("video/mp4" == $transcodePath[1]){
+						# draw the mp4 player
+						echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
+						echo "	<source src='".$transcodePath[0]."' type='video/mp4'>\n";
+						echo "</video>\n";
+					}else if ("application/mpegurl" == $transcodePath[1]){
+						# draw the hls stream player webpage player
+						echo "<script>\n";
+						echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
+						echo "	if(Hls.isSupported()) {\n";
+						echo "		var video = document.getElementById('video');\n";
+						echo "		var hls = new Hls({\n";
+						echo "			startPosition: 0,\n";
+						echo "			enableWebVTT: true,\n";
+						echo "			enableWorker: true,\n";
+						echo "			enableSoftwareAES: true,\n";
+						echo "			autoStartLoad: true,\n";
+						echo "			debug: true\n";
+						echo "		});\n";
+						echo "		hls.loadSource('".$transcodePath[0]."');\n";
+						echo "		hls.attachMedia(video);\n";
+						echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
+						echo "			video.muted = false;\n";
+						echo "			video.play();\n";
+						echo "		});\n";
+						echo "	}\n";
+						echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
+						echo "		video.src = '".$transcodePath[0]."';\n";
+						echo "		video.addEventListener('canplay',function() {\n";
+						echo "			video.play();\n";
+						echo "		});\n";
+						echo "	}\n";
+						# start playback on page load
+						echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
+						echo "</script>\n";
+						noscriptRefresh(10);
+					}
 				}
 			}else{
 				# this is a mkv file that can not be played with the web player
@@ -677,11 +779,21 @@ pageKeys();
 		echo "</a>\n";
 		echo "</div>\n";
 	}
+	#if($useJson){
+	#	# draw the json button link if it exists
+	#	echo "<a class='button hardLink' href='".str_replace($_SERVER["DOCUMENT_ROOT"],"",$jsonPath)."'>\n";
+	#	echo "📑 JSON\n";
+	#	echo "</a>\n";
+	#	echo "</div>\n";
+	#}
+
 	echo "</div>\n";
 ?>
 <?PHP
-
+	# write the plot data
 	echo $plotData;
+	# write the video channel url if the json is loaded
+	echo $videoChannelUrl;
 ?>
 </div>
 <div class='titleCard'>

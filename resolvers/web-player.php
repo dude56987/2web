@@ -48,6 +48,7 @@ if (array_key_exists("url",$_GET)){
 
 	$videoLink = str_replace('"','',$videoLink);
 	$videoLink = str_replace("'","",$videoLink);
+	$orignalVideoLink=$videoLink;
 
 	# build the orignal video link from the cleaned video link
 	$orignalVideoLink=$videoLink;
@@ -75,9 +76,6 @@ if (array_key_exists("url",$_GET)){
 	}else{
 		$proto="http";
 	}
-	# build the cache link
-	#$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
-
 	# create a file based on the md5sum in a cache
 	# fileName.php
 	# fileName.php.directLink
@@ -125,11 +123,6 @@ if (array_key_exists("url",$_GET)){
 
 	$videoLinkSum=hash("sha512",$videoLink,false);
 
-	#$videoLinkSum=hash("sha512",$videoLink,false);
-	#$hashSum2=hash("sha512",'"'.$videoLink.'"',false);
-	# hashSums log
-	#file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".log", "HASH=".$videoLinkSum."\nHASH2=".$hashSum2);
-
 	if ($_SERVER["HTTPS"]){
 		# https A
 		$proto="https";
@@ -137,7 +130,6 @@ if (array_key_exists("url",$_GET)){
 		$proto="http";
 	}
 	# make the local redirect
-	#$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
 	$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
 
 	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php")){
@@ -158,19 +150,104 @@ if (array_key_exists("url",$_GET)){
 	}
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum.".php");
+}else if(array_key_exists("uploadMediaFile",$_FILES)){
+	# get the path to the tmp file
+	$fileName=$_FILES['uploadMediaFile']["tmp_name"];
+	# get the orignal file name
+	$fileOgName=$_FILES['uploadMediaFile']["full_path"];
+	# get the file mime type
+	$fileMimeType=$_FILES['uploadMediaFile']["type"];
+	# build the md5sum from the temp file data
+	$fileSum=md5_file($fileName);
+	#
+	addToLog("DOWNLOAD", "User Uploaded File", "The user has uploaded a file '$fileOgName' to '$fileName' with mime type '$fileMimeType'");
+	if($fileMimeType == "video/mp4"){
+		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mp4";
+		$fileOgName=str_replace(".mp4","",$fileOgName);
+	}else if($fileMimeType == "video/webm"){
+		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".webm";
+		$fileOgName=str_replace(".webm","",$fileOgName);
+	}else if($fileMimeType == "video/ogg"){
+		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".ogg";
+		$fileOgName=str_replace(".ogg","",$fileOgName);
+	#}else if($fileMimeType == "video/x-msvideo"){
+	#	$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".avi";
+	#	$fileOgName=str_replace(".avi","",$fileOgName);
+	}else if($fileMimeType == "video/mkv"){
+		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mkv";
+		$fileOgName=str_replace(".mkv","",$fileOgName);
+	}else if($fileMimeType == "audio/mp3"){
+		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mp3";
+		$fileOgName=str_replace(".mp3","",$fileOgName);
+	}else{
+		$filePath="";
+		$linkFailed=true;
+		addToLog("ERROR", "Unsupported file upload", "Unsupported file type '$fileMimeType' for file '$fileOgName'");
+		# redirect the failed link
+		redirect("?uploadFailure=".$fileMimeType);
+	}
+
+	if(! file_exists($filePath)){
+		# copy the temp file to the path generated
+		copy($fileName,$filePath);
+	}
+
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum."-thumb.png")){
+		# build thumbnail with the scheduler in a seprate thread
+		shell_exec("echo \"ffmpegthumbnailer -i '$filePath' -o '".$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum."-thumb.png"."'\" | at -M -q a now");
+	}
+	# remove the file from the temp directory
+	unlink($fileName);
+	# generate the video link for the direct file
+	$videoLink = str_replace($_SERVER["DOCUMENT_ROOT"],"",$filePath);
+	if ($_SERVER["HTTPS"]){
+		# https A
+		$proto="https";
+	}else{
+		$proto="http";
+	}
+
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.title")){
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.title", $fileOgName);
+	}
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php")){
+		symlink("/usr/share/2web/templates/videoPlayer.php",$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php");
+	}
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.directLink")){
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.directLink", $videoLink);
+	}
+	# build the strm links
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".strm")){
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".strm", $videoLink);
+	}
+	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.strmLink")){
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$fileSum.".strm");
+	}
+	# redirect to the web page
+	redirect("/web_player/".$fileSum.".php");
+	exit();
+}else{
+	addToLog("ERROR", "API accessed incorrectly", "The API was accessed in a incorrect way");
+	addToLog("ERROR","SESSION Data",var_export($_SESSION, true));
+	addToLog("ERROR","POST Data",var_export($_POST, true));
+	addToLog("ERROR","GET Data",var_export($_GET, true));
+	addToLog("ERROR","FILE Data",var_export($_FILES, true));
 }
 echo "<html class='randomFanart'>";
 echo "<head>";
 echo "<link rel='stylesheet' href='/style.css'>";
 echo "<script src='/2webLib.js'></script>";
 echo "</head>";
-echo "<body class='settingListCard'>";
+echo "<body>";
 include("/usr/share/2web/templates/header.php");
-#
-if (array_key_exists("failure",$_GET)){
+# draw error banners
+if (array_key_exists("uploadFailure",$_GET)){
+	echo errorBanner("Error: Unsupported file type '".$_GET["uploadFailure"]."'\n");
+	echo errorBanner("Supported filetypes are '.mp4','.mvk','.avi', and '.mp3'\n");
+}else if (array_key_exists("failure",$_GET)){
 	echo errorBanner("The given link '".$_GET['failure']."' is a invalid link and can not be parsed...",true);
 }
-
+echo "<div class='settingListCard'>";
 echo "<table class=''>";
 # form to use resolver for a url
 echo "	<tr>\n";
@@ -218,10 +295,34 @@ echo "				</table>";
 echo "			</td>\n";
 echo "		</tr>\n";
 echo "	</form>\n";
+# form to upload a file for playback
+echo "	<form method='post' action='web-player.php' enctype='multipart/form-data'>";
+echo "		<tr>\n";
+echo "			<th id='directLink'>\n";
+echo "				Upload File For Playback\n";
+echo "			</th>\n";
+echo "		</tr>\n";
+echo "		<tr>\n";
+echo "			<td>\n";
+echo "				<table class='kodiControlEmbededTable'>\n";
+echo "					<tr>\n";
+echo "						<td>\n";
+# build the share url interface for posting urls into the resolver to be passed to kodi
+echo "							<input class='button' type='file' name='uploadMediaFile' accept='video/*'>";
+echo "						</td>\n";
+echo "						<td class='kodiControlEmbededTableButton'>\n";
+echo "							<input class='button' type='submit' value='Upload File'>\n";
+echo "						</td>\n";
+echo "					</tr>\n";
+echo "				</table>";
+echo "			</td>\n";
+echo "		</tr>\n";
+echo "	</form>\n";
 echo "</table>\n";
+echo "</div>";
 # draw the older cached videos
 echo "<div class='titleCard'>\n";
-echo "<h2>Recently Viewed Videos</h2>\n";
+echo "<h2>Recent Videos</h2>\n";
 $sourceFiles = recursiveScan($_SERVER['DOCUMENT_ROOT']."/web_player/");
 # sort the files by mtime
 $sortedLinkList=array();
@@ -256,7 +357,11 @@ foreach($sourceFiles as $sourceFile){
 		$jsonData=json_decode($jsonData);
 		$videoTitle=$jsonData->title;
 	}else{
-		$videoTitle=str_replace(".php","",basename($sourceFile));
+		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum.".php.title")){
+			$videoTitle=file_get_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum.".php.title");
+		}else{
+			$videoTitle=str_replace(".php","",basename($sourceFile));
+		}
 	}
 
 	echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum.".php")."'>\n";
@@ -264,6 +369,8 @@ foreach($sourceFiles as $sourceFile){
 
 	if(file_exists($thumbTemplate.".png")){
 		echo "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
+	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."-thumb.png")){
+		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."-thumb.png"."' />\n";
 	}
 	if(file_exists($thumbTemplate.".mp4")){
 		echo "	<h3>".$videoTitle."<div class='radioIcon'>🟢</div></h3>\n";
@@ -279,9 +386,7 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 echo "</div>";
-
-
 include("/usr/share/2web/templates/footer.php");
-echo "</body>\n";
-echo "</html>\n";
+echo "</body>";
+echo "</html>";
 ?>
