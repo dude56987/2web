@@ -206,7 +206,7 @@ include("settingsHeader.php");
 	# list the lock status of each group permisssions
 	foreach( $groups as $group){
 		echo "<div class='inputCard'>";
-		echo "<h2>".$group."</h2>";
+		echo "<h2 id='groupLock_".$group."'>".$group."</h2>";
 		if ($group == "2web"){
 			echo "<p>";
 			echo "	This is the base group for the site. If this group is locked nothing is accessable without a login.";

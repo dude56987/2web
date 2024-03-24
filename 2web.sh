@@ -729,6 +729,22 @@ function update2web(){
 		fi
 	fi
 
+	# check if the web client is enabled for use with signage type interfaces
+	if yesNoCfgCheck "/etc/2web/client.cfg";then
+		# create the group for client permissions
+		createDir "/etc/2web/groups/client/"
+		createDir "/etc/2web/groups/clientRemote/"
+		# create the client directory
+		createDir "$webDirectory/client/"
+		# enable the web client page
+		linkFile "/usr/share/2web/resolvers/client.php" "$webDirectory/client/index.php"
+	else
+		# remove the web client completely
+		if test -d "$webDirectory/client/";then
+			rm -vr "$webDirectory/client/"
+		fi
+	fi
+
 	# install the php streaming script
 	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
 	linkFile "/usr/share/2web/resolvers/transcode.php" "$webDirectory/transcode.php"

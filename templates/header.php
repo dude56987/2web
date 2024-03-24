@@ -241,6 +241,14 @@ if ($writeFile){
 		$fileData .= formatText("</span>",3);
 		$fileData .= formatText("</a>",2);
 	}
+	if (yesNoCfgCheck("/etc/2web/client.cfg")){
+		$fileData .= formatText("<a class='button' href='/client/'>",2);
+		$fileData .= formatText("🛰️",3);
+		$fileData .= formatText("<span class='headerText'>",3);
+		$fileData .= formatText("CLIENT",4);
+		$fileData .= formatText("</span>",3);
+		$fileData .= formatText("</a>",2);
+	}
 
 	# write all data in buffer
 	fwrite($fileObj,"$fileData");
@@ -250,6 +258,19 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+
+# draw the client remote control based on user permissions
+if (yesNoCfgCheck("/etc/2web/client.cfg")){
+	# check for permissions for using the remote to control the client page
+	if (requireGroup("clientRemote",false)){
+		echo formatText("<a class='button' href='/client/?remote'>",2);
+		echo formatText("🎛️",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("CLIENT REMOTE",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
 
 # try to load a session in the current window if one does not exist
 if (session_status() != 2){

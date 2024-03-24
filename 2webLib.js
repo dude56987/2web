@@ -122,18 +122,31 @@ function filter(className){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function playPause(){
+function setPlayButtonState(){
 	var video = document.getElementById("video");
 	var playButton = document.getElementById("playButton");
 	var pauseButton = document.getElementById("pauseButton");
 	if(video.paused){
-		video.play();
 		playButton.style.display = 'none';
 		pauseButton.style.display = 'inline-block';
 	}else{
-		video.pause();
 		playButton.style.display = 'inline-block';
 		pauseButton.style.display = 'none';
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+function playPause(){
+	var video = document.getElementById("video");
+	//var playButton = document.getElementById("playButton");
+	//var pauseButton = document.getElementById("pauseButton");
+	if(video.paused){
+		video.play();
+		//playButton.style.display = 'none';
+		//pauseButton.style.display = 'inline-block';
+	}else{
+		video.pause();
+		//playButton.style.display = 'inline-block';
+		//pauseButton.style.display = 'none';
 	}
 	return false;
 }
@@ -190,7 +203,7 @@ function volumeUp(){
 	} else {
 		var volumeString = String(tempVolume);
 	}
-	document.getElementById("currentVolume").innerHTML=volumeString;
+	//document.getElementById("currentVolume").innerHTML=volumeString;
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +224,7 @@ function volumeDown(){
 	} else {
 		var volumeString = String(tempVolume);
 	}
-	document.getElementById("currentVolume").innerHTML=volumeString;
+	//document.getElementById("currentVolume").innerHTML=volumeString;
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,6 +308,14 @@ function closeFullscreen() {
 	document.getElementById("fullscreenButton").style = "display: inline-block;";
 	document.getElementById("exitFullscreenButton").style = "display: none;";
 	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function file_get_contents(fileUrl) {
+	// non async read a file on the local server
+	let xhttp = new XMLHttpRequest();
+	xhttp.open("GET", fileUrl, false);
+	xhttp.send();
+	return xhttp.responseText;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function delayedRefresh(timeout) {

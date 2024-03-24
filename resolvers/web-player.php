@@ -226,12 +226,6 @@ if (array_key_exists("url",$_GET)){
 	# redirect to the web page
 	redirect("/web_player/".$fileSum.".php");
 	exit();
-}else{
-	addToLog("ERROR", "API accessed incorrectly", "The API was accessed in a incorrect way");
-	addToLog("ERROR","SESSION Data",var_export($_SESSION, true));
-	addToLog("ERROR","POST Data",var_export($_POST, true));
-	addToLog("ERROR","GET Data",var_export($_GET, true));
-	addToLog("ERROR","FILE Data",var_export($_FILES, true));
 }
 echo "<html class='randomFanart'>";
 echo "<head>";

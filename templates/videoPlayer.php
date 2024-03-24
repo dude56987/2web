@@ -678,7 +678,7 @@ pageKeys();
 	echo "<div class='hardLink'>\n";
 	# draw the direct links
 	echo "<div>\n";
-	echo "<a class='button hardLink' href='".$directLinkData."'>\n";
+	echo "<a class='button hardLink' rel='noreferer' href='".$directLinkData."'>\n";
 	echo "🔗Direct Link\n";
 	echo "</a>\n";
 	echo "</div>\n";
@@ -702,39 +702,66 @@ pageKeys();
 		echo "</a>\n";
 		echo "</div>\n";
 	}
-
-	echo "<div>";
-	# build the play on kodi links
-	if (file_exists("show.title")){
-		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
-		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-		if ($cacheLinkExists){
-			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
-		}else{
-			#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
-			if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
-				echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
-			}else{
-				if($strmLinkExists){
+	# check if the play on kodi button is enabled in the settings
+	if (yesNoCfgCheck("/etc/2web/kodi/playOnKodiButton.cfg")){
+		# check if the user has permissisons to access these buttons
+		if (requireGroup("kodi2web", false)){
+			echo "<div>";
+			# build the play on kodi links
+			if (file_exists("show.title")){
+				#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
+				# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
+				if ($cacheLinkExists){
 					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+				}else{
+					#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+					if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
+						echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+					}else{
+						if($strmLinkExists){
+							echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+						}else{
+							echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+						}
+					}
+				}
+			}else{
+				# this is a movie
+				#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
+				# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
+				if ($cacheLinkExists){
+					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
 				}else{
 					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
 				}
 			}
-		}
-	}else{
-		# this is a movie
-		#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
-		# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-		if ($cacheLinkExists){
-			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
-		}else{
-			echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+			echo "🇰Play on KODI\n";
+			echo "</a>\n";
+			echo "</div>\n";
 		}
 	}
-	echo "🇰Play on KODI\n";
-	echo "</a>\n";
-	echo "</div>\n";
+
+	if ($cacheLinkExists){
+		#$clientLink="/ytdl-resolver.php?url=".$directLinkData;
+		$clientLink=$cacheLinkData;
+	}else{
+		$clientLink=$directLinkData;
+	}
+	#$clientLink=$directLinkData;
+
+	# if the client is enabled
+	if (yesNoCfgCheck("/etc/2web/client.cfg")){
+		# if the group permissions are available for the current user
+		if (requireGroup("clientRemote", false)){
+			# draw the button for playing videos across all the clients
+			echo "<div>";
+			# build the play on client link
+			echo "<a class='button hardLink' target='_new' href='/client/?play=".$clientLink."'>\n";
+			echo "🎟️ Play on Client\n";
+			echo "</a>\n";
+			echo "</div>\n";
+		}
+	}
 
 	echo "<div>";
 	# build the vlc links

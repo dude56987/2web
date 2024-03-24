@@ -39,8 +39,26 @@ include("settingsHeader.php");
 		<li><a href='#addKodiLocation'>Add kodi Location</a></li>
 		<li><a href='#kodiServerLocationPaths'>Server Kodi Locations</a></li>
 		<li><a href='#kodiLocationPaths'>Kodi Location Paths</a></li>
+		<li><a href='#playOnKodiButton'>Play On Kodi Button</a></li>
+		<li><a href='#kodiPlayerPaths'>Kodi Player Paths</a></li>
 	</ul>
 </div>
+
+<div id='playOnKodiButton' class='inputCard'>
+	<h2>Play On KODI</h2>
+		<ul>
+			<li>
+				Show or hide the "Play On KODI" button on video webpages.
+			</li>
+			<li>
+				This requires you to <a href='/settings/kodi.php#kodiPlayerPaths'>add kodi player paths</a> that will be used by this button.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/kodi/playOnKodiButton.cfg","Play On KODI Button","playOnKodiButton");
+		?>
+</div>
+
 <?php
 echo "<div id='kodiServerLocationPaths' class='settingListCard'>\n";
 echo "<h2>kodi Server Location Paths</h2>\n";

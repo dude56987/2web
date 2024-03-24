@@ -38,9 +38,13 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#addNewUser'>Add New Administrator</a></li>
-		<li><a href='#removeUser'>Remove Administrator</a></li>
+		<li><a href='#webPlayerStatus'>Web Player Status</a></li>
+		<li><a href='#webClientStatus'>Web Client Status</a></li>
 		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
+		<li><a href='#additionalDictionaryResults'>Additional Dictionary Results</a></li>
+		<li><a href='#websiteCachePath'>2web Cache Path</a></li>
+		<li><a href='#websiteDownloadPath'>2web Download Path</a></li>
+		<li><a href='#websiteGeneratedPath'>2web Generated Path</a></li>
 	</ul>
 </div>
 </div>
@@ -57,6 +61,27 @@ include("settingsHeader.php");
 		</ul>
 		<?PHP
 		buildYesNoCfgButton("/etc/2web/webPlayer.cfg","Web Player","webPlayerStatus");
+		?>
+</div>
+
+<div id='webClientStatus' class='inputCard'>
+	<h2>Web Client</h2>
+		<ul>
+			<li>
+				Enable or disable the <a href='/client/'>Web Client Page</a>.
+			</li>
+			<li>
+				A syncronized page that can be loaded on client machines and controlled by the server web interface.
+			</li>
+			<li>
+				This module creates a webpage that can be remote controlled by the web interface. To send links to kodi, enable and use the <a href='/settings/modules.php#kodi2webStatus'>kodi2web</a> module.
+			</li>
+			<li>
+				You can enable the player and lock the remote control to make the player page public but the controls for the player private. To lock or unlock it use the <a href='/settings/users.php#groupLock_clientRemote'>Users & Groups</a> and lock or unlock the "clientRemote" group.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/client.cfg","Web Client","webClientStatus");
 		?>
 </div>
 
@@ -116,7 +141,7 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 </div>
-<div id='channelCacheUpdateDelay' class='inputCard'>
+<div id='websiteCachePath' class='inputCard'>
 <h2>2web Website Cache Path</h2>
 <ul>
 	<li>
@@ -134,7 +159,7 @@ include("settingsHeader.php");
 ?>
 </div>
 
-<div id='channelCacheUpdateDelay' class='inputCard'>
+<div id='websiteDownloadPath' class='inputCard'>
 <h2>2web Download Path</h2>
 <ul>
 	<li>
@@ -152,7 +177,7 @@ include("settingsHeader.php");
 ?>
 </div>
 
-<div id='channelCacheUpdateDelay' class='inputCard'>
+<div id='websiteGeneratedPath' class='inputCard'>
 <h2>2web Generated Path</h2>
 <ul>
 	<li>

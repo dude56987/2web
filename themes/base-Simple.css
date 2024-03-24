@@ -2324,3 +2324,43 @@ details summary h2::before {
 details[open] summary h2::before {
 	content:"📖";
 }
+.clientVideoPlayer{
+	width: 100dvw;
+	height: 100dvh;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	margin: 0px;
+}
+.clientQrCode{
+	bottom: 0px;
+	right: 0px;
+	position: fixed;
+	width: 20dvw;
+	height: 20dvh;
+	margin-right: 10dvw;
+	margin-bottom: 10dvh;
+	filter: drop-shadow(0rem 0rem 1rem white);
+}
+.clientQrCodeIp{
+	bottom: 0px;
+	left: 0px;
+	position: fixed;
+	width: 20dvw;
+	height: 20dvh;
+	margin-left: 10dvw;
+	margin-bottom: 10dvh;
+	filter: drop-shadow(0rem 0rem 1rem white);
+}
+.clientBackButton{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	margin: 0.05rem;
+}
+.clientRemoteButton{
+	position: fixed;
+	right: 0px;
+	top: 0px;
+	margin: 0.05rem;
+}

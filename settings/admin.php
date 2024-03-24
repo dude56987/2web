@@ -783,6 +783,11 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/weather.php#setWeatherHomepageLocation'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("playOnKodiButton",$_POST)){
+	$link=$_POST['playOnKodiButton'];
+	yesNoCfgSet("/etc/2web/kodi/playOnKodiButton.cfg", $_POST['playOnKodiButton']);
+	echo "<hr><a class='button' href='/settings/kodi.php#playOnKodiButton'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
 	$link=$_POST['homepageFortuneStatus'];
 	yesNoCfgSet("/etc/2web/fortuneStatus.cfg", $_POST['homepageFortuneStatus']);
@@ -792,6 +797,11 @@ if (array_key_exists("newUserName",$_POST)){
 	$link=$_POST['webPlayerStatus'];
 	yesNoCfgSet("/etc/2web/webPlayer.cfg", $_POST['webPlayerStatus']);
 	echo "<hr><a class='button' href='/settings/system.php#webpagePlayerStatus'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("webClientStatus",$_POST)){
+	$link=$_POST['webClientStatus'];
+	yesNoCfgSet("/etc/2web/client.cfg", $_POST['webClientStatus']);
+	echo "<hr><a class='button' href='/settings/system.php#webClientStatus'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("lockGroup",$_POST)){
 	$group=$_POST["lockGroup"];
