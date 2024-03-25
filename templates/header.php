@@ -395,3 +395,8 @@ if (array_key_exists("q",$_GET)){
 	?>
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
+<?PHP
+# send the header information before the rest of the page
+flush();
+ob_flush();
+?>
