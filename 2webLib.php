@@ -1421,7 +1421,9 @@ if( ! function_exists("addToLog")){
 		# set the module name to admin
 		$moduleName="WEB";
 		# create identifier date to organize the data, this is really accurate
-		$logIdentifier=$_SERVER["REQUEST_TIME_FLOAT"];
+		# - use microtime to generate log entries at the time the function is executed
+		# - do not use request_time_float as this will make all log entries added by a php script to be under the same log entry
+		$logIdentifier=(string)microtime(true);
 		$logDate=date("d\/m\/y");
 		$logTime=date("h:i:s");
 		#
