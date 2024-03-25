@@ -62,7 +62,6 @@
 ?>
 </div>
 </div>
-
 <?php
 	// get a list of all the genetrated index links for the page
 	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/weather/data/forcast_*.index | sort"));
@@ -90,15 +89,9 @@
 		}
 	}
 ?>
-
-<!--
-</div>
--->
-
 <?php
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
-
 </body>
 </html>

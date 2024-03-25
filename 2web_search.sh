@@ -320,7 +320,7 @@ function singleWikiSearch(){
 	done
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
-#
+################################################################################
 function wikiSearch(){
 	#wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS"
 	webDirectory=$1

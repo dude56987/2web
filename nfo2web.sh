@@ -1889,7 +1889,7 @@ function update(){
 	# build the show index
 	buildShowIndex "$webDirectory"
 	touch "$logPagePath"
-	addToLog "INFO" "STARTED Update" "$(date)" "$webDirectory/log/$(date "+%s").log"
+	addToLog "INFO" "STARTED Update" "$(date)"
 	# sleep one second to seprate the logs
 	sleep 1
 	# create new log after start so start log message is at start of log
