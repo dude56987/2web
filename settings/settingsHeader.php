@@ -18,12 +18,23 @@
 ########################################################################
 $pageURL = $_SERVER['REQUEST_URI'];
 ########################################################################
-function drawSettingsHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLink){
+function drawModuleHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLink,$activeLinkArray=Array()){
 	if (detectEnabledStatus("$moduleName")){
 		if ($_SERVER['REQUEST_URI'] == "$buttonLink"){
 			echo "<a class='activeButton' href='$buttonLink'>";
 		}else{
-			echo "<a class='button' href='$buttonLink'>";
+			$foundLink=false;
+			# compare the array
+			foreach($activeLinkArray as $tempLink){
+				if ($_SERVER['REQUEST_URI'] == "$tempLink"){
+					$foundLink=true;
+				}
+			}
+			if($foundLink){
+				echo "<a class='activeButton' href='$buttonLink'>";
+			}else{
+				echo "<a class='button' href='$buttonLink'>";
+			}
 		}
 		echo "	$buttonIcon";
 		echo "	<span class='headerText'>";
@@ -33,72 +44,49 @@ function drawSettingsHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLin
 	}
 }
 ########################################################################
+function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=Array()){
+	if ($_SERVER['REQUEST_URI'] == "$buttonLink"){
+		echo "<a class='activeButton' href='$buttonLink'>";
+	}else{
+		$foundLink=false;
+		# compare the array
+		foreach($activeLinkArray as $tempLink){
+			if ($_SERVER['REQUEST_URI'] == "$tempLink"){
+				$foundLink=true;
+			}
+		}
+		if($foundLink){
+			echo "<a class='activeButton' href='$buttonLink'>";
+		}else{
+			echo "<a class='button' href='$buttonLink'>";
+		}
+	}
+	echo "	$buttonIcon";
+	echo "	<span class='headerText'>";
+	echo "		$buttonText";
+	echo "	</span>";
+	echo "</a>";
+}
+########################################################################
 ?>
 <div class='titleCard'>
 	<h2>Settings</h2>
 	<div class='listCard'>
 		<?PHP
-		if ($pageURL == "/settings/modules.php"){
-			echo "<a class='activeButton' href='/settings/modules.php'>";
-		}else{
-			echo "<a class='button' href='/settings/modules.php'>";
-		}
-		?>
-			🧩
-			<span class='headerText'>
-				Modules
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/system.php"){
-			echo "<a class='activeButton' href='/settings/system.php'>";
-		}else{
-			echo "<a class='button' href='/settings/system.php'>";
-		}
-		?>
-			🎛️
-			<span class='headerText'>
-				System
-			</span>
-		</a>
-		<?PHP
 		# draw the module buttons if the module is enabled
-		drawSettingsHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php");
-		drawSettingsHeaderButton("music2web","🎧","Music","/settings/music.php");
-		drawSettingsHeaderButton("comic2web","📚","Comics","/settings/comics.php");
-		drawSettingsHeaderButton("iptv2web","📡","Live","/settings/tv.php");
-		drawSettingsHeaderButton("wiki2web","⛵","Wiki","/settings/wiki.php");
-		drawSettingsHeaderButton("git2web","💾","Repos","/settings/repos.php");
-		drawSettingsHeaderButton("portal2web","🚪","Portal","/settings/portal.php");
-		drawSettingsHeaderButton("weather2web","🌤️","Weather","/settings/weather.php");
-		drawSettingsHeaderButton("ai2web","🧠","AI","/settings/ai.php");
-		drawSettingsHeaderButton("graph2web","📊","Graphs","/settings/graphs.php");
-		drawSettingsHeaderButton("kodi2web","🇰","Kodi","/settings/kodi.php");
+		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php"));
+		drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+		drawModuleHeaderButton("music2web","🎧","Music","/settings/music.php");
+		drawModuleHeaderButton("comic2web","📚","Comics","/settings/comics.php",Array("/settings/comicsDL.php"));
+		drawModuleHeaderButton("iptv2web","📡","Live","/settings/tv.php",Array("/settings/tv.php","/settings/radio.php","/settings/iptv_blocked.php"));
+		drawModuleHeaderButton("wiki2web","⛵","Wiki","/settings/wiki.php");
+		drawModuleHeaderButton("git2web","💾","Repos","/settings/repos.php");
+		drawModuleHeaderButton("portal2web","🚪","Portal","/settings/portal.php");
+		drawModuleHeaderButton("weather2web","🌤️","Weather","/settings/weather.php");
+		drawModuleHeaderButton("ai2web","🧠","AI","/settings/ai.php");
+		drawModuleHeaderButton("graph2web","📊","Graphs","/settings/graphs.php");
+		drawModuleHeaderButton("kodi2web","🇰","Kodi","/settings/kodi.php");
 		?>
-		<?PHP
-		if ($pageURL == "/log/index.php"){
-			echo "<a class='activeButton' href='/log/'>";
-		}else{
-			echo "<a class='button' href='/log/'>";
-		}
-		?>
-			📋
-			<span class='headerText'>
-				Log
-			</span>
-		</a>
-		<?PHP
-		if ($pageURL == "/settings/about.php"){
-			echo "<a class='activeButton' href='/settings/about.php'>";
-		}else{
-			echo "<a class='button' href='/settings/about.php'>";
-		}
-		?>
-			❓
-			<span class='headerText'>
-				About
-			</span>
-		</a>
 	</div>
 </div>
 
@@ -108,9 +96,9 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Live Settings</h2>\n";
 	echo "		<div class='listCard'>";
-	echo "			<a class='button' href='/settings/tv.php'>📺TV</a>\n";
-	echo "			<a class='button' href='/settings/radio.php'>📻Radio</a>\n";
-	echo "			<a class='button' href='/settings/iptv_blocked.php'>🚫Blocked</a>\n";
+	drawHeaderButton("📺","TV","/settings/tv.php");
+	drawHeaderButton("📻","Radio","/settings/radio.php");
+	drawHeaderButton("🚫","Blocked","/settings/iptv_blocked.php");
 	echo "		</div>";
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php") || ($pageURL == "/settings/rss.php")){
@@ -124,13 +112,9 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Video On Demand Settings</h2>\n";
 	echo "		<div class='listCard'>";
-	echo "			<a class='button' href='/settings/nfo.php'>🎞️Libaries</a>\n";
-	if (detectEnabledStatus("ytdl2nfo")){
-		echo "			<a class='button' href='/settings/ytdl2nfo.php'>↓Downloads</a>\n";
-	}
-	if (detectEnabledStatus("rss2nfo")){
-		echo "			<a class='button' href='/settings/rss.php'>📶 RSS</a>\n";
-	}
+	drawHeaderButton("🎞️","Libaries","/settings/nfo.php");
+	drawModuleHeaderButton("ytdl2nfo","↓","Downloads","/settings/ytdl2nfo.php");
+	drawModuleHeaderButton("rss2nfo","📶","RSS","/settings/rss.php");
 	echo "		</div>";
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
@@ -150,42 +134,33 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Comics Settings</h2>\n";
 	echo "		<div class='listCard'>";
-	echo "			<a class='button' href='/settings/comics.php'>📚Libaries</a>\n";
-	echo "			<a class='button' href='/settings/comicsDL.php'>↓Downloads</a>\n";
+	drawHeaderButton("📚","Libaries","/settings/comics.php");
+	drawHeaderButton("↓","Downloads","/settings/comicsDL.php");
 	echo "		</div>";
 	echo "	</div>\n";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
-}else if ($pageURL == "/settings/modules.php"){
-	$moduleName="none";
 }else if ($pageURL == "/settings/repos.php"){
 	$moduleName="git2web";
-}else if (($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php")){
+}else if ($pageURL == "/settings/weather.php"){
+	$moduleName="weather2web";
+}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php")){
 	$moduleName="none";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
 	echo "		<div class='listCard'>";
-	echo "			<a class='button' href='/settings/system.php'>🎛️ General</a>\n";
-	echo "			<a class='button' href='/settings/modules.php'>🧩 Modules</a>\n";
-	echo "			<a class='button' href='/settings/users.php'>👪 Users & Groups</a>\n";
-	echo "			<a class='button' href='/settings/themes.php'>🎨 Themes</a>\n";
-	echo "			<a class='button' href='/settings/cache.php'>📥 Cache</a>\n";
-	echo "			<a class='button' href='/log/'>📋 Log</a>\n";
-	echo "			<a class='button' href='/views/'>👁️ Views</a>\n";
+	drawHeaderButton("🎛️","General","/settings/system.php");
+	drawHeaderButton("🧩","Modules","/settings/modules.php");
+	drawHeaderButton("👪","Users & Groups","/settings/users.php");
+	drawHeaderButton("🎨","Themes","/settings/themes.php");
+	drawHeaderButton("📥","Cache","/settings/cache.php");
+	drawHeaderButton("📋","Log","/log/");
+	drawHeaderButton("👁️","Views","/views/");
+	drawHeaderButton("❓","About","/settings/about.php");
 	echo "		</div>";
 	echo "	</div>";
-}else if ($pageURL == "/settings/weather.php"){
-	$moduleName="weather2web";
-	echo "	<div class='inputCard'>\n";
-	echo "		<h2>Weather Settings</h2>\n";
-	echo "		<ul>";
-	echo "			<li>\n";
-	echo "				<a class='' href='/settings/weather.php'>🌤️Weather</a>\n";
-	echo "			</li>\n";
-	echo "		</ul>";
-	echo "	</div>\n";
 }else{
 	$moduleName="none";
 }
