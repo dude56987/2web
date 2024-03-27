@@ -209,21 +209,23 @@ if( ! function_exists("drawPosterWidget")){
 	}
 }
 if( ! function_exists("detectEnabledStatus")){
-	function detectEnabledStatus($filePath){
+	function detectEnabledStatus($moduleName){
 		# Return true if given module is enabled
 		# Used for testing module enabled or disabled status
+		#
 		# return true if a $filePath exists and contains the text "enabled"
-		$filePath = "/etc/2web/mod_status/".$filePath.".cfg";
-		if (file_exists($filePath)){
-			if (file_get_contents($filePath) == "enabled"){
-				return True;
-			}else{
-				return False;
-			}
-		}else{
-			// no config exists so mark it as disabled
-			return False;
-		}
+		$filePath = "/etc/2web/mod_status/".$moduleName.".cfg";
+		return yesNoCfgCheck($filePath);
+	}
+}
+if( ! function_exists("checkModStatus")){
+	function checkModStatus($moduleName){
+		# Return true if given module is enabled
+		# Used for testing module enabled or disabled status
+		#
+		# return true if a $filePath exists and contains the text "enabled"
+		$filePath = "/etc/2web/mod_status/".$moduleName.".cfg";
+		return yesNoCfgCheck($filePath);
 	}
 }
 if( ! function_exists("formatText")){
@@ -899,13 +901,15 @@ if( ! function_exists("drawPlaylistButton")){
 	function drawPlaylistButton($activeFilter,$filterName,$buttonText){
 		# check if the playlist index exists
 		if (file_exists($filterName.".index")){
-			# check the file has more than 2 entries
-			if (count(file("$filterName.index")) > 0){
-				if ($activeFilter == $filterName){
-					#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
-					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
-				}else{
-					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+			if (checkFilePathPermissions("_".$filterName.".index")){
+				# check the file has more than 2 entries
+				if (count(file("$filterName.index")) > 0){
+					if ($activeFilter == $filterName){
+						#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+						echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					}else{
+						echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+					}
 				}
 			}
 		}
@@ -928,13 +932,15 @@ if( ! function_exists("SQLdrawPlaylistButton")){
 				# add each row to the array
 				array_push($dataResults,$row['name']);
 			}
-			if (in_array("_".$filterName, $dataResults)){
-				# if the button is the active filter change the css
-				if ($activeFilter == $filterName){
-					#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
-					echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
-				}else{
-					echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+			if (checkFilePathPermissions("_".$filterName.".index")){
+				if (in_array("_".$filterName, $dataResults)){
+					# if the button is the active filter change the css
+					if ($activeFilter == $filterName){
+						#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+						echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+					}else{
+						echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+					}
 				}
 			}
 		}
@@ -1140,29 +1146,171 @@ if( ! function_exists("errorBanner")){
 	}
 }
 ########################################################################
+if( ! function_exists("sessionSetValue")){
+	function sessionSetValue($indexKey,$storedValue,$timeout=600){
+		# store a value in the session data and set a timeout for the value
+		#
+		# - This function can not store a value of null because the sessionGetValue()
+		#   return value will return null if no stored value could be retrieved
+		#
+		# - Default timeout is high because it will mostly effect users who are not
+		#   modifying these values
+		#
+		if (! isset($_SESSION)){
+			# the session does not yet exist so start the session
+			# - this is only for users that are not logged in
+			session_start();
+		}
+		# set the timestamp
+		$_SESSION[$indexKey."_timeStamp"]=time();
+		# set the timeout
+		$_SESSION[$indexKey."_timeOut"]=$timeout;
+		# store the value itself
+		$_SESSION[$indexKey."_value"]=$storedValue;
+	}
+}
+########################################################################
+if( ! function_exists("sessionGetValue")){
+	function sessionGetValue($indexKey){
+		# load a value stored in the session data
+		#
+		# - This will return null if the value could not be loaded
+		#
+		# store a value in the session
+		if (! isset($_SESSION)){
+			# the session does not yet exist so start the session
+			# - this is only for users that are not logged in
+			session_start();
+		}
+		if (array_key_exists($indexKey."_value",$_SESSION)){
+			# the value is stored check the value timeout
+			if (array_key_exists($indexKey."_timeStamp",$_SESSION)){
+				# load up the timestamp
+				$timeStamp=$_SESSION[$indexKey."_timeStamp"];
+				#addToLog("DEBUG","Found timestamp","$timeStamp");
+				if (array_key_exists($indexKey."_timeOut",$_SESSION)){
+					# load up the timeout
+					$timeOut=$_SESSION[$indexKey."_timeOut"];
+					#addToLog("DEBUG","Found timeOut","$timeOut");
+					# the timestamp exists check the value of the timestamp
+					if ((time() - $timeStamp) < $timeOut){
+						# the cached data is not to old so load the data
+						#addToLog("DEBUG","Found value",$_SESSION[$indexKey."_value"]);
+						# return the stored value
+						return $_SESSION[$indexKey."_value"];
+					}
+				}
+			}
+		}
+		#addToLog("DEBUG","Failed to load value from key",$indexKey);
+		# the data could not be got, so fail
+		return null;
+	}
+}
+########################################################################
 if( ! function_exists("yesNoCfgCheck")){
 	function yesNoCfgCheck($configPath){
 		# This function checks the value of a configuration file and returns true if the file is set to yes.
 		# If no config file exists a new one will be created.
 		#
 		# RETURN BOOL
-
+		# check if the config is cached in ram
+		$configPathSum=md5($configPath);
+		#check session data
+		$storedValue=sessionGetValue($configPathSum);
+		# if a value is returned
+		if($storedValue !== null){
+			# load the stored value found
+			# - exit the function here so the value will not be loaded from disk
+			return $storedValue;
+		}
 		# check if the config file exists
 		if (file_exists($configPath)){
 			$selected=file_get_contents($configPath);
 			$selected=strtolower($selected);
 			if ($selected == "yes"){
+				# cache the calculated value
+				sessionSetValue($configPathSum,true);
 				# the config file is set to yes
 				return true;
 			}else{
+				# cache the calculated value
+				sessionSetValue($configPathSum,false);
 				# the config is set to anything other than yes it is false
 				return false;
 			}
 		}else{
+			# cache the calculated value
+			sessionSetValue($configPathSum,false);
 			# no file exists return false and create default no config
 			file_put_contents($configPath , "no");
 			return false;
 		}
+	}
+}
+########################################################################
+if( ! function_exists("checkFilePathPermissions")){
+	function checkFilePathPermissions($filePath){
+		# check for permissions to read the file
+		$drawResult=false;
+		# check for permissions for specific results
+		if (stripos($filePath,"_wiki") !== false){
+			# check group permissions
+			if (requireGroup("wiki2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_comics") !== false){
+			if (requireGroup("comic2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_episodes") !== false){
+			if (requireGroup("nfo2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_shows") !== false){
+			if (requireGroup("nfo2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_movies") !== false){
+			if (requireGroup("nfo2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_channels") !== false){
+			if (requireGroup("iptv2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_graphs") !== false){
+			if (requireGroup("graph2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_music") !== false){
+			if (requireGroup("music2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_tracks") !== false){
+			if (requireGroup("music2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_artists") !== false){
+			if (requireGroup("music2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_albums") !== false){
+			if (requireGroup("music2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_portal") !== false){
+			if (requireGroup("portal2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_weather") !== false){
+			if (requireGroup("weather2web",false)){
+				$drawResult=true;
+			}
+		}else{
+			$drawResult=true;
+		}
+		return $drawResult;
 	}
 }
 ########################################################################

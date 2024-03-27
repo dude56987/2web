@@ -737,7 +737,7 @@ function returnModStatus(){
 	resetTerm="\033[0m"
 	# the config exists check the config
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
-		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
+		if grep -q "yes" "/etc/2web/mod_status/${moduleName}.cfg";then
 			echo -e "MOD $moduleName IS ${greenFG}ENABLED${resetTerm}!"
 			return 0
 		else
@@ -766,7 +766,7 @@ function checkModStatus(){
 	# check the mod status
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
 		# the config exists check the config
-		if grep -q "enabled" "/etc/2web/mod_status/${moduleName}.cfg";then
+		if grep -q "yes" "/etc/2web/mod_status/${moduleName}.cfg";then
 			# the module is enabled
 			echo "Preparing to process ${moduleName}..."
 		else
@@ -781,7 +781,7 @@ function checkModStatus(){
 		createDir "/etc/2web/mod_status/"
 		# the config does not exist at all create the default one
 		# - the default status for module should be disabled
-		echo -n "disabled" > "/etc/2web/mod_status/${moduleName}.cfg"
+		echo -n "no" > "/etc/2web/mod_status/${moduleName}.cfg"
 		chown www-data:www-data "/etc/2web/mod_status/${moduleName}.cfg"
 		# exit the script since by default the module is disabled
 		exit
@@ -799,7 +799,7 @@ function enableMod(){
 	# create a group for the module when it is enabled
 	createDir "/etc/2web/groups/${moduleName}/"
 	# enable the module
-	echo -n "enabled" > /etc/2web/mod_status/${moduleName}.cfg
+	echo -n "yes" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function disableMod(){
@@ -810,7 +810,7 @@ function disableMod(){
 	# RETURN FILES
 	moduleName=$1
 	ALERT "Disabling the module $moduleName"
-	echo -n "disabled" > /etc/2web/mod_status/${moduleName}.cfg
+	echo -n "no" > /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function loadWithoutComments(){

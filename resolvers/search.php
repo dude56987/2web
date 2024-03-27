@@ -296,6 +296,7 @@ function drawHead(){
 	echo "<body>";
 }
 ################################################################################
+################################################################################
 function checkSpelling($searchQuery){
 	# check the spelling and draw links to other sections
 
@@ -418,8 +419,10 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					# draw the link
-					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
+					if (checkFilePathPermissions($filePath)){
+						# draw the link
+						echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
+					}
 				}
 			}
 			if ($noFoundCategories == false){
@@ -433,11 +436,14 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					echo "<h2 id='$jumpLink'>$headerTitle</h2>";
-					# draw the matching search content
-					echo "<div>";
-					echo file_get_contents($webDirectory."/search/".$filePath);
-					echo "</div>";
+					# check the permissions
+					if (checkFilePathPermissions($filePath)){
+						# draw the matching search content
+						echo "<h2 id='$jumpLink'>$headerTitle</h2>";
+						echo "<div>";
+						echo file_get_contents($webDirectory."/search/".$filePath);
+						echo "</div>";
+					}
 				}
 			}
 		}else{
@@ -508,7 +514,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
 					# draw the link
-					echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
+					if (checkFilePathPermissions($filePath)){
+						echo "<a class='button' href='#$jumpLink'>$headerTitle</a>\n";
+					}
 				}
 			}
 			if ($noFoundCategories == false){
@@ -522,11 +530,14 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					$jumpLink=$headerTitle;
 					$headerTitle=str_replace("_"," ",$headerTitle);
 					$headerTitle=ucwords($headerTitle);
-					echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
-					# draw the matching search content
-					echo "<div>";
-					echo file_get_contents($webDirectory."/search/".$filePath);
-					echo "</div>";
+					# check the permissions
+					if (checkFilePathPermissions($filePath)){
+						# draw the matching search content
+						echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
+						echo "<div>";
+						echo file_get_contents($webDirectory."/search/".$filePath);
+						echo "</div>";
+					}
 				}
 			}
 			# using javascript, reload the webpage every 60 seconds, time is in milliseconds

@@ -119,136 +119,6 @@ if ($writeFile){
 	$fileData .= formatText("</span>",3);
 	$fileData .= formatText("</a>",2);
 
-	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
-		$fileData .= formatText("<a class='button' href='/new/'>",2);
-		$fileData .= formatText("📃",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("PLAYLISTS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-
-	if ($moviesFound){
-		$fileData .= formatText("<a class='button' href='/movies'>",2);
-		$fileData .= formatText("🎥",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("MOVIES",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($showsFound){
-		$fileData .= formatText("<a class='button' href='/shows'>",2);
-		$fileData .= formatText("📺",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("SHOWS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($musicFound){
-		$fileData .= formatText("<a class='button' href='/music'>",2);
-		$fileData .= formatText("🎧",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("MUSIC",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($comicsFound){
-		$fileData .= formatText("<a class='button' href='/comics'>",2);
-		$fileData .= formatText("📚",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("COMICS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($channelsFound){
-		$fileData .= formatText("<a class='button' href='/live'>",2);
-		$fileData .= formatText("📡",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("LIVE",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (file_exists("$webDirectory/wiki/")){
-		$fileData .= formatText("<a class='button' href='/wiki/'>",2);
-		$fileData .= formatText("⛵",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("WIKI",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($reposFound){
-		$fileData .= formatText("<a class='button' href='/repos/'>",2);
-		$fileData .= formatText("💾",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("REPOS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (file_exists("$webDirectory/ai/")){
-		$fileData .= formatText("<a class='button' href='/ai/'>",2);
-		$fileData .= formatText("🧠",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("AI",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (file_exists("$webDirectory/portal/")){
-		$fileData .= formatText("<a class='button' href='/portal/'>",2);
-		$fileData .= formatText("🚪",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("PORTAL",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if ($graphsFound){
-		$fileData .= formatText("<a class='button' href='/graphs/'>",2);
-		$fileData .= formatText("📊",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("GRAPHS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	// read the weather info for weather2web
-	//
-	if (file_exists("$webDirectory/weather/index.php")){
-		if (file_exists("$webDirectory/totalWeatherStations.index")){
-			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-				$fileData .= formatText("<a class='button' href='/weather/'>",2);
-				$fileData .= formatText("🌤️",3);
-				$fileData .= formatText("<span class='headerText'>",3);
-				$fileData .= formatText("WEATHER",4);
-				$fileData .= formatText("</span>",3);
-				$fileData .= formatText("</a>",2);
-			}
-		}
-	}
-	// check for the kodi remote
-	if (detectEnabledStatus("kodi2web")){
-		if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
-			$fileData .= formatText("<a class='button' href='/kodi-player.php'>",2);
-			$fileData .= formatText("🇰",3);
-			$fileData .= formatText("<span class='headerText'>",3);
-			$fileData .= formatText("KODI REMOTE",4);
-			$fileData .= formatText("</span>",3);
-			$fileData .= formatText("</a>",2);
-		}
-	}
-	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
-		$fileData .= formatText("<a class='button' href='/web-player.php'>",2);
-		$fileData .= formatText("📥",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("WEB PLAYER",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
-	if (yesNoCfgCheck("/etc/2web/client.cfg")){
-		$fileData .= formatText("<a class='button' href='/client/'>",2);
-		$fileData .= formatText("🛰️",3);
-		$fileData .= formatText("<span class='headerText'>",3);
-		$fileData .= formatText("CLIENT",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a>",2);
-	}
 
 	# write all data in buffer
 	fwrite($fileObj,"$fileData");
@@ -258,6 +128,164 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+
+#
+echo formatText("<a class='button' href='/new/'>",2);
+echo formatText("📃",3);
+echo formatText("<span class='headerText'>",3);
+echo formatText("PLAYLISTS",4);
+echo formatText("</span>",3);
+echo formatText("</a>",2);
+#
+if (detectEnabledStatus("nfo2web")){
+	if (requireGroup("nfo2web",false)){
+		echo formatText("<a class='button' href='/movies'>",2);
+		echo formatText("🎥",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("MOVIES",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("nfo2web")){
+	if (requireGroup("nfo2web",false)){
+		echo formatText("<a class='button' href='/shows'>",2);
+		echo formatText("📺",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("SHOWS",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("music2web")){
+	if (requireGroup("music2web",false)){
+		echo formatText("<a class='button' href='/music'>",2);
+		echo formatText("🎧",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("MUSIC",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("comic2web")){
+	if (requireGroup("comic2web",false)){
+		echo formatText("<a class='button' href='/comics'>",2);
+		echo formatText("📚",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("COMICS",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("iptv2web")){
+	if (requireGroup("iptv2web",false)){
+		echo formatText("<a class='button' href='/live'>",2);
+		echo formatText("📡",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("LIVE",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("wiki2web")){
+	if (requireGroup("wiki2web",false)){
+		echo formatText("<a class='button' href='/wiki/'>",2);
+		echo formatText("⛵",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("WIKI",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("git2web")){
+	if (requireGroup("git2web",false)){
+		echo formatText("<a class='button' href='/repos/'>",2);
+		echo formatText("💾",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("REPOS",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("ai2web")){
+	if (requireGroup("ai2web",false)){
+		echo formatText("<a class='button' href='/ai/'>",2);
+		echo formatText("🧠",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("AI",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("portal2web")){
+	if (requireGroup("portal2web",false)){
+		echo formatText("<a class='button' href='/portal/'>",2);
+		echo formatText("🚪",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("PORTAL",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("graph2web")){
+	if (requireGroup("graph2web",false)){
+		formatText("<a class='button' href='/graphs/'>",2);
+		formatText("📊",3);
+		formatText("<span class='headerText'>",3);
+		formatText("GRAPHS",4);
+		formatText("</span>",3);
+		formatText("</a>",2);
+	}
+}
+// read the weather info for weather2web
+if (file_exists("$webDirectory/weather/index.php")){
+	if (file_exists("$webDirectory/totalWeatherStations.index")){
+		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+			if (requireGroup("weather2web",false)){
+				echo formatText("<a class='button' href='/weather/'>",2);
+				echo formatText("🌤️",3);
+				echo formatText("<span class='headerText'>",3);
+				echo formatText("WEATHER",4);
+				echo formatText("</span>",3);
+				echo formatText("</a>",2);
+			}
+		}
+	}
+}
+
+// check for the kodi remote
+if (detectEnabledStatus("kodi2web")){
+	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+		if (requireGroup("kodi2web",false)){
+			echo formatText("<a class='button' href='/kodi-player.php'>",2);
+			echo formatText("🇰",3);
+			echo formatText("<span class='headerText'>",3);
+			echo formatText("KODI REMOTE",4);
+			echo formatText("</span>",3);
+			echo formatText("</a>",2);
+		}
+	}
+}
+if (requireGroup("webPlayer",false)){
+	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+		echo formatText("<a class='button' href='/web-player.php'>",2);
+		echo formatText("📥",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("WEB PLAYER",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (requireGroup("client",false)){
+	if (yesNoCfgCheck("/etc/2web/client.cfg")){
+		echo formatText("<a class='button' href='/client/'>",2);
+		echo formatText("🛰️",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("CLIENT",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
 
 # draw the client remote control based on user permissions
 if (yesNoCfgCheck("/etc/2web/client.cfg")){

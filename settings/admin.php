@@ -66,16 +66,24 @@ function yesNoCfgSet($configPath, $newConfigSetting){
 	# Set a yes/no configuration file to a set value, The value must be 'yes' or it will be set to no.
 	#
 	# RETURN FILES
+	// create a sum for the value for updating the session
+	$configPathSum=md5($configPath);
+	#
 	outputLog("Setting $configPath status to $newConfigSetting");
 	if (strtolower($newConfigSetting) == "yes"){
+		# store the updated value in the local session
+		sessionSetValue($configPathSum,true);
+		# store the update value on disk
 		file_put_contents($configPath , "yes");
 		outputLog("$configPath saved as 'yes'");
 	}else{
+		# store the updated value in the local session
+		sessionSetValue($configPathSum,false);
 		# set the file to disabled if anything other than yes is set
 		file_put_contents($configPath, "no");
 		outputLog("$configPath saved as 'no'");
 	}
-	return True;
+	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function outputLog($stringData,$class="outputLog"){
@@ -112,36 +120,12 @@ function setModStatus($modName,$modStatus){
 	outputLog("Setting $modName status to ".$modStatus);
 	# read the link and create a custom config
 	$configPath="/etc/2web/mod_status/".$modName.".cfg";
-	if ( $modStatus == "enabled"){
-		# enable the module
-		outputLog("Enabling $modName","goodLog");
-		# write status to module config
-		file_put_contents($configPath,$modStatus);
-		# create the group if it does not exist
-		if (! file_exists("/etc/2web/groups/".$modName."/")){
-			mkdir("/etc/2web/groups/".$modName."/");
-		}
-		outputLog("$modName has been set to $modStatus","goodLog");
-	}else{
-		# disable the module
-		outputLog("Disabling $modName", "goodLog");
-		# if the file exists
-		if (file_exists($configPath)){
-			# remove the config file to disable the module
-			unlink($configPath);
-			outputLog("$modName has been set to $modStatus", "goodLog");
-		}else{
-			outputLog("$modName status is already $modStatus", "badLog");
-		}
-	}
+	#
+	yesNoCfgSet($configPath, $modStatus);
 }
 ////////////////////////////////////////////////////////////////////////////////
 function usablePath($path){
 	# check if the file path exists
-	#if (! file_exists($path)){
-	#	outputLog("'$path' does not exist!");
-	#	return False;
-	#}
 	# check the path info
 	$path=explode("/",$path);
 	$pathCollector="/";
@@ -628,7 +612,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
-	echo "<hr><a class='button' href='/settings/system.php#randomTheme'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/themes.php#randomTheme'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("addKodiLocation",$_POST)){
 	# add kodi location

@@ -150,7 +150,7 @@ foreach($modules as $module){
 		echo "				</li>";
 	}
 	# check the module status for drawing enabled or disabled onscreen
-	if (detectEnabledStatus($module)){
+	if (checkModStatus($module)){
 		echo "				<li>";
 		echo "					Currently this module is <span class='enabledSetting'>Enabled</span>.";
 		echo "				</li>";
@@ -161,13 +161,13 @@ foreach($modules as $module){
 	}
 	echo "			</ul>";
 	// check the status of the module for the dropdown
-	if (detectEnabledStatus($module)){
+	if (checkModStatus($module)){
 		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "	<button class='button' type='submit' name='".$module."Status' value='disabled'>🟢 Disable Module</button>\n";
+		echo "	<button class='button' type='submit' name='".$module."Status' value='no'>🟢 Disable Module</button>\n";
 		echo "	</form>\n";
 	}else{
 		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "	<button class='button' type='submit' name='".$module."Status' value='enabled'>◯ Enable Module</button>\n";
+		echo "	<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable Module</button>\n";
 		echo "	</form>\n";
 	}
 	echo "</div>";

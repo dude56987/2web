@@ -220,133 +220,6 @@ if ($writeFile){
 		$fileData .= "</span>";
 		$fileData .= "</a> ";
 	}
-
-	if ($moviesFound){
-		$fileData .= "<a class='footerButton' href='/movies'>";
-		$fileData .= "🎥";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " MOVIES";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	if ($showsFound){
-		$fileData .= "<a class='footerButton' href='/shows'>";
-		$fileData .= "📺";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " SHOWS";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	if ($musicFound){
-		$fileData .= "<a class='footerButton' href='/music'>";
-		$fileData .= "🎧";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " MUSIC";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	if ($comicsFound){
-		$fileData .= "<a class='footerButton' href='/comics'>";
-		$fileData .= "📚";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " COMICS";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	if ($channelsFound){
-		$fileData .= "<a class='footerButton' href='/live'>";
-		$fileData .= "📡";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " LIVE";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	if (file_exists("$webDirectory/wiki/")){
-		$fileData .= "<a class='footerButton' href='/wiki/'>";
-		$fileData .= "⛵";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " WIKI";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-	// read the weather info for weather2web
-	if (file_exists("$webDirectory/weather/index.php")){
-		if (file_exists("$webDirectory/totalWeatherStations.index")){
-			if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-				$fileData .= "<a class='footerButton' href='/weather/'>";
-				$fileData .= "🌤️";
-				$fileData .= "<span class='footerText'>";
-				$fileData .= " WEATHER";
-				$fileData .= "</span>";
-				$fileData .= "</a> ";
-			}
-		}
-	}
-	// check for the kodi remote
-	if (detectEnabledStatus("kodi2web")){
-		if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
-			$fileData .= formatText("<a class='footerButton' href='/kodi-player.php'>",2);
-			$fileData .= formatText("🇰",3);
-			$fileData .= formatText("<span class='footerText'>",3);
-			$fileData .= formatText("KODI REMOTE",4);
-			$fileData .= formatText("</span>",3);
-			$fileData .= formatText("</a> ",2);
-		}
-	}
-	if ($reposFound){
-		$fileData .= formatText("<a class='footerButton' href='/repos/'>",2);
-		$fileData .= formatText("💾",3);
-		$fileData .= formatText("<span class='footerText'>",3);
-		$fileData .= formatText("REPOS",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a> ",2);
-	}
-	if ($aiFound){
-		$fileData .= formatText("<a class='footerButton' href='/ai/'>",2);
-		$fileData .= formatText("🧠",3);
-		$fileData .= formatText("<span class='footerText'>",3);
-		$fileData .= formatText("AI",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a> ",2);
-	}
-	if ($portalsFound){
-		$fileData .= formatText("<a class='footerButton' href='/portal/'>",2);
-		$fileData .= formatText("🚪",3);
-		$fileData .= formatText("<span class='footerText'>",3);
-		$fileData .= formatText("PORTAL",4);
-		$fileData .= formatText("</span>",3);
-		$fileData .= formatText("</a> ",2);
-	}
-	if ($graphsFound){
-		$fileData .= "<a class='footerButton' href='/graphs/'>";
-		$fileData .= "📊";
-		$fileData .= "<span class='footerText'>";
-		$fileData .= " GRAPHS";
-		$fileData .= "</span>";
-		$fileData .= "</a> ";
-	}
-
-	// draw the help button
-	$fileData .= "<a class='footerButton' href='/help.php'>";
-	$fileData .= "❔";
-	$fileData .= "<span class='footerText'>";
-	$fileData .= " HELP";
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
-
-	$fileData .= "<a class='footerButton' href='/support.php'>";
-	$fileData .= "🫀";
-	$fileData .= "<span class='footerText'>";
-	$fileData .= " SUPPORT";
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
-
-	$fileData .= "</div>";
-
-	$fileData .= "<div class='topButtonSpace'>";
-	$fileData .= "<hr>";
-	$fileData .= "</div>";
-
 	fwrite($fileObj,"$fileData");
 	// close the file
 	fclose($fileObj);
@@ -354,6 +227,159 @@ if ($writeFile){
 }
 // read the file that is cached
 echo file_get_contents($cacheFile);
+
+if (detectEnabledStatus("nfo2web")){
+	if (requireGroup("nfo2web",false)){
+		echo "<a class='footerButton' href='/movies'>";
+		echo "🎥";
+		echo "<span class='footerText'>";
+		echo " MOVIES";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("nfo2web")){
+	if (requireGroup("nfo2web",false)){
+		echo "<a class='footerButton' href='/shows'>";
+		echo "📺";
+		echo "<span class='footerText'>";
+		echo " SHOWS";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("music2web")){
+	if (requireGroup("music2web",false)){
+		echo "<a class='footerButton' href='/music'>";
+		echo "🎧";
+		echo "<span class='footerText'>";
+		echo " MUSIC";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("comic2web")){
+	if (requireGroup("comic2web",false)){
+		echo "<a class='footerButton' href='/comics'>";
+		echo "📚";
+		echo "<span class='footerText'>";
+		echo " COMICS";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("iptv2web")){
+	if (requireGroup("iptv2web",false)){
+		echo "<a class='footerButton' href='/live'>";
+		echo "📡";
+		echo "<span class='footerText'>";
+		echo " LIVE";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("wiki2web")){
+	if (requireGroup("wiki2web",false)){
+		echo "<a class='footerButton' href='/wiki/'>";
+		echo "⛵";
+		echo "<span class='footerText'>";
+		echo " WIKI";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+if (detectEnabledStatus("weahter2web")){
+	if (requireGroup("weather2web",false)){
+	// read the weather info for weather2web
+		if (file_exists("$webDirectory/weather/index.php")){
+			if (file_exists("$webDirectory/totalWeatherStations.index")){
+				if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+					echo "<a class='footerButton' href='/weather/'>";
+					echo "🌤️";
+					echo "<span class='footerText'>";
+					echo " WEATHER";
+					echo "</span>";
+					echo "</a> ";
+				}
+			}
+		}
+	}
+}
+// check for the kodi remote
+if (detectEnabledStatus("kodi2web")){
+	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+		if (requireGroup("kodi2web",false)){
+			echo formatText("<a class='footerButton' href='/kodi-player.php'>",2);
+			echo formatText("🇰",3);
+			echo formatText("<span class='footerText'>",3);
+			echo formatText("KODI REMOTE",4);
+			echo formatText("</span>",3);
+			echo formatText("</a> ",2);
+		}
+	}
+}
+if (detectEnabledStatus("git2web")){
+	if (requireGroup("git2web",false)){
+		echo formatText("<a class='footerButton' href='/repos/'>",2);
+		echo formatText("💾",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("REPOS",4);
+		echo formatText("</span>",3);
+		echo formatText("</a> ",2);
+	}
+}
+if (detectEnabledStatus("ai2web")){
+	if (requireGroup("ai2web",false)){
+		echo formatText("<a class='footerButton' href='/ai/'>",2);
+		echo formatText("🧠",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("AI",4);
+		echo formatText("</span>",3);
+		echo formatText("</a> ",2);
+	}
+}
+if (detectEnabledStatus("portal2web")){
+	if (requireGroup("portal2web",false)){
+		echo formatText("<a class='footerButton' href='/portal/'>",2);
+		echo formatText("🚪",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("PORTAL",4);
+		echo formatText("</span>",3);
+		echo formatText("</a> ",2);
+	}
+}
+if (detectEnabledStatus("graph2web")){
+	if (requireGroup("graph2web",false)){
+		echo "<a class='footerButton' href='/graphs/'>";
+		echo "📊";
+		echo "<span class='footerText'>";
+		echo " GRAPHS";
+		echo "</span>";
+		echo "</a> ";
+	}
+}
+
+// draw the help button
+echo "<a class='footerButton' href='/help.php'>";
+echo "❔";
+echo "<span class='footerText'>";
+echo " HELP";
+echo "</span>";
+echo "</a> ";
+
+echo "<a class='footerButton' href='/support.php'>";
+echo "🫀";
+echo "<span class='footerText'>";
+echo " SUPPORT";
+echo "</span>";
+echo "</a> ";
+
+echo "</div>";
+
+echo "<div class='topButtonSpace'>";
+echo "<hr>";
+echo "</div>";
+
 // remove the spinners after the footer is loaded
 echo "<style>";
 echo "	#spinner {";
