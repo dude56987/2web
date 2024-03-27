@@ -3,6 +3,10 @@
 ini_set('display_errors', 1);
 # include the standard lib
 include("/usr/share/2web/2webLib.php");
+# redirect to https if the page is loaded in http
+if (! $_SERVER["HTTPS"]){
+	redirect("https://".$_SERVER["HTTP_HOST"]."/login.php");
+}
 $errorMessages="";
 # start a session
 session_start();

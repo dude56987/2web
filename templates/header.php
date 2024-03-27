@@ -16,6 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+include("/usr/share/2web/2webLib.php");
+# the 2web group to lock login to the website completely
+if(! requireGroup("2web", false)){
+	# check for access to the 2web group
+	if (! ($_SERVER["PHP_SELF"] == "/login.php")){
+		# redirect to the login if this page is not the login page
+		redirect("/login.php");
+	}
+}
 ?>
 <!-- create top jump button -->
 <img class='globalPulse' src='/pulse.gif'>
@@ -37,7 +46,7 @@ $startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/web_cache/headerData.index";
 
-include("/usr/share/2web/2webLib.php");
+
 
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
