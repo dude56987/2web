@@ -1341,6 +1341,14 @@ if( ! function_exists("requireGroup")){
 			ini_set('session.gc_maxlifetime', ( $timeOutHours + $timeOutMinutes ) );
 			session_start();
 		}
+		# check if the current user has admin privileges
+		if (array_key_exists("admin",$_SESSION)){
+			# admin privileges override all other group permissions
+			if ($_SESSION["admin"]){
+				# if the user is logged in and has admin permissions, eject them from the group auth process
+				return true;
+			}
+		}
 		# check if the group itself is locked
 		if (array_key_exists($group."_locked",$_SESSION)){
 			# the array key is set
