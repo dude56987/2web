@@ -19,8 +19,78 @@
 # enable debug log
 #set -x
 source /var/lib/2web/common
+########################################################################
+function avahi2csv(){
+	# use avahi to scan for domains with zeroconf services, this does not list
+	# the services themselves though
+	#
+	# - this text should be piped into a while loop for processing or a file
+	rawData=$(avahi-browse -alrt)
+	# rip the hostnames
+	hostArray=$(echo "$rawData" | grep "hostname = ")
+	# only include remote hosts, this will remove localhost services
+	hostArray=$(echo "$hostArray" | grep ".local")
+	# for each entry parse the data and combine it into links
+	dataLength=$(echo "$hostArray" | wc -l)
+	numbers=$(seq 1 "$dataLength")
+	for lineNumber in $numbers;do
+		# pull the line number from the array
+		lineHostName=$(echo "$hostArray" | head -n "$lineNumber"| tail -n 1)
+		# cleanup the data to show only the domain itself
+		lineHostName=$(echo "$lineHostName" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+		# print the host lines
+		echo "$lineHostName"
+	done
+}
+########################################################################
+function avahi2csvOld(){
+	# Generate CSV data from the avahi browse output of the local network
+	#
+	# - this text should be piped into a while loop for processing or a file
+	rawData=$(avahi-browse -alrt)
+	# rip the parallel arrays
+	hostArray=$(echo "$rawData" | grep "hostname = ")
+	ipArray=$(echo "$rawData" | grep "address = ")
+	portArray=$(echo "$rawData" | grep "port = ")
+	#
+	dataLength=$(echo "$hostArray" | wc -l)
+	#echo "Found $dataLength services with avahi..."
+	# for each entry parse the data and combine it into links
+	#IFS=!'\n'
+	numbers=$(seq 1 "$dataLength")
+	for lineNumber in $numbers;do
+		#echo "line = $lineNumber"
+		lineHostName=$(echo "$hostArray" | head -n "$lineNumber"| tail -n 1)
+		lineIp=$(echo "$ipArray" | head -n "$lineNumber"| tail -n 1)
+		linePort=$(echo "$portArray" | head -n "$lineNumber"| tail -n 1)
+		#
+		lineHostName=$(echo "$lineHostName" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+		lineIp=$(echo "$lineIp" | sed "s/address = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+		linePort=$(echo "$linePort" | sed "s/port = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+		#
+		if [ $linePort -eq 22 ];then
+			proto="SSH"
+		elif [ $linePort -eq 80 ];then
+			proto="WEBSITE"
+		elif [ $linePort -eq 8080 ];then
+			proto="WEBSITE"
+		else
+			proto="UNKNOWN"
+		fi
+		#
+		echo "$proto,$lineHostName:$linePort,$lineIp:$linePort"
+		#echo "---- end entry ----"
+	done
+}
+
 ################################################################################
 function scanLink(){
+	# scanLink $link $scanPorts $scanPaths $webDirectory
+	#
+	# Scan a link and generates html files if link resolves
+	#
+	# - Uses scan paths and scan ports configured in /etc/2web/portal/
+	#
 	link="$1"
 	scanPorts="$2"
 	scanPaths="$3"
@@ -273,6 +343,26 @@ function update(){
 			waitQueue 0.2 "$totalCPUS"
 		fi
 	done
+	# check if zeroconf should be scanned and added to the portal
+	if yesNoCfgCheck "/etc/2web/portal/scanAvahi.cfg";then
+		# look for bonjour/zeroconf/avahi connections
+		# - sort and keep only unique entries
+		avahi2csv | sort -u | shuf | while read -r portalSource;do
+			ALERT "Processing '$portalSource'"
+			# add to tally
+			processedSources=$(( $processedSources + 1 ))
+			# generate the source sum
+			portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
+			# split up the portal data
+			linkDomain=$(echo "$portalSource")
+			if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
+				INFO "⚙️ [$processedSources/$totalSources]"
+				# generate portal links from zeroconf services
+				scanLink "http://$linkDomain" "$scanPorts" "$scanPaths" "$webDirectory" &
+				waitQueue 0.2 "$totalCPUS"
+			fi
+		done
+	fi
 
 	# block for parallel threads here
 	blockQueue 1

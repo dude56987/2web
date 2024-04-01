@@ -123,8 +123,15 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="kodi2web";
 }else if (($pageURL == "/settings/ai.php")){
 	$moduleName="ai2web";
-}else if (($pageURL == "/settings/portal.php")){
+}else if (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";
+	echo "	<div class='titleCard'>\n";
+	echo "		<h2>Portal Settings</h2>\n";
+	echo "		<div class='listCard'>";
+	drawHeaderButton("⛓️","Sources","/settings/portal.php");
+	drawHeaderButton("🌐","Scanning","/settings/portal_scanning.php");
+	echo "		</div>";
+	echo "	</div>";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 }else if ($pageURL == "/settings/graphs.php"){
@@ -148,7 +155,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="weather2web";
 }else if ($pageURL == "/settings/wiki.php"){
 	$moduleName="wiki2web";
-}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php")){
+}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php")){
 	$moduleName="none";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
@@ -160,6 +167,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("📥","Cache","/settings/cache.php");
 	drawHeaderButton("📋","Log","/log/");
 	drawHeaderButton("👁️","Views","/views/");
+	drawHeaderButton("📔","Manuals","/settings/manuals.php");
 	drawHeaderButton("❓","About","/settings/about.php");
 	echo "		</div>";
 	echo "	</div>";

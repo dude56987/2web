@@ -40,40 +40,24 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#addPortalscanSources'>Add portal scanSources Paths</a></li>
-		<li><a href='#portalServerscanSourcesPaths'>Server scanSources Paths Config</a></li>
-		<li><a href='#portalscanSourcesPaths'>portal scanSources Paths</a></li>
-		<li><a href='#addPortalSource'>Add portal Source</a></li>
-		<li><a href='#portalServerSourcePaths'>Server portal Sources</a></li>
+		<li><a href='#portalSourcePaths'>portal Source Paths</a></li>
+		<li><a href='#addPortalScanPort'>Add portal Scan Port</a></li>
+		<li><a href='#portalServerScanPort'>Server Portal Scan Ports</a></li>
+		<li><a href='#portalScanPorts'>Portal Scan Ports</a></li>
 	</ul>
 </div>
 
-<div id='scanAvahi' class='inputCard'>
-	<h2>Scan using Avahi</h2>
-		<ul>
-			<li>
-				Look for domains hosting Zeroconf/Bonjour services with Avahi.
-			</li>
-			<li>
-				Scan domains found with avahi for services using <a href='#portalServerScanPaths'>Scan Paths</a> and <a href='#portalServerScanPort'>Scan Ports</a> Configurations.
-			</li>
-		</ul>
-		<?PHP
-		buildYesNoCfgButton("/etc/2web/portal/scanAvahi.cfg","Zeroconf/Avahi/Bonjour Domain Scanning","scanAvahi");
-		?>
-</div>
-
 <?php
-echo "<div id='portalServerscanSourcesPaths' class='settingListCard'>\n";
-echo "<h2>portal Server scanSources Paths</h2>\n";
+echo "<div id='portalServerScanPort' class='settingListCard'>\n";
+echo "<h2>Portal Server Scan Ports</h2>\n";
 echo "<pre>\n";
-echo file_get_contents("/etc/2web/portal/scanSources.cfg");
+echo file_get_contents("/etc/2web/portal/scanPorts.cfg");
 echo "</pre>\n";
 echo "</div>";
 
-echo "<div id='portalscanSourcesPaths' class='settingListCard'>";
-echo "<h2>Portal scanSources Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/scanSources.d/*.cfg"));
+echo "<div id='removePortalScanPort' class='settingListCard'>";
+echo "<h2>Portal Scan Ports</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/scanPorts.d/*.cfg"));
 sort($sourceFiles);
 # write each config file as a editable entry
 foreach($sourceFiles as $sourceFile){
@@ -86,7 +70,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removePortalScanSource' value='".$link."'>Remove scanSources</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanPort' value='".$link."'>Remove Port</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -95,62 +79,64 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-	<div id='addPortalScanSource' class='inputCard'>
+	<div id='addPortalScanPort' class='inputCard'>
 	<form action='admin.php' method='post'>
-		<h2>Add portal scanSources Path</h2>
-		<ul>
-			<li>Use the base url of a server to scan for services</li>
-		</ul>
-		<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
-		<button class='button' type='submit'>Add Path</button>
-	</form>
-	</div>
-</div>
-
-<?php
-echo "<div id='portalServerSourcePaths' class='settingListCard'>\n";
-echo "<h2>portal Server Source Paths</h2>\n";
-echo "<pre>\n";
-echo file_get_contents("/etc/2web/portal/sources.cfg");
-echo "</pre>\n";
-echo "</div>";
-
-echo "<div id='portalSourcePaths' class='settingListCard'>";
-echo "<h2>portal Source Paths</h2>\n";
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/sources.d/*.cfg"));
-sort($sourceFiles);
-# write each config file as a editable entry
-foreach($sourceFiles as $sourceFile){
-	$sourceFileName = $sourceFile;
-	if (file_exists($sourceFile)){
-		if (is_file($sourceFile)){
-			if (strpos($sourceFile,".cfg")){
-				echo "<div class='settingsEntry'>";
-				$link=file_get_contents($sourceFile);
-				echo "	<h2>".$link."</h2>";
-				echo "<div class='buttonContainer'>\n";
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removePortalSource' value='".$link."'>Remove Source</button>\n";
-				echo "	</form>\n";
-				echo "</div>\n";
-				echo "</div>\n";
-			}
-		}
-	}
-}
-?>
-	<div id='addPortalScanSources' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add portal Source Path</h2>
+		<h2>Add Scan Port</h2>
 		<ul>
 			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
-			<li>Title,URL,Description</li>
+			<li>Title,PORT,Description</li>
 		</ul>
-		<input width='60%' type='text' name='addPortalSource' placeholder=''>
+		<input width='60%' type='text' name='addPortalScanPort' placeholder=''>
+		<button class='button' type='submit'>Add Port</button>
+	</form>
+	</div>
+</div>
+
+<?php
+echo "<div id='portalServerScanPaths' class='settingListCard'>\n";
+echo "<h2>Portal Server Scan Paths</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/2web/portal/scanPaths.cfg");
+echo "</pre>\n";
+echo "</div>";
+
+echo "<div id='portalScanPaths' class='settingListCard'>";
+echo "<h2>Portal Scan Paths</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/scanPaths.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				$link=file_get_contents($sourceFile);
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanPath' value='".$link."'>Remove Path</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+			}
+		}
+	}
+}
+?>
+	<div id='addportalScanPath' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add Scan Path</h2>
+		<ul>
+			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
+			<li>Title,PATH,Description</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalScanPath' placeholder=''>
 		<button class='button' type='submit'>Add Path</button>
 	</form>
 	</div>
 </div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

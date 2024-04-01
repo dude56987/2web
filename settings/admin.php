@@ -650,6 +650,11 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("removePortalScanPath",$_POST)){
 	# remove portal scan path
 	removeCustomConfig("removePortalScanPath","/etc/2web/portal/scanPaths.d/","portal.php");
+}else if (array_key_exists("scanAvahi",$_POST)){
+	outputLog("Changing setting to scan for services using avahi on the local network to '".$_POST['scanAvahi']."'");
+	yesNoCfgSet("/etc/2web/portal/scanAvahi.cfg", $_POST['scanAvahi']);
+	echo "<hr><a class='button' href='/settings/portal.php#scanAvahi'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("aiSubsGenerate",$_POST)){
 	outputLog("Setting AI lyrics generation status to ".$_POST['aiSubsGenerate']);
 	# generate subtitles for nfo2web movies/shows
