@@ -235,6 +235,10 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/2web_search
 	cat build/sh_head.txt > debian/usr/bin/2web_search
 	grep --invert-match "^[[:blank:]]*#" 2web_search.sh | tr -s '\n' >> debian/usr/bin/2web_search
+	# 2web_client global search helper
+	echo "#! /bin/bash" > debian/usr/bin/2web_client
+	cat build/sh_head.txt > debian/usr/bin/2web_client
+	grep --invert-match "^[[:blank:]]*#" 2web_client.sh | tr -s '\n' >> debian/usr/bin/2web_client
 	# build the shell scripts
 	# - add the gpl header on the top
 	# - copy the file but remove the comments and blank lines

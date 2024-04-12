@@ -1237,6 +1237,16 @@ function yesNoCfgCheck(){
 	fi
 }
 ########################################################################
+function yesNoCfgSet(){
+	configFilePath="$1"
+	configValue="$2"
+	if echo "$configValue" | grep --quiet --ignore-case "yes";then
+		echo "yes" > "$configFilePath"
+	else
+		echo "no" > "$configFilePath"
+	fi
+}
+########################################################################
 function loadConfigs(){
 	# load a config from a path, if no config is found copy the default config path to the config
 	#

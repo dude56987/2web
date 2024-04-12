@@ -32,9 +32,19 @@ if (array_key_exists("events",$_GET)){
 		"stop",
 		"volumeup",
 		"volumedown",
-		"mute"
+		"mute",
+		"subs",
+		"switchsub",
+		"switchaudio",
+		"nexttrack",
+		"previoustrack"
 	);
-
+	# generate the default configs if they are not there
+	foreach($buttonNames as $filePath){
+		if(! file_exists($filePath.".json")){
+			file_put_contents($filePath.".json", "");
+		}
+	}
 	#while (true) {
 	#	#
 	#	echo "event: ping\n";
@@ -53,12 +63,22 @@ if (array_key_exists("events",$_GET)){
 	$heartBeatCounter=0;
 
 	# set the current states from the stored states
-	$lastStatus["media"] = file_get_contents("status.json");
-	$lastStatus["buttonPressed"] = file_get_contents("buttonpressed.json");
+	if("status.json"){
+		$lastStatus["media"] = "";
+		file_put_contents("status.json","");
+	}else{
+		$lastStatus["media"] = file_get_contents("status.json");
+	}
+	if("buttonpressed.json"){
+		$lastStatus["buttonPressed"] = "";
+		file_put_contents("buttonpressed.json","");
+	}else{
+		$lastStatus["buttonPressed"] = file_get_contents("buttonpressed.json");
+	}
 	# setup the last button status on first load of the button events
 	foreach($buttonNames as $buttonName){
 		$lastStatus[$buttonName]=file_get_contents($buttonName.".json");
-		addToLog("DEBUG","button file status '".$buttonName."'",$lastStatus[$buttonName]);
+		#addToLog("DEBUG","button file status '".$buttonName."'",$lastStatus[$buttonName]);
 	}
 	function clear(){
 		# send all information to the connection
@@ -81,6 +101,11 @@ if (array_key_exists("events",$_GET)){
 		if ($currentStatus != $lastStatus["media"]){
 			# get the media path data
 			$mediaPath = file_get_contents("media.json");
+			# check the media path for absolute paths
+			if (! (substr($mediaPath,0,4) == "http")){
+				# make the path absolute if it is relative
+				$mediaPath="http://".$_SERVER["HTTP_HOST"].$mediaPath;
+			}
 			# send the event
 			# - double new lines seprate events
 			echo 'data: play='.$mediaPath;
@@ -237,6 +262,17 @@ if (array_key_exists("play",$_GET)){
 		echo "	</tr>\n";
 		echo "	<tr>\n";
 		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=subs'>🔡<div>Subtitles</div></a>\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchsub'>✒️<div>Switch Sub</div></a>\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=switchaudio'>🗣️<div>Switch Audio</div></a>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
 		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=volumedown'>🔉<div>- Volume</div></a>\n";
 		echo "		</td>\n";
 		echo "		<td>\n";
@@ -252,9 +288,9 @@ if (array_key_exists("play",$_GET)){
 		exit();
 	}
 }else if (array_key_exists("remoteKey",$_GET)){
-	addToLog("DEBUG","remoteKey"," pressed key");
+	#addToLog("DEBUG","remoteKey"," pressed key");
 	$pressedKey=$_GET["remoteKey"];
-	addToLog("DEBUG","remoteKey",$pressedKey);
+	#addToLog("DEBUG","remoteKey",$pressedKey);
 	file_put_contents("buttonpressed.json", time());
 	# mark the button pressed file that will trigger all button presses to be checked
 	if ($pressedKey == "playpause"){
@@ -276,7 +312,19 @@ if (array_key_exists("play",$_GET)){
 		file_put_contents($pressedKey.".json", time());
 		# remove the currently playing media and clear the command queue
 		#file_put_contents("status.json", "");
-		#file_put_contents("media.json", "");
+		file_put_contents("media.json", "");
+	}else if($pressedKey == "subs"){
+		file_put_contents($pressedKey.".json", time());
+	}else if($pressedKey == "subs"){
+		file_put_contents($pressedKey.".json", time());
+	}else if($pressedKey == "switchsub"){
+		file_put_contents($pressedKey.".json", time());
+	}else if($pressedKey == "switchaudio"){
+		file_put_contents($pressedKey.".json", time());
+	}else if($pressedKey == "nexttrack"){
+		file_put_contents($pressedKey.".json", time());
+	}else if($pressedKey == "previoustrack"){
+		file_put_contents($pressedKey.".json", time());
 	}else{
 		# output API error message
 		addToLog("ERROR","CLIENT API ERROR","The remote key was sent '$pressedKey' this key press is unsupported.");
@@ -292,14 +340,18 @@ if (array_key_exists("play",$_GET)){
 }
 # load the button file paths
 $filePaths = Array(
-	"buttonpressed",
 	"playpause",
 	"skipforward",
 	"skipbackward",
 	"stop",
 	"volumeup",
 	"volumedown",
-	"mute"
+	"mute",
+	"subs",
+	"switchsub",
+	"switchaudio",
+	"nexttrack",
+	"previoustrack"
 );
 # generate the default configs if they are not there
 foreach($filePaths as $filePath){
@@ -368,11 +420,24 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 		});
 	}
 	// use the event server API
+	<?PHP
+	#	# use the event server config if set to setup the remote client
+	#	if (file_exists("/etc/2web/client-event.cfg")){
+	#		# load the event server config and remove all newlines
+	#		$eventServerPath=file_get_contents("/etc/2web/client-event.cfg");
+	#		$eventServerPath=str_replace("\n","",$eventServerPath);
+	#		echo "const eventData = new EventSource(\"".$eventServerPath."\");\n";
+	#	}else{
+	#		# load up the local event server
+	#		echo "const eventData = new EventSource(\"?events\");\n";
+	#	}
+	?>
 	const eventData = new EventSource("?events");
 	console.log(eventData);
 
 	// setup the default window data
 	var defaultWindow = "";
+	//
 	defaultWindow += "<a class='clientBackButton button' href='/'>↖️</a>";
 	<?PHP
 	if (requireGroup("clientRemote", false)){
@@ -483,7 +548,7 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 <?PHP
 #include("/usr/share/2web/templates/header.php");
 ?>
-<div id='pageContent'>
+<div id='pageContent' onload='resetPlayer(defaultWindow)'>
 <noscript>
 <h1 class='errorBanner'>This page can not work without javascript enabled.</h1>
 </noscript>

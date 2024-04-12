@@ -1103,6 +1103,29 @@ function screenshot(){
 		"$webPath" "/var/cache/2web/generated/comics/2web/2web Screenshots/phone_$localPath"
 }
 ################################################################################
+function clientSetupMessage(){
+	# display a message after setup of one of the clients
+	if [[ $(find "/etc/2web/users/" -type f | wc -l) -gt 0 ]];then
+		# if theere are no users
+		echo "###############################################################################"
+		echo "# You should log into the webserver and set a administrator username and      #"
+		echo "# password to lock control of this device down.                               #"
+		echo "###############################################################################"
+		echo "https://$(hostname).local/settings/users.php#addNewUser"
+		echo "###############################################################################"
+		echo "_______________________________________________________________________________"
+	fi
+	echo "###############################################################################"
+	echo "# Base access to the server for control is at the below link."
+	echo "###############################################################################"
+	echo "http://$(hostname).local/"
+	echo "###############################################################################"
+	if which pavucontrol;then
+		echo "# You may have to setup the sound output with 'pavucontrol'."
+		echo "###############################################################################"
+	fi
+}
+################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -1582,6 +1605,315 @@ main(){
 			cat /usr/share/2web/version_$module.cfg
 		done
 		drawLine
+	elif [ "$1" == "--fast-client" ] || [ "$1" == "fast-client" ];then
+		################################################################################
+		# use a bash script to load the event server and launch client commands
+		# - will setup a custom kiosk user with a openbox session
+		# - kiosk will login automatically when the computer is powered on
+		################################################################################
+		# check for default client event server path
+		if ! test -f "/etc/2web/client-event.cfg";then
+			# create the event server config
+			echo "http://$(hostname).local/client/?events" > "/etc/2web/client-event.cfg"
+		fi
+		# check for background config
+		if ! test -f "/etc/2web/client-bg.cfg";then
+			# read the custom client config for the background path
+			echo "http://$(hostname).local/randomFanart.php" > "/etc/2web/client-bg.cfg"
+		fi
+		################################################################################
+		# install the software to make this into a fast client
+		################################################################################
+		# install x server and the init system
+		apt-get install -y xserver-xorg
+		apt-get install -y xinit
+		# install boot system
+		apt-get install -y lightdm
+
+		if ! which openbox-session;then
+			# install the desktop
+			apt-get install -y openbox
+		fi
+		if ! which vlc;then
+			# install the video player
+			apt-get install -y vlc
+		fi
+		if ! which feh;then
+			# install the image viewer to set the background on openbox
+			apt-get install -y feh
+		fi
+		if ! which adduser;then
+			# install adduser to create the kiosk user
+			apt-get install -y adduser
+		fi
+		if ! which xdotool;then
+			# install the sound control application
+			apt-get install -y xdotool
+		fi
+		if ! which pavucontrol;then
+			# install the sound control application
+			apt-get install -y pavucontrol
+		fi
+		if ! which pulseaudio;then
+			# install the sound system
+			apt-get install -y pulseaudio
+		fi
+		if ! which unclutter;then
+			# install unclutter to hide the mouse cursor
+			apt-get install -y unclutter
+			apt-get install -y unclutter-startup
+		fi
+		if ! test -d "/etc/lightdm/lightdm.conf.d/";then
+			# create the autologin lightdm config path
+			mkdir -p "/etc/lightdm/lightdm.conf.d/"
+		fi
+		if ! test -f "/etc/lightdm/lightdm.conf.d/12-autologin-kiosk.conf";then
+			# create the autologin lightdm config file
+			{
+				echo "[SeatDefaults]"
+				echo "xserver-command=X -s 0 -dpms"
+				echo "autologin-user=kiosk"
+				echo "autologin-user-timeout=0"
+				#echo "user-session=Xsession"
+			} > /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
+		fi
+		# create a user without any special privliges to run the kiosk on
+		adduser kiosk --home "/home/kiosk/" --comment "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+		# debian version of above command with old style comment line, this does nothing if the above line worked
+		adduser kiosk --home "/home/kiosk/" --gecos "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+		# Create custom Xsession file
+		{
+			echo "#!/bin/bash"
+			# launch the desktop enviorment
+			echo "exec openbox-session &"
+			# hide the mouse cursor
+			echo "unclutter &"
+			# start the sound server
+			echo "pulseaudio --start"
+			# disable screen power off on idle
+			#echo "xset s off"
+			#echo "xset -dpms"
+			#echo "xset s noblank"
+			# run the client and respond to connections from the server
+			echo "2web_client"
+		} > /home/kiosk/.xsession
+		clientSetupMessage
+	elif [ "$1" == "--browser-client" ] || [ "$1" == "browser-client" ];then
+		################################################################################
+		# install and setup a client kiosk that will run in the display of the server
+		################################################################################
+		# install software to setup kiosk
+		if ! which openbox-session;then
+			apt-get install -y openbox
+		fi
+		if ! which adduser;then
+			apt-get install -y adduser
+		fi
+		apt-get install -y xserver-xorg
+		apt-get install -y xinit
+		# install boot system
+		apt-get install -y lightdm
+		# install the stable version of firefox
+		if ! which firefox;then
+			apt-get install -y firefox-esr
+		fi
+		if ! which unclutter;then
+			apt-get install -y unclutter
+			apt-get install -y unclutter-startup
+		fi
+		if ! test -d "/etc/lightdm/lightdm.conf.d/";then
+			# create the autologin lightdm config directory
+			mkdir -p "/etc/lightdm/lightdm.conf.d/"
+		fi
+		if ! test -f "/etc/lightdm/lightdm.conf.d/12-autologin-kiosk.conf";then
+			# create the autologin lightdm config file
+			{
+				echo "[SeatDefaults]"
+				echo "xserver-command=X -s 0 -dpms"
+				echo "autologin-user=kiosk"
+				echo "autologin-user-timeout=0"
+				#echo "user-session=Xsession"
+			} > /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
+		fi
+		# create a user without any special privliges to run the kiosk on
+		adduser kiosk --home "/home/kiosk/" --comment "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+		# debian version of above command with old style comment line, this does nothing if the above line worked
+		adduser kiosk --home "/home/kiosk/" --gecos "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+
+		# create the firefox profile directory for the kiosk
+		mkdir -p "/home/kiosk/browser/"
+		# run a fake video input to let firefox load up and generate the user profile, give the pc 10 seconds to load it
+		xvfb-run timeout 10s firefox --profile "/home/kiosk/browser/"
+
+		# create the custom firefox settings with user.js file in firefox directory
+		{
+			echo 'user_pref("media.autoplay.default",0);'
+			echo 'user_pref("media.autoplay.allow-muted",false);'
+			echo 'user_pref("media.autoplay.blocking_policy",0);'
+			echo 'user_pref("media.block-autoplay-until-in-foreground",true);'
+			# enable option to always use graphics compositing
+			echo 'user_pref("layers.acceleration.force-enabled",true);'
+		} > "/home/kiosk/browser/user.js"
+		# Create custom Xsession file
+		{
+			echo "#!/bin/bash"
+			# launch the desktop enviorment
+			echo "exec openbox-session &"
+			# hide the mouse cursor
+			echo "unclutter &"
+			# create a loop that will keep the web browser active if it crashes
+			echo "while true;do"
+			# launch the browser
+			echo "	firefox --kiosk --profile '/home/kiosk/browser/' --private-window 'http://localhost/client/'"
+			echo "done"
+		} > /home/kiosk/.xsession
+		# enable the web client in the webserver
+		yesNoCfgSet "/etc/2web/kodi/client.cfg" "yes"
+		# enable the web player
+		yesNoCfgSet "/etc/2web/kodi/webPlayer.cfg" "yes"
+		clientSetupMessage
+	elif [ "$1" == "--kodi-client" ] || [ "$1" == "kodi-client" ];then
+		# setup a kiosk that auto logs in and launches kodi fullscreen on the server system. This will also
+		# automatically setup kodi to use content from the server as its sources.
+
+		apt-get install -y xserver-xorg
+		apt-get install -y xinit
+		# install boot system
+		apt-get install -y lightdm
+
+		if ! which adduser;then
+			apt-get install -y adduser
+		fi
+		if ! which unclutter;then
+			# install unclutter to hide the mouse cursor
+			apt-get install -y unclutter
+			apt-get install -y unclutter-startup
+		fi
+		if ! which kodi;then
+			# install kodi if it is not on the system
+			apt-get install -y kodi
+		fi
+		if ! test -d "/etc/lightdm/lightdm.conf.d/";then
+			# create the lightdm custom config directory if it does not exist
+			mkdir -p "/etc/lightdm/lightdm.conf.d/"
+		fi
+		if ! test -f "/etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf";then
+			# create the autologin lightdm config file
+			{
+				echo "[SeatDefaults]"
+				echo "autologin-user=kiosk"
+				echo "autologin-user-timeout=0"
+				# set the user session to kodi
+				echo "user-session=kodi"
+			} > /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
+		fi
+		# create a user without any special privliges to run the kiosk on
+		adduser kiosk --home "/home/kiosk/" --comment "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+		# debian version of above command with old style comment line, this does nothing if the above line worked
+		adduser kiosk --home "/home/kiosk/" --gecos "2web Kiosk,Unlisted,Unlisted,Unlisted" --disabled-password
+		# create the directory to store the kodi settings
+		if ! test -d "/home/kiosk/.kodi/userdata/";then
+			mkdir -p /home/kiosk/.kodi/userdata/
+		fi
+		{
+			# build the kodi sources config file to point to this server
+			echo "<sources>"
+			echo "	<programs>"
+			echo "		<default pathversion=\"1\"></default>"
+			echo "	</programs>"
+			echo "	<video>"
+			echo "		<default pathversion=\"1\"></default>"
+			echo "		<source>"
+			echo "			<name>movies</name>"
+			echo "			<path pathversion=\"1\">http://localhost:80/kodi/movies/</path>"
+			echo "			<allowsharing>true</allowsharing>"
+			echo "		</source>"
+			echo "		<source>"
+			echo "			<name>shows</name>"
+			echo "			<path pathversion=\"1\">http://localhost:80/kodi/shows/</path>"
+			echo "			<allowsharing>true</allowsharing>"
+			echo "		</source>"
+			echo "	</video>"
+			echo "	<music>"
+			echo "     <default pathversion=\"1\"></default>"
+			echo "     <source>"
+			echo "         <name>music</name>"
+			echo "         <path pathversion=\"1\">http://localhost:80/kodi/music/</path>"
+			echo "         <allowsharing>true</allowsharing>"
+			echo "     </source>"
+			echo "	</music>"
+			echo "	<pictures>"
+			echo "		<default pathversion=\"1\"></default>"
+			echo "     <source>"
+			echo "         <name>comics</name>"
+			echo "         <path pathversion=\"1\">http://localhost:80/kodi/comics/</path>"
+			echo "         <allowsharing>true</allowsharing>"
+			echo "     </source>"
+			echo "     <source>"
+			echo "         <name>comics_tank</name>"
+			echo "         <path pathversion=\"1\">http://localhost:80/kodi/comics_tank/</path>"
+			echo "         <allowsharing>true</allowsharing>"
+			echo "     </source>"
+			echo "	</pictures>"
+			echo "	<files>"
+			echo "		<default pathversion=\"1\"></default>"
+			echo "	</files>"
+			echo "	<games>"
+			echo "		<default pathversion=\"1\"></default>"
+			echo "	</games>"
+			echo "</sources>"
+		} > "/home/kiosk/.kodi/userdata/sources.xml"
+		# create a random password
+		remotePass="$RANDOM$RANDOM$RANDOM"
+		# create kodi custom advanced settings.xml
+		{
+			echo "<advancedsettings>"
+			echo "	<services>"
+			echo "		<esallinterfaces>true</esallinterfaces>"
+			echo "		<webserver>true</webserver>"
+			echo "		<zeroconf>true</zeroconf>"
+			echo "	</services>"
+			echo "</advancedsettings>"
+		} > "/home/kiosk/.kodi/userdata/advancedsettings.xml"
+		#	gui settings
+		{
+			echo "<settings version=\"2\">"
+			echo "	<setting id=\"services.webserver\">true</setting>"
+			echo "	<setting id=\"services.webserverport\" default=\"true\">8080</setting>"
+			echo "	<setting id=\"services.webserverauthentication\" default=\"true\">true</setting>"
+			echo "	<setting id=\"services.webserverusername\" default=\"true\">kodi</setting>"
+			echo "	<setting id=\"services.webserverpassword\">$remotePass</setting>"
+			echo "	<setting id=\"services.webserverssl\" default=\"true\">false</setting>"
+			echo "</settings>"
+		} > "/home/kiosk/.kodi/userdata/guisettings.xml"
+
+		# fix created file permissions to be owned by the user
+		chown -R kiosk:kiosk /home/kiosk/
+		# enable kodi2web
+		kodi2web enable
+		# enable "play on kodi" button
+		yesNoCfgSet "/etc/2web/kodi/playOnKodiButton.cfg" "yes"
+		# add local kodi instance as remote on the server
+		playerLink="kodi:$remotePass@localhost:8080"
+		# create the sum for the config so the web interface can remove it
+		playerFileSum=$(echo "$playerLink" | md5sum | cut -d' ' -f1)
+		# add this player to the players
+		{
+			echo "$playerLink"
+		} > "/etc/2web/kodi/players.d/$playerFileSum.cfg"
+		# write the help messages
+		echo "################################################################################"
+		echo "# If you have ran this command multuple times you may want to remove old       #"
+		echo "# players in the settings with different random passowrds.                     #"
+		echo "################################################################################"
+		echo "https://settings/kodi.php#kodiPlayerPaths"
+		echo "################################################################################"
+		clientSetupMessage
+	elif [ "$1" == "--disable-client" ] || [ "$1" == "disable-client" ];then
+		# disable auto launcher for the client
+		rm -v /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
+		# remove the kiosk user from the system
+		deluser --remote-all-files kiosk
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
