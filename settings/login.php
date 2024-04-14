@@ -65,7 +65,7 @@ if (array_key_exists("userLogout",$_POST)){
 		}
 	}else{
 		# the username does not exist at all
-		$errorMessages .= errorBanner("The username '".$username."' does not exist.", true);
+		$errorMessages .= errorBanner("The username does not exist.", true);
 		addToLog("ADMIN", "FAILED LOGIN", "NO USERNAME EXISTS! Username='".$username."'<br>\n".getIdentity());
 		sleep(3);
 	}
@@ -136,12 +136,14 @@ if ($loggedIn){
 	echo "<hr>";
 	if ($noLogins){
 		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/settings/users.php'>Add Administrator Login</a>";
+		echo "	<a class='button' href='/settings/users.php'>🔒 Add Administrator Login</a>";
 		echo "</div>";
 		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/logout.php'>Logout</a>";
+		echo "	<a class='button' href='/settings/modules.php'>🧩 Enable Modules</a>";
 		echo "</div>";
-
+		echo "<div class='listCard'>";
+		echo "	<a class='button' href='/logout.php'>⤴️ Logout</a>";
+		echo "</div>";
 	}else{
 		echo "<div>Logged in as ".$_SESSION["user"]."</div>";
 		echo "<hr>";
