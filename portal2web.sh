@@ -33,12 +33,13 @@ function avahi2csv(){
 	# for each entry parse the data and combine it into links
 	dataLength=$(echo "$hostArray" | wc -l)
 	numbers=$(seq 1 "$dataLength")
+	outputData=""
 	for lineNumber in $numbers;do
 		# pull the line number from the array
 		lineHostName=$(echo "$hostArray" | head -n "$lineNumber"| tail -n 1)
 		# cleanup the data to show only the domain itself
 		lineHostName=$(echo "$lineHostName" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
-		# print the host lines
+		# print the line if it is not blank
 		echo "$lineHostName"
 	done
 }
@@ -85,13 +86,13 @@ function avahi2csvOld(){
 
 ################################################################################
 function scanLink(){
-	# scanLink $link $scanPorts $scanPaths $webDirectory
+	# scanLink $scanLink $scanPorts $scanPaths $webDirectory
 	#
 	# Scan a link and generates html files if link resolves
 	#
 	# - Uses scan paths and scan ports configured in /etc/2web/portal/
 	#
-	link="$1"
+	scanLink="$1"
 	scanPorts="$2"
 	scanPaths="$3"
 	webDirectory="$4"
@@ -101,14 +102,14 @@ function scanLink(){
 		port=$(echo "$scanPort" | cut -d',' -f2)
 		description=$(echo "$scanPort" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		ALERT "Scanning $link:$port"
-		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$link:$port"
+		ALERT "Scanning $scanLink:$port"
+		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink:$port"
 		if [ $? -eq 0 ];then
-			ALERT "Found link at $link:$port, generating link..."
+			ALERT "Found link at $scanLink:$port, generating link..."
 			# for working links generate index files
-			generateLink "$link:$port" "$name" "$description" "$webDirectory"
+			generateLink "$scanLink:$port" "$name" "$description" "$webDirectory"
 		else
-			ALERT "No link found for $link:$port..."
+			ALERT "No link found for $scanLink:$port..."
 		fi
 		# reset port
 		port=""
@@ -119,14 +120,14 @@ function scanLink(){
 		path=$(echo "$scanPath" | cut -d',' -f2)
 		description=$(echo "$scanPath" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		ALERT "Scanning $link$path"
-		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$link$path"
+		ALERT "Scanning $scanLink$path"
+		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink$path"
 		if [ $? -eq 0 ];then
-			ALERT "Found link at $link$path, generating link..."
+			ALERT "Found link at $scanLink$path, generating link..."
 			# for working links generate index files
-			generateLink "$link$path" "$name" "$description" "$webDirectory"
+			generateLink "$scanLink$path" "$name" "$description" "$webDirectory"
 		else
-			ALERT "No link found for $link$path..."
+			ALERT "No link found for $scanLink$path..."
 		fi
 	done
 }
@@ -310,39 +311,44 @@ function update(){
 		fi
 	done
 
-	# read the portal sources and generate links
-	echo "$portalSources" | shuf | while read -r portalSource;do
-		# split portal info up based on commas
-		portalSourceName=$(echo "$portalSource" | cut -d',' -f1)
-		portalSourceLink=$(echo "$portalSource" | cut -d',' -f2)
-		portalSourceDesc=$(echo "$portalSource" | cut -d',' -f3)
-		# add to tally
-		processedSources=$(( $processedSources + 1 ))
-		ALERT "Processing '$portalSource'"
-		# generate the source sum
-		portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
-		if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
-			INFO "⚙️ [$processedSources/$totalSources]"
-			# generate portal links
-			generateLink "$portalSourceLink" "$portalSourceName" "$portalSourceDesc" "$webDirectory" &
-			waitQueue 0.2 "$totalCPUS"
-		fi
-	done
-
-	# scan portal sources
-	echo "$portalScanSources" | shuf | while read -r portalSource;do
-		ALERT "Processing '$portalSource'"
-		# add to tally
-		processedSources=$(( $processedSources + 1 ))
-		# generate the source sum
-		portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
-		if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
-			INFO "⚙️ [$processedSources/$totalSources]"
-			# generate portal links
-			scanLink "$portalSource" "$scanPorts" "$scanPaths" "$webDirectory" &
-			waitQueue 0.2 "$totalCPUS"
-		fi
-	done
+	# if at least one source exists
+	if echo "$portalSources" | grep -q "http";then
+		# read the portal sources and generate links
+		echo "$portalSources" | shuf | while read -r portalSource;do
+			# split portal info up based on commas
+			portalSourceName=$(echo "$portalSource" | cut -d',' -f1)
+			portalSourceLink=$(echo "$portalSource" | cut -d',' -f2)
+			portalSourceDesc=$(echo "$portalSource" | cut -d',' -f3)
+			# add to tally
+			processedSources=$(( $processedSources + 1 ))
+			ALERT "Processing '$portalSource'"
+			# generate the source sum
+			portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
+			if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
+				INFO "⚙️ [$processedSources/$totalSources]"
+				# generate portal links
+				generateLink "$portalSourceLink" "$portalSourceName" "$portalSourceDesc" "$webDirectory" &
+				waitQueue 0.2 "$totalCPUS"
+			fi
+		done
+	fi
+	# check that at least one source exists
+	if echo "$portalScanSources" | grep -q "http";then
+		# scan portal sources
+		echo "$portalScanSources" | shuf | while read -r portalSource;do
+			ALERT "Processing '$portalSource'"
+			# add to tally
+			processedSources=$(( $processedSources + 1 ))
+			# generate the source sum
+			portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
+			if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
+				INFO "⚙️ [$processedSources/$totalSources]"
+				# generate portal links
+				scanLink "$portalSource" "$scanPorts" "$scanPaths" "$webDirectory" &
+				waitQueue 0.2 "$totalCPUS"
+			fi
+		done
+	fi
 	# check if zeroconf should be scanned and added to the portal
 	if yesNoCfgCheck "/etc/2web/portal/scanAvahi.cfg";then
 		# look for bonjour/zeroconf/avahi connections
@@ -351,14 +357,15 @@ function update(){
 			ALERT "Processing '$portalSource'"
 			# add to tally
 			processedSources=$(( $processedSources + 1 ))
-			# generate the source sum
-			portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
 			# split up the portal data
-			linkDomain=$(echo "$portalSource")
+			linkDomainSource=$(echo "http://$portalSource")
+			# generate the source sum
+			portalSourceSum=$(echo "$linkDomainSource" | md5sum | cut -d' ' -f1)
+			#
 			if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
 				INFO "⚙️ [$processedSources/$totalSources]"
 				# generate portal links from zeroconf services
-				scanLink "http://$linkDomain" "$scanPorts" "$scanPaths" "$webDirectory" &
+				scanLink "$linkDomainSource" "$scanPorts" "$scanPaths" "$webDirectory" &
 				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
