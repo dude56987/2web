@@ -123,7 +123,7 @@ if (array_key_exists("url",$_GET)){
 	echo "<head>";
 	echo "<link rel='stylesheet' href='/style.css'>";
 	echo "</head>";
-	echo "<body class='settingListCard'>";
+	echo "<body class='remoteCard'>";
 	echo "<table class='kodiPlayerButtonGrid'>";
 	echo "	<tr>\n";
 	echo "		<td>\n";
@@ -353,7 +353,7 @@ if (array_key_exists("url",$_GET)){
 	echo "<head>\n";
 	echo "<link rel='stylesheet' href='/style.css'>\n";
 	echo "</head>\n";
-	echo "<body class='settingListCard'>\n";
+	echo "<body class='remoteCard'>\n";
 	echo "<table class='kodiPlayerButtonGrid'>\n";
 	echo "	<tr>\n";
 	echo "		<td>\n";

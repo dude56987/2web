@@ -19,13 +19,11 @@
 # setup api option to access the event server
 # - this changes the header so it must be before any other code
 include("/usr/share/2web/2webLib.php");
-if (array_key_exists("events",$_GET)){
-	# set the header data for the event stream
-	date_default_timezone_set("America/New_York");
-	header("Cache-Control: no-store");
-	header("Content-Type: text/event-stream");
-	# build the array for the button names for the controler
-	$buttonNames = Array(
+################################################################################
+function loadButtons(){
+	# load the button file paths
+	$filePaths = Array(
+		"buttonpressed",
 		"playpause",
 		"skipforward",
 		"skipbackward",
@@ -33,12 +31,42 @@ if (array_key_exists("events",$_GET)){
 		"volumeup",
 		"volumedown",
 		"mute",
+		"configure",
 		"subs",
 		"switchsub",
 		"switchaudio",
+		"switchoutput",
 		"nexttrack",
 		"previoustrack"
 	);
+	return $filePaths;
+}
+################################################################################
+function buildButtonData(){
+	# generate the default configs if they are not there
+	foreach(loadButtons() as $filePath){
+		if(! file_exists($filePath.".json")){
+			file_put_contents($filePath.".json", "");
+		}
+	}
+}
+################################################################################
+function nukeButtonData(){
+	# generate the default configs if they are not there
+	foreach(loadButtons() as $filePath){
+		if(file_exists($filePath.".json")){
+			unlink($filePath.".json");
+		}
+	}
+}
+if (array_key_exists("events",$_GET)){
+	# set the header data for the event stream
+	date_default_timezone_set("America/New_York");
+	header("Cache-Control: no-store");
+	header("Content-Type: text/event-stream");
+	# build the array for the button names for the controler
+	$buttonNames = loadButtons();
+
 	# generate the default configs if they are not there
 	foreach($buttonNames as $filePath){
 		if(! file_exists($filePath.".json")){
@@ -141,38 +169,6 @@ if (array_key_exists("events",$_GET)){
 		sleep(1);
 	}
 }
-################################################################################
-function loadButtons(){
-	# load the button file paths
-	$filePaths = Array(
-		"playpause",
-		"skipforward",
-		"skipbackward",
-		"stop",
-		"volumeup",
-		"volumedown",
-		"mute"
-	);
-	return $filePaths;
-}
-################################################################################
-function buildButtonData(){
-	# generate the default configs if they are not there
-	foreach(loadButtons() as $filePath){
-		if(! file_exists($filePath.".json")){
-			file_put_contents($filePath.".json", "");
-		}
-	}
-}
-################################################################################
-function nukeButtonData(){
-	# generate the default configs if they are not there
-	foreach(loadButtons() as $filePath){
-		if(file_exists($filePath.".json")){
-			unlink($filePath.".json");
-		}
-	}
-}
 ?>
 <!--
 ########################################################################
@@ -229,6 +225,43 @@ if (array_key_exists("play",$_GET)){
 		# a attempt to play something without permissions was made
 		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
 	}
+}else if (array_key_exists("resolveStream",$_GET)){
+	if (requireGroup("clientRemote",false)){
+		# store the url as the playback url
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/iptv-resolver.php?url='".$_GET["resolveStream"]."'"));
+		# store the time of the playback start
+		$playbackTime=filemtime("media.cfg");
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/time.json",$playbackTime);
+		# generate the sum
+		$urlSum=md5($_GET["resolveStream"].time());
+		# store the hash sum
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/status.json",$urlSum);
+		# redirect to the client remote page after starting playback
+		redirect("/client/?remote");
+	}else{
+		addToLog("ERROR","Play on Client Failed","The user '".$_SESSION["user"]."' with the user agent string ".$_SERVER["HTTP_USER_AGENT"]." has attempted to play a video stream on the client without permissions.");
+		# a attempt to play something without permissions was made
+		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
+	}
+}else if (array_key_exists("resolveUrl",$_GET)){
+	if (requireGroup("clientRemote",false)){
+		# store the url as the playback url
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url='".$_GET["resolveUrl"]."'"));
+		# store the time of the playback start
+		$playbackTime=filemtime("media.cfg");
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/time.json",$playbackTime);
+		# generate the sum
+		$urlSum=md5($_GET["resolveUrl"].time());
+		# store the hash sum
+		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/status.json",$urlSum);
+		# redirect to the client remote page after starting playback
+		redirect("/client/?remote");
+	}else{
+		addToLog("ERROR","Play on Client Failed","The user '".$_SESSION["user"]."' with the user agent string ".$_SERVER["HTTP_USER_AGENT"]." has attempted to play a video stream on the client without permissions.");
+		# a attempt to play something without permissions was made
+		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
+	}
+
 }else if (array_key_exists("remote",$_GET)){
 	if (requireGroup("clientRemote")){
 		// no url was given at all draw the remote
@@ -236,14 +269,14 @@ if (array_key_exists("play",$_GET)){
 		echo "<head>\n";
 		echo "<link rel='stylesheet' href='/style.css'>\n";
 		echo "</head>\n";
-		echo "<body class='settingListCard'>\n";
+		echo "<body class='remoteCard'>\n";
 		echo "<table class='kodiPlayerButtonGrid'>\n";
 		echo "	<tr>\n";
 		echo "		<td>\n";
 		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>\n";
 		echo "		</td>\n";
 		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton' href='/web-player.php' title='Share Link'>⛓️<div>Share</div></a>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton' href='?share' title='Share Link'>⛓️<div>Share</div></a>\n";
 		echo "		</td>\n";
 		echo "		<td>\n";
 		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=stop'>⏹️<div>STOP</div></a>\n";
@@ -262,10 +295,21 @@ if (array_key_exists("play",$_GET)){
 		echo "	</tr>\n";
 		echo "	<tr>\n";
 		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=subs'>🔡<div>Subtitles</div></a>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=nexttrack'>⏮️<div>Previous Track</div></a>\n";
 		echo "		</td>\n";
 		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchsub'>✒️<div>Switch Sub</div></a>\n";
+		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=subs'>📑<div>Subtitles On/Off</div></a>\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=previoustrack'>⏭️<div>Next Track</div></a>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=configure'>🎚️<div>Configure Client</div></a>\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchsub'>✍️<div>Switch Sub</div></a>\n";
 		echo "		</td>\n";
 		echo "		<td>\n";
 		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=switchaudio'>🗣️<div>Switch Audio</div></a>\n";
@@ -287,43 +331,115 @@ if (array_key_exists("play",$_GET)){
 		echo "</html>\n";
 		exit();
 	}
+}else if (array_key_exists("share",$_GET)){
+	if (requireGroup("clientRemote")){
+		echo "<html class='randomFanart'>";
+		echo "<head>";
+		echo "<link rel='stylesheet' href='/style.css'>";
+		echo "</head>";
+		echo "<body class='remoteCard'>";
+		echo "<table class='kodiPlayerButtonGrid'>";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		# link back to the launch location of the remote
+		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/client/?remote'>🎛️ Remote</a>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		# form to use resolver for a url
+		echo "	<tr>\n";
+		echo "		<form method='get'>\n";
+		echo "			<th>\n";
+		echo "				Send Stream To Client via Resolver\n";
+		echo "			</th>\n";
+		echo "		</tr>\n";
+		echo "		<tr>\n";
+		echo "			<td>\n";
+		echo "				<table class='kodiControlEmbededTable'>\n";
+		echo "					<tr>\n";
+		# build the share url interface for posting urls into the resolver to be passed to kodi
+		echo "						<td>\n";
+		echo "							<input type='text' name='resolveStream' placeholder='http://example.com/play.php?v=3d4D3ldK'>\n";
+		echo "						</td>\n";
+		echo "						<td class='kodiControlEmbededTableButton'>\n";
+		echo "							<input class='button' type='submit' value='Share URL'>\n";
+		echo "						</td>\n";
+		echo "					</tr>\n";
+		echo "				</table>\n";
+		echo "			</td>\n";
+		echo "		</form>\n";
+		echo "	</tr>\n";
+		# form to use resolver for a stream url
+		echo "	<form method='get'>\n";
+		echo "		<tr>\n";
+		echo "			<th>\n";
+		echo "				Send URL to Client via Resolver\n";
+		echo "			</th>\n";
+		echo "		</tr>\n";
+		echo "		<tr>\n";
+		echo "			<td>\n";
+		echo "				<table class='kodiControlEmbededTable'>\n";
+		echo "					<tr>\n";
+		echo "						<td>\n";
+		# build the share url interface for posting urls into the resolver to be passed to kodi
+		echo "							<input type='text' name='resolveUrl' placeholder='http://example.com/user/3d4D3ldK/'>\n";
+		echo "						</td>\n";
+		echo "						<td class='kodiControlEmbededTableButton'>\n";
+		echo "							<input class='button' type='submit' value='Share Stream URL'>\n";
+		echo "						</td>\n";
+		echo "					</tr>\n";
+		echo "				</table>";
+		echo "			</td>\n";
+		echo "		</tr>\n";
+		echo "	</form>\n";
+		# form to use a direct link to content to send to kodi
+		echo "	<form method='get'>\n";
+		echo "		<tr>\n";
+		echo "			<th>\n";
+		echo "				Send Direct URL\n";
+		echo "			</th>\n";
+		echo "		</tr>\n";
+		echo "		<tr>\n";
+		echo "			<td>\n";
+		echo "				<table class='kodiControlEmbededTable'>\n";
+		echo "					<tr>\n";
+		echo "						<td>\n";
+		# build the share url interface for posting urls into the resolver to be passed to kodi
+		echo "							<input type='text' name='play' placeholder='http://example.com/media.mkv'>\n";
+		echo "						</td>\n";
+		echo "						<td class='kodiControlEmbededTableButton'>\n";
+		echo "							<input class='button' type='submit' value='Share Direct URL'>\n";
+		echo "						</td>\n";
+		echo "					</tr>\n";
+		echo "				</table>";
+		echo "			</td>\n";
+		echo "		</tr>\n";
+		echo "	</form>\n";
+		echo "</table>\n";
+		echo "</body>\n";
+		echo "</html>\n";
+		exit();
+	}
 }else if (array_key_exists("remoteKey",$_GET)){
 	#addToLog("DEBUG","remoteKey"," pressed key");
 	$pressedKey=$_GET["remoteKey"];
 	#addToLog("DEBUG","remoteKey",$pressedKey);
 	file_put_contents("buttonpressed.json", time());
+	# set found key before the search
+	$validKey=false;
 	# mark the button pressed file that will trigger all button presses to be checked
-	if ($pressedKey == "playpause"){
-		# add playPause command to the command queue that will be parsed with javascript on the remote client
-		# - other commands should be added the same way
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "skipbackward"){
-		# update the timestamp on the button keypress
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "skipforward"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "volumeup"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "volumedown"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "mute"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "stop"){
-		file_put_contents($pressedKey.".json", time());
-		# remove the currently playing media and clear the command queue
-		#file_put_contents("status.json", "");
-		file_put_contents("media.json", "");
-	}else if($pressedKey == "subs"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "subs"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "switchsub"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "switchaudio"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "nexttrack"){
-		file_put_contents($pressedKey.".json", time());
-	}else if($pressedKey == "previoustrack"){
+	foreach(loadButtons() as $buttonName){
+		if ($pressedKey == $buttonName){
+			$validKey=true;
+		}
+	}
+	# check if the key was a valid API entry
+	if($validKey){
+		if($pressedKey == "stop"){
+			# remove the currently playing media and clear the command queue
+			# - this is only done on the stop event
+			file_put_contents("media.json", "");
+		}
+		# mark the key as pressed
 		file_put_contents($pressedKey.".json", time());
 	}else{
 		# output API error message

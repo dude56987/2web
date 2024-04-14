@@ -68,6 +68,7 @@ function runEventServer(){
 		# read events from the event server, this can fail if the connection fails
 		curl -N --no-progress-meter "$eventServerPath" | while read -r event;do
 			# read the events and run the aproprate commands on the client machine
+			echo "$event"
 			if echo "$event" | grep -q "play=";then
 				# pull the url to be played back
 				playUrl="$(echo "$event" | cut -d'=' -f2- )"
@@ -77,9 +78,10 @@ function runEventServer(){
 				# send a space to wake the monitor if it is asleep
 				xdotool key space
 				# vlc can not play "LONG" urls so almost everything fails create a .strm file and play that
-				echo "$playUrl" > /home/kiosk/clientPlayBuffer.strm
+				echo "$HOME/clientPlayBuffer.strm"
+				echo "$playUrl" > "$HOME/clientPlayBuffer.strm"
 				# launch the player in the background
-				vlc --fullscreen --play-and-exit "/home/kiosk/clientPlayBuffer.strm" &
+				vlc --fullscreen --play-and-exit "$HOME/clientPlayBuffer.strm" &
 			elif echo "$event" | grep -q "playpause";then
 				xdotool key space
 			elif echo "$event" | grep -q "stop";then
@@ -97,9 +99,19 @@ function runEventServer(){
 				xdotool key Down
 			elif echo "$event" | grep -q "mute";then
 				xdotool key m
+			elif echo "$event" | grep -q "configure";then
+				killall vlc
+				killall pavucontrol
+				# launch vlc to configure the settings
+				vlc &
+				# launch the volume control interface
+				pavucontrol &
 			elif echo "$event" | grep -q "subs";then
 				# enable/disable subtitles
 				xdotool key shift+v
+			elif echo "$event" | grep -q "switchoutput";then
+				# go to the next available audio output
+				xdotool key shift+a
 			elif echo "$event" | grep -q "switchsub";then
 				# switch to the next available subtitle
 				xdotool key v

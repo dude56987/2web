@@ -572,6 +572,7 @@ function update2web(){
 	# caching resolvers
 	linkFile "/usr/share/2web/resolvers/search.php" "$webDirectory/search.php"
 	linkFile "/usr/share/2web/resolvers/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
+	linkFile "/usr/share/2web/resolvers/iptv-resolver.php" "$webDirectory/iptv-resolver.php"
 	linkFile "/usr/share/2web/resolvers/m3u-gen.php" "$webDirectory/m3u-gen.php"
 	linkFile "/usr/share/2web/resolvers/zip-gen.php" "$webDirectory/zip-gen.php"
 	linkFile "/usr/share/2web/resolvers/kodi-player.php" "$webDirectory/kodi-player.php"

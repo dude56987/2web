@@ -1006,6 +1006,10 @@ a:visited {
 		width: -webkit-fill-available !important;
 		height: 60dvh !important;
 	}
+	.kodiPlayerButton div{
+		/* Hide Button text in portrat mode for remote interfaces */
+		display: none !important;
+	}
 }
 @media only screen and (max-width: 800px), (orientation: portrait){
 	.dropBox{
@@ -1495,6 +1499,11 @@ table{
 	min-height: 8rem;
 	text-align: center;
 	margin-bottom: 1rem;
+}
+.remoteCard{
+	color: var(--textColor);
+	background-color: var(--glassBackground);
+	text-align: center;
 }
 #player{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
@@ -2291,7 +2300,10 @@ select{
 }
 .kodiPlayerButton div{
 	font-size: 1dvh;
-	display: none;
+	display: block;
+	top: -5dvh;
+	position: relative;
+	height: 0px;
 }
 .kodiPlayerButtonGrid{
 	border: none;
