@@ -2038,7 +2038,7 @@ pre{
 .localPulse{
 	position: fixed;
 	width: 100dvw;
-	height: 0.4rem;
+	height: 0.8rem;
 	left: 0px;
 	top: 0px;
 	border-bottom: solid var(--borderColor) 0.1rem;
