@@ -408,6 +408,13 @@ pageKeys();
 <div class='titleCard'>
 <h1>
 <?PHP
+	if(file_exists($jsonPath)){
+		if(property_exists($jsonData, "age_limit")){
+			if(($jsonData->age_limit) == 18){
+				echo "🔞 ";
+			}
+		}
+	}
 	if (file_exists("show.title")){
 		# write the data
 		echo "<a href='/shows/".$showTitle."/?search=".$seasonTitle."#Season ".$seasonTitle."'>".$showTitle."</a> $numericTitleData";
