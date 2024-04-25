@@ -37,7 +37,11 @@ function loadButtons(){
 		"switchaudio",
 		"switchoutput",
 		"nexttrack",
-		"previoustrack"
+		"previoustrack",
+		"blank",
+		"nightmode",
+		"daymode",
+		"duskmode"
 	);
 	return $filePaths;
 }
@@ -59,6 +63,29 @@ function nukeButtonData(){
 		}
 	}
 }
+################################################################################
+function drawRemoteHeader(){
+	echo "			<table class='kodiControlEmbededTableButtonGridHeader'>\n";
+	echo "				<tr>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?setSleep'>😴<div>Sleep Timer</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='?share' title='Share Link'>⛓️<div>Share</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?configure'>🎚️<div>Configure</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/client/?remote'>🎛️<div>Remote</div></a>\n";
+	echo "					</td>\n";
+	echo "				</tr>\n";
+	echo "			</table>\n";
+}
+################################################################################
 if (array_key_exists("events",$_GET)){
 	# set the header data for the event stream
 	date_default_timezone_set("America/New_York");
@@ -91,17 +118,26 @@ if (array_key_exists("events",$_GET)){
 	$heartBeatCounter=0;
 
 	# set the current states from the stored states
-	if("status.json"){
+	if(! file_exists("status.json")){
 		$lastStatus["media"] = "";
 		file_put_contents("status.json","");
 	}else{
 		$lastStatus["media"] = file_get_contents("status.json");
 	}
-	if("buttonpressed.json"){
+	if(! file_exists("buttonpressed.json")){
 		$lastStatus["buttonPressed"] = "";
 		file_put_contents("buttonpressed.json","");
 	}else{
 		$lastStatus["buttonPressed"] = file_get_contents("buttonpressed.json");
+	}
+	# build the sleep file if it does not yet exist
+	if(! file_exists("sleepcheck.json")){
+		file_put_contents("sleepcheck.json", "");
+		# set the status of sleep
+		$lastStatus["sleep"] = "";
+	}else{
+		# get the current sleep status
+		$lastStatus["sleep"] = file_get_contents("sleepcheck.json");
 	}
 	# setup the last button status on first load of the button events
 	foreach($buttonNames as $buttonName){
@@ -123,6 +159,19 @@ if (array_key_exists("events",$_GET)){
 			$heartBeatCounter=0;
 		}else{
 			$heartBeatCounter+=1;
+		}
+		# check the sleep timer status
+		$currentSleepStatus = file_get_contents("sleepcheck.json");
+		# compare the current sleep status with the last found sleep status
+		if ($currentSleepStatus != $lastStatus["sleep"]){
+			$sleepTime=file_get_contents("sleep.json");
+			# if the sleep timer is greater than 0 send a sleep timer event
+			echo "data: sleep=".$sleepTime;
+			echo "\n\n";
+			# send the generated event
+			clear();
+			# update the sleep timer status so the event checking will be marked as done
+			$lastStatus["sleep"] = $currentSleepStatus;
 		}
 		# check the status
 		$currentStatus = file_get_contents("status.json");
@@ -199,13 +248,6 @@ include("/usr/share/2web/2webLib.php");
 # require the web player group
 requireGroup("client");
 ################################################################################
-################################################################################
-function resetButtonData(){
-	# reset the button states
-	nukeButtonData();
-	buildButtonData();
-}
-################################################################################
 # check for get data used to set the playback link
 if (array_key_exists("play",$_GET)){
 	if (requireGroup("clientRemote",false)){
@@ -261,7 +303,6 @@ if (array_key_exists("play",$_GET)){
 		# a attempt to play something without permissions was made
 		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
 	}
-
 }else if (array_key_exists("remote",$_GET)){
 	if (requireGroup("clientRemote")){
 		// no url was given at all draw the remote
@@ -270,60 +311,216 @@ if (array_key_exists("play",$_GET)){
 		echo "<link rel='stylesheet' href='/style.css'>\n";
 		echo "</head>\n";
 		echo "<body class='remoteCard'>\n";
+		echo "<table class='kodiPlayerButtonGrid kodiControlEmbededTableButtonGrid'>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		drawRemoteHeader();
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=skipbackward'>⏪<div>BACKWARD</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=playpause'>⏯️<div>Play/Pause</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=skipforward'>⏩<div>FORWARD</div></a>\n";
+		echo "				</td>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=nexttrack'>⏮️<div>Previous Track</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=stop'>⏹️<div>STOP</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=previoustrack'>⏭️<div>Next Track</div></a>\n";
+		echo "				</td>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=volumedown'>🔉<div>- Volume</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonDown kodiPlayerButton ' href='?remoteKey=mute'>🔇<div>Mute</div></a>\n";
+		echo "				</td>\n";
+		echo "				<td>\n";
+		echo "					<a class='kodiPlayerButtonContext kodiPlayerButton ' href='?remoteKey=volumeup'>🔊<div>+ Volume</div></a>\n";
+		echo "				</td>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "</table>\n";
+		echo "</body>\n";
+		echo "</html>\n";
+		exit();
+	}
+}else if (array_key_exists("configure",$_GET)){
+	if (requireGroup("clientRemote")){
+		// no url was given at all draw the remote
+		echo "<html class='randomFanart'>\n";
+		echo "<head>\n";
+		echo "<link rel='stylesheet' href='/style.css'>\n";
+		echo "</head>\n";
+		echo "<body class='remoteCard'>\n";
+		echo "<table class='kodiPlayerButtonGrid kodiControlEmbededTableButtonGrid'>\n";
+		# link back to the launch location of the remote
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		drawRemoteHeader();
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=nightmode'>🌃<div>Night Mode</div></a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=duskmode'>🌇<div>Dusk Mode</div></a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=daymode'>🏙️<div>Day Mode</div></a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchoutput'>📢<div>Switch Output</div></a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchsub'>✍️<div>Switch Sub</div></a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=switchaudio'>🗣️<div>Switch Audio</div></a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td>\n";
+		echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=configure'>🔧<div>Configure Client</div></a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=blank'>🖥️<div>Blank Screen</div></a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "			</table>\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+		echo "</table>\n";
+		echo "</body>\n";
+		echo "</html>\n";
+		exit();
+	}
+}else if (array_key_exists("sleep",$_GET)){
+	if (requireGroup("clientRemote")){
+		# update the sleep file to activate the sleep timer on all clients
+		# - this will turn off or blank out the display
+		# - this will be deactivated by any keypresses or activation of playback
+		file_put_contents("/var/cache/2web/web/client/sleep.json",$_GET["sleep"]);
+		# set the sleep check variable that activates a new sleep timer
+		file_put_contents("/var/cache/2web/web/client/sleepcheck.json",$_SERVER["REQUEST_TIME"]);
+		redirect("?remote");
+	}
+}else if (array_key_exists("setSleep",$_GET)){
+	if (requireGroup("clientRemote")){
+		echo "<html class='randomFanart'>\n";
+		echo "<head>\n";
+		echo "<link rel='stylesheet' href='/style.css'>\n";
+		echo "</head>\n";
+		echo "<body class='remoteCard'>\n";
 		echo "<table class='kodiPlayerButtonGrid'>\n";
 		echo "	<tr>\n";
 		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton' href='?share' title='Share Link'>⛓️<div>Share</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=stop'>⏹️<div>STOP</div></a>\n";
+		drawRemoteHeader();
 		echo "		</td>\n";
 		echo "	</tr>\n";
 		echo "	<tr>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=skipbackward'>⏪<div>BACKWARD</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=playpause'>⏯️<div>Play/Pause</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=skipforward'>⏩<div>FORWARD</div></a>\n";
+		echo "		<th>\n";
+		echo "			Sleep Presets\n";
+		echo "		</th>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td class='listCard'>\n";
+		echo "			<table class='kodiControlEmbededTable'>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=5'>5 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=10'>10 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=15'>15 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=30'>30 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=60'>60 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=90'>90 Minutes</a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "				<tr>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=120'>2 Hours</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=240'>4 Hours</a>\n";
+		echo "					</td>\n";
+		echo "					<td>\n";
+		echo "						<a class='button' href='?sleep=480'>8 Hours</a>\n";
+		echo "					</td>\n";
+		echo "				</tr>\n";
+		echo "			</table>\n";
 		echo "		</td>\n";
 		echo "	</tr>\n";
 		echo "	<tr>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=nexttrack'>⏮️<div>Previous Track</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=subs'>📑<div>Subtitles On/Off</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=previoustrack'>⏭️<div>Next Track</div></a>\n";
-		echo "		</td>\n";
+		echo "		<th>\n";
+		echo "			Set custom sleep timer\n";
+		echo "		</th>\n";
 		echo "	</tr>\n";
 		echo "	<tr>\n";
 		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=configure'>🎚️<div>Configure Client</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=switchsub'>✍️<div>Switch Sub</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?remoteKey=switchaudio'>🗣️<div>Switch Audio</div></a>\n";
-		echo "		</td>\n";
-		echo "	</tr>\n";
-		echo "	<tr>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonBack kodiPlayerButton ' href='?remoteKey=volumedown'>🔉<div>- Volume</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonDown kodiPlayerButton ' href='?remoteKey=mute'>🔇<div>Mute</div></a>\n";
-		echo "		</td>\n";
-		echo "		<td>\n";
-		echo "			<a class='kodiPlayerButtonContext kodiPlayerButton ' href='?remoteKey=volumeup'>🔊<div>+ Volume</div></a>\n";
+		echo "			<table class='kodiControlEmbededTable'>\n";
+		echo "			<tr>\n";
+		echo "				<form method='get'>\n";
+		echo "				<td>\n";
+		echo "					<input type='number' name='sleep' placeholder='90' value='90' min='1' max='1000'>\n";
+		echo "				</td>\n";
+		echo "				<td class='kodiControlEmbededTableButton'>\n";
+		echo "					<input class='button' type='submit' value='Set Sleep Timer'>\n";
+		echo "				</td>\n";
+		echo "				</form>\n";
+		echo "			</tr>\n";
+		echo "			</table>\n";
 		echo "		</td>\n";
 		echo "	</tr>\n";
 		echo "</table>\n";
@@ -341,8 +538,7 @@ if (array_key_exists("play",$_GET)){
 		echo "<table class='kodiPlayerButtonGrid'>";
 		echo "	<tr>\n";
 		echo "		<td>\n";
-		# link back to the launch location of the remote
-		echo "			<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/client/?remote'>🎛️ Remote</a>\n";
+		drawRemoteHeader();
 		echo "		</td>\n";
 		echo "	</tr>\n";
 		# form to use resolver for a url
@@ -454,27 +650,8 @@ if (array_key_exists("play",$_GET)){
 	# - also refreshes the page after playback of video has finished
 	redirect("/client/");
 }
-# load the button file paths
-$filePaths = Array(
-	"playpause",
-	"skipforward",
-	"skipbackward",
-	"stop",
-	"volumeup",
-	"volumedown",
-	"mute",
-	"subs",
-	"switchsub",
-	"switchaudio",
-	"nexttrack",
-	"previoustrack"
-);
-# generate the default configs if they are not there
-foreach($filePaths as $filePath){
-	if(! file_exists($filePath.".json")){
-		file_put_contents($filePath.".json", "");
-	}
-}
+# build the button data for each button that does not exist
+buildButtonData();
 # generate the sum used by the qr codes for host specific qr codes
 # - where you access this from gives you a diffrent qr code for ip based mdns based and hostname based pages to generate qr codes for those pages
 $hostSum=md5($_SERVER["HTTP_HOST"]);

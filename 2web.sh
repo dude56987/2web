@@ -1606,7 +1606,7 @@ main(){
 			cat /usr/share/2web/version_$module.cfg
 		done
 		drawLine
-	elif [ "$1" == "--fast-client" ] || [ "$1" == "fast-client" ];then
+	elif [ "$1" == "--desktop-client" ] || [ "$1" == "desktop-client" ];then
 		################################################################################
 		# use a bash script to load the event server and launch client commands
 		# - will setup a custom kiosk user with a openbox session
@@ -1635,6 +1635,10 @@ main(){
 			# install the desktop
 			apt-get install -y openbox
 		fi
+		if ! which notify-send;then
+			# install the notification system
+			apt-get install -y libnotify-bin
+		fi
 		if ! which vlc;then
 			# install the video player
 			apt-get install -y vlc
@@ -1642,6 +1646,10 @@ main(){
 		if ! which feh;then
 			# install the image viewer to set the background on openbox
 			apt-get install -y feh
+		fi
+		if ! which redshift;then
+			# install redshift for night mode support
+			apt-get install -y redshift
 		fi
 		if ! which adduser;then
 			# install adduser to create the kiosk user
@@ -1672,7 +1680,6 @@ main(){
 			# create the autologin lightdm config file
 			{
 				echo "[SeatDefaults]"
-				echo "xserver-command=X -s 0 -dpms"
 				echo "autologin-user=kiosk"
 				echo "autologin-user-timeout=0"
 				#echo "user-session=Xsession"
@@ -1691,10 +1698,6 @@ main(){
 			echo "unclutter &"
 			# start the sound server
 			echo "pulseaudio --start"
-			# disable screen power off on idle
-			#echo "xset s off"
-			#echo "xset -dpms"
-			#echo "xset s noblank"
 			# run the client and respond to connections from the server
 			echo "2web_client"
 		} > /home/kiosk/.xsession
@@ -1730,7 +1733,6 @@ main(){
 			# create the autologin lightdm config file
 			{
 				echo "[SeatDefaults]"
-				echo "xserver-command=X -s 0 -dpms"
 				echo "autologin-user=kiosk"
 				echo "autologin-user-timeout=0"
 				#echo "user-session=Xsession"

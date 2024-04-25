@@ -50,12 +50,9 @@ function updateBackground(){
 			feh --bg-scale "$eventServerBackgroundPath"
 			# update the background update time
 			backgroundUpdateTime=$(date "+%s")
-			# reset the screensaver timer
-			# - this will prevent the screensaver or power saving from activating
-			xset s reset
 		fi
-		# sleep 10 seconds between checks
-		sleep 10
+		# sleep 20 seconds between checks
+		sleep 20
 	done
 }
 ################################################################################
@@ -63,42 +60,65 @@ function runEventServer(){
 	# setup the connection to the event server and loop forever
 	eventServerPath="$1"
 	ALERT "Loading Main event server at '$eventServerPath'..."
+	# Setup sleep timer variables
+	sleepStartTime=0
+	sleepSetTime=0
+	sleepTimerOn=false
+	awake=true
 	# run the client loop that will run forever
 	while true;do
 		# read events from the event server, this can fail if the connection fails
 		curl -N --no-progress-meter "$eventServerPath" | while read -r event;do
 			# read the events and run the aproprate commands on the client machine
+			# - the heartbeat will be recieved roughly every 10 seconds regardless of actual events
+			#   to keep the server connection alive
 			echo "$event"
 			if echo "$event" | grep -q "play=";then
 				# pull the url to be played back
 				playUrl="$(echo "$event" | cut -d'=' -f2- )"
 				echo "playing url = '$playUrl'"
+				# send a space key to wake the client screen if it is asleep
+				xdotool key space
 				# close existing vlc instances
 				killall vlc
-				# send a space to wake the monitor if it is asleep
-				xdotool key space
 				# vlc can not play "LONG" urls so almost everything fails create a .strm file and play that
 				echo "$HOME/clientPlayBuffer.strm"
 				echo "$playUrl" > "$HOME/clientPlayBuffer.strm"
 				# launch the player in the background
 				vlc --fullscreen --play-and-exit "$HOME/clientPlayBuffer.strm" &
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "playpause";then
 				xdotool key space
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "stop";then
 				# stop video playback
 				xdotool key s
 				# kill all VLC instances
 				killall vlc
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "skipforward";then
 				xdotool key Right
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "skipbackward";then
 				xdotool key Left
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "volumeup";then
 				xdotool key Up
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "volumedown";then
 				xdotool key Down
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "mute";then
 				xdotool key m
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "configure";then
 				killall vlc
 				killall pavucontrol
@@ -106,25 +126,97 @@ function runEventServer(){
 				vlc &
 				# launch the volume control interface
 				pavucontrol &
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "subs";then
 				# enable/disable subtitles
 				xdotool key shift+v
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "switchoutput";then
 				# go to the next available audio output
 				xdotool key shift+a
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "switchsub";then
 				# switch to the next available subtitle
 				xdotool key v
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "switchaudio";then
 				# switch to the next available audio track
 				xdotool key b
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "nexttrack";then
 				xdotool key n
+				# set the sleep status
+				awake=true
 			elif echo "$event" | grep -q "previoustrack";then
 				xdotool key p
-			elif echo "$event" | grep -q "audiosource";then
+				# set the sleep status
+				awake=true
+			elif echo "$event" | grep -q "switchoutput";then
 				# change the audio source used by vlc
 				xdotool key shift+a
+				# set the sleep status
+				awake=true
+			elif echo "$event" | grep -q "nightmode";then
+				# reset the color
+				redshift -x
+				# set the color wavelength low enough for night mode
+				# - 1000k is the fully red light
+				redshift -O 1000
+			elif echo "$event" | grep -q "duskmode";then
+				# reset the color
+				redshift -x
+				# set the color wavelength halfway to night mode
+				# - 1000k is the fully red light
+				redshift -O 2500
+			elif echo "$event" | grep -q "daymode";then
+				# reset the color temp
+				redshift -x
+			elif echo "$event" | grep -q "blank";then
+				# turn off all active tools
+				killall vlc
+				killall pavucontrol
+				# turn off the screen
+				xset dpms force off
+				# set the sleep status
+				awake=false
+			elif echo "$event" | grep -q "sleep=";then
+				# set a timer to turn off the display after a delay
+				sleepTimerOn=true
+				# sleep time in minutes
+				sleepStartTime="$(date "+%s")"
+				sleepSetTime="$(echo "$event" | cut -d'=' -f2- )"
+				# notify the user the sleep timer is set
+				notify-send "Sleep timer set for '$sleepSetTime' minutes"
+				# convert sleep time into seconds for use with timers
+				sleepSetTime="$(( sleepSetTime * 60 ))"
+			fi
+			if $sleepTimerOn;then
+				# if the sleep timer is on check the current time is not past the sleep timer poweroff time
+				if [ $(( $( date "+%s" ) - sleepStartTime )) -gt $sleepSetTime ];then
+					# stop all tools and turn the display off
+					killall vlc
+					killall pavucontrol
+					# turn off the screen
+					xset dpms force off
+					# reset sleep timer variables
+					sleepStartTime=0
+					sleepSetTime=0
+					sleepTimerOn=false
+					# set the sleep status
+					awake=false
+				fi
+			fi
+			# if the screen is supposted to be awake
+			if $awake;then
+				# reset the screensaver timer
+				# - this will prevent the screensaver or power saving from activating
+				# - this will also turn off the active screensaver
+				xset s reset
 			fi
 		done
 	done

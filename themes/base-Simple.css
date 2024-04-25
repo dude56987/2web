@@ -2312,6 +2312,24 @@ select{
 .kodiPlayerButtonGrid tr td{
 	border: none;
 }
+.kodiPlayerButtonGrid th{
+	border-left: none;
+	border-right: none;
+}
+.kodiControlEmbededTableButtonGrid{
+	border: none;
+	width: 100dvw;
+}
+.kodiControlEmbededTableButtonGrid td{
+	width: 33%;
+}
+.kodiControlEmbededTableButtonGridHeader{
+	border: none;
+	width: 100dvw;
+}
+.kodiControlEmbededTableButtonGridHeader td{
+	width: 20%;
+}
 /*
 details > summary{
 	list-style: none;
