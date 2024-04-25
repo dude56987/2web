@@ -238,12 +238,12 @@ if (detectEnabledStatus("portal2web")){
 }
 if (detectEnabledStatus("graph2web")){
 	if (requireGroup("graph2web",false)){
-		formatText("<a class='button' href='/graphs/'>",2);
-		formatText("📊",3);
-		formatText("<span class='headerText'>",3);
-		formatText("GRAPHS",4);
-		formatText("</span>",3);
-		formatText("</a>",2);
+		echo formatText("<a class='button' href='/graphs/'>",2);
+		echo formatText("📊",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("GRAPHS",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
 	}
 }
 // read the weather info for weather2web
