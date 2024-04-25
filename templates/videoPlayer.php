@@ -343,14 +343,28 @@ pageKeys();
 		if(property_exists($jsonData, "uploader_url")){
 			$videoChannelUrl=$jsonData->uploader_url;
 			# Build the html for the bottom of the page
-			$tempVideoChannelUrl="<table>";
-			$tempVideoChannelUrl.="<tr>";
-			$tempVideoChannelUrl.="<th>Channel Source</th>";
-			$tempVideoChannelUrl.="</tr>";
-			$tempVideoChannelUrl.="<tr>";
-			$tempVideoChannelUrl.="<td>".$videoChannelUrl."</td>";
-			$tempVideoChannelUrl.="</tr>";
-			$tempVideoChannelUrl.="</table>";
+			$tempVideoChannelUrl="<table>\n";
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="<th>Channel Source</th>\n";
+			if (requireGroup("admin",false)){
+				$tempVideoChannelUrl.="<th>Admin Actions</th>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="	<td>\n";
+			$tempVideoChannelUrl.="		".$videoChannelUrl."\n";
+			$tempVideoChannelUrl.="	</td>\n";
+			if (requireGroup("admin",false)){
+				# if the user has admin permissions load the button that will add the channel
+				$tempVideoChannelUrl.="	<td>\n";
+				$tempVideoChannelUrl.="		<form action='/settings/admin.php' method='post'>\n";
+				$tempVideoChannelUrl.="			<input width='60%' type='text' name='ytdl_add_username_source' value='".$videoChannelUrl."' hidden>\n";
+				$tempVideoChannelUrl.="			<button class='button' type='submit'>➕ Add Channel</button>\n";
+				$tempVideoChannelUrl.="		</form>\n";
+				$tempVideoChannelUrl.="	</td>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+			$tempVideoChannelUrl.="</table>\n";
 			#
 			$videoChannelUrl=$tempVideoChannelUrl;
 		}
