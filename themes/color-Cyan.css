@@ -29,7 +29,6 @@
 	--highlightBorder: white;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
-/*
 html{
 	text-shadow: 0.1em 0.1em 3px var(--textShadowColor),
 	-0.1em 0.1em 3px var(--textShadowColor),
@@ -40,4 +39,3 @@ html{
 :hover{
 	text-shadow: none;
 }
-*/

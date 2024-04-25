@@ -1,6 +1,6 @@
 /*
 ########################################################################
-# 2web orange flat theme
+# 2web forest theme
 # Copyright (C) 2023 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@
 ########################################################################
 */
 :root{
-	--solidBackground: #c38a22;
-	--glassBackground: rgb(181,102,0);
+	--solidBackground: #00653f;
+	--glassBackground: rgba(0,126,0,0.85);
 	--borderColor: white;
 	--textColor: white;
 	--shadowColor: black;
