@@ -261,20 +261,6 @@ if (file_exists("$webDirectory/weather/index.php")){
 		}
 	}
 }
-
-// check for the kodi remote
-if (detectEnabledStatus("kodi2web")){
-	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
-		if (requireGroup("kodi2web",false)){
-			echo formatText("<a class='button' href='/kodi-player.php'>",2);
-			echo formatText("🇰",3);
-			echo formatText("<span class='headerText'>",3);
-			echo formatText("KODI REMOTE",4);
-			echo formatText("</span>",3);
-			echo formatText("</a>",2);
-		}
-	}
-}
 if (requireGroup("webPlayer",false)){
 	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
 		echo formatText("<a class='button' href='/web-player.php'>",2);
@@ -308,7 +294,18 @@ if (yesNoCfgCheck("/etc/2web/client.cfg")){
 		echo formatText("</a>",2);
 	}
 }
-
+if (detectEnabledStatus("kodi2web")){
+	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+		if (requireGroup("kodi2web",false)){
+			echo formatText("<a class='button' href='/kodi-player.php'>",2);
+			echo formatText("🇰",3);
+			echo formatText("<span class='headerText'>",3);
+			echo formatText("KODI REMOTE",4);
+			echo formatText("</span>",3);
+			echo formatText("</a>",2);
+		}
+	}
+}
 # try to load a session in the current window if one does not exist
 if (session_status() != 2){
 	session_start();
