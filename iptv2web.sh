@@ -53,10 +53,8 @@ function killFakeImage(){
 ################################################################################
 function streamPass(){
 	# pass streamlink arguments to correct streamlink path
-	if test -f "/usr/local/bin/streamlink";then
-		/usr/local/bin/streamlink "$@"
-	elif test -f "/usr/bin/streamlink";then
-		/usr/bin/streamlink "$@"
+	if test -f "/var/cache/2web/downloads/pip/streamlink/bin/streamlink";then
+		/var/cache/2web/downloads/pip/streamlink/bin/streamlink "$@"
 	else
 		# could not find streamlink installed on the server
 		ERROR "For the URL to resolve you must install streamlink on this server."
@@ -99,7 +97,7 @@ examineIconLink(){
 		killFakeImage "$localIconPath"
 		# try to download the icon with yt-dlp
 		if ! test -f "$localIconPath";then
-			tempIconLink=$(yt-dlp --abort-on-error -j "$link")
+			tempIconLink=$(/usr/bin/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link")
 			if [ $? -eq 0 ];then
 				tempIconLink=$(echo $tempIconLink | jq ".thumbnail")
 				INFO "Downloading thumbnail '$tempIconLlink'"
@@ -574,37 +572,35 @@ function processLink(){
 				#hostPathHD='iptv-resolver.php?HD="true"&url="'$link'"'
 				thumbnailLink="0"
 
-				if which yt-dlp && which jq;then
-					INFO "Attempting to get link metadata with yt-dlp ..."
-					streamLinkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
-					# cache the yt-dlp json data 10 days
-					if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" "10";then
-						#mkdir -p "$webDirectory/live/ytdlp_cache/"
-						downloadCount=0
-						while true;do
-							# if there is less than 10 characters in the json data the download has failed
-							if [ $(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" | wc -c) -le 10 ];then
-								# if the file contains no data try to download it again
-								yt-dlp --abort-on-error -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
-								errorCode=$?
-								if [ $errorCode -eq 1 ];then
-									# break if there is an error in yt-dlp
-									addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because of an error in yt-dlp. ERROR CODE = '$errorCode'."
-									# this means the channels most likely can not be played in any way so it should not be added to the list
-									return 1
-								fi
-								downloadCount=$(( downloadCount + 1))
-							else
-								# if the file is big enough break the loop, this is the success state
-								break
-							fi
-							if [ $downloadCount -ge 5 ];then
-								# break the loop if download attempts are 5 or more
-								addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because the download attempts for downloading channel metadata have failed 5 or more times."
+				INFO "Attempting to get link metadata with yt-dlp ..."
+				streamLinkSum=$(echo -n "$link" | md5sum | cut -d' ' -f1)
+				# cache the yt-dlp json data 10 days
+				if cacheCheck "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" "10";then
+					#mkdir -p "$webDirectory/live/ytdlp_cache/"
+					downloadCount=0
+					while true;do
+						# if there is less than 10 characters in the json data the download has failed
+						if [ $(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" | wc -c) -le 10 ];then
+							# if the file contains no data try to download it again
+							/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
+							errorCode=$?
+							if [ $errorCode -eq 1 ];then
+								# break if there is an error in yt-dlp
+								addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because of an error in yt-dlp. ERROR CODE = '$errorCode'."
+								# this means the channels most likely can not be played in any way so it should not be added to the list
 								return 1
 							fi
-						done
-					fi
+							downloadCount=$(( downloadCount + 1))
+						else
+							# if the file is big enough break the loop, this is the success state
+							break
+						fi
+						if [ $downloadCount -ge 5 ];then
+							# break the loop if download attempts are 5 or more
+							addToLog "ERROR" "Failed Download" "The download of '$link' in iptv2web has failed because the download attempts for downloading channel metadata have failed 5 or more times."
+							return 1
+						fi
+					done
 					# load the cached data
 					tempMeta=$(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index")
 					if echo -n "$link" | grep -q "youtube.com";then
@@ -632,7 +628,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					# try to get json data with streamlink
-					fileName=$(streamlink -j "$link" | jq .metadata.title)
+					fileName=$(/usr/bin/2web/downloads/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
 				fi
 
 				#ERROR "[DEBUG]: checking filename length '$fileName'"
@@ -1395,6 +1391,16 @@ nuke(){
 	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
+function upgrade-pip(){
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	# create the pip install path
+	createDir "$pipInstallPath/streamlink/"
+	createDir "$pipInstallPath/yt-dlp/"
+	# upgrade streamlink and yt-dlp pip packages
+	pip3 install --target "$pipInstallPath/streamlink/" --upgrade streamlink
+	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
+}
+################################################################################
 main(){
 	################################################################################
 	# if --debug flag used activate bash debugging for script
@@ -1432,10 +1438,12 @@ main(){
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade the pip packages if the module is enabled
 		checkModStatus "iptv2web"
-		# upgrade streamlink and yt-dlp pip packages
-		pip3 install --break-system-packages --upgrade streamlink
-		pip3 install --break-system-packages --upgrade yt-dlp
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# copy local hls.js included in package to the website
 		linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"

@@ -18,6 +18,7 @@
 ########################################################################
 -->
 <?php
+include("/usr/share/2web/2webLib.php");
 ################################################################################
 function debugTrue(){
 	if (array_key_exists("debug",$_GET)){
@@ -36,11 +37,9 @@ function debug($output){
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
-if (file_exists("/usr/local/bin/streamlink")){
-	$streamlinkPath="/usr/local/bin/streamlink";
-}
-else if (file_exists("/usr/bin/streamlink")){
-	$streamlinkPath="/usr/bin/streamlink";
+if (file_exists("/var/cache/2web/downloads/pip/streamlink/bin/streamlink")){
+	# look for the 2web pip path
+	$streamlinkPath="/var/cache/2web/downloads/pip/streamlink/bin/streamlink";
 }else{
 	# could not find streamlink installed on the server
 	echo "[ERROR]: For the URL to resolve you must install streamlink on this server."."<br>";

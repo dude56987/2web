@@ -161,7 +161,7 @@ rss2nfo_update(){
 		if cacheCheck "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg" "1";then
 			# use yt-dlp to download the rss and convert it into json
 			INFO "Shows:[$finishedSources/$totalSources] - Downloading rss and converting to json from $rssSource"
-			rssAsJson=$(timeout 120 /usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
+			rssAsJson=$(timeout 120 /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
 			# only write valid rss data to the cache
 			if [ 5 -lt $(echo "$rssAsJson" | wc -c) ];then
 				# cache the rss that has been convered to json
@@ -203,6 +203,14 @@ function nuke(){
 	ALERT "The RSS is still stored as json in /var/cache/2web/downloads/rss/"
 }
 ################################################################################
+function upgrade-pip(){
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	# create the pip install path
+	createDir "$pipInstallPath/yt-dlp/"
+	# upgrade streamlink and yt-dlp pip packages
+	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
+}
+################################################################################
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "rss2nfo"
@@ -213,8 +221,12 @@ main(){
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "rss2nfo"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade the pip packages if the module is enabled
 		checkModStatus "rss2nfo"
-		pip3 install --break-system-packages --upgrade yt-dlp
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "rss2nfo"
 		ytdl2kodi_reset_cache

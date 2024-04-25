@@ -1171,6 +1171,17 @@ function nuke(){
 	rm -v $webDirectory/web_cache/widget_new_comics.index
 }
 ################################################################################
+function upgrade-pip(){
+	# upgrade gallery-dl pip packages
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	# create the pip install paths
+	createDir "$pipInstallPath/gallery-dl/"
+	createDir "$pipInstallPath/dosage/"
+	# upgrade streamlink and yt-dlp pip packages
+	pip3 install --target "$pipInstallPath/gallery-dl/" --upgrade gallery-dl
+	pip3 install --target "$pipInstallPath/dosage/" --upgrade dosage
+}
+################################################################################
 main(){
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
@@ -1190,10 +1201,12 @@ main(){
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade the pip packages if the module is enabled
 		checkModStatus "comic2web"
-		# upgrade gallery-dl pip packages
-		pip3 install --break-system-packages --upgrade gallery-dl
-		pip3 install --break-system-packages --upgrade dosage
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
 		# comic2web --convert filePath
 		convertImage "$3"

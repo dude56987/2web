@@ -824,13 +824,12 @@ function processRepo(){
 
 		INFO "$repoName : Building lint data for Javascript"
 		# check for javascript files to run lint on
-		if test -f "/usr/local/bin/jslint";then
+		if test -f "/var/cache/2web/downloads/jslint/bin/jslint-cli";then
 			find "." -type f -name "*.js" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
 				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-					#eslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index"
-					/usr/local/bin/jslint "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+					/var/cache/2web/downloads/jslint/bin/jslint-cli "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
@@ -1123,6 +1122,14 @@ function nuke(){
 	rm -v $webDirectory/web_cache/widget_new_repos.index
 }
 ################################################################################
+function upgrade-pip(){
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	# create the pip install path
+	createDir "$pipInstallPath/jslint/"
+	# upgrade the jslint package
+	pip3 install --target "$pipInstallPath/jslint/" --upgrade jslint
+}
+################################################################################
 main(){
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
@@ -1134,9 +1141,12 @@ main(){
 		checkModStatus "git2web"
 		update "$@"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade the pip packages if the module is enabled
 		checkModStatus "git2web"
-		# upgrade the jslint package
-		pip3 install --break-system-packages --upgrade "jslint"
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "git2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

@@ -865,9 +865,6 @@ function main(){
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		lockProc "music2web"
 		nuke
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade gallery-dl pip packages
-		pip3 install --upgrade gallery-dl
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "music2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

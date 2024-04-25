@@ -126,15 +126,9 @@ ytdl2kodi_channel_extractor(){
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	echo "[INFO]: Updating the playlist..."
 	# try to rip as a playlist
-	if test -f /usr/local/bin/yt-dlp;then
-		tempLinkList=$(/usr/local/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-		errorCode=$?
-		echo "[INFO]: tempLinkList = $tempLinkList"
-	else
-		tempLinkList=$(yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
-		errorCode=$?
-		echo "[INFO]: tempLinkList = $tempLinkList"
-	fi
+	tempLinkList=$(/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
+	errorCode=$?
+	echo "[INFO]: tempLinkList = $tempLinkList"
 	# get uploader from the json data and set it as the show title
 	#showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
 
@@ -214,8 +208,8 @@ ytdl2kodi_channel_extractor(){
 			tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
 			tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
 			echo "tempLinkUrl= $tempLinkUrl"
-			tempJsonInfo=$(yt-dlp -j "$tempLinkUrl")
-			tempJsonInfo2=$(yt-dlp -j "$tempLinkUrl2")
+			tempJsonInfo=$(/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp -j "$tempLinkUrl")
+			tempJsonInfo2=$(/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp -j "$tempLinkUrl2")
 
 			tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
 			tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".channel")
@@ -657,14 +651,9 @@ ytdl2kodi_video_extractor(){
 	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
 	echo "Extracting metadata from '$selection'..."
-	# use the pip package if it is available, otherwise use default system paths
-	if test -f /usr/local/bin/yt-dlp;then
-		echo "timeout --preserve-status \"$timeLimitSeconds\" /usr/local/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
-		info=$(timeout --preserve-status "$timeLimitSeconds" /usr/local/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
-	else
-		echo "timeout --preserve-status \"$timeLimitSeconds\" yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
-		info=$(timeout --preserve-status "$timeLimitSeconds" yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
-	fi
+	# use the pip package
+	echo "timeout --preserve-status \"$timeLimitSeconds\" /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
+	info=$(timeout --preserve-status "$timeLimitSeconds" /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
 	infoCheck=$?
 	if [ $infoCheck -eq 0 ];then
 		echo "Return code of ytdl = $infoCheck"
@@ -1100,6 +1089,14 @@ function nuke(){
 	echo "########################################################################"
 }
 ################################################################################
+function upgrade-pip(){
+	# create the pip install path
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	createDir "$pipInstallPath/yt-dlp/"
+	# upgrade pip packages
+	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
+}
+################################################################################
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "ytdl2nfo"
@@ -1110,8 +1107,12 @@ main(){
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "ytdl2nfo"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		# upgrade the pip packages if the module is enabled
 		checkModStatus "ytdl2nfo"
-		pip3 install --break-system-packages --upgrade yt-dlp
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "ytdl2nfo"
 		ytdl2kodi_reset_cache

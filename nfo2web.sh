@@ -1039,7 +1039,7 @@ processEpisode(){
 						echo "SHA Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						echo "SHA Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
-						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /usr/local/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
+						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 					fi
 				fi
@@ -2081,6 +2081,16 @@ function update(){
 showHelp(){
 	cat /usr/share/2web/help/nfo2web.txt
 }
+################################################################################
+function upgrade-pip(){
+	pipInstallPath="/var/cache/2web/downloads/pip"
+	# create the pip install path
+	createDir "$pipInstallPath/streamlink/"
+	createDir "$pipInstallPath/yt-dlp/"
+	# upgrade streamlink and yt-dlp pip packages
+	pip3 install --target "$pipInstallPath/streamlink/" --upgrade streamlink
+	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
+}
 ########################################################################
 main(){
 	debugCheck
@@ -2126,10 +2136,12 @@ main(){
 	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 		clean
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		checkModStatus "iptv2web"
-		# upgrade streamlink and yt-dlp pip packages
-		pip3 install --break-system-packages --upgrade streamlink
-		pip3 install --break-system-packages --upgrade yt-dlp
+		# upgrade the pip packages if the module is enabled
+		checkModStatus "nfo2web"
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ];then
+		# force upgrade or install of all the pip packages
+		upgrade-pip
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"

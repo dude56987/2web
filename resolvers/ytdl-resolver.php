@@ -77,7 +77,9 @@ function cacheUrl($sum,$videoLink){
 	debug("Build the command<br>");
 	$command = "nice -n -5 ";
 	// add the download to the cache with the processing queue
-	if (file_exists("/usr/local/bin/yt-dlp")){
+	if (file_exists("/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp")){
+		$command = $command."/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
+	}else if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
 		# add the sponsorblock video bookmarks to the video file when using yt-dlp
 		$command = $command."/usr/local/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";

@@ -9,3 +9,11 @@ symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
 /usr/bin/2web
 # launch again to enable it, this is a bug
 /usr/bin/2web
+# install the pip package dependencies for all modules, even disabled modules
+# - try to only run the forced pip install once, this is mostly for testing purposes
+if ! test -f /tmp/2web_pip_install_flag;then
+	/usr/bin/2web --force-upgrade
+	touch /tmp/2web_pip_install_flag
+else
+	echo "PIP packages already installed..."
+fi
