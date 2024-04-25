@@ -314,6 +314,9 @@ echo "		</tr>\n";
 echo "	</form>\n";
 echo "</table>\n";
 echo "</div>";
+# send the input forms to the user before rendering the list of recent videos
+flush();
+ob_flush();
 # draw the older cached videos
 echo "<div class='titleCard'>\n";
 echo "<h2>Recent Videos</h2>\n";
