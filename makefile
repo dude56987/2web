@@ -138,6 +138,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/etc/2web/portal/;
 	mkdir -p debian/var/lib/2web/;
+	# create the ufw applications profile directory
+	mkdir -p debian/etc/ufw/applications.d/
 	# copy the license over to the webserver to include it in about page and in CLI tools
 	cp -v LICENSE debian/usr/share/2web/
 	# copy templates over
@@ -362,6 +364,8 @@ build-deb: upgrade-hls
 	# copy over the zeroconf configs to anounce the service
 	cp -v systemConf/zeroconf_http.service debian/etc/avahi/services/2web_http.service
 	#cp -v systemConf/zeroconf_https.service debian/etc/avahi/services/2web_https.service
+	# copy over the 2web ufw firewall app profile settings
+	cp -v systemConf/ufw_app_profile.ini debian/etc/ufw/applications.d/2web_server
 	# copy over bash tab completion scripts
 	cp -v tab_complete/* debian/etc/bash_completion.d/
 	# write version info last thing before the build process of the package
