@@ -261,8 +261,10 @@ function noscriptRefresh($seconds=10){
 </head>
 <body>
 <script>
-function pageKeys() {
-	document.body.addEventListener('keydown', function(event){
+document.body.addEventListener('keydown', function(event){
+	// only allow hotkeys if the video player has focus
+	if(document.getElementById("video").hasFocus()){
+		// check for key controls on the video player
 		const key = event.key;
 		switch (key){
 			case " ":
@@ -290,10 +292,8 @@ function pageKeys() {
 			seekBackward();
 			break;
 		}
-	});
-}
-// launch the function
-pageKeys();
+	}
+});
 </script>
 <?PHP
 	include("/usr/share/2web/templates/header.php");
