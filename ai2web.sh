@@ -642,6 +642,31 @@ function nuke(){
 	rm -v $webDirectory/web_cache/widget_new_ai.index
 }
 ################################################################################
+function upgrade-pip(){
+	# install gpt4all for base text prompt generation
+	# - version 1.0.8 is still working on debain but 1.0.9 is broken
+	pip3 install --break-system-packages --upgrade "gpt4all==1.0.8"
+	# install whisper speech recognition
+	pip3 install --break-system-packages --upgrade "openai-whisper"
+	# install stable diffusion diffusers library
+	pip3 install --break-system-packages --upgrade "diffusers==0.21.4"
+	# install the huggingface transformers library, required by diffusers based on the running model
+	pip3 install --break-system-packages --upgrade transformers
+	pip3 install --break-system-packages --upgrade torch
+	pip3 install --break-system-packages --upgrade tensorrt
+	# tensor libaries
+	pip3 install --break-system-packages --upgrade safetensors
+	pip3 install --break-system-packages --upgrade xformers
+	pip3 install --break-system-packages --upgrade tensorflow
+	pip3 install --break-system-packages --upgrade scipy
+	# accelerate allows only loading active tensors onto the GPU
+	pip3 install --break-system-packages --upgrade accelerate
+	# 8bit support for accelerate to run larger models on smaller computers
+	#pip3 install --break-system-packages --upgrade bitsandbytes
+	# speech functions are provided by speechbrain, tts, stt
+	#pip3 install --break-system-packages --upgrade speechbrain
+}
+################################################################################
 main(){
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
@@ -661,27 +686,9 @@ main(){
 		pip3 install --break-system-packages --upgrade "openai-whisper==showAllVersionNumbers"
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		checkModStatus "ai2web"
-		# install gpt4all for base text prompt generation
-		# - version 1.0.8 is still working on debain but 1.0.9 is broken
-		pip3 install --break-system-packages --upgrade "gpt4all==1.0.8"
-		# install whisper speech recognition
-		pip3 install --break-system-packages --upgrade "openai-whisper"
-		# install stable diffusion diffusers library
-		pip3 install --break-system-packages --upgrade "diffusers=0.21.4"
-		# install the huggingface transformers library, required by diffusers based on the running model
-		pip3 install --break-system-packages --upgrade transformers
-		pip3 install --break-system-packages --upgrade torch
-		pip3 install --break-system-packages --upgrade tensorrt
-		# tensor libaries
-		pip3 install --break-system-packages --upgrade safetensors
-		pip3 install --break-system-packages --upgrade xformers
-		pip3 install --break-system-packages --upgrade tensorflow
-		# accelerate allows using cpu and gpu
-		#pip3 install --break-system-packages --upgrade accelerate
-		# 8bit support for accelerate to run larger models on smaller computers
-		#pip3 install --break-system-packages --upgrade bitsandbytes
-		# speech functions are provided by speechbrain, tts, stt
-		#pip3 install --break-system-packages --upgrade speechbrain
+		upgrade-pip
+	elif [ "$1" == "--force-upgrade" ] ;then
+		upgrade-pip
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "ai2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
