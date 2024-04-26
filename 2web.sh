@@ -1554,9 +1554,13 @@ main(){
 		ALERT "Screenshots are stored in /var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		ALERT "Run 'comic2web' in order to add the screenshots to the comic section of 2web"
 	elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" ] ;then
-		webDirectory=$(webRoot);
-		# run the cleanup to remove cached files older than the cache time
 		################################################################################
+		# Run the cleanup to remove cached files older than the cache time
+		# - ALL caches use the same timer
+		# - the timer is set in days
+		################################################################################
+		webDirectory=$(webRoot);
+		# load the cache settings
 		if test -f "/etc/2web/cache/cacheDelay.cfg";then
 			echo "Loading cache settings..."
 			cacheDelay=$(cat "/etc/2web/cache/cacheDelay.cfg")
@@ -1566,29 +1570,42 @@ main(){
 		fi
 		# if the cache is not set to forever then cleanup the cache directories that exist
 		if ! echo "$cacheDelay" | grep -q "forever";then
-			# cleanup the caches
+			# cleanup all the 2web cache directories
 			echo "Checking cache for files older than ${cacheDelay} Days"
-			# delete files older than x days
+			# cleanup the resolver cache
 			ALERT "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
 			if test -d "$webDirectory/RESOLVER-CACHE/";then
 				find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
 			fi
+			# cleanup files in the transcode cache
 			ALERT "Checking for cache files in $webDirectory/TRANSCODE-CACHE/"
 			if test -d "$webDirectory/TRANSCODE-CACHE/";then
 				find "$webDirectory/TRANSCODE-CACHE/" -type f -mtime +"$cacheDelay" -name '*.webm' -exec rm -v {} \;
 			fi
-			# delete the m3u cache
+			# cleanup the m3u playlist cache
 			ALERT "Checking for cache files in $webDirectory/M3U-CACHE/"
 			if test -d "$webDirectory/M3U-CACHE/";then
 				find "$webDirectory/M3U-CACHE/" -type f -mtime +"$cacheDelay" -name '*.m3u' -exec rm -v {} \;
 			fi
+			# cleanup the search results cache
 			ALERT "Checking for cache files in $webDirectory/search/"
 			if test -d "$webDirectory/search/";then
 				find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
 			fi
+			# cleanup the generated zip file cache
 			ALERT "Checking for cache files in $webDirectory/zip_cache/"
 			if test -d "$webDirectory/zip_cache/";then
 				find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
+			fi
+			# cleanup the web player cache
+			ALERT "Checking for cache files in $webDirectory/web_player/"
+			if test -d "$webDirectory/web_player/";then
+				find "$webDirectory/web_player/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
+			fi
+			# cleanup kodi player
+			ALERT "Checking for cache files in $webDirectory/kodi-player/"
+			if test -d "$webDirectory/kodi-player/";then
+				find "$webDirectory/kodi-player/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
 			fi
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
