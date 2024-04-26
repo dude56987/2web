@@ -352,7 +352,7 @@ document.body.addEventListener('keydown', function(event){
 			$tempVideoChannelUrl.="</tr>\n";
 			$tempVideoChannelUrl.="<tr>\n";
 			$tempVideoChannelUrl.="	<td>\n";
-			$tempVideoChannelUrl.="		".$videoChannelUrl."\n";
+			$tempVideoChannelUrl.="		<a href='".$videoChannelUrl."'>".$videoChannelUrl."</a>\n";
 			$tempVideoChannelUrl.="	</td>\n";
 			if (requireGroup("admin",false)){
 				# if the user has admin permissions load the button that will add the channel
