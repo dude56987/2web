@@ -417,11 +417,8 @@ function updateCerts(){
 	fi
 	if [ $genCert == 'yes' ];then
 		addToLog "UPDATE" "Updating custom SSL certificate"
-		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -config /etc/2web/certInfo.cnf
-		# convert the ssl certificate into the der format
-		# - der format can be copied to other systems at /usr/local/share/ca-certificates/
-		# - linux only updates after update-ca-certificates
-		openssl x509 -in /var/cache/2web/ssl-cert.crt -out /var/cache/2web/ssl-cert.der -outform DER
+		# build the custom cert and private key
+		openssl req -x509 -newkey rsa:4096 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -sha256 -days 3650 -nodes -subj "/C=XX/ST=Networked/L=Internetville/O=2web/OU=$(hostname)@2web/CN=$(hostname).local"
 		# add the cert to the system cert directory
 		ln -s /var/cache/2web/ssl-cert.crt /usr/share/ca-certificates/2web.crt
 		# update system cert file
