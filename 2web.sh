@@ -1656,7 +1656,8 @@ main(){
 		apt-get install -y xinit
 		# install boot system
 		apt-get install -y lightdm
-
+		# install the notification daemon
+		apt-get install -y xfce4-notifyd
 		if ! which openbox-session;then
 			# install the desktop
 			apt-get install -y openbox

@@ -56,6 +56,13 @@ function updateBackground(){
 	done
 }
 ################################################################################
+function stopOtherTasks(){
+	# stop all the other tasks running
+	killall vlc
+	killall pavucontrol
+	killall xfce4-notifyd-config
+}
+################################################################################
 function runEventServer(){
 	# setup the connection to the event server and loop forever
 	eventServerPath="$1"
@@ -80,7 +87,7 @@ function runEventServer(){
 				# send a space key to wake the client screen if it is asleep
 				xdotool key space
 				# close existing vlc instances
-				killall vlc
+				stopOtherTasks
 				# vlc can not play "LONG" urls so almost everything fails create a .strm file and play that
 				echo "$HOME/clientPlayBuffer.strm"
 				echo "$playUrl" > "$HOME/clientPlayBuffer.strm"
@@ -96,7 +103,7 @@ function runEventServer(){
 				# stop video playback
 				xdotool key s
 				# kill all VLC instances
-				killall vlc
+				stopOtherTasks
 				# set the sleep status
 				awake=true
 			elif echo "$event" | grep -q "skipforward";then
@@ -120,12 +127,13 @@ function runEventServer(){
 				# set the sleep status
 				awake=true
 			elif echo "$event" | grep -q "configure";then
-				killall vlc
-				killall pavucontrol
+				stopOtherTasks
 				# launch vlc to configure the settings
 				vlc &
 				# launch the volume control interface
 				pavucontrol &
+				# launch the notification theme configuration interface
+				xfce4-notifyd-config &
 				# set the sleep status
 				awake=true
 			elif echo "$event" | grep -q "subs";then
@@ -178,8 +186,7 @@ function runEventServer(){
 				redshift -x
 			elif echo "$event" | grep -q "blank";then
 				# turn off all active tools
-				killall vlc
-				killall pavucontrol
+				stopOtherTasks
 				# turn off the screen
 				xset dpms force off
 				# set the sleep status
@@ -199,8 +206,7 @@ function runEventServer(){
 				# if the sleep timer is on check the current time is not past the sleep timer poweroff time
 				if [ $(( $( date "+%s" ) - sleepStartTime )) -gt $sleepSetTime ];then
 					# stop all tools and turn the display off
-					killall vlc
-					killall pavucontrol
+					stopOtherTasks
 					# turn off the screen
 					xset dpms force off
 					# reset sleep timer variables
