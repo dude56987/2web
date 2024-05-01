@@ -1020,6 +1020,7 @@ processEpisode(){
 			# if the config option is set to cache new episodes
 			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
+				yt_download_command=""
 				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
 				# split up airdate data to check if caching should be done
 				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
@@ -1031,16 +1032,24 @@ processEpisode(){
 						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath" "$logPagePath"
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
-						tempSum=$(echo -n "\"$ytLink\"" | sha512sum | cut -d' ' -f1)
+						tempSum=$(echo -n "$ytLink" | sha512sum | cut -d' ' -f1)
+						# create the directory to store the cached data
 						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
-						echo "Video link cached with nfo2web" > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "Orignal Link = '$videoPath'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "Youtube Link = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "SHA Source = '$ytLink'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
-						echo "SHA Sum = '$tempSum'" >> "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
+						# create the command for caching
+						temp_cache_command="/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'"
+						# store processing info into a log file
+						{
+							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
+							echo "Orignal Link = '$videoPath'"
+							echo "Youtube Link = '$ytLink'"
+							echo "SHA Source = '$ytLink'"
+							echo "SHA Sum = '$tempSum'"
+							echo "____COMMAND____"
+							echo "$temp_cache_command"
+						} > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
-						echo "/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'" | at -q b -M 'now'
-						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
+						# launch the command in the queue scheduler
+						echo "$temp_cache_command" | at -q b -M 'now'
 					fi
 				fi
 			fi
