@@ -930,10 +930,10 @@ function verifyDatabasePaths(){
 		rows=$(sqlite3 --cmd ".timeout $timeout" "$databasePath" "select * from \"$tableName\";")
 		# read though each table for the title column
 		for path in $rows;do
-			# for each colum check the path it lists on the disk to make sure the file exists
 			# check the path stored in the table exists on the disk
 			if ! test -f "$path";then
-				INFO "Discovered invalid path in $tableName:$path"
+				ALERT "Discovered invalid path in $databasePath table:$tableName:$path"
+				addToLog "ERROR" "Invalid SQL Entry" "Discovered invalid path in $databasePath table:$tableName:$path"
 				# the path does not exist so it needs removed from the database
 				sqlite3 --cmd ".timeout $timeout" "$databasePath" "delete from \"$tableName\" where title='$path';"
 			fi
