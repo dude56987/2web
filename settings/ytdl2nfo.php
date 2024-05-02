@@ -204,10 +204,15 @@ foreach($sourceFiles as $sourceFile){
 	<li>
 		This is to throttle downloading metadata from the site.
 	</li>
+	<li>
+		/etc/2web/ytdl/episodeProcessingLimit.cfg
+	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/ytdl/episodeProcessingLimit.cfg");
 ?>
+</pre>
 </div>
 
 <div id='downloadPath' class='inputCard'>
@@ -217,9 +222,9 @@ foreach($sourceFiles as $sourceFile){
 		This is where nfo libary will be created for shows.
 	</li>
 </ul>
-<?PHP
-	echo file_get_contents("/etc/2web/ytdl/downloadPath.cfg");
-?>
+<pre>
+/var/cache/2web/downloads/nfo/
+</pre>
 </div>
 
 <div id='channelProcessingLimit' class='inputCard'>
@@ -228,10 +233,15 @@ foreach($sourceFiles as $sourceFile){
 	<li>
 		How many channels can be scanned during an update.
 	</li>
+	<li>
+		/etc/2web/ytdl/channelProcessingLimit.cfg
+	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/ytdl/channelProcessingLimit.cfg");
 ?>
+</pre>
 </div>
 
 <div id='channelCacheUpdateDelay' class='inputCard'>
@@ -240,10 +250,15 @@ foreach($sourceFiles as $sourceFile){
 	<li>
 		How long in hours the channel will wait before updating again.
 	</li>
+	<li>
+		/etc/2web/ytdl/channelCacheUpdateDelay.cfg
+	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/ytdl/channelCacheUpdateDelay.cfg");
 ?>
+</pre>
 </div>
 
 <div id='videoFetchTimeLimit' class='inputCard'>
@@ -252,10 +267,15 @@ foreach($sourceFiles as $sourceFile){
 	<li>
 		The max time in seconds to wait before the network times out when downloading metadata.
 	</li>
+	<li>
+		/etc/2web/ytdl/videoFetchTimeLimit.cfg
+	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/ytdl/videoFetchTimeLimit.cfg");
 ?>
+</pre>
 </div>
 
 <div id='sleepTime' class='inputCard'>
@@ -267,10 +287,15 @@ foreach($sourceFiles as $sourceFile){
 	<li>
 		The true sleep time is randomized between this number and zero.
 	</li>
+	<li>
+		/etc/2web/ytdl/sleepTime.cfg
+	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/ytdl/sleepTime.cfg");
 ?>
+</pre>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
