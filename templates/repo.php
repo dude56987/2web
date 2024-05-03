@@ -494,8 +494,45 @@ if (array_key_exists("inspector",$_GET)){
 	getDateStat("stat_end.cfg", "Project Last Updated");
 
 	if (file_exists("repoHistory.webm")){
+		# add the keyboard controls for the video player
+		echo "<script>";
+		echo "document.body.addEventListener('keydown', function(event){";
+		echo "	// only allow hotkeys if the video player has focus";
+		echo "	if(document.getElementById('video').hasFocus()){";
+		echo "		// check for key controls on the video player";
+		echo "		const key = event.key;";
+		echo "		switch (key){";
+		echo "			case ' ':";
+		echo "			event.preventDefault();";
+		echo "			playPause();";
+		echo "			break;";
+		echo "			case 'Spacebar':";
+		echo "			event.preventDefault();";
+		echo "			playPause();";
+		echo "			break;";
+		echo "			case 'ArrowDown':";
+		echo "			event.preventDefault();";
+		echo "			volumeDown();";
+		echo "			break;";
+		echo "			case 'ArrowUp':";
+		echo "			event.preventDefault();";
+		echo "			volumeUp();";
+		echo "			break;";
+		echo "			case 'ArrowRight':";
+		echo "			event.preventDefault();";
+		echo "			seekForward();";
+		echo "			break;";
+		echo "			case 'ArrowLeft':";
+		echo "			event.preventDefault();";
+		echo "			seekBackward();";
+		echo "			break;";
+		echo "		}";
+		echo "	}";
+		echo "});";
+		echo "</script>";
+		# draw the video player
 		echo "<hr>\n";
-		echo "	<video controls poster='repoHistory.png'>\n";
+		echo "	<video id='video' controls poster='repoHistory.png'>\n";
 		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
 		echo "	</video>\n";
 		# add a rule here to space stats below the video
