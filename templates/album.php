@@ -124,6 +124,36 @@ if (file_exists("artist.cfg")){
 			🔀 Play Random
 			<sup><span id='vlcIcon'>&#9650;</span> VLC</sup>
 		</a>
+		<?PHP
+		# check if the play on kodi button is enabled in the settings
+		if (yesNoCfgCheck("/etc/2web/kodi/playOnKodiButton.cfg")){
+			# check if the user has permissisons to access these buttons
+			if (requireGroup("kodi2web", false)){
+				# Draw the kodi button to play all
+				echo "<a class='button' target='_new' href='/kodi-player.php?url=http://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"'>\n";
+				echo "▶️ Play All <sup>🇰 KODI</sup>\n";
+				echo "</a>\n";
+				# Draw the kodi button to play all randomly
+				echo "<a class='button' target='_new' href='/kodi-player.php?url=http://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"&sort=random'>\n";
+				echo "🔀 Play Random <sup>🇰 KODI</sup>\n";
+				echo "</a>\n";
+			}
+		}
+		# if the client is enabled
+		if (yesNoCfgCheck("/etc/2web/client.cfg")){
+			# if the group permissions are available for the current user
+			if (requireGroup("clientRemote", false)){
+				#
+				echo "<a class='button' target='_new' href='/client/?play=http://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"'>\n";
+				echo "▶️ Play All <sup>🎟️ Client</sup>\n";
+				echo "</a>\n";
+				#
+				echo "<a class='button' target='_new' href='/client/?play=http://".$_SERVER['HTTP_HOST']."/m3u-gen.php?artist=\"$artist/$albumTitle\"&sort=random'>\n";
+				echo "🔀 Play Random <sup>🎟️ Client</sup>\n";
+				echo "</a>\n";
+			}
+		}
+		?>
 	</div>
 </div>
 
