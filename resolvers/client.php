@@ -20,6 +20,29 @@
 # - this changes the header so it must be before any other code
 include("/usr/share/2web/2webLib.php");
 ################################################################################
+# functions
+################################################################################
+function loadCache(){
+	# load the shared memory cache
+	$cache = new Memcached();
+	$cache->addServer("localhost", 11211);
+	# return the created connection
+	return $cache;
+}
+################################################################################
+function loadCacheData($varName, $cacheObject){
+	# load data from the cache by variable name
+	$cacheData = $cacheObject->get($varName);
+
+	return $cacheData;
+}
+################################################################################
+function setCacheData($varName, $newValue, $cacheObject){
+	# set cache data in the shared memory cache
+	$cacheObject->set($varName,$newValue);
+	return true;
+}
+################################################################################
 function loadButtons(){
 	# load the button file paths
 	$filePaths = Array(
@@ -47,10 +70,11 @@ function loadButtons(){
 }
 ################################################################################
 function buildButtonData(){
+	$cache=loadCache();
 	# generate the default configs if they are not there
 	foreach(loadButtons() as $filePath){
 		if(! file_exists($filePath.".json")){
-			file_put_contents($filePath.".json", "");
+			setCacheData($filePath.".json", "", $cache);
 		}
 	}
 }
@@ -94,10 +118,13 @@ if (array_key_exists("events",$_GET)){
 	# build the array for the button names for the controler
 	$buttonNames = loadButtons();
 
+	#
+	$cache=loadCache();
+
 	# generate the default configs if they are not there
 	foreach($buttonNames as $filePath){
 		if(! file_exists($filePath.".json")){
-			file_put_contents($filePath.".json", "");
+			setCacheData($filePath.".json", "", $cache);
 		}
 	}
 	#while (true) {
@@ -120,28 +147,28 @@ if (array_key_exists("events",$_GET)){
 	# set the current states from the stored states
 	if(! file_exists("status.json")){
 		$lastStatus["media"] = "";
-		file_put_contents("status.json","");
+		setCacheData("status.json","", $cache);
 	}else{
-		$lastStatus["media"] = file_get_contents("status.json");
+		$lastStatus["media"] = loadCacheData("status.json", $cache);
 	}
 	if(! file_exists("buttonpressed.json")){
 		$lastStatus["buttonPressed"] = "";
-		file_put_contents("buttonpressed.json","");
+		setCacheData("buttonpressed.json","", $cache);
 	}else{
-		$lastStatus["buttonPressed"] = file_get_contents("buttonpressed.json");
+		$lastStatus["buttonPressed"] = loadCacheData("buttonpressed.json", $cache);
 	}
 	# build the sleep file if it does not yet exist
 	if(! file_exists("sleepcheck.json")){
-		file_put_contents("sleepcheck.json", "");
+		setCacheData("sleepcheck.json", "", $cache);
 		# set the status of sleep
 		$lastStatus["sleep"] = "";
 	}else{
 		# get the current sleep status
-		$lastStatus["sleep"] = file_get_contents("sleepcheck.json");
+		$lastStatus["sleep"] = loadCacheData("sleepcheck.json", $cache);
 	}
 	# setup the last button status on first load of the button events
 	foreach($buttonNames as $buttonName){
-		$lastStatus[$buttonName]=file_get_contents($buttonName.".json");
+		$lastStatus[$buttonName]=loadCacheData($buttonName.".json", $cache);
 		#addToLog("DEBUG","button file status '".$buttonName."'",$lastStatus[$buttonName]);
 	}
 	function clear(){
@@ -161,10 +188,10 @@ if (array_key_exists("events",$_GET)){
 			$heartBeatCounter+=1;
 		}
 		# check the sleep timer status
-		$currentSleepStatus = file_get_contents("sleepcheck.json");
+		$currentSleepStatus = loadCacheData("sleepcheck.json", $cache);
 		# compare the current sleep status with the last found sleep status
 		if ($currentSleepStatus != $lastStatus["sleep"]){
-			$sleepTime=file_get_contents("sleep.json");
+			$sleepTime=loadCacheData("sleep.json", $cache);
 			# if the sleep timer is greater than 0 send a sleep timer event
 			echo "data: sleep=".$sleepTime;
 			echo "\n\n";
@@ -173,11 +200,12 @@ if (array_key_exists("events",$_GET)){
 			# update the sleep timer status so the event checking will be marked as done
 			$lastStatus["sleep"] = $currentSleepStatus;
 		}
+
 		# check the status
-		$currentStatus = file_get_contents("status.json");
+		$currentStatus = loadCacheData("status.json", $cache);
 		if ($currentStatus != $lastStatus["media"]){
 			# get the media path data
-			$mediaPath = file_get_contents("media.json");
+			$mediaPath = loadCacheData("media.json", $cache);
 			# check the media path for absolute paths
 			if (! (substr($mediaPath,0,4) == "http")){
 				# make the path absolute if it is relative
@@ -193,11 +221,11 @@ if (array_key_exists("events",$_GET)){
 			$lastStatus["media"] = $currentStatus;
 		}
 		# check if a button was pressed
-		$currentButtonStatus = file_get_contents("buttonpressed.json");
+		$currentButtonStatus = loadCacheData("buttonpressed.json", $cache);
 		if ($currentButtonStatus != $lastStatus["buttonPressed"]){
 			# check each button status
 			foreach($buttonNames as $buttonName){
-				$activeButtonStatus=file_get_contents($buttonName.".json");
+				$activeButtonStatus=loadCacheData($buttonName.".json", $cache);
 				if ($activeButtonStatus != $lastStatus[$buttonName]){
 					# build the event
 					echo 'data: '.$buttonName;
@@ -251,15 +279,16 @@ requireGroup("client");
 # check for get data used to set the playback link
 if (array_key_exists("play",$_GET)){
 	if (requireGroup("clientRemote",false)){
+		$cache=loadCache();
 		# store the url as the playback url
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/media.json",urldecode($_GET["play"]));
+		setCacheData("media.json",urldecode($_GET["play"]), $cache);
 		# store the time of the playback start
 		$playbackTime=filemtime("media.cfg");
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/time.json",$playbackTime);
+		setCacheData("time.json",$playbackTime, $cache);
 		# generate the sum
 		$urlSum=md5($_GET["play"].time());
 		# store the hash sum
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/status.json",$urlSum);
+		setCacheData("status.json",$urlSum, $cache);
 		# redirect to the client remote page after starting playback
 		redirect("/client/?remote");
 	}else{
@@ -269,15 +298,16 @@ if (array_key_exists("play",$_GET)){
 	}
 }else if (array_key_exists("resolveStream",$_GET)){
 	if (requireGroup("clientRemote",false)){
+		$cache=loadCache();
 		# store the url as the playback url
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/iptv-resolver.php?url='".$_GET["resolveStream"]."'"));
+		setCacheData("media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/iptv-resolver.php?url='".$_GET["resolveStream"]."'"), $cache);
 		# store the time of the playback start
 		$playbackTime=filemtime("media.cfg");
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/time.json",$playbackTime);
+		setCacheData("time.json",$playbackTime, $cache);
 		# generate the sum
 		$urlSum=md5($_GET["resolveStream"].time());
 		# store the hash sum
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/status.json",$urlSum);
+		setCacheData("status.json",$urlSum, $cache);
 		# redirect to the client remote page after starting playback
 		redirect("/client/?remote");
 	}else{
@@ -287,15 +317,16 @@ if (array_key_exists("play",$_GET)){
 	}
 }else if (array_key_exists("resolveUrl",$_GET)){
 	if (requireGroup("clientRemote",false)){
+		$cache=loadCache();
 		# store the url as the playback url
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url='".$_GET["resolveUrl"]."'"));
+		setCacheData("media.json",urldecode("http://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url='".$_GET["resolveUrl"]."'"), $cache);
 		# store the time of the playback start
 		$playbackTime=filemtime("media.cfg");
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/time.json",$playbackTime);
+		setCacheData("time.json",$playbackTime, $cache);
 		# generate the sum
 		$urlSum=md5($_GET["resolveUrl"].time());
 		# store the hash sum
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/client/status.json",$urlSum);
+		setCacheData("status.json",$urlSum, $cache);
 		# redirect to the client remote page after starting playback
 		redirect("/client/?remote");
 	}else{
@@ -437,12 +468,13 @@ if (array_key_exists("play",$_GET)){
 	}
 }else if (array_key_exists("sleep",$_GET)){
 	if (requireGroup("clientRemote")){
+		$cache=loadCache();
 		# update the sleep file to activate the sleep timer on all clients
 		# - this will turn off or blank out the display
 		# - this will be deactivated by any keypresses or activation of playback
-		file_put_contents("/var/cache/2web/web/client/sleep.json",$_GET["sleep"]);
+		setCacheData("sleep.json",$_GET["sleep"], $cache);
 		# set the sleep check variable that activates a new sleep timer
-		file_put_contents("/var/cache/2web/web/client/sleepcheck.json",$_SERVER["REQUEST_TIME"]);
+		setCacheData("sleepcheck.json",$_SERVER["REQUEST_TIME"], $cache);
 		redirect("?remote");
 	}
 }else if (array_key_exists("setSleep",$_GET)){
@@ -616,10 +648,11 @@ if (array_key_exists("play",$_GET)){
 		exit();
 	}
 }else if (array_key_exists("remoteKey",$_GET)){
+	$cache=loadCache();
 	#addToLog("DEBUG","remoteKey"," pressed key");
 	$pressedKey=$_GET["remoteKey"];
 	#addToLog("DEBUG","remoteKey",$pressedKey);
-	file_put_contents("buttonpressed.json", time());
+	setCacheData("buttonpressed.json", time(), $cache);
 	# set found key before the search
 	$validKey=false;
 	# mark the button pressed file that will trigger all button presses to be checked
@@ -633,10 +666,10 @@ if (array_key_exists("play",$_GET)){
 		if($pressedKey == "stop"){
 			# remove the currently playing media and clear the command queue
 			# - this is only done on the stop event
-			file_put_contents("media.json", "");
+			setCacheData("media.json", "", $cache);
 		}
 		# mark the key as pressed
-		file_put_contents($pressedKey.".json", time());
+		setCacheData($pressedKey.".json", time(), $cache);
 	}else{
 		# output API error message
 		addToLog("ERROR","CLIENT API ERROR","The remote key was sent '$pressedKey' this key press is unsupported.");
