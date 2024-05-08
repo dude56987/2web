@@ -68,7 +68,7 @@ function drawRemoteHeader(){
 	echo "			<table class='kodiControlEmbededTableButtonGridHeader'>\n";
 	echo "				<tr>\n";
 	echo "					<td>\n";
-	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' onclick='window.close();' href='/'>❌<div>CLOSE</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?setSleep'>😴<div>Sleep Timer</div></a>\n";

@@ -58,7 +58,7 @@ function drawRemoteHeader(){
 	echo "			<table class='kodiControlEmbededTableButtonGrid'>\n";
 	echo "				<tr>\n";
 	echo "					<td>\n";
-	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='/'>❌<div>CLOSE</div></a>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' onclick='window.close();' href='/'>❌<div>CLOSE</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/kodi-player.php?share' title='Share Link'>⛓️<div>Share</div></a>\n";
