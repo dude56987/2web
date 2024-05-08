@@ -305,19 +305,6 @@ if (detectEnabledStatus("weahter2web")){
 		}
 	}
 }
-// check for the kodi remote
-if (detectEnabledStatus("kodi2web")){
-	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
-		if (requireGroup("kodi2web",false)){
-			echo formatText("<a class='footerButton' href='/kodi-player.php'>",2);
-			echo formatText("🇰",3);
-			echo formatText("<span class='footerText'>",3);
-			echo formatText("KODI REMOTE",4);
-			echo formatText("</span>",3);
-			echo formatText("</a> ",2);
-		}
-	}
-}
 if (detectEnabledStatus("git2web")){
 	if (requireGroup("git2web",false)){
 		echo formatText("<a class='footerButton' href='/repos/'>",2);
@@ -358,7 +345,65 @@ if (detectEnabledStatus("graph2web")){
 		echo "</a> ";
 	}
 }
-
+// read the weather info for weather2web
+if (file_exists("$webDirectory/weather/index.php")){
+	if (file_exists("$webDirectory/totalWeatherStations.index")){
+		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
+			if (requireGroup("weather2web",false)){
+				echo formatText("<a class='footerButton' href='/weather/'>",2);
+				echo formatText("🌤️",3);
+				echo formatText("<span class='footerText'>",3);
+				echo formatText("WEATHER",4);
+				echo formatText("</span>",3);
+				echo formatText("</a>",2);
+			}
+		}
+	}
+}
+if (requireGroup("webPlayer",false)){
+	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+		echo formatText("<a class='footerButton' href='/web-player.php'>",2);
+		echo formatText("📥",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("WEB PLAYER",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (requireGroup("client",false)){
+	if (yesNoCfgCheck("/etc/2web/client.cfg")){
+		echo formatText("<a class='footerButton' href='/client/'>",2);
+		echo formatText("🛰️",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("CLIENT",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+# draw the client remote control based on user permissions
+if (yesNoCfgCheck("/etc/2web/client.cfg")){
+	# check for permissions for using the remote to control the client page
+	if (requireGroup("clientRemote",false)){
+		echo formatText("<a class='footerButton' href='/client/?remote'>",2);
+		echo formatText("🎛️",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("CLIENT REMOTE",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
+if (detectEnabledStatus("kodi2web")){
+	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
+		if (requireGroup("kodi2web",false)){
+			echo formatText("<a class='footerButton' href='/kodi-player.php'>",2);
+			echo formatText("🇰",3);
+			echo formatText("<span class='footerText'>",3);
+			echo formatText("KODI REMOTE",4);
+			echo formatText("</span>",3);
+			echo formatText("</a>",2);
+		}
+	}
+}
 // draw the help button
 echo "<a class='footerButton' href='/help.php'>";
 echo "❔";
