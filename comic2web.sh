@@ -60,7 +60,7 @@ function processPdfPageToImage(){
 	# pdf file path
 	# pdf comic name
 	# generate the page path
-	pdfImageFilePath="${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName/$pdfComicName-$pageNumber.jpeg"
+	pdfImageFilePath="${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName-$pageNumber.jpg"
 	# render the page
 	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName"
 	# trim the whitespace
