@@ -1600,7 +1600,7 @@ main(){
 			# cleanup the web player cache
 			ALERT "Checking for cache files in $webDirectory/web_player/"
 			if test -d "$webDirectory/web_player/";then
-				find "$webDirectory/web_player/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
+				find "$webDirectory/web_player/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
 			fi
 			# cleanup kodi player
 			ALERT "Checking for cache files in $webDirectory/kodi-player/"

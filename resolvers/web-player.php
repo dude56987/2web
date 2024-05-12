@@ -45,11 +45,6 @@ function is_in_array($needle,$haystack){
 if (array_key_exists("url",$_GET)){
 	# check if the link was passed with the web remote
 	$videoLink = $_GET['url'];
-
-	$videoLink = str_replace('"','',$videoLink);
-	$videoLink = str_replace("'","",$videoLink);
-	$orignalVideoLink=$videoLink;
-
 	# build the orignal video link from the cleaned video link
 	$orignalVideoLink=$videoLink;
 	# set the linkfailed state to true
@@ -66,16 +61,9 @@ if (array_key_exists("url",$_GET)){
 		# redirect failed links to the error page
 		redirect("?failure=".$videoLink);
 	}
-
 	#
 	$videoLinkSum=hash("sha512",$videoLink,false);
 
-	# set the proto based on the current protocol
-	if ($_SERVER["HTTPS"]){
-		$proto="https";
-	}else{
-		$proto="http";
-	}
 	# create a file based on the md5sum in a cache
 	# fileName.php
 	# fileName.php.directLink
@@ -83,21 +71,69 @@ if (array_key_exists("url",$_GET)){
 	# fileName.php.date
 	# fileName.php.plot
 	# fileName.php.cacheLink
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php")){
-		symlink("/usr/share/2web/templates/videoPlayer.php","/var/cache/2web/web/web_player/".$videoLinkSum.".php");
+
+	# create the directory to store the video metadata
+	$videoPathPrefix=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$videoLinkSum."/";
+	# make the local cache path for the video in the web player
+	if (! file_exists($videoPathPrefix)){
+		mkdir($videoPathPrefix);
 	}
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".directLink")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".directLink", $orignalVideoLink);
-	}
-	# build the strm links
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".strm")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".strm", $orignalVideoLink);
-	}
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php.strmLink")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum.".strm");
+	# download the remote file to the web player cache in the background if it does not yet exist
+	if (! file_exists($videoPathPrefix.$videoLinkSum.".finished")){
+		# get the mime type for the remote file
+		$videoMimeType=get_headers($videoLink, true);
+		$videoMimeType=$videoMimeType["Content-Type"];
+		# check and set the extension based on the remote file mime data
+		if ("video/mp4" == $videoMimeType){
+			$ext=".mp4";
+		}else if ("audio/mpeg" == $videoMimeType){
+			$ext=".mp3";
+		}else if ("video/webm" == $videoMimeType){
+			$ext=".webm";
+		}else if ("video/ogg" == $videoMimeType){
+			$ext=".ogv";
+		}else if ("video/x-matroska" == $videoMimeType){
+			$ext=".mkv";
+		}else{
+			addToLog("ERROR", "Unsupported file URL", "Unsupported file type '$videoMimeType' for file '$orignalVideoLink', If this is HTTPS using a self signed certificate this error will also occur but the video mime type data will be blank.");
+			redirect("?uploadFailure=".$videoMimeType);
+		}
+		# generate qr codes if they do not yet exist
+		$command = "wget -c -O '".$videoPathPrefix.$videoLinkSum.$ext."' '$videoLink';";
+		$command .= "ffmpegthumbnailer -i '".$videoPathPrefix.$videoLinkSum.$ext."' -o '".$videoPathPrefix.$videoLinkSum."-thumb.png';";
+		$command .= "touch '".$videoPathPrefix.$videoLinkSum.".finished';";
+		$command .= "touch '".$videoPathPrefix.$videoLinkSum.$ext."';";
+		#
+		if(! file_exists($videoPathPrefix."command.cfg")){
+			file_put_contents($videoPathPrefix."command.cfg",$command);
+		}
+		# launch command in queue
+		$command = 'echo "'.$command.'" | at -M now';
+		addToLog("UPDATE","Adding Data To Cache","Downloading remote url to cache for web player '".$command."'");
+		# launch the command to download the remote file to the cache for playback on the 2web server
+		shell_exec($command);
+		# build the php page
+		if(! file_exists($videoPathPrefix.$videoLinkSum.".php")){
+			symlink("/usr/share/2web/templates/videoPlayer.php",$videoPathPrefix.$videoLinkSum.".php");
+		}
+		# build the direct link
+		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
+			file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
+		}
+		# build the cache link
+		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.cacheLink")){
+			file_put_contents($videoPathPrefix.$videoLinkSum.".php.cacheLink", "/web_player/".$videoLinkSum."/".$videoLinkSum.$ext);
+		}
+		# build the strm links
+		if(! file_exists($videoPathPrefix.$videoLinkSum.".strm")){
+			file_put_contents($videoPathPrefix.$videoLinkSum.".strm", "/web_player/".$videoLinkSum."/".$videoLinkSum.$ext);
+		}
+		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
+			file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
+		}
 	}
 	# redirect to the web page
-	redirect("/web_player/".$videoLinkSum.".php");
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }else if(array_key_exists("shareURL",$_GET)){
 	# check if the link was passed with the web remote
 	$videoLink = $_GET['shareURL'];
@@ -131,25 +167,32 @@ if (array_key_exists("url",$_GET)){
 	}
 	# make the local redirect
 	$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
-
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php")){
-		symlink("/usr/share/2web/templates/videoPlayer.php","/var/cache/2web/web/web_player/".$videoLinkSum.".php");
+	# create the directory to store the video metadata
+	$videoPathPrefix="/var/cache/2web/web/web_player/".$videoLinkSum."/";
+	if (! file_exists($videoPathPrefix)){
+		mkdir($videoPathPrefix);
 	}
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php.directLink")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".php.directLink", $orignalVideoLink);
+	# build the php page
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php")){
+		symlink("/usr/share/2web/templates/videoPlayer.php",$videoPathPrefix.$videoLinkSum.".php");
 	}
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php.cacheLink")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".php.cacheLink", $videoLink);
+	# build the direct link
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
+	}
+	# build the cache link
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.cacheLink")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".php.cacheLink", $videoLink);
 	}
 	# build the strm links
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".strm")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".strm", $videoLink);
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".strm")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".strm", $videoLink);
 	}
-	if(! file_exists("/var/cache/2web/web/web_player/".$videoLinkSum.".php.strmLink")){
-		file_put_contents("/var/cache/2web/web/web_player/".$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum.".strm");
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
 	}
 	# redirect to the web page
-	redirect("/web_player/".$videoLinkSum.".php");
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }else if(array_key_exists("uploadMediaFile",$_FILES)){
 	# get the path to the tmp file
 	$fileName=$_FILES['uploadMediaFile']["tmp_name"];
@@ -157,27 +200,38 @@ if (array_key_exists("url",$_GET)){
 	$fileOgName=$_FILES['uploadMediaFile']["full_path"];
 	# get the file mime type
 	$fileMimeType=$_FILES['uploadMediaFile']["type"];
-	# build the md5sum from the temp file data
-	$fileSum=md5_file($fileName);
+	# build the sum from the temp file data
+	$fileSum=hash_file("sha512",$fileName);
+	# set the video link sum as the file sum for the uploaded file
+	$videoLinkSum=$fileSum;
+	# create the directory to store the video metadata
+	$videoPathPrefix=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$videoLinkSum."/";
 	#
 	addToLog("DOWNLOAD", "User Uploaded File", "The user has uploaded a file '$fileOgName' to '$fileName' with mime type '$fileMimeType'");
+	# check the mime data for the file type
 	if($fileMimeType == "video/mp4"){
-		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mp4";
+		$filePath=$videoPathPrefix.$fileSum.".mp4";
 		$fileOgName=str_replace(".mp4","",$fileOgName);
+	}else if ($fileMimeType == "audio/mpeg"){
+		$filePath=$videoPathPrefix.$fileSum.".mp3";
+		$fileOgName=str_replace(".mp3","",$fileOgName);
 	}else if($fileMimeType == "video/webm"){
-		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".webm";
+		$filePath=$videoPathPrefix.$fileSum.".webm";
 		$fileOgName=str_replace(".webm","",$fileOgName);
 	}else if($fileMimeType == "video/ogg"){
-		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".ogg";
+		$filePath=$videoPathPrefix.$fileSum.".ogg";
 		$fileOgName=str_replace(".ogg","",$fileOgName);
 	#}else if($fileMimeType == "video/x-msvideo"){
-	#	$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".avi";
+	#	$filePath=$videoPathPrefix.$fileSum.".avi";
 	#	$fileOgName=str_replace(".avi","",$fileOgName);
+	}else if($fileMimeType == "video/x-matroska"){
+		$filePath=$videoPathPrefix.$fileSum.".mkv";
+		$fileOgName=str_replace(".mkv","",$fileOgName);
 	}else if($fileMimeType == "video/mkv"){
-		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mkv";
+		$filePath=$videoPathPrefix.$fileSum.".mkv";
 		$fileOgName=str_replace(".mkv","",$fileOgName);
 	}else if($fileMimeType == "audio/mp3"){
-		$filePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".mp3";
+		$filePath=$videoPathPrefix.$fileSum.".mp3";
 		$fileOgName=str_replace(".mp3","",$fileOgName);
 	}else{
 		$filePath="";
@@ -186,15 +240,13 @@ if (array_key_exists("url",$_GET)){
 		# redirect the failed link
 		redirect("?uploadFailure=".$fileMimeType);
 	}
-
 	if(! file_exists($filePath)){
 		# copy the temp file to the path generated
 		copy($fileName,$filePath);
 	}
-
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum."-thumb.png")){
+	if(! file_exists($videoPathPrefix.$fileSum."-thumb.png")){
 		# build thumbnail with the scheduler in a seprate thread
-		shell_exec("echo \"ffmpegthumbnailer -i '$filePath' -o '".$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum."-thumb.png"."'\" | at -M -q a now");
+		shell_exec("echo \"ffmpegthumbnailer -i '$filePath' -o '".$videoPathPrefix.$fileSum."-thumb.png"."'\" | at -M -q a now");
 	}
 	# remove the file from the temp directory
 	unlink($fileName);
@@ -206,26 +258,30 @@ if (array_key_exists("url",$_GET)){
 	}else{
 		$proto="http";
 	}
-
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.title")){
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.title", $fileOgName);
+	if (! file_exists($videoPathPrefix)){
+		mkdir($videoPathPrefix);
 	}
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php")){
-		symlink("/usr/share/2web/templates/videoPlayer.php",$_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php");
+	# build the title for the video based on the file title uploaded
+	if(! file_exists($videoPathPrefix.$fileSum.".php.title")){
+		file_put_contents($videoPathPrefix.$fileSum.".php.title", $fileOgName);
 	}
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.directLink")){
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.directLink", $videoLink);
+	# build the php page
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php")){
+		symlink("/usr/share/2web/templates/videoPlayer.php",$videoPathPrefix.$videoLinkSum.".php");
+	}
+	# build the direct link
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $videoLink);
 	}
 	# build the strm links
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".strm")){
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".strm", $videoLink);
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".strm")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".strm", $videoLink);
 	}
-	if(! file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.strmLink")){
-		file_put_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$fileSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$fileSum.".strm");
+	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
+		file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
 	}
 	# redirect to the web page
-	redirect("/web_player/".$fileSum.".php");
-	exit();
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }
 echo "<html class='randomFanart'>";
 echo "<head>";
@@ -344,8 +400,9 @@ foreach($sourceFiles as $sourceFile){
 	#$directLinkSum=hash("sha512",$directLink,false);
 	# get the link sum
 	$directLinkSum=str_replace(".php","",basename($sourceFile));
-
+	#
 	$cachePathTemplate="/RESOLVER-CACHE/".$directLinkSum."/video";
+	#
 	$thumbTemplate=$_SERVER["DOCUMENT_ROOT"].$cachePathTemplate;
 	#echo "THUMB TEMPLATE = '$thumbTemplate'<br>\n";
 	# get the cache data if it exists
@@ -354,20 +411,19 @@ foreach($sourceFiles as $sourceFile){
 		$jsonData=json_decode($jsonData);
 		$videoTitle=$jsonData->title;
 	}else{
-		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum.".php.title")){
-			$videoTitle=file_get_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum.".php.title");
+		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title")){
+			$videoTitle=file_get_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title");
 		}else{
 			$videoTitle=str_replace(".php","",basename($sourceFile));
 		}
 	}
-
-	echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum.".php")."'>\n";
+	echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
 	#echo "<div>".mime_content_type($sourceFile)."</div>";
 
 	if(file_exists($thumbTemplate.".png")){
 		echo "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
-	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."-thumb.png")){
-		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."-thumb.png"."' />\n";
+	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png")){
+		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png"."' />\n";
 	}
 	if(file_exists($thumbTemplate.".mp4")){
 		echo "	<h3>".$videoTitle."<div class='radioIcon'>🟢</div></h3>\n";
