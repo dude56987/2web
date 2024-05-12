@@ -530,7 +530,7 @@ scanPages(){
 	pageNumber=0
 
 	# scan for all jpg and png images in the comic book directory
-	find -L "$pagesDirectory" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | sort | while read imagePath;do
+	find -L "$pagesDirectory" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" | sort | while read imagePath;do
 		pageNumber=$(( 10#$pageNumber + 1 ))
 		################################################################################
 		# set the page number prefix to make file sorting work
@@ -568,7 +568,7 @@ scanPages(){
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/$tempComicChapter/totalPages.cfg";then
 					# find the total number of pages in the chapter
-					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" | wc -l)
+					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" | wc -l)
 					# write the total pages to a file in the directory
 					echo "$totalPages" > "$webDirectory/comics/$tempComicName/$tempComicChapter/totalPages.cfg"
 				else
@@ -601,7 +601,7 @@ scanPages(){
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/totalPages.cfg";then
 					# find the total number of pages in the chapter
-					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" | wc -l)
+					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" | wc -l)
 					# write the total pages to a file in the directory
 					echo "$totalPages" > "$webDirectory/comics/$tempComicName/totalPages.cfg"
 				else
