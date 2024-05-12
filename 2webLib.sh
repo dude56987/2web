@@ -612,8 +612,23 @@ function ALERT(){
 	# Write output and move down to the next line. Keeps text on screen when using INFO()
 	#
 	# RETURN STDOUT
-	echo "$1";
-	echo
+	#
+	width=$(tput cols)
+	buffer=" "
+	# make the buffer the width of the terminal
+	for index in $(seq $width);do
+		buffer="$buffer "
+	done
+	# - cut the line to make it fit on one line using ncurses tput command
+	# - add the buffer to the end of the line and cut to terminal width
+	#   - this will overwrite any previous text wrote to the line
+	#   - cut one off the width in order to make space for the \r
+	output="$(echo -n "[ALERT]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# printf uses percentage signs for formatting so you must use two in a row to print
+	# a single regular one
+	output="$(echo "$output" | sed "s/%/%%/g")"
+	#
+	printf "\n$output\n";
 }
 ################################################################################
 function startDebug(){
@@ -651,12 +666,19 @@ function INFO(){
 	#
 	# RETURN STDOUT
 	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
+	buffer=""
+	# make the buffer the width of the terminal
+	for index in $(seq $width);do
+		buffer="$buffer "
+	done
+	# - cut the line to make it fit on one line using ncurses tput command
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
 	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# printf uses percentage signs for formatting so you must use two in a row to print
+	# a single regular one
+	output="$(echo "$output" | sed "s/%/%%/g")"
 	# print the line
 	printf "$output\r"
 }
