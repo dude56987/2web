@@ -179,6 +179,7 @@ build-deb: upgrade-hls
 	touch debian/etc/2web/groups/.placeholder
 	touch debian/etc/2web/portal/.placeholder
 	# fix ownership
+	chown -R www-data:www-data debian/usr/share/2web/theme-templates/
 	chown -R www-data:www-data debian/etc/2web/users/
 	chown -R www-data:www-data debian/etc/2web/groups/
 	chown -R www-data:www-data debian/etc/2web/lockedGroups/

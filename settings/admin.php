@@ -976,6 +976,42 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/repos/renderVideo.cfg", $_POST['repoRenderVideo']);
 	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("colorName",$_POST)){
+	# load the template name
+	$newColorName=$_POST["colorName"];
+	# load each of the elements
+	$solidBackground = str_replace("\\", "", $_POST["solidBackground"]);
+	$glassBackground = str_replace("\\#", "", $_POST["glassBackground"]);
+	$borderColor = str_replace("\\", "", $_POST["borderColor"]);
+	$textColor = str_replace("\\", "", $_POST["textColor"]);
+	$shadowColor = str_replace("\\", "", $_POST["shadowColor"]);
+	$highlightText = str_replace("\\", "", $_POST["highlightText"]);
+	$highlightBackground = str_replace("\\", "", $_POST["highlightBackground"]);
+	$highlightBorder = str_replace("\\", "", $_POST["highlightBorder"]);
+	# fill in values to the template
+	$newColorStyle = "";
+	$newColorStyle .= ":root{\n";
+	$newColorStyle .= "	--solidBackground: ".$solidBackground.";\n";
+	$colorCode = hexdec(substr($glassBackground,0,2)).", ";
+	$colorCode .= hexdec(substr($glassBackground,2,2)).", ";
+	$colorCode .= hexdec(substr($glassBackground,4,2)).", ";
+	$newColorStyle .= "	--glassBackground: rgba(".$colorCode."0.90);\n";
+	$newColorStyle .= "	--borderColor: ".$borderColor.";\n";
+	$newColorStyle .= "	--textColor: ".$textColor.";\n";
+	$newColorStyle .= "	--shadowColor: ".$shadowColor.";\n";
+	$newColorStyle .= "	--highlightText: ".$highlightText.";\n";
+	$newColorStyle .= "	--highlightBackground: ".$highlightBackground.";\n";
+	$newColorStyle .= "	--highlightBorder: ".$highlightBorder.";\n";
+	$newColorStyle .= "	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));\n";
+	$newColorStyle .= "}\n";
+	#
+	$themePath="/usr/share/2web/theme-templates/color-".$newColorName.".css";
+	#
+	outputLog("Writing the new generated theme to '".$themePath."'");
+	# save the new template
+	file_put_contents($themePath, $newColorStyle);
+	# new theme will be generated on next run of '2web' command
+	echo "<hr><a class='button' href='/settings/themes.php#createColor'>BACK</a><hr>";
 }else{
 	addToLog("ERROR","UNKONWN ADMIN COMMAND",var_export($_POST, true));
 	countdown(5);
