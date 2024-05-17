@@ -203,7 +203,7 @@ processMovie(){
 		pathSum=$(echo -n "$movieDir" | sha512sum | cut -d' ' -f1)
 		logPagePath="$webDirectory/log/$(date "+%s")_movie_${pathSum}.log"
 		################################################################################
-		# for each episode build a page for the episode
+		# for each movie build a page for the movie
 		nfoInfo=$(cat "$moviePath")
 		# rip the movie title
 		movieTitle=$(cleanXml "$nfoInfo" "title")
@@ -1855,6 +1855,271 @@ function cleanDatabase(){
 	rm -rv /var/cache/2web/web/web_cache/widget_random_episodes.index
 }
 ################################################################################
+function nfo2web_watch_service(){
+	# This launches the service that will update shows as filesystem changes are
+	# detected. This is a more optimized way to manage updates to existing media
+	# directories.
+	#
+	# - You must still run a full scan every so often if the service goes down
+	# - This should update shows when they have changed
+	addToLog "ALERT" "Starting Watch Service" "Starting the 2web watcher service"
+	ALERT "Starting the 2web watcher service..."
+	# load the web root
+	webDirectory=$(webRoot)
+	# cleanup any leftover process locks that where left from broken execution
+	ALERT "Finished removing process scan locks..."
+	rm -v /tmp/2web/active_scan_*.active
+	# forever loop for service
+	while true;do
+		# run a regular update to detect new episodes
+		# - this will also build stats and cleanup indexes as well
+		touch /tmp/2web/active_scan_MAIN.active
+		update --parallel
+		rm -v /tmp/2web/active_scan_MAIN.active
+
+		# start the background process
+		INFO "Loading library configs..."
+		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
+		addToLog "INFO" "Watch Service Scan" "Scanning content in libaries <pre>$libaries</pre>"
+		IFS=$'\n'
+		for libary in $libaries;do
+			ALERT "libary = $libary"
+			# check if the libary directory exists
+			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
+			ALERT "Check if directory exists at '$libary'"
+			if test -d "$libary";then
+				ALERT "library exists at '$libary'"
+			else
+				ALERT "library does not exist at '$libary'"
+			fi
+			if test -d "$libary";then
+				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
+				#
+				echo "library exists at '$libary'"
+				# read each tvshow directory from the libary
+				# store these paths in a varaible to be checked when events are activated
+				watch_library "$libary" "$webDirectory" &
+
+			else
+				ALERT "$show does not exist!"
+			fi
+			# update random backgrounds
+			#scanForRandomBackgrounds "$webDirectory"
+		done
+		# store the loop start time for activating the rescan
+		watchProcessStartupTime="$(date "+%s")"
+		# calc the timeout for hours in seconds
+		timeOut=$(( ( (60 * 60) * 6 ) ))
+		# this process loops forever because it is a service
+		while [ "true" == "true" ] ;do
+			INFO "Running '$(jobs | wc -l)' watcher processes..."
+			# check if the watcher processes have been running for more than 2 hour
+			if [ $(( $(date "+%s") - watchProcessStartupTime )) -gt $timeOut ];then
+				# check for locked running processes
+				activeProcesses=$(find /tmp/2web/ -type f -name "active_scan_*.active" | wc -l)
+				if [ $activeProcesses -gt 0 ];then
+					# if there are still processes running
+					INFO "Rescan imminent waiting for '$activeProcesses' active scans to finish..."
+				else
+					# no processes are running
+					# - stop all existing scan processes
+					# - do not quote the string
+					kill $(jobs -p)
+					# break the loop and trigger a rescan for new media directories
+					break
+				fi
+			fi
+			# sleep between job number updates
+			sleep 60
+		done
+	done
+}
+################################################################################
+function watch_library(){
+	# create a process that watches for filesystem events on a media directory
+	libraryPath="$1"
+	webDirectory="$2"
+	# this process will spawn one inotifywait process for a entire library
+	# - when a change is detected in the library it scans the known paths for a match
+	#   and updates that path information
+
+	# create the lock file path
+	createDir /tmp/2web/
+	# find all library media paths
+	# - this will be searched for events
+	foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+	# show the user all the paths that will be watched
+	for showPath in $foundLibaryPaths;do
+		ALERT "Adding media path to service watchlist '$showPath'"
+	done
+	# launch a event server to watch a library for changes and spawn update events
+	inotifywait --csv -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$libraryPath" | while read event;do
+		INFO "EVENT DETECTED : $event"
+		# store the event time and watch for new events
+		# backup IFS
+		IFS_BACKUP=$IFS
+		# split on newlines
+		IFS=$'\n'
+		# scan the event for matches with the library show paths
+		for showPath in $foundLibaryPaths;do
+			# if the event is in one of the found library paths
+			if echo "$event" | grep "$showPath";then
+				INFO "EVENT MATCHES: show '$showPath', waiting for event changes to finish..."
+				# launch a thread in the background to wait for the changes to finish and then update the content
+				wait_for_changes_to_finish "$showPath" "$event" "$webDirectory" &
+			else
+				# this means a change has happened that is not a change in a existing show
+				# - the entire library must be re scanned to find new content
+				INFO "EVENT Trigger: Rescan library '$libraryPath', waiting for event changes to finish..."
+				wait_for_new_changes_to_finish "$libraryPath" "$webDirectory" &
+			fi
+		done
+		# reset to backup IFS
+		IFS=IFS_BACKUP
+	done
+}
+################################################################################
+function wait_for_new_changes_to_finish(){
+	# wait for a directory to stop being modified and then process the path
+	showPath="$1"
+	webDirectory="$2"
+
+	if test -f /tmp/2web/active_scan_MAIN.active;then
+		INFO "Scan process already active, remove /tmp/2web/active_scan_MAIN.active force scanning if this is in error."
+	else
+		# create the lock file
+		touch /tmp/2web/active_scan_MAIN.active
+
+		addToLog "UPDATE" "Update " "New Full Scan Triggered..."
+		# create a loop to run until no changes have been detected on the directory for at least 60 seconds
+		changesComplete="false"
+		while [ $changesComplete == "false" ];do
+			changesComplete="true"
+			# wait for changes to stop happening to the directory for more than 1 minute
+			inotifywait --timeout 60 -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$showPath" | while read event;do
+				# if a change is detected in the 60 seconds then reset the loop and wait again after the 60 second timeout
+				changesComplete="false"
+			done
+			if [ $(find /tmp/2web/ -type f -name "active_scan_*.active" | wc -l) -gt 1 ];then
+				# other scans are active wait for them to finish to start this rescan
+				changesComplete="false"
+			fi
+		done
+		# scan media for updates
+		# - this will be logged in the 2web log by the below function
+		update --parallel
+		# remove the lock file
+		rm /tmp/2web/active_scan_MAIN.active
+	fi
+}
+################################################################################
+function wait_for_changes_to_finish(){
+	# wait for a directory to stop being modified and then process the path
+	showPath="$1"
+	event="$2"
+	webDirectory="$3"
+
+	# must be process locked so multuple process path commands can not be ran at the same time
+	waitChangesPathSum="$(echo -n "$showPath" | md5sum | cut -d' ' -f1)"
+
+	if test -f /tmp/2web/active_scan_$waitChangesPathSum.active;then
+		INFO "Scan process already active, remove /tmp/2web/active_scan_$waitChangesPathSum.active force scanning if this is in error."
+	else
+		# create the lock file
+		touch /tmp/2web/active_scan_$waitChangesPathSum.active
+
+		# create a loop to run until no changes have been detected on the directory for at least 60 seconds
+		changesComplete="false"
+		while [ $changesComplete == "false" ];do
+			changesComplete="true"
+			# wait for changes to stop happening to the directory for more than 1 minute
+			inotifywait --timeout 60 -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$showPath" | while read event;do
+				# if a change is detected in the 60 seconds then reset the loop and wait again after the 60 second timeout
+				changesComplete="false"
+			done
+		done
+		# get the event type
+		eventType="$(echo "$event" | cut -d',' -f2)"
+		# scan media for updates
+		# - this will be logged in the 2web log by the below function
+		processPath "$showPath" "$eventType" "$webDirectory"
+		# remove the lock file
+		rm /tmp/2web/active_scan_$waitChangesPathSum.active
+	fi
+}
+################################################################################
+function processPath(){
+	# Given a path it will determine if the path is a show or movie and update
+	# the content
+	show="$1"
+	eventType="$2"
+	webDirectory="$3"
+
+	################################################################################
+	# process page metadata
+	################################################################################
+	# if the show directory contains a nfo file defining the show
+	if test -f "$show/tvshow.nfo";then
+		#INFO "found metadata at '$show/tvshow.nfo'"
+		# load update the tvshow.nfo file and get the metadata required for
+		showMeta=$(cat "$show/tvshow.nfo")
+		showTitle=$(ripXmlTag "$showMeta" "title")
+		#INFO "showTitle = '$showTitle'"
+		showTitle=$(cleanText "$showTitle")
+		showTitle=$(alterArticles "$showTitle")
+		#INFO "showTitle after cleanText() = '$showTitle'"
+		if echo "$showMeta" | grep -q "<tvshow>";then
+			# pipe the output to a black hole and cache
+			episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
+			# make sure show has episodes
+			if [ $episodeSearchResults -gt 0 ];then
+				# if this is a delete event the show must be rebuilt on the webserver
+				if [ "$eventType" == "DELETE" ];then
+					addToLog "UPDATE" "DELETE EVENT" "The show '$show' has had media removed. The web directory will be removed and rebuilt."
+					# if a file has been removed from the directory all the content needs rescaned after the web content has been deleted
+					ALERT "Removing '$webDirectory/shows/$showTitle/'"
+					# remove existing web directory for rebuild of the show
+					# - this will remove the removed content from the server
+					rm -v "$webDirectory/shows/$showTitle/"
+				fi
+				#ALERT "ADDING SHOW $show"
+				#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+				processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
+				# write log info from show to the log, this must be done here to keep ordering
+				# of the log and to make log show even when the state of the show is unchanged
+				#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
+				#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
+			else
+				echo "[ERROR]: Show has no episodes!"
+				addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'"
+			fi
+		else
+			echo "[ERROR]: Show nfo file is invalid!"
+			addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo"
+		fi
+	elif grep -q "<movie>" "$show"/*.nfo;then
+		# if a file has been removed from the directory all the content needs rescaned from scratch
+		# if this is a delete event the show must be rebuilt on the webserver
+		if [ "$eventType" == "DELETE" ];then
+			# find the movie nfo in the movie path
+			moviePath=$(find "$show"/*.nfo)
+			################################################################################
+			# read the discovered nfo data
+			nfoInfo=$(cat "$moviePath")
+			# rip the movie title cleanup and rip the year of the movie
+			movieTitle=$(cleanXml "$nfoInfo" "title")
+			movieTitle=$(alterArticles "$movieTitle" )
+			movieYear=$(cleanXml "$nfoInfo" "year")
+			# Add the year to the movie title to get the web path
+			movieWebPath="${movieTitle} ($movieYear)"
+			# The existing web content must be be deleted and process movie will rebuild that content
+			ALERT "rm -v '$webDirectory/movies/$movieWebPath/'"
+		fi
+		# this is a move directory not a show
+		processMovie "$show" "$webDirectory"
+	fi
+}
+################################################################################
 function update(){
 	################################################################################
 	# Create website containing info and links to one or more .nfo directories
@@ -1991,10 +2256,8 @@ function update(){
 	# add the end to the log, add the jump to top button and finish out the html
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	addToLog "INFO" "FINISHED" "$(date)"
-	if test -f /usr/bin/kodi2web;then
-		# update video libaries on all kodi clients, if no video playback is detected
-		/usr/bin/kodi2web video
-	fi
+	# update video libaries on all kodi clients, if no video playback is detected
+	/usr/bin/kodi2web video
 	################################################################################
 	# - sort and clean main indexes
 	# - cleanup the new indexes by limiting the lists to 200 entries
@@ -2064,10 +2327,6 @@ function update(){
 	# write the sum state of the libary for change checking
 	#echo "$libarySum" > "$webDirectory/state.cfg"
 	#getLibSum > "$webDirectory/state.cfg"
-	# remove active state file
-	if test -f /tmp/nfo2web.active;then
-		rm /tmp/nfo2web.active
-	fi
 	# read the tvshow.nfo files for each show
 	################################################################################
 	# Create the show link on index.php
@@ -2140,6 +2399,17 @@ main(){
 	elif [ "$1" == "--CERTS" ] || [ "$1" == "CERTS" ] ;then
 		# force update certs
 		updateCerts 'yes'
+	elif [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
+		# only launch the service if the module is enabled
+		checkModStatus "nfo2web"
+		# lock the module execution
+		lockProc "nfo2web"
+		# launch the watch service
+		nfo2web_watch_service
+		# remove active state file
+		if test -f /tmp/nfo2web.active;then
+			rm /tmp/nfo2web.active
+		fi
 	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		nuke
 	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
@@ -2155,10 +2425,18 @@ main(){
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"
 		update "$@"
+		# remove active state file
+		if test -f /tmp/nfo2web.active;then
+			rm /tmp/nfo2web.active
+		fi
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"
 		update "$@" --parallel
+		# remove active state file
+		if test -f /tmp/nfo2web.active;then
+			rm /tmp/nfo2web.active
+		fi
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "Build Date: "
 		cat /usr/share/2web/buildDate.cfg
@@ -2168,6 +2446,10 @@ main(){
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"
 		update "$@"
+		# remove active state file
+		if test -f /tmp/nfo2web.active;then
+			rm /tmp/nfo2web.active
+		fi
 		#main update "$@"
 		# show the server link at the bottom of the interface
 		showServerLinks
