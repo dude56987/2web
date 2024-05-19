@@ -1192,6 +1192,36 @@ main(){
 		lockProc "comic2web"
 		checkModStatus "comic2web"
 		update "$@"
+	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+		# generate demo data for use in screenshots, make it random as can be
+
+		# check for parallel processing and count the cpus
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(cpuCount)
+		else
+			totalCPUS=1
+		fi
+		#########################################################################################
+		# comic2web demo comics
+		#########################################################################################
+		createDir "/var/cache/2web/generated/demo/comics/"
+		# build random comics
+		for index in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+			# generate the random comic name
+			randomTitle="$RANDOM $(randomWord) $(randomWord)"
+			#
+			createDir "/var/cache/2web/generated/demo/comics/generated/$randomTitle/"
+			# write the comic pages
+			for index2 in $(seq -w $(( 4 + ( $RANDOM % 25 ) )) );do
+				# write the pages
+				demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2.png" "${randomTitle} Page:$index2" "400" "700" &
+				# wait for queue to be free
+				waitQueue 0.2 "$totalCPUS"
+			done
+		done
+		#
+		blockQueue 1
+		#########################################################################################
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "comic2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then

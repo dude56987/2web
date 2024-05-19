@@ -1300,3 +1300,32 @@ function loadConfigs(){
 	done
 }
 ########################################################################
+function demoImage(){
+	# the output path for the image
+	localIconPath="$1"
+	# the title for captioning the image
+	title="$2"
+	# image width
+	imageWidth="$3"
+	# image height
+	imageHeight="$4"
+	#########################################################################################
+	# get sum from title
+	sum=$(echo "$title" | md5sum | cut -d' ' -f1)
+	# get swirl amount from title
+	swirlAmount=$(echo -n "$title" | wc -c)
+	timeout 600 convert -size ${imageWidth}x${imageHeight} +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
+	# add text over generated image
+	timeout 600 convert "$localIconPath" -adaptive-resize  ${imageWidth}x${imageHeight}\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -size ${imageWidth}x${imageHeight} -gravity center caption:"$title" -composite "$localIconPath"
+	linkColor=$(echo -n "$title" | md5sum | cut --bytes='1-6')
+	# convert to grayscale
+	timeout 600 convert "$localIconPath" -colorSpace "gray" "$localIconPath"
+	# colorize the image based on the link md5
+	timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
+}
+########################################################################
+function randomWord(){
+	# generate a random word from the dict server
+	shuf -n 1 /usr/share/dict/words
+}
+########################################################################

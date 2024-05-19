@@ -2362,9 +2362,108 @@ function upgrade-pip(){
 ########################################################################
 main(){
 	debugCheck
-
 	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		showHelp
+	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+		# generate demo data for 2web modules for use in screenshots, make it random as can be
+
+		# check for parallel processing and count the cpus
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(cpuCount)
+		else
+			totalCPUS=1
+		fi
+		#########################################################################################
+		# nfo2web demo movies
+		#########################################################################################
+		createDir "/var/cache/2web/generated/demo/nfo/movies/"
+		# create 5 random demo movies
+		for index in $(seq $(( $RANDOM % 6 )) );do
+			# write a fake movie nfo with random data
+			randomTitle="$RANDOM $(randomWord) $(randomWord)"
+			createDir "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/"
+			# generate the random plot string
+			randomPlot="$(randomWord)"
+			for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+				randomPlot="$randomPlot $(randomWord)"
+			done
+			{
+				echo "<movie>";
+				echo "	<title>$randomTitle</title>";
+				echo "	<year>$RANDOM</year>";
+				echo "	<plot>$randomPlot</plot>";
+				echo "</movie>";
+			} > "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.nfo"
+			# generate a randomized artwork to use
+			# - poster
+			demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/poster.png" "$randomTitle" "200" "500" &
+			waitQueue 0.2 "$totalCPUS"
+			# - fanart
+			demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
+			waitQueue 0.2 "$totalCPUS"
+			# generate the fake video file using the site spinner gif
+			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+			waitQueue 0.2 "$totalCPUS"
+		done
+		#########################################################################################
+		# nfo2web demo shows
+		#########################################################################################
+		createDir "/var/cache/2web/generated/demo/nfo/shows/"
+		# create 5 random demo shows with 10 random demo episodes
+		for index in $(seq $(( 1 + ( $RANDOM % 10 ) )) );do
+			randomTitle="$RANDOM $(randomWord) $(randomWord)"
+			createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/"
+			# generate the random plot string
+			randomPlot="$(randomWord)"
+			for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+				randomPlot="$randomPlot $(randomWord)"
+			done
+			# create the show nfo
+			{
+				echo "<tvshow>"
+				echo "	<title>$randomTitle</title>"
+				echo "	<year>$RANDOM</year>"
+				echo "	<plot>$randomPlot</plot>"
+				echo "</tvshow>"
+			} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/tvshow.nfo"
+			# create show poster
+			demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/poster.png" "$randomTitle" "200" "500" &
+			waitQueue 0.2 "$totalCPUS"
+			# create show fanart
+			demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
+			waitQueue 0.2 "$totalCPUS"
+			# create random episodes for show
+			for index2 in $(seq $(( 2 + ( $RANDOM % 9 ) )) );do
+				# random season
+				createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/"
+				for index3 in $(seq $(( 5 + ( $RANDOM % 16 ) )) );do
+					# create a random name for the episode
+					randomEpisodeTitle="$(randomWord) $(randomWord)"
+					randomPlot="$(randomWord)"
+					for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+						randomPlot="$randomPlot $(randomWord)"
+					done
+					# create episode nfo
+					{
+						echo "<episodedetails>"
+						echo "	<showtitle>$randomTitle</showtitle>"
+						echo "	<title>$randomEpisodeTitle</title>"
+						# set the episode number from the sequence number
+						echo "	<season>$index2</season>"
+						echo "	<episode>$index3</episode>"
+						echo "	<plot>$randomPlot</plot>"
+						echo "</episodedetails>"
+					} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.nfo"
+					# create episode thumbnail
+					demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle-thumb.png" "$randomEpisodeTitle" "800" "600" &
+					waitQueue 0.2 "$totalCPUS"
+					# create episode fake video file
+					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+					waitQueue 0.2 "$totalCPUS"
+				done
+			done
+		done
+		blockQueue 1
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "nfo2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
