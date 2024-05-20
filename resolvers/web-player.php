@@ -43,6 +43,10 @@ function is_in_array($needle,$haystack){
 }
 # Parse inputs
 if (array_key_exists("url",$_GET)){
+	# ignore close connection
+	ignore_user_abort(true);
+	# 2 hour limit
+	set_time_limit(7200);
 	# check if the link was passed with the web remote
 	$videoLink = $_GET['url'];
 	# build the orignal video link from the cleaned video link
@@ -135,6 +139,10 @@ if (array_key_exists("url",$_GET)){
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }else if(array_key_exists("shareURL",$_GET)){
+	# ignore close connection
+	ignore_user_abort(true);
+	# 2 hour limit
+	set_time_limit(7200);
 	# check if the link was passed with the web remote
 	$videoLink = $_GET['shareURL'];
 	# set the linkfailed state to true
@@ -194,6 +202,10 @@ if (array_key_exists("url",$_GET)){
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }else if(array_key_exists("uploadMediaFile",$_FILES)){
+	# ignore close connection
+	ignore_user_abort(true);
+	# 2 hour limit
+	set_time_limit(7200);
 	# get the path to the tmp file
 	$fileName=$_FILES['uploadMediaFile']["tmp_name"];
 	# get the orignal file name
@@ -206,7 +218,11 @@ if (array_key_exists("url",$_GET)){
 	$videoLinkSum=$fileSum;
 	# create the directory to store the video metadata
 	$videoPathPrefix=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$videoLinkSum."/";
-	#
+	# build the directory used to store all the data
+	if (! file_exists($videoPathPrefix)){
+		mkdir($videoPathPrefix);
+	}
+	# log the upload with the system
 	addToLog("DOWNLOAD", "User Uploaded File", "The user has uploaded a file '$fileOgName' to '$fileName' with mime type '$fileMimeType'");
 	# check the mime data for the file type
 	if($fileMimeType == "video/mp4"){
@@ -253,13 +269,10 @@ if (array_key_exists("url",$_GET)){
 	# generate the video link for the direct file
 	$videoLink = str_replace($_SERVER["DOCUMENT_ROOT"],"",$filePath);
 	if ($_SERVER["HTTPS"]){
-		# https A
+		# https
 		$proto="https";
 	}else{
 		$proto="http";
-	}
-	if (! file_exists($videoPathPrefix)){
-		mkdir($videoPathPrefix);
 	}
 	# build the title for the video based on the file title uploaded
 	if(! file_exists($videoPathPrefix.$fileSum.".php.title")){
@@ -283,12 +296,68 @@ if (array_key_exists("url",$_GET)){
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }
-echo "<html class='randomFanart'>";
-echo "<head>";
-echo "<link rel='stylesheet' href='/style.css'>";
-echo "<script src='/2webLib.js'></script>";
-echo "</head>";
-echo "<body>";
+?>
+<html class='randomFanart'>
+<head>
+<link rel='stylesheet' href='/style.css'>
+<script src='/2webLib.js'></script>
+<script>
+// file upload progress function
+function postFile() {
+	//
+  var formdata = new FormData();
+	// get the first file in the upload form
+  formdata.append('uploadMediaFile', document.getElementById('fileUploadInput').files[0]);
+	// create a request
+  var request = new XMLHttpRequest();
+	// add a event trigger
+	request.upload.addEventListener('progress', function (event) {
+		// get the size for the file uploaded
+		var fileSize = document.getElementById('fileUploadInput').files[0].size;
+		// if the file has not completed upload draw the updated progress bar
+		if (event.loaded <= fileSize){
+			//
+			var percent = Math.round(event.loaded / fileSize * 100);
+			// set the progress bar width
+			document.getElementById('progressBarBar').style.width = percent + '%';
+			// the progress bar text
+      document.getElementById('progressBarBar').innerHTML = String(percent) + '% ' + String(Math.floor(event.loaded / 1000000)) + "mb/" + String(Math.floor(fileSize / 1000000)) + "mb";
+			// hide the upload input and show the progress bar
+			document.getElementById('stopButton').style.display = "block";
+			document.getElementById('uploadButton').style.display = "none";
+			// swap file picker and progress bar elements
+			document.getElementById('fileUploadInput').style.display = "none";
+			document.getElementById('progressBar').style.display = "block";
+    }
+		// if the file upload has finished draw the full progress bar
+		if(event.loaded == event.total){
+			//
+      document.getElementById('progressBarBar').style.width = '100%';
+      document.getElementById('progressBarBar').innerHTML = '100% ' + String(event.loaded) + "/" + String(fileSize);
+			// hide the progress bar and show the file input
+			document.getElementById('stopButton').style.display = "none";
+			document.getElementById('uploadButton').style.display = "block";
+			// swap file picker and progress bar elements
+			document.getElementById('fileUploadInput').style.display = "block";
+			document.getElementById('progressBar').style.display = "none";
+    }
+	});
+	// try and capture the redirect when it is loaded
+	request.onload = () => {
+		// redirect the current page to the new page
+		window.location=request.responseURL;
+	}
+	//
+	request.open('POST', 'web-player.php');
+	//
+	request.timeout = 45000;
+	//
+	request.send(formdata);
+}
+</script>
+</head>
+<body>
+<?PHP
 include("/usr/share/2web/templates/header.php");
 # draw error banners
 if (array_key_exists("uploadFailure",$_GET)){
@@ -297,79 +366,86 @@ if (array_key_exists("uploadFailure",$_GET)){
 }else if (array_key_exists("failure",$_GET)){
 	echo errorBanner("The given link '".$_GET['failure']."' is a invalid link and can not be parsed...",true);
 }
-echo "<div class='settingListCard'>";
-echo "<table class=''>";
-# form to use resolver for a url
-echo "	<tr>\n";
-echo "		<form method='get'>\n";
-echo "			<th id='openLink'>\n";
-echo "				Open Link With Resolver\n";
-echo "			</th>\n";
-echo "		</tr>\n";
-echo "		<tr>\n";
-echo "			<td>\n";
-echo "				<table class='kodiControlEmbededTable'>\n";
-echo "					<tr>\n";
-# build the share url interface for posting urls into the resolver to be passed to kodi
-echo "						<td>\n";
-echo "							<input type='text' name='shareURL' placeholder='http://example.com/play.php?v=3d4D3ldK'>\n";
-echo "						</td>\n";
-echo "						<td class='kodiControlEmbededTableButton'>\n";
-echo "							<input class='button' type='submit' value='Share URL'>\n";
-echo "						</td>\n";
-echo "					</tr>\n";
-echo "				</table>\n";
-echo "			</td>\n";
-echo "		</form>\n";
-echo "	</tr>\n";
-# form to use a direct link to content to send to kodi
-echo "	<form method='get'>\n";
-echo "		<tr>\n";
-echo "			<th id='directLink'>\n";
-echo "				Open Direct Media Link\n";
-echo "			</th>\n";
-echo "		</tr>\n";
-echo "		<tr>\n";
-echo "			<td>\n";
-echo "				<table class='kodiControlEmbededTable'>\n";
-echo "					<tr>\n";
-echo "						<td>\n";
-# build the share url interface for posting urls into the resolver to be passed to kodi
-echo "							<input type='text' name='url' placeholder='http://example.com/media.mkv'>\n";
-echo "						</td>\n";
-echo "						<td class='kodiControlEmbededTableButton'>\n";
-echo "							<input class='button' type='submit' value='Share Direct URL'>\n";
-echo "						</td>\n";
-echo "					</tr>\n";
-echo "				</table>";
-echo "			</td>\n";
-echo "		</tr>\n";
-echo "	</form>\n";
-# form to upload a file for playback
-echo "	<form method='post' action='web-player.php' enctype='multipart/form-data'>";
-echo "		<tr>\n";
-echo "			<th id='directLink'>\n";
-echo "				Upload File For Playback\n";
-echo "			</th>\n";
-echo "		</tr>\n";
-echo "		<tr>\n";
-echo "			<td>\n";
-echo "				<table class='kodiControlEmbededTable'>\n";
-echo "					<tr>\n";
-echo "						<td>\n";
-# build the share url interface for posting urls into the resolver to be passed to kodi
-echo "							<input class='button' type='file' name='uploadMediaFile' accept='video/*'>";
-echo "						</td>\n";
-echo "						<td class='kodiControlEmbededTableButton'>\n";
-echo "							<input class='button' type='submit' value='Upload File'>\n";
-echo "						</td>\n";
-echo "					</tr>\n";
-echo "				</table>";
-echo "			</td>\n";
-echo "		</tr>\n";
-echo "	</form>\n";
-echo "</table>\n";
-echo "</div>";
+?>
+<div class='settingListCard'>
+<table class=''>
+<!-- form to use resolver for a url -->
+	<tr>
+		<form method='get'>
+			<th id='openLink'>
+				Open Link With Resolver
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<!-- build the share url interface for posting urls into the resolver to be passed to kodi -->
+				<table class='kodiControlEmbededTable'>
+					<tr>
+						<td>
+							<input type='text' name='shareURL' placeholder='http://example.com/play.php?v=3d4D3ldK'>
+						</td>
+						<td class='kodiControlEmbededTableButton'>
+							<input class='button' type='submit' value='Share URL'>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</form>
+	</tr>
+<!-- form to use a direct link to content to send to kodi -->
+	<form method='get'>
+		<tr>
+			<th id='directLink'>
+				Open Direct Media Link
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<!-- build the share url interface for posting urls into the resolver to be passed to kodi -->
+				<table class='kodiControlEmbededTable'>
+					<tr>
+						<td>
+							<input type='text' name='url' placeholder='http://example.com/media.mkv'>
+						</td>
+						<td class='kodiControlEmbededTableButton'>
+							<input class='button' type='submit' value='Share Direct URL'>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</form>
+	<!-- form to upload a file for playback -->
+	<form method='post' action='/web-player.php' enctype='multipart/form-data'>
+		<tr>
+			<th id='directLink'>
+				Upload File For Playback
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<!-- build the share url interface for posting urls into the resolver to be passed to kodi -->
+				<table class='kodiControlEmbededTable'>
+					<tr>
+						<td>
+							<noscript><div class="errorBanner">This upload form will not work without javascript enabled.</div></noscript>
+							<input class='button' id="fileUploadInput" type='file' name='uploadMediaFile' accept='video/*'>
+							<div id='progressBar' class="progressBar" style="display: none;">
+									<div id="progressBarBar" class="progressBarBar">Inactive</div>
+							</div>
+						</td>
+						<td class='kodiControlEmbededTableButton' >
+							<input id='uploadButton' class='button' onclick="postFile()" type='button' value='Upload File'>
+							<input id='stopButton' class='button' onclick="location.reload()" type='button' value='Stop Upload' style="display: none;">
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</form>
+</table>
+</div>
+<?PHP
 # send the input forms to the user before rendering the list of recent videos
 flush();
 ob_flush();
@@ -425,7 +501,10 @@ foreach($sourceFiles as $sourceFile){
 	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png")){
 		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png"."' />\n";
 	}
-	if(file_exists($thumbTemplate.".mp4")){
+	#
+	$localCachePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum;
+	#
+	if(file_exists($thumbTemplate.".mp4") or file_exists($localCachePath.".webm") or file_exists($localCachePath.".mp4") or file_exists($localCachePath.".mkv")){
 		echo "	<h3>".$videoTitle."<div class='radioIcon'>🟢</div></h3>\n";
 	}else{
 		echo "	<h3>".$videoTitle."<div class='radioIcon'>◯</div></h3>\n";
