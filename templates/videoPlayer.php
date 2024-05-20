@@ -449,9 +449,16 @@ document.body.addEventListener('keydown', function(event){
 		$trailerPath="trailer.title";
 		if (file_exists($trailerPath)){
 			$trailerData=file_get_contents($trailerPath);
-			echo "<a class='button' rel='noreferer' target='_new' href='$trailerData'>";
-			echo "🔗 Trailer";
-			echo "</a>";
+			# check if the web player is enabled
+			if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+				echo "<a class='button' rel='noreferer' target='_new' href='/web-player.php?shareURL=$trailerData'>";
+				echo "🔗 Trailer";
+				echo "</a>";
+			}else{
+				echo "<a class='button' rel='noreferer' target='_new' href='$trailerData'>";
+				echo "🔗 Trailer";
+				echo "</a>";
+			}
 		}
 	}
 	# get the production studio
