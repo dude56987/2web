@@ -1881,17 +1881,21 @@ function nfo2web_watch_service(){
 	ALERT "Starting the 2web watcher service..."
 	# load the web root
 	webDirectory=$(webRoot)
-	# cleanup any leftover process locks that where left from broken execution
-	ALERT "Finished removing process scan locks..."
-	rm -v /tmp/2web/active_scan_*.active
+	# create the lock directory path
+	createDir /tmp/2web/
 	# forever loop for service
 	while true;do
+		# cleanup any leftover process locks that where left from broken execution
+		rm -v /tmp/2web/active_scan_*.active
+		# remove the conf changed trigger
+		rm -v /tmp/2web/nfo2web_conf_changed.active
+		ALERT "Finished removing process scan locks..."
 		# run a regular update to detect new episodes
 		# - this will also build stats and cleanup indexes as well
-		touch /tmp/2web/active_scan_MAIN.active
 		update --parallel
-		rm -v /tmp/2web/active_scan_MAIN.active
-
+		# watch for changes to the module config files
+		# - if one is detected then this process will restart
+		watch_conf_changes &
 		# start the background process
 		INFO "Loading library configs..."
 		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
@@ -1939,14 +1943,30 @@ function nfo2web_watch_service(){
 					# no processes are running
 					# - stop all existing scan processes
 					# - do not quote the string
+					# - all processing tasks are power cycle safe so killing unfinished processes will not cause problems
 					kill $(jobs -p)
 					# break the loop and trigger a rescan for new media directories
 					break
 				fi
 			fi
+			# watch the event server for changes to /etc/2web/nfo/
+			# - this means the configuration of the module has changed so a rescan must be triggered
+			if test -f "/tmp/2web/nfo2web_conf_changed.active";then
+				# kill all running background jobs
+				kill $(jobs -p)
+				# launch a reload to load detected configuration changes
+				break
+			fi
 			# sleep between job number updates
 			sleep 60
 		done
+	done
+}
+################################################################################
+function watch_conf_changes(){
+	inotifywait --csv -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "/etc/2web/nfo/" | while read event;do
+		# mark the conf as changed
+		touch /tmp/2web/nfo2web_conf_changed.active
 	done
 }
 ################################################################################
@@ -1958,11 +1978,9 @@ function watch_library(){
 	# - when a change is detected in the library it scans the known paths for a match
 	#   and updates that path information
 
-	# create the lock file path
-	createDir /tmp/2web/
 	# find all library media paths
 	# - this will be searched for events
-	foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+	foundLibaryPaths=$(find "$libraryPath" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
 	# show the user all the paths that will be watched
 	for showPath in $foundLibaryPaths;do
 		ALERT "Adding media path to service watchlist '$showPath'"
@@ -1978,54 +1996,30 @@ function watch_library(){
 		# scan the event for matches with the library show paths
 		for showPath in $foundLibaryPaths;do
 			# if the event is in one of the found library paths
-			if echo "$event" | grep "$showPath";then
+			if echo -n "$event" | grep -q "$showPath";then
 				INFO "EVENT MATCHES: show '$showPath', waiting for event changes to finish..."
 				# launch a thread in the background to wait for the changes to finish and then update the content
 				wait_for_changes_to_finish "$showPath" "$event" "$webDirectory" &
 			else
-				# this means a change has happened that is not a change in a existing show
-				# - the entire library must be re scanned to find new content
-				INFO "EVENT Trigger: Rescan library '$libraryPath', waiting for event changes to finish..."
-				wait_for_new_changes_to_finish "$libraryPath" "$webDirectory" &
+				# rescan the found library paths
+				# - this should overwrite the above variable
+				foundLibaryPaths=$(find "$libraryPath" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+				# scan the updated show paths to try and match the event to the new list
+				for subShowPath in $foundLibaryPaths;do
+					# if the event matches
+					if echo -n "$event" | grep -q "$subShowPath";then
+						addToLog "Update" "Found Event" "Matched event '$event', found a new media entry..."
+						wait_for_changes_to_finish "$subShowPath" "$event" "$webDirectory" &
+					else
+						INFO "The change was detected in a place that could not be a new media item..."
+						#addToLog "ERROR" "Unknown Event" "Could not determine what to do with event '$event', it is improperly formatted for the server. On the server use the command 'nfo2web --demo-data' in order to generate example data for nfo2web in '/var/cache/2web/generated/demo/nfo/'."
+					fi
+				done
 			fi
 		done
 		# reset to backup IFS
 		IFS=IFS_BACKUP
 	done
-}
-################################################################################
-function wait_for_new_changes_to_finish(){
-	# wait for a directory to stop being modified and then process the path
-	showPath="$1"
-	webDirectory="$2"
-
-	if test -f /tmp/2web/active_scan_MAIN.active;then
-		INFO "Scan process already active, remove /tmp/2web/active_scan_MAIN.active force scanning if this is in error."
-	else
-		# create the lock file
-		touch /tmp/2web/active_scan_MAIN.active
-
-		addToLog "UPDATE" "Update " "New Full Scan Triggered..."
-		# create a loop to run until no changes have been detected on the directory for at least 60 seconds
-		changesComplete="false"
-		while [ $changesComplete == "false" ];do
-			changesComplete="true"
-			# wait for changes to stop happening to the directory for more than 1 minute
-			inotifywait --timeout 60 -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$showPath" | while read event;do
-				# if a change is detected in the 60 seconds then reset the loop and wait again after the 60 second timeout
-				changesComplete="false"
-			done
-			if [ $(find /tmp/2web/ -type f -name "active_scan_*.active" | wc -l) -gt 1 ];then
-				# other scans are active wait for them to finish to start this rescan
-				changesComplete="false"
-			fi
-		done
-		# scan media for updates
-		# - this will be logged in the 2web log by the below function
-		update --parallel
-		# remove the lock file
-		rm /tmp/2web/active_scan_MAIN.active
-	fi
 }
 ################################################################################
 function wait_for_changes_to_finish(){
