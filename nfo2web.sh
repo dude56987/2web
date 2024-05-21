@@ -477,8 +477,10 @@ processMovie(){
 					# remove any found decimal places in the frame rate
 					tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
 				fi
-				tempTimeCode=$(( $tempTotalFrames / 16 ))
-				tempTimeCode=$(($tempTimeCode / $tempFrameRate))
+				tempTimeCode=$(bc <<< "$tempTotalFrames / 16 ")
+				tempTimeCode=$(bc <<< "$tempTimeCode / $tempFrameRate")
+				# make output into a interger
+				tempTimeCode=$(echo "$tempTimeCode" | cut -d'.' -f1)
 				# - force the filesize to be large enough to be a complex descriptive thumbnail
 				# - filesize of images is directly related to visual complexity
 				largestFileSize=15000
@@ -717,6 +719,8 @@ checkForThumbnail(){
 				fi
 				tempTimeCode=$(bc -l <<< "$tempTotalFrames / 5")
 				tempTimeCode=$(bc -l <<< "$tempTimeCode / $tempFrameRate")
+				# make output into a interger
+				tempTimeCode=$(echo "$tempTimeCode" | cut -d'.' -f1)
 				# - force the filesize to be large enough to be a complex descriptive thumbnail
 				# - filesize of images is directly related to visual complexity
 				largestFileSize=15000
@@ -757,6 +761,17 @@ checkForThumbnail(){
 						tempFileSize=16000
 					fi
 				done
+				# verify the thumbnail was generated correctly by testing the file size
+				if test -f "$thumbnailPath.png";then
+					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				else
+					tempFileSize=0
+				fi
+				if [ "$tempFileSize" -le 0 ];then
+					# Generate a generic uniquely identifiable image using the demo image generator
+					# - this is the last resort if no thumbnail could be generated any other way
+					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600" &
+				fi
 			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
 				ALERT "This is a audio file, generate a audio waveform..."
 				generateWaveform "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
