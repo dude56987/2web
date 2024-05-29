@@ -2267,9 +2267,18 @@ details{
 }
 .portalPreview{
 	height: 15rem;
+	max-width: 100%;
 }
 .portalPreviewContainer{
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	background: var(--staticBackground);
 	display: inline-block;
+	max-width: 25rem;
+}
+.portalPreviewContainer:hover{
+	box-shadow: none;
+	background: var(--highlightBackground) !important;
+	color: var(--highlightText) !important;
 }
 .aiIcon{
 	font-size: 6rem;
