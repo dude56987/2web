@@ -619,11 +619,15 @@ function ALERT(){
 	for index in $(seq $width);do
 		buffer="$buffer "
 	done
+	# store the color codes for colorizing the terminal output
+	resetCode="\033[0m"
+	yellowCode="\033[0;33m"
 	# - cut the line to make it fit on one line using ncurses tput command
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[ALERT]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
+	output="$(echo -n "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
 	# printf uses percentage signs for formatting so you must use two in a row to print
 	# a single regular one
 	output="$(echo "$output" | sed "s/%/%%/g")"
@@ -671,11 +675,15 @@ function INFO(){
 	for index in $(seq $width);do
 		buffer="$buffer "
 	done
+	# store the color codes for coloring
+	resetCode="\033[0m"
+	blueCode="\033[0;34m"
 	# - cut the line to make it fit on one line using ncurses tput command
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
+	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
 	# printf uses percentage signs for formatting so you must use two in a row to print
 	# a single regular one
 	output="$(echo "$output" | sed "s/%/%%/g")"
@@ -690,17 +698,24 @@ function ERROR(){
 	width=$(tput cols)
 	# cut the line to make it fit on one line using ncurses tput command
 	buffer="                                                                                "
+	# store the color codes for coloring
+	resetCode="\033[0m"
+	redCode="\033[0;31m"
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[ERROR]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	output="$(echo -n "[${redCode}ERROR${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
 	# print the line
 	echo
+	echo -n "$redCode"
 	echo "################################################################################"
 	echo "#################################### ERROR! ####################################"
 	echo "################################################################################"
+	echo -n "$resetCode"
 	echo "$output"
+	echo -n "$redCode"
 	echo "################################################################################"
+	echo -n "$resetCode"
 	echo
 }
 ################################################################################
