@@ -55,6 +55,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 #drawPosterWidget("portal");
 ################################################################################
+echo "	<img class='globalPulse' src='/pulse.gif'>";
 ?>
 <div class='settingListCard'>
 <?php
@@ -68,22 +69,43 @@ $hostnameIp=gethostbyname($scriptDomain);
 # load each portal link that is also in this domain
 echo "<h1>";
 echo "	$scriptDomain";
-if (key_exists("ip",$_GET)){
-	echo "<a class='button' href='?'>Domain Links</a>";
-}else{
-	echo "<a class='button' href='?ip'>IP Links</a>";
-}
-echo "	<img class='globalPulse' src='/pulse.gif'>";
 echo "</h1>";
+# draw the resolve switch buttons
+echo "<div class='listCard'>\n";
+if (key_exists("ip",$_GET)){
+	echo "<a class='button' href='?'>Auto</a>\n";
+	echo "<a class='button' href='?domain'>Domain Links</a>\n";
+	echo "<a class='button activeButton' href='?ip'>IP Links</a>\n";
+}else if (key_exists("domain",$_GET)){
+	echo "<a class='button' href='?'>Auto</a>\n";
+	echo "<a class='button activeButton' href='?domain'>Domain Links</a>\n";
+	echo "<a class='button' href='?ip'>IP Links</a>\n";
+}else{
+	echo "<a class='button activeButton' href='?'>Auto</a>\n";
+	echo "<a class='button' href='?domain'>Domain Links</a>\n";
+	echo "<a class='button' href='?ip'>IP Links</a>\n";
+}
+echo "</div>\n";
+# draw each of the links
 foreach($portalLinks as $portalLink){
 	if (strpos($portalLink, ".index") !== false){
 		if (strpos($portalLink, $scriptDomain) !== false){
 			# load each portal link
 			echo "<div class='listCard'>";
 			if (key_exists("ip",$_GET)){
+				# build the ip based link
 				echo "	".replaceLink($scriptDomain, $hostnameIp, $portalLink);
-			}else{
+			}else if (key_exists("domain",$_GET)){
+				# build the regular link
 				echo "	".file_get_contents($portalLink);
+			}else{
+				# automatic detection of ip address
+				# - this will replace the link if the current URL is being accessed with a direct IP
+				if(preg_match("/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/",$_SERVER["HTTP_HOST"])){
+					echo "	".replaceLink($scriptDomain, $hostnameIp, $portalLink);
+				}else{
+					echo "	".file_get_contents($portalLink);
+				}
 			}
 			echo "	<div class='portalPreviewContainer'>";
 			echo "		<a href='".str_replace(".index","-web.png",$portalLink)."'>";
