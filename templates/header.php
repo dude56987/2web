@@ -430,6 +430,8 @@ if (array_key_exists("q",$_GET)){
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <?PHP
+# release the lock on the session for this script to allow pages to load in parallel
+session_write_close();
 # send the header information before the rest of the page
 flush();
 ob_flush();
