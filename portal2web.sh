@@ -24,8 +24,10 @@ function avahi2csv(){
 	# use avahi to scan for domains with zeroconf services, this does not list
 	# the services themselves though
 	#
-	# - this text should be piped into a while loop for processing or a file
-	rawData=$(avahi-browse -alrt)
+	# - This text should be piped into a while loop for processing or a file
+	# - The scrape needs to have a timeout so it will not hang randomly (This may be a issue in avahi-browse or a bad network connection error)
+	# - Timeout is 8 minutes in seconds.
+	rawData=$(timeout 500 avahi-browse -alrt)
 	# rip the hostnames
 	hostArray=$(echo "$rawData" | grep "hostname = ")
 	# only include remote hosts, this will remove localhost services
