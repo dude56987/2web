@@ -385,7 +385,7 @@ if (array_key_exists("uploadFailure",$_GET)){
 							<input type='text' name='shareURL' placeholder='http://example.com/play.php?v=3d4D3ldK'>
 						</td>
 						<td class='kodiControlEmbededTableButton'>
-							<input class='button' type='submit' value='Share URL'>
+							<input class='button' type='submit' value='📥 Share URL'>
 						</td>
 					</tr>
 				</table>
@@ -408,7 +408,7 @@ if (array_key_exists("uploadFailure",$_GET)){
 							<input type='text' name='url' placeholder='http://example.com/media.mkv'>
 						</td>
 						<td class='kodiControlEmbededTableButton'>
-							<input class='button' type='submit' value='Share Direct URL'>
+							<input class='button' type='submit' value='🔗 Share Direct URL'>
 						</td>
 					</tr>
 				</table>
@@ -435,8 +435,8 @@ if (array_key_exists("uploadFailure",$_GET)){
 							</div>
 						</td>
 						<td class='kodiControlEmbededTableButton' >
-							<input id='uploadButton' class='button' onclick="postFile()" type='button' value='Upload File'>
-							<input id='stopButton' class='button' onclick="location.reload()" type='button' value='Stop Upload' style="display: none;">
+							<input id='uploadButton' class='button' onclick="postFile()" type='button' value='🎞️ Upload File'>
+							<input id='stopButton' class='button' onclick="location.reload()" type='button' value='❌ Stop Upload' style="display: none;">
 						</td>
 					</tr>
 				</table>
