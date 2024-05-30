@@ -64,9 +64,9 @@ function processPdfPageToImage(){
 	# render the page
 	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/comics/pdf2comic/$pdfComicName/$pdfComicName"
 	# trim the whitespace
-	convert -quiet "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+	convert -strip -quiet "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 	# add a border to the edge of the image
-	convert -quiet "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
+	convert -strip -quiet "$pdfImageFilePath" -matte -bordercolor white -border 15 "$pdfImageFilePath"
 }
 ################################################################################
 function extractCBZ(){
@@ -167,12 +167,12 @@ function update(){
 					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
 						# convert each png file to a jpg file
-						convert -quiet "$imageToConvert" "$newImagePath"
+						convert -strip -quiet "$imageToConvert" "$newImagePath"
 					done
 					find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
 						# convert each png file to a jpg file
-						convert -quiet "$imageToConvert" "$newImagePath"
+						convert -strip -quiet "$imageToConvert" "$newImagePath"
 					done
 				else
 					totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
@@ -185,12 +185,12 @@ function update(){
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
 						# convert each png file to a jpg file
-						convert -quiet "$imageToConvert" "$newImagePath"
+						convert -strip -quiet "$imageToConvert" "$newImagePath"
 					done
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
 						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
 						# convert each png file to a jpg file
-						convert -quiet "$imageToConvert" "$newImagePath"
+						convert -strip -quiet "$imageToConvert" "$newImagePath"
 					done
 				fi
 			fi
@@ -395,7 +395,7 @@ convertImage(){
 
 	if ! test -f "$newName";then
 		# convert the filename
-		convert -quiet "$fileName" "$newName"
+		convert -strip -quiet "$fileName" "$newName"
 	fi
 
 	return 0
@@ -408,6 +408,9 @@ cleanText(){
 	cleanedText=$(echo "$cleanedText" | tr -d '#`')
 	cleanedText=$(echo "$cleanedText" | tr -d "'" )
 	cleanedText=$(echo "$cleanedText" | sed "s/_/ /g" )
+	################################################################################
+	# convert symbols that cause issues to full width versions of those characters
+	################################################################################
 	# convert question marks into wide question marks so they look
 	# the same but wide question marks do not break URLS
 	cleanedText=$(echo "$cleanedText" | sed "s/?/？/g" )
@@ -419,6 +422,8 @@ cleanText(){
 	cleanedText=$(echo "$cleanedText" | sed "s/%/％/g" )
 	# hyphens break grep searches
 	cleanedText=$(echo "$cleanedText" | sed "s/-/－/g" )
+	# exclamation marks can also cause problems
+	cleanedText=$(echo "$cleanedText" | sed "s/!/！/g" )
 	# squeeze double spaces into single spaces
 	cleanedText=$(echo "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
@@ -529,8 +534,9 @@ scanPages(){
 	# set page number counter
 	pageNumber=0
 
+	addToLog "UPDATE" "Scanning Comic" "Adding comic from '$pagesDirectory'"
 	# scan for all jpg and png images in the comic book directory
-	find -L "$pagesDirectory" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" | sort | while read imagePath;do
+	find -L "$pagesDirectory" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" | sort | while read imagePath;do
 		pageNumber=$(( 10#$pageNumber + 1 ))
 		################################################################################
 		# set the page number prefix to make file sorting work
@@ -568,7 +574,7 @@ scanPages(){
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/$tempComicChapter/totalPages.cfg";then
 					# find the total number of pages in the chapter
-					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" | wc -l)
+					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif"  | wc -l)
 					# write the total pages to a file in the directory
 					echo "$totalPages" > "$webDirectory/comics/$tempComicName/$tempComicChapter/totalPages.cfg"
 				else
@@ -601,7 +607,7 @@ scanPages(){
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/totalPages.cfg";then
 					# find the total number of pages in the chapter
-					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" | wc -l)
+					totalPages=$(find -L "$pagesDirectory" -maxdepth 1 -mindepth 1 -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" | wc -l)
 					# write the total pages to a file in the directory
 					echo "$totalPages" > "$webDirectory/comics/$tempComicName/totalPages.cfg"
 				else
@@ -654,7 +660,7 @@ renderPage(){
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png";then
-			convert -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
+			convert -strip -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber-thumb.png"
 		fi
 		# get page width and height
 		tempImageData=$(identify -verbose "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg" | grep "Geometry" |  cut -d':' -f2 | sed "s/+0//g")
@@ -672,7 +678,7 @@ renderPage(){
 
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png";then
-			convert -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
+			convert -strip -quiet "$imagePath" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
 		fi
 		# link the image
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
@@ -724,16 +730,16 @@ renderPage(){
 			# create chapter specific thumbnails
 			if ! test -f "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png";then
 				# create a thumb for the comic
-				convert -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
+				convert -strip -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageChapterName/thumb.png"
 			fi
 		fi
 		# if no thumbnail exists then
 		if ! test -f "$webDirectory/comics/$pageComicName/thumb.png";then
 			if [ $isChapter = true ];then
 				# create a thumb for the comic
-				convert -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert -strip -quiet "$webDirectory/comics/$pageComicName/$pageChapterName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			else
-				convert -quiet "$webDirectory/comics/$pageComicName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
+				convert -strip -quiet "$webDirectory/comics/$pageComicName/0001.jpg" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/thumb.png"
 			fi
 		fi
 	fi
@@ -1031,6 +1037,7 @@ webUpdate(){
 	ALERT "Scanning libary config '$downloadDirectory'"
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
 		ALERT "Scanning Libary Path... '$comicLibaryPath'"
+		addToLog "INFO" "Scanning Library..." "$comicLibaryPath"
 		# read each comicWebsite directory from the download directory
 		find "$comicLibaryPath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
 			INFO "scanning comic website path '$comicWebsitePath'"
@@ -1040,6 +1047,7 @@ webUpdate(){
 			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
 				# check the sum for this directory to see if the data has changed
 				if checkDirSum "$webDirectory" "$comicNamePath";then
+					addToLog "UPDATE" "Adding comic" "$comicNamePath"
 
 					INFO "link the comics to the kodi directory"
 					# link this comic to the kodi directory
@@ -1049,7 +1057,7 @@ webUpdate(){
 					# add one to the total comics
 					totalComics=$(( $totalComics + 1 ))
 					# build the comic index page
-					if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" | wc -l) -gt 0 ];then
+					if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" | wc -l) -gt 0 ];then
 						INFO "scanning single chapter comic '$comicNamePath'"
 						# if this directory contains .jpg or .png files then this is a single chapter comic
 						# - build the individual pages for the comic
@@ -1075,6 +1083,7 @@ webUpdate(){
 					fi
 					setDirSum "$webDirectory" "$comicNamePath"
 				else
+					addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
 					INFO "Already processed '$comicNamePath'"
 				fi
 			done
@@ -1201,6 +1210,8 @@ main(){
 		else
 			totalCPUS=1
 		fi
+		# create a list of file extensions
+		fileExtensions=".png .jpg .gif .webp"
 		#########################################################################################
 		# comic2web demo comics
 		#########################################################################################
@@ -1213,8 +1224,10 @@ main(){
 			createDir "/var/cache/2web/generated/demo/comics/generated/$randomTitle/"
 			# write the comic pages
 			for index2 in $(seq -w $(( 4 + ( $RANDOM % 25 ) )) );do
+				# pick a random file extension for each demo image in the comic
+				extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
 				# write the pages
-				demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2.png" "${randomTitle} Page:$index2" "400" "700" &
+				demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" "${randomTitle} Page:$index2" "400" "700" &
 				# wait for queue to be free
 				waitQueue 0.2 "$totalCPUS"
 			done
