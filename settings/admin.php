@@ -800,7 +800,7 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("Locking access to the group '".$group."'","goodLog");
 		touch("/etc/2web/lockedGroups/".$group.".cfg");
 	}
-	echo "<hr><a class='button' href='/settings/users.php'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/users.php#groupLock_".$group."'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("unlockGroup",$_POST)){
 	$group=$_POST["unlockGroup"];
@@ -810,7 +810,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		outputLog("The group '".$group."' is already unlocked, Nothing is to be done.","badLog");
 	}
-	echo "<hr><a class='button' href='/settings/users.php'>BACK</a><hr>";
+	echo "<hr><a class='button' href='/settings/users.php#groupLock_".$group."'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("rss2nfoStatus",$_POST)){
 	$status=$_POST['rss2nfoStatus'];
