@@ -1877,12 +1877,15 @@ function nfo2web_watch_service(){
 	#
 	# - You must still run a full scan every so often if the service goes down
 	# - This should update shows when they have changed
-	addToLog "ALERT" "Starting Watch Service" "Starting the 2web watcher service"
+	addToLog "INFO" "Starting Watch Service" "Starting the 2web watcher service"
 	ALERT "Starting the 2web watcher service..."
 	# load the web root
 	webDirectory=$(webRoot)
 	# create the lock directory path
 	createDir /tmp/2web/
+	# Calc the timeout for hours in seconds
+	# - this will force the service to reload and do a full scan after this period
+	timeOut=$(( ( (60 * 60) * 6 ) ))
 	# forever loop for service
 	while true;do
 		# cleanup any leftover process locks that where left from broken execution
@@ -1899,47 +1902,40 @@ function nfo2web_watch_service(){
 		# start the background process
 		INFO "Loading library configs..."
 		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
-		addToLog "INFO" "Watch Service Scan" "Scanning content in libaries <pre>$libaries</pre>"
+		addToLog "INFO" "Watch Service Loading" "Scanning content in libaries <pre>$libaries</pre>"
 		IFS=$'\n'
 		for libary in $libaries;do
 			ALERT "libary = $libary"
 			# check if the libary directory exists
-			addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
 			ALERT "Check if directory exists at '$libary'"
 			if test -d "$libary";then
 				ALERT "library exists at '$libary'"
-			else
-				ALERT "library does not exist at '$libary'"
-			fi
-			if test -d "$libary";then
-				addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
+				addToLog "INFO" "Starting Watch Service" "$libary" "$logPagePath"
 				#
 				echo "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				# store these paths in a varaible to be checked when events are activated
 				watch_library "$libary" "$webDirectory" &
-
 			else
-				ALERT "$show does not exist!"
+				ALERT "library does not exist at '$libary'"
+				addToLog "ERROR" "Path Broken" "Path does not exist '$libary'" "$logPagePath"
 			fi
-			# update random backgrounds
-			#scanForRandomBackgrounds "$webDirectory"
 		done
 		# store the loop start time for activating the rescan
 		watchProcessStartupTime="$(date "+%s")"
-		# calc the timeout for hours in seconds
-		timeOut=$(( ( (60 * 60) * 6 ) ))
 		# this process loops forever because it is a service
 		while [ "true" == "true" ] ;do
 			INFO "Running '$(jobs | wc -l)' watcher processes..."
-			# check if the watcher processes have been running for more than 2 hour
+			# check if the watcher processes have been running for more than the timeout
 			if [ $(( $(date "+%s") - watchProcessStartupTime )) -gt $timeOut ];then
 				# check for locked running processes
 				activeProcesses=$(find /tmp/2web/ -type f -name "active_scan_*.active" | wc -l)
 				if [ $activeProcesses -gt 0 ];then
 					# if there are still processes running
-					INFO "Rescan imminent waiting for '$activeProcesses' active scans to finish..."
+					INFO "Service Reload Timeout exceeded, Waiting for '$activeProcesses' scans to finish before reloading service..."
+					addToLog "INFO" "Service Reload Timeout Exceeded" "Waiting for '$activeProcesses' active scans to complete before reloading the service..."
 				else
+					addToLog "INFO" "Active scans finished." "All active scans have finished, triggering a reload of the service..."
 					# no processes are running
 					# - stop all existing scan processes
 					# - do not quote the string
@@ -1952,6 +1948,8 @@ function nfo2web_watch_service(){
 			# watch the event server for changes to /etc/2web/nfo/
 			# - this means the configuration of the module has changed so a rescan must be triggered
 			if test -f "/tmp/2web/nfo2web_conf_changed.active";then
+				INFO "The configuration has changed. The service will be reloaded and a full scan will be triggered..."
+				addToLog "Update" "Configuration Changed" "The configuration has changed. The service will be reloaded and a full scan will be triggered..."
 				# kill all running background jobs
 				kill $(jobs -p)
 				# launch a reload to load detected configuration changes
