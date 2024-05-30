@@ -76,6 +76,10 @@ OPTIONS
 
 :   Reset the state of all 2web components without deleting downloaded metadata.
 
+`-R, --rescan, rescan`
+
+:   Force new salts for all md5sums and rescan all media from all modules into the server. This will remove any .nomedia locks preventing kodi clients from scanning old media on the network.
+
 `-w, --webgen, webgen`
 
 :   Generate webpage parts of all 2web components.
@@ -83,6 +87,22 @@ OPTIONS
 `-l, --libary, libary`
 
 :   Download the latest version of the hls.js library for use.
+
+`--screenshots`
+
+:   Take screenshots of all the webpages and generate a comic book in the generated comics directory. /var/cache/2web/generated/comics/
+
+`--fast-client`
+
+:   Enable the fast client on the display of this server. This will setup a custom lightweight desktop that will auto login. The desktop will launch VLC to play videos and can be controlled with the client remote webpage.
+
+`--kodi-client`
+
+:   Enable the kodi login session and automaticaly login to the kiosk user. The sources for kodi will all be set to the local server and the remote control will be auto setup on the local server.
+
+`--browser-client`
+
+:   Setup a auto login browser kiosk on the local server display. Load up the client page from the local server automatically.
 
 ### Logs
 
