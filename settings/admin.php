@@ -487,7 +487,7 @@ if (array_key_exists("newUserName",$_POST)){
 			# read the link and create a custom config
 			$configPath="/etc/2web/iptv/sources.d/".$sumOfLink.".m3u";
 			# create the custom link content
-			$content='#EXTM3U\n'.'#EXTINF:-1 tvg-logo="'.$linkIcon.'",'.$linkTitle.'\n'.$link;
+			$content="#EXTM3U\n".'#EXTINF:-1 tvg-logo="'.$linkIcon.'",'.$linkTitle."\n".$link;
 			outputLog("Checking for Config file ".$configPath);
 			# write the link to a file at the configPath if the path does not already exist
 			/*
@@ -496,15 +496,14 @@ if (array_key_exists("newUserName",$_POST)){
 				# write the config file
 				file_put_contents($configPath,$content);
 			*/
-			$fileObject=fopen($configPath,'w');
 			if ( ! file_exists($configPath)){
+				$fileObject=fopen($configPath,'w');
 				outputLog("Adding link ".$link);
 				# write the config file
 				fwrite($fileObject,$content);
-				fwrite($fileObject,$link);
 				fclose($fileObject);
 			}else{
-				outputLog("[ERROR]: Custom link creation failed '".$link."'");
+				outputLog("[ERROR]: Custom link creation failed '".$link."' '$configPath' already exists!");
 			}
 		}else{
 			outputLog("[ERROR]: Custom Icon not found");

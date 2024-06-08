@@ -48,12 +48,6 @@ if (file_exists("/var/cache/2web/downloads/pip/streamlink/bin/streamlink")){
 	exit();
 }
 ################################################################################
-debug('<hr>'.$streamlinkPath.' --stream-url '.$_GET['url']."<br>\n");
-#if (array_key_exists("debug",$_GET)){
-#	echo '<hr>';
-#	echo $streamlinkPath.' --stream-url '.$_GET['url']."<br>\n";
-#}
-################################################################################
 function writeLog($md5sum, $contents){
 	file_put_contents(("RESOLVER-CACHE/".$md5sum.".log"),$contents, FILE_APPEND);
 }
@@ -61,6 +55,9 @@ function writeLog($md5sum, $contents){
 function cleanLink($link){
 	$videoLink = $link;
 	debug("[DEBUG]: URL is ".$videoLink."<br>");
+	# decode link first as it was probably encoded last and may include things that need cleaned up
+	$videoLink = urldecode($videoLink);
+	debug("[DEBUG]: decoding link ".$videoLink."<br>");
 	#if (array_key_exists("debug",$_GET)){
 	#	echo "[DEBUG]: URL is ".$videoLink."<br>";
 	#}
@@ -104,10 +101,6 @@ if (array_key_exists("url",$_GET)){
 	$sum = md5($videoLink);
 	debug("[DEBUG]: MD5SUM is ".$sum."<br>");
 	debug($streamlinkPath.' --stream-url "'.$videoLink.'"'."<br>");
-	#if (array_key_exists("debug",$_GET)){
-	#	echo "[DEBUG]: MD5SUM is ".$sum."<br>";
-	#	echo $streamlinkPath.' --stream-url "'.$videoLink.'"'."<br>";
-	#}
 	################################################################################
 	# get the quality, defaults to worst, this is for making low bandwidth and HD
 	# versions of channels
@@ -125,15 +118,9 @@ if (array_key_exists("url",$_GET)){
 	################################################################################
 	$output = shell_exec($streamlinkPath.' --stream-url "'.$videoLink.'" '.$quality);
 	debug("Output = ".$output."<br>");
-	#if (array_key_exists("debug",$_GET)){
-	#	echo "Output = ".$output."<br>";
-	#}
-	#if ($output == null || strpos($output,"error:")){
 	if (strpos($output,"error:")){
 		debug("Checking for 'error:' in ".$output);
 		// the url was not able to resolve
-		//echo "The URL '".$_GET['url']."' was unable to resolve...";
-		//echo "The URL was unable to resolve...<br>";
 		if (debugTrue()){
 			echo 'Location: FAILED.webm';
 		}else{
@@ -155,10 +142,20 @@ if (array_key_exists("url",$_GET)){
 	}
 }else{
 	// no url was given at all
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<link rel='stylesheet' href='style.css'>\n";
+	echo "</head>\n";
+	echo "<body>\n";
+	// no url was given at all
 	echo "No url was specified to the resolver!<br>";
 	echo "Please give a valid URL to a video to be resolved.<br>";
 	echo "<form method='get'>";
 	echo "<input width='60%' type='text' name='url'>";
+	echo "	<div>\n";
+	echo "		<span>Enable Debug Output<span>\n";
+	echo "		<input class='button' width='10%' type='checkbox' name='debug'>\n";
+	echo "	</div>\n";
 	echo "<input type='submit'>";
 	echo "</form>";
 	echo '<a href=\'http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="NONSENSE"\'>';
@@ -175,8 +172,10 @@ if (array_key_exists("url",$_GET)){
 	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo '	<li>';
-	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/iptv-resolver.php?url="http://videoUrl/videoid/"&debug=true';
 	echo '	</li>';
 	echo "</ul>";
+	echo "</body>";
+	echo "</html>";
 }
 ?>

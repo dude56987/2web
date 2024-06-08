@@ -97,7 +97,7 @@ examineIconLink(){
 		killFakeImage "$localIconPath"
 		# try to download the icon with yt-dlp
 		if ! test -f "$localIconPath";then
-			tempIconLink=$(/usr/bin/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link")
+			tempIconLink=$(/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link")
 			if [ $? -eq 0 ];then
 				tempIconLink=$(echo $tempIconLink | jq ".thumbnail")
 				INFO "Downloading thumbnail '$tempIconLlink'"
@@ -258,17 +258,17 @@ function process_M3U(){
 
 	generatedGroups=$(generateGroups)
 
-	echo -n "$channels" | while read line;do
+	echo "$channels" | while read line;do
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
-		if [ "$caughtLength" -gt 1 ];then
+		# if the caught line is greater than 6 characters "#EXTINF
+		if [ "$caughtLength" -gt 7 ];then
 			# pull the link on this line and store it
 			title=$(echo -n "$lineCaught" | rev | cut -d',' -f1 | rev)
 			title=$(cleanText "$title")
 			# remove any newlines found in the title
 			title=$(echo -n "$title" | sed "s/\n//g")
 			title=$(echo -n "$title" | sed "s/\r//g")
-			#echo "Found Title = $title" >> "/var/log/iptv4everyone.log"
 			link=$(echo -n "$line" | sed "s/\n//g")
 			link=$(echo -n "$line" | sed "s/\r//g")
 			#INFO "Found Link = $link"
@@ -341,36 +341,42 @@ function process_M3U(){
 			#ALERT "groups='$(getTVG "$lineCaught" "group-title")'"
 			#ALERT "'$title' contains groups '$groupTitle'"
 
+			# check if the channel should be blocked
+			addChannel="true"
 			# during the building of the m3u file split out blocked items
 			for group in $groupTitle;do
 				# check each channel group to see if the group is in the blocked groups
-				if echo -n "$blockedGroups" | grep -q --ignore-case "$group";then
-					# this channel should be blocked from being added to the list
-					INFO "The channel $title has been blocked, it contained blocked group $group"
-					createDir "$webDirectory/live/blocked/"
-					{
-						echo "<div class='blockedLink'>"
-						echo "	<div class='blockedLinkTitle'>"
-						echo "		$title"
-						echo "	</div>"
-						echo "	<div class='blockedLinkMeta'>"
-						echo "		$lineCaught"
-						echo "	</div>"
-						echo "	<div class='blockedLinkLink'>"
-						echo "		$link"
-						echo "	</div>"
-						echo "</div>"
-					} > "$webDirectory/live/blocked/$iconSum.index"
+				if echo "$blockedGroups" | grep -q --ignore-case "$group";then
+					groupLength=$(echo "$group" | wc -c)
+					if [ "$groupLength" -gt 2 ];then
+						INFO "Ignoring blank group..."
+					else
+						# this channel should be blocked from being added to the list
+						INFO "The channel $title has been blocked, it contained blocked group $group"
+						createDir "$webDirectory/live/blocked/"
+						{
+							echo "<div class='blockedLink'>"
+							echo "	<div class='blockedLinkTitle'>"
+							echo "		$title"
+							echo "	</div>"
+							echo "	<div class='blockedLinkMeta'>"
+							echo "		$lineCaught"
+							echo "	</div>"
+							echo "	<div class='blockedLinkLink'>"
+							echo "		$link"
+							echo "	</div>"
+							echo "</div>"
+						} > "$webDirectory/live/blocked/$iconSum.index"
+					fi
 					addChannel="false"
 				else
 					# if the channel is not blocked, add the .index file for the group
-					INFO "The channel $title was added in group $group"
+					ALERT "The channel $title was added in group $group"
 					#createDir "$webDirectory/live/groups/$group/"
 					#if ! test -f "$webDirectory/live/groups/$group/$iconSum.index";then
 					#	# link index files in group directories
 					#	linkFile "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups/$group/$iconSum.index"
 					#fi
-					addChannel="true"
 					# add the sql index database entry for the groups database
 					SQLaddToIndex "$webDirectory/live/index/channel_$iconSum.index" "$webDirectory/live/groups.db" "$group"
 				fi
@@ -556,6 +562,8 @@ function processLink(){
 			process_M3U "$downloadedM3U" "$webDirectory" "$radioFile"
 		else
 			INFO "Link is Unknown..."
+			# blank out the filename
+			fileName=""
 			# if it is a known stream site use streamlink
 			if streamPass --can-handle-url "$link";then
 				INFO "Link can be processed by streamlink..."
@@ -612,8 +620,6 @@ function processLink(){
 								fileName=$(echo "$tempMeta" | jq -r ".uploader" )
 							fi
 						fi
-
-
 						if echo -n "$tempMeta" | grep -q "thumbnail";then
 							thumbnailLink=$(echo "$tempMeta" | jq -r ".thumbnail" )
 							#ALERT "thumbnailLink = $thumbnailLink"
@@ -628,7 +634,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					# try to get json data with streamlink
-					fileName=$(/usr/bin/2web/downloads/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
+					fileName=$(/var/cache/2web/downloads/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
 				fi
 
 				#ERROR "[DEBUG]: checking filename length '$fileName'"
@@ -657,7 +663,7 @@ function processLink(){
 						INFO "Found generated video entry set radio to false"
 						radio="false"
 					fi
-					#ALERT "Adding channel '$fileName' to m3u..."
+					ALERT "Adding channel '$fileName' to m3u..."
 					#ERROR "[DEBUG]: WebIconPath = $webIconPath"
 					{
 						echo "#EXTINF:-1 radio=\"$radio\" tvg-logo=\"$webIconPathHD\" group-title=\"2web\",$fileName HD"
@@ -1105,7 +1111,7 @@ webGen(){
 		#INFO "Line Caught = $line"
 		# if a info line was detected on the last line
 		caughtLength=$(echo "$lineCaught" | wc -c)
-		if [ "$caughtLength" -gt 1 ];then
+		if [ "$caughtLength" -gt 7 ];then
 			#if cacheCheck "$webDirectory/live/channel_$channelNumber.index" "10";then
 			#if ! test -f "$webDirectory/live/channel_$channelNumber.index";then
 			if true;then
@@ -1123,148 +1129,51 @@ webGen(){
 				#INFO "Icon Link = $iconLink"
 				#INFO "Icon MD5 = $iconLink"
 				################################################################################
-				# build individual channel webpage
+				# build the page metadata files
 				################################################################################
+				# store the channel title
 				{
-					echo "<?PHP"
-					echo "ini_set('display_errors', 1);"
-					echo "include('/usr/share/2web/2webLib.php');"
-					echo "requireGroup('iptv2web');"
-					echo "?>"
-					# build the page
-					echo "<html onload='forcePlay()'  id='top' class='liveBackground'>"
-					echo "<head>"
-					echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"
-					echo "	<title>$title</title>"
-					echo "	<script src='/2webLib.js'></script>"
-					echo "</head>"
-					echo "<body>"
-					# place the header
-					echo "<?PHP";
-					echo "include('/var/cache/2web/web/header.php')";
-					echo "?>";
-					echo "<div class='titleCard'>"
-					echo "	<h1>"
-					echo "		$title"
-					echo "		<img id='spinner' src='/spinner.gif' />";
-					echo "	</h1>"
-					echo "<div class='listCard'>"
-					echo "	<a class='button' href='$link'>"
-					echo "		🔗 Direct Link"
-					echo "	</a>"
-
+					echo "$title"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.title"
+				{
+					# store the link
+					#echo "$newLink"
+					echo "$link"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.strm"
+				{
+					# rip the link and remove the domain
 					newLink="$( echo ${link//\"/\\\"} )"
 					newLink="$( echo ${newLink//http:\/\/$(hostname).local/} )"
-
-					newLink="vlc://http://\".\$_SERVER['HTTP_HOST'].\"$newLink"
-
-					echo "<?PHP"
-					echo "	echo \"<a class='button hardLink vlcButton' href='$newLink'>\";"
-					echo "?>"
-					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
-					echo "	</a>"
-
-					echo "</div>"
-					echo "</div>"
-
-					echo "<div class='listCard'>";
-					echo "<div id='videoPlayerContainer'>";
-					if echo "$lineCaught" | grep -Eq "radio=[\",']true";then
-						buildRadioPage "$title" "$link" "$iconLink" "\t\t\t"
-					else
-						buildPage "$title" "$link" "$iconLink" "\t\t\t"
-					fi
-					echo "<div class='videoPlayerControls'>"
-					# play
-					echo "<button id='playButton' class='button' style='display:none;' onclick='playPause()' alt='play'>&#9654;</button>"
-					# pause
-					echo "<button id='pauseButton' class='button' onclick='playPause()' alt='pause'>&#9208;</button>"
-					#echo "<input type='range' onload='startVideoUpdateLoop()' id='videoPositionBar' value='0' />"
-					#echo "<a class='button' onclick='stopVideo()'>Stop</a>"
-					#echo "<a class='button' onclick='reloadVideo()'>Replay</a>"
-					# volume controls
-					echo "<span>"
-					echo "<button class='button' onclick='volumeDown()'>&#128264;</button>"
-					echo "<span id='currentVolume'>100</span>%"
-					echo "<button class='button' onclick='volumeUp()'>&#128266;</button>"
-					#echo "<span>"
-					# mute
-					#echo "<a id='muteButton' class='button' onclick='muteUnMute()'>Mute</a>"
-					#echo "<a id='muteButton' class='button' onclick='muteUnMute()'>&#x1f507;</a>"
-					# nmute
-					#echo "<a id='unMuteButton' class='button' style='display:none;' onclick='muteUnMute()'>Unmute</a>"
-					#echo "<a id='unMuteButton' class='button' style='display:none;' onclick='muteUnMute()'>&#x1f4e2;</a>"
-					#echo "</span>"
-					echo "</span>"
-					echo "<span>";
-					# show controls
-					echo "<button id='showControls' onload='hideControls()' class='button' onclick='showControls()'>&#127899;</button>"
-					# hide controls
-					echo "<button id='hideControls' class='button' style='display:none;' onclick='hideControls()'>&#128317;</button>"
-					echo "</span>"
-					echo "<span>";
-					# fullscreen
-					echo "<button id='fullscreenButton' class='button' onclick='openFullscreen()'>&#11028;</button>"
-					# exit fullscreen
-					echo "<button id='exitFullscreenButton' class='button' style='display:none;' onclick='closeFullscreen()'>&#11029;</button>"
-					echo "</span>"
-					echo "</div>"
-
-					echo "</div>"
-					echo "	<div class='channelList'>"
-					# create the line that will be replaced by the link list to all the channels
-					echo "		<?PHP";
-					echo "			include('/var/cache/2web/web/live/channelList.php')";
-					echo "		?>";
-					echo "	</div>"
-					echo "</div>"
-
-					echo "<div>";
-					echo "<br>"
-					echo "<div class='descriptionCard'>"
-					echo "	<a class='channelLink' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
-					echo "		$title"
-					echo "		<img id='spinner' src='/spinner.gif' />";
-					echo "	</a>"
-					echo "	<a class='button hardLink' href='$link'>"
-					echo "		🔗 Direct Link"
-					echo "	</a>"
-
-					newLink="$( echo ${link//\"/\\\"} )"
-					newLink="$( echo ${newLink//http:\/\/$(hostname).local/} )"
-
-					newLink="vlc://http://\".\$_SERVER['HTTP_HOST'].\"$newLink"
-
-					echo "<?PHP"
-					echo "	echo \"<a class='button hardLink vlcButton' href='$newLink'>\";"
-					echo "?>"
-					echo "		<span id='vlcIcon'>&#9650;</span> VLC"
-					echo "	</a>"
+					# store the link
+					#echo "$newLink"
+					echo "$link"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.og.strm"
+				# store the groups
+				{
 					for group in $groupTitle;do
 						echo "		<a class='button groupButton tag' href='/live/?filter=$group'>👥 $group</a>"
 					done
-					echo "	<table>"
-					echo "		<tr>"
-					echo "			<th>M3U Data</th>"
-					echo "		</tr>"
-					echo "		<tr>"
-					echo "			<td>$lineCaught</td>"
-					echo "		</tr>"
-					echo "		<tr>"
-					echo "			<td>$link</td>"
-					echo "		</tr>"
-					echo "	</table>"
-					echo "</div>"
-					# add footer
-					echo "<?PHP";
-					echo "	include('/var/cache/2web/web/randomChannels.php');";
-					echo "	include('/var/cache/2web/web/footer.php');";
-					echo "?>";
-					# add space for jump button when scrolled all the way down
-					echo "<hr class='topButtonSpace'>"
-					echo "</body>"
-					echo "</html>"
-				} > "$webDirectory/live/channels/channel_$channelNumber.php"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.groups"
+				# store the page type
+				{
+					if echo "$lineCaught" | grep -Eq "radio=[\",']true";then
+						# radio
+						echo "radio"
+					else
+						# video
+						echo "video"
+					fi
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.type"
+				{
+					echo "$channelNumber"
+				} > "$webDirectory/live/channels/channel_$channelNumber.php.number"
+
+				################################################################################
+				# build individual channel webpage
+				################################################################################
+				# link the template
+				linkFile "/usr/share/2web/templates/live_channel.php" "$webDirectory/live/channels/channel_$channelNumber.php"
+
 				{
 					# write the link to a strm file for vlc link
 					echo "#EXTM3U"
