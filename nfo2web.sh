@@ -254,7 +254,7 @@ processMovie(){
 					echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
 				fi
 				# this means they are the same so no update needs run
-				addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+				#addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
 				return
 			else
 				# enable kodi client updates if the state has changed
@@ -1241,7 +1241,7 @@ processShow(){
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
 			#INFO "[DEBUG]: $currentSum == $libarySum"
-			addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
+			#addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
 			return
 		else
 			# enable kodi client updates
@@ -1937,10 +1937,6 @@ function nfo2web_watch_service(){
 				else
 					addToLog "INFO" "Active scans finished." "All active scans have finished, triggering a reload of the service..."
 					# no processes are running
-					# - stop all existing scan processes
-					# - do not quote the string
-					# - all processing tasks are power cycle safe so killing unfinished processes will not cause problems
-					kill $(jobs -p)
 					# break the loop and trigger a rescan for new media directories
 					break
 				fi
@@ -1950,14 +1946,20 @@ function nfo2web_watch_service(){
 			if test -f "/tmp/2web/nfo2web_conf_changed.active";then
 				INFO "The configuration has changed. The service will be reloaded and a full scan will be triggered..."
 				addToLog "Update" "Configuration Changed" "The configuration has changed. The service will be reloaded and a full scan will be triggered..."
-				# kill all running background jobs
-				kill $(jobs -p)
 				# launch a reload to load detected configuration changes
 				break
 			fi
 			# sleep between job number updates
 			sleep 60
 		done
+		# always kill all active background jobs
+		# - stop all existing scan processes
+		# - do not quote the string
+		# - all processing tasks are power cycle safe so killing unfinished processes will not cause problems
+		kill $(jobs -p)
+		# check the status of the module
+		# - This will stop the service if the module has been disabled
+		checkModStatus "nfo2web"
 	done
 }
 ################################################################################
