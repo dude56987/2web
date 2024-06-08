@@ -372,7 +372,7 @@ document.body.addEventListener('keydown', function(event){
 		#if(array_key_exists("description",$jsonData)){
 		if(property_exists($jsonData, "description")){
 			$plotData="<div class='plot'>\n";
-			$plotData.=$jsonData->description;
+			$plotData.=str_replace("\n","<br>",$jsonData->description);
 			$plotData.="</div>\n";
 		}else{
 			# there is no description so blank it out
