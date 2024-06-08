@@ -129,6 +129,7 @@ echo "<h2 class=''>";
 echo "External Info";
 echo "</h2>";
 echo "<div class='listCard'>";
+echo "<a class='button' target='_new' href='/search.php?q=$showTitle'>🔎 2web</a>";
 echo "<a class='button' target='_new' href='https://www.imdb.com/find?q=$showTitle'>🔎 IMDB</a>";
 echo "<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$showTitle'>🔎 WIKIPEDIA</a>";
 echo "<a class='button' target='_new' href='https://archive.org/details/movies?query=$showTitle'>🔎 ARCHIVE.ORG</a>";
