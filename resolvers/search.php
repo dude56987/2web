@@ -163,6 +163,7 @@ function moreDictLinks($searchQuery){
 	echo "	</h2>";
 	echo "	<div class='listCard'>";
 	echo "		<a class='button' rel='noreferer' href='https://www.urbandictionary.com/define.php?term=$searchQuery'>🔎 Urban Dictionary</a>";
+	echo "		<a class='button' rel='noreferer' href='https://en.wiktionary.org/wiki/$searchQuery'>🔎 Wiktionary</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.merriam-webster.com/dictionary/$searchQuery'>🔎 Merriam Webster Dictionary</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.britannica.com/dictionary/$searchQuery'>🔎 Britannica Dictionary</a>";
 	echo "		<a class='button' rel='noreferer' href='https://www.dictionary.com/browse/$searchQuery'>🔎 Random House Dictionary</a>";
