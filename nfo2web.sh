@@ -1964,7 +1964,7 @@ function nfo2web_watch_service(){
 }
 ################################################################################
 function watch_conf_changes(){
-	inotifywait --csv -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "/etc/2web/nfo/" | while read event;do
+	inotifywait --csv -r -e "MODIFY" -e "CREATE" -e "DELETE" "/etc/2web/nfo/" | while read event;do
 		# mark the conf as changed
 		touch /tmp/2web/nfo2web_conf_changed.active
 	done
@@ -1986,39 +1986,41 @@ function watch_library(){
 		ALERT "Adding media path to service watchlist '$showPath'"
 	done
 	# launch a event server to watch a library for changes and spawn update events
-	inotifywait --csv -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$libraryPath" | while read event;do
-		INFO "EVENT DETECTED : $event"
-		# store the event time and watch for new events
-		# backup IFS
-		IFS_BACKUP=$IFS
-		# split on newlines
-		IFS=$'\n'
-		# scan the event for matches with the library show paths
-		for showPath in $foundLibaryPaths;do
-			# if the event is in one of the found library paths
-			if echo -n "$event" | grep -q "$showPath";then
-				INFO "EVENT MATCHES: show '$showPath', waiting for event changes to finish..."
-				# launch a thread in the background to wait for the changes to finish and then update the content
-				wait_for_changes_to_finish "$showPath" "$event" "$webDirectory" &
-			else
-				# rescan the found library paths
-				# - this should overwrite the above variable
-				foundLibaryPaths=$(find "$libraryPath" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
-				# scan the updated show paths to try and match the event to the new list
-				for subShowPath in $foundLibaryPaths;do
-					# if the event matches
-					if echo -n "$event" | grep -q "$subShowPath";then
-						addToLog "Update" "Found Event" "Matched event '$event', found a new media entry..."
-						wait_for_changes_to_finish "$subShowPath" "$event" "$webDirectory" &
-					else
-						INFO "The change was detected in a place that could not be a new media item..."
-						#addToLog "ERROR" "Unknown Event" "Could not determine what to do with event '$event', it is improperly formatted for the server. On the server use the command 'nfo2web --demo-data' in order to generate example data for nfo2web in '/var/cache/2web/generated/demo/nfo/'."
-					fi
-				done
-			fi
+	while true;do
+		inotifywait --csv -r -e "MODIFY" -e "CREATE" -e "DELETE" "$libraryPath" | while read event;do
+			INFO "EVENT DETECTED : $event"
+			# store the event time and watch for new events
+			# backup IFS
+			IFS_BACKUP=$IFS
+			# split on newlines
+			IFS=$'\n'
+			# scan the event for matches with the library show paths
+			for showPath in $foundLibaryPaths;do
+				# if the event is in one of the found library paths
+				if echo -n "$event" | grep -q "$showPath";then
+					INFO "EVENT MATCHES: show '$showPath', waiting for event changes to finish..."
+					# launch a thread in the background to wait for the changes to finish and then update the content
+					wait_for_changes_to_finish "$showPath" "$event" "$webDirectory" &
+				else
+					# rescan the found library paths
+					# - this should overwrite the above variable
+					foundLibaryPaths=$(find "$libraryPath" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+					# scan the updated show paths to try and match the event to the new list
+					for subShowPath in $foundLibaryPaths;do
+						# if the event matches
+						if echo -n "$event" | grep -q "$subShowPath";then
+							addToLog "Update" "Found Event" "Matched event '$event', found a new media entry..."
+							wait_for_changes_to_finish "$subShowPath" "$event" "$webDirectory" &
+						else
+							INFO "The change was detected in a place that could not be a new media item..."
+							#addToLog "ERROR" "Unknown Event" "Could not determine what to do with event '$event', it is improperly formatted for the server. On the server use the command 'nfo2web --demo-data' in order to generate example data for nfo2web in '/var/cache/2web/generated/demo/nfo/'."
+						fi
+					done
+				fi
+			done
+			# reset to backup IFS
+			IFS=IFS_BACKUP
 		done
-		# reset to backup IFS
-		IFS=IFS_BACKUP
 	done
 }
 ################################################################################
