@@ -263,7 +263,7 @@ function noscriptRefresh($seconds=10){
 <script>
 document.body.addEventListener('keydown', function(event){
 	// only allow hotkeys if the video player has focus
-	if(document.getElementById("video").hasFocus()){
+	if(document.getElementById("video") == document.activeElement){
 		// check for key controls on the video player
 		const key = event.key;
 		switch (key){

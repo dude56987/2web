@@ -320,7 +320,16 @@ function file_get_contents(fileUrl) {
 ////////////////////////////////////////////////////////////////////////////////
 function delayedRefresh(timeout) {
 	// reload the page after a timeout
-	setTimeout(function() { location.reload();},(1000*timeout));
+	setTimeout(function() {
+		// reload the page only if the search bar does not have focus
+		if(document.activeElement.tagName == "INPUT"){
+			// if the search box is focused delay the reload another cycle
+			delayedRefresh(timeout);
+		}else{
+			// reload the current page
+			location.reload();
+		}
+	},(1000*timeout));
 }
 ////////////////////////////////////////////////////////////////////////////////
 function copyToClipboard(copyText){
