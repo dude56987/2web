@@ -28,6 +28,7 @@ if(! requireGroup("2web", false)){
 ?>
 <!-- create top jump button -->
 <img class='globalPulse' src='/pulse.gif'>
+<img class='globalSpinner' src='/spinner.gif'>
 <a href='#' id='topButton' class='button'>&uarr;<div><div id='scrollProgress'></div></div></a>
 
 <script>

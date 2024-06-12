@@ -433,5 +433,8 @@ echo "	}";
 echo "	.globalPulse{";
 echo "		visibility: hidden;";
 echo "	}";
+echo "	.globalSpinner{";
+echo "		visibility: hidden;";
+echo "	}";
 echo "</style>";
 ?>

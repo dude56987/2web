@@ -2047,6 +2047,17 @@ pre{
 	border-bottom: solid var(--borderColor) 0.1rem;
 	background-color: var(--glassBackground);
 }
+.globalSpinner{
+	position: fixed;
+	height: 6dvw;
+	left: 49dvw;
+	top: 80dvh;
+	/*
+	height: 6dvh;
+	border: solid var(--borderColor) 0.1rem;
+	background-color: var(--glassBackground);
+	*/
+}
 .localPulse{
 	position: fixed;
 	width: 100dvw;
