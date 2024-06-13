@@ -271,6 +271,29 @@ if( ! function_exists("is_in_array")){
 		}
 	}
 }
+if( ! function_exists("addToQueue")){
+	function addToQueue($type,$command){
+		# addToQueue($type,$command)
+		#
+		# Add a item to queue2web
+		#
+		# - Command should be a bash command to run
+		# - Set type to 'multi' for multithreaded queue processing
+		# - Set the type to 'single' for linear processing
+		# - Both queues will be processed, just diffrently
+		if ($type == "single"){
+			# place the command in the single threaded queue
+			# - Use microtime but remove the decimal place
+			file_put_contents( ( "/var/cache/2web/queue/single/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
+		}else if ($type == "multi"){
+			# place command in the multithreaded queue
+			file_put_contents( ( "/var/cache/2web/queue/single/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
+		}else{
+			# unknown type
+			addToLog("DEBUG","Unknown Type","Unknown type used in addToQueue(), Use 'multi' or 'single' as the types.");
+		}
+	}
+}
 if( ! function_exists("listAllIndex")){
 	function listAllIndex($indexPath,$sortMethod="forward"){
 		# List all text files stored in a .index file

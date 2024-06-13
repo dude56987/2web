@@ -209,6 +209,10 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/2web
 	cat build/sh_head.txt > debian/usr/bin/2web
 	grep --invert-match "^[[:blank:]]*#" 2web.sh | tr -s '\n' >> debian/usr/bin/2web
+	# add the queue system
+	echo "#! /bin/bash" > debian/usr/bin/queue2web
+	cat build/sh_head.txt > debian/usr/bin/queue2web
+	grep --invert-match "^[[:blank:]]*#" queue2web.sh | tr -s '\n' >> debian/usr/bin/queue2web
 	################################################################################
 	# build ai prompt tools
 	################################################################################

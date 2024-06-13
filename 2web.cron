@@ -29,6 +29,9 @@
 @reboot root /usr/bin/2web &> /dev/null
 */30 * * * * root /usr/bin/2web &> /dev/null
 ################################################################################
+# make sure the queue2web service is enabled once every 20 minutes
+*/20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
+################################################################################
 # make sure the nfo2web service is enabled once every 20 minutes
 */20 * * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --service &> /dev/null
 ################################################################################
