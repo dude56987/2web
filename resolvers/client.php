@@ -692,20 +692,18 @@ $hostSum=md5($_SERVER["HTTP_HOST"]);
 if (! file_exists("qr_".$hostSum.".png")){
 	$command = "qrencode -o '".$_SERVER["DOCUMENT_ROOT"]."/client/qr_".$hostSum.".png' --background='00000000' -m 1 -l h 'http://".$_SERVER["HTTP_HOST"]."/'";
 	# launch command in queue
-	$command = 'echo "'.$command.'" | at -M now';
 	addToLog("UPDATE","Launching New QR code generator","Full QR gen command '".$command."'");
 	# launch the command
-	shell_exec($command);
+	addToQueue("multi",$command);
 }
 if (! file_exists("qr_ip_".$hostSum.".png")){
 	# get the ip based host name
 	$domainIP=gethostbyname($_SERVER["HTTP_HOST"]);
 	$command = "qrencode -o '".$_SERVER["DOCUMENT_ROOT"]."/client/qr_ip_".$hostSum.".png' --background='00000000' -m 1 -l h 'http://".$domainIP."/'";
 	# launch command in queue
-	$command = 'echo "'.$command.'" | at -M now';
 	addToLog("UPDATE","Launching New QR code generator","Full QR gen command '".$command."'");
 	# launch the command
-	shell_exec($command);
+	addToQueue("multi",$command);
 }
 ?>
 <html class='randomFanart'>

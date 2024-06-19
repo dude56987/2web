@@ -45,13 +45,7 @@ function cleanQuotes($videoLink){
 }
 ################################################################################
 function forkCommand($inputCommand){
-	# launch the process with a background scheduler
-	$command = 'echo "';
-	# one at a time queue, but launch from atq right away
-	$command .= '/usr/bin/nohup ';
-	$command .= $inputCommand;
-	$command .= '" | at -M now';
-	shell_exec($command);
+	addToQueue("multi", $inputCommand);
 }
 ################################################################################
 function drawRemoteHeader(){

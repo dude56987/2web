@@ -562,12 +562,12 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "</div>";
 
 		# launch the process with a background scheduler
-		$command = "echo '";
+		$command = "";
 		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
-		$command .= "' | at -M now";
+		$command .= "";
 
 		# launch the command
-		shell_exec($command);
+		addToQueue("multi",$command);
 
 		# write the started file
 		file_put_contents(($webDirectory."/search/".$querySum."_started.index"), $_SERVER["REQUEST_TIME"]);

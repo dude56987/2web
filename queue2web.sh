@@ -29,12 +29,14 @@ function addJob(){
 		echo "You have added a job to the single queue"
 	elif [ $queueType == "multi" ];then
 		echo "You have added a job to the multi queue"
+	elif [ $queueType == "idle" ];then
+		echo "You have added a job to the idle queue"
 	else
 		# this is in error only single and multi queues are available
 		exit
 	fi
 	# generate a timestamp at the start of the filename
-	timestamp=$(date "+%s")
+	timestamp=$(date "+%s %N")
 	# generate a md5sum of the command itself for the name of the queue job file
 	commandSum=$(echo "$userCommand" | md5sum | cut -d' ' -f1)
 	# create the queue filename
@@ -45,57 +47,126 @@ function addJob(){
 function processThreadedJob(){
 	# run a threaded job in the queue and remove the job if the command is successfull
 	queueFile=$1
-	addToLog "INFO" "Queue Starting Job " "Command started processing '$queueFileData'."
-	bash "$queueFile"
-	exitStatus=$?
-	queueFileData="$(cat "$queueFile")"
-	if [ 0 -eq $exitStatus ];then
-		# remove the job from the queue
-		rm -v "$queueFile"
-		addToLog "INFO" "Queue Job Success" "Command in queue '$queueFileData' has succeeded."
-	else
-		addToLog "ERROR" "Queue Job Failed" "Command in queue '$queueFileData' has failed."
+	lockFilePath="/var/cache/2web/queue/active/$(basename "$queueFile" | cut -d'.' -f1).active"
+	# create the lock file
+	if ! test -f "$lockFilePath";then
+		queueFileData="$(cat "$queueFile")"
+		addToLog "INFO" "Queue Starting Job " "Command started processing '$queueFileData'."
+		# lock the command execution from being doubled
+		touch "$lockFilePath"
+		# run the command
+		bash "$queueFile"
+		exitStatus=$?
+		if [ 0 -eq $exitStatus ];then
+			# remove the job from the queue
+			rm -v "$queueFile"
+			addToLog "INFO" "Queue Job Success" "Command in queue '$queueFileData' has succeeded."
+		else
+			addToLog "ERROR" "Queue Job Failed" "Command in queue '$queueFileData' has failed."
+			# failed jobs should be moved into the failed job directory and ignored from then on
+			cp -v "$queueFile" "/var/cache/2web/queue/failed/"
+			# remove the orignal command file to prevent the queue from trying to run a failed job again
+			rm -v "$queueFile"
+		fi
+		# remove the lock file
+		rm -v "$lockFilePath"
 	fi
-
 }
 ########################################################################
-function processJobQueue(){
+function processSingleJobQueue(){
 	# process all the jobs found in the queue system
-
-	# check for parallel processing and count the cpus
-	totalCPUS=$(cpuCount)
-	# load up files in queue to be processed
-	find /var/cache/2web/queue/multi/ -name "*.cmd" | sort | while read -r queueFile;do
-		processThreadedJob "$queueFile" &
-		waitQueue 0.5 "$totalCPUS"
-	done
-	blockQueue 1
 	find /var/cache/2web/queue/single/ -name "*.cmd" | sort | while read -r queueFile;do
 		# for each job in the single queue
 		processThreadedJob "$queueFile"
-		waitQueue 0.5 "1"
+		#waitQueue 0.5 "1"
 	done
-	blockQueue 1
+	#blockQueue 1
 }
 ########################################################################
-function queueService(){
+function processIdleJobQueue(){
+	# process all the jobs found in the idle queue system
+	# - only process the next item when the sytem load is less than 10%
+	totalCPUS=$(cpuCount)
+	# get the idle load from the max load, a percentage of the max load
+	idleLoad=$(( totalCPUS / 10 ))
+	# watch the queue
+	find /var/cache/2web/queue/idle/ -name "*.cmd" | sort | while read -r queueFile;do
+		# wait for the idle queue to get to less than half the system load
+		while [ $(cat /proc/loadavg | cut -d' ' -f1) -gt $idleLoad ] && [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -ge $totalCPUS ];do
+			INFO "Waiting for system to become idle..."
+			sleep 10
+		done
+		# for each job in the single queue
+		processThreadedJob "$queueFile" &
+		sleep 1
+		#waitQueue 0.5 "$totalCPUS"
+	done
+	#blockQueue 1
+}
+########################################################################
+function processMultiJobQueue(){
+	# process all the jobs found in the queue system
+	# - multi queue job queue takes into account the single job queue as a job in the multi queue
+
+	# check for parallel processing and count the cpus
+	totalCPUS=$(cpuCount)
+
+	# while there are still jobs in the queue keep reloading them into the queue
+	while [ $(find "/var/cache/2web/queue/multi/" -name "*.cmd" | wc -l ) -gt 0 ];do
+		# load up files in queue to be processed
+		find /var/cache/2web/queue/multi/ -name "*.cmd" | sort | while read -r queueFile;do
+			# wait for the job queue to free up by checking the active jobs
+			while [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -ge $totalCPUS ];do
+				echo "The queue is full wait for queue to free up..."
+				sleep 10
+			done
+			processThreadedJob "$queueFile" &
+			sleep 1
+			#waitQueue 0.5 "$totalCPUS"
+		done
+		# sleep a few seconds between queue checks
+		sleep 10
+	done
+
+	#blockQueue 1
+}
+########################################################################
+function overviewQueueService(){
 	# lock the process so multuple instances of the service do not run at the same time
 	lockProc "queue2web"
-	# create the multi and single queues
-	createDir "/var/cache/2web/queue/multi/"
-	createDir "/var/cache/2web/queue/single/"
-	# setup the timeout that will reset the service
-	# every X minutes check the queue
-	timeOut=$(( (60 * 3) ))
-	# launch the service that will run in the background to process new jobs added to the queue
+	# create the process lock file directory
+	createDir "/var/cache/2web/queue/active/"
+	# create directory to store failed jobs
+	createDir "/var/cache/2web/queue/failed/"
+	# cleanup queue lock files
+	rm -v "/var/cache/2web/queue/multi.active"
+	rm -v "/var/cache/2web/queue/single.active"
+	rm -v "/var/cache/2web/queue/idle.active"
+	# remove all the active process locks
+	rm -v /var/cache/2web/queue/active/*.active
+	# launch the multi and the single queues in parallel
 	while true;do
-		# run the queue before setting up the watch service
-		processJobQueue
-		# wait for queue to activate
-		inotifywait --csv --timeout "$timeOut" -r -e "MODIFY" -e "CREATE" "/var/cache/2web/queue/" | while read event;do
-			# if any files are added to the queue launch the process jobs function
-			processJobQueue
-		done
+		if ! test -f "/var/cache/2web/queue/multi.active";then
+			multiQueueService &
+			touch "/var/cache/2web/queue/multi.active"
+		fi
+		if ! test -f "/var/cache/2web/queue/single.active";then
+			singleQueueService &
+			touch "/var/cache/2web/queue/single.active"
+		fi
+		if ! test -f "/var/cache/2web/queue/idle.active";then
+			idleQueueService &
+			touch "/var/cache/2web/queue/idle.active"
+		fi
+		# print the queue processing info
+		singleQueueSize=$(find "/var/cache/2web/queue/single/" -name "*.cmd" | wc -l)
+		multiQueueSize=$(find "/var/cache/2web/queue/multi/" -name "*.cmd" | wc -l)
+		idleQueueSize=$(find "/var/cache/2web/queue/idle/" -name "*.cmd" | wc -l)
+		failedQueueSize=$(find "/var/cache/2web/queue/failed/" -name "*.cmd" | wc -l)
+		# draw the Queue sizes every 30 seconds
+		INFO "Single Queue:$singleQueueSize Multi Queue:$multiQueueSize Idle Queue:$idleQueueSize Failed Jobs:$failedQueueSize"
+		# sleep the overview process
+		sleep 30
 	done
 	# remove active state file
 	if test -f /var/cache/2web/web/queue2web.active;then
@@ -103,11 +174,75 @@ function queueService(){
 	fi
 }
 ########################################################################
+function multiQueueService(){
+	# create the multi and single queues
+	createDir "/var/cache/2web/queue/multi/"
+	# setup the timeout that will reset the service
+	# every X minutes check the queue
+	timeOut=$(( (60 * 5) ))
+	# launch the service that will run in the background to process new jobs added to the queue
+	while true;do
+		# run the queue before setting up the watch service
+		processMultiJobQueue
+		# wait for queue to activate
+		inotifywait --csv --timeout "$timeOut" -r -e "MODIFY" -e "CREATE" "/var/cache/2web/queue/multi/" | while read event;do
+			# while there are still jobs in the queue
+			while [ $(find "/var/cache/2web/queue/multi/" -name "*.cmd" | wc -l ) -gt 0 ];do
+				# if any files are added to the queue launch the process jobs function
+				processMultiJobQueue
+			done
+		done
+	done
+}
+########################################################################
+function singleQueueService(){
+	# create the multi and single queues
+	createDir "/var/cache/2web/queue/single/"
+	# setup the timeout that will reset the service
+	# every X minutes check the queue
+	timeOut=$(( (60 * 5) ))
+	# launch the service that will run in the background to process new jobs added to the queue
+	while true;do
+		# run the queue before setting up the watch service
+		processSingleJobQueue
+		# wait for queue to activate
+		inotifywait --csv --timeout "$timeOut" -r -e "MODIFY" -e "CREATE" "/var/cache/2web/queue/single/" | while read event;do
+			# while there are still jobs in the queue
+			while [ $(find "/var/cache/2web/queue/single/" -name "*.cmd" | wc -l ) -gt 0 ];do
+				# if any files are added to the queue launch the process jobs function
+				processSingleJobQueue
+			done
+		done
+	done
+}
+########################################################################
+function idleQueueService(){
+	# The service that will run the idle queue this is a single queue that only allows the
+	# next job to run when the system load is below 1
+	createDir "/var/cache/2web/queue/idle/"
+	# setup the timeout that will reset the service
+	# every X minutes check the queue
+	timeOut=$(( (60 * 5) ))
+	# launch the service that will run in the background to process new jobs added to the queue
+	while true;do
+		# run the queue before setting up the watch service
+		processIdleJobQueue
+		# wait for queue to activate
+		inotifywait --csv --timeout "$timeOut" -r -e "MODIFY" -e "CREATE" "/var/cache/2web/queue/idle/" | while read event;do
+			# while there are still jobs in the queue
+			while [ $(find "/var/cache/2web/queue/idle/" -name "*.cmd" | wc -l ) -gt 0 ];do
+				# if any files are added to the queue launch the process jobs function
+				processIdleJobQueue
+			done
+		done
+	done
+}
+########################################################################
 # Process CLI options
 ########################################################################
 if [ "$1" == "-s" ] || [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
 	# launch the service to process jobs as they are added to the server
-	queueService
+	overviewQueueService
 elif [ "$1" == "-a" ] || [ "$1" == "--add" ] || [ "$1" == "add" ] ;then
 	# add a job to the queue
 	addJob "$2" "$3"
@@ -115,6 +250,8 @@ elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 	enableMod "queue2web"
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 	disableMod "queue2web"
+	# kill all remaining queues running on the server
+	killall queue2web
 else
 	echo "+---------------------------------------------------------------------------------+"
 	echo "| queue2web queue processing system for 2web                                      |"

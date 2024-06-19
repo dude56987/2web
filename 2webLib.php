@@ -287,13 +287,17 @@ if( ! function_exists("addToQueue")){
 			file_put_contents( ( "/var/cache/2web/queue/single/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
 		}else if ($type == "multi"){
 			# place command in the multithreaded queue
-			file_put_contents( ( "/var/cache/2web/queue/single/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
+			file_put_contents( ( "/var/cache/2web/queue/multi/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
+		}else if ($type == "idle"){
+			# place command in the idle queue
+			file_put_contents( ( "/var/cache/2web/queue/idle/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
 		}else{
 			# unknown type
-			addToLog("DEBUG","Unknown Type","Unknown type used in addToQueue(), Use 'multi' or 'single' as the types.");
+			addToLog("DEBUG","Unknown Type","Unknown type used in addToQueue(), Use 'multi', 'single', or 'idle' as the types.");
 		}
 	}
 }
+################################################################################
 if( ! function_exists("listAllIndex")){
 	function listAllIndex($indexPath,$sortMethod="forward"){
 		# List all text files stored in a .index file

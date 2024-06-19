@@ -161,8 +161,7 @@ function transcodeVideo($link, $proto){
 		}
 		# remove doubled slashes to fix paths
 		$fullLinkPath=str_replace("//","/",$fullLinkPath);
-		$command = 'echo "';
-		$command .= "/usr/bin/ffmpeg -i '".$fullLinkPath."'";
+		$command = "/usr/bin/ffmpeg -i '".$fullLinkPath."'";
 		$command .= " -preset superfast";
 		$command .= " -hls_list_size 0";
 		$command .= " -start_number 0";
@@ -170,12 +169,11 @@ function transcodeVideo($link, $proto){
 		$command .= " '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u'";
 		# encode the stream into a mp4 file for compatibility with firefox
 		$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u' '".$webServerPath."/TRANSCODE-CACHE/".$sum."/play.mp4'";
-		$command .= '" | /usr/bin/at -M -q a now';
 
 		# save the transcode command to a file
 		file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/command.cfg","$command");
 		# launch the command to post job in the queue
-		shell_exec($command);
+		addToQueue("multi",$command);
 		# sleep to allow the transcode job to startup
 		# build and display a m3u file with a delay using the spinner gif
 		sleep(10);

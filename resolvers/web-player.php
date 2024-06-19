@@ -112,10 +112,9 @@ if (array_key_exists("url",$_GET)){
 			file_put_contents($videoPathPrefix."command.cfg",$command);
 		}
 		# launch command in queue
-		$command = 'echo "'.$command.'" | at -M now';
 		addToLog("UPDATE","Adding Data To Cache","Downloading remote url to cache for web player '".$command."'");
 		# launch the command to download the remote file to the cache for playback on the 2web server
-		shell_exec($command);
+		addToQueue("multi",$command);
 		# build the php page
 		if(! file_exists($videoPathPrefix.$videoLinkSum.".php")){
 			symlink("/usr/share/2web/templates/videoPlayer.php",$videoPathPrefix.$videoLinkSum.".php");
@@ -262,7 +261,7 @@ if (array_key_exists("url",$_GET)){
 	}
 	if(! file_exists($videoPathPrefix.$fileSum."-thumb.png")){
 		# build thumbnail with the scheduler in a seprate thread
-		shell_exec("echo \"ffmpegthumbnailer -i '$filePath' -o '".$videoPathPrefix.$fileSum."-thumb.png"."'\" | at -M -q a now");
+		addToQueue("multi","ffmpegthumbnailer -i '$filePath' -o '".$videoPathPrefix.$fileSum."-thumb.png"."'");
 	}
 	# remove the file from the temp directory
 	unlink($fileName);

@@ -164,31 +164,11 @@ function cacheUrl($sum,$videoLink){
 	}
 	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
 		$command = $command." -o - -c '".$videoLink."'";
-		$command = 'echo "'.$command.'"';
 	}else{
 		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 		# after the download also transcode the
 		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		$command = 'echo "'.$command.";".$dlCommand.'"';
-		#$dlCommand = 'echo "'.$dlCommand.'"';
-	}
-	# - Place the higher quality download or the mp4 conversion in a batch queue
-	#   that adds a new task once every 60 seconds if system load is below 1.5
-	# - This will prevent active downloads from being overwhelmed
-	# allow setting of batch processing of cached links
-	if (array_key_exists("batch",$_GET)){
-		if ($_GET["batch"] == "true") {
-			$command = $command." | /usr/bin/at -M -q b now";
-			#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-		}else{
-			// add command to next available slot in the queue
-			$command = $command." | /usr/bin/at -M -q a now";
-			#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
-		}
-	}else{
-		// add command to next available slot in the queue
-		$command = $command." | /usr/bin/at -M -q a now";
-		#$dlCommand = $dlCommand." | /usr/bin/at -M -q Z now";
+		$command = $command.";".$dlCommand;
 	}
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -202,33 +182,8 @@ function cacheUrl($sum,$videoLink){
 	fwrite($logFile,"MD5 Source:\n");
 	fwrite($logFile,$videoLink."\n");
 	fclose($logFile);
-	# fork the process with "at" scheduler command
-	runShellCommand($command);
-	#runShellCommand($dlCommand);
-	if (array_key_exists("batch",$_GET)){
-		if ($_GET["batch"] == "true") {
-			# exit connection after adding batch process to queue
-			exit;
-		}
-	}
-}
-################################################################################
-function runExternalProc($command){
-	$client= new GearmanClient();
-	$client->addServer();
-	$client->addFunction();
-}
-################################################################################
-function runShellCommand($command){
-	if (array_key_exists("debug",$_GET)){
-		//echo 'Running command %echo "'.$command.'" | at now<br>';
-		echo 'Running command %'.$command.'<br>';
-	}
-	################################################################################
-	//exec($command);
-	//$output=shell_exec('echo "'.$command.'" | at now >> RESOLVER-CACHE/resolver.log');
-	$output=shell_exec($command);
-	debug("OUTPUT=".$output."<br>");
+	# Add the command to the processing queue
+	addToQueue("multi",$command);
 }
 ################################################################################
 if (array_key_exists("url",$_GET)){
