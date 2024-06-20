@@ -63,6 +63,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		</div>
 	<?PHP
 	echo "<div class='listCard'>";
+	echo "	<a class='button' target='_new' href='/search.php?q=$artist'>🔎 2web</a>";
 	echo "	<a class='button' target='_new' href='https://musicbrainz.org/search?type=artist&query=$artist'>🔎 MUSIC BRAINZ</a>";
 	echo "	<a class='button' target='_new' href='https://en.wikipedia.org/w/?search=$artist'>🔎 WIKIPEDIA</a>";
 	echo "	<a class='button' target='_new' href='https://archive.org/details/movies?query=$artist'>🔎 ARCHIVE.ORG</a>";
