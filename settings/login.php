@@ -57,7 +57,7 @@ if (array_key_exists("userLogout",$_POST)){
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
 			sleep(2);
 		}else{
-			$errorMessages .= errorBanner("LOGIN FAILED INCORRECT PASSWORD!", true);
+			$errorMessages .= errorBanner("LOGIN FAILED INCORRECT USERNAME/PASSWORD!", true);
 			# log the failure to the system log
 			addToLog("ADMIN", "FAILED LOGIN", "LOGIN FAILED INCORRECT PASSWORD! Username='".$username."'<br>\n".getIdentity());
 			# sleep the login script to prevent overloading
@@ -65,7 +65,7 @@ if (array_key_exists("userLogout",$_POST)){
 		}
 	}else{
 		# the username does not exist at all
-		$errorMessages .= errorBanner("The username does not exist.", true);
+		$errorMessages .= errorBanner("LOGIN FAILED INCORRECT USERNAME/PASSWORD!", true);
 		addToLog("ADMIN", "FAILED LOGIN", "NO USERNAME EXISTS! Username='".$username."'<br>\n".getIdentity());
 		sleep(3);
 	}
