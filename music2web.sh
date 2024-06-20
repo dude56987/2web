@@ -264,8 +264,7 @@ function processTrack(){
 				# generate a thumbnail for the album
 				if ! test -f "$webDirectory/music/$artist/$album/album.png";then
 					INFO "${processingInfo}Building Album Cover from file..."
-					convert -quiet -size 800x800 plasma: "$webDirectory/music/$artist/$album/album.png"
-					convert -quiet "$webDirectory/music/$artist/$album/album.png" -adaptive-resize 800x800\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 800x800 -gravity center caption:"$albumOG" -composite "$webDirectory/music/$artist/$album/album.png"
+					demoImage "$webDirectory/music/$artist/$album/album.png" "$albumOG" "800" "800"
 				fi
 
 				# create a artist thumbnail from combining all the album covers
