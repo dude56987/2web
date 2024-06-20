@@ -1,3 +1,7 @@
+<?PHP
+include("/usr/share/2web/2webLib.php");
+requireAdmin();
+?>
 <!--
 ########################################################################
 # 2web CLI manual pages for website
