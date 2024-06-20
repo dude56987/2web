@@ -1911,7 +1911,7 @@ function nfo2web_watch_service(){
 	createDir /tmp/2web/
 	# Calc the timeout for hours in seconds
 	# - this will force the service to reload and do a full scan after this period
-	timeOut=$(( ( (60 * 60) * 6 ) ))
+	timeout=$(( ( (60 * 60) * 6 ) ))
 	# forever loop for service
 	while true;do
 		# cleanup any leftover process locks that where left from broken execution
@@ -1924,7 +1924,7 @@ function nfo2web_watch_service(){
 		update --parallel
 		# watch for changes to the module config files
 		# - if one is detected then this process will restart
-		watch_conf_changes &
+		watch_conf_changes "$timeout" &
 		# start the background process
 		INFO "Loading library configs..."
 		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
@@ -1941,7 +1941,7 @@ function nfo2web_watch_service(){
 				echo "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				# store these paths in a varaible to be checked when events are activated
-				watch_library "$libary" "$webDirectory" &
+				watch_library "$libary" "$webDirectory" "$timeout" &
 			else
 				ALERT "library does not exist at '$libary'"
 				addToLog "ERROR" "Path Broken" "Path does not exist '$libary'" "$logPagePath"
@@ -1990,7 +1990,9 @@ function nfo2web_watch_service(){
 }
 ################################################################################
 function watch_conf_changes(){
-	inotifywait --csv -r -e "MODIFY" -e "CREATE" -e "DELETE" "/etc/2web/nfo/" | while read event;do
+	timeout=$1
+	#
+	inotifywait --csv --timeout "$timeout" -r -e "MODIFY" -e "CREATE" -e "DELETE" "/etc/2web/nfo/" | while read event;do
 		# mark the conf as changed
 		touch /tmp/2web/nfo2web_conf_changed.active
 	done
@@ -2000,6 +2002,7 @@ function watch_library(){
 	# create a process that watches for filesystem events on a media directory
 	libraryPath="$1"
 	webDirectory="$2"
+	timeout="$3"
 	# this process will spawn one inotifywait process for a entire library
 	# - when a change is detected in the library it scans the known paths for a match
 	#   and updates that path information
@@ -2013,7 +2016,7 @@ function watch_library(){
 	done
 	# launch a event server to watch a library for changes and spawn update events
 	while true;do
-		inotifywait --csv -r -e "MODIFY" -e "CREATE" -e "DELETE" "$libraryPath" | while read event;do
+		inotifywait --csv --timeout "$timeout" -r -e "MODIFY" -e "CREATE" -e "DELETE" "$libraryPath" | while read event;do
 			INFO "EVENT DETECTED : $event"
 			# store the event time and watch for new events
 			# backup IFS
