@@ -44,24 +44,6 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-<div id='aiCompareGenerate' class='inputCard'>
-	<h2>Generate Comparisons</h2>
-		<ul>
-			<li>
-				Generate comparisons for related videos section of webpages.
-			</li>
-			<li>
-				This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
-			</li>
-			<li>
-				<span class='disabledSetting'>Webpages do NOT support this yet.</span>
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/ai/aiCompareGenerate.cfg","Comparison Generation","aiCompareGenerate");
-		?>
-</div>
-
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

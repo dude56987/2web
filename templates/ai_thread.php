@@ -54,7 +54,8 @@ if (array_key_exists("generateMore",$_GET)){
 	# update the ordering by changing the modification time of the directory
 	touch(".");
 	# launch the command again to generate more versions of the output
-	shell_exec(file_get_contents("command.cfg"));
+	# addToQueue
+	addToQueue("single",file_get_contents("command.cfg"));
 	# redirect back to this page in refresh mode
 	redirect("?autoRefresh");
 }

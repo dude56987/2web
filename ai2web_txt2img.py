@@ -49,6 +49,15 @@ import torch
 # stable diffusion image generating code
 #from diffusers import StableDiffusionPipeline
 from diffusers import DiffusionPipeline
+from transformers import logging
+
+# show error logging
+logging.set_verbosity_error()
+
+# disable the telemetry collection done by hugging face
+os.environ["HF_HUB_DISABLE_TELEMETRY"]="1"
+# do not track is another option to disable telemetry
+os.environ["DO_NOT_TRACK"]="1"
 
 # check for download argument and if given only download the model and exit
 if "--download-model" in sys.argv:
@@ -57,6 +66,10 @@ if "--download-model" in sys.argv:
 	DiffusionPipeline.from_pretrained(modelPath, cache_dir="/var/cache/2web/downloads/ai/txt2img/")
 	gc.collect()
 	exit()
+
+# run hfhub in offline mode
+# - this is after the option to download models since model downloads require network connection
+os.environ["HF_HUB_OFFLINE"]="1"
 
 if "--list-negative-prompts" in sys.argv:
 	h1("Looking for default prompts in: /etc/2web/ai/negative_prompts/")
@@ -211,12 +224,17 @@ while versions > 0:
 
 	# local_files_only should always be true to prevent unwanted internet connections
 	if deviceToUse == "cpu":
-		pipe = DiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
+		pipe = DiffusionPipeline.from_pretrained(modelPath, gradient_checkpointing=True, use_safetensors=True, num_inference_steps=1, safety_checker=safetyCheck, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
 	elif deviceToUse == "gpu":
-		pipe = DiffusionPipeline.from_pretrained(modelPath, safety_checker=safetyCheck, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
+		pipe = DiffusionPipeline.from_pretrained(modelPath, gradient_checkpointing=True, use_safetensors=True, num_inference_steps=1, safety_checker=safetyCheck, torch_dtype=torch.float16, cache_dir="/var/cache/2web/downloads/ai/txt2img/", local_files_only=True)
 
 	if "--debug-pipe-components" in sys.argv:
 		print("Pipe components: "+str(pipe.components))
+
+	# use xformers
+	#pipe.enable_xformers_memory_efficient_attention()
+	#
+	#pipe.enable_sequential_cpu_offload()
 
 	# allow the forced use of GPU or CPU for processing
 	if "--gpu" in sys.argv:

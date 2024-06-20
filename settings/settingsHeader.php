@@ -121,8 +121,20 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="rss2nfo";
 }else if (($pageURL == "/settings/kodi.php")){
 	$moduleName="kodi2web";
-}else if (($pageURL == "/settings/ai.php")){
+}else if (($pageURL == "/settings/ai.php") || ($pageURL == "/settings/ai_embeds.php") || ($pageURL == "/settings/ai_prompt.php") || ($pageURL == "/settings/ai_txt2img.php") || ($pageURL == "/settings/ai_subtitles.php") || ($pageURL == "/settings/ai_audio.php") ){
 	$moduleName="ai2web";
+	echo "	<div class='titleCard'>\n";
+	echo "		<h2>AI Settings</h2>\n";
+	echo "		<div class='errorBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
+	echo "		<div class='listCard'>\n";
+	drawHeaderButton("🧠","Main","/settings/ai.php");
+	drawHeaderButton("🪄","Intergrations","/settings/ai_embeds.php");
+	drawHeaderButton("👽","Prompting","/settings/ai_prompt.php");
+	drawHeaderButton("🎨","Image Gen","/settings/ai_txt2img.php");
+	drawHeaderButton("📹","Subtitle Gen","/settings/ai_subtitles.php");
+	drawHeaderButton("📢","Audio Gen","/settings/ai_audio.php");
+	echo "		</div>";
+	echo "	</div>\n";
 }else if (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";
 	echo "	<div class='titleCard'>\n";

@@ -120,9 +120,9 @@ foreach($modules as $module){
 		echo "					Enable or disable sync of linked kodi instances.";
 		echo "				</li>";
 	}elseif ($module == "wiki2web"){
-		echo "				<li>";
+		echo "				<div class='errorBanner'>";
 		echo "					 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.";
-		echo "				<li>";
+		echo "				</div>";
 		# if zimdump does not exist zim files can not be extracted correctly
 		if (! is_file("/usr/bin/zimdump")){
 			echo "					<span class='disabledSetting'>wiki2web REQUIRES zimdump from zim-tools package to extract .zim files<span>";
@@ -139,11 +139,14 @@ foreach($modules as $module){
 		echo "					Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.";
 		echo "				</li>";
 	}elseif ($module == "ai2web"){
-		echo "				<li>";
+		echo "				<div class='errorBanner'>";
 		echo "					 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.";
-		echo "				</li>";
+		echo "				</div>";
 		echo "				<li>";
 		echo "					Will enable machine learning for recommending videos.";
+		echo "				</li>";
+		echo "				<li>";
+		echo "					Will enable diffusion based image generation from text.";
 		echo "				</li>";
 		echo "				<li>";
 		echo "					Will enable gpt4all web interface for prompting.";

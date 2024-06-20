@@ -95,6 +95,7 @@ function update(){
 	# load up the configs
 	aiPromptModels=$(loadConfigs "/etc/2web/ai/promptModels.cfg" "/etc/2web/ai/promptModels.d/" "/etc/2web/config_default/ai2web_promptModels.cfg" | tr -s '\n' | shuf)
 	txt2imgModels=$(loadConfigs "/etc/2web/ai/txt2imgModels.cfg" "/etc/2web/ai/txt2imgModels.d/" "/etc/2web/config_default/ai2web_txt2imgModels.cfg" | tr -s '\n' | shuf)
+	aiAudioModels=$(loadConfigs "/etc/2web/ai/audioModels.cfg" "/etc/2web/ai/audioModels.d/" "/etc/2web/config_default/ai2web_audioModels.cfg" | tr -s '\n' | shuf)
 	################################################################################
 	webDirectory=$(webRoot)
 	################################################################################
@@ -108,8 +109,10 @@ function update(){
 	createDir "/var/cache/2web/web/ai/img2img/"
 	createDir "/var/cache/2web/web/ai/txt2img/"
 	createDir "/var/cache/2web/web/ai/prompt/"
+	createDir "/var/cache/2web/web/ai/audio/"
 	# create cache directories for AI models
 	createDir "/var/cache/2web/downloads/ai/prompt/"
+	createDir "/var/cache/2web/downloads/ai/audio/"
 	createDir "/var/cache/2web/downloads/ai/txt2txt/"
 	createDir "/var/cache/2web/downloads/ai/txt2img/"
 	createDir "/var/cache/2web/downloads/ai/img2img/"
@@ -140,6 +143,33 @@ function update(){
 	done
 	# set correct ownership of files
 	chown www-data:www-data "/var/cache/2web/downloads/ai/prompt/*"
+
+	################################################################################
+	# scan the sources
+	ALERT "AI Download Audio Model Sources: $aiAudioModels"
+	echo "$aiAudioModels" | while read aiSource;do
+		# generate a sum for the source
+		aiName=$(echo "$aiSource" | rev | cut -d'/' -f1 | rev)
+		# link the individual index page for this ai model in the web interface
+		linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/$aiName/index.php"
+		# do not process the ai if it is still in the cache
+		ALERT "checking for existance of lock file that blocks further download  '$webDirectory/sums/ai2web_model_audio_$aiName.cfg'"
+		if ! test -f "$webDirectory/sums/ai2web_model_audio_$aiName.cfg";then
+			ALERT "No block file found downloading with wget..."
+			# disable download telemetry
+			export DISABLE_TELEMETRY=YES
+			export HF_HUB_DISABLE_TELEMETRY=YES
+			# download the ai model from remote location using the huggingface API
+			ai2web_audio --download-model "$aiSource"
+			if [ $? -eq 0 ];then
+				# the download finished successfully
+				touch "$webDirectory/sums/ai2web_model_audio_$aiName.cfg"
+			fi
+		fi
+	done
+	# set correct ownership of files
+	chown www-data:www-data "/var/cache/2web/downloads/ai/audio/*"
+
 	################################################################################
 	ALERT "AI Download txt2img Model Sources: $txt2imgModels"
 	echo "$txt2imgModels" | while read aiSource;do
@@ -151,6 +181,7 @@ function update(){
 		if ! test -f "$webDirectory/sums/ai2web_model_prompt_$aiName.cfg";then
 			# disable download telemetry
 			export DISABLE_TELEMETRY=YES
+			export HF_HUB_DISABLE_TELEMETRY=YES
 			# download the ai model from remote location using the huggingface API
 			ai2web_txt2img --download-model "$aiSource"
 			if [ $? -eq 0 ];then
@@ -435,11 +466,11 @@ function generateLyrics(){
 	aiModel=$2
 
 	# split up input path
-	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
+	fileName=$(basename "$videoFile")
 	# remove file extension
-	fileName=$(echo "$fileName" | sed "s/\.mp3//g")
+	fileName=$(echo "$fileName" | cut -d'.' -f1)
 
-	filePath=$(echo "$videoFile" | rev | cut -d '/' -f2- | rev)
+	filePath=$(dirname "$videoFile")
 
 	inputSum=$(echo "$filePath" | md5sum | cut -d' ' -f1 )
 
@@ -457,7 +488,6 @@ function generateLyrics(){
 
 	# generated subtitles cache directory
 	createDir "/var/cache/2web/ai/lyrics/"
-	createDir "/var/cache/2web/ai/lyrics/$inputSum/"
 
 	# input the videofile to generate srt file
 	# - save only .srt subtitle files
@@ -471,17 +501,74 @@ function generateLyrics(){
 	#whisper --model small \
 	#whisper --model tiny \
 	#whisper --model base \
-	whisper --model "$aiModel" \
+	/var/cache/2web/downloads/pip/whisper/bin/whisper --model "$aiModel" \
 		--task translate \
 		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
 		--output_format "txt" \
-		--output_dir "/var/cache/2web/ai/lyrics/$inputSum/" \
+		--output_dir "/var/cache/2web/generated/ai/lyrics/" \
 		--threads "$(cpuCount)" \
 		"$videoFile"
 	# link the generated subtitle file into the same directory as the file
 	# - This can then be linked into the kodi directory for library video files
 	# - This can generate .srt subs for the video_cache/ and translate_cache/
-	linkFile "/var/cache/2web/ai/lyrics/$inputSum/$fileName.txt" "$filePath/$fileName-lyrics.txt"
+	linkFile "/var/cache/2web/ai/lyrics/$fileName.txt" "$filePath/$fileName-lyrics.txt"
+}
+########################################################################
+function media2text(){
+	# generate lyrics using local AI tool whisper
+
+	# used to generate subtitles for video files that do not already have subtitles
+	videoFile=$1
+	aiModel=$2
+	outputFile=$3
+
+	# split up input path
+	fileName=$(basename "$videoFile" )
+	# remove file extension
+	fileName=$(echo "$fileName" | cut -d'.' -f1)
+	# get the path of the file
+	filePath=$(dirname "$videoFile")
+	# generate a sum
+	inputSum=$(echo "$filePath" | md5sum | cut -d' ' -f1 )
+
+	# check if the video file exists
+	if ! test -f "$videoFile";then
+		return 0
+	fi
+	# check if the file has already been created
+	if test -f "$outputFile";then
+		return 0
+	elif echo "$videoFile" | grep ".strm$";then
+		# check if the file is a .strm that can not generate subtitles
+		return 0
+	fi
+
+	# generated subtitles cache directory
+	createDir "/var/cache/2web/generated/ai/media2text/"
+
+	# input the videofile to generate srt file
+	# - save only .srt subtitle files
+	# - use the max threads
+	# - set task to translate so non-english movies are translated into english
+	# - english movies will be transcribed with with translate task as well
+	# - chosen model will be downloaded on first use
+	# - models are: tiny, base, small, medium, large, large-v2
+	# - threads is set to one because the processing jobs that call this function run in parallel
+	#/usr/bin/sem --retries 10 --jobs 1 --fg --id "AI" whisper --model small \
+	#whisper --model small \
+	#whisper --model tiny \
+	#whisper --model base \
+	/var/cache/2web/downloads/pip/whisper/bin/whisper --model "$aiModel" \
+		--task translate \
+		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
+		--output_format "txt" \
+		--output_dir "/var/cache/2web/generated/ai/media2text/" \
+		--threads "$(cpuCount)" \
+		"$videoFile"
+	# link the generated subtitle file into the same directory as the file
+	# - This can then be linked into the kodi directory for library video files
+	# - This can generate .srt subs for the video_cache/ and translate_cache/
+	linkFile "/var/cache/2web/generated/ai/media2text/$fileName.txt" "$outputFile"
 }
 ########################################################################
 function generateSubtitles(){
@@ -492,8 +579,12 @@ function generateSubtitles(){
 	aiModel=$2
 
 	# split up input path
+	fileName=$(basename "$videoFile")
 	fileName=$(echo "$videoFile" | rev | cut -d '/' -f1 | rev)
-	filePath=$(echo "$videoFile" | rev | cut -d '/' -f2- | rev)
+
+	filePath=$(dirname "$videoFile")
+
+	inputSum=$(echo "$filePath" | md5sum | cut -d' ' -f1 )
 
 	# check if the video file exists
 	if ! test -f "$videoFile";then
@@ -507,7 +598,7 @@ function generateSubtitles(){
 		return 0
 	fi
 	# generated subtitles cache directory
-	createDir "/var/cache/2web/ai/subs/"
+	createDir "/var/cache/2web/generated/ai/subs/"
 
 	# input the videofile to generate srt file
 	# - save only .srt subtitle files
@@ -521,17 +612,17 @@ function generateSubtitles(){
 	#whisper --model small \
 	#whisper --model tiny \
 	#whisper --model base \
-	whisper --model "$aiModel" \
+	/var/cache/2web/downloads/pip/whisper/bin/whisper --model "$aiModel" \
 		--task translate \
 		--model_dir "/var/cache/2web/downloads/ai/subtitles/" \
 		--output_format "srt" \
-		--output_dir "/var/cache/2web/ai/subs/" \
+		--output_dir "/var/cache/2web/generated/ai/subs/" \
 		--threads "$(cpuCount)" \
 		"$videoFile"
 	# link the generated subtitle file into the same directory as the file
 	# - This can then be linked into the kodi directory for library video files
 	# - This can generate .srt subs for the video_cache/ and translate_cache/
-	linkFile "/var/cache/2web/ai/subs/$fileName.srt" "$filePath/$fileName.ai.srt"
+	linkFile "/var/cache/2web/generated/ai/subs/$fileName.srt" "$filePath/$fileName.ai.srt"
 }
 ################################################################################
 webUpdate(){
@@ -547,12 +638,18 @@ webUpdate(){
 
 	# create the web directory
 	createDir "$webDirectory/ai/"
+	createDir "$webDirectory/ai/prompt/"
+	createDir "$webDirectory/ai/txt2img/"
+	createDir "$webDirectory/ai/audio/"
+	createDir "$webDirectory/ai/subtitles/"
 
 	# link the homepage
 	linkFile "/usr/share/2web/templates/ai.php" "$webDirectory/ai/index.php"
 	# link the prompting interface
 	linkFile "/usr/share/2web/templates/ai_prompt.php" "$webDirectory/ai/prompt/index.php"
 	linkFile "/usr/share/2web/templates/ai_imgs.php" "$webDirectory/ai/txt2img/index.php"
+	linkFile "/usr/share/2web/templates/ai_audio.php" "$webDirectory/ai/audio/index.php"
+	linkFile "/usr/share/2web/templates/ai_subtitles.php" "$webDirectory/ai/subtitles/index.php"
 
 	################################################################################
 	# generate lyrics for mp3 tracks in music2web

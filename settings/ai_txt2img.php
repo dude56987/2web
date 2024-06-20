@@ -1,3 +1,4 @@
+
 <?PHP
 include("/usr/share/2web/2webLib.php");
 requireAdmin();
@@ -40,26 +41,51 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#aiCompareGenerate'>Generate Comparisons</a></li>
+		<li><a href='#aiServerLibaryPaths'>Server Libary Paths Config</a></li>
+		<li><a href='#aiLibaryPaths'>AI Libary Paths</a></li>
 	</ul>
 </div>
+<?PHP
+echo "<div id='aiServerLibaryPaths' class='settingListCard'>\n";
+echo "<h2>AI Text To Image Models</h2>\n";
+echo "<pre>\n";
+echo (file_get_contents("/etc/2web/ai/txt2imgModels.cfg"));
+echo "</pre>\n";
+echo "</div>";
 
-<div id='aiCompareGenerate' class='inputCard'>
-	<h2>Generate Comparisons</h2>
-		<ul>
-			<li>
-				Generate comparisons for related videos section of webpages.
-			</li>
-			<li>
-				This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
-			</li>
-			<li>
-				<span class='disabledSetting'>Webpages do NOT support this yet.</span>
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/ai/aiCompareGenerate.cfg","Comparison Generation","aiCompareGenerate");
-		?>
+
+echo "<div id='aiLibaryPaths' class='settingListCard'>";
+echo "<h2>AI Text To Image Models</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/ai/txt2imgModels.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg")){
+				echo "<div class='settingsEntry'>";
+				$link=(file_get_contents($sourceFile));
+				echo "	<h2>".$link."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='remove_ai_txt2img_model' value='".$link."'>Remove Model</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+				//echo "</div>";
+			}
+		}
+	}
+}
+?>
+	<div id='add_ai_txt2img_model' class='inputCard'>
+	<form action='admin.php' method='post'>
+		<h2>Add AI Text To Image Models</h2>
+		<input width='60%' type='text' name='add_ai_txt2img_model' placeholder='runwayml/stable-diffusion-v1-5'>
+		<button class='button' type='submit'>Add Model</button>
+	</form>
+	</div>
 </div>
 
 <?PHP

@@ -38,6 +38,15 @@
 			$discoveredTxt2Img=True;
 		}
 	}
+	# load each of the ai models
+	$discoveredMedia2Text=False;
+	$discoveredMedia2TextData="";
+	foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/subtitles/"),array(".","..")) as $directoryPath){
+		if (strpos($directoryPath,"/")){
+			$discoveredMedia2TextData.="<option value='$directoryPath'>$directoryPath</option>\n";
+			$discoveredMedia2Text=True;
+		}
+	}
 
 	echo "<div class='titleCard'>";
 	echo "<details>";
@@ -54,6 +63,20 @@
 		echo "<a class='showPageEpisode' href='/ai/txt2txt/'>";
 		echo "	<h2>Text Generation</h2>";
 		echo "	<div class='aiIcon'>✏️</div>";
+		echo "</a>";
+	}
+	if ($discoveredMedia2Text){
+		# speech to text
+		echo "<a class='showPageEpisode' href='/ai/media2text/'>";
+		echo "	<h2>Dictaphone</h2>";
+		echo "	<div class='aiIcon'>📠</div>";
+		echo "</a>";
+	}
+	if ($discoveredMedia2Text){
+		# speech to subtitle file
+		echo "<a class='showPageEpisode' href='/ai/media2subs/'>";
+		echo "	<h2>Dictaphone</h2>";
+		echo "	<div class='aiIcon'>📹</div>";
 		echo "</a>";
 	}
 	if ($discoveredTxt2Img){

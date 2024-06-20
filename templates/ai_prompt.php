@@ -43,9 +43,9 @@ if (array_key_exists("prompt",$_POST)){
 	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
 
 	# launch the process with a background scheduler
-	$command = "echo '";
+	$command = "";
 	# one at a time queue, but launch from atq right away
-	$command .= '/usr/bin/nohup /usr/bin/sem --keep-order --roundrobin --fg --jobs 1 --id ai2web ';
+	$command .= '';
 	# default load order of models if found on system
 	# check for loading custom LLM
 	if (! is_dir("/var/cache/2web/web/ai/prompt/")){
@@ -108,7 +108,7 @@ if (array_key_exists("prompt",$_POST)){
 	# write the prompt file
 	$command .= '--prompt-file "/var/cache/2web/web/ai/prompt/'.$fileSum.'/prompt.cfg" ';
 	# end the command by passing it to the "at" queue
-	$command .= "' | at -M now";
+	$command .= "";
 	# create the image view script link
 	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
 		symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php"));
@@ -137,7 +137,7 @@ if (array_key_exists("prompt",$_POST)){
 				echo "</div>\n";
 			}
 			# for each model found launch a new command
-			shell_exec(str_replace("{ALL}","\"$directoryPath\"",$command));
+			addToQueue("single",str_replace("{ALL}","\"$directoryPath\"",$command));
 		}
 	}else{
 		if ($_POST["debug"] == "yes"){
@@ -148,7 +148,7 @@ if (array_key_exists("prompt",$_POST)){
 			echo "</div>\n";
 		}
 		# launch the command
-		shell_exec($command);
+		addToQueue("single",$command);
 	}
 	# delay 1 seconds to allow loading of database
 	if(array_key_exists("HTTPS",$_SERVER)){
@@ -314,7 +314,7 @@ if ($discoveredPrompt){
 		foreach($promptIndex as $directoryPath){
 			# if the hidden cfg file does not exist use this in the index
 			if ( ! file_exists($directoryPath."/hidden.cfg")){
-				echo "<a class='inputCard textList' href='/ai/prompt/$directoryPath'>";
+				echo "<a class='inputCard textList button' href='/ai/prompt/$directoryPath'>";
 				echo file_get_contents($directoryPath."/prompt.cfg");
 				echo "<div>🗨️ Responses: ";
 				$finishedResponses=0;

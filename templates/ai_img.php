@@ -53,8 +53,10 @@ if (array_key_exists("generateMore",$_GET)){
 	file_put_contents("started.cfg",$_SERVER["REQUEST_TIME"]);
 	# update the ordering by changing the modification time of the directory
 	touch(".");
-	# launch the command again to generate more versions of the output
-	shell_exec(file_get_contents("command.cfg"));
+	# load the command
+	$command=file_get_contents("command.cfg");
+	# add the command to the queue
+	addToQueue("single",$command);
 	# redirect back to this page in refresh mode
 	redirect("?autoRefresh");
 }

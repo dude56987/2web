@@ -40,25 +40,32 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#aiCompareGenerate'>Generate Comparisons</a></li>
+		<li><a href='#aiLyricsGenerate'>Generate Lyrics</a></li>
+		<li><a href='#aiSubsGenerate'>Generate Subtitles</a></li>
 	</ul>
 </div>
 
-<div id='aiCompareGenerate' class='inputCard'>
-	<h2>Generate Comparisons</h2>
+<div id='aiLyricsGenerate' class='inputCard'>
+	<h2>Generate Lyrics</h2>
 		<ul>
 			<li>
-				Generate comparisons for related videos section of webpages.
-			</li>
-			<li>
-				This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
-			</li>
-			<li>
-				<span class='disabledSetting'>Webpages do NOT support this yet.</span>
+				Generate lyrics for music2web tracks.
 			</li>
 		</ul>
 		<?php
-		buildYesNoCfgButton("/etc/2web/ai/aiCompareGenerate.cfg","Comparison Generation","aiCompareGenerate");
+		buildYesNoCfgButton("/etc/2web/ai/aiLyricsGenerate.cfg","Lyrics Generation","aiLyricsGenerate");
+		?>
+</div>
+
+<div id='aiSubsGenerate' class='inputCard'>
+	<h2>Generate Subtitles</h2>
+		<ul>
+			<li>
+				Generate subtitles using AI for movies and shows added by nfo2web module.
+			</li>
+		</ul>
+		<?php
+		buildYesNoCfgButton("/etc/2web/ai/aiSubsGenerate.cfg","Subs Generation","aiSubsGenerate");
 		?>
 </div>
 
