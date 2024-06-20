@@ -1568,12 +1568,12 @@ table{
 	margin-left: auto;
 	margin-right: auto;
 	*/
+	background-color: var(--solidBackground);
+	color: var(--textColor);
 	overflow: auto;
-	background-color: white;
 	word-wrap: break-word;
 	display: inline-block;
 	width: 45dvw;
-	color: black;
 	float: none;
 	min-height: 5rem;
 	text-align: center;
@@ -2318,7 +2318,23 @@ input{
 	font-size: 1.5rem;
 	width: 90%;
 }
+input[type=text]{
+	background-color: var(--solidBackground);
+	color: var(--textColor);
+	caret-color: var(--textColor);
+	caret-shape: block;
+}
+input[type=number]{
+	background-color: var(--solidBackground);
+	color: var(--textColor);
+}
+input[type=password]{
+	background-color: var(--solidBackground);
+	color: var(--textColor);
+}
 select{
+	background-color: var(--solidBackground);
+	color: var(--textColor);
 	font-size: 1.5rem;
 	width: 90%;
 }
