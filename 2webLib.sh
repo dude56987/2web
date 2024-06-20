@@ -834,6 +834,8 @@ function enableMod(){
 	createDir "/etc/2web/groups/${moduleName}/"
 	# enable the module
 	echo -n "yes" > /etc/2web/mod_status/${moduleName}.cfg
+	# fix ownership so the web interface can change settings
+	chown www-data:www-data /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function disableMod(){
@@ -845,6 +847,8 @@ function disableMod(){
 	moduleName=$1
 	ALERT "Disabling the module $moduleName"
 	echo -n "no" > /etc/2web/mod_status/${moduleName}.cfg
+	# fix ownership so the web interface can change settings
+	chown www-data:www-data /etc/2web/mod_status/${moduleName}.cfg
 }
 ################################################################################
 function loadWithoutComments(){
