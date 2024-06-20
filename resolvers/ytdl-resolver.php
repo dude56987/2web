@@ -288,17 +288,17 @@ if (array_key_exists("url",$_GET)){
 							$localJsonValue= (int)$localJson->media->track[0]->Duration;
 							# compare the lenght in the remote json to the local file, including the variance above
 							if ($localJsonValue >= $remoteJsonValue){
-								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was verified");
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was verified for link '$videoLink'");
 								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
 								# if the length is correct the file is verified to have downloaded completely
 								touch($storagePath."verified.cfg");
 							}else{
-								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because the length was incorrect<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because the length was incorrect<br>\nLink = '$videoLink'<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
 								debug("The video was corrupt and could not be verified...");
 								$cacheFile=true;
 							}
 						}else{
-							addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with");
+							addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with.\n<br>The link given was '$videoLink'");
 							# the mp4 was found but the json was not
 							$cacheFile=true;
 						}
