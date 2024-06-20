@@ -73,7 +73,7 @@
 ################################################################################
 # Once a month verify all entries in the database
 # - This removes deleted entries
-@monthly root /usr/bin/nice -n 10 /usr/bin/2web --verify &> /dev/null
+@monthly root /usr/bin/nice -n 15 /usr/bin/2web --verify &> /dev/null
 ################################################################################
 # update kodi2web to update all remote kodi clients
 # - This runs every time new content is detected
@@ -82,7 +82,7 @@
 @weekly root /usr/bin/nice -n 10 /usr/bin/kodi2web &> /dev/null
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
-@daily root /usr/bin/2web upgrade &> /dev/null
+@daily root /usr/bin/nice -n 20 /usr/bin/2web upgrade &> /dev/null
 ################################################################################
 # Check once a day to see if the cache need cleaned, files are removed on a time
 # delay
