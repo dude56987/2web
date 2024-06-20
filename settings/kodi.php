@@ -59,6 +59,24 @@ include("settingsHeader.php");
 		?>
 </div>
 
+<div id='webClientStatus' class='inputCard'>
+	<h2>KODI Update Optimization</h2>
+		<ul>
+			<li>
+				Enable or disable .nomedia files for use in KODI clients.
+			</li>
+			<li>
+				This will add '.nomedia' files in the KODI share to allow smaller kodi clients to update content without scanning the entire 2web database.
+			</li>
+			<li>
+				You will need to disable this option if there are new kodi clients added to the server in order to get them to scan the entire database.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/kodi/nomediaFiles.cfg","'.nomedia' Files","nomediaFiles");
+		?>
+</div>
+
 <?php
 echo "<div id='kodiServerLocationPaths' class='settingListCard'>\n";
 echo "<h2>kodi Server Location Paths</h2>\n";

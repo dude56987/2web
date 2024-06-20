@@ -672,6 +672,11 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/ai/aiCompareGenerate.cfg", $_POST['aiCompareGenerate']);
 	echo "<hr><a class='button' href='/settings/ai.php#aiCompareGenerate'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("nomediaFiles",$_POST)){
+	outputLog("Setting Status for .nomedia files ".$_POST['nomediaFiles']);
+	yesNoCfgSet("/etc/2web/kodi/nomediaFiles.cfg", $_POST['nomediaFiles']);
+	echo "<hr><a class='button' href='/settings/kodi.php#nomediaFiles'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addAiPromptModel",$_POST)){
 	addCustomConfig("addAiPromptModel","/etc/2web/ai/promptModels.d/","ai.php");
 }else if (array_key_exists("removeAiPromptModel",$_POST)){

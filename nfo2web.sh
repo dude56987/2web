@@ -249,9 +249,16 @@ processMovie(){
 			unchangedInfo="$movieTitle"
 			# if the current state is the same as the state of the last update
 			if [ "$libarySum" == "$currentSum" ];then
-				if cacheCheck "$webDirectory/movies/$movieWebPath/movies.index" 7;then
-					# create the block to lockout updates from kodi clients after 1 weeks
-					echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+				# check if nomedia files are enabled
+				if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
+					if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
+						rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+					fi
+				else
+					if cacheCheck "$webDirectory/movies/$movieWebPath/movies.index" 7;then
+						# create the block to lockout updates from kodi clients after 1 weeks
+						echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+					fi
 				fi
 				# this means they are the same so no update needs run
 				#addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
@@ -1230,13 +1237,21 @@ processShow(){
 		updateInfo="$showTitle\n<br>$currentSum != $libarySum\n<br>$(ls "$show")\n<br>$show"
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
-			# this means they are the same so no update needs run
-			# if the show is unchanged check for the time it has been unchanged for more than 7 days
-			if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
-				# create the block to lockout updates from kodi clients after 1 weeks
-				# - this should reset when the software is updated and all content will be rescanned by clients
+			# check if nomedia files are disabled
+			if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
+				# if nomedia files are disabled remove any existing nomedia files
 				if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
 					echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+				fi
+			else
+				# this means they are the same so no update needs run
+				# if the show is unchanged check for the time it has been unchanged for more than 7 days
+				if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
+					# create the block to lockout updates from kodi clients after 1 weeks
+					# - this should reset when the software is updated and all content will be rescanned by clients
+					if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
+						echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+					fi
 				fi
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
@@ -1382,11 +1397,22 @@ processShow(){
 				# - seasons need to be checked indivually because some shows can have thousands of episodes a year
 				# - This will only add .nomedia to seasons of active shows, shows with no new episodes will add
 				#   a .nomedia file to the entire show after 7 days
-				if cacheCheck "$webDirectory/shows/$showTitle/$seasonName.index" 7;then
-					# create the block to lockout updates from kodi clients after 1 weeks
-					# - this should reset when the software is updated and all content will be rescanned by clients
-					if ! test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
-						echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+
+				# check if nomedia files are disabled
+				if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
+					# if nomedia files are disabled remove any existing nomedia files
+					if test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
+						rm -v "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+					fi
+				else
+					# this means they are the same so no update needs run
+					# if the show is unchanged check for the time it has been unchanged for more than 7 days
+					if cacheCheck "$webDirectory/shows/$showTitle/$seasonName.index" 7;then
+						# create the block to lockout updates from kodi clients after 1 weeks
+						# - this should reset when the software is updated and all content will be rescanned by clients
+						if ! test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
+							echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+						fi
 					fi
 				fi
 				################################################################################
