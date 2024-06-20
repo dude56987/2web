@@ -1083,7 +1083,7 @@ webUpdate(){
 					fi
 					setDirSum "$webDirectory" "$comicNamePath"
 				else
-					addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
+					#addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
 					INFO "Already processed '$comicNamePath'"
 				fi
 			done
