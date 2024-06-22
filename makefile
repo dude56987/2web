@@ -103,6 +103,7 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/2web/lockedGroups/;
 	mkdir -p debian/etc/2web/nfo/;
 	mkdir -p debian/etc/2web/nfo/libaries.d/;
+	mkdir -p debian/etc/2web/nfo/disabledLibaries.d/;
 	mkdir -p debian/etc/2web/music/;
 	mkdir -p debian/etc/2web/music/libaries.d/;
 	mkdir -p debian/etc/2web/ai/negative_prompts/;
@@ -164,6 +165,7 @@ build-deb: upgrade-hls
 	touch debian/etc/2web/nfo/.placeholder
 	touch debian/etc/2web/music/libaries.d/.placeholder
 	touch debian/etc/2web/nfo/libaries.d/.placeholder
+	touch debian/etc/2web/nfo/disabledLibaries.d/.placeholder
 	touch debian/etc/2web/comics/.placeholder
 	touch debian/etc/2web/comics/libaries.d/.placeholder
 	touch debian/etc/2web/comics/sources.d/.placeholder

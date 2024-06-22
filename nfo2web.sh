@@ -1928,23 +1928,30 @@ function nfo2web_watch_service(){
 		# start the background process
 		INFO "Loading library configs..."
 		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
+		# load the disabled libraries that should not be scanned by the file watch service
+		disabledLibaries=$(loadConfigs "/etc/2web/nfo/disabledLibaries.cfg" "/etc/2web/nfo/disabledLibaries.d/" "/etc/2web/config_default/nfo2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 		addToLog "INFO" "Watch Service Loading" "Scanning content in libaries <pre>$libaries</pre>"
 		IFS=$'\n'
 		for libary in $libaries;do
-			ALERT "libary = $libary"
-			# check if the libary directory exists
-			ALERT "Check if directory exists at '$libary'"
-			if test -d "$libary";then
-				ALERT "library exists at '$libary'"
-				addToLog "INFO" "Starting Watch Service" "$libary" "$logPagePath"
-				#
-				echo "library exists at '$libary'"
-				# read each tvshow directory from the libary
-				# store these paths in a varaible to be checked when events are activated
-				watch_library "$libary" "$webDirectory" "$timeout" &
+			if echo "$disabledLibaries" | grep "$libary";then
+				ALERT "Library path is disabled '$libary'"
+				addToLog "INFO" "Library Service Disabled" "Skipping scan for disabled path '$libary'"
 			else
-				ALERT "library does not exist at '$libary'"
-				addToLog "ERROR" "Path Broken" "Path does not exist '$libary'" "$logPagePath"
+				ALERT "Loading service for libary = '$libary'"
+				# check if the libary directory exists
+				ALERT "Check if directory exists at '$libary'"
+				if test -d "$libary";then
+					ALERT "library exists at '$libary'"
+					addToLog "INFO" "Starting Watch Service" "$libary" "$logPagePath"
+					#
+					echo "library exists at '$libary'"
+					# read each tvshow directory from the libary
+					# store these paths in a varaible to be checked when events are activated
+					watch_library "$libary" "$webDirectory" "$timeout" &
+				else
+					ALERT "library does not exist at '$libary'"
+					addToLog "ERROR" "Path Broken" "Path does not exist '$libary'" "$logPagePath"
+				fi
 			fi
 		done
 		# store the loop start time for activating the rescan
@@ -2191,6 +2198,8 @@ function update(){
 	/usr/bin/2web
 	# load the libary directory
 	libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
+	# load the disabled list
+	disabledLibaries=$(loadConfigs "/etc/2web/nfo/disabledLibaries.cfg" "/etc/2web/nfo/disabledLibaries.d/" "/etc/2web/config_default/nfo2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
 	# create the log path
@@ -2225,70 +2234,75 @@ function update(){
 
 	IFS=$'\n'
 	for libary in $libaries;do
-		ALERT "libary = $libary"
-		# check if the libary directory exists
-		logPagePath="$webDirectory/log/$(date "+%s").log"
-		addToLog "INFO" "Checking library path" "$libary" "$logPagePath"
-		ALERT "Check if directory exists at '$libary'"
-		if test -d "$libary";then
-			ALERT "library exists at '$libary'"
+		if echo "$disabledLibaries" | grep "$libary";then
+			ALERT "Path is disabled '$libary'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$libary'"
 		else
-			ALERT "library does not exist at '$libary'"
-		fi
-		if test -d "$libary";then
-			addToLog "UPDATE" "Starting library scan" "$libary" "$logPagePath"
-			echo "library exists at '$libary'"
-			# read each tvshow directory from the libary
-			foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
+			ALERT "libary = $libary"
+			# check if the libary directory exists
+			logPagePath="$webDirectory/log/$(date "+%s").log"
+			addToLog "INFO" "Checking library path" "$libary"
+			ALERT "Check if directory exists at '$libary'"
+			if test -d "$libary";then
+				ALERT "library exists at '$libary'"
+			else
+				ALERT "library does not exist at '$libary'"
+			fi
+			if test -d "$libary";then
+				addToLog "UPDATE" "Starting library scan" "$libary"
+				echo "library exists at '$libary'"
+				# read each tvshow directory from the libary
+				foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
 
-			for show in $foundLibaryPaths;do
-				################################################################################
-				# process page metadata
-				################################################################################
-				# if the show directory contains a nfo file defining the show
-				if test -f "$show/tvshow.nfo";then
-					#INFO "found metadata at '$show/tvshow.nfo'"
-					# load update the tvshow.nfo file and get the metadata required for
-					showMeta=$(cat "$show/tvshow.nfo")
-					showTitle=$(ripXmlTag "$showMeta" "title")
-					#INFO "showTitle = '$showTitle'"
-					showTitle=$(cleanText "$showTitle")
-					showTitle=$(alterArticles "$showTitle")
-					#INFO "showTitle after cleanText() = '$showTitle'"
-					if echo "$showMeta" | grep -q "<tvshow>";then
-						# pipe the output to a black hole and cache
-						episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
-						# make sure show has episodes
-						if [ $episodeSearchResults -gt 0 ];then
-							#ALERT "ADDING SHOW $show"
-							#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
-							processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
-							# pause execution while no cpus are open
-							waitQueue 0.5 "$totalCPUS"
-							# write log info from show to the log, this must be done here to keep ordering
-							# of the log and to make log show even when the state of the show is unchanged
-							#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-							#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
+				for show in $foundLibaryPaths;do
+					################################################################################
+					# process page metadata
+					################################################################################
+					# if the show directory contains a nfo file defining the show
+					if test -f "$show/tvshow.nfo";then
+						#INFO "found metadata at '$show/tvshow.nfo'"
+						# load update the tvshow.nfo file and get the metadata required for
+						showMeta=$(cat "$show/tvshow.nfo")
+						showTitle=$(ripXmlTag "$showMeta" "title")
+						#INFO "showTitle = '$showTitle'"
+						showTitle=$(cleanText "$showTitle")
+						showTitle=$(alterArticles "$showTitle")
+						#INFO "showTitle after cleanText() = '$showTitle'"
+						if echo "$showMeta" | grep -q "<tvshow>";then
+							# pipe the output to a black hole and cache
+							episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
+							# make sure show has episodes
+							if [ $episodeSearchResults -gt 0 ];then
+								#ALERT "ADDING SHOW $show"
+								#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
+								processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
+								# pause execution while no cpus are open
+								waitQueue 0.5 "$totalCPUS"
+								# write log info from show to the log, this must be done here to keep ordering
+								# of the log and to make log show even when the state of the show is unchanged
+								#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
+								#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
+							else
+								echo "[ERROR]: Show has no episodes!"
+								addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
+							fi
 						else
-							echo "[ERROR]: Show has no episodes!"
-							addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
+							echo "[ERROR]: Show nfo file is invalid!"
+							addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
 						fi
-					else
-						echo "[ERROR]: Show nfo file is invalid!"
-						addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
+					elif grep -q "<movie>" "$show"/*.nfo;then
+						# this is a move directory not a show
+						processMovie "$show" "$webDirectory" &
+						# pause execution while no cpus are open
+						waitQueue 0.5 "$totalCPUS"
 					fi
-				elif grep -q "<movie>" "$show"/*.nfo;then
-					# this is a move directory not a show
-					processMovie "$show" "$webDirectory" &
-					# pause execution while no cpus are open
-					waitQueue 0.5 "$totalCPUS"
-				fi
-			done
-		else
-			ALERT "$show does not exist!"
+				done
+			else
+				ALERT "$show does not exist!"
+			fi
+			# update random backgrounds
+			#scanForRandomBackgrounds "$webDirectory"
 		fi
-		# update random backgrounds
-		#scanForRandomBackgrounds "$webDirectory"
 	done
 	# block for parallel threads here
 	blockQueue 1

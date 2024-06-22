@@ -40,9 +40,9 @@ include("settingsHeader.php");
 <div class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-	<li><a href='#serverLibaryPaths'>Server Libary Paths</a></li>
-	<li><a href='#libaryPaths'>Libary Paths</a></li>
-	<li><a href='#addLibaryPath'>Add Libary Path</a></li>
+	<li><a href='#serverLibaryPaths'>Server Library Paths</a></li>
+	<li><a href='#libaryPaths'>Library Paths</a></li>
+	<li><a href='#addLibaryPath'>Add Library Path</a></li>
 	<ul>
 </div>
 
@@ -54,6 +54,15 @@ echo file_get_contents("/etc/2web/nfo/libaries.cfg");
 echo "</pre>\n";
 echo "</div>";
 ?>
+<?php
+echo "<div id='serverDisabledLibaryPaths' class='titleCard'>\n";
+echo "<h2>Server Disabled Libary Paths</h2>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/2web/nfo/disabledLibaries.cfg");
+echo "</pre>\n";
+echo "</div>";
+?>
+
 <?php
 echo "<div id='libaryPaths' class='settingListCard'>";
 echo "<h2>Libary Paths</h2>\n";
@@ -70,8 +79,17 @@ foreach($sourceFiles as $sourceFile){
 				$link=file_get_contents($sourceFile);
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
+				if (file_exists("/etc/2web/nfo/disabledLibaries.d/".md5($link).".cfg")){
+					echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+					echo "	<button class='button' type='submit' name='enableLibrary' value='".$link."'>◯ Enable Updates</button>\n";
+					echo "	</form>\n";
+				}else{
+					echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+					echo "	<button class='button' type='submit' name='disableLibrary' value='".$link."'>🟢 Disable Updates</button>\n";
+					echo "	</form>\n";
+				}
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeLibary' value='".$link."'>Remove Libary</button>\n";
+				echo "	<button class='button' type='submit' name='removeLibary' value='".$link."'>❌ Remove Library</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -83,7 +101,7 @@ foreach($sourceFiles as $sourceFile){
 ?>
 	<div id='addLibaryPath' class='inputCard'>
 		<form action='admin.php' method='post'>
-			<h2>Add Libary Path</h2>
+			<h2>Add Library Path</h2>
 			<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
 			<button class='button' type='submit'>Add Path</button>
 		</form>

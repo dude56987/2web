@@ -703,6 +703,10 @@ if (array_key_exists("newUserName",$_POST)){
 	removeCustomConfig("ytdl_remove_username_source","/etc/2web/ytdl/usernameSources.d/","ytdl2nfo.php");
 }else if (array_key_exists("addLibary",$_POST)){
 	addCustomPathConfig("addLibary","/etc/2web/nfo/libaries.d/","nfo.php");
+}else if (array_key_exists("enableLibrary",$_POST)){
+	removeCustomConfig("enableLibrary","/etc/2web/nfo/disabledLibaries.d/","nfo.php");
+}else if (array_key_exists("disableLibrary",$_POST)){
+	addCustomPathConfig("disableLibrary","/etc/2web/nfo/disabledLibaries.d/","nfo.php");
 }else if (array_key_exists("addWeatherLocation",$_POST)){
 	$link=$_POST['addWeatherLocation'];
 	outputLog("Running addWeatherLocation on link ".$link);
