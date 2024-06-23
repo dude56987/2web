@@ -2045,7 +2045,6 @@ function watch_library(){
 					for subShowPath in $foundLibaryPaths;do
 						# if the event matches
 						if echo -n "$event" | grep -q "$subShowPath";then
-							addToLog "Update" "Found Event" "Matched event '$event', found a new media entry..."
 							wait_for_changes_to_finish "$subShowPath" "$event" "$webDirectory" &
 						else
 							INFO "The change was detected in a place that could not be a new media item..."
@@ -2072,6 +2071,8 @@ function wait_for_changes_to_finish(){
 	if test -f /tmp/2web/active_scan_$waitChangesPathSum.active;then
 		INFO "Scan process already active, remove /tmp/2web/active_scan_$waitChangesPathSum.active force scanning if this is in error."
 	else
+		# log a new event being processed
+		addToLog "Update" "Found Event" "Matched event '$event' to show '$showPath', Path will begin processing when no file changes have been detected for 60 seconds."
 		# create the lock file
 		touch /tmp/2web/active_scan_$waitChangesPathSum.active
 
@@ -2088,6 +2089,7 @@ function wait_for_changes_to_finish(){
 		# get the event type
 		eventType="$(echo "$event" | cut -d',' -f2)"
 		# scan media for updates
+		addToLog "Update" "Processing Path" "Matched event '$event' to show '$showPath', Processing Path for changes."
 		# - this will be logged in the 2web log by the below function
 		processPath "$showPath" "$eventType" "$webDirectory"
 		# remove the lock file
