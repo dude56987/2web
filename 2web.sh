@@ -797,9 +797,10 @@ function update2web(){
 		# update the time on the file to lock it out for another 24 hours
 		touch "$webDirectory/log/cleanup.index"
 	fi
-
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
+	# check if the system needs rebooted
+	rebootCheck
 }
 ########################################################################
 backupSettings(){
@@ -884,13 +885,33 @@ restoreSettings(){
 }
 ########################################################################
 rebootCheck(){
+	# stop the reboot if it is disabled
+	if ! yesNoCfgCheck /etc/2web/autoReboot.cfg;then
+		ALERT "Auto Reboot Disabled in CLI"
+		# clear any previous uncleared reboot alerts
+		if test -f "/var/cache/2web/web/rebootAlert.cfg";then
+			rm -v "/var/cache/2web/web/rebootAlert.cfg"
+		fi
+		#
+		return
+	fi
+	# check if reboot check is disabled
+	if echo "$@" | grep -q -e "--no-reboot";then
+		ALERT "Reboot Disabled in CLI"
+		return
+	fi
+	ALERT "Auto Reboot enabled, checking current time..."
+	# get the total cpus
+	totalCPUS=$(cpuCount)
+	#
+	lastRebootTime="$(cat /var/cache/2web/web/lastReboot.cfg)"
 	echo "Checking if it is time to reboot the system..."
 	# check the reboot time
-	if test -f /etc/2web/rebootTime.cfg;then
-		rebootTime=$(cat /etc/2web/rebootTime.cfg)
+	if test -f /etc/2web/autoRebootTime.cfg;then
+		rebootTime=$(cat /etc/2web/autoRebootTime.cfg)
 	else
 		rebootTime="4"
-		echo "$rebootTime" > /etc/2web/rebootTime.cfg
+		echo "$rebootTime" > /etc/2web/autoRebootTime.cfg
 	fi
 	currentTime=$(date "+%H")
 	echo "Reboot Time ?= Current Time"
@@ -904,20 +925,56 @@ rebootCheck(){
 	else
 		# this is a usable reboot hour check if it is available
 		if [ "$currentTime" -eq "$rebootTime" ];then
-			echo -n "Rebooting"
-			# 5 second delay
-			sleep 1
-			echo -n "."
-			sleep 1
-			echo -n "."
-			sleep 1
-			echo -n "."
-			sleep 1
-			echo -n "."
-			sleep 1
-			echo -n "."
-			# reboot the system
-			/usr/sbin/reboot
+			ALERT "Current Hour is set hour for reboot to occur..."
+			# the last reboot must have happened more than a hour ago
+			if [ $(date "+%s") -gt $(( $lastRebootTime + ( 60 * 60 ) )) ];then
+				ALERT "Last Reboot was more than an hour ago..."
+				ALERT "Reboot is now scheduled to happen when system becomes idle..."
+				# put up the reboot alert on the website
+				touch /var/cache/2web/web/rebootAlert.cfg
+				# ten percent of the idle load
+				idleLoad=$(( totalCPUS / 5 ))
+				# the idle load should never be below 1
+				if [ $idleLoad -le 0 ];then
+					idleLoad=1
+				fi
+				# wait for the reboot until the job queue empties and the server becomes idle
+				while [ $( echo "$(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad" | bc ) -eq 1 ] && [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -gt 0 ];do
+					INFO "Waiting for system to become idle in order to reboot. LOAD:($(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad) ACTIVE JOBS:($(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l))"
+					sleep 30
+				done
+				# start the reboot process by showing a delay before rebooting the system
+				echo -n "Rebooting"
+				# 5 second delay
+				sleep 1
+				echo -n "."
+				sleep 1
+				echo -n "."
+				sleep 1
+				echo -n "."
+				sleep 1
+				echo -n "."
+				sleep 1
+				echo -n "."
+				# store the time of the last reboot
+				date "+%s" > /var/cache/2web/web/lastReboot.cfg
+				# remove the alert before reboot
+				rm -v /var/cache/2web/web/rebootAlert.cfg
+				# log reboot in the system log
+				addToLog "INFO" "REBOOT" "A system reboot was triggered."
+				# reboot the system using the available program
+				if test -f /usr/bin/systemctl;then
+					/usr/bin/systemctl reboot
+				elif test -f /usr/sbin/reboot;then
+					/usr/sbin/reboot
+				elif test -f /usr/sbin/shutdown;then
+					/usr/sbin/shutdown -r 'now'
+				fi
+			else
+				ALERT "It has been less than a hour since the last reboot. The system will not reboot more than once per hour."
+			fi
+		else
+			ALERT "The Time check failed this is not a hour on which a reboot is scheduled."
 		fi
 	fi
 }

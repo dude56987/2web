@@ -608,6 +608,18 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("autoReboot",$_POST)){
+	outputLog("Setting randomize theme status to ".$_POST['autoReboot']);
+	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);
+	echo "<hr><a class='button' href='/settings/system.php#autoReboot'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("autoRebootTime",$_POST)){
+	$time=$_POST['autoRebootTime'];
+	outputLog("Setting Reboot Time to Hour $time");
+	file_put_contents("/etc/2web/autoRebootTime.cfg", $time);
+	outputLog("Set the reboot hour to ".$time." hour on a 24 hour clock.", "goodLog");
+	echo "<hr><a class='button' href='/settings/system.php#autoRebootTime'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);

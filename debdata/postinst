@@ -8,9 +8,9 @@ symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
 # enable the 2web queue system
 /usr/bin/queue2web enable
 # launch 2web to build basic webserver, and themes
-/usr/bin/2web
+/usr/bin/2web --no-reboot
 # launch again to enable it, this is a bug
-/usr/bin/2web
+/usr/bin/2web --no-reboot
 # install the pip package dependencies for all modules, even disabled modules
 # - try to only run the forced pip install once, this is mostly for testing purposes
 if ! test -f /tmp/2web_pip_install_flag;then

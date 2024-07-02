@@ -109,6 +109,51 @@ include("settingsHeader.php");
 		?>
 </div>
 
+<div id='autoReboot' class='inputCard'>
+	<h2>Automatic Reboot</h2>
+		<ul>
+			<li>
+				Schedule a automatic reboot each day.
+			</li>
+			<li>
+				Reboot will wait until the server becomes idle.
+			</li>
+			<li>
+			The hour the reboot will be set to happen is set in the <a href="#autoRebootTime">automatic reboot time</a> setting.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/autoReboot.cfg","Automatic Reboot","autoReboot");
+		?>
+</div>
+
+<div id='autoRebootTime' class='inputCard'>
+	<form action='admin.php' method='post' class='buttonForm'>
+		<h2>Automatic Reboot Time</h2>
+		<ul>
+			<li>
+				The hour that the reboot should be scheduled for.
+			</li>
+			<li>
+				Selected hour is based on 24 hour clock.
+			</li>
+			<li>
+				This will only reboot if <a href="#autoReboot">automatic reboot</a> is enabled.
+			</li>
+		</ul>
+		<?PHP
+			if (file_exists("/etc/2web/autoRebootTime.cfg")){
+				# get the current reboot time and show it
+				$automaticRebootTime=file_get_contents("/etc/2web/autoRebootTime.cfg");
+			}else{
+				$automaticRebootTime=4;
+			}
+			echo "<input type='number' name='autoRebootTime' placeholder='Reboot Hour...' min='0' max='23' value='".$automaticRebootTime."' />";
+		?>
+		<button type='submit' class='button'>Change Reboot Time</button>
+	</form>
+</div>
+
 <div id='additionalDictionaryResults' class='inputCard'>
 	<h2>Additional dictionary results</h2>
 	<p>
@@ -141,6 +186,7 @@ include("settingsHeader.php");
 		</li>
 	</ul>
 </div>
+
 <div id='websiteCachePath' class='inputCard'>
 <h2>2web Website Cache Path</h2>
 <ul>

@@ -417,7 +417,6 @@ formatEcho("Help",4);
 formatEcho("</span>",3);
 formatEcho("</a>",2);
 echo "</div>";
-
 ?>
 <form class='searchBoxForm' action='/search.php' method='get'>
 	<?PHP
@@ -431,6 +430,16 @@ if (array_key_exists("q",$_GET)){
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <?PHP
+if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
+	echo "<div class='errorBanner'>\n";
+	echo "<h1>";
+	echo "<img class='localSpinner left' src='/spinner.gif'>\n";
+	echo "<img class='localSpinner right' src='/spinner.gif'>\n";
+	echo "Server Reboot Impending\n";
+	echo "</h1>";
+	echo "The server is preparing to reboot. Services may become momentarily unavailable.\n";
+	echo "</div>\n";
+}
 # release the lock on the session for this script to allow pages to load in parallel
 session_write_close();
 # send the header information before the rest of the page
