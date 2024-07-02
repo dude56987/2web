@@ -32,8 +32,8 @@
 # make sure the queue2web service is enabled once every 20 minutes
 */20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
 ################################################################################
-# make sure the nfo2web service is enabled once every 20 minutes
-*/20 * * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --service &> /dev/null
+# make sure nfo2web is updated once every 3 hours
+* */3 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
 ################################################################################
 # check if the iptv lists need updated
 @weekly root /usr/bin/nice -n 10 /usr/bin/iptv2web &> /dev/null
@@ -48,13 +48,13 @@
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
-0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel &> /dev/null
+0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel &> /dev/null
 ################################################################################
 # update graph2web
 @weekly root /usr/bin/nice -n 10 /usr/bin/wiki2web &> /dev/null
 ################################################################################
 # update graph2web
-0 */4 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
+0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
 ################################################################################
 # Update weather info once per hour
 0 * * * *	root /usr/bin/weather2web &> /dev/null
