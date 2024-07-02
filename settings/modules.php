@@ -65,7 +65,7 @@ foreach($modules as $module){
 <hr>
 <?PHP
 foreach($modules as $module){
-	echo "<div id='".$module."Status' class='inputCard'>";
+	echo "<div id='".$module."' class='inputCard'>";
 	echo "		<h2>$module Module Status</h2>";
 	echo "			<ul>";
 	echo "				<li>";
@@ -163,16 +163,22 @@ foreach($modules as $module){
 		echo "				</li>";
 	}
 	echo "			</ul>";
+	echo "	<div class='listCard'>";
 	// check the status of the module for the dropdown
 	if (checkModStatus($module)){
-		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "	<button class='button' type='submit' name='".$module."Status' value='no'>🟢 Disable Module</button>\n";
-		echo "	</form>\n";
+		echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "		<button class='button' type='submit' name='".$module."Status' value='no'>🟢 Disable Module</button>\n";
+		echo "		</form>\n";
 	}else{
-		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "	<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable Module</button>\n";
-		echo "	</form>\n";
+		echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "		<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable Module</button>\n";
+		echo "		</form>\n";
 	}
+	// add force update button
+	echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
+	echo "			<button class='button' type='submit' name='".$module."_update' value='yes'>⚙️ Force Update</button>\n";
+	echo "		</form>\n";
+	echo "	</div>";
 	echo "</div>";
 }
 ?>

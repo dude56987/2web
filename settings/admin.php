@@ -395,30 +395,75 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("Processing failed!", "badLog");
 	}
 	echo ("<hr><a class='button' href='/settings/users.php'>BACK</a><hr>");
-}else if (array_key_exists("all_update",$_POST)){
+}else if (array_key_exists("2web_update",$_POST)){
 	outputLog("Scheduling 2web update!");
-	shell_exec("echo '2web all' | /usr/bin/at -q b now");
-	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
+	addToQueue("multi","2web");
+	echo "<hr><a class='button' href='/settings/modules.php#2web'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("nfo_update",$_POST)){
+}else if (array_key_exists("nfo2web_update",$_POST)){
 	outputLog("Scheduling nfo update!");
-	shell_exec("echo 'nfo2web' | /usr/bin/at -q b now");
-	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
+	addToQueue("multi","nfo2web --parallel");
+	echo "<hr><a class='button' href='/settings/modules.php#nfo2web'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("iptv_update",$_POST)){
+}else if (array_key_exists("iptv2web_update",$_POST)){
 	outputLog("Scheduling iptv2web update!");
-	shell_exec("echo 'iptv2web' | /usr/bin/at -q b now");
-	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
+	addToQueue("multi","iptv2web");
+	echo "<hr><a class='button' href='/settings/modules.php#iptv2web'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("comic_update",$_POST)){
+}else if (array_key_exists("comic2web_update",$_POST)){
 	outputLog("Scheduling comic2web update!");
-	shell_exec("echo 'comic2web' | /usr/bin/at -q b now");
-	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
+	addToQueue("multi","comic2web --parallel");
+	echo "<hr><a class='button' href='/settings/modules.php#comic2web'>BACK</a><hr>";
 	clear();
-}else if (array_key_exists("weather_update",$_POST)){
+}else if (array_key_exists("weather2web_update",$_POST)){
 	outputLog("Scheduling weather2web update!");
-	shell_exec("echo 'weather2web' | /usr/bin/at -q b now");
-	echo "<hr><a class='button' href='/settings/system.php#update'>BACK</a><hr>";
+	addToQueue("multi","weather2web");
+	echo "<hr><a class='button' href='/settings/modules.php#weather2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("ytdl2nfo_update",$_POST)){
+	outputLog("Scheduling ytdl2nfo update!");
+	addToQueue("multi","ytdl2nfo");
+	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfo'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("graph2web_update",$_POST)){
+	outputLog("Scheduling graph2web update!");
+	addToQueue("multi","graph2web");
+	echo "<hr><a class='button' href='/settings/modules.php#graph2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("music2web_update",$_POST)){
+	outputLog("Scheduling music2web update!");
+	addToQueue("multi","music2web --parallel");
+	echo "<hr><a class='button' href='/settings/modules.php#music2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("portal2web_update",$_POST)){
+	outputLog("Scheduling portal2web update!");
+	addToQueue("multi","portal2web");
+	echo "<hr><a class='button' href='/settings/modules.php#portal2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("git2web_update",$_POST)){
+	outputLog("Scheduling git2web update!");
+	addToQueue("multi","git2web");
+	echo "<hr><a class='button' href='/settings/modules.php#git2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("ai2web_update",$_POST)){
+	outputLog("Scheduling ai2web update!");
+	addToQueue("multi","ai2web");
+	echo "<hr><a class='button' href='/settings/modules.php#ai2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("wiki2web_update",$_POST)){
+	outputLog("Scheduling wiki2web update!");
+	addToQueue("multi","wiki2web");
+	echo "<hr><a class='button' href='/settings/modules.php#wiki2web'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("rss2nfo_update",$_POST)){
+	outputLog("Scheduling rss2nfo update!");
+	addToQueue("multi","rss2nfo");
+	echo "<hr><a class='button' href='/settings/modules.php#rss2nfo'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("kodi2web_update",$_POST)){
+	outputLog("Scheduling kodi2web update!");
+	addToQueue("multi","kodi2web");
+	echo "<hr><a class='button' href='/settings/modules.php#kodi2web'>BACK</a><hr>";
 	clear();
 }else if (array_key_exists("setSessionTimeoutMinutes",$_POST)){
 	$timeoutMinutes=$_POST['setSessionTimeoutMinutes'];
