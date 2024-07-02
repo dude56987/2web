@@ -88,20 +88,22 @@ function processIdleJobQueue(){
 	# - only process the next item when the sytem load is less than 10%
 	totalCPUS=$(cpuCount)
 	# get the idle load from the max load, a percentage of the max load
-	idleLoad=$(( totalCPUS / 10 ))
+	idleLoad=$(( totalCPUS / 5 ))
+	# the idle load should never be below 1
+	if [ $idleLoad -le 0 ];then
+		idleLoad=1
+	fi
 	# watch the queue
 	find /var/cache/2web/queue/idle/ -name "*.cmd" | sort | while read -r queueFile;do
 		# wait for the idle queue to get to less than half the system load
-		while [ $(cat /proc/loadavg | cut -d' ' -f1) -gt $idleLoad ] && [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -ge $totalCPUS ];do
+		while [ $( echo "$(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad" | bc ) -eq 1 ] && [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -gt 0 ];do
 			INFO "Waiting for system to become idle..."
 			sleep 10
 		done
 		# for each job in the single queue
 		processThreadedJob "$queueFile" &
 		sleep 1
-		#waitQueue 0.5 "$totalCPUS"
 	done
-	#blockQueue 1
 }
 ########################################################################
 function processMultiJobQueue(){
