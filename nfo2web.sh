@@ -597,7 +597,7 @@ processMovie(){
 		getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 
 		# add the path to the list of paths for duplicate checking
-		if ! grep "$movieDir" "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg";then
+		if ! grep -c "$movieDir" "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg";then
 			# if the path is not in the file add it to the file
 			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg"
 		fi
@@ -1531,7 +1531,7 @@ processShow(){
 	#   can get extremely messy and episode files will be duplicated
 	# - 2web will still scan these series and display them normally
 	# - duplicates will show in web interface IF metadata is diffrent in any way
-	if ! grep "$show" "$webDirectory/shows/$showTitle/sources.cfg";then
+	if ! grep -c "$show" "$webDirectory/shows/$showTitle/sources.cfg";then
 		# if the path is not in the file add it to the file
 		echo "$show" >> "$webDirectory/shows/$showTitle/sources.cfg"
 	fi
@@ -1930,7 +1930,7 @@ function nfo2web_watch_service(){
 		libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 		# load the disabled libraries that should not be scanned by the file watch service
 		disabledLibaries=$(loadConfigs "/etc/2web/nfo/disabledLibaries.cfg" "/etc/2web/nfo/disabledLibaries.d/" "/etc/2web/config_default/nfo2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
-		addToLog "INFO" "Watch Service Loading" "Scanning content in libaries <pre>$libaries</pre>"
+		addToLog "INFO" "Watch Service Loading" "Scanning content in libaries <pre>$libaries</pre>Service will reset after a timeout of '$timeout' seconds."
 		IFS=$'\n'
 		for libary in $libaries;do
 			if echo "$disabledLibaries" | grep "$libary";then
@@ -1959,8 +1959,9 @@ function nfo2web_watch_service(){
 		# this process loops forever because it is a service
 		while [ "true" == "true" ] ;do
 			INFO "Running '$(jobs | wc -l)' watcher processes..."
+			currentTime=$(date "+%s")
 			# check if the watcher processes have been running for more than the timeout
-			if [ $(( $(date "+%s") - watchProcessStartupTime )) -gt $timeOut ];then
+			if [[ $(( currentTime - watchProcessStartupTime )) -gt $timeout ]];then
 				# check for locked running processes
 				activeProcesses=$(find /tmp/2web/ -type f -name "active_scan_*.active" | wc -l)
 				if [ $activeProcesses -gt 0 ];then
@@ -1970,8 +1971,9 @@ function nfo2web_watch_service(){
 				else
 					addToLog "INFO" "Active scans finished." "All active scans have finished, triggering a reload of the service..."
 					# no processes are running
-					# break the loop and trigger a rescan for new media directories
-					break
+					# close the service and it will be relaunched by cron
+					# - this will reload a new version of the service if the software is updated
+					exit
 				fi
 			fi
 			# watch the event server for changes to /etc/2web/nfo/
@@ -2067,21 +2069,21 @@ function wait_for_changes_to_finish(){
 
 	# must be process locked so multuple process path commands can not be ran at the same time
 	waitChangesPathSum="$(echo -n "$showPath" | md5sum | cut -d' ' -f1)"
-
+	#
 	if test -f /tmp/2web/active_scan_$waitChangesPathSum.active;then
 		INFO "Scan process already active, remove /tmp/2web/active_scan_$waitChangesPathSum.active force scanning if this is in error."
 	else
 		# log a new event being processed
-		addToLog "Update" "Found Event" "Matched event '$event' to show '$showPath', Path will begin processing when no file changes have been detected for 60 seconds."
+		addToLog "Update" "Found Event" "Matched event '$event' to show '$showPath', Path will begin processing when no file changes have been detected for 10 minutes."
 		# create the lock file
-		touch /tmp/2web/active_scan_$waitChangesPathSum.active
+		date "+%s" > /tmp/2web/active_scan_$waitChangesPathSum.active
 
 		# create a loop to run until no changes have been detected on the directory for at least 60 seconds
 		changesComplete="false"
 		while [ $changesComplete == "false" ];do
 			changesComplete="true"
-			# wait for changes to stop happening to the directory for more than 1 minute
-			inotifywait --timeout 60 -m -r -e "MODIFY" -e "CREATE" -e "DELETE" "$showPath" | while read event;do
+			# wait for changes to stop happening to the directory for more than 10 minutes
+			inotifywait --timeout 600 -r -e "MODIFY" -e "CREATE" -e "DELETE" "$showPath" | while read event;do
 				# if a change is detected in the 60 seconds then reset the loop and wait again after the 60 second timeout
 				changesComplete="false"
 			done
@@ -2092,8 +2094,10 @@ function wait_for_changes_to_finish(){
 		addToLog "Update" "Processing Path" "Matched event '$event' to show '$showPath', Processing Path for changes."
 		# - this will be logged in the 2web log by the below function
 		processPath "$showPath" "$eventType" "$webDirectory"
+		# log finished
+		addToLog "Update" "Processing Path" "Finished processing path, '$showPath'"
 		# remove the lock file
-		rm /tmp/2web/active_scan_$waitChangesPathSum.active
+		rm -v /tmp/2web/active_scan_$waitChangesPathSum.active
 	fi
 }
 ################################################################################
