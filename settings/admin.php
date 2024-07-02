@@ -430,6 +430,10 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Set to timeout after ".$timeoutHours." hours and ".$timeoutMinutes." minutes", "goodLog");
 	echo "<hr><a class='button' href='/settings/users.php#loginInactivityTimeout'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("purgeNomediaFiles",$_POST)){
+	# create a job to remove all existing .nomedia files
+	addToQueue("multi","find '/var/cache/2web/web/kodi/movies/' -name '.nomedia' -delete");
+	addToQueue("multi","find '/var/cache/2web/web/kodi/shows/' -name '.nomedia' -delete");
 }else if (array_key_exists("addCustomRadioLink",$_POST)){
 	# this will add a custom m3u file with a single entry
 	$link=$_POST['addCustomRadioLink'];

@@ -72,9 +72,14 @@ include("settingsHeader.php");
 				You will need to disable this option if there are new kodi clients added to the server in order to get them to scan the entire database.
 			</li>
 		</ul>
-		<?PHP
-		buildYesNoCfgButton("/etc/2web/kodi/nomediaFiles.cfg","'.nomedia' Files","nomediaFiles");
-		?>
+		<div class='listCard'>
+			<?PHP
+			buildYesNoCfgButton("/etc/2web/kodi/nomediaFiles.cfg","'.nomedia' Files","nomediaFiles");
+			?>
+			<form action='admin.php' class='' method='post'>
+				<button class='button' type='submit' name='purgeNomediaFiles' value='yes'>Purge Existing '.nomedia' Files</button>
+			</form>
+		</div>
 </div>
 
 <?php
