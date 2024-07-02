@@ -27,7 +27,7 @@
 
 <?php
 	ini_set('display_errors', 1);
-	include("header.php");
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	include("/usr/share/2web/2webLib.php");
 ?>
 
@@ -54,6 +54,11 @@
 
 		echo "</div>";
 	}
+	# draw the combined widget
+	drawPosterWidget("all");
+	# draw the random combined widget
+	drawPosterWidget("all", True);
+	#
 	if (file_exists("shows")){
 		drawPosterWidget("episodes");
 		drawPosterWidget("shows");
@@ -96,7 +101,7 @@
 		drawPosterWidget("graphs", True);
 	}
 	// add the footer
-	include("footer.php");
+	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 
 </body>
