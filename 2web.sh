@@ -1447,6 +1447,20 @@ main(){
 		drawLine
 	elif [ "$1" == "-re" ] || [ "$1" == "--restore" ] || [ "$1" == "restore" ] ;then
 		restoreSettings "$2"
+	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+		# generate demo data for 2web modules for use in screenshots, make it random as can be
+		#########################################################################################
+		# nfo2web demo data for movies and shows
+		#########################################################################################
+		nfo2web --demo-data
+		#########################################################################################
+		# comic2web demo comics
+		#########################################################################################
+		comic2web --demo-data
+		#########################################################################################
+		# music2web demo music
+		#########################################################################################
+		createDir "/var/cache/2web/generated/demo/music/"
 	elif [ "$1" == "-S" ] || [ "$1" == "--screenshots" ] || [ "$1" == "screenshots" ] ;then
 		totalCPUs=$(cpuCount)
 		# remove existing cookie file
