@@ -1058,7 +1058,7 @@ processEpisode(){
 						# create the directory to store the cached data
 						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# create the command for caching
-						temp_cache_command="/usr/bin/sem --retries 10 --jobs 1 --id downloadQueue /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/$tempSum.mp4' -c '$ytLink'"
+						temp_cache_command="/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
 						{
 							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
@@ -1071,7 +1071,7 @@ processEpisode(){
 						} > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# launch the command in the queue scheduler
-						echo "$temp_cache_command" | at -q b -M 'now'
+						queue2web --add idle "$temp_cache_command"
 					fi
 				fi
 			fi
