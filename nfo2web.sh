@@ -1238,12 +1238,7 @@ processShow(){
 		# if the current state is the same as the state of the last update
 		if [ "$libarySum" == "$currentSum" ];then
 			# check if nomedia files are disabled
-			if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
-				# if nomedia files are disabled remove any existing nomedia files
-				if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
-					echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
-				fi
-			else
+			if yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
 				# this means they are the same so no update needs run
 				# if the show is unchanged check for the time it has been unchanged for more than 7 days
 				if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
@@ -1252,6 +1247,11 @@ processShow(){
 					if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
 						echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
 					fi
+				fi
+			else
+				# if nomedia files are disabled remove any existing nomedia files
+				if test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
+					rm -v "$webDirectory/kodi/shows/$showTitle/.nomedia"
 				fi
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
