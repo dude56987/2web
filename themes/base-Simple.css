@@ -1111,11 +1111,11 @@ a:visited {
 	border-style: inset !important;
 }
 .comicPageButtonLeft{
-	position: absolute;
+	position: fixed;
 	left: 0px;
 }
 .comicPageButtonRight{
-	position: absolute;
+	position: fixed;
 	right: 0px;
 }
 .indexBody{
@@ -2446,4 +2446,16 @@ details[open] summary h2::before {
 	right: 0px;
 	top: 0px;
 	margin: 0.05rem;
+}
+.zoomBoxContainer {
+	position:relative;
+}
+.zoomBox {
+	position: absolute;
+	cursor: none;
+	width: 80dvh;
+	height: 80dvh;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	visibility: hidden;
+	z-index: 10;
 }
