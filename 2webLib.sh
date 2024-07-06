@@ -661,6 +661,51 @@ function stopDebug(){
 	echo "################################################################################"
 	echo
 }
+########################################################################
+function drawCellLine(){
+	# draw a line above or below a cell
+	colums=$1
+	totalWidth=$(tput cols)
+	width=$(( ( $totalWidth / $colums) - 3 ))
+
+	buffer=""
+	# make the buffer
+	for index in $(seq $width);do
+		buffer="${buffer}-"
+	done
+	# cut the output to cell size
+	output="$(echo -n "$buffer" | cut -b1-$width)"
+	#
+	for index in $(seq $colums);do
+		echo -n "${output} + "
+	done
+	echo
+	return 0
+}
+########################################################################
+function drawCell(){
+	# drawCell $text $colums
+	#
+	# Draw a single cell of a table
+	#
+	# - The number of colums determines the width of the cells
+	text="$1"
+	colums=$2
+	# divide the total width by the number of collums in this table
+	totalWidth=$(tput cols)
+	#
+	width=$(( ( $totalWidth / $colums) - 3 ))
+	#
+	buffer=""
+	# make the buffer the width of the terminal
+	for index in $(seq $width);do
+		buffer="$buffer "
+	done
+	# cut the output to cell size
+	output="$(echo -n "$text$buffer" | cut -b1-$width)"
+	echo -n "$output | "
+	return 0
+}
 ################################################################################
 function INFO(){
 	# Output text on a single line and overwite that text with the next INFO() output.

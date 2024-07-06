@@ -245,6 +245,91 @@ function idleQueueService(){
 if [ "$1" == "-s" ] || [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
 	# launch the service to process jobs as they are added to the server
 	overviewQueueService
+elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
+	#
+	activeJobs=$(find /var/cache/2web/queue/active/ -type f -name '*.active')
+	failedJobs=$(find /var/cache/2web/queue/failed/ -type f -name '*.cmd')
+	idleJobs=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd')
+	multiJobs=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd')
+	singleJobs=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd')
+	#
+	activeJobCount=$(find /var/cache/2web/queue/active/ -type f -name '*.active'  | wc -l)
+	failedJobCount=$(find /var/cache/2web/queue/failed/ -type f -name '*.cmd'  | wc -l)
+	idleJobCount=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd'  | wc -l)
+	multiJobCount=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd'  | wc -l)
+	singleJobCount=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd' | wc -l)
+
+	drawCellLine 5
+	# draw the headers
+	drawCell "Active Jobs" 5
+	drawCell "Failed Jobs" 5
+	drawCell "Idle Jobs" 5
+	drawCell "Multi Jobs" 5
+	drawCell "Single Jobs" 5
+	# create a new row
+	echo
+	drawCellLine 5
+	# draw the data
+	drawCell "$activeJobCount" 5
+	drawCell "$failedJobCount" 5
+	drawCell "$idleJobCount" 5
+	drawCell "$multiJobCount" 5
+	drawCell "$singleJobCount" 5
+	echo
+	drawCellLine 5
+	# draw each of the unfinished jobs
+	if [ $singleJobCount -gt 0 ];then
+		drawLine
+		echo "Single Job Queue"
+		drawLine
+		echo "$singleJobs" | while read -r jobPath;do
+			if test -f "$jobPath";then
+				echo "Job From: $jobPath"
+				cat "$jobPath"
+				echo
+				echo
+			fi
+		done
+	fi
+	if [ $multiJobCount -gt 0 ];then
+		drawLine
+		echo "Multi Job Queue"
+		drawLine
+		echo "$multiJobs" | while read -r jobPath;do
+			if test -f "$jobPath";then
+				echo "Job From: $jobPath"
+				cat "$jobPath"
+				echo
+				echo
+			fi
+		done
+	fi
+	if [ $idleJobCount -gt 0 ];then
+		drawLine
+		echo "Idle Queue"
+		drawLine
+		echo "$idleJobs" | while read -r jobPath;do
+			if test -f "$jobPath";then
+				echo "Job From: $jobPath"
+				cat "$jobPath"
+				echo
+				echo
+			fi
+		done
+	fi
+	if [ $failedJobCount -gt 0 ];then
+		drawLine
+		echo "Failed Jobs"
+		drawLine
+		echo "$failedJobs" | while read -r jobPath;do
+			if test -f "$jobPath";then
+				echo "Job From: $jobPath"
+				cat "$jobPath"
+				echo
+				echo
+			fi
+		done
+	fi
 elif [ "$1" == "-a" ] || [ "$1" == "--add" ] || [ "$1" == "add" ] ;then
 	# add a job to the queue
 	addJob "$2" "$3"
