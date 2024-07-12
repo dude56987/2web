@@ -762,6 +762,92 @@ function ERROR(){
 	echo
 }
 ################################################################################
+function upgrade-pip(){
+	# list the package names in a space seprated list
+	moduleName="$1"
+	packageNames="$2"
+	# download package source code into the download path
+	pipDownloadPath="/var/cache/2web/downloads/pip"
+	#
+	for packageName in $packageNames;do
+		# create the pip install and download cache
+		createDir "$pipDownloadPath/$packageName/"
+		# if the mod is enabled install the package
+		pip3 download "$packageName" --destination-directory "$pipDownloadPath/$packageName/"
+	done
+	# build and install packages into generated path
+	pipInstallPath="/var/cache/2web/generated/pip"
+	# install packages if the mod is enabled
+	if returnModStatus "$moduleName";then
+		# build and install the packages
+		for packageName in $packageNames;do
+			# create the install path for this package
+			createDir "$pipInstallPath/$packageName/"
+			# if the mod is disabled only download the package into the cache
+			# - This makes packages available to install even if no network connection is available
+			pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$packageName/" --target "$pipInstallPath/$packageName/" --upgrade --upgrade-strategy "only-if-needed"
+		done
+	fi
+}
+################################################################################
+function upgrade-single-pip(){
+	# list the package names in a space seprated list
+	moduleName="$1"
+	packageName="$2"
+	installPath="$3"
+	# download package source code into the download path
+	pipDownloadPath="/var/cache/2web/downloads/pip"
+	#
+	# create the pip install and download cache
+	createDir "$pipDownloadPath/$installPath/"
+	# if the mod is enabled install the package
+	pip3 download "$packageName" --destination-directory "$pipDownloadPath/$installPath/"
+	# build and install packages into generated path
+	pipInstallPath="/var/cache/2web/generated/pip"
+	# install packages if the mod is enabled
+	if returnModStatus "$moduleName";then
+		# create the install path for this package
+		createDir "$pipInstallPath/$installPath/"
+		# if the mod is disabled only download the package into the cache
+		# - This makes packages available to install even if no network connection is available
+		pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$installPath/" --target "$pipInstallPath/$installPath/" --upgrade --upgrade-strategy "only-if-needed"
+	fi
+}
+################################################################################
+function upgrade-yt-dlp(){
+	# upgrade the yt-dlp binary to the latest version
+
+	# create the directories to store the download
+	createDir "/var/cache/2web/generated/yt-dlp/"
+	createDir "/var/cache/2web/downloads/yt-dlp/"
+	# only update yt-dlp once every 7 days
+	if cacheCheck "/var/cache/2web/generated/yt-dlp/yt-dlp" "7";then
+		# download yt-dlp directly
+		wget "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" -O "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached"
+		# get the size of the downloaded cache file
+		newFileSize=$(cat "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached" | wc -c)
+		# check if the file is already installed
+		if test -f "/var/cache/2web/generated/yt-dlp/yt-dlp";then
+			# if the file is installed get the file size
+			oldFileSize=$(cat "/var/cache/2web/generated/yt-dlp/yt-dlp" | wc -c)
+		else
+			oldFileSize=0
+		fi
+		# check the new file is larger than the old file
+		if [ $newFileSize -gt $oldFileSize ];then
+			# copy over the new file
+			cp -v "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached" "/var/cache/2web/generated/yt-dlp/yt-dlp"
+			# set the permissions
+			chmod +x "/var/cache/2web/generated/yt-dlp/yt-dlp"
+		fi
+		# cleanup any cached files
+		if test -f "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached";then
+			# remove the cache file for the next download attempt
+			rm -v "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached"
+		fi
+	fi
+}
+################################################################################
 function lockProc(){
 	# Lock a module to a single process. This should prevent any module from running
 	# more than one process at a time.

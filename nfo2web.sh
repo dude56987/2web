@@ -1058,7 +1058,7 @@ processEpisode(){
 						# create the directory to store the cached data
 						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# create the command for caching
-						temp_cache_command="/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -f 'best' -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
+						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' --embed-subs --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
 						{
 							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
@@ -2409,16 +2409,6 @@ function update(){
 showHelp(){
 	cat /usr/share/2web/help/nfo2web.txt
 }
-################################################################################
-function upgrade-pip(){
-	pipInstallPath="/var/cache/2web/downloads/pip"
-	# create the pip install path
-	createDir "$pipInstallPath/streamlink/"
-	createDir "$pipInstallPath/yt-dlp/"
-	# upgrade streamlink and yt-dlp pip packages
-	pip3 install --target "$pipInstallPath/streamlink/" --upgrade streamlink
-	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
-}
 ########################################################################
 main(){
 	debugCheck
@@ -2576,10 +2566,10 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "nfo2web"
-		upgrade-pip
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade or install of all the pip packages
-		upgrade-pip
+		# upgrade streamlink
+		upgrade-pip "nfo2web" "streamlink"
+		# install nightly version of yt-dlp
+		upgrade-yt-dlp
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "nfo2web"
 		lockProc "nfo2web"

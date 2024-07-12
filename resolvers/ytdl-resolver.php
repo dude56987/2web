@@ -21,7 +21,6 @@
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
-################################################################################
 # force debugging
 #$_GET['debug']='true';
 ini_set('display_errors',1);
@@ -73,12 +72,57 @@ function getUpgradeQualityConfig($webDirectory){
 function cacheUrl($sum,$videoLink){
 	$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 	################################################################################
+	// create the directory to hold the video files within the resolver cache
+	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/")){
+		mkdir("$webDirectory/RESOLVER-CACHE/$sum/");
+	}
+	# link the video bump
+	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/bump.m3u")){
+		# build a m3u playlist that plays the bump and then the video
+		$playlist=fopen("$webDirectory/RESOLVER-CACHE/$sum/bump.m3u", "w");
+		# add the file header
+		fwrite($playlist,"#EXTM3U\n");
+		fwrite($playlist,"#PLAYLIST:$sum\n");
+		# figure out the absolute server path
+		$serverPath='http://'.$_SERVER["HTTP_HOST"].'/';
+		# write the first segment repeatedly in order to generate a buffer time for the player
+		for ($index=1;$index <= 30;$index+=1){
+			# write 20 lines of the bump
+			fwrite($playlist,"#EXTINF:1,Loading... $index/30\n");
+			fwrite($playlist,"bump.mp4\n");
+		}
+		fwrite($playlist,"#EXTINF:1,\n");
+		//fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video.mp4\n");
+		//fwrite($playlist,"RESOLVER-CACHE/$sum/video.mp4\n");
+		fwrite($playlist,"video.mp4\n");
+		fclose($playlist);
+	}
+	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.pls")){
+		# build a m3u playlist that plays the bump and then the video
+		$playlist=fopen("$webDirectory/RESOLVER-CACHE/$sum/video.pls", "w");
+		# add the file header
+		fwrite($playlist,"[playlist]\n");
+		# figure out the absolute server path
+		$serverPath='http://'.$_SERVER["HTTP_HOST"].'/RESOLVER-CACHE/'.$sum."/";
+		# write the first segment repeatedly in order to generate a buffer time for the player
+		for ($index=1;$index <= 30;$index+=1){
+			# write 20 lines of the bump
+			fwrite($playlist,"File".$index."=".$serverPath."bump.mp4\n");
+			fwrite($playlist,"Title".$index."=Loading... $index/30\n");
+		}
+		fwrite($playlist,"File31=".$serverPath."video.mp4\n");
+		fwrite($playlist,"Title31=$sum\n");
+		fwrite($playlist,"NumberOfEntries=31\n");
+		fwrite($playlist,"Version=2\n");
+		fclose($playlist);
+	}
+	################################################################################
 	// if the cache flag has been set to true then download the file and play it from the cache
 	debug("Build the command<br>");
 	$command = "nice -n -5 ";
 	// add the download to the cache with the processing queue
-	if (file_exists("/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp")){
-		$command = $command."/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
+	if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
+		$command = $command."/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
 		# add the sponsorblock video bookmarks to the video file when using yt-dlp
@@ -100,76 +144,40 @@ function cacheUrl($sum,$videoLink){
 	$command = $command." --fragment-retries 'infinite'";
 
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
-	$command = $command." --continue --write-info-json";
-	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
-		$dlCommand = $command." --all-subs --sub-format srt --embed-subs --no-part";
-		$dlCommand = $dlCommand." --write-thumbnail --convert-thumbnails png";
-	}else{
-		$dlCommand = $command." --all-subs --sub-format srt --embed-subs";
-		$dlCommand = $dlCommand." --write-thumbnail --convert-thumbnails png";
-	}
-	# check for manually set quality
-	if (array_key_exists("res",$_GET)){
-		if($_GET["res"] == "HD"){
-			$command = $command." -f best";
-		} else if ($_GET["res"] == "SD") {
-			$command = $command." -f worst";
-		}
-	} else {
-		# if no quality is set in url use server settings
-		if (file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
-			$upgradeQuality = getUpgradeQualityConfig($webDirectory);
-			# update the download command
-			if (($upgradeQuality == "best") or ($upgradeQuality == "worst")){
-				$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
-			}else{
-				$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
-			}
-			$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
+	$command = $command." --continue";
+	#
+	$command = $command." --write-info-json";
+	#
+	$dlCommand = $command." --all-subs --sub-format srt --embed-subs";
+	#
+	$dlCommand = $dlCommand." --write-thumbnail --convert-thumbnails png";
+
+	# if no quality is set in url use server settings
+	if (file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
+		$upgradeQuality = getUpgradeQualityConfig($webDirectory);
+
+		# update the download command
+		if (($upgradeQuality == "best") or ($upgradeQuality == "worst")){
+			$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
 		}else{
-			# if no server settings are configured use the default
-			# the dl command should simply convert the downloaded m3u file with the m3u file
-			if ( (! file_exists("/etc/2web/cache/cacheResize.cfg")) AND (! file_exists("/etc/2web/cache/cacheFramerate.cfg")) ){
-				# if no upgrade quality is set and no hls rescaling or frame dropping then convert the file to mp4 directly
-				$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4'";
-			}else{
-				# if custom postprocessing is set then the download command should be the same as the input
-				# - This is because postprocessing can only decrease the quality, this is to upgrade from those decreases
-				if (($quality == "best") or ($quality == "worst")){
-					$dlCommand = $dlCommand." -f '".$quality."'";
-				}else{
-					$dlCommand = $dlCommand." -S '".$quality."'";
-				}
-				$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
-			}
+			$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
 		}
-		# by default use the option set in the web interface it it exists
-		if (($quality == "best") or ($quality == "worst")){
-			$command = $command." -f '".$quality."'";
-		}else{
-			$command = $command." -S '".$quality."'";
-		}
-	}
-	if (file_exists("/etc/2web/cache/cacheFramerate.cfg")){
-		$cacheFramerate = " -r ".file_get_contents("/etc/2web/cache/cacheFramerate.cfg");
+		#
+		$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
+		//$dlCommand = $dlCommand." --no-part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.%(ext)s.part' -c '".$videoLink."'";
+		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.%(ext)s.part' -c '".$videoLink."'";
+		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' -c '".$videoLink."'";
+		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
+		#
+		//$dlCommand = $dlCommand." && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}else{
-		//$cacheFramerate = " -r 30";
-		$cacheFramerate = "";
+		# if no upgrade is set then simply convert the hls stream into a mp4
+		$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}
-	if (file_exists("/etc/2web/cache/cacheResize.cfg")){
-		$cacheResize = " -s ".file_get_contents("/etc/2web/cache/cacheResize.cfg");
-	}else{
-		//$cacheResize = " -s 1920x1080";
-		$cacheResize = "";
-	}
-	if ( (array_key_exists("webplayer",$_GET)) AND ($_GET["webplayer"] == "true") ){
-		$command = $command." -o - -c '".$videoLink."'";
-	}else{
-		$command = $command." -o - -c '".$videoLink."' | ffmpeg -i - $cacheFramerate $cacheResize -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
-		# after the download also transcode the
-		# add the higher quality download to happen in the sceduled command after the stream has been transcoded
-		$command = $command.";".$dlCommand;
-	}
+
+	# create the stream command that will be ran to get the chosen quality and convert it into a hls stream
+	$command = $command." -S ".$quality." -o - -c '".$videoLink."' | ffmpeg -i - -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
+
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
 	$tempTime = strtotime('now');
@@ -182,8 +190,35 @@ function cacheUrl($sum,$videoLink){
 	fwrite($logFile,"MD5 Source:\n");
 	fwrite($logFile,$videoLink."\n");
 	fclose($logFile);
+
+	# add the upgrade command after writing the commands to the log
+	$command = $command.";".$dlCommand;
 	# Add the command to the processing queue
 	addToQueue("multi",$command);
+}
+################################################################################
+function cacheResolve($sum,$webDirectory){
+	# wait for either the bump or the file to be downloaded and redirect
+	while(true){
+		# if 60 seconds of the video has been downloaded then launch the video
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+			# redirect to discovered mp3
+			redirect("/RESOLVER-CACHE/$sum/video.mp3");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
+			// file is fully downloaded and converted play instantly
+			redirect("/RESOLVER-CACHE/$sum/video.mp4");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
+			# if the stream has x segments (segments start as 0)
+			# - currently 10 seconds of video
+			# - force loading of 3 segments before resolution
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
+				# redirect to the stream
+				redirect("/RESOLVER-CACHE/$sum/video.m3u");
+			}
+		}
+		# Sleep at end of the loop then try to find a redirect again
+		sleep(1);
+	}
 }
 ################################################################################
 if (array_key_exists("url",$_GET)){
@@ -207,14 +242,6 @@ if (array_key_exists("url",$_GET)){
 	}else{
 		logPrint("No Header was returned.<br>");
 	}
-	# if the url is a link to media directly redirect to that media
-	#if (! is_in_array("text/html", $videoMimeType)){
-	if (is_in_array("audio/mpeg", $videoMimeType)){
-		redirect($videoLink);
-	}else if (is_in_array("video/mp4", $videoMimeType)){
-		redirect($videoLink);
-	}
-	# start translating the url
 	# remove parenthesis from video link if they exist
 	$videoLink = str_replace('"','',$videoLink);
 	$videoLink = str_replace("'","",$videoLink);
@@ -223,12 +250,6 @@ if (array_key_exists("url",$_GET)){
 	$sum = hash("sha512",$videoLink,false);
 
 	debug("[DEBUG]: SUM is ".$sum."<br>");
-	# libsyn will resolve properly with only the link, so resolve but do not cache
-	if (strpos($videoLink,"libsyn.com")){
-		if (!array_key_exists("link",$_GET)){
-			$_GET['link']=true;
-		}
-	}
 	// check for the cache flag
 	if (array_key_exists("link",$_GET)){
 		debug("[DEBUG]: linking to video ".$videoLink."<br>");
@@ -282,7 +303,7 @@ if (array_key_exists("url",$_GET)){
 							$remoteJsonValue=(int)$remoteJson->duration;
 							# reduce the value to add variance for rounding errors
 							# - Depending on the json data and how it was generated the rounding of time may go up or down by one
-							$remoteJsonValue-=1;
+							$remoteJsonValue-=5;
 							# the json data from reading the current downloaded file
 							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.mp4"));
 							$localJsonValue= (int)$localJson->media->track[0]->Duration;
@@ -310,29 +331,10 @@ if (array_key_exists("url",$_GET)){
 				unlink($storagePath."video.mp4");
 				# this means the download has failed and must be re-cached to get the full video
 				cacheUrl($sum,$videoLink);
-				# wait for either the bump or the file to be downloaded and redirect
-				while(true){
-					# if 60 seconds of the video has been downloaded then launch the video
-					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-						// file is fully downloaded and converted play instantly
-						redirect("RESOLVER-CACHE/$sum/video.mp4");
-					}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
-						# if the stream has x segments (segments start as 0)
-						# - currently 10 seconds of video
-						# - force loading of 3 segments before resolution
-						if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
-							# redirect to the stream
-							redirect("RESOLVER-CACHE/$sum/video.m3u");
-						}
-						# if all else fails wait then restart the loop
-						sleep(1);
-					}
-				}
 			}
 			# touch the file to update the mtime and delay cache removal
-			#touch($url);
 			touch($storagePath);
-			redirect($url);
+			cacheResolve($sum,$webDirectory);
 		}else{
 			# ignore user abort of connection
 			ignore_user_abort(true);
@@ -341,28 +343,6 @@ if (array_key_exists("url",$_GET)){
 
 			debug("No file exists in the cache<br>");
 			debug("cache is set<br>");
-			// create the directory to hold the video files within the resolver cache
-			if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/")){
-				mkdir("$webDirectory/RESOLVER-CACHE/$sum/");
-			}
-
-			# build a m3u playlist that plays the bump and then the video
-			$playlist=fopen("$webDirectory/RESOLVER-CACHE/$sum/master.m3u8", "w");
-			# add the file header
-			fwrite($playlist,"#EXTM3U\n");
-			fwrite($playlist,"#PLAYLIST:$sum\n");
-			# figure out the absolute server path
-			$serverPath='http://'.$_SERVER["HTTP_HOST"].'/';
-
-			# write the first segment repeatedly in order to generate a buffer time for the player
-			for ($index=1;$index <= 30;$index+=1){
-				# write 20 lines of the bump
-				fwrite($playlist,"#EXTINF:1,Loading... $index/30\n");
-				fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video-stream1.ts\n");
-			}
-			fwrite($playlist,"#EXTINF:1,\n");
-			fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video.m3u\n");
-			fclose($playlist);
 			# cache the url if no log has been created, otherwise jump to the redirect
 			if(! file_exists("$webDirectory/RESOLVER-CACHE/$sum/data.log")){
 				cacheUrl($sum,$videoLink);
@@ -373,23 +353,7 @@ if (array_key_exists("url",$_GET)){
 			# download has also already been forked
 			#
 			# wait for either the bump or the file to be downloaded and redirect
-			while(true){
-				# if 60 seconds of the video has been downloaded then launch the video
-				if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-					// file is fully downloaded and converted play instantly
-					redirect("RESOLVER-CACHE/$sum/$sum.mp4");
-				}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
-					# if the stream has x segments (segments start as 0)
-					# - currently 10 seconds of video
-					# - force loading of 3 segments before resolution
-					if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
-						# redirect to the stream
-						redirect("RESOLVER-CACHE/$sum/video.m3u");
-					}
-				}
-				# if all else fails wait then restart the loop
-				sleep(1);
-			}
+			cacheResolve($sum,$webDirectory);
 		}
 	}
 }else{

@@ -53,8 +53,8 @@ function killFakeImage(){
 ################################################################################
 function streamPass(){
 	# pass streamlink arguments to correct streamlink path
-	if test -f "/var/cache/2web/downloads/pip/streamlink/bin/streamlink";then
-		/var/cache/2web/downloads/pip/streamlink/bin/streamlink "$@"
+	if test -f "/var/cache/2web/generated/pip/streamlink/bin/streamlink";then
+		/var/cache/2web/generated/pip/streamlink/bin/streamlink "$@"
 	else
 		# could not find streamlink installed on the server
 		ERROR "For the URL to resolve you must install streamlink on this server."
@@ -97,7 +97,7 @@ examineIconLink(){
 		killFakeImage "$localIconPath"
 		# try to download the icon with yt-dlp
 		if ! test -f "$localIconPath";then
-			tempIconLink=$(/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link")
+			tempIconLink=$(/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error -j "$link")
 			if [ $? -eq 0 ];then
 				tempIconLink=$(echo $tempIconLink | jq ".thumbnail")
 				INFO "Downloading thumbnail '$tempIconLlink'"
@@ -590,7 +590,7 @@ function processLink(){
 						# if there is less than 10 characters in the json data the download has failed
 						if [ $(cat "$webDirectory/live/ytdlp_cache/$streamLinkSum.index" | wc -c) -le 10 ];then
 							# if the file contains no data try to download it again
-							/var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --abort-on-error -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
+							/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error -j "$link" > "$webDirectory/live/ytdlp_cache/$streamLinkSum.index"
 							errorCode=$?
 							if [ $errorCode -eq 1 ];then
 								# break if there is an error in yt-dlp
@@ -634,7 +634,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					# try to get json data with streamlink
-					fileName=$(/var/cache/2web/downloads/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
+					fileName=$(/var/cache/2web/generated/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
 				fi
 
 				#ERROR "[DEBUG]: checking filename length '$fileName'"
@@ -1300,15 +1300,6 @@ nuke(){
 	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
-function upgrade-pip(){
-	pipInstallPath="/var/cache/2web/downloads/pip"
-	# create the pip install path
-	createDir "$pipInstallPath/streamlink/"
-	createDir "$pipInstallPath/yt-dlp/"
-	# upgrade streamlink and yt-dlp pip packages
-	pip3 install --target "$pipInstallPath/streamlink/" --upgrade streamlink
-	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
-}
 ################################################################################
 main(){
 	################################################################################
@@ -1349,10 +1340,8 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "iptv2web"
-		upgrade-pip
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade or install of all the pip packages
-		upgrade-pip
+		upgrade-pip "iptv2web" "streamlink"
+		upgrade-yt-dlp
 	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
 		# copy local hls.js included in package to the website
 		linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"

@@ -203,14 +203,6 @@ function nuke(){
 	ALERT "The RSS is still stored as json in /var/cache/2web/downloads/rss/"
 }
 ################################################################################
-function upgrade-pip(){
-	pipInstallPath="/var/cache/2web/downloads/pip"
-	# create the pip install path
-	createDir "$pipInstallPath/yt-dlp/"
-	# upgrade streamlink and yt-dlp pip packages
-	pip3 install --target "$pipInstallPath/yt-dlp/" --upgrade yt-dlp
-}
-################################################################################
 main(){
 	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 		checkModStatus "rss2nfo"
@@ -223,10 +215,7 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "rss2nfo"
-		upgrade-pip
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade or install of all the pip packages
-		upgrade-pip
+		upgrade-yt-dlp
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "rss2nfo"
 		ytdl2kodi_reset_cache

@@ -642,6 +642,25 @@ function update2web(){
 	if ! test -f /var/cache/2web/spinner.gif;then
 		buildSpinnerGif
 	fi
+	# build the bump video
+	if test -f /var/cache/2web/spinner.gif;then
+		if ! test -f "/var/cache/2web/spinner_bg.png";then
+			# make background used to generate video bump
+			convert -scale "320x240" xc:black "/var/cache/2web/spinner_bg.png"
+		fi
+		filter="[0][1]scale2ref[bg][gif];[bg]setsar=1[bg];[bg][gif]overlay=shortest=1"
+		#filter="${filter};drawtext:text='Try again\, Video is Caching...':fontcolor=white:fontsize=24;"
+		if ! test -f "/var/cache/2web/spinner.mp4";then
+			ffmpeg -f lavfi -i color=000000 -i "/var/cache/2web/spinner.gif" -filter_complex "$filter" -c:v libvpx-vp9 -loop 100 "/var/cache/2web/spinner.mp4"
+			chown www-data:www-data "/var/cache/2web/spinner.mp4"
+		fi
+		if test -f "/var/cache/2web/spinner.mp4";then
+			if ! test -f "/var/cache/2web/spinner_long.mp4";then
+				ffmpeg -stream_loop 60 -i "/var/cache/2web/spinner.mp4" "/var/cache/2web/spinner_long.mp4"
+				chown www-data:www-data "/var/cache/2web/spinner_long.mp4"
+			fi
+		fi
+	fi
 	# link default animations
 	if ! test -f $webDirectory/spinner.gif;then
 		linkFile "/var/cache/2web/spinner.gif" "$webDirectory/spinner.gif"
@@ -1066,7 +1085,7 @@ function buildSpinnerGif(){
 	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_01.gif"
 
 	# convert frames into transparent gif
-	convert -delay 16 -dispose Background \
+	convert -transparent "#000000" -delay 16 -dispose Background \
 		-page +0+0 "${outputPathPrefix}_01.gif" \
 		-page +0+0 "${outputPathPrefix}_02.gif" \
 		-page +0+0 "${outputPathPrefix}_03.gif" \
@@ -1110,7 +1129,7 @@ function buildPulseGif(){
 	# pulse back to start
 
 	# convert frames into transparent gif
-	convert -delay 16 -dispose Background \
+	convert -transparent "#000000" -delay 16 -dispose Background \
 		-page +0+0 "${outputPathPrefix}_01.gif" \
 		-page +0+0 "${outputPathPrefix}_02.gif" \
 		-page +0+0 "${outputPathPrefix}_03.gif" \

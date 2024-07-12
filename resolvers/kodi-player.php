@@ -90,7 +90,7 @@ if (array_key_exists("url",$_GET)){
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
 		# get the title of the video
-		$videoTitle=shell_exec("yt-dlp --get-title '".$OGvideoLink."' ");
+		$videoTitle=shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --get-title '".$OGvideoLink."' ");
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle);
 		# write the temp file
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
@@ -115,7 +115,7 @@ if (array_key_exists("url",$_GET)){
 	$videoLinkSum=md5($videoLink);
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
 		# get the title of the video
-		$videoTitle=shell_exec("yt-dlp --get-title '".$OGvideoLink."' ");
+		$videoTitle=shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --get-title '".$OGvideoLink."' ");
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle );
 		# write the temp file
 		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);

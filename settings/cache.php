@@ -112,58 +112,6 @@ include("settingsHeader.php");
 		<button class='button' type='submit'>Change Quality</button>
 	</form>
 </div>
-<div id='cacheResize' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>HLS Size</h2>
-		<p>
-			This is the size of the hls stream generated for first time playback. Quality of the downloaded file itself is set in 'Cache Quality' setting above.
-		</p>
-		<select name='cacheResize'>
-			<?php
-				// add the cache Mode as a option
-				if(file_exists("/etc/2web/cache/cacheResize.cfg")){
-					$cacheResize= file_get_contents('/etc/2web/cache/cacheResize.cfg');
-					echo "<option selected value='".$cacheResize."'>$cacheResize</option>";
-				}
-			?>
-			<option value=''>Copy Input</option>
-			<option value='1920x1080'>1080p</option>
-			<option value='1240x720'>720p</option>
-			<option value='360x240'>240p</option>
-			<option value='240x120'>120p</option>
-			<option value='120x60'>60p</option>
-		</select>
-		<button class='button' type='submit'>Change Cache Quality</button>
-	</form>
-</div>
-
-
-<!-- create the theme picker based on installed themes -->
-<div id='cacheFramerate' class='inputCard'>
-	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>HLS FrameRate</h2>
-		<p>
-			This is the HLS stream framerate.
-		</p>
-		<select name='cacheFramerate'>
-			<?php
-				// add the cache Mode as a option
-				if(file_exists("/etc/2web/cache/cacheFramerate.cfg")){
-					$cacheFramerate= file_get_contents('/etc/2web/cache/cacheFramerate.cfg');
-					echo "<option selected value='$cacheFramerate'>$cacheFramerate FPS</option>";
-				}
-			?>
-			<option value=''>Copy Input</option>
-			<option value='8'>8 FPS</option>
-			<option value='12'>12 FPS</option>
-			<option value='24'>24 FPS</option>
-			<option value='30'>30 FPS</option>
-			<option value='60'>60 FPS</option>
-			<option value='120'>120 FPS</option>
-		</select>
-		<button class='button' type='submit'>Change Cache Framerate</button>
-	</form>
-</div>
 
 <div id='cacheDelay' class='inputCard'>
 	<form action='admin.php' class='buttonForm' method='post'>

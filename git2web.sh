@@ -824,12 +824,12 @@ function processRepo(){
 
 		INFO "$repoName : Building lint data for Javascript"
 		# check for javascript files to run lint on
-		if test -f "/var/cache/2web/downloads/jslint/bin/jslint-cli";then
+		if test -f "/var/cache/2web/generated/pip/jslint/bin/jslint-cli";then
 			find "." -type f -name "*.js" | sort | while read sourceFilePath;do
 				tempSourceSum=$(popPath "$sourceFilePath")
 				git log -1 --pretty="%ct" $sourceFilePath > "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index"
 				if [ $( cat "$webDirectory/repos/$repoName/lint_time/$tempSourceSum.index" | wc -c ) -gt 6 ];then
-					/var/cache/2web/downloads/jslint/bin/jslint-cli "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
+					/var/cache/2web/generated/pip/jslint/bin/jslint-cli "$sourceFilePath" | txt2html --extract --escape_HTML_chars  > "$webDirectory/repos/$repoName/lint/$tempSourceSum.index" &
 					waitQueue 0.5 "$totalCPUS"
 				fi
 			done
@@ -1122,14 +1122,6 @@ function nuke(){
 	rm -v $webDirectory/web_cache/widget_new_repos.index
 }
 ################################################################################
-function upgrade-pip(){
-	pipInstallPath="/var/cache/2web/downloads/pip"
-	# create the pip install path
-	createDir "$pipInstallPath/jslint/"
-	# upgrade the jslint package
-	pip3 install --target "$pipInstallPath/jslint/" --upgrade jslint
-}
-################################################################################
 main(){
 	################################################################################
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
@@ -1143,7 +1135,7 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "git2web"
-		upgrade-pip
+		upgrade-pip "git2web" "jslint"
 	elif [ "$1" == "--force-upgrade" ];then
 		# force upgrade or install of all the pip packages
 		upgrade-pip

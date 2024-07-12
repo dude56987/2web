@@ -37,9 +37,9 @@ function debug($output){
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
-if (file_exists("/var/cache/2web/downloads/pip/streamlink/bin/streamlink")){
+if (file_exists("/var/cache/2web/generated/pip/streamlink/bin/streamlink")){
 	# look for the 2web pip path
-	$streamlinkPath="/var/cache/2web/downloads/pip/streamlink/bin/streamlink";
+	$streamlinkPath="/var/cache/2web/generated/pip/streamlink/bin/streamlink";
 }else{
 	# could not find streamlink installed on the server
 	echo "[ERROR]: For the URL to resolve you must install streamlink on this server."."<br>";

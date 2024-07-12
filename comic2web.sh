@@ -161,7 +161,7 @@ function update(){
 					# set the number of strips to download to be the current number + 50
 					numStrips=$(( $totalPages + 50 ))
 
-					/usr/local/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
+					/var/cache/2web/generated/pip/dosage/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
 					# cleanup downloaded .txt files
 					rm -v "${downloadDirectory}$comicSource"/*.txt
 					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
@@ -179,7 +179,7 @@ function update(){
 					# set the number of strips to download to be the current number + 50
 					numStrips=$(( $totalPages + 50 ))
 
-					/usr/local/bin/dosage --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
+					/var/cache/2web/generated/pip/dosage/bin/dosage --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "$webDirectory/comicCache/webDownload_$comicSum.index"
 					# cleanup downloaded .txt files
 					rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
@@ -946,8 +946,8 @@ function processDosageExtractor(){
 	extractorName=$(echo "$extractorName" | cut -d' ' -f1)
 	if [ $addComic == "True" ];then
 		# for each extractor get the website address
-		moduleUrl=$(dosage --modulehelp "$extractorName" | grep 'URL:' | cut -d' ' -f3)
-		moduleLang=$(dosage --modulehelp "$extractorName" | grep 'Language:' | cut -d' ' -f3)
+		moduleUrl=$(/var/cache/2web/generated/pip/dosage/bin/dosage --modulehelp "$extractorName" | grep 'URL:' | cut -d' ' -f3)
+		moduleLang=$(/var/cache/2web/generated/pip/dosage/bin/dosage --modulehelp "$extractorName" | grep 'Language:' | cut -d' ' -f3)
 		linkRow=$(
 			echo "<tr>";\
 			echo "<td>";\
@@ -973,7 +973,7 @@ function buildDosageList(){
 	cacheFilePath="/var/cache/2web/web/web_cache/comic2web_dosageList.index";
 	lockFile="/var/cache/2web/web/web_cache/comic2web_dosageList_COMPLETE.index";
 	if ! test -f "$lockFile";then
-		extractors=$(dosage --singlelist)
+		extractors=$(/var/cache/2web/generated/pip/dosage/bin/dosage --singlelist)
 		IFS=$'\n'
 		for extractorName in $extractors;do
 			# if ran in parallel run the extractor process in the background for this list
@@ -1180,16 +1180,6 @@ function nuke(){
 	rm -v $webDirectory/web_cache/widget_new_comics.index
 }
 ################################################################################
-function upgrade-pip(){
-	# upgrade gallery-dl pip packages
-	pipInstallPath="/var/cache/2web/downloads/pip"
-	# create the pip install paths
-	createDir "$pipInstallPath/gallery-dl/"
-	createDir "$pipInstallPath/dosage/"
-	# upgrade streamlink and yt-dlp pip packages
-	pip3 install --target "$pipInstallPath/gallery-dl/" --upgrade gallery-dl
-	pip3 install --target "$pipInstallPath/dosage/" --upgrade dosage
-}
 ################################################################################
 main(){
 	################################################################################
@@ -1246,10 +1236,7 @@ main(){
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "comic2web"
-		upgrade-pip
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade or install of all the pip packages
-		upgrade-pip
+		upgrade-pip "comic2web" "gallery-dl dosage"
 	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
 		# comic2web --convert filePath
 		convertImage "$3"
