@@ -324,14 +324,11 @@ function cacheCheck(){
 	filePath="$1"
 	cacheDays="$2"
 
-	fileName=$( echo "$filePath" | rev | cut -d'/' -f'1'| rev )
-	fileDir=$( echo "$filePath" | rev | cut -d'/' -f'2-'| rev )
-
 	# return true if cached needs updated
 	if test -f "$filePath";then
 		# check the file date
-		fileFound=$(find "$fileDir" -type f -name "$fileName" -mtime "+$cacheDays" | wc -l)
-		if [ "$fileFound" -gt 0 ] ;then
+		fileMtime=$(stat -c "%Y" "$filePath")
+		if [ $(($(date "+%s") - $fileMtime)) -gt $(( ( ( (60 * 60) * 60 ) * 24 ) * $cacheDays )) ];then
 			# the file is more than "$cacheDays" days old, it needs updated
 			#INFO "File is to old, update the file $1"
 			return 0
@@ -364,7 +361,8 @@ function cacheCheckMin(){
 	# return true if cached needs updated
 	if [ -f "$filePath" ];then
 		# the file exists
-		if [[ $(find "$1" -cmin "+$cacheMinutes") ]];then
+		fileMtime=$(stat -c "%Y" "$filePath")
+		if [ $(($(date "+%s") - $fileMtime)) -gt $(( (60 * 60) * $cacheMinutes )) ];then
 			# the file is more than "$2" minutes old, it needs updated
 			#INFO "File is to old, update the file $1"
 			return 0
