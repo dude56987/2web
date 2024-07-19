@@ -1192,8 +1192,8 @@ webGen(){
 				if echo $lineCaught | grep -Eq "radio=[\",']true";then
 					{
 						# build icon to link to the channel
-						echo -e "<a class='indexLink button radio' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
-						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
+						echo -e "<a class='indexSeries radio' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<img loading='lazy' class='' src='/live/$iconThumbLink'>"
 						echo -e "\t<div class='indexTitle'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"
@@ -1206,8 +1206,8 @@ webGen(){
 				else
 					{
 						# build icon to link to the channel
-						echo -e "<a class='indexLink button tv' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
-						echo -e "\t<img loading='lazy' class='indexIcon' src='/live/$iconThumbLink'>"
+						echo -e "<a class='indexSeries tv' href='/live/channels/channel_$channelNumber.php#$channelNumber'>"
+						echo -e "\t<img loading='lazy' class='' src='/live/$iconThumbLink'>"
 						echo -e "\t<div class='indexTitle'>"
 						echo -e "\t\t$title"
 						echo -e "\t<div class='radioIcon'>"

@@ -390,8 +390,8 @@ function processTrack(){
 				} > "$webDirectory/kodi/music/$artist/artist.nfo"
 				# Create the artist index link
 				{
-					echo "<a class='indexLink button' href='/music/$artist'>"
-					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/poster-web.png'>"
+					echo "<a class='indexSeries' href='/music/$artist'>"
+					echo "	<img class='' loading='lazy' src='/music/$artist/poster-web.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$artistOG"
 					echo "	</div>"
@@ -449,8 +449,8 @@ function processTrack(){
 				} > "$webDirectory/kodi/music/$artist/$album/album.nfo"
 				# add the album to the artist index
 				{
-					echo "<a class='indexLink button' href='/music/$artist/$album'>"
-					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/$album/album-web.png'>"
+					echo "<a class='indexSeries' href='/music/$artist/$album'>"
+					echo "	<img class='' loading='lazy' src='/music/$artist/$album/album-web.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$albumOG"
 					if [ "$date" != "" ];then

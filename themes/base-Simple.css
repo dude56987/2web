@@ -1236,11 +1236,11 @@ a:visited {
 	min-height: 14rem;
 }
 .listCard .indexSeries{
-	width: 4rem !important;
 	/*
+	width: 4rem !important;
 	min-height: 7rem !important;
-	*/
 	max-height: 6rem !important;
+	*/
 }
 .listCard .indexSeries div{
 	display: none;
@@ -1250,8 +1250,8 @@ a:visited {
 	/*
 	min-height: 7rem;
 	*/
-	max-height: 6rem;
 	/*
+	max-height: 6rem;
 	height: 100%;
 	*/
 }
@@ -1268,7 +1268,7 @@ a:visited {
 	color: var(--textColor);
 	background-color: var(--glassBackground);
 	border: 0.3rem solid var(--borderColor);
-	width: 6rem;
+	width: 7rem;
 	/*
 	min-height: 12rem;
 	*/
@@ -1277,6 +1277,8 @@ a:visited {
 	width: 200px;
 	height: 350px;
 	*/
+	/* Create the loading effect for unloaded images */
+	min-height: 4rem;
 }
 .indexSeries:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
@@ -1293,9 +1295,11 @@ a:visited {
 	float: right;
 }
 .indexSeries img{
+	/*
 	background-color: white;
+	*/
 	width: 100%;
-	max-height: 10rem;
+	max-height: 15rem;
 	/*
 	height: 10rem;
 	width: 10dvw;
