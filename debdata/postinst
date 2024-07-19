@@ -3,10 +3,12 @@ a2enmod ssl
 # cleanup broken symlinks in apache
 symlinks -d "/etc/apache2/sites-enabled/" || echo "No broken symlinks found..."
 symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
+# create the log directory for apache
+mkdir -p "/var/log/apache2/" || echo "Existing Apache Logs found..."
 # enable 2web by default
-/usr/bin/2web enable
+/usr/bin/2web --enable
 # enable the 2web queue system
-/usr/bin/queue2web enable
+/usr/bin/queue2web --enable
 # launch 2web to build basic webserver, and themes
 /usr/bin/2web --no-reboot
 # launch again to enable it, this is a bug
@@ -14,7 +16,7 @@ symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
 # install the pip package dependencies for all modules, even disabled modules
 # - try to only run the forced pip install once, this is mostly for testing purposes
 if ! test -f /tmp/2web_pip_install_flag;then
-	/usr/bin/2web --force-upgrade
+	/usr/bin/2web --upgrade
 	touch /tmp/2web_pip_install_flag
 else
 	echo "PIP packages already installed..."

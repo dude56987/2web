@@ -1415,15 +1415,6 @@ main(){
 		git2web --upgrade
 		ai2web --upgrade
 		rss2nfo --upgrade
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade of all module pip packages
-		ytdl2nfo --force-upgrade
-		iptv2web --force-upgrade
-		nfo2web --force-upgrade
-		comic2web --force-upgrade
-		git2web --force-upgrade
-		ai2web --force-upgrade
-		rss2nfo --force-upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
 		# remove all genereated web content
 		/usr/bin/nfo2web nuke
