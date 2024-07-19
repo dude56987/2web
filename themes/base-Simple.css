@@ -252,21 +252,29 @@ ol li{
 }
 .logEntry{
 	background-color: var(--solidBackground);
+	color: floralwhite !important;
+	/*
+	-webkit-text-stroke: 0.04rem black;
+	*/
+}
+.logEntry a{
+	background-color: var(--solidBackground);
+	color: floralwhite !important;
 }
 .ERROR{
-	background-color: darkred;
+	background-color: red;
 }
 .DOWNLOAD{
-	background-color: green;
+	background-color: darkgreen;
 }
 .DEBUG{
 	background-color: gray;
 }
 .WARNING{
-	background-color: orange;
+	background-color: darkorange;
 }
 .NEW{
-	background-color: darkgreen;
+	background-color: green;
 }
 .UPDATE{
 	background-color: darkslateblue;
@@ -275,7 +283,7 @@ ol li{
 	background-color: darkslategray;
 }
 .ADMIN{
-	background-color: fuchsia;
+	background-color: purple;
 }
 .outputLog{
 	background: white;
