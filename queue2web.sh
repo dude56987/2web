@@ -176,6 +176,46 @@ function overviewQueueService(){
 	fi
 }
 ########################################################################
+function liveView(){
+	clear
+	while true;do
+		# count job types
+		activeJobCount=$(find /var/cache/2web/queue/active/ -type f -name '*.active'  | wc -l)
+		failedJobCount=$(find /var/cache/2web/queue/failed/ -type f -name '*.cmd'  | wc -l)
+		idleJobCount=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd'  | wc -l)
+		multiJobCount=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd'  | wc -l)
+		singleJobCount=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd' | wc -l)
+		# use curses clear command
+		tput clear
+		# the x,y cordnates are reversed in tput
+		# y, x
+		tput cup 0 0
+		drawCellLine 5
+		tput cup 1 0
+		# draw the headers
+		drawCell "Active Jobs" 5
+		drawCell "Failed Jobs" 5
+		drawCell "Idle Jobs" 5
+		drawCell "Multi Jobs" 5
+		drawCell "Single Jobs" 5
+		# create a new row
+		tput cup 2 0
+		drawCellLine 5
+		tput cup 3 0
+		# draw the data
+		drawCell "$activeJobCount" 5
+		drawCell "$failedJobCount" 5
+		drawCell "$idleJobCount" 5
+		drawCell "$multiJobCount" 5
+		drawCell "$singleJobCount" 5
+		tput cup 4 0
+		drawCellLine 5
+		echo "Refreshed $(date) ,Use [Ctrl]+[C] to exit..."
+		sleep 5
+	done
+}
+
+########################################################################
 function multiQueueService(){
 	# create the multi and single queues
 	createDir "/var/cache/2web/queue/multi/"
@@ -245,6 +285,11 @@ function idleQueueService(){
 if [ "$1" == "-s" ] || [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
 	# launch the service to process jobs as they are added to the server
 	overviewQueueService
+elif [ "$1" == "-l" ] || [ "$1" == "--live" ] || [ "$1" == "live" ] ;then
+	liveView
+elif [ "$1" == "-c" ] || [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
+	# cleanup failed jobs
+	rm -v /var/cache/2web/queue/failed/*.cmd
 elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
 	#
 	activeJobs=$(find /var/cache/2web/queue/active/ -type f -name '*.active')
