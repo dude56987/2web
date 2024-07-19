@@ -1226,11 +1226,24 @@ main(){
 	elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ];then
 		# read all the modules from loadModules
 		moduleNames=$(loadModules)
+		counter=0
 		# figure out enabled modules and build header text
 		for module in $moduleNames;do
+			drawLine
 			module="$(echo "$module" | cut -d'=' -f1)"
 			# figure out enabled modules and build header text
+			echo -n "🧩"
 			returnModStatus "$module"
+			# check if the module is running
+			if test -f "/var/cache/2web/web/$module.active";then
+				echo "⚙️ Module is Currently Running."
+			else
+				echo "🛑 Module is Currently Inactive."
+			fi
+			counter=$(( counter + 1 ))
+			if [ $counter -gt 5 ];then
+				counter=0
+			fi
 		done
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
