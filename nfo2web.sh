@@ -781,7 +781,11 @@ checkForThumbnail(){
 				fi
 			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
 				ALERT "This is a audio file, generate a audio waveform..."
-				generateWaveform "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
+				if yesNoCfgCheck "/etc/2web/nfo/generateAudioWaveforms.cfg";then
+					generateWaveform "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
+				else
+					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600" &
+				fi
 			else
 				ALERT "This media could not be determined to be any type of media try 'mediainfo \"$videoPath\"'"
 				addToLog "ERROR" "Could not create Thumbnail" "This media could not be determined to be any type of media try 'mediainfo $videoPath'"

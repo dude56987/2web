@@ -657,6 +657,11 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("nfo_generateAudioWaveforms",$_POST)){
+	outputLog("Setting audio waveform generator to ".$_POST['nfo_generateAudioWaveforms']);
+	yesNoCfgSet("/etc/2web/generateAudioWaveforms.cfg", $_POST['nfo_generateAudioWaveforms']);
+	echo "<hr><a class='button' href='/settings/system.php#nfo_generateAudioWaveforms'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("autoReboot",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['autoReboot']);
 	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);

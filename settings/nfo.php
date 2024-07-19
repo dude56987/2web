@@ -46,6 +46,21 @@ include("settingsHeader.php");
 	<ul>
 </div>
 
+<div id='nfo_generateAudioWaveform' class='inputCard'>
+	<h2>Generate Waveform Thumbnails</h2>
+		<ul>
+			<li>
+				Generate waveform thumbnails for audio files. This includes remote audio files stored as '.strm' files.
+			</li>
+			<li>
+				To generate a waveform the audio track must be downloaded to local memory. If you have a lot of remote audio links like a podcast, this means every episode must be downloaded to be converted into a waveform. Depeneding on how fast your network connection is you may not want to use this option.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/nfo/generateAudioWaveforms.cfg","Generating Audio Waveforms","nfo_generateAudioWaveforms");
+		?>
+</div>
+
 <?php
 echo "<div id='serverLibaryPaths' class='titleCard'>\n";
 echo "<h2>Server Libary Paths</h2>\n";
