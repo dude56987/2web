@@ -139,8 +139,8 @@ rss2nfo_update(){
 
 	################################################################################
 	# create show and cache directories
-	createDir "/var/cache/2web/downloads/rss2nfo/"
-	createDir "/var/cache/2web/downloads/rss2nfo/cache/"
+	createDir "/var/cache/2web/downloads/rss/"
+	createDir "/var/cache/2web/downloads/rss/cache/"
 	# generated directory
 	createDir "/var/cache/2web/generated/rss/"
 
@@ -155,48 +155,56 @@ rss2nfo_update(){
 	# read each of the rss sources
 	# - shuffle the order of sources for processing
 	echo "$rssSources" | shuf | while read -r rssSource;do
-		# generate a sum for the source
-		rssSum=$(echo "$rssSource" | sha512sum | cut -d' ' -f1)
-		# check for existing cached rss json data limited to once per day
-		if cacheCheck "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg" "1";then
-			# use yt-dlp to download the rss and convert it into json
-			INFO "Shows:[$finishedSources/$totalSources] - Downloading rss and converting to json from $rssSource"
-			rssAsJson=$(timeout 120 /var/cache/2web/downloads/pip/yt-dlp/bin/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
-			# only write valid rss data to the cache
-			if [ 5 -lt $(echo "$rssAsJson" | wc -c) ];then
-				# cache the rss that has been convered to json
-				echo "$rssAsJson" > "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg"
+		if [ "$rssSource" == "" ];then
+			# this is a blank entry
+			INFO "Skipping Blank Entry..."
+		elif echo "$rssSource" | grep -q --ignore-case "http" ;then
+			# generate a sum for the source
+			rssSum=$(echo "$rssSource" | sha512sum | cut -d' ' -f1)
+			# check for existing cached rss json data limited to once per day
+			if cacheCheck "/var/cache/2web/downloads/rss/cache/$rssSum.cfg" "1";then
+				# use yt-dlp to download the rss and convert it into json
+				INFO "Shows:[$finishedSources/$totalSources] - Downloading rss and converting to json from $rssSource"
+				rssAsJson=$(timeout 120 /var/cache/2web/generated/yt-dlp/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
+				# only write valid rss data to the cache
+				if [ 5 -lt $(echo "$rssAsJson" | wc -c) ];then
+					addToLog "UPDATE" "RSS Download Succeded" "New RSS file from '$rssSource' was successfull"
+					# cache the rss that has been convered to json
+					echo "$rssAsJson" > "/var/cache/2web/downloads/rss/cache/$rssSum.cfg"
+				else
+					# log failed downloads
+					addToLog "ERROR" "RSS Download Failed" "The download of RSS from '$rssSource' has failed!"
+					# load the cached json data
+					rssAsJson="$(cat "/var/cache/2web/downloads/rss/cache/$rssSum.cfg")"
+				fi
 			else
-				# log failed downloads
-				addToLog "ERROR" "Failed Download" "The download of RSS from '$rssSource' has failed!"
+				addToLog "INFO" "RSS Check" "RSS is already up to date '$rssSource'"
 				# load the cached json data
-				rssAsJson="$(cat "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg")"
+				rssAsJson="$(cat "/var/cache/2web/downloads/rss/cache/$rssSum.cfg")"
 			fi
+			# read each item in the json array
+			totalEpisodes=$(echo "$rssAsJson" | wc -l)
+			finishedEpisodes=1
+			# for each item read the json data and put it into a nfo file
+			# - reverse line sorting order to be oldest to newest
+			echo "$rssAsJson" | tac | while read -r rssObject;do
+				# process rss episode
+				processEpisode "$rssObject" "$processedEpisodes" "$totalEpisodes" "$finishedSources" "$totalSources" &
+				waitQueue 0.5 "$totalCPUS"
+				finishedEpisodes=$(( $finishedEpisodes + 1 ))
+			done
+			finishedSources=$(( $finishedSources + 1 ))
+			blockQueue 1
 		else
-			# load the cached json data
-			rssAsJson="$(cat "/var/cache/2web/downloads/rss2nfo/cache/$rssSum.cfg")"
+			# this is a error
+			addToLog "ERROR" "Invalid RSS" "This is a invalid RSS entry '$rssSource'"
 		fi
-		# read each item in the json array
-		totalEpisodes=$(echo "$rssAsJson" | wc -l)
-		finishedEpisodes=1
-		# for each item read the json data and put it into a nfo file
-		# - reverse line sorting order to be oldest to newest
-		echo "$rssAsJson" | tac | while read -r rssObject;do
-			# process rss episode
-			processEpisode "$rssObject" "$processedEpisodes" "$totalEpisodes" "$finishedSources" "$totalSources" &
-			waitQueue 0.5 "$totalCPUS"
-			finishedEpisodes=$(( $finishedEpisodes + 1 ))
-		done
-		finishedSources=$(( $finishedSources + 1 ))
 	done
-	blockQueue 1
 }
 ################################################################################
 function nuke(){
 	echo "########################################################################"
-	echo "[INFO]: NUKE is disabled for rss2nfo..."
-	echo "[INFO]: This is so you can disable the module but keep metadata."
-	echo "[INFO]: Use 'rss2nfo reset' to remove all downloaded metadata."
+	echo "[INFO]: Use 'rss2nfo reset' to remove all downloaded data."
 	echo "########################################################################"
 	ALERT "Remove NFO data generated from the downloaded RSS file"
 	rm -rv /var/cache/2web/generated/rss/
@@ -218,9 +226,16 @@ main(){
 		upgrade-yt-dlp
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		lockProc "rss2nfo"
-		ytdl2kodi_reset_cache
+		ALERT "Removing the downloaded RSS feeds."
+		# cleanup the rss data
+		rm -rv "/var/cache/2web/web/downloads/rss/"
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		lockProc "rss2nfo"
+		ALERT "Removing NFO data generated from rss feeds."
+		ALERT "All this data can be regenerated without redownload of the rss feed."
+		#
+		rm -rv "/var/cache/2web/web/generated/rss/"
+		#
 		nuke
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 		echo -n "Build Date: "
