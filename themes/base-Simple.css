@@ -2453,9 +2453,10 @@ details[open] summary h2::before {
 .zoomBox {
 	position: absolute;
 	cursor: none;
-	width: 80dvh;
+	width: 200dvh;
 	height: 80dvh;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	visibility: hidden;
+	display: none;
 	z-index: 10;
 }

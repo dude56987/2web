@@ -97,6 +97,7 @@
 			var w;
 			var h;
 			var comicPane;
+			//
 			// get the image
 			img = document.getElementById(idTag);
 			// get the distance of
@@ -113,7 +114,6 @@
 			zoomBox.style.backgroundRepeat = "no-repeat";
 			// set the background size
 			zoomBox.style.backgroundSize = (img.offsetWidth * zoom) + "px " + (img.offsetHeight * zoom) + "px";
-			//
 			/////////////////////////////////////////////////////////////////////////////////////////
 			// Create functions for the events to call
 			// - Events are setup below the functions
@@ -132,6 +132,18 @@
 				// account for scrolling
 				cursorX = cursorX - window.pageXOffset;
 				cursorY = cursorY - window.pageYOffset;
+				// clamp the cursor position to the page
+				// - this prevents continuous scroll
+				if(cursorX > document.body.offsetWidth){
+					cursorX = document.body.offsetWidth;
+				}else if(cursorX < 0){
+					cursorX = 0;
+				}
+				if(cursorY > document.body.offsetHeight){
+					cursorY = document.body.offsetHeight;
+				}else if(cursorY < 0){
+					cursorY = 0;
+				}
 				// return the x,y pos
 				return {x : cursorX, y : cursorY};
 			}
@@ -154,16 +166,16 @@
 				// set the zoom box location
 				zoomBox.style.left = ( ( x - w ) ) + "px";
 				zoomBox.style.top = ( ( y - h ) ) + "px";
+				// enable the zoom box
+				zoomBox.style.display = "inline";
 				// set the inside of the zoom box
 				zoomBox.style.backgroundPosition = "" + (((x * zoom) - w ) * -1) + "px " + (((y * zoom) - h ) * -1) + "px";
 			}
 			////////////////////////////////////////////////////////////////////////////////
 			// create events for activating the zoom for mouse and touchscreens
 			////////////////////////////////////////////////////////////////////////////////
-			zoomBox.addEventListener("mousemove", moveZoomBox);
 			img.addEventListener("mousemove", moveZoomBox);
-			zoomBox.addEventListener("touchmove", moveZoomBox);
-			img.addEventListener("touchmove", moveZoomBox);
+			zoomBox.addEventListener("mousemove", moveZoomBox);
 		}
 		// setup keyboard controls
 		function setupKeys() {
@@ -274,6 +286,12 @@
 		zoomInBox("comicThumbPane",2);
 		// value to tell if the zoomBox should be enabled by a mouse down event
 		var zoomBoxEnabled = true;
+		document.body.ontouchstart = function(){
+			// disable the zoombox when a touchscreen is touched
+			console.log("touch start");
+			// remove the zoombox element
+			document.getElementById("zoomBox").remove();
+		}
 		// activate the zoom if the mouse is clicked and no buttons are active
 		document.body.onmousedown = function(){
 			console.log("mouseDown");
