@@ -136,6 +136,8 @@ function cacheUrl($sum,$videoLink){
 	$quality = getQualityConfig($webDirectory);
 	$cacheMode = getCacheMode($webDirectory);
 	debug("The web interface set quality is '".$quality."'");
+	// abort if parts of the stream are missing
+	$command = $command." --abort-on-unavailable-fragments";
 	// max download file size should be 6 gigs, this is a insane file size for a youtube video
 	// if a way of detecting livestreams is found this is unnessary
 	$command = $command." --max-filesize '6g'";
