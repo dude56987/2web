@@ -362,7 +362,7 @@ function cacheCheckMin(){
 	if [ -f "$filePath" ];then
 		# the file exists
 		fileMtime=$(stat -c "%Y" "$filePath")
-		if [ $(($(date "+%s") - $fileMtime)) -gt $(( (60 * 60) * $cacheMinutes )) ];then
+		if [ $(($(date "+%s") - $fileMtime)) -gt $(( 60 * $cacheMinutes )) ];then
 			# the file is more than "$2" minutes old, it needs updated
 			#INFO "File is to old, update the file $1"
 			return 0
