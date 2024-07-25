@@ -785,7 +785,7 @@ function upgrade-pip(){
 			createDir "$pipInstallPath/$packageName/"
 			# if the mod is disabled only download the package into the cache
 			# - This makes packages available to install even if no network connection is available
-			pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$packageName/" --target "$pipInstallPath/$packageName/" --upgrade --upgrade-strategy "only-if-needed"
+			pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$packageName/" --target "$pipInstallPath/$packageName/" --upgrade --upgrade-strategy=only-if-needed
 		done
 	fi
 }
@@ -820,31 +820,28 @@ function upgrade-yt-dlp(){
 	# create the directories to store the download
 	createDir "/var/cache/2web/generated/yt-dlp/"
 	createDir "/var/cache/2web/downloads/yt-dlp/"
-	# only update yt-dlp once every 7 days
-	if cacheCheck "/var/cache/2web/generated/yt-dlp/yt-dlp" "7";then
-		# download yt-dlp directly
-		wget "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" -O "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached"
-		# get the size of the downloaded cache file
-		newFileSize=$(cat "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached" | wc -c)
-		# check if the file is already installed
-		if test -f "/var/cache/2web/generated/yt-dlp/yt-dlp";then
-			# if the file is installed get the file size
-			oldFileSize=$(cat "/var/cache/2web/generated/yt-dlp/yt-dlp" | wc -c)
-		else
-			oldFileSize=0
-		fi
-		# check the new file is larger than the old file
-		if [ $newFileSize -gt $oldFileSize ];then
-			# copy over the new file
-			cp -v "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached" "/var/cache/2web/generated/yt-dlp/yt-dlp"
-			# set the permissions
-			chmod +x "/var/cache/2web/generated/yt-dlp/yt-dlp"
-		fi
-		# cleanup any cached files
-		if test -f "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached";then
-			# remove the cache file for the next download attempt
-			rm -v "/var/cache/2web/downloads/yt-dlp/yt-dlp.cached"
-		fi
+	# download yt-dlp directly
+	# - only download the file if the modified time is newer
+	wget -N "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" -P "/var/cache/2web/downloads/yt-dlp/"
+	# get the sum of the downloaded cache file
+	newFileSum=$(md5sum "/var/cache/2web/downloads/yt-dlp/yt-dlp" | cut -d' ' -f1 )
+	# check if the file is already installed
+	if test -f "/var/cache/2web/generated/yt-dlp/yt-dlp";then
+		# if the file is installed get the file sum
+		oldFileSum=$(md5sum "/var/cache/2web/generated/yt-dlp/yt-dlp" | cut -d' ' -f1 )
+	else
+		oldFileSum=0
+	fi
+	# check the new file is diffrent than the old file by comparing the sums
+	if [ $newFileSum == $oldFileSum ];then
+		ALERT "No upgrade could not be found..."
+	else
+		# upgrade the package with the new one
+		addToLog "UPDATE" "Upgrading Package" "Upgrading the yt-dlp package."
+		# copy over the new file
+		cp -v "/var/cache/2web/downloads/yt-dlp/yt-dlp" "/var/cache/2web/generated/yt-dlp/yt-dlp"
+		# set the permissions
+		chmod +x "/var/cache/2web/generated/yt-dlp/yt-dlp"
 	fi
 }
 ################################################################################
