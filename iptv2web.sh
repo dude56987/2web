@@ -52,6 +52,8 @@ function killFakeImage(){
 }
 ################################################################################
 function streamPass(){
+	# set the path for streamlink to be able to use python
+	export PYTHONPATH="/var/cache/2web/generated/pip/streamlink/";
 	# pass streamlink arguments to correct streamlink path
 	if test -f "/var/cache/2web/generated/pip/streamlink/bin/streamlink";then
 		/var/cache/2web/generated/pip/streamlink/bin/streamlink "$@"
@@ -634,7 +636,7 @@ function processLink(){
 				tempFileName=$(($tempFileName))
 				if [ 3 -gt $tempFileName ];then
 					# try to get json data with streamlink
-					fileName=$(/var/cache/2web/generated/pip/streamlink/bin/streamlink -j "$link" | jq .metadata.title)
+					fileName=$(streamPass -j "$link" | jq .metadata.title)
 				fi
 
 				#ERROR "[DEBUG]: checking filename length '$fileName'"

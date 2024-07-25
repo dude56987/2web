@@ -100,7 +100,6 @@ if (array_key_exists("url",$_GET)){
 	# create the md5sum of the file
 	$sum = md5($videoLink);
 	debug("[DEBUG]: MD5SUM is ".$sum."<br>");
-	debug($streamlinkPath.' --stream-url "'.$videoLink.'"'."<br>");
 	################################################################################
 	# get the quality, defaults to worst, this is for making low bandwidth and HD
 	# versions of channels
@@ -116,7 +115,13 @@ if (array_key_exists("url",$_GET)){
 	# Get a direct link to the video bypassing the cache.
 	# This works on most sites, except youtube.
 	################################################################################
-	$output = shell_exec($streamlinkPath.' --stream-url "'.$videoLink.'" '.$quality);
+	# use the pip package path
+	$pathInfo='export PYTHONPATH="/var/cache/2web/generated/pip/streamlink/";';
+	#
+	$command=$pathInfo.$streamlinkPath.' --stream-url "'.$videoLink.'" '.$quality;
+	debug($command);
+	#
+	$output = shell_exec($command);
 	debug("Output = ".$output."<br>");
 	if (strpos($output,"error:")){
 		debug("Checking for 'error:' in ".$output);
