@@ -1,4 +1,4 @@
-<!--
+<?PHP
 ########################################################################
 # 2web resolver for caching and playback of video links using yt-dlp
 # Copyright (C) 2024  Carl J Smith
@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
--->
-<?PHP
+
 // NOTE: Do not write any text to the document, this will break the redirect
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
@@ -92,8 +91,6 @@ function cacheUrl($sum,$videoLink){
 			fwrite($playlist,"bump.mp4\n");
 		}
 		fwrite($playlist,"#EXTINF:1,\n");
-		//fwrite($playlist,$serverPath."RESOLVER-CACHE/$sum/video.mp4\n");
-		//fwrite($playlist,"RESOLVER-CACHE/$sum/video.mp4\n");
 		fwrite($playlist,"video.mp4\n");
 		fclose($playlist);
 	}
@@ -160,25 +157,36 @@ function cacheUrl($sum,$videoLink){
 
 		# update the download command
 		if (($upgradeQuality == "best") or ($upgradeQuality == "worst")){
-			$dlCommand = $dlCommand." -f '".$upgradeQuality."'";
+			if ($upgradeQuality == "worst"){
+				$upgradeQuality = " -f '".$upgradeQuality."'";
+			}else{
+				# no quality should be given for the best quality
+				$upgradeQuality = "";
+			}
 		}else{
 			$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
 		}
 		#
 		$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
-		//$dlCommand = $dlCommand." --no-part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.%(ext)s.part' -c '".$videoLink."'";
-		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.%(ext)s.part' -c '".$videoLink."'";
-		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' -c '".$videoLink."'";
-		//$dlCommand = $dlCommand." --part --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 		#
-		//$dlCommand = $dlCommand." && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}else{
 		# if no upgrade is set then simply convert the hls stream into a mp4
 		$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}
-
+	# use the correct format for the quality value chosen
+	if (($quality == "best") or ($quality == "worst")){
+		if ($quality == "worst"){
+			$quality = " -f '".$quality."'";
+		}else{
+			# no quality should be given for the best quality
+			$quality = "";
+		}
+	}else{
+		$quality = " -S '".$quality."'";
+	}
 	# create the stream command that will be ran to get the chosen quality and convert it into a hls stream
-	$command = $command." -S ".$quality." -o - -c '".$videoLink."' | ffmpeg -i - -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
+	# force the most compatible version of the stream codecs
+	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts - | ffmpeg -i - -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -204,16 +212,19 @@ function cacheResolve($sum,$webDirectory){
 	while(true){
 		# if 60 seconds of the video has been downloaded then launch the video
 		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+			header("Content-type: audio/mpeg;");
 			# redirect to discovered mp3
 			redirect("/RESOLVER-CACHE/$sum/video.mp3");
 		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-			// file is fully downloaded and converted play instantly
+			header("Content-type: video/mp4;");
+			# file is fully downloaded and converted play instantly
 			redirect("/RESOLVER-CACHE/$sum/video.mp4");
 		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
 			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
+				header("Content-type: application/mpegurl;");
 				# redirect to the stream
 				redirect("/RESOLVER-CACHE/$sum/video.m3u");
 			}
@@ -261,8 +272,7 @@ if (array_key_exists("url",$_GET)){
 		################################################################################
 		$output = shell_exec('/usr/local/bin/youtube-dl --get-url '.$videoLink);
 		if ($output == null){
-			// the url was not able to resolve
-			//echo "The URL '".$_GET['url']."' was unable to resolve...";
+			# the url was not able to resolve
 			debug("The URL was unable to resolve...<br>");
 		}else{
 			// output is the resolved url
@@ -340,6 +350,8 @@ if (array_key_exists("url",$_GET)){
 		}else{
 			# ignore user abort of connection
 			ignore_user_abort(true);
+			# allow parallel loading of pages for user
+			session_write_close();
 			# set execution time limit to 15 minutes
 			set_time_limit(900);
 
@@ -349,12 +361,7 @@ if (array_key_exists("url",$_GET)){
 			if(! file_exists("$webDirectory/RESOLVER-CACHE/$sum/data.log")){
 				cacheUrl($sum,$videoLink);
 			}
-			# the playlist is wrote by the php and cached on the server this code
-			# should be able to exit here as it should have wrote the file to the
-			# server and sent the created file from RAM the the client, the
-			# download has also already been forked
-			#
-			# wait for either the bump or the file to be downloaded and redirect
+			# wait for a cache link to become available and redirect
 			cacheResolve($sum,$webDirectory);
 		}
 	}

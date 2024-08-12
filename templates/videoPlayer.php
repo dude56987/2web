@@ -8,6 +8,7 @@
 		$titleData=file_get_contents($titlePath);
 		$useJson=false;
 		$jsonPath="";
+		$jsonSum=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
 	}else{
 		$titleData=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
 		$jsonSum=$titleData;
@@ -42,7 +43,32 @@
 ########################################################################
 -->
 <?PHP
-
+function fetchHeader($URL, $streamContextParams=false){
+	if ($streamContextParams == false){
+		# setup the defaul stream context params
+		# - timeout is 30 seconds
+		# - accept the webserver cert by default if this url is on the local server
+		$streamContextParams=[
+			'ssl' => [
+				'cafile' => "/var/cache/2web/ssl-cert.crt",
+				'verify_peer' => true,
+				'verify_peer_name' => true,
+				'allow_self_signed' => true,
+			],
+			'http' => [
+				'timeout' => 90,
+				'method' => 'HEAD',
+				'user_agent' => 'PHP',
+			],
+		];
+	}
+	$streamContext=stream_context_create($streamContextParams);
+	#
+	$headerOutputData=get_headers($URL, true, $streamContext);
+	#
+	return $headerOutputData;
+}
+#
 if($useJson){
 	# use random fanart if this is loading from the json
 	echo "<html id='top' class='randomFanart'>";
@@ -83,133 +109,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 ?>
 <head>
 <?PHP
-#################################################################################
-function transcodeVideo($link, $proto){
-	# The function for transcoding a file for playback in the browser
-	#
-	# - This function does not check if transcoding is enabled use isTranscodeEnabled()
-	#   to check before calling this function
-
-	# if the trancode is enabled run the transcode job
-	debug("Reading link for transcode : '".$link."'");
-	# create the sum of the link
-	$sum=md5($link);
-	$webServerPath=$_SERVER["DOCUMENT_ROOT"];
-
-	# set the default cache value
-	$cacheFile=false;
-	# set the storage path
-	$storagePath=$webServerPath."/TRANSCODE-CACHE/".$sum."/";
-	# if the json data has not yet been verified to have downloaded the entire file
-	if (! file_exists($storagePath."verified.cfg")){
-		# check the file downloaded correctly by comparing the json data file length with local file length
-		if (file_exists($storagePath."video.mp4")){
-			# if the file was last modified more than 60 seconds ago
-			# - checks should wait for caching to complete in order to properly read file metadata
-			if ( ( time() - filemtime($storagePath."video.mp4") ) > 60){
-				if (file_exists($storagePath."video.info.json")){
-					# The json downloaded from the remote and stored by the resolver
-					$remoteJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.info.json"));
-					$remoteJsonValue= (int)$remoteJson->media->track[0]->Duration;
-					# reduce the value to add variance for rounding errors
-					# - Depending on the json data and how it was generated the rounding of time may go up or down by one
-					$remoteJsonValue-=1;
-					# the json data from reading the current downloaded file
-					$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video.mp4"));
-					$localJsonValue= (int)$localJson->media->track[0]->Duration;
-					# compare the lenght in the remote json to the local file, including the variance above
-					if ($localJsonValue >= $remoteJsonValue){
-						addToLog("WARNING","Attempt to Verify Track Length","Track was verified in /TRANSCODE-CACHE/$sum/");
-						debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-						# if the length is correct the file is verified to have downloaded completely
-						touch($storagePath."verified.cfg");
-					}else{
-						addToLog("WARNING","Attempt to Verify Transcoded Track Length","Track was NOT verified because the length was incorrect<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
-						debug("The video was corrupt and could not be verified...");
-						$cacheFile=true;
-					}
-				}else{
-					addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with");
-					# the mp4 was found but the json was not
-					$cacheFile=true;
-				}
-			}
-		}
-	}
-	# make sure there is no existing stream available
-	if ( ! file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.m3u")){
-		$cacheFile=true;
-	}
-	if ($cacheFile){
-		addToLog("WARNING", "Transcode Job was Started", "A transcode job was started for '$link'");
-		if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
-			mkdir("$webServerPath/TRANSCODE-CACHE/");
-		}
-		# cleanup html string encoding of spaces and pathnames
-		#$link = str_replace("%20"," ",$link);
-		#$link = str_replace("%21"," ",$link);
-		#
-		$link = str_replace("'","",$link);
-		$link = str_replace('"',"",$link);
-		# decode the link
-		$link = urldecode($link);
-		# build the command
-		$fullLinkPath=$webServerPath.$link;
-		# create a transcode directory to store the hls stream if it does not exist
-		if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/$sum/")){
-			mkdir("$webServerPath/TRANSCODE-CACHE/$sum/");
-		}
-		# remove doubled slashes to fix paths
-		$fullLinkPath=str_replace("//","/",$fullLinkPath);
-		$command = "/usr/bin/ffmpeg -i '".$fullLinkPath."'";
-		$command .= " -preset superfast";
-		$command .= " -hls_list_size 0";
-		$command .= " -start_number 0";
-		$command .= " -master_pl_name 'play.m3u' -g 30 -hls_time 10 -f hls";
-		$command .= " '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u'";
-		# encode the stream into a mp4 file for compatibility with firefox
-		$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/stream.m3u' '".$webServerPath."/TRANSCODE-CACHE/".$sum."/play.mp4'";
-
-		# save the transcode command to a file
-		file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/command.cfg","$command");
-		# launch the command to post job in the queue
-		addToQueue("multi",$command);
-		# sleep to allow the transcode job to startup
-		# build and display a m3u file with a delay using the spinner gif
-		sleep(10);
-	}
-
-	#
-	$playbackUrl="";
-	$playbackMime="";
-	#
-	$plabackAvailable=false;
-	#
-	if (file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.mp4")){
-		$playbackUrl="/TRANSCODE-CACHE/$sum/play.mp4";
-		$playbackMime="video/mp4";
-		# redirect to the mp4 file for the highest level of browser compatibility
-		if (filesize($_SERVER["DOCUMENT_ROOT"].$playbackUrl) > 10){
-			$plabackAvailable=true;
-			$playbackUrl=$proto.$_SERVER["HTTP_HOST"]."/TRANSCODE-CACHE/$sum/play.mp4";
-		}
-	}else if (file_exists($webServerPath."/TRANSCODE-CACHE/$sum/play.m3u")){
-		$playbackUrl="/TRANSCODE-CACHE/$sum/play.m3u";
-		$playbackMime="application/mpegurl";
-		# redirect to the master playlist
-		if (filesize($_SERVER["DOCUMENT_ROOT"].$playbackUrl) > 10){
-			$plabackAvailable=true;
-			$playbackUrl=$proto.$_SERVER["HTTP_HOST"]."/TRANSCODE-CACHE/$sum/play.m3u";
-		}
-	}
-	if($plabackAvailable){
-		return Array($playbackUrl, $playbackMime);
-	}else{
-		# the transcode job failed completely so add it to the system log
-		addToLog("ERROR", "A transcode Job Failed", "The transcode job for '$link' has failed. The path '$webServerPath/TRANSCODE-CACHE/$sum/' does not contain any playable video content.");
-		return false;
-	}
-}
 #################################################################################
 function isTranscodeEnabled(){
 	$doTranscode = False;
@@ -301,32 +200,27 @@ document.body.addEventListener('keydown', function(event){
 	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
 	if (file_exists($directLinkPath)){
 		$directLinkData=file_get_contents($directLinkPath);
-		if ($_SERVER["HTTP_HOST"] != "localhost"){
-			$directLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$directLinkData);
-		}
+		#
 		$directLinkData=trim($directLinkData, "\r\n");
+		#
 		$directLinkExists=true;
+		# remove parenthesis from video link if they exist
+		$directLinkData=str_replace('"','',$directLinkData);
+		$directLinkData=str_replace("'","",$directLinkData);
+		# create the sum of the file
+		$sum = hash("sha512",$directLinkData,false);
 	}else{
 		$directLinkExists=false;
 	}
-	# check for cache link
-	$cacheLinkPath=$_SERVER["SCRIPT_FILENAME"].".cacheLink";
-	if (file_exists($cacheLinkPath)){
-		$cacheLinkData=file_get_contents($cacheLinkPath);
-		$cacheLinkData=str_replace((gethostname().".local"),$_SERVER["HTTP_HOST"],$cacheLinkData);
-		$cacheLinkData=trim($cacheLinkData, "\r\n");
-		$cacheLinkExists=true;
+	# check if the direct link is a link to a external source rather than the local server
+	if ( substr($directLinkData,0,1) == "/" ){
+		$httpLink=false;
+	}else if ( substr($directLinkData,0,7) == "http://" ){
+		$httpLink=true;
+	}else if ( substr($directLinkData,0,8) == "https://" ){
+		$httpLink=true;
 	}else{
-		$cacheLinkExists=false;
-	}
-	# get the strmlink
-	$strmLinkPath=$_SERVER["SCRIPT_FILENAME"].".strmLink";
-	if (file_exists($strmLinkPath)){
-		$strmLinkData=file_get_contents($strmLinkPath);
-		$strmLinkData=trim($strmLinkData, "\r\n");
-		$strmLinkExists=true;
-	}else{
-		$strmLinkExists=false;
+		$httpLink=true;
 	}
 	# this should always be set even if it is empty
 	$videoChannelUrl="";
@@ -367,7 +261,6 @@ document.body.addEventListener('keydown', function(event){
 			$videoChannelUrl=$tempVideoChannelUrl;
 		}
 		# get the plot data
-		#if(array_key_exists("description",$jsonData)){
 		if(property_exists($jsonData, "description")){
 			$plotData="<div class='plot'>\n";
 			$plotData.=str_replace("\n","<br>",$jsonData->description);
@@ -472,81 +365,32 @@ document.body.addEventListener('keydown', function(event){
 	?>
 </div>
 </div>
-	<?PHP
-		# get the cache link if it exists
-		if ($cacheLinkExists){
-			# check if the mp4 file is already in the cache
-			$videoLink = $cacheLinkData;
-		}else if ($directLinkExists){
-			# load the direct link to the video into the player
-			$videoLink = $directLinkData;
-		}
-		# make the full path
-		if (file_exists("show.title")){
-			if (! ($cacheLinkExists)){
-				# load show episode
-				$videoLink = $directLinkData;
-			}
-		}else{
-			# load movie
-			$videoLink = "$directLinkData";
-		}
+<?PHP
+		# flush output so far to the page
 		flush();
 		ob_flush();
-		# get headers to use the local certificate
-		$streamContextParams=[
-			'ssl' => [
-				'cafile' => "/var/cache/2web/ssl-cert.crt",
-				'verify_peer' => true,
-				'verify_peer_name' => true,
-				'allow_self_signed' => true,
-			],
-		];
-		$streamContext=stream_context_create($streamContextParams);
+
 		# check if the file exists and check the metadata
-		if ($cacheLinkExists){
-			# check if the mp4 file is already in the cache
-			if(file_exists($jsonPath)){
-				# if the json data exists
-				$mp4FilePath = $_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4";
-				$strmFilePath = $_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.m3u";
-				# if the mp4 exists load the file directly without reading the headers
-				if(file_exists($mp4FilePath)){
-					# build the video link directly to the mp4 file
-					$videoLink = $proto.$_SERVER["HTTP_HOST"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4" ;
-					$videoMimeType=Array();
-					$videoMimeType["Content-Type"]="video/mp4";
-					$fullPathVideoLink=$videoLink;
-				#}else if(file_exists($strmFilePath)){
-				}else{
-					# try the stream link
-					$videoLink = $proto.$_SERVER["HTTP_HOST"]."/RESOLVER-CACHE/".$jsonSum."/video.m3u" ;
-					$videoMimeType=Array();
-					$videoMimeType["Content-Type"]="application/mpegurl";
-					$fullPathVideoLink=$videoLink;
-				}
-			}else{
-				# this is not a file but a external link so check the mime type of the video link
-				#$videoMimeType=get_headers($cacheLinkData, true, $streamContext);
-				# the mimetype should be gathered from the local resolver location
-				$videoMimeType=get_headers($proto.gethostname().".local/ytdl-resolver.php?url=".$directLinkData, true, $streamContext);
-				$fullPathVideoLink=$cacheLinkData;
-			}
+		if ($httpLink){
+			# this is not a file but a external link so check the mime type of the video link
+			# the mimetype should be gathered from the local resolver location
+			$videoMimeType=fetchHeader($proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData);
+			#
+			$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="'.$directLinkData.'"';
 		}else{
-			if ( (substr($directLinkData,0,8) == "https://") or (substr($directLinkData,0,7) == "http://") ){
-				# this is a external link
-				$videoMimeType=get_headers($directLinkData, true);
-				$fullPathVideoLink=$directLinkData;
+			# if the trancode is enabled run the transcode job
+			# - the transcoder will transcode all local videos for playback on webpages.
+			if (isTranscodeEnabled()){
+				# send the link to the resolver to transcode it using the same method as the resolver
+				$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/transcode.php?path="'.urlencode($directLinkData).'"';
+				# get mime data from the resolver
+				$videoMimeType=fetchHeader($fullPathVideoLink);
 			}else{
-				# this is a file path
-				$videoMimeType=mime_content_type($_SERVER["DOCUMENT_ROOT"].$directLinkData);
-				$fullPathVideoLink=$directLinkData;
+				# build the full path on the server with the current protocol
+				$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"]."/".$directLinkData;
+				# if no stream link exists then generate the mime type info from the file
+				$videoMimeType=mime_content_type(str_replace("//","/", ($_SERVER["DOCUMENT_ROOT"].$directLinkData) ));
 			}
-		}
-		# generate https links for https connections
-		if (array_key_exists("HTTPS",$_SERVER)){
-			# the cache links that are linked to should be https anyway
-			$fullPathVideoLink=str_replace("http://","https://",$fullPathVideoLink);
 		}
 		# pull the content type based on the mime data
 		if (is_array($videoMimeType)){
@@ -571,62 +415,6 @@ document.body.addEventListener('keydown', function(event){
 			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
 			echo "</audio>\n";
-		}else if (is_in_array("video/x-matroska", $videoMimeType)){
-			# if the trancode is enabled run the transcode job
-			if (isTranscodeEnabled()){
-				# use the transcode function in order to transcode the video if transcoding is enabled
-				$transcodePath=transcodeVideo(str_replace(" ","%20", $videoLink), $proto);
-				if ($transcodePath == false){
-					echo "<div class='titleCard'>\n";
-					echo "The trancode job is currently running but is unfinished...\n";
-					echo "</div>\n";
-				}else{
-					# create the generated transcode path localy
-					#$transcodePath=$videoMimeType["Location"];
-					if ("video/mp4" == $transcodePath[1]){
-						# draw the mp4 player
-						echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
-						echo "	<source src='".$transcodePath[0]."' type='video/mp4'>\n";
-						echo "</video>\n";
-					}else if ("application/mpegurl" == $transcodePath[1]){
-						# draw the hls stream player webpage player
-						echo "<script>\n";
-						echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
-						echo "	if(Hls.isSupported()) {\n";
-						echo "		var video = document.getElementById('video');\n";
-						echo "		var hls = new Hls({\n";
-						echo "			startPosition: 0,\n";
-						echo "			enableWebVTT: true,\n";
-						echo "			enableWorker: true,\n";
-						echo "			enableSoftwareAES: true,\n";
-						echo "			autoStartLoad: true,\n";
-						echo "			debug: true\n";
-						echo "		});\n";
-						echo "		hls.loadSource('".$transcodePath[0]."');\n";
-						echo "		hls.attachMedia(video);\n";
-						echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
-						echo "			video.muted = false;\n";
-						echo "			video.play();\n";
-						echo "		});\n";
-						echo "	}\n";
-						echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
-						echo "		video.src = '".$transcodePath[0]."';\n";
-						echo "		video.addEventListener('canplay',function() {\n";
-						echo "			video.play();\n";
-						echo "		});\n";
-						echo "	}\n";
-						# start playback on page load
-						echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
-						echo "</script>\n";
-						noscriptRefresh(10);
-					}
-				}
-			}else{
-				# this is a mkv file that can not be played with the web player
-				echo "<div class='titleCard'>\n";
-				echo "The server administrator has disabled video transcoding.Video Player Can Not currently Play MKV files. Use the direct links or external links below to download or access media with a external application.\n";
-				echo "</div>\n";
-			}
 		}else if (is_in_array("application/mpegurl", $videoMimeType)){
 			# hls stream
 			# draw the hls stream player webpage player
@@ -660,31 +448,11 @@ document.body.addEventListener('keydown', function(event){
 			echo "</script>\n";
 			noscriptRefresh(10);
 		}else{
-			# draw the hls stream player webpage player
-			echo "<script>\n";
-			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
-			echo "	if(Hls.isSupported()) {\n";
-			echo "		var video = document.getElementById('video');\n";
-			echo "		var hls = new Hls({\n";
-			echo "			startPosition: 0\n";
-			echo "		});\n";
-			echo "		hls.loadSource('$fullPathVideoLink');\n";
-			echo "		hls.attachMedia(video);\n";
-			echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
-			#echo"	echo \"			video.muted = false;\";"
-			echo "			video.play();\n";
-			echo "		});\n";
-			echo "	}\n";
-			echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
-			echo "		video.src = '$fullPathVideoLink';\n";
-			echo "		video.addEventListener('canplay',function() {\n";
-			echo "			video.play();\n";
-			echo "		});\n";
-			echo "	}\n";
-			# start playback on page load
-			echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
-			echo "</script>\n";
-			noscriptRefresh(10);
+			# This is a unsupported media file that can not be played with the web player
+			# - This is the message displayed when a local media type is given but transcoding is disabled
+			echo "<div class='titleCard'>\n";
+			echo "The server administrator has disabled video transcoding.<br> Video player can not currently play this file type '$videoMimeType'.<br> Use the direct links or external links below to download or access media with a external application.\n";
+			echo "</div>\n";
 		}
 	?>
 <div class='descriptionCard'>
@@ -710,15 +478,23 @@ document.body.addEventListener('keydown', function(event){
 	echo "</div>\n";
 
 	# build the cache links
-	if ($cacheLinkExists){
+	if ( $httpLink ){
 		# if the cache link is a external link that means it is a real cache link
-		#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+		echo "<div>\n";
+		echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."'>\n";
+		echo "📥Cache Link\n";
+		echo "</a>\n";
+		echo "</div>\n";
+	}else{
+		# only draw a cache link for local links if the transcoder is enabled
+		if (isTranscodeEnabled()){
+			# this is a local link so show the transcode cache link unless transcoding is disabled
 			echo "<div>\n";
-			echo "<a class='button hardLink' href='$fullPathVideoLink'>\n";
+			echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/transcode.php?path=".$directLinkData."'>\n";
 			echo "📥Cache Link\n";
 			echo "</a>\n";
 			echo "</div>\n";
-		#}
+		}
 	}
 	# build the continue playing playlist links
 	if (file_exists("show.title")){
@@ -735,27 +511,21 @@ document.body.addEventListener('keydown', function(event){
 			echo "<div>";
 			# build the play on kodi links
 			if (file_exists("show.title")){
-				#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/shows/$showTitle/Season $seasonTitle/$directLinkData'>\n";
-				# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-				if ($cacheLinkExists){
-					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
+				# if this is a .strm link it should always be passed though the resolver
+				# - The resolver will cache direct links to media files
+				# - The resolver will resolve webpages that contain media links
+				# - using a self signed cert will cause this to fail unless you setup all
+				#   kodi clients with the public cert so this is currently disabled by default
+				if($httpLink){
+					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
 				}else{
-					#if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
-					if ( stripos($fullPathVideoLink,(gethostname().".local")) !== false ){
-						echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
-					}else{
-						if($strmLinkExists){
-							echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=".str_replace(" ","%20","$strmLinkData")."'>\n";
-						}else{
-							echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
-						}
-					}
+					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
 				}
 			}else{
 				# this is a movie
-				#echo "<a class='button hardLink' href='/kodi-player.php?url=".$proto.$_SERVER["HTTP_HOST"]."/kodi/movies/$movieTitle/$directLinkData'>\n";
-				# - using a self signed cert will cause this to fail unless you setup all kodi clients with the public cert so this is currently disabled by default
-				if ($cacheLinkExists){
+				# - using a self signed cert will cause this to fail unless you setup all
+				#   kodi clients with the public cert so this is currently disabled by default
+				if($httpLink){
 					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
 				}else{
 					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
@@ -767,14 +537,6 @@ document.body.addEventListener('keydown', function(event){
 		}
 	}
 
-	if ($cacheLinkExists){
-		#$clientLink="/ytdl-resolver.php?url=".$directLinkData;
-		$clientLink=$cacheLinkData;
-	}else{
-		$clientLink=$directLinkData;
-	}
-	#$clientLink=$directLinkData;
-
 	# if the client is enabled
 	if (yesNoCfgCheck("/etc/2web/client.cfg")){
 		# if the group permissions are available for the current user
@@ -782,7 +544,7 @@ document.body.addEventListener('keydown', function(event){
 			# draw the button for playing videos across all the clients
 			echo "<div>";
 			# build the play on client link
-			echo "<a class='button hardLink' target='_new' href='/client/?play=".$clientLink."'>\n";
+			echo "<a class='button hardLink' target='_new' href='/client/?play=".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."'>\n";
 			echo "🎟️ Play on Client\n";
 			echo "</a>\n";
 			echo "</div>\n";
@@ -792,20 +554,18 @@ document.body.addEventListener('keydown', function(event){
 	echo "<div>";
 	# build the vlc links
 	if (file_exists("show.title")){
-		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+		if ( $httpLink ){
 			# if this is a external link
 			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
 		}else{
-			#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 		}
 	}else{
-		if ( (substr($fullPathVideoLink,0,8) == "https://") or (substr($fullPathVideoLink,0,7) == "http://") ){
+		if ( $httpLink ){
 			# if this is a external link
 			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
 		}else{
 			# this is a movie
-			#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 		}
 	}
@@ -814,31 +574,14 @@ document.body.addEventListener('keydown', function(event){
 	echo "</a>\n";
 	echo "</div>\n";
 
-	#if ($cacheLinkExists){
-	#	echo "<div>";
-	#	echo "<a class='button hardLink vlcButton' href='vlc://$fullPathVideoLink'>\n";
-	#	echo "📥Cache Link\n";
-	#	echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
-	#	echo "</a>\n";
-	#	echo "</div>";
-	#}
-
 	if (file_exists("show.title")){
 		echo "<div>\n";
-		#echo "<a class='button hardLink vlcButton' href='vlc://".$proto.$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>";
 		echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>\n";
 		echo "🔁 Continue\n";
 		echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
 		echo "</a>\n";
 		echo "</div>\n";
 	}
-	#if($useJson){
-	#	# draw the json button link if it exists
-	#	echo "<a class='button hardLink' href='".str_replace($_SERVER["DOCUMENT_ROOT"],"",$jsonPath)."'>\n";
-	#	echo "📑 JSON\n";
-	#	echo "</a>\n";
-	#	echo "</div>\n";
-	#}
 
 	echo "</div>\n";
 ?>
