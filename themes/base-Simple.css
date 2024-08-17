@@ -842,7 +842,7 @@ a:visited {
 }
 .activeButton{
 	box-shadow: 0px 0px 0px var(--shadowColor);
-	color: var(--highlightText);
+	color: var(--highlightText) !important;
 	background-color: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
