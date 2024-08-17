@@ -27,20 +27,6 @@ include("/usr/share/2web/2webLib.php");
 # require the web player group
 requireGroup("webPlayer");
 ################################################################################
-function is_in_array($needle,$haystack){
-	# search for a needle in a string or array haystack
-	if (is_array($haystack)){
-		return in_array($needle, $haystack);
-	}else if(is_string($haystack)){
-		if (stripos($haystack,$needle) !== false){
-			return true;
-		}else{
-			return false;
-		}
-	}else{
-		return false;
-	}
-}
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	# ignore close connection
@@ -57,9 +43,11 @@ if (array_key_exists("url",$_GET)){
 	if (stripos($videoLink,"http://") !== false){
 		# link is http the link has passed
 		$linkFailed=false;
+		$isHttps=false;
 	}else if (stripos($videoLink,"https://") !== false){
 		# link is https the link has passed
 		$linkFailed=false;
+		$isHttps=true;
 	}
 	if($linkFailed){
 		# redirect failed links to the error page
@@ -85,25 +73,28 @@ if (array_key_exists("url",$_GET)){
 	# download the remote file to the web player cache in the background if it does not yet exist
 	if (! file_exists($videoPathPrefix.$videoLinkSum.".finished")){
 		# get the mime type for the remote file
-		$videoMimeType=get_headers($videoLink, true);
-		$videoMimeType=$videoMimeType["Content-Type"];
+		$videoMimeTypeHeader=get_headers($videoLink, true);
+		$videoMimeType=$videoMimeTypeHeader["Content-Type"];
 		# check and set the extension based on the remote file mime data
-		if ("video/mp4" == $videoMimeType){
+		if (is_in_array("video/mp4",$videoMimeType)){
 			$ext=".mp4";
-		}else if ("audio/mpeg" == $videoMimeType){
+		}else if (is_in_array("audio/mpeg",$videoMimeType)){
 			$ext=".mp3";
-		}else if ("video/webm" == $videoMimeType){
+		}else if (is_in_array("video/webm",$videoMimeType)){
 			$ext=".webm";
-		}else if ("video/ogg" == $videoMimeType){
+		}else if (is_in_array("video/ogg",$videoMimeType)){
 			$ext=".ogv";
-		}else if ("video/x-matroska" == $videoMimeType){
+		}else if (is_in_array("video/x-matroska",$videoMimeType)){
 			$ext=".mkv";
 		}else{
-			addToLog("ERROR", "Unsupported file URL", "Unsupported file type '$videoMimeType' for file '$orignalVideoLink', If this is HTTPS using a self signed certificate this error will also occur but the video mime type data will be blank.");
-			redirect("?uploadFailure=".$videoMimeType);
+			addToLog("ERROR", "Unsupported file URL", "Unsupported file type '$videoMimeType' for file '$orignalVideoLink'\n<br>Video mime type header = ".var_export($videoMimeTypeHeader, true));
+			if($isHttps){
+				addToLog("ERROR", "Unsupported file URL", "videoLink='$orignalVideoLink',\n<br>If this is HTTPS using a self signed certificate the self signed cert must be configured to be accepted by this server.");
+			}
+			redirect("?uploadFailure=".$videoMimeType."&tryhttp=".$videoLink);
 		}
-		# generate qr codes if they do not yet exist
-		$command = "wget -c -O '".$videoPathPrefix.$videoLinkSum.$ext."' '$videoLink';";
+		# create the command to build the thumbnail
+		$command = "/var/cache/2web/generated/yt-dlp/yt-dlp -c -O '".$videoPathPrefix.$videoLinkSum.$ext."' '$videoLink';";
 		$command .= "ffmpegthumbnailer -i '".$videoPathPrefix.$videoLinkSum.$ext."' -o '".$videoPathPrefix.$videoLinkSum."-thumb.png';";
 		$command .= "touch '".$videoPathPrefix.$videoLinkSum.".finished';";
 		$command .= "touch '".$videoPathPrefix.$videoLinkSum.$ext."';";
@@ -122,17 +113,6 @@ if (array_key_exists("url",$_GET)){
 		# build the direct link
 		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
 			file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
-		}
-		# build the cache link
-		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.cacheLink")){
-			file_put_contents($videoPathPrefix.$videoLinkSum.".php.cacheLink", "/web_player/".$videoLinkSum."/".$videoLinkSum.$ext);
-		}
-		# build the strm links
-		if(! file_exists($videoPathPrefix.$videoLinkSum.".strm")){
-			file_put_contents($videoPathPrefix.$videoLinkSum.".strm", "/web_player/".$videoLinkSum."/".$videoLinkSum.$ext);
-		}
-		if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
-			file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
 		}
 	}
 	# redirect to the web page
@@ -187,17 +167,6 @@ if (array_key_exists("url",$_GET)){
 	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
 		file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
 	}
-	# build the cache link
-	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.cacheLink")){
-		file_put_contents($videoPathPrefix.$videoLinkSum.".php.cacheLink", $videoLink);
-	}
-	# build the strm links
-	if(! file_exists($videoPathPrefix.$videoLinkSum.".strm")){
-		file_put_contents($videoPathPrefix.$videoLinkSum.".strm", $videoLink);
-	}
-	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
-		file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
-	}
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
 }else if(array_key_exists("uploadMediaFile",$_FILES)){
@@ -224,28 +193,25 @@ if (array_key_exists("url",$_GET)){
 	# log the upload with the system
 	addToLog("DOWNLOAD", "User Uploaded File", "The user has uploaded a file '$fileOgName' to '$fileName' with mime type '$fileMimeType'");
 	# check the mime data for the file type
-	if($fileMimeType == "video/mp4"){
+	if(is_in_array($fileMimeType, "video/mp4")){
 		$filePath=$videoPathPrefix.$fileSum.".mp4";
 		$fileOgName=str_replace(".mp4","",$fileOgName);
-	}else if ($fileMimeType == "audio/mpeg"){
+	}else if (is_in_array($fileMimeType, "audio/mpeg")){
 		$filePath=$videoPathPrefix.$fileSum.".mp3";
 		$fileOgName=str_replace(".mp3","",$fileOgName);
-	}else if($fileMimeType == "video/webm"){
+	}else if(is_in_array($fileMimeType, "video/webm")){
 		$filePath=$videoPathPrefix.$fileSum.".webm";
 		$fileOgName=str_replace(".webm","",$fileOgName);
-	}else if($fileMimeType == "video/ogg"){
+	}else if(is_in_array($fileMimeType, "video/ogg")){
 		$filePath=$videoPathPrefix.$fileSum.".ogg";
 		$fileOgName=str_replace(".ogg","",$fileOgName);
-	#}else if($fileMimeType == "video/x-msvideo"){
-	#	$filePath=$videoPathPrefix.$fileSum.".avi";
-	#	$fileOgName=str_replace(".avi","",$fileOgName);
-	}else if($fileMimeType == "video/x-matroska"){
+	}else if(is_in_array($fileMimeType, "video/x-matroska")){
 		$filePath=$videoPathPrefix.$fileSum.".mkv";
 		$fileOgName=str_replace(".mkv","",$fileOgName);
-	}else if($fileMimeType == "video/mkv"){
+	}else if(is_in_array($fileMimeType, "video/mkv")){
 		$filePath=$videoPathPrefix.$fileSum.".mkv";
 		$fileOgName=str_replace(".mkv","",$fileOgName);
-	}else if($fileMimeType == "audio/mp3"){
+	}else if(is_in_array($fileMimeType, "audio/mp3")){
 		$filePath=$videoPathPrefix.$fileSum.".mp3";
 		$fileOgName=str_replace(".mp3","",$fileOgName);
 	}else{
@@ -361,9 +327,21 @@ include("/usr/share/2web/templates/header.php");
 # draw error banners
 if (array_key_exists("uploadFailure",$_GET)){
 	echo errorBanner("Error: Unsupported file type '".$_GET["uploadFailure"]."'\n");
-	echo errorBanner("Supported filetypes are '.mp4','.mvk','.avi', and '.mp3'\n");
+	echo errorBanner("Supported filetypes are '.mp4','.mvk','.avi', '.webm', '.ogv', and '.mp3'\n");
+	if (requireGroup("iptv2web")){
+		echo errorBanner("Error: If this is a remote live stream, live streams are currently unsupported in the web player but can be added in live section of website by a admin.\n");
+	}
 }else if (array_key_exists("failure",$_GET)){
 	echo errorBanner("The given link '".$_GET['failure']."' is a invalid link and can not be parsed...",true);
+}
+if (array_key_exists("tryhttp",$_GET)){
+	# convert the https to http in the link
+	$cleanHttp=preg_replace("/^https/", "http", $_GET["tryhttp"]);
+	//$cleanHttp=preg_replace("/^https/", "http", urldecode($_GET["tryhttp"]));
+	//$cleanHttp=str_replace("https", "http", urldecode($_GET["tryhttp"]));
+	//$cleanHttp=urlencode($cleanHttp);
+	# the link has failed you can try the link with http
+	echo errorBanner("<a class='button' href='/web_player.php?url=".$cleanHttp."'>Try link as a http link</a>");
 }
 ?>
 <div class='settingListCard'>
@@ -428,7 +406,7 @@ if (array_key_exists("uploadFailure",$_GET)){
 					<tr>
 						<td>
 							<noscript><div class="errorBanner">This upload form will not work without javascript enabled.</div></noscript>
-							<input class='button' id="fileUploadInput" type='file' name='uploadMediaFile' accept='video/*'>
+							<input class='button' id="fileUploadInput" type='file' name='uploadMediaFile' accept='video/*,audio/*'>
 							<div id='progressBar' class="progressBar" style="display: none;">
 									<div id="progressBarBar" class="progressBarBar">Inactive</div>
 							</div>
@@ -485,6 +463,10 @@ foreach($sourceFiles as $sourceFile){
 		$jsonData=file_get_contents($thumbTemplate.".info.json");
 		$jsonData=json_decode($jsonData);
 		$videoTitle=$jsonData->title;
+	}else if(file_exists($thumbTemplate.".mp4.info.json")){
+		$jsonData=file_get_contents($thumbTemplate.".mp4.info.json");
+		$jsonData=json_decode($jsonData);
+		$videoTitle=$jsonData->title;
 	}else{
 		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title")){
 			$videoTitle=file_get_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title");
@@ -493,20 +475,21 @@ foreach($sourceFiles as $sourceFile){
 		}
 	}
 	echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
-	#echo "<div>".mime_content_type($sourceFile)."</div>";
 
 	if(file_exists($thumbTemplate.".png")){
 		echo "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
+	}else if(file_exists($thumbTemplate.".mp4.png")){
+		echo "<img loading='lazy' src='".$cachePathTemplate.".mp4.png"."' />\n";
 	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png")){
 		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png"."' />\n";
 	}
 	#
 	$localCachePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum;
 	#
-	if(file_exists($thumbTemplate.".mp4") or file_exists($localCachePath.".webm") or file_exists($localCachePath.".mp4") or file_exists($localCachePath.".mkv")){
-		echo "	<h3>".$videoTitle."<div class='radioIcon'>🟢</div></h3>\n";
+	if(file_exists($thumbTemplate.".mp4") or file_exists($thumbTemplate.".mp3") or file_exists($localCachePath.".mp4")){
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
 	}else{
-		echo "	<h3>".$videoTitle."<div class='radioIcon'>◯</div></h3>\n";
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>◯</div></div>\n";
 	}
 	echo "</a>\n";
 	# increment the processed titles

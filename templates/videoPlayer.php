@@ -4,17 +4,29 @@
 	########################################################################
 	# get the title data
 	$titlePath=$_SERVER["SCRIPT_FILENAME"].".title";
+	# get the sum from the filename
+	$jsonSum=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
+	# check for resolver json data
+	$jsonPath=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.info.json";
+	$jsonPathMP4=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4.info.json";
 	if (file_exists($titlePath)){
 		$titleData=file_get_contents($titlePath);
 		$useJson=false;
 		$jsonPath="";
-		$jsonSum=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
-	}else{
-		$titleData=str_replace(".php","",basename($_SERVER["SCRIPT_FILENAME"]));
-		$jsonSum=$titleData;
+	}else if (file_exists($jsonPath)){
+		$titleData=$jsonSum;
 		$useJson=true;
 		# build the json path
-		$jsonPath=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.info.json";
+		$jsonPath=$jsonPath;
+	}else if (file_exists($jsonPathMP4)){
+		$useJson=true;
+		$jsonSum=$titleData;
+		# build the json path
+		$jsonPath=$jsonPathMP4;
+	}else{
+		addToLog("ERROR","videoPlayer.php","Could Not Find A Title");
+		$titleData=$jsonSum;
+		$useJson=false;
 	}
 	# check group permissions based on what the player is being used for
 	if($useJson){
@@ -275,8 +287,13 @@ document.body.addEventListener('keydown', function(event){
 			# there is no description so it is unrated
 			$ratingText="<span class='button'>Rating : UNRATED</span>";
 		}
-		# get the thumbnail
-		$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
+		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.png")){
+			# get the thumbnail
+			$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
+		}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4.png")){
+			# get the thumbnail
+			$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.mp4.png";
+		}
 	}else{
 		# get the video thumb path for the video player
 		# - check for PNG and JPG versions
