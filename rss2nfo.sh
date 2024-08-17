@@ -114,7 +114,7 @@ function processEpisode(){
 			echo "</streamdetails>"
 			echo "</fileinfo>"
 			echo "<plot>$plot</plot>"
-			echo "<aired>$airdate</aired>"
+			echo "<aired>$airDate</aired>"
 			# set the last processed time of the episode
 			echo "<lastProcessed>$(date "+%s")</lastProcessed>"
 			# end the nfo file
