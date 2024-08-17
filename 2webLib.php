@@ -21,7 +21,19 @@ ini_set('display_errors', 1);
 if( ! function_exists("drawPosterWidget")){
 	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
 		# check for group permissions in filter type
-		if ($filterType == "graphs"){
+		if ($filterType == "all"){
+			$groups=Array("graph2web","comic2web","git2web","nfo2web","music2web","portal2web","iptv2web");
+			# check user has all permissions for groups
+			foreach($groups as $groupName){
+				if(! requireGroup($groupName, false)){
+					$showOutput = false;
+					break;
+				}else{
+					# mark output to be shown
+					$showOutput = true;
+				}
+			}
+		}else if ($filterType == "graphs"){
 			$showOutput = requireGroup("graph2web", false);
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
@@ -43,6 +55,10 @@ if( ! function_exists("drawPosterWidget")){
 			$showOutput = requireGroup("music2web", false);
 		}else if ($filterType == "tracks"){
 			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "portal"){
+			$showOutput = requireGroup("portal2web", false);
+		}else if ($filterType == "channels"){
+			$showOutput = requireGroup("iptv2web", false);
 		}else{
 			$showOutput = true;
 		}
@@ -208,6 +224,7 @@ if( ! function_exists("drawPosterWidget")){
 		}
 	}
 }
+################################################################################
 if( ! function_exists("detectEnabledStatus")){
 	function detectEnabledStatus($moduleName){
 		# Return true if given module is enabled
