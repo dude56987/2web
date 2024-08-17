@@ -2251,7 +2251,7 @@ details{
 	max-height: 45rem;
 	vertical-align: top;
 	white-space: normal;
-	overflow: scroll;
+	overflow: hidden;
 	border: solid var(--borderColor) 0.3rem;
 }
 .progressBar{
