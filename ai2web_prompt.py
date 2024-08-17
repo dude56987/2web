@@ -16,6 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+# import libaries
+import sys, os, json, hashlib, sqlite3, time
+import datetime
+# add custom lib path
+sys.path.append("/usr/share/2web/")
+# add the pip install path of 2web
+sys.path.append("/var/cache/2web/generated/pip/gpt4all/")
+########################################################################
 try:
 	import gpt4all
 except:
@@ -24,11 +32,6 @@ except:
 	print("ai2web_prompt will now close...")
 	exit()
 ########################################################################
-# import libaries
-import sys, os, json, hashlib, sqlite3, time
-import datetime
-# add custom lib path
-sys.path.append("/usr/share/2web/")
 from python2webLib import h1, hr, file_get_contents, file_put_contents
 ################################################################################
 def ai2web_CLI_help():

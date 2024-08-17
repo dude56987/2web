@@ -17,9 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 # import libaries
-import sys, os, json, hashlib, sqlite3, time
+import sys
+import os
+import json
+import hashlib
+import sqlite3
+import time
 import gc
+# import local lib paths
 sys.path.append("/usr/share/2web/")
+sys.path.append("/var/cache/2web/generated/pip/tensorTech/")
+
 from python2webLib import h1, hr, file_get_contents
 ################################################################################
 if "--help" in sys.argv:

@@ -5,7 +5,7 @@
 ?>
 <?PHP
 ########################################################################
-# 2web AI prompt interface
+# 2web AI image generation from text prompt interface
 # Copyright (C) 2024	Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,84 +21,42 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.	If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-ini_set('file_uploads', "On");
-########################################################################
-if (array_key_exists("debug",$_POST)){
-	echo "<div class='errorBanner'>\n";
-	echo "<hr>\n";
-	echo (var_dump($_POST));
-	echo "<hr>\n";
-	echo "</div>\n";
-}
 if (array_key_exists("imageInputPrompt",$_POST)){
 	# prompt for image generation from text
-
 	$fileSumString	= ($_POST['imageInputPrompt']);
 	$fileSumString .= ($_POST['imageNegativeInputPrompt']);
 	$fileSumString .= ($_POST['model']);
-	#$fileSumString .= ($_POST['temperature']);
-
+	# generate a sum
 	$fileSum=md5($fileSumString);
-	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
-
-	# launch the process with a background scheduler
-	$command = '';
-	# one at a time queue, but launch from atq right away
-	$command .= '';
-	# default load order of models if found on system
-	# check for loading custom LLM
+	# create the directory to store the output in
 	if (! is_dir("/var/cache/2web/web/ai/txt2img/")){
 		mkdir("/var/cache/2web/web/ai/txt2img/");
 	}
 	if (! is_dir("/var/cache/2web/web/ai/txt2img/".$fileSum."/")){
 		mkdir("/var/cache/2web/web/ai/txt2img/".$fileSum."/");
 	}
-
+	# always write start time
+	file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
+	# store the prompt
 	if (! is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg")){
 		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg",$_POST["imageInputPrompt"]);
 	}
-
+	# store the negative prompt
 	if (! is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg")){
 		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg",$_POST["imageNegativeInputPrompt"]);
 	}
-
-	# always write start time
-	file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
+	# store the selected model
 	if (! is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/model.cfg")){
 		file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/model.cfg",$_POST["model"]);
 	}
-	if (array_key_exists("model",$_POST)){
-		# convert the model download name to the hugging face model name
-		#$modelName=str_replace("models--","/",$_POST["model"]);
-		$modelName=str_replace("--","/",$_POST["model"]);
-		$modelName=str_replace("models/","",$modelName);
-		# disable telemetry
-		# - they really really want to know everything your doing because the
-		#		method of doing this has changed 3 times, becoming more difficult
-		#		every time to implement by jumping techniques and programming
-		#		languages
-		# - Errors related to old methods also do not produce a failure state
-		#   only a warning
-		$command .= "export DISABLE_TELEMETRY=YES;";
-		$command .= "export HF_HUB_DISABLE_TELEMETRY=YES;";
-
-		# set the model
-		$command .= "/usr/bin/ai2web_txt2img --set-model '".$modelName."' ";
-	}else{
-		# use the default model
-		$command .= '/usr/bin/ai2web_txt2img ';
-	}
-	$command .= "--output-dir '/var/cache/2web/web/ai/txt2img/".$fileSum."/' ";
-	# generate a version
-	$command .= "--versions '1' ";
-
+	# set the thread hidden status
 	if (array_key_exists("hidden",$_POST)){
 		if ($_POST["hidden"] == "yes"){
 			# if the post is set to hidden generate a hidden.cfg
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/hidden.cfg", "yes");
 		}
 	}
-
+	# get the number of versions
 	if (is_file("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg")){
 		# increment existing versions file
 		$foundVersions = file_get_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg");
@@ -125,7 +83,29 @@ if (array_key_exists("imageInputPrompt",$_POST)){
 			file_put_contents("/var/cache/2web/web/ai/txt2img/".$fileSum."/versions.cfg","1");
 		}
 	}
+	# create the command to be added to the queue
+	$command = '';
+	# disable all network access for the AI tool command
+	# - Some AI tools have a telemetry problem even in offline mode
+	$command .= '/usr/bin/unshare -n ';
+	# build the model
+	if (array_key_exists("model",$_POST)){
+		# convert the model download name to the hugging face model name
+		$modelName=str_replace("--","/",$_POST["model"]);
+		$modelName=str_replace("models/","",$modelName);
+		# attempt to disable telemetry
+		$command .= "export DISABLE_TELEMETRY=YES;";
+		$command .= "export HF_HUB_DISABLE_TELEMETRY=YES;";
 
+		# set the model
+		$command .= "/usr/bin/ai2web_txt2img --set-model '".$modelName."' ";
+	}else{
+		# by default use all available models
+		$command .= '/usr/bin/ai2web_txt2img "{ALL}" ';
+	}
+	$command .= "--output-dir '/var/cache/2web/web/ai/txt2img/".$fileSum."/' ";
+	# generate a version
+	$command .= "--versions '1' ";
 	# cleanup the negative prompt so it will work correctly
 	$_POST["imageNegativeInputPrompt"] =	str_replace("'","",$_POST["imageNegativeInputPrompt"]);
 
@@ -133,8 +113,6 @@ if (array_key_exists("imageInputPrompt",$_POST)){
 	$command .= "--negative-prompt-file '/var/cache/2web/web/ai/txt2img/".$fileSum."/negativePrompt.cfg' ";
 	# load up the written prompt file
 	$command .= "--prompt-file '/var/cache/2web/web/ai/txt2img/".$fileSum."/prompt.cfg' ";
-
-	$command .= '';
 	# create the image view script link
 	if (! is_link("/var/cache/2web/web/ai/txt2img/".$fileSum."/index.php")){
 		symlink("/usr/share/2web/templates/ai_img.php" ,("/var/cache/2web/web/ai/txt2img/".$fileSum."/index.php"));
@@ -170,39 +148,15 @@ if (array_key_exists("imageInputPrompt",$_POST)){
 				$directoryPath=str_replace("models/","",$directoryPath);
 				# replace all in the command
 				$newCommand=str_replace("{ALL}","$directoryPath",$command);
-				# print debug info
-				if (array_key_exists("debug",$_POST)){
-					if ($_POST["debug"] == "yes"){
-						echo "<div class='errorBanner'>\n";
-						echo "<hr>\n";
-						echo "DEBUG: SHELL EXECUTE: '$newCommand'<br>\n";
-						echo "<hr>\n";
-						echo "</div>\n";
-					}
-				}
 				# add the command to the queue
 				addToQueue("single",$newCommand);
-				# for each model found launch a new command
-				#shell_exec($newCommand);
 			}
 		}
 	}else{
-		if (array_key_exists("debug",$_POST)){
-			if ($_POST["debug"] == "yes"){
-				echo "<div class='errorBanner'>\n";
-				echo "<hr>\n";
-				echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-				echo "<hr>\n";
-				echo "</div>\n";
-			}
-		}
-
 		# add the command to the queue
 		addToQueue("single",$command);
-		# launch the command
-		#shell_exec($command);
 	}
-	# delay 1 seconds to allow loading of database
+	# build redirect URL
 	if(array_key_exists("HTTPS",$_SERVER)){
 		if($_SERVER['HTTPS']){
 			$redirectUrl = ("https://".$_SERVER['HTTP_HOST']."/ai/txt2img/".$fileSum."/?autoRefresh");
@@ -300,12 +254,6 @@ if ($discoveredTxt2Img){
 	echo "</span>\n";
 	echo "</span>\n";
 
-	#echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
-	#echo "<span class='groupedMenuItem'>\n";
-	#echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
-	#echo "</span>\n";
-	#echo "</span>\n";
-
 	echo "<span title='Hide the prompt output from the public indexes. Anyone can still access it with a direct link though.'>";
 	echo "<span class='groupedMenuItem'>🥸 Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
 	echo "</span>";
@@ -317,8 +265,6 @@ if ($discoveredTxt2Img){
 	echo "</div>\n";
 	echo "</span>";
 
-	#echo "<textarea title='Input the prompt text here.' class='aiPrompt' name='prompt' placeholder='Text prompt...'></textarea>";
-
 	echo "<textarea class='imageInputPrompt' name='imageInputPrompt' placeholder='Image generation prompt, Tags...' maxlength='120'></textarea>";
 	echo "<textarea class='imageNegativeInputPrompt' name='imageNegativeInputPrompt' placeholder='Negative Prompt, Tags...'  maxlength='120'></textarea>";
 
@@ -329,7 +275,6 @@ if ($discoveredTxt2Img){
 
 	# draw the threads discovered
 	$promptIndex=array_diff(scanDir("/var/cache/2web/web/ai/txt2img/"),array(".","..","index.php"));
-	#sort($promptIndex);
 
 	# generate an array where the keys are the file modification dates of the the directories listed
 	$sortedPromptIndex=Array();

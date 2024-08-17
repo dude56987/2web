@@ -21,66 +21,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-ini_set('file_uploads', "On");
-########################################################################
-if (array_key_exists("debug",$_POST)){
-	echo "<div class='errorBanner'>\n";
-	echo "<hr>\n";
-	echo (var_dump($_POST));
-	echo "<hr>\n";
-	echo "</div>\n";
-}
-
 if (array_key_exists("prompt",$_POST)){
 	# text prompting interface for gpt4all
 	# prompt
 
 	$fileSumString  = ($_POST['prompt']);
 	$fileSumString .= ($_POST['model']);
-	#$fileSumString .= ($_POST['temperature']);
 
 	$fileSum=md5($fileSumString);
-	#$fileSum=$_SERVER["REQUEST_TIME"].$fileSum;
-
-	# launch the process with a background scheduler
-	$command = "";
-	# one at a time queue, but launch from atq right away
-	$command .= '';
-	# default load order of models if found on system
-	# check for loading custom LLM
+	# create directories to store responses
 	if (! is_dir("/var/cache/2web/web/ai/prompt/")){
 		mkdir("/var/cache/2web/web/ai/prompt/");
 	}
 	if (! is_dir("/var/cache/2web/web/ai/prompt/".$fileSum."/")){
 		mkdir("/var/cache/2web/web/ai/prompt/".$fileSum."/");
 	}
-
-	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg")){
-		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg",$_POST["prompt"]);
-	}
-
-	# always write start time
+	# write the start time of the prompt
 	file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/started.cfg",$_SERVER["REQUEST_TIME"]);
-	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg")){
-		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg",$_POST["model"]);
-	}
-	if (array_key_exists("model",$_POST)){
-		# set the model
-		$command .= '/usr/bin/ai2web_prompt --set-model "'.$_POST["model"].'" ';
-	}else{
-		# use the default model
-		$command .= '/usr/bin/ai2web_prompt ';
-	}
-	$command .= '--output-dir "/var/cache/2web/web/ai/prompt/'.$fileSum.'/" ';
-	# generate one version
-	$command .= '--versions "1" ';
-
+	# set the hidden status
 	if (array_key_exists("hidden",$_POST)){
 		if ($_POST["hidden"] == "yes"){
 			# if the post is set to hidden generate a hidden.cfg
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/hidden.cfg", "yes");
 		}
 	}
+	# create the image view script link
+	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
+		symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php"));
+	}
+	# write the prompt info to the response directory
+	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg")){
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/prompt.cfg",$_POST["prompt"]);
+	}
+	# write the prompt model
+	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg")){
+		file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/model.cfg",$_POST["model"]);
+	}
+	# figure out the versions
 	if (is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg")){
 		# increment existing versions file
 		$foundVersions = file_get_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg");
@@ -102,17 +79,28 @@ if (array_key_exists("prompt",$_POST)){
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/versions.cfg","1");
 		}
 	}
+	# create the command to be sent to the queue system
+	$command = "";
+	# disable all network access for the AI tool command
+	# - Some AI tools have a telemetry problem even in offline mode
+	$command .= '/usr/bin/unshare -n ';
+	# check the chosen model
+	if (array_key_exists("model",$_POST)){
+		# set the model
+		$command .= '/usr/bin/ai2web_prompt --set-model "'.$_POST["model"].'" ';
+	}else{
+		# use the default, run all models with prompt
+		$command .= '/usr/bin/ai2web_prompt "{ALL}" ';
+	}
+	# write to the response directory
+	$command .= '--output-dir "/var/cache/2web/web/ai/prompt/'.$fileSum.'/" ';
+	# generate one version
+	$command .= '--versions "1" ';
 
 	# cleanup the prompt so it will work correctly
 	$_POST["prompt"] =	str_replace("'","",$_POST["prompt"]);
 	# write the prompt file
 	$command .= '--prompt-file "/var/cache/2web/web/ai/prompt/'.$fileSum.'/prompt.cfg" ';
-	# end the command by passing it to the "at" queue
-	$command .= "";
-	# create the image view script link
-	if (! is_link("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php")){
-		symlink("/usr/share/2web/templates/ai_thread.php" ,("/var/cache/2web/web/ai/prompt/".$fileSum."/index.php"));
-	}
 	if (! is_file("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg")){
 		if ($_POST["model"] == "{ALL}"){
 			$combinedFileData = "";
@@ -125,28 +113,14 @@ if (array_key_exists("prompt",$_POST)){
 			file_put_contents("/var/cache/2web/web/ai/prompt/".$fileSum."/command.cfg",$command);
 		}
 	}
-	# launch a job on the queue for each version
 	# if the model is set to all
 	if ($_POST["model"] == "{ALL}"){
+		# launch a job on the queue for each version
 		foreach(array_diff(scanDir("/var/cache/2web/downloads/ai/prompt/"),array(".","..")) as $directoryPath){
-			if ($_POST["debug"] == "yes"){
-				echo "<div class='errorBanner'>\n";
-				echo "<hr>\n";
-				echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-				echo "<hr>\n";
-				echo "</div>\n";
-			}
 			# for each model found launch a new command
 			addToQueue("single",str_replace("{ALL}","\"$directoryPath\"",$command));
 		}
 	}else{
-		if ($_POST["debug"] == "yes"){
-			echo "<div class='errorBanner'>\n";
-			echo "<hr>\n";
-			echo "DEBUG: SHELL EXECUTE: '$command'<br>\n";
-			echo "<hr>\n";
-			echo "</div>\n";
-		}
 		# launch the command
 		addToQueue("single",$command);
 	}
@@ -246,19 +220,6 @@ if ($discoveredPrompt){
 	echo "</span>\n";
 	echo "</span>\n";
 
-	#echo "<span title='How many anwsers would you like the AI to generate to your prompt?'>";
-	#echo "<span class='groupedMenuItem'>\n";
-	#echo "Unique Versions: <input class='numberBox' type='number' min='1' max='1' value='1' name='versions' placeholder='Number of versions to draw'>";
-	#echo "</span>\n";
-	#echo "</span>\n";
-
-	#echo "<span class='groupedMenuItem'>\n";
-	#echo "Randomness : <input class='' type='number' min='1' max='10' value='7' name='temperature' placeholder='Randomness'>";
-	#echo "</span>\n";
-
-	#echo "<span class='groupedMenuItem'>\n";
-	#echo "Max Output : <input class='' type='number' min='10' max='1000' value='100' name='maxOutput' placeholder='Max characters to output'>";
-	#echo "</span>\n";
 	echo "<span title='Hide the prompt output from the public indexes. Anyone can still access it with a direct link though.'>";
 	echo "<span class='groupedMenuItem'>🥸 Hidden</span>:<input class='checkbox' type='checkbox' name='hidden' value='yes'></input></span>\n";
 	echo "</span>";
