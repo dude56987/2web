@@ -111,6 +111,12 @@ include("settingsHeader.php");
 			echo "		<a href='/settings/manuals.php#wiki2web'>📑</a>";
 			echo "	</div>";
 		}
+		if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
+			echo "	<div>";
+			echo "		yt-dlp Version: ";
+			echo shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --version");
+			echo "	</div>";
+		}
 		echo "</div>";
 	}
 ?>
