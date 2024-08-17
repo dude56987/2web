@@ -348,8 +348,9 @@ ol li{
 .comicPageBackground{
 	/*
 	background-image: var(--staticBackground);
+	filter: blur(5px);
 	*/
-	filter: blurr(5px);
+	overflow: hidden;
 }
 .menuButtonBox{
 	width: 3rem;
