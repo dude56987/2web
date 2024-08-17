@@ -69,30 +69,6 @@ function getDirSum(){
 	# write the md5sum to stdout
 	echo "$tempLibList"
 }
-################################################################################
-function cacheCheck(){
-
-	filePath="$1"
-	cacheDays="$2"
-
-	# return true if cached needs updated
-	if [ -f "$filePath" ];then
-		# the file exists
-		if [[ $(find "$1" -mtime "+$cacheDays") ]];then
-			# the file is more than "$2" days old, it needs updated
-			INFO "[INFO]: File is to old, update the file $1"
-			return 0
-		else
-			# the file exists and is not old enough in cache to be updated
-			INFO "[INFO]: File in cache, do not update $1"
-			return 1
-		fi
-	else
-		# the file does not exist, it needs created
-		INFO "[INFO]: File does not exist, it must be created $1"
-		return 0
-	fi
-}
 ########################################################################
 function enableApacheServer(){
 	rm -v "/etc/apache2/conf-enabled/0000-default.conf"
