@@ -276,6 +276,18 @@
 	echo ($progress."%");
 	echo "\t</div>\n";
 	echo "</div>\n";
+	# check if this may be a scroll
+	if ($imageHeight > ( $imageWidth * 4 )){
+		# the image is to long to be read by the page view add a link to scroll view
+		echo "<div class='listCard'>";
+		echo "	<a class='button' href='scroll.php?real#$page'>";
+		echo "		🖼️ Real Size View";
+		echo "	</a>\n";
+		echo "	<a class='button' href='scroll.php#$page'>";
+		echo "		📜 Scroll View";
+		echo "	</a>\n";
+		echo "</div>";
+	}
 	#
 	echo "</div>\n";
 	echo "</div>\n";
