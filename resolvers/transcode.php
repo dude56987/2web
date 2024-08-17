@@ -100,7 +100,10 @@ if (array_key_exists("path",$_GET)){
 			$command .= " | /usr/bin/ffmpeg -i - ";
 			$command .= " -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webServerPath/TRANSCODE-CACHE/".$sum."/video-stream.m3u'";
 			# encode the stream into a mp4 file for compatibility with firefox
-			$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.m3u' '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4'";
+			# - use a .part file until the mp4 is complete because partial mp4 files will not play
+			$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.m3u' -f mp4 '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4.part'";
+			# copy the complete file
+		 	$command .= " && cp '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4.part' -f mp4 '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4'";
 			# save the transcode command to a file
 			file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/command.cfg","$command");
 			# add the job to the 2web queue system

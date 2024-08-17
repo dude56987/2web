@@ -75,6 +75,10 @@ function cacheUrl($sum,$videoLink){
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/")){
 		mkdir("$webDirectory/RESOLVER-CACHE/$sum/");
 	}
+	# link the player into the resolver cache
+	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/index.php")){
+		link("/usr/share/templates/videoPlayer.php","$webDirectory/RESOLVER-CACHE/$sum/index.php");
+	}
 	# link the video bump
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/bump.m3u")){
 		# build a m3u playlist that plays the bump and then the video
@@ -171,7 +175,8 @@ function cacheUrl($sum,$videoLink){
 		#
 	}else{
 		# if no upgrade is set then simply convert the hls stream into a mp4
-		$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
+		$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
+		$dlCommand .= " && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}
 	# use the correct format for the quality value chosen
 	if (($quality == "best") or ($quality == "worst")){
