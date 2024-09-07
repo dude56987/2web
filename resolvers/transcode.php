@@ -63,6 +63,14 @@ if (yesNoCfgCheck("/etc/2web/transcodeForWebpages.cfg")){
 if (array_key_exists("path",$_GET)){
 	# pull the link from
 	$link = $_GET['path'];
+
+	# remove parenthesis from video link if they exist
+	$link = str_replace('"','',$link);
+	$link = str_replace("'","",$link);
+
+	# create the sum of the file
+	$sum = hash("sha512",$link,false);
+	addToLog("DEBUG","Transcode","Creating sum '$sum' from link '$link'\n");
 	# decode link into text
 	$link = urldecode($link);
 	# allow parallel loading of pages for user
@@ -70,8 +78,6 @@ if (array_key_exists("path",$_GET)){
 	# if the trancode is enabled run the transcode job
 	if ($doTranscode){
 		addToLog("INFO","Transcode","Checking for trancode for '$link'\n");
-		# create the sum of the link
-		$sum=md5($link);
 		# check if the session has been locked
 		if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/$sum/started.cfg")){
 			# create the transcode lock file
@@ -86,9 +92,6 @@ if (array_key_exists("path",$_GET)){
 			if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
 				mkdir("$webServerPath/TRANSCODE-CACHE/");
 			}
-			# cleanup html string encoding of spaces and pathnames
-			$link = str_replace("'","",$link);
-			$link = str_replace('"',"",$link);
 			# build the command
 			$fullLinkPath=$webServerPath.$link;
 			# create a transcode directory to store the hls stream if it does not exist

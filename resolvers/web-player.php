@@ -350,7 +350,7 @@ if (array_key_exists("tryhttp",$_GET)){
 	<tr>
 		<form method='get'>
 			<th id='openLink'>
-				Open Link With Resolver
+				Open Video Link With Resolver
 			</th>
 		</tr>
 		<tr>
@@ -369,34 +369,11 @@ if (array_key_exists("tryhttp",$_GET)){
 			</td>
 		</form>
 	</tr>
-<!-- form to use a direct link to content to send to kodi -->
-	<form method='get'>
-		<tr>
-			<th id='directLink'>
-				Open Direct Media Link
-			</th>
-		</tr>
-		<tr>
-			<td>
-				<!-- build the share url interface for posting urls into the resolver to be passed to kodi -->
-				<table class='kodiControlEmbededTable'>
-					<tr>
-						<td>
-							<input type='text' name='url' placeholder='http://example.com/media.mkv'>
-						</td>
-						<td class='kodiControlEmbededTableButton'>
-							<input class='button' type='submit' value='🔗 Share Direct URL'>
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr>
-	</form>
 	<!-- form to upload a file for playback -->
 	<form method='post' action='/web-player.php' enctype='multipart/form-data'>
 		<tr>
 			<th id='directLink'>
-				Upload File For Playback
+				Upload Video File For Playback
 			</th>
 		</tr>
 		<tr>

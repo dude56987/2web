@@ -19,8 +19,8 @@
 		# build the json path
 		$jsonPath=$jsonPath;
 	}else if (file_exists($jsonPathMP4)){
+		$titleData=$jsonSum;
 		$useJson=true;
-		$jsonSum=$titleData;
 		# build the json path
 		$jsonPath=$jsonPathMP4;
 	}else{
@@ -55,6 +55,57 @@
 ########################################################################
 -->
 <?PHP
+########################################################################
+function cachedMimeType($videoLink){
+	# return the path to a found cache link once it is available
+
+	# set the default web directory
+	$webDirectory="/var/cache/2web/web";
+	# cleanup the video link
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+	# get the sum
+	$sum = hash("sha512",$videoLink,false);
+	#
+	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
+	# wait for either the bump or the file to be downloaded and redirect
+	while(true){
+		# if 60 seconds of the video has been downloaded then launch the video
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+			# redirect to discovered mp3
+			return ("audio/mpeg");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
+			# file is fully downloaded and converted play instantly
+			return ("video/mp4");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
+			# if the stream has x segments (segments start as 0)
+			# - currently 10 seconds of video
+			# - force loading of 3 segments before resolution
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
+				# redirect to the stream
+				return ("application/mpegurl");
+			}
+		}
+		if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp3")){
+			# redirect to discovered mp3
+			return ("audio/mpeg");
+		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp4")){
+			# file is fully downloaded and converted play instantly
+			return ("video/mp4");
+		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.m3u")){
+			# if the stream has x segments (segments start as 0)
+			# - currently 10 seconds of video
+			# - force loading of 3 segments before resolution
+			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream2.ts")){
+				# redirect to the stream
+				return ("application/mpegurl");
+			}
+		}
+		# if no media can be resolved return loading as the metadata type
+		return ("loading");
+	}
+}
+########################################################################
 function fetchHeader($URL, $streamContextParams=false){
 	if ($streamContextParams == false){
 		# setup the defaul stream context params
@@ -176,28 +227,24 @@ document.body.addEventListener('keydown', function(event){
 		// check for key controls on the video player
 		const key = event.key;
 		switch (key){
-			case " ":
-			event.preventDefault();
-			playPause();
-			break;
-			case "Spacebar":
-			event.preventDefault();
-			playPause();
-			break;
 			case "ArrowDown":
 			event.preventDefault();
+			event.stopImmediatePropagation();
 			volumeDown();
 			break;
 			case "ArrowUp":
 			event.preventDefault();
+			event.stopImmediatePropagation();
 			volumeUp();
 			break;
 			case "ArrowRight":
 			event.preventDefault();
+			event.stopImmediatePropagation();
 			seekForward();
 			break;
 			case "ArrowLeft":
 			event.preventDefault();
+			event.stopImmediatePropagation();
 			seekBackward();
 			break;
 		}
@@ -293,6 +340,22 @@ document.body.addEventListener('keydown', function(event){
 		}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4.png")){
 			# get the thumbnail
 			$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.mp4.png";
+		}else{
+			# check if the video file has been found
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4")){
+				if ( ( time() - filemtime($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4") ) > 60){
+					# create a thumbnail  from the downloaded video file if the video file has finished downloading
+					addToQueue("multi","/usr/bin/ffmpegthumbnailer -i '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4' -s 400 -c png -o '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.png'");
+					# set the current thumbnail to be the poster.png
+					$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
+				}else{
+					# set the current thumbnail to be the poster.png
+					$posterPath="/spinner.gif";
+				}
+			}else{
+				# set the current thumbnail to be the poster.png
+				$posterPath="/spinner.gif";
+			}
 		}
 	}else{
 		# get the video thumb path for the video player
@@ -304,7 +367,7 @@ document.body.addEventListener('keydown', function(event){
 		}else if (file_exists($posterPathJPG)){
 			$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPathJPG);
 		}else{
-			$posterPath="poster.png";
+			$posterPath="/spinner.gif";
 		}
 		$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
 		$plotData="";
@@ -389,9 +452,8 @@ document.body.addEventListener('keydown', function(event){
 
 		# check if the file exists and check the metadata
 		if ($httpLink){
-			# this is not a file but a external link so check the mime type of the video link
-			# the mimetype should be gathered from the local resolver location
-			$videoMimeType=fetchHeader($proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData);
+			# check the mimetype for the link
+			$videoMimeType=cachedMimeType($directLinkData);
 			#
 			$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="'.$directLinkData.'"';
 		}else{
@@ -400,8 +462,9 @@ document.body.addEventListener('keydown', function(event){
 			if (isTranscodeEnabled()){
 				# send the link to the resolver to transcode it using the same method as the resolver
 				$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/transcode.php?path="'.urlencode($directLinkData).'"';
-				# get mime data from the resolver
-				$videoMimeType=fetchHeader($fullPathVideoLink);
+				# get mime data if the resolver has it cached
+				#$videoMimeType=cachedMimeType(urlencode($directLinkData));
+				$videoMimeType=cachedMimeType($directLinkData);
 			}else{
 				# build the full path on the server with the current protocol
 				$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"]."/".$directLinkData;
@@ -414,6 +477,11 @@ document.body.addEventListener('keydown', function(event){
 			if (array_key_exists("Content-Type", $videoMimeType)){
 				$videoMimeType=$videoMimeType["Content-Type"];
 			}
+		}
+		# check if the video is still loading in the cache
+		if (is_in_array("loading", $videoMimeType)){
+			# set the video type to load the hls player which will keep trying to play until the video loads
+			$videoMimeType="application/mpegurl";
 		}
 		# draw the player based on the video link mime type
 		if (is_in_array("video/mp4", $videoMimeType)){
