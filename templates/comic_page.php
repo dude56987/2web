@@ -215,6 +215,12 @@
 					echo "window.location.href='./$lastPage';";
 					?>
 					break;
+					case 'Insert':
+					event.preventDefault();
+					<?PHP
+					echo "toggleFullscreen();";
+					?>
+					break;
 				}
 			});
 		}
@@ -230,6 +236,17 @@
 	}else{
 		$imageSizeData=getimagesize($page.".png");
 	}
+	if(mime_content_type($page.".jpg") == "video/webm"){
+		# use the thumbnail for dimensions in animated webm files
+		$imageSizeData=getimagesize($page."-thumb.png");
+		$videoFile=true;
+	}else if(mime_content_type($page.".jpg") == "video/mp4"){
+		# use the thumbnail for dimensions in animated mp4 files
+		$imageSizeData=getimagesize($page."-thumb.png");
+		$videoFile=true;
+	}else{
+		$videoFile=false;
+	}
 	$imageWidth=$imageSizeData[0];
 	$imageHeight=$imageSizeData[1];
 
@@ -244,8 +261,17 @@
 	}
 
 	echo "<body id='body' onload='setupKeys();'>\n";
-	echo "<div id='comicPane' class='$comicPaneType zoomBoxContainer' style='background: ".'url("'.$page.'-thumb.png")'."'>\n";
+	if($videoFile){
+		echo "<div id='comicPane' class='$comicPaneType zoomBoxContainer' >\n";
+	}else{
+		echo "<div id='comicPane' class='$comicPaneType zoomBoxContainer' style='background: ".'url("'.$page.'-thumb.png")'."'>\n";
+	}
 	echo "<div id='comicThumbPane' class='$comicThumbType' style='background: ".'url("'.$page.'.jpg")'."'>\n";
+	if($videoFile){
+		echo "<video class='comicVideo' loop autoplay controls>\n";
+		echo "<source src='".$page.".jpg' type='video/webm'>\n";
+		echo "</video>\n";
+	}
 	echo "	<a href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
 	echo "		&#8617;\n";
 	echo "		<br>\n";
@@ -356,7 +382,13 @@
 		setTimeout(reHidePopup, 1000);
 	</script>
 	<?PHP
-	# hide the pulse after the page has loaded everything
+	#
+	if($videoFile){
+		# remove the zoombox on videos
+		echo '<script>';
+		echo 'document.getElementById("zoomBox").remove();';
+		echo '</script>';
+	}
 	?>
 	<style>
 		.globalPulse{

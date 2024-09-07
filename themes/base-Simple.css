@@ -923,6 +923,18 @@ a:visited {
 	width: 60dvw !important;
 	height: 100dvh !important;
 	height: -webkit-fill-available !important;
+	image-rendering: optimizequality;
+}
+.comicVideo{
+	width: 100% !important;
+	height: 100% !important;
+	z-index: 0;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	margin: 0px !important;
+	box-shadow: none;
+	background: rgba(0,0,0,0);
 }
 .comicPane{
 	background-size: 100% 100% !important;
@@ -1107,6 +1119,7 @@ a:visited {
 	transition: opacity 0.5s ease;
 	box-sizing: border-box;
 	word-wrap: normal;
+	z-index: 15;
 }
 .comicPageButton:hover{
 	width: 20%;

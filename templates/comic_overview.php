@@ -35,71 +35,82 @@ function prefixNumbers($pageNumber){
 		return "$pageNumber";
 	}
 }
-# get the directory name
-$data=getcwd();
-$data=explode('/',$data);
-$currentDir=array_pop($data);
+# get this comic
+$thisComic=dirname($_SERVER["SCRIPT_FILENAME"], 1);
+$thisComic=basename($thisComic);
+# check for chapter data to draw the chapter next and back buttons
+if(file_exists("../totalChapters.cfg")){
+	$thisChapterComic=dirname($_SERVER["SCRIPT_FILENAME"], 2);
+	$thisChapterComicName=basename($thisChapterComic);
+	# pull the chapter index data
+	$comicIndex=scandir($thisChapterComic);
+	# remove navigation directory paths
+	$comicIndex=array_diff($comicIndex, Array(".",".."));
+	# create the temp index to store verified entries in
+	$tempIndex=Array();
+	foreach($comicIndex as $comicPath){
+		# check each path to be a directory
+		if (is_dir($thisChapterComic."/".$comicPath."/")){
+			# append the verified path to the temp index
+			$tempIndex = array_merge($tempIndex, Array($thisChapterComic."/".$comicPath."/comics.index"));
+		}
+	}
+	# set the value of the comic index to use only verified entries
+	$comicIndex=$tempIndex;
+}else{
+	# get the comic index built by comic2web
+	$comicIndex=file("/var/cache/2web/web/comics/comics.index");
+}
 
-# look up one directory and search the directories there
-# for each directory search for a comics.index or a chapterTitle.cfg in those subdirectories
-$siblingDirs = scanDir("..");
-sort($siblingDirs);
-$siblingDirs = array_diff($siblingDirs,Array(".",".."));
-#$tempDirs=$siblingDirs;
-$tempDirs=Array();
-foreach($siblingDirs as $dirPath){
-	# if the directory path exists
-	if(is_dir("../".$dirPath)){
-		# add the directory to the array
-		$tempDirs=array_merge($tempDirs,Array($dirPath));
+$prevComic="";
+$nextComic="";
+$comicFound=false;
+# read each of the comics to find the current comic
+foreach($comicIndex as $comicName){
+	#
+	$comicName=dirname($comicName, 1);
+	$comicName=basename($comicName);
+	#
+	if($comicName == $thisComic){
+		# found this comic in the index
+		# - disable listing the last comic
+		$comicFound=true;
+	}else{
+		if ($comicFound){
+			$nextComic=$comicName;
+			# break the loop now that all info has been found
+			break;
+		}else{
+			# if no comic has been found mark the current comic as the last comic
+			$prevComic=$comicName;
+		}
 	}
 }
-# sort the directories
-sort($tempDirs);
-#
-$totalChapters=count($tempDirs);
+# blank entries become this comic links
+if($prevComic == ""){
+	$previousDir=$thisComic;
+}else{
+	$previousDir=$prevComic;
+}
+if($nextComic == ""){
+	$nextDir=$thisComic;
+}else{
+	$nextDir=$nextComic;
+}
+# get the random comic
+$randomDir=basename(dirname($comicIndex[array_rand($comicIndex)],1));
+#echo "$randomDir<br>";
+# load chapter data from the file if this is a multi chapter comic
+if (file_exists("totalChapters.cfg")){
+	$totalChapters=file_get_contents("totalChapters.cfg");
+}else if (file_exists("../totalChapters.cfg")){
+	$totalChapters=file_get_contents("../totalChapters.cfg");
+}
 
 $chapterIndex=false;
-$previousDir="";
 
-$firstDir="";
-$lastCheckedDir="";
-# determine the next and previous links
-foreach($tempDirs as $dirPath){
-	if ($firstDir == ""){
-		# store the first directory
-		$firstDir=$dirPath;
-	}
-	# set the next directory every run for first and last entries to pickup
-	$nextDir=$dirPath;
-	#
-	if ($dirPath == $currentDir){
-		# this is the current comic
-		if ($lastCheckedDir == ""){
-			$previousDir=$currentDir;
-		}else{
-			$previousDir=$lastCheckedDir;
-		}
-	}else if($previousDir != ""){
-		# if the previousDirectory has been set and this is not the active directory
-		# its the next directory
-		# break the loop since both buttons have been set
-		break;
-	}
-	# store the last checked directory
-	$lastCheckedDir=$dirPath;
-}
-#
-$tempLastDir=Array();
-foreach($tempDirs as $dirPath){
-	if(is_dir($dirPath)){
-		$tempLastDir=array_merge($tempLastDir, Array($dirPath));
-	}
-}
-# get the last dir
-$lastDir=array_pop($tempLastDir);
-#
 $topLevel=false;
+
 if(file_exists("../".$nextDir."/comics.index")){
 	# this means this is a single chapter comic
 	$topLevel=true;
@@ -127,7 +138,7 @@ if($topLevel){
 	$previousDirButton.="</a>";
 
 	# get the title of the comic
-	$comicTitle=$currentDir;
+	$comicTitle=$thisComic;
 	# get the title info
 	$comicTitleData=getcwd();
 	$comicTitleData=explode('/',$comicTitleData);
@@ -192,15 +203,6 @@ html{ background-image: url("thumb.png") }
 
 <?PHP
 
-#if($firstDir == $previousDir){
-#	# do not draw a link
-#	$previousDirButton="";
-#}
-#if($nextDir == $lastDir){
-#	# do not draw the link
-#	$nextDirButton="";
-#}
-#
 $indexPaths = scanDir(".");
 sort($indexPaths);
 $indexPaths = array_diff($indexPaths,Array(".",".."));
@@ -265,6 +267,12 @@ function setupKeys() {
 			}
 			?>
 			break;
+			case 'End':
+			event.preventDefault();
+			<?PHP
+				echo "window.location.href='../".$randomDir."';";
+			?>
+			break;
 		}
 	});
 }
@@ -294,7 +302,11 @@ echo "$previousDirButton";
 		}
 	}
 	echo "<hr>";
-	echo "<a class='button indexSeries' href='0001.php'>";
+	if(is_dir("0001/")){
+		echo "<a class='button indexSeries' href='0001/'>";
+	}else{
+		echo "<a class='button indexSeries' href='0001.php'>";
+	}
 	echo "<img loading='lazy' src='thumb.png' />";
 	echo "</a>";
 	echo "<hr>";

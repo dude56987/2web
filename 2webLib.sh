@@ -16,6 +16,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+cleanText(){
+	# clean up the text for use in web urls and directory paths
+	cleanedText="$1"
+	# remove bangs as they break URLS
+	cleanedText=$(echo "$cleanedText" | tr -d '#`')
+	cleanedText=$(echo "$cleanedText" | tr -d "'" )
+	cleanedText=$(echo "$cleanedText" | sed "s/_/ /g" )
+	################################################################################
+	# convert symbols that cause issues to full width versions of those characters
+	################################################################################
+	# convert question marks into wide question marks so they look
+	# the same but wide question marks do not break URLS
+	cleanedText=$(echo "$cleanedText" | sed "s/?/？/g" )
+	# cleanup ampersands, they break URLs
+	cleanedText=$(echo "$cleanedText" | sed "s/&/＆/g" )
+	# cleanup @ symbols, they break URLs
+	cleanedText=$(echo "$cleanedText" | sed "s/@/＠/g" )
+	# remove percent signs they break print functions
+	cleanedText=$(echo "$cleanedText" | sed "s/%/％/g" )
+	# hyphens break grep searches
+	cleanedText=$(echo "$cleanedText" | sed "s/-/－/g" )
+	# exclamation marks can also cause problems
+	cleanedText=$(echo "$cleanedText" | sed "s/!/！/g" )
+	# squeeze double spaces into single spaces
+	cleanedText=$(echo "$cleanedText" | tr -s ' ')
+	# print the cleaned up text
+	echo "$cleanedText"
+}
+########################################################################
 function createDir(){
 	# Create a path for use in the webserver
 	#
