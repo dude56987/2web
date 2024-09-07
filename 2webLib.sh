@@ -99,11 +99,21 @@ function readPathConfig(){
 	echo "$foundPath"
 }
 ########################################################################
-function webRoot(){
-	# read config for webserver root directory
+function realWebRoot(){
+	# read config for the full path used in the symlink to the web root
 	#
 	# RETURN STDOUT
 	readPathConfig "/etc/2web/web.cfg" "/var/cache/2web/web_cache/"
+}
+########################################################################
+function webRoot(){
+	# read config for webserver root directory
+	#
+	# - This is a dummy function that returns the symlink to the web root
+	# - For the full path the symlink is set to use realWebRoot()
+	#
+	# RETURN STDOUT
+	echo "/var/cache/2web/web"
 }
 ########################################################################
 function generatedRoot(){

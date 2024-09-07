@@ -369,7 +369,7 @@ function update2web(){
 	lockProc "2web"
 	echo "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
-	webDirectory="$(webRoot)"
+	webDirectory="$(realWebRoot)"
 	downloadDirectory="$(downloadRoot)"
 	generatedDirectory="$(generatedRoot)"
 
