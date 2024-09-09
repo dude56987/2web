@@ -20,32 +20,6 @@
 #set -x
 source /var/lib/2web/common
 ################################################################################
-function update(){
-	addToLog "INFO" "STARTED Update" "$(date)"
-
-	webDirectory=$(webRoot)
-
-	if test -f "/etc/2web/cache/cacheDelay.cfg";then
-		echo "Loading cache settings..."
-		cacheDelay=$(cat "/etc/2web/cache/cacheDelay.cfg")
-	else
-		echo "Using default cache settings..."
-		cacheDelay="14"
-	fi
-
-	# cleanup old searches
-
-	ALERT "Checking for cache files in $webDirectory/search/"
-	if test -d "$webDirectory/search/";then
-		find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.index' -exec rm -v {} \;
-	fi
-
-
-	# build searches based on names of content in database and substrings of those terms
-
-	addToLog "INFO" "Update FINISHED" "$(date)"
-}
-################################################################################
 function searchPortal(){
 	webDirectory=$1
 	searchQuery=$2
@@ -350,10 +324,16 @@ function search(){
 	# lauch a search of all database infomation
 	searchQuery=$1
 	searchQuery=$(echo "$searchQuery" | sed "s/_/ /g")
-	addToLog "INFO" "Starting Search" "<a href='/search.php?q=$searchQuery'>$searchQuery</a>"
-	webDirectory=$(webRoot)
-
 	searchSum="$2"
+	# limit repeated searches to once per day
+	if test -f "$webDirectory/search/${searchSum}_processing.index";then
+		# if the search is already running
+		addToLog "INFO" "Search Query" "Query submited to already running search at : <a href='/search.php?q=$searchQuery'>$searchQuery</a>"
+		# exit without running any new search
+		return 0
+	fi
+	addToLog "INFO" "Search Query" "Starting Search <a href='/search.php?q=$searchQuery'>$searchQuery</a>"
+	webDirectory=$(webRoot)
 
 	# check for parallel processing and count the cpus
 	if echo "$@" | grep -q -e "--parallel";then
@@ -450,7 +430,7 @@ function search(){
 	# mark the search as complete this will stop the page refresh
 	date "+%s" > "$webDirectory/search/${searchSum}_finished.index"
 
-	addToLog "INFO" "Finished Search" "<a href='/search.php?q=$searchQuery'>$searchQuery</a>"
+	addToLog "INFO" "Search Query" "Finished Search : <a href='/search.php?q=$searchQuery'>$searchQuery</a>"
 
 }
 ################################################################################
