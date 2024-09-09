@@ -71,8 +71,8 @@ function m3u_gen($section,$title){
 	if (array_key_exists("sort",$_GET)){
 		if ($_GET['sort'] == 'random'){
 			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
-			// - currently 20 variations of the randomization pattern can be created
-			$tempRand = rand(0,20);
+			// - currently 100 variations of the randomization pattern can be created
+			$tempRand = rand(0,100);
 			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["HTTP_HOST"]);
 		}else{
 			$cacheSum = md5($showTitle.$_SERVER["HTTP_HOST"]);
