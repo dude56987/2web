@@ -36,15 +36,6 @@ drawLine(){
 	printf "$output\n"
 }
 ########################################################################
-cleanText(){
-	# remove punctuation from text, remove leading whitespace, and double spaces
-	if test -f /usr/bin/inline-detox;then
-		echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g" | tr -d '#'
-	else
-		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
-	fi
-}
-########################################################################
 function debugCheck(){
 	if test -f /etc/2web/nfo/debug.enabled;then
 		# if debug mode is enabled show execution
@@ -322,40 +313,6 @@ processMovie(){
 			addToLog "ERROR" "No video file in directory" "$movieDir\n\nTo remove empty movie use the below command\n\nrm -rvi '$movieDir'" "$logPagePath"
 			return
 		fi
-		# set the video type based on the found video path
-		if echo "$videoPath" | grep -q --ignore-case ".mp3";then
-			mediaType="audio"
-			mimeType="audio/mp3"
-		elif echo "$videoPath" | grep -q --ignore-case ".ogg";then
-			mediaType="audio"
-			mimeType="audio/ogg"
-		elif echo "$videoPath" | grep -q --ignore-case ".ogv";then
-			mediaType="video"
-			mimeType="video/ogv"
-		elif echo "$videoPath" | grep -q --ignore-case ".mp4";then
-			mediaType="video"
-			mimeType="video/mp4"
-		elif echo "$videoPath" | grep -q --ignore-case ".m4v";then
-			mediaType="video"
-			mimeType="video/m4v"
-		elif echo "$videoPath" | grep -q --ignore-case ".avi";then
-			mediaType="video"
-			mimeType="video/avi"
-		elif echo "$videoPath" | grep -q --ignore-case ".mpeg";then
-			mediaType="video"
-			mimeType="video/mpeg"
-		elif echo "$videoPath" | grep -q --ignore-case ".mpg";then
-			mediaType="video"
-			mimeType="video/mpg"
-		elif echo "$videoPath" | grep -q --ignore-case ".mkv";then
-			mediaType="video"
-			mimeType="video/x-matroska"
-		else
-			# if no correct video type was found use video only tag
-			# this is a failover for .strm files
-			mediaType="video"
-			mimeType="video"
-		fi
 		# link the movie nfo file
 		linkFile "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
 		linkFile "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
@@ -475,54 +432,18 @@ processMovie(){
 				tempFileSize=0
 			fi
 			if [ "$tempFileSize" -le 0 ];then
-				ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
-				addToLog "WARNING" "Generating Thumbnail from video file" "$movieVideoPath" "$logPagePath"
-				# try to generate a thumbnail from video file
-				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$movieVideoPath")
-				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$movieVideoPath")
-				if echo "$tempFrameRate" | grep -q ".";then
-					# remove any found decimal places in the frame rate
-					tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
-				fi
-				tempTimeCode=$(bc <<< "$tempTotalFrames / 16 ")
-				tempTimeCode=$(bc <<< "$tempTimeCode / $tempFrameRate")
-				# make output into a interger
-				tempTimeCode=$(echo "$tempTimeCode" | cut -d'.' -f1)
-				# - force the filesize to be large enough to be a complex descriptive thumbnail
-				# - filesize of images is directly related to visual complexity
-				largestFileSize=15000
-				largestImage=""
-				image=""
-				while [ $tempFileSize -lt $largestFileSize ];do
-					# - place -ss in front of -i for speed boost in seeking to correct frame of source
-					# - tempTimeCode is in seconds
-					# - '-y' to force overwriting the empty file
-					# store the image inside a variable
-					image=$(ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.jpg" )
-					# resize the image before checking the filesize
-					convert -quiet "$thumbnailPath.jpg" -adaptive-resize 400x200\! "$thumbnailPath.jpg"
-					# get the size of the file, after it has been created
-					tempFileSize=$(wc --bytes < "$thumbnailPath.jpg")
-					# - increment the timecode to get from the video to find a thumbnail that is not
-					#   a blank screen
-					# - This will create 50 screenshots 500/10 and use the screenshot with the largest
-					#   file size
-					tempTimeCode=$(($tempTimeCode + 10))
-					# after checking x seconds for a thumbnail of the thumbs created use the one with
-					# the largest file size
-					if [ $tempTimeCode -gt 500 ];then
-						# break the loop by breaking the comparison
-						tempFileSize=$largestFileSize
-						# link the thumbnail created to the kodi path
-						linkFile "$thumbnailPath.jpg" "$thumbnailPathKodi.jpg"
-					elif [ $tempFileSize -eq 0 ];then
-						# break the loop, no thumbnail could be generated at all
-						# - Blank white or black space takes up more than 0 bytes
-						# - A webpage generated thumbnail will be created as a alternative
-						rm "$thumbnailPath.jpg"
-						tempFileSize=16000
-					fi
-				done
+				# generate a thumbnail from the video source
+				generateThumbnailFromMedia "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
+			fi
+			# check if the thumb download failed
+			if test -f "$thumbnailPath.png";then
+				tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+			else
+				tempFileSize=0
+			fi
+			# as a failsafe generate a image using the movie name and a color
+			if [ "$tempFileSize" -le 0 ];then
+				demoImage "$thumbnailPath.png" "$movieWebPath" "200" "500"
 			fi
 		fi
 		thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
@@ -697,10 +618,15 @@ checkForThumbnail(){
 				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
 				# link the downloaded thumbnail to the kodi directory
 				linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
+			else
+				# no thumbnail could be discovered in any way
+				# the extension must still be set for failsafe thumb generation methods below
+				thumbnailExt=".png"
 			fi
 			#touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
 		fi
+		addToLog "DEBUG" "THUMBNAIL TESTING" "Thumbnail extension found to be '$thumbnailExt' for video path '$videoPath'"
 		#INFO "[DEBUG]: file size $tempFileSize"
 		if test -s $thumbnailPath$thumbnailExt;then
 			INFO "Existing thumbnail file found '$thumbnailPath$thumbnailExt'!"
@@ -708,83 +634,50 @@ checkForThumbnail(){
 			INFO "Existing thumbnail was linked already '$thumbnailPath$thumbnailExt'!"
 		else
 			# if the downloaded file is blank use mediainfo to determine if it is a video or audio link
-			addToLog "DOWNLOAD" "Generating Thumbnail" "Creating video thumbnail using media link: $videoPath" "$logPagePath"
 			ALERT "[ERROR]: Failed to find thumbnail inside nfo file!"
 			ALERT "thumbnail path = $thumbnailPath"
 			# try to generate a thumbnail from video file
 			#INFO "Attempting to create thumbnail from video source..."
-			#tempFileSize=0
-			mediaData="$(mediainfo "$videoPath")"
+			# load the json data from the media, this is cached for rescans
+			mediaData="$(mediaJson "$videoPath")"
 			# check if this is a video file using mediainfo
-			if echo "$mediaData" | grep -q --ignore-case "^video";then
-				# if this is a video link create a thumb from the video
-				tempTotalFrames=$(mediainfo --Output="Video;%FrameCount%" "$videoPath")
-				tempFrameRate=$(mediainfo --Output="Video;%FrameRate%" "$videoPath")
-				if echo "$tempFrameRate" | grep -q ".";then
-					# remove any found decimal places in the frame rate
-					tempFrameRate=$(echo "$tempFrameRate" | cut -d'.' -f1)
-				fi
-				tempTimeCode=$(bc -l <<< "$tempTotalFrames / 5")
-				tempTimeCode=$(bc -l <<< "$tempTimeCode / $tempFrameRate")
-				# make output into a interger
-				tempTimeCode=$(echo "$tempTimeCode" | cut -d'.' -f1)
-				# - force the filesize to be large enough to be a complex descriptive thumbnail
-				# - filesize of images is directly related to visual complexity
-				largestFileSize=15000
-				largestImage=""
-				image=""
-				while [ $tempFileSize -lt $largestFileSize ];do
-					# - place -ss in front of -i for speed boost in seeking to correct frame of source
-					# - tempTimeCode is in seconds
-					# - '-y' to force overwriting the empty file
-					#INFO "[DEBUG]: tempTotalFrames = $tempTotalFrames'"
-					#ALERT "[DEBUG]: ffmpeg -y -ss $tempTimeCode -i '$episodeVideoPath' -vframes 1 '$thumbnailPath.png'"
-					#ffmpeg -y -ss $tempTimeCode -i "$movieVideoPath" -vframes 1 "$thumbnailPath.png"
-					# store the image inside a variable
-					image=$(ffmpeg -y -ss $tempTimeCode -i "$videoPath" -vframes 1 -f singlejpeg - | convert -quiet - "$thumbnailPath.png" )
-					# resize the image before checking the filesize
-					convert -quiet "$thumbnailPath.png" -adaptive-resize 400x200\! "$thumbnailPath.png"
-					tempFileSize=$(echo "$image" | wc --bytes)
-					# get the size of the file, after it has been created
-					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
-					# - increment the timecode to get from the video to find a thumbnail that is not
-					#   a blank screen
-					# - This will create 50 screenshots 500/10 and use the screenshot with the largest
-					#   file size
-					tempTimeCode=$(($tempTimeCode + 10))
-					# after checking x seconds for a thumbnail of the thumbs created use the one with
-					# the largest file size
-					if [ $tempTimeCode -gt 500 ];then
-						# break the loop by breaking the comparison
-						tempFileSize=$largestFileSize
-						# write the thubmnail data
-						# link the thumbnail created to the kodi path
-						linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
-					elif [ $tempFileSize -eq 0 ];then
-						# break the loop, no thumbnail could be generated at all
-						# - Blank white or black space takes up more than 0 bytes
-						# - A webpage generated thumbnail will be created as a alternative
-						rm "$thumbnailPath.png"
-						tempFileSize=16000
-					fi
-				done
+			if echo -n "$mediaData" | jq | grep --ignore-case "type" | grep --ignore-case -q "video";then
+				addToLog "DOWNLOAD" "Generating Thumbnail" "Creating video thumbnail using media link: $videoPath"
+				# generate a thumbnail from the video
+				generateThumbnailFromMedia "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
 				# verify the thumbnail was generated correctly by testing the file size
-				if test -f "$thumbnailPath.png";then
+				if test -e "$thumbnailPath.png";then
+					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path found at '$thumbnailPath.png' for video link '$videoPath'"
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
 				else
+					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path does not exist at '$thumbnailPath.png' for video link '$videoPath'"
 					tempFileSize=0
 				fi
-				if [ "$tempFileSize" -le 0 ];then
+				if [ "$tempFileSize" -le 15000 ];then
+					addToLog "WARNING" "Failsafe Thumbnail" "No thumbnail could be created from the video. Creating a failsafe thumbnail at '$thumbnailPath.png' using only the video file name."
 					# Generate a generic uniquely identifiable image using the demo image generator
 					# - this is the last resort if no thumbnail could be generated any other way
-					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600" &
+					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600"
 				fi
-			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
+			elif echo -n "$mediaData" | jq | grep --ignore-case "type" | grep --ignore-case -q "audio";then
 				ALERT "This is a audio file, generate a audio waveform..."
 				if yesNoCfgCheck "/etc/2web/nfo/generateAudioWaveforms.cfg";then
 					generateWaveform "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
 				else
-					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600" &
+					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600"
+				fi
+				# check the file was created correctly
+				if test -e "$thumbnailPath.png";then
+					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path found at '$thumbnailPath.png' for video link '$videoPath'"
+					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
+				else
+					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path does not exist at '$thumbnailPath.png' for audio link '$videoPath'"
+					tempFileSize=0
+				fi
+				# as a failsafe generate a image using the name and a hash based color
+				if [ "$tempFileSize" -le 15000 ];then
+					addToLog "WARNING" "Failsafe Thumbnail" "No thumbnail could be created from the audio. Creating a failsafe thumbnail at '$thumbnailPath.png' using only the audio file name."
+					demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600"
 				fi
 			else
 				ALERT "This media could not be determined to be any type of media try 'mediainfo \"$videoPath\"'"
@@ -952,40 +845,6 @@ processEpisode(){
 			addToLog "ERROR" "No video file" "$episode" "$logPagePath"
 			# exit the function  cancel building the episode
 			return
-		fi
-		# set the video type based on the found video path
-		if echo "$videoPath" | grep -q --ignore-case "\.mp3";then
-			mediaType="audio"
-			mimeType="audio/mp3"
-		elif echo "$videoPath" | grep -q --ignore-case "\.ogg";then
-			mediaType="audio"
-			mimeType="audio/ogg"
-		elif echo "$videoPath" | grep -q --ignore-case "\.ogv";then
-			mediaType="video"
-			mimeType="video/ogv"
-		elif echo "$videoPath" | grep -q --ignore-case "\.mp4";then
-			mediaType="video"
-			mimeType="video/mp4"
-		elif echo "$videoPath" | grep -q --ignore-case "\.m4v";then
-			mediaType="video"
-			mimeType="video/m4v"
-		elif echo "$videoPath" | grep -q --ignore-case "\.mpeg";then
-			mediaType="video"
-			mimeType="video/mpeg"
-		elif echo "$videoPath" | grep -q --ignore-case "\.mpg";then
-			mediaType="video"
-			mimeType="video/mpg"
-		elif echo "$videoPath" | grep -q --ignore-case "\.avi";then
-			mediaType="video"
-			mimeType="video/avi"
-		elif echo "$videoPath" | grep -q --ignore-case "\.mkv";then
-			mediaType="video"
-			mimeType="video/x-matroska"
-		else
-			# if no correct video type was found use video only tag
-			# this is a failover for .strm files
-			mediaType="video"
-			mimeType="video"
 		fi
 
 		# link the episode nfo file
@@ -1495,7 +1354,7 @@ processShow(){
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
 		echo "	<img loading='lazy' src='/shows/$showTitle/poster-web.png'>"
 		#echo "  <marquee direction='up' scrolldelay='100'>"
-		echo "	<div>"
+		echo "	<div class='indexSeriesTitle'>"
 		echo "		$showTitle"
 		echo "	</div>"
 		#echo "  </marquee>"
@@ -2204,8 +2063,6 @@ function update(){
 	# - Should convert youtube links from kodi to embeded player links
 	# - Should create its own web directory
 	################################################################################
-	# run 2web to build the default website if it does not exist
-	/usr/bin/2web
 	# load the libary directory
 	libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# load the disabled list

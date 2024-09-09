@@ -1352,6 +1352,128 @@ function downloadThumbnail(){
 	fi
 }
 ########################################################################
+generateThumbnailFromMedia(){
+	# generateThumbnailFromMedia $videoPath $thumbnailPath $thumbnailPathKodi
+	#
+	# Take a source video and generate thumbnails from the first 30% of the video making a thumbnail every 5%.
+	#
+	# - The largest thumbnail generated will be used as the thumbnail.
+	# - Any thumbnail larger than 15000 bytes will end thumbnail generation.
+	videoPath=$1
+	thumbnailPath=$2
+	thumbnailKodi=$3
+	# if the downloaded file is blank use mediainfo to determine if it is a video or audio link
+	addToLog "DOWNLOAD" "Generating Thumbnail" "Creating video thumbnail using media link: $videoPath"
+	# get the name for the active module
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# get the thumbsum to identify the name of the thumbnail in the generated thumbnails
+	thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
+	# check link type
+	if [ "$(echo "$videoPath" | cut -f1-8)" == "https://" ];then
+		# generate the thumbnail directory if it does not exist
+		createDir /var/cache/2web/downloads/thumbnails/$moduleName/
+		thumbnailCachePath="/var/cache/2web/downloads/thumbnails/${moduleName}/$thumbSum-gen.png"
+	elif [ "$(echo "$videoPath" | cut -f1-7)" == "http://" ];then
+		# generate the thumbnail directory if it does not exist
+		createDir /var/cache/2web/downloads/thumbnails/$moduleName/
+		thumbnailCachePath="/var/cache/2web/downloads/thumbnails/${moduleName}/$thumbSum-gen.png"
+	else
+		# generate the thumbnail directory if it does not exist
+		createDir "/var/cache/2web/downloads/generated/$moduleName/"
+		# The path to store the generated thumbnail
+		thumbnailCachePath="/var/cache/2web/generated/thumbnails/${moduleName}/$thumbSum-gen.png"
+	fi
+	# create a temp file to store generated thumbnails
+	tempThumbnailCachePath="/var/cache/2web/downloads/thumbnails/${moduleName}/$thumbSum-temp.png"
+
+	# try to generate a thumbnail from video file
+	# - filesize of images is directly related to visual complexity
+	startDebug
+
+	# stop processing the thumbnail if it is already cached
+	if ! test -e "$thumbnailCachePath";then
+		# This is the minimum file size for a thumb, anything larger than this will be accepted
+		largestFileSize=15000
+		#
+		largestImage=""
+		largestImageSize=0
+		tempTimeCode=1
+		tempFileSize=0
+		#
+		while [ $tempFileSize -lt $largestFileSize ];do
+			#
+			addToLog "DEBUG" "Thumbnail Gen" "Building a thumbnail at '$tempThumbnailCachePath'"
+			# use the ffmpeg thumbnailer to build a thumbnail
+			ffmpegthumbnailer -t "${tempTimeCode}%" -i "$videoPath" -s 400 -c png -o "$tempThumbnailCachePath"
+			# get the size of the file, after it has been created
+			if test -e "$tempThumbnailCachePath";then
+				tempFileSize=$(wc -c < "$tempThumbnailCachePath" )
+			else
+				tempFileSize=0
+			fi
+			# check if this image is larger than the other generated thumbnails
+			if [ $tempFileSize -gt $largestImageSize ];then
+				addToLog "DEBUG" "Thumbnail Gen" "Larger thumbnail discovered <br>( '$tempFileSize' < 15000 )"
+				# copy over the temp thumbnail into the cached thumbnail path
+				cp -v "$tempThumbnailCachePath" "$thumbnailCachePath"
+				# remove the temp thumbnail
+				rm -v "$tempThumbnailCachePath"
+			else
+				addToLog "DEBUG" "Thumbnail Gen" "Thumbnail is not larger than the minimum size <br>( '$tempFileSize' < 15000 )"
+			fi
+			# - increment the timecode to get from the video to find a thumbnail that is not
+			#   a blank screen
+			# - This will create 50 screenshots 500/10 and use the screenshot with the largest
+			#   file size
+			tempTimeCode=$(( tempTimeCode + 5 ))
+			# after checking x seconds for a thumbnail of the thumbs created use the one with
+			# the largest file size
+			if [ $tempTimeCode -gt 30 ];then
+				addToLog "DEBUG" "Thumbnail Gen" "Exceeded length no more thumbnails will attempt to be made"
+				# break the loop by breaking the comparison
+				tempFileSize=$largestFileSize
+				# write the thubmnail data
+			fi
+		done
+	fi
+	# link the cached thumbnail to the web path
+	addToLog "DEBUG" "Thumbnail Gen" "Generation completed, saving thumbnail '$thumbnailPath.png'"
+	linkFile "$thumbnailCachePath" "$thumbnailPath.png"
+	# link the thumbnail created to the kodi path
+	addToLog "DEBUG" "Thumbnail Gen" "Linking thumbnail to kodi directory '$thumbnailPathKodi.png'"
+	linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
+	#
+	#if ! test -f "/var/cache/2web/web/thumbnails/$thumbSum-web.png";then
+	#	# create the web page link thumbnail, this is smaller than the kodi thumbnail
+	#	convert -quiet "$thumbnailPath.png" -resize "300x200" "/var/cache/2web/web/thumbnails/$thumbSum-web.png"
+	#fi
+	stopDebug
+}
+########################################################################
+function mediaJson(){
+	# mediaJson $mediaFilePath
+	#
+	# Load a media file path and print the json meta data for that media file
+	mediaFilePath=$1
+	sum=$(echo -n "$mediaFilePath" | sha512sum | cut -d' ' -f1)
+	# create the cache directory
+	createDir "/var/cache/2web/downloads/mediaInfo/"
+	#
+	if test -f "/var/cache/2web/downloads/mediaInfo/$sum.json";then
+		# read cached mediainfo
+		mediaData=$(cat "/var/cache/2web/downloads/mediaInfo/$sum.json")
+	else
+		# load the mediainfo as json data
+		mediaData=$(mediainfo --output=JSON "$mediaFilePath")
+		# store the media info
+		echo -n "$mediaData" > "/var/cache/2web/downloads/mediaInfo/$sum.json"
+	fi
+	#
+	addToLog "DEBUG" "Media Json" "mediaData = '$mediaData'"
+	# store the media info
+	echo -n "$mediaData"
+}
+########################################################################
 function popPath(){
 	# pop the path name from the end of a absolute path
 	# e.g. popPath "/path/to/your/file/test.jpg" gives you "test.jpg"
