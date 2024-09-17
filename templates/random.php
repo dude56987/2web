@@ -26,6 +26,8 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("music2web");
 	}else if ($filterType == "albums"){
 		requireGroup("music2web");
+	}else if ($filterType == "portal"){
+		requireGroup("portal2web");
 	}else if ($filterType == "tracks"){
 		requireGroup("music2web");
 	}
@@ -55,6 +57,14 @@ if (array_key_exists("filter",$_GET)){
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		if (array_key_exists("filter",$_GET)){
+			$filterType=$_GET['filter'];
+			echo "<title>Playlist: ".ucfirst($filterType)." Random</title>";
+		}else{
+			echo "<title>Playlist: All Random</title>";
+		}
+	?>
 </head>
 <body>
 <?php
@@ -68,7 +78,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	<div class='listCard'>
 		<?PHP
 		if (array_key_exists("filter",$_GET)){
-			$filterType=$_GET['filter'];
 			echo "<a class='button' href='/new/?filter=$filterType'>";
 		}else{
 			echo "<a class='button' href='/new/'>";
@@ -125,8 +134,9 @@ SQLdrawPlaylistButton($filterType,"channels","📡 Channels");
 SQLdrawPlaylistButton($filterType,"albums","💿 Albums");
 SQLdrawPlaylistButton($filterType,"artists","🎤 Artists");
 SQLdrawPlaylistButton($filterType,"tracks","🎵 Tracks");
-SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
 SQLdrawPlaylistButton($filterType,"repos","💾 Repos");
+SQLdrawPlaylistButton($filterType,"portal","🔗 links");
+SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
 
 ?>
 </div>
