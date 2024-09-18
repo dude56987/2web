@@ -99,7 +99,6 @@ if($nextComic == ""){
 }
 # get the random comic
 $randomDir=basename(dirname($comicIndex[array_rand($comicIndex)],1));
-#echo "$randomDir<br>";
 # load chapter data from the file if this is a multi chapter comic
 if (file_exists("totalChapters.cfg")){
 	$totalChapters=file_get_contents("totalChapters.cfg");
@@ -169,9 +168,6 @@ if($topLevel){
 	# get the title info
 	$comicTitleData=getcwd();
 	$comicTitleData=explode('/',$comicTitleData);
-	#echo "<hr>";
-	#var_dump($comicTitleData);
-	#echo "<hr>";
 	# pop the directory name above the current directory
 	$chapterTitle=array_pop($comicTitleData);
 	$comicTitle=array_pop($comicTitleData);
@@ -214,7 +210,7 @@ foreach($indexPaths as $currentPath){
 	if (stripos($currentPath,".jpg") !== false){
 		$currentPath=str_replace(".jpg","",$currentPath);
 		# build the page links
-		$pageGrid .= "<a id='$currentPath' href='$currentPath.php' class='indexSeries' >";
+		$pageGrid .= "<a target='_parent' id='$currentPath' href='$currentPath.php' class='indexSeries' >";
 		$pageGrid .= "<img loading='lazy' src='$currentPath-thumb.png' />";
 		$pageGrid .= "<div>$currentPath</div>";
 		$pageGrid .= "</a>";
@@ -303,9 +299,9 @@ echo "$previousDirButton";
 	}
 	echo "<hr>";
 	if(is_dir("0001/")){
-		echo "<a class='button indexSeries' href='0001/'>";
+		echo "<a target='_parent' class='button indexSeries' href='0001/'>";
 	}else{
-		echo "<a class='button indexSeries' href='0001.php'>";
+		echo "<a target='_parent' class='button indexSeries' href='0001.php'>";
 	}
 	echo "<img loading='lazy' src='thumb.png' />";
 	echo "</a>";

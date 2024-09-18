@@ -864,7 +864,8 @@ renderPage(){
 		linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/scroll.php"
 		# link the comic overview page
 		linkFile "/usr/share/2web/templates/comic_overview.php" "$webDirectory/comics/$pageComicName/index.php"
-
+		# add the fullscreen page
+		linkFile "/usr/share/2web/templates/comic_fullscreen.php" "$webDirectory/comics/$pageComicName/fullscreen.php"
 		#if echo "$pageType" | grep "chapter";then
 		if [ $isChapter = true ];then
 			INFO "Building index links to each chapter of the comic..."

@@ -62,19 +62,43 @@
 		$lastPage = $lastPage - 1;
 		$lastPageNumber = $lastPage;
 		#
+		if (array_key_exists("fullscreen",$_GET)){
+			$isFullscreen = true;
+		}else{
+			$isFullscreen = false;
+		}
+		#
 		if ( $lastPage < 1 ){
 			# this means that this is the first page
+			$lastPageTarget = "_parent";
 			$lastPage = "index.php";
 			$lastPageNumber = "Back";
 		}else{
-			$lastPage = prefixNumbers($lastPage).".php";
+			# all other pages
+			if($isFullscreen){
+				# if fullscreen is enabled add fullscreen to page links to remain in fullscreen
+				$lastPageTarget = "comicFullscreen";
+				$lastPage = prefixNumbers($lastPage).".php?fullscreen";
+			}else{
+				$lastPageTarget = "_parent";
+				$lastPage = prefixNumbers($lastPage).".php";
+			}
 			$lastPageNumber = prefixNumbers($lastPageNumber);
 		}
 		if ( $nextPage > $totalPages ){
+			# this is the last page
+			$nextPageTarget = "_parent";
 			$nextPage = "index.php";
 			$nextPageNumber = "Back";
 		}else{
-			$nextPage = prefixNumbers($nextPage).".php";
+			# this is all other pages
+			if($isFullscreen){
+				$nextPageTarget = "comicFullscreen";
+			$nextPage = prefixNumbers($nextPage).".php?fullscreen";
+			}else{
+				$nextPageTarget = "_parent";
+				$nextPage = prefixNumbers($nextPage).".php";
+			}
 			$nextPageNumber = prefixNumbers($nextPageNumber);
 		}
 		#
@@ -186,39 +210,40 @@
 					case 'ArrowLeft':
 					event.preventDefault();
 					<?PHP
-					echo "window.location.href='./$lastPage';";
+					echo "window.open('./$lastPage','comicFullscreen');";
 					?>
 					break;
 					case 'ArrowRight':
 					event.preventDefault();
 					<?PHP
-					echo "window.location.href='./$nextPage';";
+					echo "window.open('./$nextPage','$nextPageTarget');";
 					?>
 					break;
 					case 'ArrowUp':
 					event.preventDefault();
 					window.location.href='index.php';
+					window.open('index.php','_parent');
 					break;
 					case 'Home':
 					event.preventDefault();
-					window.location.href='index.php';
+					window.open('index.php','_parent');
 					break;
 					case 'PageDown':
 					event.preventDefault();
 					<?PHP
-					echo "window.location.href='./$nextPage';";
+					echo "window.open('./$nextPage','$nextPageTarget');";
 					?>
 					break;
 					case 'PageUp':
 					event.preventDefault();
 					<?PHP
-					echo "window.location.href='./$lastPage';";
+					echo "window.open('./$lastPage','$lastPageTarget');";
 					?>
 					break;
 					case 'Insert':
 					event.preventDefault();
 					<?PHP
-					echo "toggleFullscreen();";
+					echo "window.open('fullscreen.php?page=$page','_parent');";
 					?>
 					break;
 				}
@@ -227,6 +252,7 @@
 	</script>
 </head>
 <img class='globalPulse' src='/pulse.gif'>
+<img class='globalSpinner' src='/spinner.gif'>
 <?PHP
 	# send the loading bar code while the page loads the rest of the content
 	flush();
@@ -272,25 +298,29 @@
 		echo "<source src='".$page.".jpg' type='video/webm'>\n";
 		echo "</video>\n";
 	}
-	echo "	<a href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
+	echo "	<a id='leftButton' target='$lastPageTarget' href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
 	echo "		&#8617;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
 	echo "			".$lastPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
+	echo "	<a id='rightButton' target='$nextPageTarget' href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
 	echo "		&#8618;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
 	echo "			".$nextPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a class='comicIndexButton comicPageButton center' href='index.php#$page'>\n";
+	echo "	<a target='_parent' class='comicIndexButton comicPageButton center' href='index.php#$page'>\n";
 	echo "		&uarr;\n";
 	echo "	</a>\n";
 	echo "	<div id='comicPagePopup' class='comicPagePopup center'>\n";
 	echo "		Page $page / ".prefixNumbers($totalPages)."\n";
+	# draw the fullscreen button
+	echo "	<a target='_parent' class='comicFullscreenButton' href='fullscreen.php?page=".$page."'>";
+	echo "		📐";
+	echo "	</a>\n";
 	# convert to intergers for use with the scroll view API
 	# and for calculating the reading progress
 	$page=(int)$page;

@@ -969,6 +969,34 @@ a:visited {
 	float: left;
 	max-width: 20dvw;
 }
+#comicFullscreen{
+	width: 100dvw;
+	height: 100dvh;
+	border: none !important;
+}
+#comicFullscreenCheck{
+	position: fixed;
+	z-index: 10;
+	width: 100dvw;
+	background: var(--glassBackground);
+	height: 100dvh;
+}
+.comicFullscreenButton{
+	float: right;
+	margin-right: 0.5rem;
+	text-decoration: none;
+}
+.comicFullscreenButton:hover{
+	background-color: var(--highlightBackground) !important;
+}
+.comicFullscreenSpinner{
+	position: absolute;
+	width: 5dvh;
+	height: 5dvh;
+	left: 45dvw;
+	top: 45dvh;
+	z-index: 1;
+}
 /*
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
