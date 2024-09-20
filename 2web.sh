@@ -1457,9 +1457,9 @@ main(){
 		#########################################################################################
 		comic2web --demo-data
 		#########################################################################################
-		# music2web demo music
+		# git2web demo repos
 		#########################################################################################
-		createDir "/var/cache/2web/generated/demo/music/"
+		git2web --demo-data
 	elif [ "$1" == "-S" ] || [ "$1" == "--screenshots" ] || [ "$1" == "screenshots" ] ;then
 		totalCPUs=$(cpuCount)
 		# remove existing cookie file

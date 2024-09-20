@@ -265,7 +265,7 @@ function drawLint(){
 	echo "</div>\n";
 }
 ################################################################################
-if (file_exists("repoHistory.webm")){
+if (file_exists("repoHistory.mp4")){
 	echo "<html class='seriesBackground'>";
 }else{
 	echo "<html class='randomFanart'>";
@@ -278,7 +278,7 @@ if (file_exists("repoHistory.webm")){
 
 	<style>
 	<?PHP
-	if (file_exists("repoHistory.webm")){
+	if (file_exists("repoHistory.mp4")){
 		$data=getcwd();
 		$data=explode('/',$data);
 		$repo=array_pop($data);
@@ -528,11 +528,11 @@ if (array_key_exists("inspector",$_GET)){
 	getDateStat("stat_start.cfg", "Project Started");
 	getDateStat("stat_end.cfg", "Project Last Updated");
 
-	if (file_exists("repoHistory.webm")){
+	if (file_exists("repoHistory.mp4")){
 		# draw the video player
 		echo "<hr>\n";
 		echo "	<video id='video' controls poster='repoHistory.png'>\n";
-		echo "		<source src='repoHistory.webm' type='video/webm'>\n";
+		echo "		<source src='repoHistory.mp4' type='video/mp4'>\n";
 		echo "	</video>\n";
 		# add a rule here to space stats below the video
 	}

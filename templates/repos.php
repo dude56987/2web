@@ -23,7 +23,7 @@
 ########################################################################
 -->
 <?PHP
-if (file_exists("allHistory.webm")){
+if (file_exists("allHistory.mp4")){
 	echo "<html class='seriesBackground'>";
 }else{
 	echo "<html class='randomFanart'>";
@@ -36,7 +36,7 @@ if (file_exists("allHistory.webm")){
 
 	<style>
 	<?PHP
-	if (file_exists("allHistory.webm")){
+	if (file_exists("allHistory.mp4")){
 		# set the background
 		echo ":root{";
 		echo "--backgroundPoster: url(\"/repos/allHistory.png\");";
@@ -55,12 +55,12 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 <?php
 ################################################################################
-if (file_exists("allHistory.webm")){
+if (file_exists("allHistory.mp4")){
 	if (file_exists("allHistory.png")){
 		echo "<div class='titleCard'>";
 		echo "	<h1>Combined Overview</h1>";
 		echo "	<video controls poster='allHistory.png'>\n";
-		echo "		<source src='allHistory.webm' type='video/webm'>\n";
+		echo "		<source src='allHistory.mp4' type='video/mp4'>\n";
 		echo "	</video>\n";
 		echo "</div>";
 	}

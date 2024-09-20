@@ -301,7 +301,9 @@ function buildDiffGraph(){
 	emptyGraph="yes"
 	graphScale=0
 	largestValue=0
-
+	# log the graph rendering update
+	INFO "Generating '$outputFilename' graph for '$repoName'"
+	addToLog "UPDATE" "Rendering Repo Graph" "Generating '$outputFilename' graph for '$repoName'"
 	for index in $( seq $timeLength );do
 		# get commits within a time frame
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | cut -d' ' -f1)
@@ -396,6 +398,8 @@ function buildDiffGraph(){
 		rm -v "$webDirectory/repos/$repoName/$outputFilename.png"
 		rm -v "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 	fi
+	#
+	addToLog "INFO" "Finished Rendering" "Finished generating '$outputFileName' graph for '$repoName'"
 }
 ################################################################################
 function buildCommitGraph(){
@@ -429,6 +433,9 @@ function buildCommitGraph(){
 	largestValue=0
 	commits=0
 
+	# log the graph rendering update
+	INFO "Generating '$outputFilename' graph for '$repoName'"
+	addToLog "UPDATE" "Rendering Repo Graph" "Generating '$outputFilename' graph for '$repoName'"
 	for index in $( seq $timeLength );do
 		# get commits within a time frame
 		commits=$(git log --oneline --before "$(( $index - 1 )) $timeFrame ago" --after "$index $timeFrame ago" | wc -l)
@@ -488,6 +495,7 @@ function buildCommitGraph(){
 		rm -v "$webDirectory/repos/$repoName/$outputFilename.png"
 		rm -v "$webDirectory/repos/$repoName/$outputFilename-thumb.png"
 	fi
+	addToLog "INFO" "Finished Rendering" "Finished generating '$outputFileName' graph for '$repoName'"
 }
 ################################################################################
 function update(){
@@ -495,6 +503,11 @@ function update(){
 	#
 	# RETURN NULL, FILES
 	addToLog "INFO" "STARTED Update" "$(date)"
+
+	# disable the safe directory functionality
+	# - this is for a security flaw that only exists on the 'windows' operating system
+	git config --global --add safe.directory '*'
+
 	INFO "Loading up sources..."
 	repoSources=$(loadConfigs "/etc/2web/repos/sources.cfg" "/etc/2web/repos/sources.d/" "/etc/2web/config_default/git2web_sources.cfg" | tr -s '\n' | shuf)
 	################################################################################
@@ -557,6 +570,7 @@ function generateZip(){
 	cd "$webDirectory/repos/$repoName/source/"
 	# compress into a zip file
 	zip -rqT -9 "$zipFilePath" "."
+	createDir "$webDirectory/kodi/repos/"
 	# link the zip file created into the web directory
 	linkFile "$zipFilePath" "$webDirectory/kodi/repos/$repoName.zip"
 }
@@ -572,27 +586,38 @@ function processRepo(){
 	if [ "$repoName" == "" ];then
 		repoName=$(echo "$repoSource" | rev | cut -d'/' -f2 | rev)
 	fi
+	# cleanup repo name for sorting compatiblity
+	repoName="$(cleanText "$repoName")"
+	repoName="$(alterArticles "$repoName")"
+	# create the repo location in the web server
+	createDir "$webDirectory/repos/$repoName/"
+	# create the source storage location
+	createDir "$webDirectory/repos/$repoName/source/"
+	# disable safe directory checking on repo stored in web server
+	git -C "$webDirectory/repos/$repoName/source/" config --add safe.directory '*'
 	INFO "$repoName : Checking repo source sum"
-	cd "$repoSource"
-	if git -P log --oneline -1;then
+	#cd "$repoSource"
+	# test that this is a valid git repo by looking for .git directory
+	if test -d "$repoSource/.git/";then
 		ALERT "This is a valid repo '$repoSource'"
+		addToLog "INFO" "Valid Repo" "'$repoSource' contains a valid .git repo"
 	else
 		ALERT "Invalid repo '$repoSource'"
 		addToLog "ERROR" "Invalid Repo" "$repoSource"
 		return
 	fi
-
 	if test -d "$webDirectory/repos/$repoName/source/.git/";then
 		INFO "$repoName : Pull updates to git repo..."
+		addToLog "DOWNLOAD" "Pull updates to repo" "$repoName"
 		# pull updates to existing repo
-		git -C "$webDirectory/repos/$repoName/source/" pull
-		#addToLog "DOWNLOAD" "Pull updates to repo" "$repoName"
+		/usr/bin/git -C "$webDirectory/repos/$repoName/source/" pull || addToLog "ERROR" "Git Pull Failed" "$repoName"
 	else
 		INFO "$repoName : Creating a clone of the repo..."
+		addToLog "DOWNLOAD" "Clone Inital repo" "$repoName"
 		# add as a safe directory for service to be able to update in above git pull
 		git config --global --add safe.directory "$webDirectory/repos/$repoName/source"
 		# clone the repo into the web directory
-		git clone "$repoSource" "$webDirectory/repos/$repoName/source/"
+		git clone "$repoSource" "$webDirectory/repos/$repoName/source/" || addToLog "ERROR" "Git Clone Failed" "$repoName"
 	fi
 
 	# get the old status sum
@@ -603,7 +628,8 @@ function processRepo(){
 	fi
 
 	# get the repo status sum based on the last commit to the local repo
-	repoStatusSum=$(git -P log --oneline -1 | md5sum | cut -d' ' -f1)
+	repoStatusSum=$(git -C "$webDirectory/repos/$repoName/source/" -P log --oneline -1 | md5sum | cut -d' ' -f1)
+
 	INFO "$repoName : Checking git repo source data sum: $repoName"
 
 	# configure how multithreading will be handled
@@ -615,8 +641,11 @@ function processRepo(){
 
 	# update the graph info at least once per day even if the repo is unchanged
 	if cacheCheck "$webDirectory/repos/$repoName/graph_diff_year.png" "1";then
+		# move into the source directory stored on the server in order to generate
+		# graphs for the webserver stored version of the repo
+		cd "$webDirectory/repos/$repoName/source/"
 		# create the base directory if it does not yet exist
-		createDir "$webDirectory/repos/$repoName/"
+		addToLog "INFO" "Generating Graphs" "Creating all graphs for '$repoName'"
 		#
 		INFO "$repoName : Rendering Graphs"
 		# build the pulse graph
@@ -652,6 +681,7 @@ function processRepo(){
 	# check if the data sum of the source has changed
 	if [ "$repoStatusSum" == "$oldRepoStatusSum" ];then
 		ALERT "The Repo $repoName has not changed and will not be updated..."
+		addToLog "INFO" "No Repo Changes" "'$repoName' has no changes, nothing will be updated. "
 	else
 		addToLog "UPDATE" "New Repo Changes" "'$repoName' Commits have Changed, Updating all repo information and generated content."
 		ALERT "The Repo $repoName has changed and will be updated..."
@@ -915,19 +945,27 @@ function processRepo(){
 		# render the video
 		if echo "$renderVideo" | grep -q "yes";then
 			INFO "$repoName : Rendering gource video..."
-			gource --output-custom-log "$webDirectory/repos/$repoName/GOURCE_LOG.gource" "$webDirectory/repos/$repoName/source/"
+			/usr/bin/gource --output-custom-log "$webDirectory/repos/$repoName/GOURCE_LOG_RAW.gource" "$webDirectory/repos/$repoName/source/"
 			# Add repo name to the combined repo log
+			cp -v "$webDirectory/repos/$repoName/GOURCE_LOG_RAW.gource" "$webDirectory/repos/$repoName/GOURCE_LOG.gource"
+			# filter the source file names to include the repo name for the combined video
 			sed -i -r "s#(.+)\|#\1|/$repoName#" "$webDirectory/repos/$repoName/GOURCE_LOG.gource"
+			# This parathensis is for a bug in vim while viewing the code, do not touch -> "
 			# build history video in 720p from the generated log
-			#xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - |\
-			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/$repoName/GOURCE_LOG.gource" |\
-			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/$repoName/repoHistory.webm"
+
+			# render the gource log into images
+			/usr/bin/xvfb-run /usr/bin/gource --key --max-files 0 -s 1 -c 4 -1280x720 -o "$webDirectory/repos/$repoName/GOURCE_IMAGES.ppm" "$webDirectory/repos/$repoName/GOURCE_LOG.gource"
+			# render the gource images into a video file
+			/usr/bin/ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i "$webDirectory/repos/$repoName/GOURCE_IMAGES.ppm" -vcodec libx264 -preset medium -pix_fmt yuv420p -crf 1 -threads "$totalCPUS" -bf 0 "$webDirectory/repos/$repoName/repoHistory.mp4"
+			# remove the ppm file that is un-needed after the format conversion
+			# - this file is raw video and is way to large to keep
+			rm -v "$webDirectory/repos/$repoName/GOURCE_IMAGES.ppm"
 		else
 			INFO "$repoName : Skip video rendering..."
 			# remove any video generated when the setting was set to yes
-			if test -f "$webDirectory/repos/$repoName/repoHistory.webm";then
+			if test -f "$webDirectory/repos/$repoName/repoHistory.mp4";then
 				# remove generated video
-				rm -v "$webDirectory/repos/$repoName/repoHistory.webm"
+				rm -v "$webDirectory/repos/$repoName/repoHistory.mp4"
 			fi
 			if test -f "$webDirectory/repos/$repoName/repoHistory.png";then
 				# remove generated thumbnail
@@ -937,9 +975,9 @@ function processRepo(){
 		# block until video rendering is done, the video render will use all of the cpu cores anyway
 		# NOTE: gource currently still refuses to render no headless servers so it only works if you run git2web on a desktop with graphics support
 		# build thumbnail for repo from video or from graphs if video does not render
-		if test -f "$webDirectory/repos/$repoName/repoHistory.webm";then
+		if test -f "$webDirectory/repos/$repoName/repoHistory.mp4";then
 			# build the thumbnail from the end of the video
-			ffmpegthumbnailer -i "$webDirectory/repos/$repoName/repoHistory.webm" -o "$webDirectory/repos/$repoName/repoHistory.png" -s 0 -t "100%"
+			ffmpegthumbnailer -i "$webDirectory/repos/$repoName/repoHistory.mp4" -o "$webDirectory/repos/$repoName/repoHistory.png" -s 0 -t "100%"
 		else
 			# if no video was rendered use generated graphs for thumbnail
 			linkFile "$webDirectory/repos/$repoName/graph_commit_month.png" "$webDirectory/repos/$repoName/repoHistory.png"
@@ -1055,26 +1093,29 @@ webUpdate(){
 		if checkFileDataSum "$webDirectory" "$webDirectory/repos/repos.index";then
 			# combine the gource logs to make a combined repo video
 			{
-				#cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sed -r "s#(.+)\|#\1|/Repos#" | sort -n
 				cat "$webDirectory"/repos/*/GOURCE_LOG.gource | sort -n
 			} > "$webDirectory/repos/combined_gource.gource"
-			# render the combined video
-			xvfb-run gource --key --max-files 0 -s 1 -c 4 -1280x720 -o - "$webDirectory/repos/combined_gource.gource" | \
-			ffmpeg -y -r 60 -f image2pipe -i - -threads $totalCPUS -bf 0 "$webDirectory/repos/allHistory.webm"
 
+			# render the gource log into images
+			/usr/bin/xvfb-run /usr/bin/gource --key --max-files 0 -s 1 -c 4 -1280x720 -o "$webDirectory/repos/GOURCE_IMAGES.ppm" "$webDirectory/repos/combined_gource.gource"
+			# render the gource images into a video file
+			/usr/bin/ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i "$webDirectory/repos/GOURCE_IMAGES.ppm" -vcodec libx264 -preset medium -pix_fmt yuv420p -crf 1 -threads "$totalCPUS" -bf 0 "$webDirectory/repos/allHistory.mp4"
+			# remove the ppm file that is un-needed after the format conversion
+			# - this file is raw video and is way to large to keep
+			rm -v "$webDirectory/repos/GOURCE_IMAGES.ppm"
 			setFileDataSum "$webDirectory" "$webDirectory/repos/repos.index"
 		fi
 	else
 		INFO "Skip combined video rendering..."
 		# remove existing old versions of video
-		if test -f "$webDirectory/repos/allHistory.webm";then
-			rm -v "$webDirectory/repos/allHistory.webm"
+		if test -f "$webDirectory/repos/allHistory.mp4";then
+			rm -v "$webDirectory/repos/allHistory.mp4"
 		fi
 	fi
 
-	if test -f "$webDirectory/repos/allHistory.webm";then
+	if test -f "$webDirectory/repos/allHistory.mp4";then
 		# build the thumbnail from the end of the video
-		ffmpegthumbnailer -i "$webDirectory/repos/allHistory.webm" -o "$webDirectory/repos/allHistory.png" -s 0 -t "100%"
+		ffmpegthumbnailer -i "$webDirectory/repos/allHistory.mp4" -o "$webDirectory/repos/allHistory.png" -s 0 -t "100%"
 	fi
 
 	# finish building main index page a-z
@@ -1139,6 +1180,176 @@ main(){
 	elif [ "$1" == "--force-upgrade" ];then
 		# force upgrade or install of all the pip packages
 		upgrade-pip
+	elif [ "$1" == "--demo-push" ] || [ "$1" == "demo-push" ] ;then
+		# create a list of file extensions
+		fileExtensions=".txt .py .sh"
+		# create new commits for existing repos in the demo data repos
+		find "/var/cache/2web/generated/demo/repos/" -maxdepth 1 -mindepth 1 -type d | while read repoSource;do
+			# for each of the found repos generate new randomized commits
+			projectPath="$repoSource"
+			# get the name of the repo
+			randomTitle="$(basename "$repoSource")"
+			# random start date between 10 and 300 days ago
+			projectStartDate="$(date)"
+			# create a random list of commiter names
+			userNames="$(randomWord)\n"
+			for index1 in $(seq -w $(( 1 + ( $RANDOM % 20 ) )) );do
+				userNames="$userNames$(randomWord)\n"
+			done
+			ALERT "USER NAMES = '$userNames'"
+			# generate a random number of commits for each repo
+			for index1 in $(seq -w $(( 2 + ( $RANDOM % 5 ) )) );do
+				# for each commit pick a random username
+				userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
+				ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
+				# set the user name for the user commiting this commit
+				git -C "$projectPath" config --add user.email "${userName}@demoData.local"
+				git -C "$projectPath" config --add user.name "${userName} DemoData"
+				# add a random number of files
+				for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					# choose a random file type
+					extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
+					randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
+					# create diffrent files based on extension
+					if [ $extension == ".py" ];then
+						commentPrefix="# "
+					elif [ $extension == ".sh" ];then
+						commentPrefix="# "
+					elif [ $extension == ".js" ];then
+						commentPrefix="// "
+					else
+						commentPrefix=""
+					fi
+					# create a random number of comments
+					for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+						# add the comment prefix to the line
+						echo -n "${commentPrefix}" >> "$randomFile"
+						# set a random number of words in the comment line
+						for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+							echo -n "$(randomWord) " >> "$randomFile"
+						done
+						# write the end of the line
+						echo -ne "\n" >> "$randomFile"
+					done
+					# add the generated file to the git repo
+					git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
+				done
+				# convert the date format to what git requires
+				tempCommitTime="$(date)"
+				# set the dates for the commit to be the same
+				export GIT_COMMITTER_DATE="$tempCommitTime"
+				export GIT_AUTHOR_DATE="$tempCommitTime"
+				# commit the generated files
+				# - create a randomized commit message
+				commitMessage=""
+				for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					commitMessage="$commitMessage$(randomWord) "
+				done
+				# add the commit
+				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
+				# unset values so the users shell is unaffected
+				unset GIT_COMMITTER_DATE
+				unset GIT_AUTHOR_DATE
+			done
+		done
+	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+		# generate demo data git repos
+
+		# check for parallel processing and count the cpus
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(cpuCount)
+		else
+			totalCPUS=1
+		fi
+		# create a list of file extensions
+		fileExtensions=".txt .py .sh"
+		#########################################################################################
+		# comic2web demo comics
+		#########################################################################################
+		createDir "/var/cache/2web/generated/demo/repos/"
+		# build random git repos
+		for index0 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+			# generate the random git repo name
+			randomTitle="$RANDOM $(randomWord) $(randomWord)"
+			projectPath="/var/cache/2web/generated/demo/repos/$randomTitle/"
+			# random start date between 10 and 300 days ago
+			projectStartDate=$(( 1000 + ( $RANDOM % 300000 ) ))
+			#
+			commitTime=$(( $projectStartDate - ( $RANDOM % 5 ) ))
+			# create the repo
+			createDir "$projectPath"
+			# initlize the repo
+			git -C "$projectPath" init
+			# disable the safe directory system
+			git -C "$projectPath" config --add safe.directory '*'
+			# create a random list of commiter names
+			userNames="$(randomWord)\n"
+			for index1 in $(seq -w $(( 2 + ( $RANDOM % 20 ) )) );do
+				userNames="$userNames$(randomWord)\n"
+			done
+			ALERT "USER NAMES = '$userNames'"
+			# generate a random number of commits for each repo
+			for index1 in $(seq -w $(( 2 + ( $RANDOM % 150 ) )) );do
+				# for each commit pick a random username
+				userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
+				ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
+				# set the user name for the user commiting this commit
+				git -C "$projectPath" config --add user.email "${userName}@demoData.local"
+				git -C "$projectPath" config --add user.name "${userName} DemoData"
+				# add a random number of files
+				for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					# choose a random file type
+					extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
+					randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
+					# create diffrent files based on extension
+					if [ $extension == ".py" ];then
+						commentPrefix="# "
+					elif [ $extension == ".sh" ];then
+						commentPrefix="# "
+					elif [ $extension == ".js" ];then
+						commentPrefix="// "
+					else
+						commentPrefix=""
+					fi
+					# create a random number of comments
+					for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+						# add the comment prefix to the line
+						echo -n "${commentPrefix}" >> "$randomFile"
+						# set a random number of words in the comment line
+						for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+							echo -n "$(randomWord) " >> "$randomFile"
+						done
+						# write the end of the line
+						echo -ne "\n" >> "$randomFile"
+					done
+					# add the generated file to the git repo
+					git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
+				done
+				# update the commit time
+				# - time in minutes
+				commitTime=$(( $commitTime - ( $RANDOM % 7200 ) ))
+				#commitTime=$(( $commitTime - 1 ))
+				# convert the date format to what git requires
+				tempCommitTime="$(date --date="$commitTime hours ago")"
+				# set the dates for the commit to be the same
+				export GIT_COMMITTER_DATE="$tempCommitTime"
+				export GIT_AUTHOR_DATE="$tempCommitTime"
+				# commit the generated files
+				# - create a randomized commit message
+				commitMessage=""
+				for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					commitMessage="$commitMessage$(randomWord) "
+				done
+				# add the commit
+				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
+				# unset values so the users shell is unaffected
+				unset GIT_COMMITTER_DATE
+				unset GIT_AUTHOR_DATE
+			done
+		done
+		# get the size of the demo data generated
+		du -sh /var/cache/2web/generated/demo/repos/
+		#########################################################################################
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "git2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
