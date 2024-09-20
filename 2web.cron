@@ -34,8 +34,8 @@
 # make sure the queue2web service is enabled once every 20 minutes
 */20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
 ################################################################################
-# make sure nfo2web is updated once every 3 hours
-* */3 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
+# make sure nfo2web is updated once every 2 hours
+0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
 ################################################################################
 # check if the iptv lists need updated
 @weekly root /usr/bin/nice -n 10 /usr/bin/iptv2web &> /dev/null
