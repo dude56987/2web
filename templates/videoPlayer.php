@@ -227,6 +227,11 @@ document.body.addEventListener('keydown', function(event){
 		// check for key controls on the video player
 		const key = event.key;
 		switch (key){
+			case "Insert":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			toggleFullscreen("video");
+			break;
 			case "ArrowDown":
 			event.preventDefault();
 			event.stopImmediatePropagation();

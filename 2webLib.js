@@ -274,6 +274,36 @@ function stopVideo(){
 	document.getElementById("video").stop();
 }
 ////////////////////////////////////////////////////////////////////////////////
+function toggleFullscreen(elementId="") {
+	var chosenElement;
+	if (elementId == ""){
+		// use the body if no element is set
+		chosenElement=document.body;
+	}else{
+		// get the element by id
+		chosenElement=document.getElementById(elementId);
+	}
+	if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement){
+		if (chosenElement.requestFullscreen) {
+			chosenElement.requestFullscreen();
+		} else if (chosenElement.webkitRequestFullscreen) {
+			chosenElement.webkitRequestFullscreen();
+		} else if (chosenElement.msRequestFullscreen) {
+			chosenElement.msRequestFullscreen();
+		}
+	}else{
+		// Close fullscreen
+		if (document.exitFullscreen) {
+			document.exitFullscreen();
+		} else if (document.webkitExitFullscreen) {
+			document.webkitExitFullscreen();
+		} else if (document.msExitFullscreen) {
+			document.msExitFullscreen();
+		}
+	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
 function openFullscreen() {
 	// View in fullscreen
 
