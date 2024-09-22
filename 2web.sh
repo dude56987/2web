@@ -618,6 +618,14 @@ function update2web(){
 	if ! test -f /var/cache/2web/spinner.gif;then
 		buildSpinnerGif
 	fi
+	# build the plasma failstate backgrounds
+	if ! test -f /var/cache/2web/plasmaFanart.gif;then
+		timeout 600 convert -size 800x600 plasma: -colorspace Gray "/var/cache/2web/web/plasmaFanart.png"
+	fi
+	if ! test -f /var/cache/2web/plasmaPoster.gif;then
+		timeout 600 convert -size 200x500 plasma: -colorspace Gray "/var/cache/2web/web/plasmaPoster.png"
+	fi
+
 	# build the bump video
 	if test -f /var/cache/2web/spinner.gif;then
 		if ! test -f "/var/cache/2web/spinner_bg.png";then

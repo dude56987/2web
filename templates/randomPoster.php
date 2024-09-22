@@ -42,8 +42,14 @@
 	$databaseObj->close();
 	unset($databaseObj);
 
-	// redirect to location of random background
-	header('Content-type: image/png');
-	header('Cache-Control: max-age=90');
-	header('Location: '.$fileContent);
+	if (is_readable($_SERVER['DOCUMENT_ROOT'].$fileContent)){
+		// redirect to location of random background
+		header('Content-type: image/png');
+		header('Cache-Control: max-age=90');
+		header('Location: '.$fileContent);
+	}else{
+		header('Content-type: image/png');
+		header('Cache-Control: max-age=90');
+		header('Location: /plasmaPoster.png');
+	}
 ?>
