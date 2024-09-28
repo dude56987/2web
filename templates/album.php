@@ -56,7 +56,7 @@ if (file_exists("artist.cfg")){
 	<?php
 	$albumTitle=file_get_contents("album.cfg");
 	if (file_exists("album.cfg")){
-		echo "<h1>".$albumTitle."</h1>";
+		echo "<h1 id='title'>".$albumTitle."</h1>";
 	}
 	?>
 	<a href='album.png'>
@@ -187,7 +187,7 @@ function buildPlayer($track,$player){
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playNext(){\n";
-			echo "	window.location='?play=".str_pad(($track + 1), 3, "0", STR_PAD_LEFT)."&player=$player';\n";
+			echo "	window.location='?play=".str_pad(($track + 1), 3, "0", STR_PAD_LEFT)."&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}else{
@@ -195,13 +195,37 @@ function buildPlayer($track,$player){
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playNext(){\n";
-			echo "	window.location='?play=001&player=$player';\n";
+			echo "	window.location='?play=001&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}
+		# build the previous button
+		if (file_exists(str_pad(($track - 1), 3, "0", STR_PAD_LEFT).$extension)){
+			# play the next track at the end of this one
+			echo "<script>\n";
+			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
+			echo "function playPrevious(){\n";
+			echo "	window.location='?play=".str_pad(($track - 1), 3, "0", STR_PAD_LEFT)."&player=$player#title';\n";
+			echo "}\n";
+			echo "</script>\n";
+		}else{
+			# go back to the first track
+			echo "<script>\n";
+			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
+			echo "function playPrevious(){\n";
+			echo "	window.location='?play=001&player=$player#title';\n";
+			echo "}\n";
+			echo "</script>\n";
+		}
+
 	}
 	echo "<div class='titleCard'>";
 	echo "	<div class='listCard'>";
+
+	echo "		<a class='button' onclick='playPrevious()'>";
+	echo "			⏮️ Previous Track";
+	echo "		</a>";
+
 	echo "		<a class='button' href='$track.mp3'>";
 	echo "			🔗Direct Link";
 	echo "		</a>";
@@ -228,6 +252,10 @@ function buildPlayer($track,$player){
 		echo "			➰ Loop Track";
 		echo "		</a>";
 	}
+	echo "		<a class='button' onclick='playNext()'>";
+	echo "			⏭️ Next Track";
+	echo "		</a>";
+
 	echo "	</div>";
 	echo "</div>";
 	if (file_exists($track."-lyrics.txt")){
