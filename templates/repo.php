@@ -143,6 +143,77 @@ function drawHeader(){
 	echo "	</div>\n";
 }
 ################################################################################
+function drawDocSearchBox(){
+	echo "<form class='searchBoxForm' method='get'>";
+	if (array_key_exists("searchDoc",$_GET)){
+			# place query into the search bar to allow editing of the query and resubmission
+			echo "<input id='searchBox' class='searchBox' type='text' name='searchDoc' placeholder='Doc Search...' value='".$_GET["searchDoc"]."' >";
+		}else{
+			echo "<input id='searchBox' class='searchBox' type='text' name='searchDoc' placeholder='Doc Search...' >";
+		}
+	echo "<button id='searchButton' class='searchButton' type='submit'>🔎</button>";
+	echo "</form>";
+}
+################################################################################
+function searchDoc(){
+	# search the documentation generated for a query
+	$searchTerm=$_GET["searchDoc"];
+	# build the table
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>Docs Containing '$searchTerm'</h2>\n";
+	echo "	<table>\n";
+	echo "	<tr>\n";
+	echo "		<th>File</th>\n";
+	echo "		<th>File Type</th>\n";
+	echo "		<th>Updated</th>\n";
+	echo "	</tr>\n";
+	$totalFilesScanned=0;
+	$totalReportLines=0;
+	foreach(recursiveScan("doc/") as $sourceFile){
+		if (($sourceFile != "") && ($sourceFile != "lint/.index")){
+			# check the document contains the search term
+			$fileData=file_get_contents("$sourceFile");
+			# only print files that contain the search term
+			if(stripos($fileData,"$searchTerm") !== false){
+				if (($totalFilesScanned % 2) == 1){
+					echo "	<tr class='evenTableRow'>\n";
+				}else{
+					echo "	<tr>\n";
+				}
+				$fileName = popPath($sourceFile);
+				$fileTime = str_replace(".index","",$fileName);
+				$fileTime = "lint_time/".$fileTime.".index";
+				$fileTitle = str_replace(".index","",$fileName);
+				$fileExt = explode(".",$fileName)[1];
+
+				// read the index entry
+				echo "	<td><a href='?doc=$fileName'>$fileTitle</a></td>\n";
+				#echo "	<td>".$tempLineCount."</td>";
+				if ($fileExt == "sh"){
+					echo "	<td>ShellScript</td>";
+				}else if ($fileExt == "js"){
+					echo "	<td>Javascript</td>";
+				}else if ($fileExt == "php"){
+					echo "	<td>PHP</td>";
+				}else if ($fileExt == "html"){
+					echo "	<td>HTML</td>";
+				}else if ($fileExt == "py"){
+					echo "	<td>Python</td>";
+				}else{
+					echo "	<td>Unknown</td>";
+				}
+				echo "	<td>";
+				# write the file last edited time in human readable format
+				timeElapsedToHuman(file_get_contents($fileTime));
+				echo "</td>\n";
+				echo "	</tr>\n";
+			}
+		}
+	}
+	echo "</table>\n";
+	echo "</div>\n";
+}
+################################################################################
 function drawDoc(){
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>Docstrings</h2>\n";
@@ -436,7 +507,12 @@ if (array_key_exists("inspector",$_GET)){
 	drawLint();
 }else if (array_key_exists("listDoc",$_GET)){
 	drawHeader();
+	drawDocSearchBox();
 	drawDoc();
+}else if (array_key_exists("searchDoc",$_GET)){
+	drawHeader();
+	drawDocSearchBox();
+	searchDoc();
 }else if (array_key_exists("doc",$_GET)){
 	$docFileName=$_GET['doc'];
 	$cleanDocFileName=str_replace(".index","",$docFileName);
@@ -472,7 +548,9 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<td class='commitMessageCell'>".file_get_contents("msg/$commitName.index")."</td>\n";
 	echo "		<td><a href='?commit=$commitName#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
 	echo "		<td><a href='?commit=$commitName#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
-	echo "		<td>📅 ".file_get_contents("date/$commitName.index")."</td>\n";
+	echo "		<td><span class='tableShrink'>📅 </span>";
+	timeElapsedToHuman(file_get_contents("date/$commitName.index"));
+	echo "		</td>";
 	echo "	</tr>\n";
 	echo "</table>\n";
 
