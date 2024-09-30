@@ -52,6 +52,21 @@
 		}
 		setupKeys();
 	}
+	// add load indicators to links
+	var linkElements=document.getElementsByTagName("a");
+	var tempTarget;
+	// loop though the found links
+	for(let index = 0; index < linkElements.length; index++){
+		tempTarget = linkElements[index].getAttribute("target") ;
+		// show the spinner
+		if ( ( tempTarget == "_parent" ) || ( tempTarget == null ) ){
+			// if no onclick event has been set
+			if ( linkElements[index].getAttribute("onclick") == null ){
+				// enable the spinner
+				linkElements[index].setAttribute("onclick", "showSpinner();");
+			}
+		}
+	}
 </script>
 <?php
 

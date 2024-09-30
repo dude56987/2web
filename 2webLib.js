@@ -304,6 +304,22 @@ function toggleFullscreen(elementId="") {
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
+function showSpinner(){
+	console.log("Spinner being shown")
+	var spinnerElements=document.getElementsByClassName("globalSpinner");
+	// loop though the found spinners
+	for(let index = 0; index < spinnerElements.length; index++){
+		// show the spinner
+		spinnerElements[index].style.visibility= "visible";
+	}
+	// get the pulse elements
+	var pulseElements=document.getElementsByClassName("globalPulse");
+	for(let index = 0; index < pulseElements.length; index++){
+		pulseElements[index].style.visibility = "visible";
+	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
 function openFullscreen() {
 	// View in fullscreen
 
