@@ -9,7 +9,7 @@ if (! $_SERVER["HTTPS"]){
 }
 $errorMessages="";
 # start a session
-session_start();
+startSession();
 # load the login page and allow the user to setup a login session
 if (array_key_exists("userLogout",$_POST)){
 	# logout of the current session
@@ -25,7 +25,14 @@ if (array_key_exists("userLogout",$_POST)){
 		$stored_pw=file_get_contents("/etc/2web/users/".$username.".cfg");
 		if (password_verify($password,$stored_pw)){
 			# start a new session if the password is verifyed
-			# set the session variables
+			# - regenerate the session id and cookie for login session
+			# - remove old session
+			session_regenerate_id(true);
+			# reset the varaibles stored in the session
+			# - this will force permissions to be checked again for the now
+			#   logged in session
+			session_unset();
+			# set the session variables to identify the user is logged in
 			$_SESSION["user"]=$username;
 			# if this user is a administrator
 			if (file_exists("/etc/2web/groups/admin/".$username.".cfg")){
@@ -53,6 +60,8 @@ if (array_key_exists("userLogout",$_POST)){
 			}
 			# always lock the admin group
 			$_SESSION["admin_locked"] = true;
+			# set the login timestamp
+			$_SESSION["loginTime"]=time();
 			# post the login into the system log
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
 			sleep(2);

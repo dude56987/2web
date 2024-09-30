@@ -26,7 +26,7 @@
 	# log the event
 	addToLog("ERROR","403 Unauthorized Access Detected!","A attempt was made to access the page '$tempURL' by remote ip '$remoteIP' using '$userAgent' as the user agent. This may or may not be a big deal depending on your security needs.");
 	# start the session to access session variables
-	session_start();
+	startSession();
 	# check for the username,
 	if (array_key_exists("user",$_SESSION)){
 		# if the user is logged in do not redirect to the login

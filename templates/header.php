@@ -25,6 +25,13 @@ if(! requireGroup("2web", false)){
 		redirect("/login.php");
 	}
 }
+# if the user is logged in
+if (isset($_SESSION["user"])){
+	# upgrade any connections to https if they are http
+	if(! $_SERVER["HTTPS"]){
+		redirect("https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
+	}
+}
 ?>
 <!-- create top jump button -->
 <img class='globalPulse' src='/pulse.gif'>
@@ -311,6 +318,9 @@ if (detectEnabledStatus("kodi2web")){
 if (session_status() != 2){
 	session_start();
 }
+
+# try to load a session in the current window if one does not exist
+startSession();
 # check the user has logged in successfully
 if (array_key_exists("user",$_SESSION)){
 	if (array_key_exists("admin",$_SESSION)){

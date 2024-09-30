@@ -114,6 +114,19 @@ getStat("mediaSize.index", "Local Media");
 getStat("freeSpace.index", "Free Space");
 
 echo "	</div>";
+
+# draw session login time
+if (isset($_SESSION["user"])){
+	$loginTime=$_SESSION["loginTime"];
+	# draw the login time
+	echo "		<div>";
+	echo "			<span class='singleStat'>";
+	echo "				Login Time:";
+	timeElapsedToHuman($loginTime);
+	echo "			</span>";
+	echo "		</div>";
+}
+
 # check the status of the fortunes for drawing large or small widgets
 $fortuneEnabled = False;
 if ( file_exists("/etc/2web/fortuneStatus.cfg")){
@@ -142,7 +155,6 @@ if (file_exists("fortune.index")){
 		echo "</a>";
 	}
 }
-
 
 if (file_exists("weather.index")){
 	$todaysWeather= file_get_contents("weather.index");

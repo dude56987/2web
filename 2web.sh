@@ -377,6 +377,7 @@ function update2web(){
 	createDir "$downloadDirectory"
 	createDir "$generatedDirectory"
 	createDir "/etc/2web/mod_status/"
+	createDir "/var/cache/2web/sessions/"
 
 	INFO "Building web directory at '$webDirectory'"
 	# force overwrite symbolic link to web directory
@@ -800,6 +801,20 @@ function update2web(){
 		# update the time on the file to lock it out for another 24 hours
 		touch "$webDirectory/log/cleanup.index"
 	fi
+	# cleanup old logged in sessions
+	ALERT "Checking for cache files in /var/cache/2web/sessions/"
+	if test -d "/var/cache/2web/sessions/";then
+		# figure out the session time
+		timeoutMinutes=$(cat "/etc/2web/loginTimeoutMinutes.cfg")
+		timeoutHours=$(cat "/etc/2web/loginTimeoutHours.cfg")
+		# convert the timeout to minutes
+		timeoutHours=$(( timeoutHours * 60 ))
+		# combine the timeouts
+		totalTimeout=$(( timeoutHours + timeoutMinutes ))
+		# remove any sessions older than the timeout
+		find "/var/cache/2web/sessions/" -type f -mmin +"$totalTimeout" -exec rm -v {} \;
+	fi
+
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
 	# check if the system needs rebooted

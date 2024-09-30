@@ -20,7 +20,7 @@
 <?PHP
 include("/usr/share/2web/2webLib.php");
 # destroy the existing logged in session
-session_start();
+startSession();
 session_destroy();
 # you are logged out
 echo "<html class='randomFanart'>";

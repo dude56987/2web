@@ -1189,6 +1189,73 @@ if( ! function_exists("errorBanner")){
 		}
 	}
 }
+
+########################################################################
+if( ! function_exists("startSession")){
+	function startSession(){
+		# load a new session with the 2web custom session management
+		# - this will avoid the debian/php complex session management
+		if (! isset($_SESSION)){
+			# load the minutes and convert into seconds
+			if (file_exists("/etc/2web/loginTimeoutMinutes.cfg")){
+				$timeOutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
+				$timeOutMinutes = (int)$timeOutMinutes;
+				$timeOutMinutes = ( ($timeOutMinutes * 60));
+			}else{
+				file_put_contents("/etc/2web/loginTimeoutMinutes.cfg","30");
+				$timeOutMinutes = 0;
+			}
+			if (file_exists("/etc/2web/loginTimeoutHours.cfg")){
+				# load the hours and convert into seconds
+				$timeOutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
+				$timeOutHours = (int)$timeOutHours;
+				$timeOutHours = (60 * ($timeOutHours * 60));
+			}else{
+				file_put_contents("/etc/2web/loginTimeoutHours.cfg","1");
+				$timeOutHours = 0;
+			}
+			#
+			$totalTimeout=( $timeOutHours + $timeOutMinutes );
+
+			# set the session timeout and then start the session
+			#ini_set('session.gc_maxlifetime', $totalTimeout );
+
+			# Setup session variables
+			# - set the session timeout and then start the session
+			$sessionVariables=[
+				"save_path" => "/var/cache/2web/sessions",
+				"cookie_lifetime" => $totalTimeout,
+				"gc_maxlifetime" => $totalTimeout
+			];
+			#
+			#session_set_cookie_params($totalTimeout,"/");
+			# the session does not yet exist so start the session
+			# - this is only for users that are not logged in
+			session_start($sessionVariables);
+		}
+		# check if the session needs to be regenerated and a new cookie sent
+		if (isset($_SESSION["lastActionTime"])){
+			# regenerate the session id every 10 minutes (600 seconds)
+			if( ( $_SERVER["REQUEST_TIME"] - $_SESSION["lastActionTime"] ) > 600){
+				$sessionMessage=" Server will regenerate the hash used to identify the user. A new cookie will be sent to the user over the established session to update the session with a new ID.";
+				if (isset($_SESSION["user"])){
+					addToLog("ADMIN","Session Update","Regenerate Session Cookie for user '".$_SESSION["user"]."'.".$sessionMessage);
+				}else{
+					addToLog("ADMIN","Session Update","Regenerate Session Cookie for non logged in user agent.'".$_SERVER["HTTP_USER_AGENT"]."'".$sessionMessage);
+				}
+				# Regenerate the session id and cookie for login session
+				# - delete the old session
+				session_regenerate_id(true);
+				# update the session update timeout
+				$_SESSION["lastActionTime"]=$_SERVER["REQUEST_TIME"];
+			}
+		}else{
+			addToLog("DEBUG","Session Timeout","No Last Action Time Set");
+			# update the session update timeout
+			$_SESSION["lastActionTime"]=$_SERVER["REQUEST_TIME"];
+		}
+	}
+}
 ########################################################################
 if( ! function_exists("sessionSetValue")){
 	function sessionSetValue($indexKey,$storedValue,$timeout=600){
@@ -1362,33 +1429,13 @@ if( ! function_exists("requireGroup")){
 	function requireGroup($group, $redirect=true){
 		# check the logged in user has permissions for the group given or if the group is unlocked
 		// try to load a session in the current window
-		if (! isset($_SESSION)){
-			# load the minutes and convert into seconds
-			if (file_exists("/etc/2web/loginTimeoutMinutes.cfg")){
-				$timeOutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
-				$timeOutMinutes = (int)$timeOutMinutes;
-				$timeOutMinutes = ( ($timeOutMinutes * 60));
-			}else{
-				file_put_contents("/etc/2web/loginTimeoutMinutes.cfg","30");
-				$timeOutMinutes = 0;
-			}
-			if (file_exists("/etc/2web/loginTimeoutHours.cfg")){
-				# load the hours and convert into seconds
-				$timeOutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
-				$timeOutHours = (int)$timeOutHours;
-				$timeOutHours = (60 * ($timeOutHours * 60));
-			}else{
-				file_put_contents("/etc/2web/loginTimeoutHours.cfg","1");
-				$timeOutHours = 0;
-			}
-			# set the session timeout and then start the session
-			ini_set('session.gc_maxlifetime', ( $timeOutHours + $timeOutMinutes ) );
-			session_start();
-		}
+		startSession();
 		# check if the current user has admin privileges
 		if (array_key_exists("admin",$_SESSION)){
 			# admin privileges override all other group permissions
 			if ($_SESSION["admin"]){
+				# update the session timestamp
+				$_SESSION["login_time_stamp"] = time();
 				# if the user is logged in and has admin permissions, eject them from the group auth process
 				return true;
 			}
@@ -1398,6 +1445,7 @@ if( ! function_exists("requireGroup")){
 			# the array key is set
 			if (! $_SESSION[$group."_locked"]){
 				# eject from the lock check and load the page without login
+				$_SESSION["login_time_stamp"] = time();
 				return true;
 			}
 		}else{
