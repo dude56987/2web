@@ -46,7 +46,6 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
-
 <div id='loginInactivityTimeout' class='inputCard'>
 <h2>Login Inactivity Timeout</h2>
 <ul>
@@ -92,10 +91,25 @@ include("settingsHeader.php");
 	?>
 	<button type='submit' class='button'>Change Session Timeout</button>
 </form>
-
 </div>
 
-
+<div class='inputCard' id='userIndex'>
+	<h2>User Index</h2>
+		<ul>
+		<?PHP
+		# for each existing user create a jump link
+		$foundUsers=scanDir("/etc/2web/users/");
+		$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
+		foreach( $foundUsers as $foundUser){
+			$foundUser = str_replace(".cfg","",$foundUser);
+			echo "<li>";
+			echo "<a href='#user_$foundUser'>$foundUser</a>";
+			echo "</li>";
+		}
+		?>
+		</ul>
+	</div>
+</div>
 
 <div class='settingListCard' id='manageUsers'>
 <h2>Active Users</h2>
@@ -110,7 +124,7 @@ include("settingsHeader.php");
 		# remove extension from filename
 		$foundUser = str_replace(".cfg","",$foundUser);
 		# build the user configuration panel
-		echo "<div class='inputCard'>";
+		echo "<div id='user_$foundUser' class='inputCard'>";
 		echo "<h1>".$foundUser."</h1>";
 		echo "<table class='controlTable'>";
 		echo "<tr>";
