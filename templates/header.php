@@ -314,9 +314,15 @@ if (detectEnabledStatus("kodi2web")){
 		}
 	}
 }
-# try to load a session in the current window if one does not exist
-if (session_status() != 2){
-	session_start();
+if (detectEnabledStatus("php2web")){
+	if (requireGroup("php2web",false)){
+		echo formatText("<a class='button' href='/apps/'>",2);
+		echo formatText("🖥️",3);
+		echo formatText("<span class='headerText'>",3);
+		echo formatText("Applications",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
 }
 
 # try to load a session in the current window if one does not exist
@@ -399,7 +405,6 @@ if (array_key_exists("user",$_SESSION)){
 	echo "				LOGOUT";
 	echo "			</span>";
 	echo "		</a>";
-	// draw the help button
 }else if ($_SERVER['SERVER_PORT'] != 443){
 	echo "<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>";
 	echo "🔑";

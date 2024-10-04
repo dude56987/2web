@@ -419,7 +419,16 @@ if (detectEnabledStatus("kodi2web")){
 		}
 	}
 }
-// draw the help button
+if (detectEnabledStatus("php2web")){
+	if (requireGroup("php2web",false)){
+		echo formatText("<a class='footerButton' href='/apps/'>",2);
+		echo formatText("🖥️",3);
+		echo formatText("<span class='footerText'>",3);
+		echo formatText("Applications",4);
+		echo formatText("</span>",3);
+		echo formatText("</a>",2);
+	}
+}
 echo "<a class='footerButton' href='/help.php'>";
 echo "❔";
 echo "<span class='footerText'>";
