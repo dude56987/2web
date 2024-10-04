@@ -232,7 +232,7 @@ function searchIndex(){
 	fi
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
-#
+################################################################################
 function singleWikiSearch(){
 	#singleWikiSearch "$webDirectory" "$searchSum" "$baseWikiName" "$wikiArticlePath" "$wikiPath" "$searchQuery"
 	webDirectory=$1
@@ -240,57 +240,20 @@ function singleWikiSearch(){
 	baseWikiName=$3
 	wikiPath=$4
 	searchQuery=$5
-	# try to get the wiki title
-	if test -f $wikiPath/M/Title;then
-		# Get the title directly from the file
-		wikiTitle=$(cat "$wikiPath/M/Title")
-	else
-		# Use the path base name as the name
-		wikiTitle="$baseWikiName"
-	fi
-	maxWikiArticles=20
-	foundWikiArticles=0
-	# search all articles for the search query
-	find "$wikiPath/A/" -type f | while read -r wikiArticlePath;do
-		# break loop if there are more than the max number of articles found
-		# - user should refine the search terms for more results
-		# - if wikis are scanned completely it takes a extreme amount of time
-		# check the article is a file
-		if test -f "$wikiArticlePath";then
-			# for each article in the wiki search the text of the wiki page
-			searchResult=$(cat "$wikiArticlePath" | sed -e 's/<[^>]*>//g' | fold --width=80 -s | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
-			#searchResult=$(cat "$wikiArticlePath" | sed -e 's/<[^>]*>//g' | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
-			#searchResult=$(w3m -T "text/html" "$wikiArticlePath" | grep -B 2 -A 2 -m 1 --ignore-case "$searchQuery" | sed -e 's/<[^>]*>//g' | tr "A-Z" "a-z" | sed "s/${searchQuery}/<span class='highlightText'>${searchQuery}<\/span>/g")
-			#searchResult=$(w3m "$wikiArticlePath" | grep -m 4 --ignore-case "$searchQuery" | sed "s/${searchQuery}/<span class='selected'>${searchQuery}<\/span>/g")
-			#searchResult=$(w3m "$wikiArticlePath" | grep -m 4 --ignore-case "$searchQuery" | sed -e 's/<[^>]*>//g')
-			#searchResult=$(w3m "$wikiArticlePath" | grep --ignore-case "$searchQuery")
-			#searchResult=$(grep --ignore-case "$searchQuery" "$wikiArticlePath" )
-		else
-			# no search result should be found for anything that is not a file
-			searchResult=""
-		fi
-		if [ $(echo "$searchResult" | wc -c) -gt 7 ];then
-			# a article with the search query was found
-			baseArticleName=$(basename "$wikiArticlePath")
-			{
-			echo "<a href='/wiki/$baseWikiName/?article=$baseArticleName'>"
-			echo "<div class='titleCard'>"
-			echo "<h2>$baseArticleName</h2>"
-			echo "<pre>"
-			echo "$searchResult"
-			echo "</pre>"
-			echo "</div>"
+
+	# search each wiki for articles containing the search query
+	kiwix-search "$wikiPath" "$searchQuery" | while read -r wikiArticle;do
+		baseArticleName=$(basename "$wikiArticle")
+		wikiSum=$(basename "$wikiPath" | md5sum | cut -d' ' -f1)
+		baseWikiName=$(basename "$wikiPath" | sed "s/\.zim//g" )
+		linkText=$(echo -n "$baseArticleName" | sed "s/ /_/g")
+
+		# for each found article generate a result
+		{
+			echo "<a class='indexSeries' href='/wiki/$wikiSum/?article=$linkText'>"
+			echo "<div class='indexTitle'>$baseArticleName</div>"
 			echo "</a>"
-			} >> "$webDirectory/search/${searchSum}_wiki:_$wikiTitle.index"
-			# check if the max number of articles was found in this wiki
-			if [ $foundWikiArticles -ge $maxWikiArticles ];then
-				# break the loop if there are to many results
-				break
-			else
-				# increment the loop if a article is found
-				foundWikiArticles=$(( $foundWikiArticles + 1 ))
-			fi
-		fi
+		} >> "$webDirectory/search/${searchSum}_wiki:_$baseWikiName.index"
 	done
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
@@ -301,14 +264,10 @@ function wikiSearch(){
 	searchQuery=$2
 	searchSum=$3
 	totalCPUS=$4
-	#
-	wikis=$(find "/var/cache/2web/web/wiki/" -maxdepth 1 -mindepth 1 -type d)
-	# search each of the wikis
-	IFS=$'\n'
-	# search each wiki in parallel for matching articles
-	for wiki in $wikis;do
-		baseWikiName=$(basename "$wiki")
-		singleWikiSearch "$webDirectory" "$searchSum" "$baseWikiName" "$wiki" "$searchQuery" &
+	# read each of the found zim files in the server
+	find "/var/cache/2web/web/kodi/wiki/" -name '*.zim' | while read -r wikiPath;do
+		baseWikiName=$(basename "$wikiPath")
+		singleWikiSearch "$webDirectory" "$searchSum" "$baseWikiName" "$wikiPath" "$searchQuery" &
 		waitQueue 0.1 "$totalCPUS"
 	done
 }
@@ -363,6 +322,9 @@ function search(){
 	waitQueue 0.2 "$totalCPUS"
 	# search the portal
 	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$webDirectory/search/${searchSum}_portal_links.index" &
+	waitQueue 0.2 "$totalCPUS"
+	# search the wiki pages
+	wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS" &
 	waitQueue 0.2 "$totalCPUS"
 	# search the shows
 	searchIndex "$webDirectory" "$webDirectory/shows/shows.index" "$searchQuery" "$webDirectory/search/${searchSum}_all_shows.index" &
@@ -420,9 +382,6 @@ function search(){
 	# search all episodes this will be a huge database
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_episodes.index" "_episodes" &
 	waitQueue 0.2 "$totalCPUS"
-	# search the wiki pages
-	wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS"
-
 
 	# block the queue
 	blockQueue 1

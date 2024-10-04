@@ -112,7 +112,7 @@ function update(){
 				# get the filename for the wiki name
 				#wikiName=$(popPath $wikiLocation)
 				# generate a md5sum for the location
-				wikiSum=$(echo -n "$zimFilePath" | md5sum | cut -d' ' -f1)
+				wikiSum=$(basename "$zimFilePath" | md5sum | cut -d' ' -f1)
 				# create a directory for extracting the wiki into
 				createDir "$webDirectory/wiki/$wikiSum/"
 				createDir "$webDirectory/wiki/$wikiSum/M/"
@@ -181,6 +181,19 @@ main(){
 		# lock the process
 		lockProc "wiki2web"
 		update
+	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+		checkModStatus "wiki2web"
+		drawLine
+		echo "There are no modules to upgrade in wiki2web"
+		drawLine
+		showServerLinks
+		# show the server link at the bottom of the interface
+		echo "Module Links"
+		drawLine
+		echo "http://$(hostname).local/wiki/"
+		drawLine
+		echo "http://$(hostname).local/settings/wiki.php"
+		drawLine
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 		# lock the process
 		lockProc "wiki2web"
