@@ -1629,6 +1629,32 @@ function demoImage(){
 	# colorize the image based on the link md5
 	timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
 }
+#########################################################################################
+function addPlaylist(){
+	#	addPlaylist "/path/to/index/file.index" "groupName" "tagName" "filterName"
+	#
+	# Add a playlist to the web playlist interface
+	#
+	# - This will generate all the variations of the playlist filters
+	indexFile="$1"
+	groupName="$2"
+	tagName="$3"
+	filterName="$4"
+	# if the tag is blank mark it as unknown
+	if [ "$tagName" == "" ];then
+		tagName="unknown"
+	fi
+	# add the direct filtered list
+	addToIndex "$indexFile" "$webDirectory/tags/${groupName}_${tagName}_${filterName}.index"
+	# add the group tag and filter type playlist variations to include the all playlist
+	addToIndex "$indexFile" "$webDirectory/tags/${groupName}_${tagName}_all.index"
+	addToIndex "$indexFile" "$webDirectory/tags/${groupName}_all_all.index"
+	addToIndex "$indexFile" "$webDirectory/tags/all_all_all.index"
+	addToIndex "$indexFile" "$webDirectory/tags/all_all_${filterName}.index"
+	addToIndex "$indexFile" "$webDirectory/tags/all_${tagName}_${filterName}.index"
+	# add the middle variation
+	addToIndex "$indexFile" "$webDirectory/tags/all_${tagName}_all.index"
+}
 ########################################################################
 function randomWord(){
 	# generate a random word from the dict server

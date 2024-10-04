@@ -26,10 +26,12 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("music2web");
 	}else if ($filterType == "albums"){
 		requireGroup("music2web");
-	}else if ($filterType == "portal"){
-		requireGroup("portal2web");
 	}else if ($filterType == "tracks"){
 		requireGroup("music2web");
+	}else if ($filterType == "portal"){
+		requireGroup("portal2web");
+	}else if ($filterType == "applications"){
+		requireGroup("php2web");
 	}
 }
 ?>
@@ -88,10 +90,15 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		<a class='activeButton' href='/random/'>
 			🔀 RANDOM
 		</a>
+		<?PHP
+		if(checkModStatus("nfo2web")){
+			echo "<a class='button' href='/tags/'>\n";
+			echo "	🔖 Tags\n";
+			echo "</a>\n";
+		}
+		?>
 	</div>
-	<img class='globalPulse' src='/pulse.gif'>
 </div>
-
 <div class='titleCard'>
 <?php
 if (array_key_exists("filter",$_GET)){
@@ -104,10 +111,10 @@ if (array_key_exists("filter",$_GET)){
 # if any content is restricted the all group will be locked
 # the all group is default so a message will be shown below if all is locked
 if ($filterType == "all"){
-	$groups=Array("graph2web","comic2web","iptv2web","git2web","nfo2web","music2web");
+	$groups=listModules();
 	# check each group permission
 	foreach($groups as $group){
-		$showOutput = requireGroup("graph2web", false);
+		$showOutput = requireGroup($group, false);
 		# if any group requires permission lock out the 'all' playlist
 		if ($showOutput == false){
 			$hideFilter = true;
@@ -137,7 +144,7 @@ SQLdrawPlaylistButton($filterType,"tracks","🎵 Tracks");
 SQLdrawPlaylistButton($filterType,"repos","💾 Repos");
 SQLdrawPlaylistButton($filterType,"portal","🔗 links");
 SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
-SQLdrawPlaylistButton($filterType,"apps","🖥️ Applications");
+SQLdrawPlaylistButton($filterType,"applications","🖥️ Applications");
 
 ?>
 </div>

@@ -386,12 +386,12 @@ document.body.addEventListener('keydown', function(event){
 		if (file_exists($ratingPath)){
 			$ratingData=file_get_contents($ratingPath);
 			if ( strlen($ratingData) > 0){
-				$ratingText="<span class='button'>Rating : $ratingData</span>";
+				$ratingText="<a class='button' href='/tags/?group=grade&tag=$ratingData'>Rating : $ratingData</a>";
 			}else{
-				$ratingText="<span class='button'>Rating : UNRATED</span>";
+				$ratingText="<a class='button' href='/tags/?group=grade&tag=unknown'>Rating : UNRATED</a>";
 			}
 		}else{
-			$ratingText="<span class='button'>Rating : UNRATED</span>";
+			$ratingText="<a class='button' href='/tags/?group=grade&tag=unknown'>Rating : UNRATED</a>";
 		}
 	}
 ?>
@@ -442,9 +442,10 @@ document.body.addEventListener('keydown', function(event){
 	if (file_exists($studioPath)){
 		$studioData=file_get_contents($studioPath);
 		if ( strlen($studioData) > 0){
-			echo "<span class='button'>Studio : $studioData</span>";
+			echo "<a class='button' href='/tags/?group=studio&tag=$studioData'>Studio : $studioData</a>";
 		}
 	}
+	# draw the rating button
 	echo $ratingText;
 
 	?>

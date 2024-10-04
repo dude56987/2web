@@ -202,8 +202,14 @@ processMovie(){
 		movieYear=$(cleanXml "$nfoInfo" "year")
 		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		movieTrailer=$(ripXmlTag "$nfoInfo" "trailer")
-		movieStudio=$(ripXmlTag "$nfoInfo" "studio")
-		movieGrade=$(ripXmlTag "$nfoInfo" "mpaa")
+		movieStudio=$(cleanXml "$nfoInfo" "studio")
+		if [ $movieStudio == "" ];then
+			movieStudio="unknown"
+		fi
+		movieGrade=$(cleanXml "$nfoInfo" "mpaa")
+		if [ $movieGrade == "" ];then
+			movieGrade="UNRATED"
+		fi
 		# create the episode page path
 		# each episode file title must be made so that it can be read more easily by kodi
 		movieWebPath="${movieTitle} ($movieYear)"
@@ -472,6 +478,12 @@ processMovie(){
 		echo -n "$movieStudio" > "$webDirectory/movies/$movieWebPath/studio.title"
 		# get the movie grade like G,PG,PG13,R,NC-17
 		echo -n "$movieGrade" > "$webDirectory/movies/$movieWebPath/grade.title"
+		# add tag playlists
+		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "year" "$movieYear" "movies"
+		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "studio" "$movieStudio" "movies"
+		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "grade" "$movieGrade" "movies"
+
+
 
 		# link the video player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$moviePagePath"
@@ -736,9 +748,15 @@ processEpisode(){
 		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title";then
 			# get the tvshow.nfo data
 			tvshowData=$(cat "$webDirectory/shows/$episodeShowTitle/tvshow.nfo")
-			episodeStudio=$(ripXmlTag "$tvshowData" "studio")
+			episodeStudio=$(cleanXml "$tvshowData" "studio")
+			if [ $episodeStudio == "" ];then
+				episodeStudio="unknown"
+			fi
 			# get the episode rating from the tvshow.nfo
-			episodeGrade=$(ripXmlTag "$tvshowData" "mpaa")
+			episodeGrade=$(cleanXml "$tvshowData" "mpaa")
+			if [ $episodeGrade == "" ];then
+				episodeGrade="UNRATED"
+			fi
 		fi
 		if [ "$episodeSeason" -le 0 ];then
 			episodeSeason="0000"
@@ -902,14 +920,14 @@ processEpisode(){
 			strmUrl="http://$(hostname).local/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			echo -n "$strmUrl" > "$episodePagePath.strmLink"
 
+			# split up airdate data to check if caching should be done
+			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
+			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
 			# if the config option is set to cache new episodes
 			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
 				yt_download_command=""
 				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
-				# split up airdate data to check if caching should be done
-				airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
-				airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
 					# if the airdate was this month
@@ -1071,6 +1089,11 @@ processEpisode(){
 		# random indexes
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/random/episodes.index"
 		echo "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/random/all.index"
+
+		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "year" "$airedYear" "episodes"
+		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "studio" "$episodeStudio" "episodes"
+		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "grade" "$episodeGrade" "episodes"
+
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1363,6 +1386,8 @@ processShow(){
 
 	linkFile "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/$showTitle/tvshow.index"
 
+	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "studio" "$episodeStudio" "shows"
+	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "grade" "$episodeGrade" "shows"
 
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
@@ -1678,6 +1703,7 @@ function nuke(){
 	rm -rv $(webRoot)/random/episodes.index
 	rm -rv $(webRoot)/new/shows.index
 	rm -rv $(webRoot)/new/episodes.index
+	rm -rv $(webRoot)/tags/*.index
 	rm -rv $(webRoot)/sums/nfo2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table shows;"
@@ -2237,6 +2263,17 @@ function update(){
 		tempList=$(cat "$webDirectory/new/all.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/all.index"
 	fi
+	#####################################
+	# Cleanup Tag Indexes of duplicates #
+	#####################################
+	find "/var/cache/2web/web/tags/" -mindepth 1 -maxdepth 1 -type f -name '*.index' | while read tagFile;do
+		# rebuild the file path to prevent unexpected paths from being removed
+		tagFilePath="/var/cache/2web/web/tags/$(basename "$tagFile")"
+		# sort the index and remove duplicates
+		tagFileData="$(cat "$tagFilePath" | sort -u)"
+		# overwrite the unsorted tag file
+		echo "$tagFileData" > "$tagFilePath"
+	done
 	##############################################################################
 	# create the final index pages, these should not have the progress indicator
 	# build the final version of the homepage without the progress indicator

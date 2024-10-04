@@ -580,6 +580,8 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
 	# add the new index
 	linkFile "/usr/share/2web/templates/new.php" "$webDirectory/new/index.php"
+	# create the playlists page
+	linkFile "/usr/share/2web/templates/tagPlaylists.php" "$webDirectory/tags/index.php"
 	# add the random index
 	linkFile "/usr/share/2web/templates/random.php" "$webDirectory/random/index.php"
 	# add robots.txt, to attempt to prevent any crawling of the site
