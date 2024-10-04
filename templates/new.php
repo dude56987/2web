@@ -135,6 +135,7 @@ drawPlaylistButton($filterType,"tracks","🎵 Tracks");
 drawPlaylistButton($filterType,"repos","💾 Repos");
 drawPlaylistButton($filterType,"portal","🔗 Links");
 drawPlaylistButton($filterType,"graphs","📊 Graphs");
+drawPlaylistButton($filterType,"apps","🖥️ Applications");
 
 ?>
 </div>

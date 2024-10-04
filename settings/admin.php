@@ -965,6 +965,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomPathConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if(array_key_exists("removeComicLibrary",$_POST)){
 	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
+}else if (array_key_exists("addAppLibrary",$_POST)){
+	addCustomPathConfig("addAppLibrary","/etc/2web/applications/libaries.d/","apps.php");
+}else if(array_key_exists("removeAppLibrary",$_POST)){
+	removeCustomConfig("removeAppLibrary","/etc/2web/applications/libaries.d/","apps.php");
 }else if (array_key_exists("addWikiPath",$_POST)){
 	addCustomPathConfig("addWikiPath","/etc/2web/wiki/libraries.d/","wiki.php");
 }else if(array_key_exists("removeWikiPath",$_POST)){

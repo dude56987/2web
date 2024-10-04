@@ -2514,3 +2514,11 @@ details[open] summary h2::before {
 	display: none;
 	z-index: 10;
 }
+.applicationFrame{
+	background: var(--glassBackground);
+	min-width: 800px;
+	min-height: 400px;
+}
+.appScreenshot{
+	height: 10rem;
+}

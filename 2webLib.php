@@ -20,9 +20,21 @@ ini_set('display_errors', 1);
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
 	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
+		# Draw a widget containing items from the playlists section of 2web
+		#
+		# - The filter type determines which playlist filter the widget pulls items from
+		# - The random variable sets if this is a widget containing random entries
+		# - The linktype determines the formatting used
+		# - The content rendered by this widget will be cached long term. So the playlist
+		#   section of the site itself will be ahead of any widgets rendered by this
+		#   function. However this function will update widget data on access. So if you
+		#   load up a page with the widget and the site has not cached it recently, the
+		#   same data as the playlists page will be loaded. The cache prevents high usage
+		#   of the site from hammering the server databases.
+
 		# check for group permissions in filter type
 		if ($filterType == "all"){
-			$groups=Array("graph2web","comic2web","git2web","nfo2web","music2web","portal2web","iptv2web");
+			$groups=listModules();
 			# check user has all permissions for groups
 			foreach($groups as $groupName){
 				if(! requireGroup($groupName, false)){
@@ -59,6 +71,8 @@ if( ! function_exists("drawPosterWidget")){
 			$showOutput = requireGroup("portal2web", false);
 		}else if ($filterType == "channels"){
 			$showOutput = requireGroup("iptv2web", false);
+		}else if ($filterType == "applications"){
+			$showOutput = requireGroup("php2web", false);
 		}else{
 			$showOutput = true;
 		}
@@ -235,6 +249,13 @@ if( ! function_exists("detectEnabledStatus")){
 		return yesNoCfgCheck($filePath);
 	}
 }
+################################################################################
+if( ! function_exists("listModules")){
+	function listModules(){
+		return Array("graph2web","comic2web","iptv2web","git2web","nfo2web","music2web","php2web","portal2web");
+	}
+}
+################################################################################
 if( ! function_exists("checkModStatus")){
 	function checkModStatus($moduleName){
 		# Return true if given module is enabled

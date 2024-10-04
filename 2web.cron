@@ -73,6 +73,9 @@
 # check the links in the portal, this also scans ports for services
 0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
 ################################################################################
+# check for new applications and updates in php2web
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/php2web &> /dev/null
+################################################################################
 # Once a month verify all entries in the database
 # - This removes deleted entries
 @monthly root /usr/bin/nice -n 15 /usr/bin/2web --verify &> /dev/null

@@ -137,6 +137,7 @@ SQLdrawPlaylistButton($filterType,"tracks","🎵 Tracks");
 SQLdrawPlaylistButton($filterType,"repos","💾 Repos");
 SQLdrawPlaylistButton($filterType,"portal","🔗 links");
 SQLdrawPlaylistButton($filterType,"graphs","📊 Graphs");
+SQLdrawPlaylistButton($filterType,"apps","🖥️ Applications");
 
 ?>
 </div>

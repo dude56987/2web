@@ -58,29 +58,21 @@
 	drawPosterWidget("all");
 	# draw the random combined widget
 	drawPosterWidget("all", True);
-	#
-	if (file_exists("shows")){
-		drawPosterWidget("episodes");
-		drawPosterWidget("shows");
-	}
-	if (file_exists("movies")){
-		drawPosterWidget("movies");
-		# random movies
-		drawPosterWidget("movies", True);
-	}
-	if (file_exists("shows")){
-		# random
-		drawPosterWidget("shows", True);
-	}
-	if (file_exists("comics")){
-		drawPosterWidget("comics");
-		drawPosterWidget("comics", True);
-	}
-	if (file_exists("music")){
-		drawPosterWidget("albums",False,True);
-		drawPosterWidget("artists",False,True);
-		drawPosterWidget("music",True,True);
-	}
+	# new episodes shows and movies
+	drawPosterWidget("episodes");
+	drawPosterWidget("shows");
+	drawPosterWidget("movies");
+	# random movies and shows
+	drawPosterWidget("movies", True);
+	drawPosterWidget("shows", True);
+
+	drawPosterWidget("comics");
+	drawPosterWidget("comics", True);
+
+	drawPosterWidget("albums",False,True);
+	drawPosterWidget("artists",False,True);
+	drawPosterWidget("music",True,True);
+
 	if (file_exists("live")){
 		drawPosterWidget("channels",False,True);
 		drawPosterWidget("channels",True,True);
@@ -88,19 +80,19 @@
 			include($_SERVER['DOCUMENT_ROOT']."/randomChannels.php");
 		}
 	}
-	if (file_exists("repos")){
-		drawPosterWidget("repos");
-		drawPosterWidget("repos", True);
-	}
-	if (file_exists("portal")){
-		drawPosterWidget("portal");
-		drawPosterWidget("portal", True);
-	}
-	if (file_exists("graphs")){
-		drawPosterWidget("graphs");
-		drawPosterWidget("graphs", True);
-	}
-	// add the footer
+	drawPosterWidget("repos");
+	drawPosterWidget("repos", True);
+
+	drawPosterWidget("portal");
+	drawPosterWidget("portal", True);
+
+	drawPosterWidget("graphs");
+	drawPosterWidget("graphs", True);
+
+	drawPosterWidget("applications");
+	drawPosterWidget("applications", True);
+
+	# add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
 

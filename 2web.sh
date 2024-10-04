@@ -213,6 +213,7 @@ function loadModules(){
 	moduleNames=$moduleNames$'iptv2web=greenyellow=14\n'
 	moduleNames=$moduleNames$'epg2web=olive=15\n'
 	moduleNames=$moduleNames$'weather2web=hotpink=16\n'
+	moduleNames=$moduleNames$'php2web=blue=17\n'
 
 	# Display the data
 	echo -n "$moduleNames"
@@ -465,8 +466,9 @@ function update2web(){
 	# make sure the directories exist and have correct permissions, also link stylesheets
 	createDir "$webDirectory"
 	createDir "$webDirectory/new/"
-	createDir "$webDirectory/web_cache/"
 	createDir "$webDirectory/random/"
+	createDir "$webDirectory/tags/"
+	createDir "$webDirectory/web_cache/"
 	createDir "$webDirectory/shows/"
 	createDir "$webDirectory/movies/"
 	createDir "$webDirectory/kodi/"
@@ -476,6 +478,7 @@ function update2web(){
 	#createDir "$webDirectory/backups/"
 	createDir "$webDirectory/log/"
 	createDir "$webDirectory/search/"
+	# storage location for all the thumbnails
 	createDir "$webDirectory/thumbnails/"
 
 	# create config files if they do not exist
@@ -484,7 +487,6 @@ function update2web(){
 		echo "no" > /etc/2web/cacheNewEpisodes.cfg
 		chown www-data:www-data /etc/2web/cacheNewEpisodes.cfg
 	fi
-
 	################################################################################
 	# Link website scripts into website directory to build a functional site
 	# - The php web interface
@@ -543,6 +545,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/portal_scanning.php" "$webDirectory/settings/portal_scanning.php"
 	linkFile "/usr/share/2web/settings/wiki.php" "$webDirectory/settings/wiki.php"
 	linkFile "/usr/share/2web/settings/kodi.php" "$webDirectory/settings/kodi.php"
+	linkFile "/usr/share/2web/settings/apps.php" "$webDirectory/settings/apps.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 	linkFile "/usr/share/2web/settings/login.php" "$webDirectory/login.php"
