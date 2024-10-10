@@ -750,15 +750,6 @@ function update(){
 	fi
 }
 ################################################################################
-function cleanText(){
-	# remove punctuation from text, remove leading whitespace, and double spaces
-	if [ -f /usr/bin/inline-detox ];then
-		echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g" | tr -d '#'
-	else
-		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
-	fi
-}
-################################################################################
 function getJson(){
 	# load the json string value
 	jsonData=$1
