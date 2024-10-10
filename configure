@@ -59,6 +59,10 @@ if [ "$keepBuilding" == "true" ];then
 	apt-get install make
 	# install npm to get javascript packages
 	apt-get install npm
+	# add git to get the version number
+	apt-get install git
+	# install gdebi to install the debian package
+	apt-get install gdebi
 else
 	echo "Only Debian, Ubuntu, Raspbian, and Dietpi builds are currently supported!"
 	echo "You can force configure to run if you add --force"
