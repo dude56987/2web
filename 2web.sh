@@ -808,17 +808,25 @@ function update2web(){
 	fi
 	# cleanup old logged in sessions
 	ALERT "Checking for cache files in /var/cache/2web/sessions/"
-	if test -d "/var/cache/2web/sessions/";then
-		# figure out the session time
+	# figure out the session time
+	if test -f "/etc/2web/loginTimeoutMinutes.cfg";then
 		timeoutMinutes=$(cat "/etc/2web/loginTimeoutMinutes.cfg")
-		timeoutHours=$(cat "/etc/2web/loginTimeoutHours.cfg")
-		# convert the timeout to minutes
-		timeoutHours=$(( timeoutHours * 60 ))
-		# combine the timeouts
-		totalTimeout=$(( timeoutHours + timeoutMinutes ))
-		# remove any sessions older than the timeout
-		find "/var/cache/2web/sessions/" -type f -mmin +"$totalTimeout" -exec rm -v {} \;
+	else
+		# default to 0 minutes
+		timeoutMinutes="0"
 	fi
+	if test -f "/etc/2web/loginTimeoutHours.cfg";then
+		timeoutHours=$(cat "/etc/2web/loginTimeoutHours.cfg")
+	else
+		# default to 72 hours
+		timeoutHours="72"
+	fi
+	# convert the timeout to minutes
+	timeoutHours=$(( timeoutHours * 60 ))
+	# combine the timeouts
+	totalTimeout=$(( timeoutHours + timeoutMinutes ))
+	# remove any sessions older than the timeout
+	find "/var/cache/2web/sessions/" -type f -mmin +"$totalTimeout" -exec rm -v {} \;
 
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
