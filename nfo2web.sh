@@ -530,10 +530,11 @@ processMovie(){
 		getDirSum "$movieDir" > "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg"
 
 		# add the path to the list of paths for duplicate checking
-		if ! grep -c "$movieDir" "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg";then
+		if ! grep -c "$movieDir" "$webDirectory/movies/$movieWebPath/sources.cfg";then
 			# if the path is not in the file add it to the file
-			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/source_$pathSum.cfg"
+			echo "$movieDir" >> "$webDirectory/movies/$movieWebPath/sources.cfg"
 		fi
+
 		# update update times for playlists
 		date "+%s" > /var/cache/2web/web/new/all.cfg
 		date "+%s" > /var/cache/2web/web/new/movies.cfg

@@ -260,6 +260,21 @@ document.body.addEventListener('keydown', function(event){
 	include("/usr/share/2web/templates/header.php");
 ?>
 <?PHP
+	# check for sources
+	if (requireGroup("admin",false)){
+		if(file_exists("sources.cfg")){
+			$adminData="<div class='titleCard'>\n";
+			$adminData.="<h2>Media Sources</h2>\n";
+			$adminData.="<pre>\n";
+			$adminData.=file_get_contents("sources.cfg");
+			$adminData.="</pre>\n";
+			$adminData.="</div>\n";
+		}else{
+			$adminData="";
+		}
+	}else{
+		$adminData="";
+	}
 	# check for direct link
 	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
 	if (file_exists($directLinkPath)){
@@ -333,6 +348,7 @@ document.body.addEventListener('keydown', function(event){
 			# there is no description so blank it out
 			$plotData="";
 		}
+
 		if(property_exists($jsonData, "age_limit")){
 			$ratingText="<span class='button'>Required Viewing Age: ".$jsonData->age_limit."</span>";
 		}else{
@@ -683,6 +699,10 @@ document.body.addEventListener('keydown', function(event){
 	echo $videoChannelUrl;
 ?>
 </div>
+<?PHP
+	# write the admin data if it exists
+	echo $adminData;
+?>
 <div class='titleCard'>
 	<h1>External Links</h1>
 	<div class='listCard'>

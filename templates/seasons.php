@@ -123,7 +123,17 @@ if (file_exists($activeDir."/poster.png")){
 }
 echo file_get_contents($activeDir."/plot.cfg");
 echo "</div>";
-
+# check for sources
+if (requireGroup("admin",false)){
+	if(file_exists("sources.cfg")){
+		echo "<div class='titleCard'>\n";
+		echo "<h2>Media Sources</h2>\n";
+		echo "<pre>\n";
+		echo file_get_contents("sources.cfg");
+		echo "</pre>\n";
+		echo "</div>\n";
+	}
+}
 echo "<div class='titleCard'>";
 echo "<h2 class=''>";
 echo "External Info";
