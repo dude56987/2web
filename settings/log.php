@@ -45,6 +45,21 @@ requireAdmin();
 	# add the javascript sorter controls
 ?>
 <div class='titleCard'>
+	<h2>Change Max Log Length</h2>
+	<ul>
+		<li>Log will be cut to this length once every 24 hours.</li>
+	</ul>
+	<div class='listCard'>
+		<form action='/settings/admin.php' method="post">
+			<?PHP
+				$logLimit=file_get_contents("/etc/2web/maxLogSize.cfg");
+				$logLimit=str_replace("\n","",$logLimit);
+
+				echo "<input type='number' name='changeLogLimit' max=500000000 min=5 value='".$logLimit."'>";
+			?>
+			<button class='button' type="submit">Change Log Length</button>
+		</form>
+	</div>
 	<h2>Limit Shown Entries</h2>
 	<div class='listCard'>
 		<form method="get">
@@ -149,26 +164,26 @@ requireAdmin();
 
 		# fetch each row data individually and display results
 		while($row = $result->fetchArray()){
-			$data  = "<tr class='logEntry ".$row['type']."'>";
-			$data .= "<td>";
+			$data  = "<tr class='logEntry ".$row['type']."'>\n";
+			$data .= "<td>\n";
 			$data .= $row['module'];
-			$data .= "</td>";
-			$data .= "<td>";
+			$data .= "</td>\n";
+			$data .= "<td>\n";
 			$data .= $row['type'];
-			$data .= "</td>";
-			$data .= "<td class='logDetails'>";
+			$data .= "</td>\n";
+			$data .= "<td class='logDetails'>\n";
 			$data .= $row['description'];
-			$data .= "</td>";
-			$data .= "<td class='logDetails'>";
+			$data .= "</td>\n";
+			$data .= "<td class='logDetails'>\n";
 			$data .= $row['details'];
-			$data .= "</td>";
-			$data .= "<td>";
+			$data .= "</td>\n";
+			$data .= "<td>\n";
 			$data .= $row['date'];
-			$data .= "</td>";
-			$data .= "<td>";
+			$data .= "</td>\n";
+			$data .= "<td>\n";
 			$data .= $row['time'];
-			$data .= "</td>";
-			$data .= "</tr>";
+			$data .= "</td>\n";
+			$data .= "</tr>\n";
 			# if a search has been set search loaded data for the search string
 			if (array_key_exists("search",$_GET)){
 				# remove tags and search for search terms in data row
@@ -183,25 +198,6 @@ requireAdmin();
 			flush();
 			ob_flush();
 		}
-		#$foundLogs = scandir($_SERVER['DOCUMENT_ROOT']."/log/");
-
-		#$foundLogs = array_diff($foundLogs,Array(".","..","index.php",".htaccess"));
-
-		#sort($foundLogs);
-
-		# read the array in reverse order
-		#while (count($foundLogs) > 0){
-		#	echo file_get_contents(array_pop($foundLogs));
-#}
-#
-
-		# reverse entries so newest logs are on top, oldest on the bottom
-		#$foundLogs = array_reverse($foundLogs);
-
-		# read each log file found
-		#foreach( $foundLogs as $logFilePath){
-		#	echo file_get_contents($logFilePath);
-		#}
 		?>
 		</table>
 	</div>

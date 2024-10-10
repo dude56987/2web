@@ -953,6 +953,12 @@ if (array_key_exists("newUserName",$_POST)){
 	setModStatus("portal2web",$status);
 	echo "<hr><a class='button' href='/settings/modules.php#portal2webStatus'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("changeLogLimit",$_POST)){
+	outputLog("Changing the max log entries to '".$_POST["changeLogLimit"]."'");
+	# set the log limit
+	file_put_contents("/etc/2web/maxLogSize.cfg",$_POST["changeLogLimit"]);
+	echo "<hr><a class='button' href='/log/'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	addCustomConfig("addComicDownloadLink","/etc/2web/comics/sources.d/","comicsDL.php");
 }else if (array_key_exists("addWebComicDownload",$_POST)){

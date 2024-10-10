@@ -1539,11 +1539,28 @@ function addToLog(){
 }
 ########################################################################
 function cleanupLog(){
-	# max out the log at 5,000 entries so the database does not grow forever
+	# cleanupLog
+	#
+	# - Max out the log at 5,000 entries so the database does not grow forever
+	# - Log is cleaned once every 24 hours
+	#
+	# - Has no options
 	indexPath="/var/cache/2web/web/log/log.db"
 	timeout=60000
+
+	# load the config
+	if test -f "/etc/2web/maxLogSize.cfg";then
+		maxLogEntries="$(cat "/etc/2web/maxLogSize.cfg")"
+	else
+		# create the default config
+		maxLogEntries=5000
+		echo "5000" > "/etc/2web/maxLogSize.cfg"
+		# set the permissions so the config file can be changed in the web interface
+		chown www-data:www-data "/etc/2web/maxLogSize.cfg"
+	fi
+
 	# remove old entries in the database but keep last 5,000 entries
-	sqlite3 -cmd ".timeout $timeout" "$indexPath" "delete from log where logIdentifier not in ( select logIdentifier from log order by date desc limit 5000 );"
+	sqlite3 -cmd ".timeout $timeout" "$indexPath" "delete from log where logIdentifier not in ( select logIdentifier from log order by date desc limit $maxLogEntries );"
 	# rebuild and shrink the database file
 	sqlite3 -cmd ".timeout $timeout" "$indexPath" "vacuum;"
 }
