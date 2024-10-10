@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-cleanText(){
+function cleanText(){
 	# clean up the text for use in web urls and directory paths
 	cleanedText="$1"
 	# remove bangs as they break URLS
@@ -39,6 +39,10 @@ cleanText(){
 	cleanedText=$(echo "$cleanedText" | sed "s/-/－/g" )
 	# exclamation marks can also cause problems
 	cleanedText=$(echo "$cleanedText" | sed "s/!/！/g" )
+	# plus signs are used in URLs so they must be changed
+	cleanedText=$(echo "$cleanedText" | sed "s/+/＋/g" )
+	# remove forward slashes, they will break all paths
+	cleanedText=$(echo "$cleanedText" | sed "s/\///g" )
 	# squeeze double spaces into single spaces
 	cleanedText=$(echo "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
