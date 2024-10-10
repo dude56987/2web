@@ -1,5 +1,8 @@
 Installed-Size.txt
 *.deb
+*.backup
+*.old
+*.swp
 *.tar.gz
 test/
 Test/
