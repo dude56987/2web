@@ -1031,6 +1031,7 @@ function loadWithoutComments(){
 }
 ################################################################################
 function drawLine(){
+	# Draw a line across the terminal using curses to determine the length
 	width=$(tput cols)
 	buffer="=========================================================================================================================================="
 	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
@@ -1038,7 +1039,9 @@ function drawLine(){
 }
 ################################################################################
 function showServerLinks(){
-	# show the server link at the bottom of the interface
+	# In the CLI show the server links to the homepage and the settings
+	#
+	# - For people who click links in the terminal
 	drawLine
 	echo "To access the webserver go to the below link."
 	drawLine
@@ -1182,8 +1185,8 @@ function checkDirDataSum(){
 }
 ########################################################################
 function getDirDataSum(){
-	line=$1
 	# check the libary sum against the existing one
+	line=$1
 	#totalList=$(find "$line" | sort)
 	# read the data from each file
 	#totalList="$( find "$line" -type f -exec /usr/bin/cat {} \; )"
@@ -1204,7 +1207,7 @@ function getDirDataSum(){
 	echo "$tempLibList"
 }
 ########################################################################
-setDirDataSum(){
+function setDirDataSum(){
 	# for use with checkdir sum, to update a sum as finished
 	webDirectory=$1
 	directory=$2
@@ -1356,7 +1359,7 @@ function downloadThumbnail(){
 	fi
 }
 ########################################################################
-generateThumbnailFromMedia(){
+function generateThumbnailFromMedia(){
 	# generateThumbnailFromMedia $videoPath $thumbnailPath $thumbnailPathKodi
 	#
 	# Take a source video and generate thumbnails from the first 30% of the video making a thumbnail every 5%.
@@ -1481,7 +1484,7 @@ function mediaJson(){
 function popPath(){
 	# pop the path name from the end of a absolute path
 	# e.g. popPath "/path/to/your/file/test.jpg" gives you "test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
+	basename "$1"
 }
 ########################################################################
 function sqliteEscape(){
@@ -1490,6 +1493,17 @@ function sqliteEscape(){
 }
 ########################################################################
 function addToLog(){
+	# addToLog $logType $description $details
+	#
+	# Add a entry to the 2web server log
+	#
+	# - log types can be DEBUG,INFO,WARNING,UPDATE,NEW,ERROR
+	# - Unknown log types will not be colored in the server view but will
+	#   not cause errors
+	# - Description should be short, max 4 words
+	# - Details can be as long as you want and should contain any info
+	#   that is relevent to the log entry
+
 	# add a entry to the 2web log system
 	errorType=$1
 	errorDescription=$2
@@ -1570,6 +1584,10 @@ function cleanupLog(){
 }
 ########################################################################
 function yesNoCfgCheck(){
+	# yesNoCfgCheck $configFilePath
+	#
+	# - Return 0 (true) if config file is set to 'yes'
+	# - Return 1 (false) if config is anything other than no or does not exist
 	configFilePath="$1"
 	if test -f "$configFilePath";then
 		# file exists check if it is a yes value
@@ -1584,6 +1602,11 @@ function yesNoCfgCheck(){
 }
 ########################################################################
 function yesNoCfgSet(){
+	# yesNoCfgSet $configFilePath $value
+	#
+	# Set value for a yes/no config file
+	#
+	# - Anything other than yes will be set to no
 	configFilePath="$1"
 	configValue="$2"
 	if echo "$configValue" | grep --quiet --ignore-case "yes";then
@@ -1628,6 +1651,12 @@ function loadConfigs(){
 }
 ########################################################################
 function demoImage(){
+	# demoImage $outputFilePath $title $width $height
+	#
+	# Generate a generic image with a caption, the background will be generated
+	# using the caption as a seed so each image will be visually unique enough
+	# for you to reconize them
+
 	# the output path for the image
 	localIconPath="$1"
 	# the title for captioning the image
@@ -1678,7 +1707,12 @@ function addPlaylist(){
 }
 ########################################################################
 function randomWord(){
-	# generate a random word from the dict server
+	# randomWord
+	#
+	# Generate a random word from the dict server
+	#
+	# - Has no options
+	# - Uses words from dictonarys installed for 'dict' command
 	shuf -n 1 /usr/share/dict/words
 }
 ########################################################################
