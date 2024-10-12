@@ -41,7 +41,8 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 	<ul>
 		<li><a href='#graph2webStatus'>Enable or Disable Graphs</a></li>
 		<li><a href='#vnstat'>Vnstat</a></li>
-		<li><a href='#munin'>Munin</a></li>
+		<li><a href='#muninEnabled'>Munin Enabled</a></li>
+		<li><a href='#muninDisabled'>Munin Disabled</a></li>
 	</ul>
 </div>
 <div id='vnstat' class='inputCard'>
@@ -64,31 +65,89 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 		</li>
 	</ul>
 </div>
-<div id='munin' class='titleCard'>
-	<h2>Munin</h2>
+
+<?PHP
+	# check for available plugins
+	$plugins=scanDir("/usr/share/munin/plugins/");
+	$plugins=array_diff($plugins,Array('..','.','.placeholder'));
+	$disabledPlugins=Array();
+	$enabledPlugins=Array();
+	# sort the plugins
+	foreach( $plugins as $plugin){
+		if (file_exists("/etc/munin/plugins/$plugin")){
+			# add to enabled
+			$enabledPlugins=array_merge($enabledPlugins,Array($plugin));
+		}else{
+			# add to disabled
+			$disabledPlugins=array_merge($disabledPlugins,Array($plugin));
+		}
+	}
+	#
+	sort($enabledPlugins);
+	sort($disabledPlugins);
+	sort($plugins);
+?>
+
+<div class='inputCard' id='muninEnabled'>
+	<h2>Enabled Munin Plugins</h2>
 	<ul>
-		<li>
-			Graphs are added from local munin instance
-			<ul>
-				<li>To add remove graphs, Add or remove them from munin</li>
-				<li>Link plugins in /usr/share/munin/plugins/ to /etc/munin/plugins/ in order to enable plugins.</li>
-			</ul>
-		</li>
+		<?PHP
+		# list available plugins and thier status
+		foreach( $enabledPlugins as $plugin){
+			# build the buttons to control the status of the plugin
+			echo "<li><a href='#pluginStatus_$plugin'>$plugin</a></li>";
+		}
+		?>
 	</ul>
-	<h2>Enable Munin Plugins</h2>
-	<p>
-		Replace the pluginName in the below command and run it on this server to enable the munin plugin.
-	</p>
-	<pre>ln -s /usr/share/munin/plugins/pluginName /etc/munin/plugins/</pre>
-	<h2>
-		Munin Plugins with Status
-	</h2>
-	<pre>
-	<?PHP
-	echo shell_exec("munin-node-configure");
-	?>
-	</pre>
 </div>
+
+<div class='inputCard' id='muninEnabled'>
+	<h2>Disabled Munin Plugins</h2>
+	<ul>
+		<?PHP
+		# list available plugins and thier status
+		foreach( $disabledPlugins as $plugin){
+			# build the buttons to control the status of the plugin
+			echo "<li><a href='#pluginStatus_$plugin'>$plugin</a></li>";
+		}
+		?>
+	</ul>
+</div>
+
+<div class='settingListCard' id='muninEnabled'>
+	<h2>Enabled Munin Plugins</h2>
+<?PHP
+	# list available plugins and thier status
+	foreach( $enabledPlugins as $plugin){
+		echo "<div class='inputCard'>";
+		echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
+		# build the buttons to control the status of the plugin
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<input type='text' name='disableGraphPlugin' value='$plugin' hidden>";
+		echo "	<button class='button' type='submit' name='' value=''>🟢 Disable Plugin</button>\n";
+		echo "	</form>\n";
+		echo "</div>";
+	}
+?>
+</div>
+
+<div class='settingListCard' id='muninDisabled'>
+	<h2>Disabled Munin Plugins</h2>
+<?PHP
+	# list available plugins and thier status
+	foreach( $disabledPlugins as $plugin){
+		echo "<div class='inputCard'>";
+		echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
+		# build the buttons to control the status of the plugin
+		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<input type='text' name='enableGraphPlugin' value='$plugin' hidden>";
+		echo "	<button class='button' type='submit' name='' value=''>◯ Enable Plugin</button>\n";
+		echo "	</form>\n";
+		echo "</div>";
+	}
+?>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

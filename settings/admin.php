@@ -1060,6 +1060,33 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/repos/renderVideo.cfg", $_POST['repoRenderVideo']);
 	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("enableGraphPlugin",$_POST)){
+	$graphName=$_POST['enableGraphPlugin'];
+	outputLog("Enable Munin Graph Plugin '$graphName'");
+	if (file_exists("/etc/munin/plugins/$graphName")){
+		outputLog("Munin Graph Plugin is already enabled '$graphName'","badLog");
+	}else{
+		outputLog("Linking munin plugin '/usr/share/munin/plugins/$graphName' to '/etc/munin/plugins/$graphName'","goodLog");
+		# use the queue to manage munin enable/disable
+		addToQueue("multi","ln -s '/usr/share/munin/plugins/$graphName' '/etc/munin/plugins/$graphName' ");
+		#link("/usr/share/munin/plugins/$graphName", "/etc/munin/plugins/$graphName");
+	}
+	echo "<hr><a class='button' href='/settings/graphs.php#pluginStatus_$graphName'>BACK</a><hr>";
+	clear();
+}else if (array_key_exists("disableGraphPlugin",$_POST)){
+	$graphName=$_POST['disableGraphPlugin'];
+	outputLog("Disable Munin Graph Plugin '$graphName'");
+	if (file_exists("/etc/munin/plugins/$graphName")){
+		outputLog("Unlinking munin plugin at '/etc/munin/plugins/$graphName'","goodLog");
+		# remove the plugin from the eanbled plugins directory
+		# - use the queue to manage munin enable/disable
+		addToQueue("multi","rm -v '/etc/munin/plugins/$graphName'");
+		#unlink("/etc/munin/plugins/$graphName");
+		echo "<hr><a class='button' href='/settings/graphs.php#pluginStatus_$graphName'>BACK</a><hr>";
+	}else{
+		outputLog("Munin Graph Plugin is already disabled '$graphName'","badLog");
+	}
+	clear();
 }else if (array_key_exists("colorName",$_POST)){
 	# load the template name
 	$newColorName=$_POST["colorName"];

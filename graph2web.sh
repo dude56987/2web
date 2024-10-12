@@ -68,6 +68,8 @@ function update(){
 
 	createDir "$webDirectory/graphs/"
 	createDir "$webDirectory/kodi/graphs/"
+	# set ownership of munin plugin directory to be able to edit them in the web interface
+	chown -R www-data:www-data /etc/munin/plugins/
 
 	# copy over the php files for the graph
 	linkFile "/usr/share/2web/templates/graphs.php" "$webDirectory/graphs/index.php"
@@ -147,61 +149,71 @@ function update(){
 	###################################################################################################
 	# find each of the graphs provided by munin
 	searchPath="/var/cache/munin/www/localdomain/localhost.localdomain"
+	# get the list of enabled graphs
+	enabledGraphs=$(find "/etc/munin/plugins/" -type f)
 	find "$searchPath/" -maxdepth 1 -mindepth 1 -type f -name "*-day.png" | while read graphPath;do
 		# get the filename and path
 		fileName=$(echo "$graphPath" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/-day//g")
-
-		#if cacheCheck "$webDirectory/graphs/$fileName/index.php" 7;then
+		#
 		if test -f "$webDirectory/graphs/$fileName/index.php";then
+			# check if the graph is enabled
+			if ! test -f "/etc/munin/plugins/$fileName";then
+				# the plugin is disabled remove it from the web interface
+				rm -rv "$webDirectory/graphs/$fileName/"
+				rm -rv "$webDirectory/kodi/graphs/$fileName/"
+			fi
 			# if the graph has been added to the server already skip this
 			INFO "Already processed $fileName graph..."
 		else
-			# the graph does not exist on the webserver but is enabled in munin so activate it
+			# the graph does not exist on the webserver
+			if test -f "/etc/munin/plugins/$fileName";then
+				# if the graph is enabled in munin
 
-			createDir "$webDirectory/graphs/$fileName/"
-			createDir "$webDirectory/kodi/graphs/$fileName/"
-			# read each graph path and build a directory for each set of graphs
-			linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/day.png"
-			linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
-			linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
-			linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
+				createDir "$webDirectory/graphs/$fileName/"
+				createDir "$webDirectory/kodi/graphs/$fileName/"
+				# read each graph path and build a directory for each set of graphs
+				linkFile "$searchPath/$fileName-day.png" "$webDirectory/graphs/$fileName/day.png"
+				linkFile "$searchPath/$fileName-week.png" "$webDirectory/graphs/$fileName/week.png"
+				linkFile "$searchPath/$fileName-month.png" "$webDirectory/graphs/$fileName/month.png"
+				linkFile "$searchPath/$fileName-year.png" "$webDirectory/graphs/$fileName/year.png"
 
-			# add kodi directory links
-			linkFile "$searchPath/$fileName-day.png" "$webDirectory/kodi/graphs/$fileName/day.png"
-			linkFile "$searchPath/$fileName-week.png" "$webDirectory/kodi/graphs/$fileName/week.png"
-			linkFile "$searchPath/$fileName-month.png" "$webDirectory/kodi/graphs/$fileName/month.png"
-			linkFile "$searchPath/$fileName-year.png" "$webDirectory/kodi/graphs/$fileName/year.png"
+				# add kodi directory links
+				linkFile "$searchPath/$fileName-day.png" "$webDirectory/kodi/graphs/$fileName/day.png"
+				linkFile "$searchPath/$fileName-week.png" "$webDirectory/kodi/graphs/$fileName/week.png"
+				linkFile "$searchPath/$fileName-month.png" "$webDirectory/kodi/graphs/$fileName/month.png"
+				linkFile "$searchPath/$fileName-year.png" "$webDirectory/kodi/graphs/$fileName/year.png"
 
-			# copy over the metadata for the template to use
-			titleClean=$(echo "$fileName" | sed "s/_/ /g" )
-			echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
+				# copy over the metadata for the template to use
+				titleClean=$(echo "$fileName" | sed "s/_/ /g" )
+				echo "$titleClean" > "$webDirectory/graphs/$fileName/title.cfg"
 
-			# build the index entry for the graph on the main index
-			{
-				echo "<a class='showPageEpisode' href='/graphs/$fileName/'>"
-				echo "	<h2 class='title'>"
-				echo "  	$titleClean"
-				echo "	</h2>"
-				echo "	<img class='graphLinkThumbnail' loading='lazy' src='/graphs/$fileName/day.png'>"
-				echo "</a>"
-			} > "$webDirectory/graphs/$fileName/graphs.index"
+				# build the index entry for the graph on the main index
+				{
+					echo "<a class='showPageEpisode' href='/graphs/$fileName/'>"
+					echo "	<h2 class='title'>"
+					echo "  	$titleClean"
+					echo "	</h2>"
+					echo "	<img class='graphLinkThumbnail' loading='lazy' src='/graphs/$fileName/day.png'>"
+					echo "</a>"
+				} > "$webDirectory/graphs/$fileName/graphs.index"
 
-			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "graphs"
-			SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "all"
+				SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "graphs"
+				SQLaddToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/data.db" "all"
 
-			# copy over the php template for the graphs
-			linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
+				# copy over the php template for the graphs
+				linkFile "/usr/share/2web/templates/graph.php" "$webDirectory/graphs/$fileName/index.php"
 
-			# add graphs to graphs.index
-			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/graphs/graphs.index"
+				# add graphs to graphs.index
+				echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/graphs/graphs.index"
 
-			# add to new indexes
-			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/graphs.index"
-			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/all.index"
+				# add to new indexes
+				echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/graphs.index"
+				echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/new/all.index"
 
-			# add to new indexes
-			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
-			echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
+				# add to new indexes
+				echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/graphs.index"
+				echo "$webDirectory/graphs/$fileName/graphs.index" >> "$webDirectory/random/all.index"
+			fi
 		fi
 	done
 	if test -f "$webDirectory/new/graphs.index";then
@@ -348,9 +360,6 @@ main(){
 		lockProc "graph2web"
 		# remove the kodi and web graph files
 		nuke
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# enable all available plugins to munin
-		munin-node-configure --suggest | sh
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 		cat "/usr/share/2web/help/graph2web.txt"
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
