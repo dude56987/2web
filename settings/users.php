@@ -53,23 +53,27 @@ include("settingsHeader.php");
 		Set the time before a session is automatically ended from inactivity and the user must log in again.
 	</li>
 <?PHP
-	$currentTimeoutSeconds=ini_get('session.gc_maxlifetime');
-
-	$currentTimeoutHours=floor(floor($currentTimeoutSeconds / 60) / 60);
-	# subtract new found number of seconds in hours
-	$currentTimeoutSeconds-=floor(($currentTimeoutHours * 60) * 60);
-	$currentTimeoutMinutes=$currentTimeoutSeconds / 60;
-	$currentTimeoutSeconds-=($currentTimeoutMinutes * 60);
+	if(file_exists("/etc/2web/loginTimeoutMinutes.cfg")){
+		$timeoutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
+	}else{
+		$timeoutMinutes = 0;
+	}
+	if(file_exists("/etc/2web/loginTimeoutHours.cfg")){
+		$timeoutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
+	}else{
+		$timeoutHours = 72;
+	}
 	echo "<li>";
-	echo "The session will currently timeout after ".$currentTimeoutHours." hours, ".$currentTimeoutMinutes." minutes, and ".$currentTimeoutSeconds." seconds.";
+	echo "The session will currently timeout after ".$timeoutHours." hours, ".$timeoutMinutes." minutes";
+	echo "</li>";
+	echo "<li>";
+	echo "The cleanup runs once every 30 minutes. So session timeout values below 30 minutes total will be rounded back up to 30 minutes. For faster cleanup you can change '/etc/cron.d/2web', however this is NOT recommended.";
 	echo "</li>";
 ?>
 </ul>
 <form action='admin.php' method='post' class='buttonForm'>
 	<?PHP
 		echo "<h3>Set Session Timeout</h3>";
-		$timeoutMinutes = file_get_contents("/etc/2web/loginTimeoutMinutes.cfg");
-		$timeoutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
 		echo "<table class='controlTable'>";
 		echo "<tr>";
 		echo "	<th>";
@@ -81,7 +85,7 @@ include("settingsHeader.php");
 		echo "</tr>";
 		echo "<tr>";
 		echo "	<td>";
-		echo "		<input type='number' name='setSessionTimeoutHours' placeholder='Session Timeout Hours...' min='0' max='72' value='".$timeoutHours."' />";
+		echo "		<input type='number' name='setSessionTimeoutHours' placeholder='Session Timeout Hours...' min='0' max='120' value='".$timeoutHours."' />";
 		echo "	</td>";
 		echo "	<td>";
 		echo "		<input type='number' name='setSessionTimeoutMinutes' placeholder='Session Timeout Minutes...' min='0' max='59' value='".$timeoutMinutes."' />";
@@ -104,6 +108,24 @@ include("settingsHeader.php");
 			$foundUser = str_replace(".cfg","",$foundUser);
 			echo "<li>";
 			echo "<a href='#user_$foundUser'>$foundUser</a>";
+			echo "</li>";
+		}
+		?>
+		</ul>
+	</div>
+</div>
+
+<div class='inputCard' id='groupIndex'>
+	<h2>Group  Index</h2>
+		<ul>
+		<?PHP
+		# get a list of the groups
+		$groups=scanDir("/etc/2web/groups/");
+		$groups=array_diff($groups,Array('..','.','.placeholder'));
+		foreach( $groups as $group ){
+			$group = str_replace(".cfg","",$group);
+			echo "<li>";
+			echo "<a href='#groupLock_$group'>$group</a>";
 			echo "</li>";
 		}
 		?>
