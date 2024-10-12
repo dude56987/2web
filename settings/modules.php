@@ -43,9 +43,9 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 		<li>Enable/Disable Modules
 			<ul>
 <?PHP
-$modules=Array("nfo2web","ytdl2nfo","rss2nfo","comic2web","music2web","iptv2web","weather2web","kodi2web","graph2web","wiki2web","git2web","ai2web","portal2web");
+$modules=listModules(true);
 foreach($modules as $module){
-	echo "				<li><a href='#".$module."Status'>$module</a></li>";
+	echo "				<li><a href='#".$module."'>$module</a></li>";
 }
 ?>
 			</ul>
