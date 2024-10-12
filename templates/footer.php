@@ -62,8 +62,11 @@
 		if ( ( tempTarget == "_parent" ) || ( tempTarget == null ) ){
 			// if no onclick event has been set
 			if ( linkElements[index].getAttribute("onclick") == null ){
-				// enable the spinner
-				linkElements[index].setAttribute("onclick", "showSpinner();");
+				// make sure this is not a reference in the page
+				if ( linkElements[index].getAttribute("href").indexOf("#") == -1 ){
+					// enable the spinner
+					linkElements[index].setAttribute("onclick", "showSpinner();");
+				}
 			}
 		}
 	}
