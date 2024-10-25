@@ -1,5 +1,7 @@
 # enable ssl module in apache
 a2enmod ssl
+# enable apache headers module
+a2enmod headers
 # cleanup broken symlinks in apache
 symlinks -d "/etc/apache2/sites-enabled/" || echo "No broken symlinks found..."
 symlinks -d "/etc/apache2/conf-enabled/" || echo "No broken symlinks found..."
