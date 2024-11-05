@@ -117,14 +117,16 @@ echo "	</div>";
 
 # draw session login time
 if (isset($_SESSION["user"])){
-	$loginTime=$_SESSION["loginTime"];
-	# draw the login time
-	echo "		<div>";
-	echo "			<span class='singleStat'>";
-	echo "				Login Time:";
-	timeElapsedToHuman($loginTime);
-	echo "			</span>";
-	echo "		</div>";
+	if (isset($_SESSION["loginTime"])){
+		$loginTime=$_SESSION["loginTime"];
+		# draw the login time
+		echo "		<div>";
+		echo "			<span class='singleStat'>";
+		echo "				Login Time:";
+		timeElapsedToHuman($loginTime);
+		echo "			</span>";
+		echo "		</div>";
+	}
 }
 
 # check the status of the fortunes for drawing large or small widgets
