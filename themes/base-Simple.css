@@ -2428,14 +2428,14 @@ select{
 	width: 100dvw;
 }
 .kodiControlEmbededTableButtonGrid td{
-	width: 33%;
+	width: 10%;
 }
 .kodiControlEmbededTableButtonGridHeader{
 	border: none;
 	width: 100dvw;
 }
 .kodiControlEmbededTableButtonGridHeader td{
-	width: 20%;
+	width: 10%;
 }
 /*
 details > summary{

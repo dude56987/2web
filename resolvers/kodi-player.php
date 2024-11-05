@@ -45,7 +45,8 @@ function cleanQuotes($videoLink){
 }
 ################################################################################
 function forkCommand($inputCommand){
-	addToQueue("multi", $inputCommand);
+	#addToQueue("multi", $inputCommand);
+	shell_exec($inputCommand);
 }
 ################################################################################
 function drawRemoteHeader(){
@@ -53,6 +54,9 @@ function drawRemoteHeader(){
 	echo "				<tr>\n";
 	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' onclick='window.close();' href='/'>❌<div>CLOSE</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>👆<div>Select Remote</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/kodi-player.php?share' title='Share Link'>⛓️<div>Share</div></a>\n";
@@ -64,6 +68,14 @@ function drawRemoteHeader(){
 	echo "			</table>\n";
 }
 ################################################################################
+# check for the selected remote
+if (array_key_exists("selectedRemote",$_SESSION)){
+	# get the user selected remote
+	$selectedRemote = $_SESSION['selectedRemote'];
+}else{
+	redirect("/remote.php");
+}
+################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	# check if the link was passed with the web remote
@@ -73,7 +85,7 @@ if (array_key_exists("url",$_GET)){
 	#	generate the sum from the cleaned link
 	$videoLinkSum = md5($videoLink);
 	# build the command to play on all the players
-	$command = "kodi2web_player open '".$videoLink."'";
+	$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
 	# fork the process
 	forkCommand($command);
 	# go back to the remote control page
@@ -98,7 +110,7 @@ if (array_key_exists("url",$_GET)){
 	# build the link for the generated .strm file
 	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
 	# build the command to play on all the players
-	$command = "kodi2web_player open '".$videoLink."'";
+	$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
 	# fork the process
 	forkCommand($command);
 	# go back to the remote control page
@@ -123,7 +135,7 @@ if (array_key_exists("url",$_GET)){
 	# build the link for the generated .strm file
 	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
 	# build the command to play on all the players
-	$command = "kodi2web_player open '".$videoLink."'";
+	$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
 	# fork the process
 	forkCommand($command);
 	# go back to the remote control page
@@ -132,9 +144,10 @@ if (array_key_exists("url",$_GET)){
 	echo "<html class='randomFanart'>";
 	echo "<head>";
 	echo "<link rel='stylesheet' href='/style.css'>";
-	echo "</head>";
-	echo "<body class='remoteCard'>";
-	echo "<table class='kodiPlayerButtonGrid'>";
+	echo "<title>Remote Control - ".$_SESSION["remoteTitle"]."</title>\n";
+	echo "</head>\n";
+	echo "<body class='remoteCard'>\n";
+	echo "<table class='kodiPlayerButtonGrid'>\n";
 	echo "	<tr>\n";
 	echo "		<td>\n";
 	# link back to the launch location of the remote
@@ -278,35 +291,28 @@ if (array_key_exists("url",$_GET)){
 	}
 	# build the command to play on all the players
 	$command = "kodi2web_player openplaylist '".$videoLink."'";
-	#$command = "echo \"kodi2web_player play '".$videoLink."'\"";
-	# set the command to run in the scheduler
-	#$command = $command." | /usr/bin/at -M -q a now";
-	# debug info
 	# fork the process
 	forkCommand($command);
-	#echo "$command"."<br>\n";
-	# go back to the page that sent the command
-	#redirect($_SERVER["HTTP_REFERER"]);
-	#echo $_SERVER["HTTP_REFERER"]."<br>\n";
+	# redirect back to the page that opened the player
 	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
 }else if (array_key_exists("input",$_GET)){
 	$inputAction = (strtolower($_GET['input']));
 	if($inputAction == "select"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "up"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "down"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "left"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "right"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "back"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "home"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else if($inputAction == "context"){
-		forkCommand("kodi2web_player --".$inputAction);
+		forkCommand("kodi2web_player --".$inputAction."-at '$selectedRemote'");
 	}else{
 		# unknown input action
 		echo "UNKNOWN ACTION SENT TO API";
@@ -314,37 +320,37 @@ if (array_key_exists("url",$_GET)){
 	remoteRedirect();
 }else if (array_key_exists("volumeup",$_GET)){
 	# volume up
-	forkCommand("kodi2web_player --volumeup");
+	forkCommand("kodi2web_player --volumeup-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("volumedown",$_GET)){
 	# volume down
-	forkCommand("kodi2web_player --volumedown");
+	forkCommand("kodi2web_player --volumedown-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("mute",$_GET)){
 	# toggle mute
-	forkCommand("kodi2web_player --mute");
+	forkCommand("kodi2web_player --mute-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("play",$_GET) or array_key_exists("pause",$_GET)){
 	# play/pause the video
-	forkCommand("kodi2web_player --play");
+	forkCommand("kodi2web_player --play-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("stop",$_GET)){
 	# play/pause the video
-	forkCommand("kodi2web_player --stop");
+	forkCommand("kodi2web_player --stop-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("skipforward",$_GET)){
 	# play/pause the video
-	forkCommand("kodi2web_player --skip-forward");
+	forkCommand("kodi2web_player --skip-forward-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else if (array_key_exists("skipbackward",$_GET)){
 	# play/pause the video
-	forkCommand("kodi2web_player --skip-backward");
+	forkCommand("kodi2web_player --skip-forward-at '$selectedRemote'");
 	# redirect back to the remote
 	remoteRedirect();
 }else{
@@ -362,6 +368,7 @@ if (array_key_exists("url",$_GET)){
 	echo "<html class='randomFanart'>\n";
 	echo "<head>\n";
 	echo "<link rel='stylesheet' href='/style.css'>\n";
+	echo "<title>Remote Control - ".$_SESSION["remoteTitle"]."</title>\n";
 	echo "</head>\n";
 	echo "<body class='remoteCard'>\n";
 	echo "<table class='kodiPlayerButtonGrid kodiControlEmbededTableButtonGrid'>\n";

@@ -289,30 +289,28 @@ if (requireGroup("client",false)){
 		echo formatText("</a>",2);
 	}
 }
-
+$drawRemote=false;
 # draw the client remote control based on user permissions
 if (yesNoCfgCheck("/etc/2web/client.cfg")){
 	# check for permissions for using the remote to control the client page
 	if (requireGroup("clientRemote",false)){
-		echo formatText("<a class='button' href='/client/?remote'>",2);
-		echo formatText("🎛️",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("CLIENT REMOTE",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		$drawRemote=true;
 	}
 }
 if (detectEnabledStatus("kodi2web")){
 	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
 		if (requireGroup("kodi2web",false)){
-			echo formatText("<a class='button' href='/kodi-player.php'>",2);
-			echo formatText("🇰",3);
-			echo formatText("<span class='headerText'>",3);
-			echo formatText("KODI REMOTE",4);
-			echo formatText("</span>",3);
-			echo formatText("</a>",2);
+			$drawRemote=true;
 		}
 	}
+}
+if ($drawRemote){
+	echo formatText("<a class='button' href='/remote.php'>",2);
+	echo formatText("🎛️",3);
+	echo formatText("<span class='headerText'>",3);
+	echo formatText("REMOTE",4);
+	echo formatText("</span>",3);
+	echo formatText("</a>",2);
 }
 if (detectEnabledStatus("php2web")){
 	if (requireGroup("php2web",false)){
@@ -328,17 +326,15 @@ if (detectEnabledStatus("php2web")){
 # try to load a session in the current window if one does not exist
 startSession();
 # check the user has logged in successfully
-if (array_key_exists("user",$_SESSION)){
-	if (array_key_exists("admin",$_SESSION)){
-		if ($_SESSION["admin"]){
-			# admin settings
-			formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
-			formatEcho("🛠️",3);
-			formatEcho("<span class='headerText'>",3);
-			formatEcho("SETTINGS",4);
-			formatEcho("</span>",3);
-			formatEcho("</a>",2);
-		}
+if (isset($_SESSION["user"])){
+	if (requireGroup("admin",false)){
+		# admin settings
+		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
+		formatEcho("🛠️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("SETTINGS",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 	# logout
 	formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
@@ -387,17 +383,15 @@ formatEcho('</script>',1);
 # if the path is in the settings draw the logout button
 
 echo "<div class='loginLogoutBox'>";
-if (array_key_exists("user",$_SESSION)){
-	if (array_key_exists("admin",$_SESSION)){
-		if ($_SESSION["admin"]){
-			echo "		<a class='button' href='/settings/'>";
-			echo "			🛠️";
-			echo "			<span class='headerText'>";
-			echo "				SETTINGS";
-			echo "			</span>";
-			echo "		</a>";
-			echo "	<hr>";
-		}
+if (isset($_SESSION["user"])){
+	if (requireGroup("admin",false)){
+		echo "		<a class='button' href='/settings/'>";
+		echo "			🛠️";
+		echo "			<span class='headerText'>";
+		echo "				SETTINGS";
+		echo "			</span>";
+		echo "		</a>";
+		echo "	<hr>";
 	}
 	echo "		<a class='button' href='/logout.php'>";
 	echo "			🔒";

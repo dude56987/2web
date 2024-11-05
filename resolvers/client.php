@@ -95,6 +95,9 @@ function drawRemoteHeader(){
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' onclick='window.close();' href='/'>❌<div>CLOSE</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";
+	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>👆<div>Select Remote</div></a>\n";
+	echo "					</td>\n";
+	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' href='?setSleep'>😴<div>Sleep Timer</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";

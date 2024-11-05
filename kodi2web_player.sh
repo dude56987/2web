@@ -38,7 +38,43 @@ function openLink(){
 	echo $request | jq
 	# run playback for link on kodi client
 	curl --silent -H "content-type: application/json;" --data-binary  "$request" "http://$kodiLocation/jsonrpc" | jq
+}
+################################################################################
+function openPlaylist(){
+	# Open a video link
 	#
+	# $1 = kodiLocation :
+	# $2 = link :
+	#
+	# RETURN REMOTE_ACTION
+	kodiLocation=$1
+	link=$2
+	# remove spaces for json parsing
+	link=$(echo "$link" | sed "s/ /%20/g")
+	#playerId=$(getPlayerId "$kodiLocation")
+
+	# blank out the playlist
+	request='{"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}}, "id": 1}'
+	curl --silent -H "content-type: application/json;" --data-binary  "$request" "http://$kodiLocation/jsonrpc" | jq
+	# open the playlist and remove all the metadata lines
+	playlistItems$(curl "$link" | grep -v "^#")
+	ALERT "PLAYLIST ITEMS: $playlistItems"
+	# load up the playlist
+	echo "$playlistItems" | while read -r playlistItem;do
+		# build a request to add a item to the playlist
+		request='{"jsonrpc": "2.0", "method": "Playlist.Add", "params": {"playlistid": 1,"item": {"file": "'
+		request="$request$playlistItem"
+		tempString='"}}, "id": 1 }'
+		request="$request$tempString"
+		# print the request before sending it
+		echo $request | jq
+		# run playback for link on kodi client
+		curl --silent -H "content-type: application/json;" --data-binary  "$request" "http://$kodiLocation/jsonrpc" | jq
+	done
+	# build the request to play the generated playlist
+	request='{"jsonrpc": "2.0", "method": "Player.Open", "params":{"item":{"playlistid":1, "position": 0}}, "id": 1}'
+	# launch playback of the playlist
+	curl --silent -H "content-type: application/json;" --data-binary  "$request" "http://$kodiLocation/jsonrpc" | jq
 }
 ################################################################################
 function next(){
@@ -219,8 +255,11 @@ function sendText(){
 	kodiLocation=$1
 	messageText=$2
 	startDebug
+	request="{\"jsonrpc\": \"2.0\", \"method\": \"Input.SendText\", \"params\": {\"text\": \"$messageText\"}}"
+	#request="$(echo "$request" | jq)"
+	echo "$request" | jq
 	# run json
-	curl --silent -H "content-type: application/json;" --data-binary "{\"jsonrpc\": \"2.0\", \"method\": \"Input.SendText\", \"params\": {\"$messageText\"}" "http://$kodiLocation/jsonrpc"
+	curl --silent -H "content-type: application/json;" --data-binary "$request" "http://$kodiLocation/jsonrpc" | jq
 	stopDebug
 }
 ################################################################################
@@ -374,8 +413,50 @@ function main(){
 	if [ "$1" == "-o" ] || [ "$1" == "--open" ] || [ "$1" == "open" ] ;then
 		# play link on all configured kodi clients
 		loadPlayers | while read -r player;do
-			openLink "$player" "$2"
+			openLink "$player" "$2" &
 		done
+	elif [ "$1" == "--open-at" ] || [ "$1" == "open-at" ] ;then
+		# open a single player instance
+		openLink "$2" "$3" &
+	elif [ "$1" == "-op" ] || [ "$1" == "--openplaylist" ] || [ "$1" == "openplaylist" ] ;then
+		# play a playlist link on all configured kodi clients
+		loadPlayers | while read -r player;do
+			openPlaylist "$player" "$2" &
+		done
+	elif [ "$1" == "--play-at" ] || [ "$1" == "play-at" ] ;then
+		playPause "$2" &
+	elif [ "$1" == "--pause-at" ] || [ "$1" == "pause-at" ] ;then
+		playPause "$2" &
+	elif [ "$1" == "--stop-at" ] || [ "$1" == "stop-at" ] ;then
+		stopPlayer "$2" &
+	elif [ "$1" == "--next-at" ] || [ "$1" == "next-at" ] ;then
+		next "$2" &
+	elif [ "$1" == "--previous-at" ] || [ "$1" == "previous-at" ] ;then
+		previous "$2" &
+	elif [ "$1" == "--input-left-at" ] || [ "$1" == "input-left-at" ] ;then
+		inputLeft "$2" &
+	elif [ "$1" == "--input-down-at" ] || [ "$1" == "input-down-at" ] ;then
+		inputDown "$2" &
+	elif [ "$1" == "--input-right-at" ] || [ "$1" == "input-right-at" ] ;then
+		inputRight "$2" &
+	elif [ "$1" == "--input-up-at" ] || [ "$1" == "input-up-at" ] ;then
+		inputUp "$2" &
+	elif [ "$1" == "--input-home-at" ] || [ "$1" == "input-home-at" ] ;then
+		inputHome "$2" &
+	elif [ "$1" == "--input-back-at" ] || [ "$1" == "input-back-at" ] ;then
+		inputGoBack "$2" &
+	elif [ "$1" == "--input-context-at" ] || [ "$1" == "input-context-at" ] ;then
+		inputContext "$2" &
+	elif [ "$1" == "--volumeup-at" ] || [ "$1" == "volumeup-at" ] ;then
+		volumeUp "$2" &
+	elif [ "$1" == "--volumedown-at" ] || [ "$1" == "volumedown-at" ] ;then
+		volumeDown "$2" &
+	elif [ "$1" == "--volumemute-at" ] || [ "$1" == "volumemute-at" ] ;then
+		volumeMute "$2" &
+	elif [ "$1" == "--skip-forward-at" ] || [ "$1" == "skip-forward-at" ] ;then
+		skipForward "$2" &
+	elif [ "$1" == "--skip-backward-at" ] || [ "$1" == "skip-backward-at" ] ;then
+		skipBackward "$2" &
 	elif [ "$1" == "-p" ] || [ "$1" == "--play" ] || [ "$1" == "play" ] ;then
 		loadPlayers | while read -r player;do
 			playPause "$player" &
