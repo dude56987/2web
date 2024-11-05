@@ -1666,18 +1666,10 @@ function demoImage(){
 	# image height
 	imageHeight="$4"
 	#########################################################################################
-	# get sum from title
-	sum=$(echo "$title" | md5sum | cut -d' ' -f1)
-	# get swirl amount from title
-	swirlAmount=$(echo -n "$title" | wc -c)
-	timeout 600 convert -size ${imageWidth}x${imageHeight} +seed "$sum" plasma: -swirl "$swirlAmount" "$localIconPath"
+	# generate a identifiable hash image from the title
+	hashImage "$title" "$localIconPath" "${imageWidth}x${imageHeight}"
 	# add text over generated image
 	timeout 600 convert "$localIconPath" -adaptive-resize  ${imageWidth}x${imageHeight}\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 2 -size ${imageWidth}x${imageHeight} -gravity center caption:"$title" -composite "$localIconPath"
-	linkColor=$(echo -n "$title" | md5sum | cut --bytes='1-6')
-	# convert to grayscale
-	timeout 600 convert "$localIconPath" -colorSpace "gray" "$localIconPath"
-	# colorize the image based on the link md5
-	timeout 600 convert "$localIconPath" -colorSpace "gray" -fill "#$linkColor" -tint 100 "$localIconPath"
 }
 #########################################################################################
 function addPlaylist(){
@@ -1716,3 +1708,69 @@ function randomWord(){
 	shuf -n 1 /usr/share/dict/words
 }
 ########################################################################
+function hashImage(){
+	# hashImage $inputText $hashSize $outputFilePath $newSize
+	#
+	# Generate a unique visual repsentation of a input text. Like a hash but for images not text.
+	#
+	#
+	if [ "$1" == "" ];then
+		ERROR "No output input text given for hashImage()"
+		return
+	else
+		inputText="$1"
+	fi
+	# generate a md5 hash of the input text
+	baseHash=$(echo -n "$inputText" | md5sum | cut -d' ' -f1)
+	if [ "$2" == "" ];then
+		ERROR "No output file given for hashImage()"
+		return
+	else
+		outputFilePath="$2"
+	fi
+
+	if [ "$3" == "" ];then
+		# default resize size
+		newSize="16x16"
+	else
+		newSize="$3"
+	fi
+
+	if [ "$4" == "" ];then
+		# default hash size
+		hashSize=5
+	else
+		hashSize=$4
+	fi
+
+	# create a transparent background
+	backgroundColor="transparent"
+
+	# create foreground color from base hash
+	# - split the hash in three
+	foregroundColor="#$(echo -n "$baseHash" | cut -c1-6 )"
+
+	# get the swirl amount from the base hash
+	swirlAmount=$(( ( 0x${baseHash} ) % 60 ))
+
+	# get the link color from the base hash
+	linkColor="#$(echo -n "$baseHash" | cut -c6-12 )"
+
+	# generate a plasma background under the image
+	timeout 600 convert -size $((${hashSize} * 4))x$((${hashSize} * 4)) +seed "$baseHash" plasma: -swirl "$swirlAmount" "$outputFilePath"
+
+	# build the icon by drawing pixels on a grid and resizing the image
+	for (( index=0; index<${hashSize}; index++ ));do
+		for (( index2=0; index2<${hashSize}; index2++ ));do
+			# generate the hash from the value
+			tempHash=$(echo -n "$baseHash$index$index2" | md5sum | cut -d' ' -f1)
+			if [ $(( ( 0x${tempHash} ) % 2 )) -eq 1 ];then
+				# read the character in the hash and modulus that number by 1 to generate a 0 or 1
+				convert "$outputFilePath" -background transparent -size ${hashSize}x${hashSize} xc:$backgroundColor -fill $foregroundColor -draw "point ${index},${index2}" -filter point -resize $newSize -layers flatten "$outputFilePath"
+			fi
+		done
+	done
+
+	# mirror the image around the center
+	convert "$outputFilePath" -background transparent -extent 200%x100% -flop +clone -composite -background transparent -extent 100%x200% -flip +clone -composite "$outputFilePath"
+}
