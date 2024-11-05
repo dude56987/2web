@@ -86,7 +86,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeRepoLibrary' value='".$link."'>Remove Library</button>\n";
+				echo "	<button class='button' type='submit' name='removeRepoLibrary' value='".$link."'>❌ Remove Library</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -102,7 +102,7 @@ foreach($sourceFiles as $sourceFile){
 			<li>Path is scanned recursively to look for GIT repositories</li>
 		</ul>
 		<input width='60%' type='text' name='addRepoLibrary' placeholder='/absolute/path/to/the/library'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>
@@ -129,7 +129,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeRepoSource' value='".$link."'>Remove Source</button>\n";
+				echo "	<button class='button' type='submit' name='removeRepoSource' value='".$link."'>❌ Remove Source</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -142,7 +142,7 @@ foreach($sourceFiles as $sourceFile){
 	<form action='admin.php' method='post'>
 		<h2>Add Repo Source Path</h2>
 		<input width='60%' type='text' name='addRepoSource' placeholder='/absolute/path/to/the/library'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>

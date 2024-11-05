@@ -80,7 +80,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeAppLibrary' value='".$link."'>Remove App Library</button>\n";
+				echo "	<button class='button' type='submit' name='removeAppLibrary' value='".$link."'>❌ Remove App Library</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -93,7 +93,7 @@ foreach($sourceFiles as $sourceFile){
 	<form action='admin.php' method='post'>
 		<h2>Add App Library Path</h2>
 		<input width='60%' type='text' name='addAppLibrary' placeholder='/absolute/path/to/the/Library'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>

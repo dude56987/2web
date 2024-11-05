@@ -50,7 +50,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 <h2>Block Group</h2>
 <input width='60%' class='inputText' type='text' name='blockGroup' placeholder='GroupName...'>
-<button class='button' type='submit'>Block</button>
+<button class='button' type='submit'>🚫 Block</button>
 </form>
 </div>
 
@@ -58,7 +58,7 @@ include("settingsHeader.php");
 <form action='admin.php' method='post'>
 <h2>Unblock Group</h2>
 <input width='60%' class='inputText' type='text' name='unblockGroup' placeholder='GroupName...'>
-<button class='button' type='submit'>Unblock</button>
+<button class='button' type='submit'>❎ Unblock</button>
 </form>
 </div>
 
@@ -128,12 +128,12 @@ if (file_exists("/var/cache/2web/web/live/groups/")){
 		echo "			$sourceFile";
 		echo "		</h2>\n";
 		echo "		<div class='buttonContainer'>\n";
-		echo "			<a class='button' href='/live/?filter=$sourceFile#$sourceFile'>View</a>\n";
+		echo "			<a class='button' href='/live/?filter=$sourceFile#$sourceFile'>🔗 View</a>\n";
 		# if the group has been blocked
 		if(in_array($sourceFile, $blockedGroups)){
-			echo "			<button class='button' type='submit' name='unblockGroup' value='".$sourceFile."'>UNBLOCK</button>\n";
+			echo "			<button class='button' type='submit' name='unblockGroup' value='".$sourceFile."'>❎ UNBLOCK</button>\n";
 		}else{
-			echo "			<button class='button' type='submit' name='blockGroup' value='".$sourceFile."'>BLOCK</button>\n";
+			echo "			<button class='button' type='submit' name='blockGroup' value='".$sourceFile."'>🚫 BLOCK</button>\n";
 		}
 		echo "		</div>\n";
 		echo "	</form>\n";
@@ -150,7 +150,7 @@ if (file_exists("/var/cache/2web/web/live/groups/")){
 		echo "		</h2>\n";
 		echo "		<div class='buttonContainer'>\n";
 		# if the group has been blocked
-		echo "			<button class='button' type='submit' name='unblockGroup' value='".$groupName."'>UNBLOCK</button>\n";
+		echo "			<button class='button' type='submit' name='unblockGroup' value='".$groupName."'>❎ UNBLOCK</button>\n";
 		echo "		</div>\n";
 		echo "	</form>\n";
 		echo "</div>\n";

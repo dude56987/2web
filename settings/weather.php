@@ -59,15 +59,12 @@ include("settingsHeader.php");
 			</ul>
 			<select name='setHomepageWeatherLocation'>
 			<?PHP
-			# build theme list
+			# build the location list
 			$themePath="/etc/2web/weather/homepageLocation.cfg";
-			//echo "THEME PATH = ".$themePath."<br>";
 			$activeTheme=file_get_contents($themePath);
 			$activeTheme=str_replace("\n","",$activeTheme);
-			//echo "ACTIVE THEME = ".$activeTheme."<br>";
-			# read in theme files in /usr/share/2web/
+			# read location list
 			$sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/weather/location.d/*.cfg"));
-			//echo "Source Files = ".implode(",",$sourceFiles)."<br>\n";
 			foreach($sourceFiles as $sourceFile){
 				if (strpos($sourceFile,".cfg")){
 					//echo "SOURCE FILE = ".$sourceFile."<br>\n";
@@ -75,15 +72,13 @@ include("settingsHeader.php");
 					$themeName=str_replace(".cfg","",$tempTheme);
 					$themeName=file_get_contents($sourceFile);
 					$tempTheme=$themeName;
-					//echo "TEMP THEME = ".$tempTheme."<br>\n";
-					echo "TEMP THEME : '".$tempTheme."' == ACTIVE THEME : '".$activeTheme."'<br>\n";
 					if ("disabled" == $activeTheme){
 						echo "<option value='disabled' selected>Disabled (Default)</option>";
 					}else if ($tempTheme == $activeTheme){
-						# mark the active theme as selected
+						# mark the selected location
 						echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
 					}else{
-						# add other theme options found
+						# add all other locations
 						echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
 					}
 				}
@@ -100,7 +95,7 @@ include("settingsHeader.php");
 			<option value='blue.css' >Blue</option>
 			-->
 		</select>
-		<button class='button' type='submit'>Set Location</button>
+		<button class='button' type='submit'>📍 Set Location</button>
 	</form>
 </div>
 
@@ -161,7 +156,7 @@ foreach($sourceFiles as $sourceFile){
 			</li>
 		</ul>
 		<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
-		<button class='button' type='submit'>Add Location</button>
+		<button class='button' type='submit'>➕ Add Location</button>
 	</form>
 	</div>
 </div>

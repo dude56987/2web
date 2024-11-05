@@ -68,7 +68,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeWikiPath' value='".$link."'>Remove Path</button>\n";
+				echo "	<button class='button' type='submit' name='removeWikiPath' value='".$link."'>❌ Remove Path</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -84,7 +84,7 @@ foreach($sourceFiles as $sourceFile){
 			<li>Add the path of a directory containing .zim files</li>
 		</ul>
 		<input width='60%' type='text' name='addWikiPath' placeholder='/absolute/path/to/the/directory/'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>

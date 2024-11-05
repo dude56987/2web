@@ -118,7 +118,7 @@ foreach($sourceFiles as $sourceFile){
 		<form action='admin.php' method='post'>
 			<h2>Add Library Path</h2>
 			<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
-			<button class='button' type='submit'>Add Path</button>
+			<button class='button' type='submit'>➕ Add Path</button>
 		</form>
 	</div>
 </div>

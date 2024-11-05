@@ -78,7 +78,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeComicDownloadLink' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeComicDownloadLink' value='".$link."'>❌ Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -95,7 +95,7 @@ foreach($sourceFiles as $sourceFile){
 	<li>Add webpage links from <a href='#gallery-dl_links'>supported websites</a></li>
 </ul>
 <input width='60%' type='text' name='addComicDownloadLink' placeholder='http://link.com/test'>
-<button class='button' type='submit'>Add Link</button>
+<button class='button' type='submit'>➕ Add Link</button>
 </form>
 </div>
 
@@ -132,7 +132,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeWebComicDownload' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeWebComicDownload' value='".$link."'>❌ Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -149,7 +149,7 @@ foreach($sourceFiles as $sourceFile){
 	<li>Add a webcomic by name path from <a href='#dosage_links'>supported comics</a>.</li>
 </ul>
 <input width='60%' type='text' name='addWebComicDownload' placeholder='xkcd'>
-<button class='button' type='submit'>Add Link</button>
+<button class='button' type='submit'>➕ Add Link</button>
 </form>
 </div>
 

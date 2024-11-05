@@ -105,7 +105,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeKodiLocation' value='".$link."'>Remove Location</button>\n";
+				echo "	<button class='button' type='submit' name='removeKodiLocation' value='".$link."'>❌ Remove Location</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -132,7 +132,7 @@ foreach($sourceFiles as $sourceFile){
 			</li>
 		</ul>
 		<input width='60%' type='text' name='addKodiLocation' placeholder='kodi:pass@localhost.local:8080'>
-		<button class='button' type='submit'>Add Location</button>
+		<button class='button' type='submit'>➕ Add Location</button>
 	</form>
 	</div>
 </div>
@@ -153,7 +153,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeKodiPlayer' value='".$link."'>Remove player</button>\n";
+				echo "	<button class='button' type='submit' name='removeKodiPlayer' value='".$link."'>❌ Remove player</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -177,7 +177,7 @@ foreach($sourceFiles as $sourceFile){
 			</li>
 		</ul>
 		<input width='60%' type='text' name='addKodiPlayer' placeholder='kodi:pass@localhost.local:8080'>
-		<button class='button' type='submit'>Add player</button>
+		<button class='button' type='submit'>➕ Add player</button>
 	</form>
 	</div>
 </div>

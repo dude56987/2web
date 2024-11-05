@@ -86,7 +86,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removePortalScanSource' value='".$link."'>Remove scanSources</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalScanSource' value='".$link."'>❌ Remove scanSources</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -102,7 +102,7 @@ foreach($sourceFiles as $sourceFile){
 			<li>Use the base url of a server to scan for services</li>
 		</ul>
 		<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>
@@ -130,7 +130,7 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removePortalSource' value='".$link."'>Remove Source</button>\n";
+				echo "	<button class='button' type='submit' name='removePortalSource' value='".$link."'>❌ Remove Source</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -147,7 +147,7 @@ foreach($sourceFiles as $sourceFile){
 			<li>Title,URL,Description</li>
 		</ul>
 		<input width='60%' type='text' name='addPortalSource' placeholder=''>
-		<button class='button' type='submit'>Add Path</button>
+		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
 </div>

@@ -95,10 +95,10 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
+				echo "		<button class='button' type='submit' name='removeLink' value='".$link."'>❌ Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>Move Down</button>\n";
+				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>⬇️ Move Down</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				$tempImgSum=md5($link);
@@ -120,10 +120,10 @@ foreach($sourceFiles as $sourceFile){
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>Remove Link</button>\n";
+				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>❌ Remove Link</button>\n";
 				echo "	</form>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>Move Down</button>\n";
+				echo "		<button class='button' type='submit' name='moveToBottom' value='".$link."'>⬇️ Move Down</button>\n";
 				echo "	</form>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -142,7 +142,7 @@ foreach($sourceFiles as $sourceFile){
 		<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
 	</ul>
 	<input width='60%' type='text' name='addLink' placeholder='http://example.com/playlist.m3u'>
-	<button class='button' type='submit'>Add Link</button>
+	<button class='button' type='submit'>➕ Add Link</button>
 	</form>
 	</div>
 
@@ -166,7 +166,7 @@ foreach($sourceFiles as $sourceFile){
 			</ul>
 		</li>
 	</ul>
-	<button class='button' type='submit'>Add Channel</button>
+	<button class='button' type='submit'>➕ Add Channel</button>
 	</form>
 	</div>
 
