@@ -33,6 +33,13 @@ test-update-ondemand: install
 	sudo time -v 2web update
 test: install
 	sudo time -v 2web --parallel
+test-apps:
+	# compress the apps into the install location
+	zip -9 -r -j "/usr/share/2web/example_apps/list.zip" "example_apps/list/."
+	zip -9 -r -j "/usr/share/2web/example_apps/ticket.zip" "example_apps/ticket/."
+	# re-install the example apps
+	php2web nuke
+	php2web
 lint:
 	# check the templates
 	php -l templates/*.php
@@ -376,6 +383,11 @@ build-deb: upgrade-hls
 	#pandoc --standalone help/man_rss2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/php2web.1.gz
 	#pandoc help/man_rss2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/php2web.html
 	#w3m debian/usr/share/2web/help/php2web.html > debian/usr/share/2web/help/php2web.txt
+	################################################################################
+	# build the example apps
+	################################################################################
+	zip -9 -r -j "debian/usr/share/2web/example_apps/list.zip" "example_apps/list/."
+	zip -9 -r -j "debian/usr/share/2web/example_apps/ticket.zip" "example_apps/ticket/."
 	################################################################################
 	# build the readme manual page
 	################################################################################

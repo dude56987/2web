@@ -82,15 +82,16 @@
 <body onload='loadApp()'>
 <?PHP
 	include("/usr/share/2web/templates/header.php");
+	if (file_exists("main.php")){
+		include("main.php");
+
+		include("/usr/share/2web/templates/footer.php");
+		echo "</body>";
+		echo "</html>";
+		exit();
+	}
 ?>
-<img class='globalPulse' src='/pulse.gif'>
 <div>
-<?PHP
-	# flush output so far to the page
-	flush();
-	ob_flush();
-	#
-?>
 <div class='titleCard'>
 	<h1>
 	<?PHP

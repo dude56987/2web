@@ -81,6 +81,8 @@ function updateApplication(){
 			INFO "This is a valid application..."
 		elif echo "$zipFileList" | grep -q "index.htm";then
 			INFO "This is a valid application..."
+		elif echo "$zipFileList" | grep -q "main.php";then
+			INFO "This is a valid application..."
 		else
 			####################################
 			# This is a catastrophic error
@@ -111,11 +113,16 @@ function updateApplication(){
 		fi
 		# create the app directory
 		createDir "/var/cache/2web/web/applications/$appTitle/"
-		#
-		linkFile "/usr/share/2web/templates/appPlayer.php" "$webDirectory/applications/$appTitle/2webAppPlayer.php"
+		createDir "/etc/2web/applications/settings/$appTitle/"
 
 		# extract the application
 		unzip "$foundAppFile" -d "/var/cache/2web/web/applications/$appTitle/"
+
+		# only add the player if the app is not a 2web full intergration app
+		# - includes 2web header and footer in the app
+		if ! grep -q "/var/cache/2web/web/header.php" "$webDirectory/applications/$appTitle/index.php";then
+			linkFile "/usr/share/2web/templates/appPlayer.php" "$webDirectory/applications/$appTitle/2webAppPlayer.php"
+		fi
 
 		################################################################################
 		# look for the icon
@@ -126,6 +133,18 @@ function updateApplication(){
 		# search for a favicon to convert into a icon image file
 		if test -f "/var/cache/2web/web/applications/$appTitle/favicon.ico";then
 			convert -quiet "/var/cache/2web/web/applications/$appTitle/favicon.ico" "/var/cache/2web/web/applications/$appTitle/icon.png"
+		fi
+		# search for icon image variants
+		if test -f "/var/cache/2web/web/applications/$appTitle/web-icon.png";then
+			convert -quiet "/var/cache/2web/web/applications/$appTitle/web-icon.png" "/var/cache/2web/web/applications/$appTitle/icon.png"
+		fi
+		# if no icon has been found, scan for one
+		if ! test -f "/var/cache/2web/web/applications/$appTitle/icon.png";then
+			# scan the directory for a favicon in case it is in a subdirectory
+			find "/var/cache/2web/web/applications/$appTitle/" -type f -name 'favicon.ico' | while read -r webIconPath;do
+				convert -quiet "$webIconPath" "/var/cache/2web/web/applications/$appTitle/icon.png"
+				break
+			done
 		fi
 		# if no icon exists after the extraction process, then generate one
 		if ! test -f "/var/cache/2web/web/applications/$appTitle/icon.png";then
@@ -166,7 +185,11 @@ function updateApplication(){
 		# generate the thumbnail for the application index
 		################################################################################
 		{
-			echo "<a href='/applications/$appTitle/2webAppPlayer.php' class='indexSeries' >"
+			if ! grep -q "/var/cache/2web/web/header.php" "$webDirectory/applications/$appTitle/index.php";then
+				echo "<a href='/applications/$appTitle/2webAppPlayer.php' class='indexSeries' >"
+			else
+				echo "<a href='/applications/$appTitle/' class='indexSeries' >"
+			fi
 			echo "<img loading='lazy' src='/applications/$appTitle/icon.png' />"
 			echo "<div>$appTitle</div>"
 			echo "</a>"
@@ -220,6 +243,8 @@ update(){
 
 	# create the web directory
 	createDir "$webDirectory/applications/"
+	# create the settings directory
+	createDir "/etc/2web/applications/settings/"
 	# create the sum directory
 	createDir "/var/cache/2web/generated/appSums/"
 
