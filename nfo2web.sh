@@ -196,11 +196,11 @@ processMovie(){
 		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
 		movieTrailer=$(ripXmlTag "$nfoInfo" "trailer")
 		movieStudio=$(cleanXml "$nfoInfo" "studio")
-		if [ $movieStudio == "" ];then
+		if [ "$movieStudio" == "" ];then
 			movieStudio="unknown"
 		fi
 		movieGrade=$(cleanXml "$nfoInfo" "mpaa")
-		if [ $movieGrade == "" ];then
+		if [ "$movieGrade" == "" ];then
 			movieGrade="UNRATED"
 		fi
 		# create the episode page path
@@ -743,12 +743,12 @@ processEpisode(){
 			# get the tvshow.nfo data
 			tvshowData=$(cat "$webDirectory/shows/$episodeShowTitle/tvshow.nfo")
 			episodeStudio=$(cleanXml "$tvshowData" "studio")
-			if [ $episodeStudio == "" ];then
+			if [ "$episodeStudio" == "" ];then
 				episodeStudio="unknown"
 			fi
 			# get the episode rating from the tvshow.nfo
 			episodeGrade=$(cleanXml "$tvshowData" "mpaa")
-			if [ $episodeGrade == "" ];then
+			if [ "$episodeGrade" == "" ];then
 				episodeGrade="UNRATED"
 			fi
 		fi
@@ -891,25 +891,14 @@ processEpisode(){
 		if echo "$sufix" | grep -q --ignore-case "strm";then
 			createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-
-			mediaData="$(mediainfo "$videoPath")"
-
 			# change the video path into a video id to make it embedable
 			# get the contents of the stream file as the link
 			ytLink="$videoPath"
 			# check the .strm link to see if it is a video link, a audio link or a link that must be ran though the resolver
-			if echo "$mediaData" | grep -q --ignore-case "^video";then
-				# direct link to video
-				resolverUrl="$ytLink"
-			elif echo "$mediaData" | grep -q --ignore-case "^audio";then
-				# direct link to audio
-				resolverUrl="$ytLink"
-			else
-				# redirect to the resolver
-				resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
-				# build the cache link
-				echo -n "$resolverUrl" > "$episodePagePath.cacheLink"
-			fi
+			# redirect to the resolver
+			resolverUrl="http://$(hostname).local/ytdl-resolver.php?url=\"$videoPath\""
+			# build the cache link
+			echo -n "$resolverUrl" > "$episodePagePath.cacheLink"
 			# this is used for generating kodi playback links, kodi has a easier time playing .strm files
 			strmUrl="http://$(hostname).local/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			echo -n "$strmUrl" > "$episodePagePath.strmLink"
@@ -1000,8 +989,11 @@ processEpisode(){
 			echo -n "$episodeShowTitle" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title"
 			# add the show studio
 			echo -n "$episodeStudio" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/studio.title"
+
+
 			# get the mpaa rating
 			echo -n "$episodeGrade" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/grade.title"
+
 		fi
 		# build the episode number
 		echo -n "$epNum" > "$episodePagePath.numTitle"
