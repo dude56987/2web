@@ -644,11 +644,14 @@ renderPage(){
 			pageChapterPathName=$(pickPath "$page" 2)
 			echo "$pageChapterPathName" > "$webDirectory/comics/$pageComicName/$pageChapterName/chapterTitle.cfg"
 		fi
+		# add the fullscreen page for the chapter
+		linkFile "/usr/share/2web/templates/comic_fullscreen.php" "$webDirectory/comics/$pageComicName/$pageChapterName/fullscreen.php"
+		linkFile "/usr/share/2web/templates/comic_scroll.php" "$webDirectory/comics/$pageComicName/$pageChapterName/scroll.php"
 		# link the image file into the web directory
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 
 		# create the thumb sum
-		thumbSum=$(echo "$imagePath" | md5 | cut -d' ' -f1 )
+		thumbSum=$(echo "$imagePath" | md5sum | cut -d' ' -f1 )
 
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/thumbnails/comics/$thumbSum-thumb.png";then
