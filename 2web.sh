@@ -1730,7 +1730,7 @@ main(){
 			# cleanup the generated zip file cache
 			ALERT "Checking for cache files in $webDirectory/zip_cache/"
 			if test -d "$webDirectory/zip_cache/";then
-				find "$webDirectory/search/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
+				find "$webDirectory/zip_cache/" -type f -mtime +"$cacheDelay" -name '*.zip' -o -name '*.cbz' -exec rm -v {} \;
 			fi
 			# cleanup the web player cache
 			ALERT "Checking for cache files in $webDirectory/web_player/"
