@@ -160,7 +160,7 @@ For when you need more than the web interface can handle. This help section defi
 		To install the client in kodi from the home menu go to
 	</p>
 	<div class='titleCard'>
-		<h4>🔢 Step-By-Step<h4>
+		<h4>🔢 Step-By-Step</h4>
 		<ol>
 			<li>in kodi go to home</li>
 			<li>settings</li>
@@ -194,7 +194,7 @@ For when you need more than the web interface can handle. This help section defi
 	<h3 id="kodi_ondemand">📺 On-Demand</h3>
 	To add the OnDemand content of this server to a kodi libary you would go to
 	<div class='titleCard'>
-		<h4>🔢 Step-By-Step<h4>
+		<h4>🔢 Step-By-Step</h4>
 		<ol>
 			<li>in kodi go to home</li>
 			<li>settings</li>
@@ -227,7 +227,7 @@ For when you need more than the web interface can handle. This help section defi
 		Kodi can be linked to this servers comic collection by using the kodi pictures interface.
 	</p>
 	<div class='titleCard'>
-		<h4>🔢 Step-By-Step<h4>
+		<h4>🔢 Step-By-Step</h4>
 		<ol>
 			<li>in kodi go to home</li>
 			<li>settings</li>
