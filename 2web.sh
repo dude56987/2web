@@ -1465,6 +1465,9 @@ main(){
 		rm -rv /var/cache/2web/web/*
 		disableApacheServer
 		disableCronJob
+	elif [ "$1" == "--cleanup-log" ] || [ "$1" == "cleanup-log" ];then
+		# force the log cleanup
+		cleanupLog
 	elif [ "$1" == "-F" ] || [ "$1" == "--fake-graph" ] || [ "$1" == "fake-graph" ];then
 		if returnModStatus "graph2web";then
 			buildFakeActivityGraph
