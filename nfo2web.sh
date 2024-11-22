@@ -29,13 +29,6 @@ STOP(){
 	read -r
 }
 ########################################################################
-drawLine(){
-	width=$(tput cols)
-	buffer="=========================================================================================================================================="
-	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
-	printf "$output\n"
-}
-########################################################################
 function debugCheck(){
 	if test -f /etc/2web/nfo/debug.enabled;then
 		# if debug mode is enabled show execution
