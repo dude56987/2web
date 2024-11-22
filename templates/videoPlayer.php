@@ -70,18 +70,38 @@ function cachedMimeType($videoLink){
 	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
-		# if 60 seconds of the video has been downloaded then launch the video
+		# if 90 seconds of the video has been downloaded then launch the video
 		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
 			# redirect to discovered mp3
 			return ("audio/mpeg");
 		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-			# file is fully downloaded and converted play instantly
-			return ("video/mp4");
+			# once verified
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
+				# file is fully downloaded and converted play instantly
+				return ("video/mp4");
+			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm") and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
+				# only load webm files that are not being written
+				# - only redirect to KODI clients
+				if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
+					# redirect to intermediary webm files
+					return ("video/webm");
+				}
+				return ("application/mpegurl");
+			}else{
+				# send unverified mp4 links to the playlist
+				return ("application/mpegurl");
+			}
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm") and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
+			if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
+				# redirect to intermediary webm files
+				return ("video/webm");
+			}
+			return ("application/mpegurl");
 		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream2.ts")){
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts")){
 				# redirect to the stream
 				return ("application/mpegurl");
 			}
@@ -96,7 +116,7 @@ function cachedMimeType($videoLink){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream2.ts")){
+			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream0.ts")){
 				# redirect to the stream
 				return ("application/mpegurl");
 			}
@@ -364,7 +384,7 @@ document.body.addEventListener('keydown', function(event){
 		}else{
 			# check if the video file has been found
 			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4")){
-				if ( ( time() - filemtime($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4") ) > 60){
+				if ( ( time() - filemtime($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4") ) > 90){
 					# create a thumbnail  from the downloaded video file if the video file has finished downloading
 					addToQueue("multi","/usr/bin/ffmpegthumbnailer -i '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4' -s 400 -c png -o '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.png'");
 					# set the current thumbnail to be the poster.png
