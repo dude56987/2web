@@ -1,9 +1,11 @@
 Installed-Size.txt
-*.deb
+2web_UNSTABLE.zip
+2web_UNSTABLE.iso
+2web_UNSTABLE.tar.gz
+2web_UNSTABLE.deb
 *.backup
 *.old
 *.swp
-*.tar.gz
 test/
 Test/
 TEST/
@@ -12,4 +14,3 @@ package.json
 package-lock.json
 .todo
 simple_version.txt
-screenshots/

@@ -63,6 +63,8 @@ if [ "$keepBuilding" == "true" ];then
 	apt-get install git
 	# install gdebi to install the debian package
 	apt-get install gdebi
+	# install iso gen for generating iso file containing package
+	apt-get install genisoimage
 else
 	echo "Only Debian, Ubuntu, Raspbian, and Dietpi builds are currently supported!"
 	echo "You can force configure to run if you add --force"

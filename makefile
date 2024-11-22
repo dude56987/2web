@@ -516,11 +516,17 @@ build-deb: upgrade-hls
 	rm -rv debian/DEBIAN
 	# compress and save the tarball
 	cd debian && tar -czvf ../2web_UNSTABLE.tar.gz etc/ usr/ var/
+	# create a zip file
+	zip -9 -r "2web_UNSTABLE.zip" "debian/"
+	# copy the tarball to a .iso disk image file
+	mkisofs -o 2web_UNSTABLE.iso 2web_UNSTABLE.tar.gz 2web_UNSTABLE.zip 2web_UNSTABLE.deb
 	# remove the build directory
 	rm -rv debian
 	# fix permissions on install files
 	chmod 777 2web_UNSTABLE.deb
+	chmod 777 2web_UNSTABLE.zip
 	chmod 777 2web_UNSTABLE.tar.gz
+	chmod 777 2web_UNSTABLE.iso
 clean:
 	# remove temp debian build directory
 	rm -rv debian
