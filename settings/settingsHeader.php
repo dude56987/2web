@@ -41,7 +41,9 @@ function drawModuleHeaderButton($moduleName,$buttonIcon,$buttonText,$buttonLink,
 		echo "		$buttonText";
 		echo "	</span>";
 		echo "</a>";
+		return true;
 	}
+	return false;
 }
 ########################################################################
 function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=Array()){
@@ -74,8 +76,15 @@ function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=A
 	<div class='listCard'>
 		<?PHP
 		# draw the module buttons if the module is enabled
-		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php"));
-		drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php"));
+		$drawVideoOnDemandButton=drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+		if(! $drawVideoOnDemandButton ){
+			# draw the header button even if only ytdl2nfo is active
+			$drawVideoOnDemandButton=drawModuleHeaderButton("ytdl2nfo","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+		}
+		if(! $drawVideoOnDemandButton ){
+			drawModuleHeaderButton("rss2nfo","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+		}
 		drawModuleHeaderButton("music2web","🎧","Music","/settings/music.php");
 		drawModuleHeaderButton("comic2web","📚","Comics","/settings/comics.php",Array("/settings/comicsDL.php"));
 		drawModuleHeaderButton("iptv2web","📡","Live","/settings/tv.php",Array("/settings/tv.php","/settings/radio.php","/settings/iptv_blocked.php"));
