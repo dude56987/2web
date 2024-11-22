@@ -706,19 +706,28 @@ function stopDebug(){
 function drawCellLine(){
 	# draw a line above or below a cell
 	colums=$1
-	totalWidth=$(tput cols)
-	width=$(( ( $totalWidth / $colums) - 3 ))
+
+	totalWidth=$(( $(tput cols) - 3 ))
+	width=$(( ( $totalWidth / $colums ) - 1 ))
 
 	buffer=""
 	# make the buffer
 	for index in $(seq $width);do
-		buffer="${buffer}-"
+		buffer="${buffer}━"
+		#buffer="${buffer}█"
 	done
 	# cut the output to cell size
-	output="$(echo -n "$buffer" | cut -b1-$width)"
+	#output="$(echo -ne "$buffer" | cut -b1-$width)"
+	#output="$(printf "$buffer" | cut -b1-$width)"
+	#
+	#echo -ne " ╋ "
+	printf "╋"
+	#printf "█"
 	#
 	for index in $(seq $colums);do
-		echo -n "${output} + "
+		#echo -ne "${output} ╋ "
+		printf "${buffer}╋"
+		#printf "${buffer}█"
 	done
 	echo
 	return 0
@@ -733,9 +742,8 @@ function drawCell(){
 	text="$1"
 	colums=$2
 	# divide the total width by the number of collums in this table
-	totalWidth=$(tput cols)
-	#
-	width=$(( ( $totalWidth / $colums) - 3 ))
+	totalWidth=$(( $(tput cols) - 3 ))
+	width=$(( ( $totalWidth / $colums ) - 1 ))
 	#
 	buffer=""
 	# make the buffer the width of the terminal
@@ -744,7 +752,54 @@ function drawCell(){
 	done
 	# cut the output to cell size
 	output="$(echo -n "$text$buffer" | cut -b1-$width)"
-	echo -n "$output | "
+	#echo -ne "$output | "
+	echo -ne "$output┃"
+	#echo -n "$output | "
+	#echo -ne "$output█"
+	return 0
+}
+################################################################################
+function startCellRow(){
+	# start a new cell row
+	#echo -n " | "
+	echo -n "┃"
+	#echo -n "█"
+}
+################################################################################
+function endCellRow(){
+	# end a existing cell row
+	echo
+}
+################################################################################
+function highlightCell(){
+	# drawCell $text $colums
+	#
+	# Draw a single cell of a table
+	#
+	# - The number of colums determines the width of the cells
+	text="$1"
+	colums=$2
+	# highlight color is bold white text on black background
+	highlightColor="\e[40m\e[1;37m"
+	# reset all color codes
+	resetColor="\033[0m"
+	# divide the total width by the number of collums in this table
+	totalWidth=$(( $(tput cols) - 3 ))
+	width=$(( ( $totalWidth / $colums ) - 1 ))
+	#
+	buffer=""
+	# make the buffer the width of the terminal
+	for index in $(seq $width);do
+		buffer="$buffer "
+	done
+	# cut the output to cell size
+	output="$(echo -n "$text$buffer" | cut -b1-$width)"
+	echo -en "$highlightColor"
+	echo -n "$output"
+	echo -en "$resetColor"
+	echo -n "┃"
+	#echo -n "█"
+	#echo -n " | "
 	return 0
 }
 ################################################################################
@@ -1033,9 +1088,17 @@ function loadWithoutComments(){
 function drawLine(){
 	# Draw a line across the terminal using curses to determine the length
 	width=$(tput cols)
-	buffer="=========================================================================================================================================="
-	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
-	printf "$output\n"
+	buffer=""
+	# make the buffer the width of the terminal
+	#█🮮═
+	for index in $(seq $width);do
+		buffer="$buffer═"
+	done
+	# draw the buffer
+	echo "$buffer";
+	#output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
+	#echo "$output";
+	#printf "$output\n"
 }
 ################################################################################
 function showServerLinks(){

@@ -1701,6 +1701,11 @@ main(){
 			if test -d "$webDirectory/kodi-player/";then
 				find "$webDirectory/kodi-player/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
 			fi
+			# cleanup queue logs
+			ALERT "Checking for log files in /var/cache/2web/queue/log/"
+			if test -d "/var/cache/2web/queue/log/";then
+				find "/var/cache/2web/queue/log/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
+			fi
 		fi
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
