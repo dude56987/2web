@@ -2343,8 +2343,16 @@ main(){
 			# - fanart
 			demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
 			waitQueue 0.2 "$totalCPUS"
+			# generate the video type
+			videoType=$(( $RANDOM % 3 ))
 			# generate the fake video file using the site spinner gif
-			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+			if [ $videoType  -eq 0 ];then
+				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
+			elif [ $videoType  -eq 1 ];then
+				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
+			else
+				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+			fi
 			waitQueue 0.2 "$totalCPUS"
 		done
 		#########################################################################################
@@ -2374,10 +2382,11 @@ main(){
 			# create show fanart
 			demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
 			waitQueue 0.2 "$totalCPUS"
-			# create random episodes for show
+			# create random seasons for show
 			for index2 in $(seq $(( 2 + ( $RANDOM % 9 ) )) );do
 				# random season
 				createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/"
+				# create random episodes, at least 5 minimum should be created
 				for index3 in $(seq $(( 5 + ( $RANDOM % 16 ) )) );do
 					# create a random name for the episode
 					randomEpisodeTitle="$(randomWord) $(randomWord)"
@@ -2399,8 +2408,16 @@ main(){
 					# create episode thumbnail
 					demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle-thumb.png" "$randomEpisodeTitle" "800" "600" &
 					waitQueue 0.2 "$totalCPUS"
-					# create episode fake video file
-					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+					# generate the video type
+					videoType=$(( $RANDOM % 3 ))
+					# generate the fake video file using the site spinner gif
+					if [ $videoType  -eq 0 ];then
+						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
+					elif [ $videoType  -eq 1 ];then
+						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
+					else
+						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+					fi
 					waitQueue 0.2 "$totalCPUS"
 				done
 			done
