@@ -1712,8 +1712,6 @@ function hashImage(){
 	# hashImage $inputText $hashSize $outputFilePath $newSize
 	#
 	# Generate a unique visual repsentation of a input text. Like a hash but for images not text.
-	#
-	#
 	if [ "$1" == "" ];then
 		ERROR "No output input text given for hashImage()"
 		return
@@ -1754,10 +1752,13 @@ function hashImage(){
 	swirlAmount=$(( ( 0x${baseHash} ) % 60 ))
 
 	# get the link color from the base hash
-	linkColor="#$(echo -n "$baseHash" | cut -c6-12 )"
-
+	linkColor="#$(echo -n "$baseHash" | cut -c7-12 )"
 	# generate a plasma background under the image
-	timeout 600 convert -size $((${hashSize} * 4))x$((${hashSize} * 4)) +seed "$baseHash" plasma: -swirl "$swirlAmount" "$outputFilePath"
+	timeout 600 convert -size $((${hashSize} * 4))x$((${hashSize} * 4)) -seed "$(( 0x${baseHash} ))" plasma: -swirl "$swirlAmount" "$outputFilePath"
+	# grayscale
+	convert "$outputFilePath" -colorspace gray "$outputFilePath"
+	# colorize the pattern
+	convert "$outputFilePath" -fill "$linkColor" -colorize 40 "$outputFilePath"
 
 	# build the icon by drawing pixels on a grid and resizing the image
 	for (( index=0; index<${hashSize}; index++ ));do
