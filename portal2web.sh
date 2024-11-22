@@ -104,7 +104,7 @@ function scanLink(){
 		port=$(echo "$scanPort" | cut -d',' -f2)
 		description=$(echo "$scanPort" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		ALERT "Scanning $scanLink:$port"
+		INFO "Scanning $scanLink:$port"
 		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink:$port"
 		if [ $? -eq 0 ];then
 			ALERT "Found link at $scanLink:$port, generating link..."
@@ -122,7 +122,7 @@ function scanLink(){
 		path=$(echo "$scanPath" | cut -d',' -f2)
 		description=$(echo "$scanPath" | cut -d',' -f3)
 		# scan a given link for available ports and paths of known services
-		ALERT "Scanning $scanLink$path"
+		INFO "Scanning $scanLink$path"
 		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink$path"
 		if [ $? -eq 0 ];then
 			ALERT "Found link at $scanLink$path, generating link..."
