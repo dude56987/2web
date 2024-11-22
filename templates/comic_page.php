@@ -257,20 +257,42 @@
 	# send the loading bar code while the page loads the rest of the content
 	flush();
 	ob_flush();
-	if(file_exists($page.".jpg")){
-		$imageSizeData=getimagesize($page.".jpg");
-	}else{
-		$imageSizeData=getimagesize($page.".png");
+	if(! is_readable($page.".jpg")){
+		# if the media file is not readable load the blocked permission error
+		echo "<body id='body' onload='setupKeys();'>\n";
+		echo "<div id='comicFullscreenCheck' class=''>";
+		echo "	<p>Permissions to access this page has been disabled by the server administrator.</p>";
+		echo "	<div class='listCard'>";
+		echo "		<a class='button' href='index.php'>Close Comic</a>";
+		echo "	</div>";
+		echo "	<div class='listCard'>";
+		echo "		<a class='button' target='$lastPageTarget' href='$lastPage'>Last Page</a>";
+		echo "		<a class='button' target='$nextPageTarget' href='$nextPage'>Next Page</a>";
+		echo "	</div>";
+		echo "</div>";
+		echo "</body>";
+		echo "</html>";
+		exit();
 	}
-	if(mime_content_type($page.".jpg") == "video/webm"){
+	if(mime_content_type($page.".jpg") == "image/jpeg"){
+		$imageSizeData=getimagesize($page.".jpg");
+		$videoFile=false;
+	}else if(mime_content_type($page.".jpg") == "image/png"){
+		$imageSizeData=getimagesize($page.".jpg");
+		$videoFile=false;
+	}else if(mime_content_type($page.".jpg") == "video/webm"){
 		# use the thumbnail for dimensions in animated webm files
 		$imageSizeData=getimagesize($page."-thumb.png");
 		$videoFile=true;
+		$videoMimeType="video/webm";
 	}else if(mime_content_type($page.".jpg") == "video/mp4"){
 		# use the thumbnail for dimensions in animated mp4 files
 		$imageSizeData=getimagesize($page."-thumb.png");
 		$videoFile=true;
+		$videoMimeType="video/mp4";
 	}else{
+		# try to get the image file size data
+		$imageSizeData=getimagesize($page.".jpg");
 		$videoFile=false;
 	}
 	$imageWidth=$imageSizeData[0];
@@ -295,17 +317,17 @@
 	echo "<div id='comicThumbPane' class='$comicThumbType' style='background: ".'url("'.$page.'.jpg")'."'>\n";
 	if($videoFile){
 		echo "<video class='comicVideo' loop autoplay controls>\n";
-		echo "<source src='".$page.".jpg' type='video/webm'>\n";
+		echo "<source src='".$page.".jpg' type='$videoMimeType'>\n";
 		echo "</video>\n";
 	}
-	echo "	<a id='leftButton' target='$lastPageTarget' href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
+	echo "	<a id='leftButton' onclick='showSpinner();' target='$lastPageTarget' href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
 	echo "		&#8617;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
 	echo "			".$lastPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a id='rightButton' target='$nextPageTarget' href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
+	echo "	<a id='rightButton' onclick='showSpinner();' target='$nextPageTarget' href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
 	echo "		&#8618;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
@@ -422,6 +444,9 @@
 	?>
 	<style>
 		.globalPulse{
+			visibility: hidden;
+		}
+		.globalSpinner{
 			visibility: hidden;
 		}
 	</style>

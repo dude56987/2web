@@ -198,39 +198,6 @@ html{ background-image: url("thumb.png") }
 ?>
 
 <?PHP
-
-$indexPaths = scanDir(".");
-sort($indexPaths);
-$indexPaths = array_diff($indexPaths,Array(".",".."));
-#
-$totalPages=0;
-$pageGrid="";
-foreach($indexPaths as $currentPath){
-	# only load jpg images
-	if (stripos($currentPath,".jpg") !== false){
-		$currentPath=str_replace(".jpg","",$currentPath);
-		# build the page links
-		$pageGrid .= "<a target='_parent' id='$currentPath' href='$currentPath.php' class='indexSeries' >";
-		$pageGrid .= "<img loading='lazy' src='$currentPath-thumb.png' />";
-		$pageGrid .= "<div>$currentPath</div>";
-		$pageGrid .= "</a>";
-		$totalPages+=1;
-	}else if(is_dir($currentPath)){
-		# this is a list of chapters link to the chapters
-		# build the chapter links
-		$pageGrid .= "<a id='$currentPath' href='$currentPath/' class='indexSeries' >";
-		$pageGrid .= "<img loading='lazy' src='$currentPath/thumb.png' />";
-		if (file_exists($currentPath."/chapterTitle.cfg")){
-			# load a specific chapter title
-			$pageGrid .= "<div>".file_get_contents($currentPath."/chapterTitle.cfg")."</div>";
-		}else{
-			# load the generic chapter number
-			$pageGrid .= "<div>Chapter $currentPath</div>";
-		}
-		$pageGrid .= "</a>";
-		$totalPages+=1;
-	}
-}
 ?>
 <script>
 function setupKeys() {
@@ -361,7 +328,59 @@ echo "$previousDirButton";
 </div>
 <div class='settingListCard'>
 <?PHP
-echo $pageGrid;
+$indexPaths = scanDir(".");
+sort($indexPaths);
+$indexPaths = array_diff($indexPaths,Array(".",".."));
+foreach($indexPaths as $currentPath){
+	# only load jpg images
+	if (stripos($currentPath,".jpg") !== false){
+		$censorImage=false;
+		#$pageMimeType=mime_content_type($_SERVER["DOCUMENT_ROOT"].dirname($_SERVER["PHP_SELF"])."/".$currentPath);
+		if(is_readable($currentPath)){
+			$pageMimeType=mime_content_type($currentPath);
+			if($pageMimeType == "image/gif"){
+				$animatedPage="<span class='radioIcon'>⏯️</span>";
+			}else if($pageMimeType == "video/webm"){
+				$animatedPage="<span class='radioIcon'>⏯️</span>";
+			}else if($pageMimeType == "video/mp4"){
+				$animatedPage="<span class='radioIcon'>⏯️</span>";
+			}else{
+				$animatedPage="";
+			}
+		}else{
+			# the file is not accessable based on permissions
+			$animatedPage="<span class='radioIcon'>⛔</span>";
+			$censorImage=true;
+		}
+		$currentPath=str_replace(".jpg","",$currentPath);
+		# build the page links
+		echo "<a target='_parent' id='$currentPath' href='$currentPath.php' class='indexSeries' >\n";
+		if($censorImage){
+			echo "<img class='censorImage' loading='lazy' src='$currentPath-thumb.png' />\n";
+		}else{
+			echo "<img loading='lazy' src='$currentPath-thumb.png' />\n";
+		}
+		echo "<div>$currentPath";
+		echo "$animatedPage";
+		echo "</div>\n";
+		echo "</a>\n";
+	}else if(is_dir($currentPath)){
+		# this is a list of chapters link to the chapters
+		# build the chapter links
+		echo "<a id='$currentPath' href='$currentPath/' class='indexSeries' >\n";
+		echo "<img loading='lazy' src='$currentPath/thumb.png' />\n";
+		if (file_exists($currentPath."/chapterTitle.cfg")){
+			# load a specific chapter title
+			echo "<div>".file_get_contents($currentPath."/chapterTitle.cfg")."</div>\n";
+		}else{
+			# load the generic chapter number
+			echo "<div>Chapter $currentPath</div>\n";
+		}
+		echo "</a>\n";
+	}
+	ob_flush();
+	flush();
+}
 ?>
 </div>
 <?PHP

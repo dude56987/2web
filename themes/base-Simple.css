@@ -2522,3 +2522,6 @@ details[open] summary h2::before {
 .appScreenshot{
 	height: 10rem;
 }
+.censorImage{
+	filter: blur(5px);
+}
