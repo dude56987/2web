@@ -46,77 +46,86 @@ include("settingsHeader.php");
 	</ul>
 </div>
 <?PHP
+function drawVersionRow($title,$filePath,$extra=""){
+	# draw a versionTableRow
+	if (file_exists($filePath)){
+		echo "	<tr>";
+		echo "		<td>\n";
+		echo "			$title\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			".file_get_contents($filePath)."\n";
+		echo "		</td>\n";
+		echo "		<td>\n";
+		echo "			".$extra."\n";
+		echo "		</td>\n";
+		echo "	</tr>\n";
+	}
+}
 	if (file_exists("/usr/share/2web/version.cfg")){
-		echo "<div id='version' class='inputCard'>";
-		echo "<h2>2web Version Info</h2>";
-		echo "	<div>";
-		echo "		Version: ".file_get_contents("/usr/share/2web/version.cfg");
-		echo "		<a href='/settings/manuals.php#README'>📑</a>";
-		echo "	</div>";
-		if (file_exists("/usr/share/2web/versionDate.cfg")){
-			echo "	<div>";
-			echo "		Version Publish Date: ".file_get_contents("/usr/share/2web/versionDate.cfg");
-			echo "	</div>";
+		echo "<div id='version' class='inputCard'>\n";
+		echo "<h2>2web Version Info</h2>\n";
+		echo "<div>\n";
+		echo "	Version Publish Date:\n";
+		echo "	".file_get_contents("/usr/share/2web/versionDate.cfg");
+		echo "</div>\n";
+		echo "<div>\n";
+		echo "	Build Date:\n";
+		echo "	".file_get_contents("/usr/share/2web/buildDate.cfg");
+		echo "</div>\n";
+		echo "<h3>2web Server Version</h3>";
+		echo "<table>\n";
+		$tempLink="<a href='/settings/manuals.php#README'>📑</a>";
+		drawVersionRow("Server Version","/usr/share/2web/version.cfg",$tempLink);
+		echo "</table>\n";
+		echo "<h3>Modules</h3>";
+		echo "<table>\n";
+		$tempLink="<a href='/settings/manuals.php#2web'>📑</a>";
+		drawVersionRow("2web Version","/usr/share/2web/version_2web.cfg",$tempLink);
+		$modules=listModules(true);
+		sort($modules);
+		foreach($modules as $module){
+			$tempLink="<a href='/settings/manuals.php#$module'>📑</a>";
+			drawVersionRow("$module Version","/usr/share/2web/version_$module.cfg",$tempLink);
 		}
-		if (file_exists("/usr/share/2web/buildDate.cfg")){
-			echo "	<div>";
-			echo "		Build Date: ".file_get_contents("/usr/share/2web/buildDate.cfg");
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_2web.cfg")){
-			echo "	<div>";
-			echo "		2web Version: ".file_get_contents("/usr/share/2web/version_2web.cfg");
-			echo "		<a href='/settings/manuals.php#2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_nfo2web.cfg")){
-			echo "	<div>";
-			echo "		nfo2web Version: ".file_get_contents("/usr/share/2web/version_nfo2web.cfg");
-			echo "		<a href='/settings/manuals.php#nfo2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_comic2web.cfg")){
-			echo "	<div>";
-			echo "		comic2web Version: ".file_get_contents("/usr/share/2web/version_comic2web.cfg");
-			echo "		<a href='/settings/manuals.php#comic2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_iptv2web.cfg")){
-			echo "	<div>";
-			echo "		iptv2web Version: ".file_get_contents("/usr/share/2web/version_iptv2web.cfg");
-			echo "		<a href='/settings/manuals.php#iptv2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_music2web.cfg")){
-			echo "	<div>";
-			echo "		music2web Version: ".file_get_contents("/usr/share/2web/version_music2web.cfg");
-			echo "		<a href='/settings/manuals.php#music2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_graph2web.cfg")){
-			echo "	<div>";
-			echo "		graph2web Version: ".file_get_contents("/usr/share/2web/version_graph2web.cfg");
-			echo "		<a href='/settings/manuals.php#graph2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_weather2web.cfg")){
-			echo "	<div>";
-			echo "		weather2web Version: ".file_get_contents("/usr/share/2web/version_weather2web.cfg");
-			echo "		<a href='/settings/manuals.php#weather2web'>📑</a>";
-			echo "	</div>";
-		}
-		if (file_exists("/usr/share/2web/version_wiki2web.cfg")){
-			echo "	<div>";
-			echo "		wiki2web Version: ".file_get_contents("/usr/share/2web/version_wiki2web.cfg");
-			echo "		<a href='/settings/manuals.php#wiki2web'>📑</a>";
-			echo "	</div>";
-		}
+		echo "</table>";
+		echo "<h3>Resolvers</h3>";
+		echo "<table>";
 		if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
-			echo "	<div>";
-			echo "		yt-dlp Version: ";
-			echo shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --version");
-			echo "	</div>";
+			echo "	<tr>";
+			echo "		<td>";
+			echo "			yt-dlp Version: ";
+			echo "		</td>";
+			echo "		<td>";
+			echo "			".shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --version");
+			echo "		</td>";
+			echo "	</tr>";
 		}
+		if (file_exists("/var/cache/2web/generated/pip/gallery-dl/bin/gallery-dl")){
+			$galleryVersionCommand='export PYTHONPATH="/var/cache/2web/generated/pip/gallery-dl/";';
+			$galleryVersionCommand.="/var/cache/2web/generated/pip/gallery-dl/bin/gallery-dl --version";
+			echo "	<tr>";
+			echo "		<td>";
+			echo "			gallery-dl Version: ";
+			echo "		</td>";
+			echo "		<td>";
+			echo "			".shell_exec($galleryVersionCommand);
+			echo "		</td>";
+			echo "	</tr>";
+		}
+		if (file_exists("/var/cache/2web/generated/pip/streamlink/bin/streamlink")){
+			$streamlinkVersionCommand='export PYTHONPATH="/var/cache/2web/generated/pip/streamlink/";';
+			$streamlinkVersionCommand.="/var/cache/2web/generated/pip/streamlink/bin/streamlink --version";
+			echo "	<tr>";
+			echo "		<td>";
+			echo "			streamlink Version: ";
+			echo "		</td>";
+			echo "		<td>";
+			echo "			".shell_exec($streamlinkVersionCommand);
+			echo "		</td>";
+			echo "	</tr>";
+		}
+		echo "</table>";
 		echo "</div>";
 	}
 ?>
@@ -153,15 +162,14 @@ include("settingsHeader.php");
 	</ul>
 </div>
 <div id='CLI_manuals' class='inputCard'>
-	<h2>CLI<sup>Command Line Interface</sup> Manual Pages</h2>
+	<h2>CLI Manual Pages</h2>
 	<ul>
 		<li><a href="/settings/manuals.php#README">README</a></li>
-		<li><a href="/settings/manuals.php#2web">2web</a></li>
-		<li><a href="/settings/manuals.php#nfo2web">nfo2web</a></li>
-		<li><a href="/settings/manuals.php#comic2web">comic2web</a></li>
-		<li><a href="/settings/manuals.php#iptv2web">iptv2web</a></li>
-		<li><a href="/settings/manuals.php#ytdl2nfo">ytdl2nfo</a></li>
-		<li><a href="/settings/manuals.php#weather2web">weather2web</a></li>
+		<?PHP
+		foreach($modules as $module){
+			echo "<li><a href='/settings/manuals.php#$module'>$module</a></li>";
+		}
+		?>
 	</ul>
 </div>
 <div id='system_checks' class='inputCard'>
