@@ -1230,23 +1230,49 @@ main(){
 		# read all the modules from loadModules
 		moduleNames=$(loadModules)
 		counter=0
+		drawCellLine 3
+		startCellRow
+		drawCell "Module" 3
+		drawCell "Status" 3
+		drawCell "Active" 3
+		endCellRow
+		drawCellLine 3
 		# figure out enabled modules and build header text
 		for module in $moduleNames;do
-			drawLine
+			# draw the headers
+			#drawLine
 			module="$(echo "$module" | cut -d'=' -f1)"
+			startCellRow
+			# draw the module  name
+			drawCell "$module" 3
 			# figure out enabled modules and build header text
-			echo -n "🧩"
-			returnModStatus "$module"
+			#echo -n "🧩"
+			if returnModStatus "$module";then
+				#echo -n "$module is ✅ Enabled, and is "
+				#drawCell "$module is ✅ Enabled, and is " 3
+				#drawCell "✅ Enabled" 3
+				highlightCell "Enabled" 3
+			else
+				#echo -n "$module is ❎ Disabled, and is "
+				#drawCell "$module is ❎ Disabled, and is " 3
+				#drawCell "❎ Disabled" 3
+				drawCell "Disabled" 3
+			fi
 			# check if the module is running
 			if test -f "/var/cache/2web/web/$module.active";then
-				echo "⚙️ Module is Currently Running."
+				#echo "⚙️ Currently Running."
+				highlightCell "Currently Running." 3
 			else
-				echo "🛑 Module is Currently Inactive."
+				#echo "🛑 Currently Inactive."
+				#drawCell "🛑 Currently Inactive." 3
+				drawCell "Currently Inactive." 3
 			fi
 			counter=$(( counter + 1 ))
 			if [ $counter -gt 5 ];then
 				counter=0
 			fi
+			endCellRow
+			drawCellLine 3
 		done
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
 		webDirectory=$(webRoot)
@@ -1274,12 +1300,15 @@ main(){
 	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
 		webDirectory=$(webRoot)
 		# read all the modules from loadModules
-		moduleNames=$(loadModules)
+		# - reverse list so main 2web process is killed last
+		moduleNames=$(loadModules | tac)
 		# figure out enabled modules and build header text
 		for module in $moduleNames;do
 			module="$(echo "$module" | cut -d'=' -f1)"
 			# clean all temp lock files
 			rm -v $webDirectory/$module.active
+			# kill active running modules
+			killall $module
 		done
 	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ];then
 		ALERT "================================================================================"
@@ -1719,27 +1748,78 @@ main(){
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		drawLine
-		echo "2web Server Version"
-		drawLine
-		echo -n "Server Version: "
-		cat /usr/share/2web/version.cfg
-		echo -n "Publish Date: "
-		cat /usr/share/2web/versionDate.cfg
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		drawLine
-		echo "Module Versions"
+		#drawLine
+		#echo "2web Server Version"
+		#drawLine
+		drawCellLine 2
+		startCellRow
+		drawCell "Server Info" 2
+		drawCell "Data" 2
+		endCellRow
+		drawCellLine 2
+		startCellRow
+		drawCell "Server Verison" 2
+		drawCell "$(cat /usr/share/2web/version.cfg)" 2
+		endCellRow
+		startCellRow
+		drawCell "Publish Date" 2
+		drawCell "$(cat /usr/share/2web/versionDate.cfg)" 2
+		endCellRow
+		startCellRow
+		drawCell "Build Date" 2
+		drawCell "$(cat /usr/share/2web/buildDate.cfg)" 2
+		endCellRow
 		# read all the modules from loadModules
 		moduleNames=$(loadModules)
+		#drawCellLine 1
+		drawCellLine 2
+		startCellRow
+		drawCell "Module Name" 2
+		drawCell "Module Version" 2
+		endCellRow
+		drawCellLine 2
+		#drawLine
+		#drawCellLine 2
 		# figure out enabled modules
 		for module in $moduleNames;do
 			module="$(echo "$module" | cut -d'=' -f1)"
-			# write the module version
-			echo -n "$module : "
-			cat /usr/share/2web/version_$module.cfg
+			if test -f "/usr/share/2web/version_$module.cfg";then
+				# draw the headers
+				startCellRow
+				drawCell "$module" 2
+				drawCell "$(cat "/usr/share/2web/version_$module.cfg")" 2
+				endCellRow
+				#drawCellLine 2
+				# write the module version
+				#echo -n "$module : "
+				#cat /usr/share/2web/version_$module.cfg
+			fi
 		done
-		drawLine
+		drawCellLine 2
+		startCellRow
+		drawCell "Resolver Name" 2
+		drawCell "Resolver Version" 2
+		endCellRow
+		drawCellLine 2
+		# draw resolver versions
+		startCellRow
+		export PYTHONPATH="/var/cache/2web/generated/pip/gallery-dl/"
+		versionData=$(/var/cache/2web/generated/pip/gallery-dl/bin/gallery-dl --version)
+		drawCell "gallery-dl" 2
+		drawCell "$versionData" 2
+		endCellRow
+		startCellRow
+		export PYTHONPATH="/var/cache/2web/generated/pip/streamlink/"
+		versionData=$(/var/cache/2web/generated/pip/streamlink/bin/streamlink --version)
+		drawCell "streamlink" 2
+		drawCell "$versionData" 2
+		endCellRow
+		startCellRow
+		versionData=$(/var/cache/2web/generated/yt-dlp/yt-dlp --version)
+		drawCell "yt-dlp" 2
+		drawCell "$versionData" 2
+		endCellRow
+		drawCellLine 2
 	elif [ "$1" == "--desktop-client" ] || [ "$1" == "desktop-client" ];then
 		################################################################################
 		# use a bash script to load the event server and launch client commands
