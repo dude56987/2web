@@ -22,25 +22,6 @@ function STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<" #DEBUG DELETE ME
 	read -r #DEBUG DELETE ME
 }
-########################################################################
-function INFO(){
-	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | cut -b"1-$(( $width - 1 ))")"
-	# print the line
-	printf "$output\r"
-}
-################################################################################
-function drawLine(){
-	width=$(tput cols)
-	buffer="=========================================================================================================================================="
-	output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
-	printf "$output\n"
-}
 ################################################################################
 function debugCheck(){
 	if [ -f /etc/2web/debug.enabled ];then
