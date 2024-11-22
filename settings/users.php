@@ -192,8 +192,8 @@ include("settingsHeader.php");
 	}
 ?>
 	<div id='addNewUser' class='inputCard'>
+	<h2>Add New System Administrator</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add New System Administrator</h2>
 		<ul>
 			<li>Add at least one administrator to lock the settings in this web interface.</li>
 			<ul>
@@ -213,8 +213,8 @@ include("settingsHeader.php");
 	</div>
 
 	<div id='addNewBasicUser' class='inputCard'>
+	<h2>Add New User</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add New User</h2>
 		<ul>
 			<li>Add a basic user for logging in to use locked sections of the website</li>
 			<li>If no groups are locked this type of user has no special privliges.</li>
