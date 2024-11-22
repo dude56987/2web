@@ -465,6 +465,11 @@ if (array_key_exists("newUserName",$_POST)){
 	addToQueue("multi","kodi2web");
 	echo "<hr><a class='button' href='/settings/modules.php#kodi2web'>BACK</a><hr>";
 	clear();
+}else if (array_key_exists("php2web_update",$_POST)){
+	outputLog("Scheduling php2web update!");
+	addToQueue("multi","php2web");
+	echo "<hr><a class='button' href='/settings/modules.php#php2web'>BACK</a><hr>";
+	clear();
 }else if (array_key_exists("setSessionTimeoutMinutes",$_POST)){
 	$timeoutMinutes=$_POST['setSessionTimeoutMinutes'];
 	$timeoutHours=$_POST['setSessionTimeoutHours'];
