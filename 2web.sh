@@ -393,19 +393,31 @@ function update2web(){
 		} > "$webDirectory/opensearch.xml"
 	fi
 
+	updateThemes="no"
 	# if the build date of the software has changed then update the generated css themes for the site
+	# - only one needs to be true so stop checks if one is true
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
+		# if the build date of the software has changed, update the themes
+		updateThemes="yes"
+	else
+		if checkFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg";then
+			# if the theme gen file contains a diffrent timestamp, update the themes
+			updateThemes="yes"
+		else
+			if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+				# if any new files are added, old files removed, or file names are changed in the templates, update the themes
+				updateThemes="yes"
+			fi
+		fi
+	fi
+	if [ "$updateThemes" == "yes" ];then
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
-		#themeColors=$(echo "$themeColors" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
 		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
-		#themeFonts=$(echo "$themeFonts" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 		themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
 		themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
-		#themeMods=$(echo "$themeMods" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
 		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
-		#themeBases=$(echo "$themeBases" | sed -z "s/$/\"/g" | sed -z "s/^/'/g" | sed -z "s/\n/ /g")
 		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
 		# build the custom stylesheets if they need to be built
 		for themeColor in $themeColors;do
@@ -416,10 +428,7 @@ function update2web(){
 					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
 					for themeBase in $themeBases;do
 						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-						#tempThemeName="${tempPathColor}-${tempPathFont}-${tempPathMod}-${tempPathBase}"
 						tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
-						#ALERT "Building theme at /usr/share/2web/themes/$tempThemeName.css"
-						#addToLog "DEBUG" "Building theme at /usr/share/2web/themes/$tempThemeName.css" "$logPagePath"
 						# build the theme
 						{
 							if test -f "$themeColor";then
@@ -439,10 +448,10 @@ function update2web(){
 				done
 			done
 		done
-		# update the timer
-		touch /var/cache/2web/web/themeGen.cfg
-		# update the checksum file
+		# update the checksum files for all the checks
+		setFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg"
 		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
+		setDirSum "$webDirectory" "/usr/share/2web/theme-templates/"
 	fi
 	# make sure the directories exist and have correct permissions, also link stylesheets
 	createDir "$webDirectory"
@@ -2038,6 +2047,11 @@ main(){
 		echo "https://settings/kodi.php#kodiPlayerPaths"
 		echo "################################################################################"
 		clientSetupMessage
+	elif [ "$1" == "--rebuild-themes" ] || [ "$1" == "rebuild-themes" ];then
+		# reset the theme gen timer
+		date "+%s" > "/var/cache/2web/themeGen.cfg"
+		# run a update to rebuild the CSS files
+		update2web
 	elif [ "$1" == "--disable-client" ] || [ "$1" == "disable-client" ];then
 		# disable auto launcher for the client
 		rm -v /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
