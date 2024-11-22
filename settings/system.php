@@ -200,9 +200,11 @@ include("settingsHeader.php");
 		Only a server administrator can change this by editing /etc/2web/web.cfg
 	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/web.cfg");
 ?>
+</pre>
 </div>
 
 <div id='websiteDownloadPath' class='inputCard'>
@@ -218,9 +220,11 @@ include("settingsHeader.php");
 		Only a server administrator can change this by editing /etc/2web/download.cfg
 	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/download.cfg");
 ?>
+</pre>
 </div>
 
 <div id='websiteGeneratedPath' class='inputCard'>
@@ -230,9 +234,11 @@ include("settingsHeader.php");
 		Only a server administrator can change this by editing /etc/2web/generated.cfg
 	</li>
 </ul>
+<pre>
 <?PHP
 	echo file_get_contents("/etc/2web/generated.cfg");
 ?>
+</pre>
 </div>
 
 </div>
