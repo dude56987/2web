@@ -96,14 +96,15 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addRepoLibrary' class='inputCard'>
-	<form action='admin.php' method='post'>
 		<h2>Add Repo Library Path</h2>
 		<ul>
 			<li>Path is scanned recursively to look for GIT repositories</li>
 		</ul>
-		<input width='60%' type='text' name='addRepoLibrary' placeholder='/absolute/path/to/the/library'>
-		<button class='button' type='submit'>➕ Add Path</button>
-	</form>
+		<form action='selectPath.php' method='post'>
+			<input type='text' name='valueName' value='addRepoLibrary' hidden>
+			<input type='text' name='startPath' placeholder='/absolute/path/to/the/library/'>
+			<button class='button' type='submit'>📁 Select Path</button>
+		</form>
 	</div>
 </div>
 <?php
@@ -139,8 +140,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addRepoLibrary' class='inputCard'>
+	<h2>Add Repo Source Path</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add Repo Source Path</h2>
 		<input width='60%' type='text' name='addRepoSource' placeholder='/absolute/path/to/the/library'>
 		<button class='button' type='submit'>➕ Add Path</button>
 	</form>

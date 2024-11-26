@@ -90,11 +90,12 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addAppLibrary' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add App Library Path</h2>
-		<input width='60%' type='text' name='addAppLibrary' placeholder='/absolute/path/to/the/Library'>
-		<button class='button' type='submit'>➕ Add Path</button>
-	</form>
+		<h2>Add Application Library Path</h2>
+		<form action='selectPath.php' method='post'>
+			<input type='text' name='valueName' value='addAppLibrary' hidden>
+			<input type='text' name='startPath' placeholder='/absolute/path/to/the/library/'>
+			<button class='button' type='submit'>📁 Select Path</button>
+		</form>
 	</div>
 </div>
 <?PHP

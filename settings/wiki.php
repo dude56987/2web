@@ -78,14 +78,12 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addWikiPath' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add Wiki Path</h2>
-		<ul>
-			<li>Add the path of a directory containing .zim files</li>
-		</ul>
-		<input width='60%' type='text' name='addWikiPath' placeholder='/absolute/path/to/the/directory/'>
-		<button class='button' type='submit'>➕ Add Path</button>
-	</form>
+		<h2>Add Library Path</h2>
+		<form action='selectPath.php' method='post'>
+			<input type='text' name='valueName' value='addWikiPath' hidden>
+			<input type='text' name='startPath' placeholder='/absolute/path/to/the/library/'>
+			<button class='button' type='submit'>📁 Select Path</button>
+		</form>
 	</div>
 </div>
 

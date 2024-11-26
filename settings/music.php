@@ -91,17 +91,18 @@ foreach($sourceFiles as $sourceFile){
 	}
 }
 ?>
-	<div id='addMusicLibary' class='inputCard'>
-	<form action='admin.php' method='post'>
-		<h2>Add Music Libary Path</h2>
+	<div id='addMusicPath' class='inputCard'>
+		<h2>Add Music Library Path</h2>
 		<ul>
 			<li>Only supports .mp3 files</li>
 			<li>Directory structure does not matter</li>
 			<li>Metadata is read from file tags</li>
 		</ul>
-		<input width='60%' type='text' name='addMusicLibary' placeholder='/absolute/path/to/the/libary'>
-		<button class='button' type='submit'>➕ Add Path</button>
-	</form>
+		<form action='selectPath.php' method='post'>
+			<input type='text' name='valueName' value='addMusicLibary' hidden>
+			<input type='text' name='startPath' placeholder='/absolute/path/to/the/library/'>
+			<button class='button' type='submit'>📁 Select Path</button>
+		</form>
 	</div>
 </div>
 <?PHP

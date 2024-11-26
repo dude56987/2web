@@ -63,7 +63,7 @@ include("settingsHeader.php");
 
 <?php
 echo "<div id='serverLibaryPaths' class='titleCard'>\n";
-echo "<h2>Server Libary Paths</h2>\n";
+echo "<h2>Server Library Paths</h2>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/nfo/libaries.cfg");
 echo "</pre>\n";
@@ -80,7 +80,7 @@ echo "</div>";
 
 <?php
 echo "<div id='libaryPaths' class='settingListCard'>";
-echo "<h2>Libary Paths</h2>\n";
+echo "<h2>Library Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -1 /etc/2web/nfo/libaries.d/*.cfg"));
 # sort sources alphabetically
 sort($sourceFiles);
@@ -115,10 +115,11 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addLibaryPath' class='inputCard'>
-		<form action='admin.php' method='post'>
-			<h2>Add Library Path</h2>
-			<input width='60%' type='text' name='addLibary' placeholder='/absolute/path/to/the/libary'>
-			<button class='button' type='submit'>➕ Add Path</button>
+		<h2>Add Library Path</h2>
+		<form action='selectPath.php' method='post'>
+			<input type='text' name='valueName' value='addLibary' hidden>
+			<input type='text' name='startPath' placeholder='/absolute/path/to/the/library/'>
+			<button class='button' type='submit'>📁 Select Path</button>
 		</form>
 	</div>
 </div>

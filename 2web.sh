@@ -505,6 +505,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/kodi/indexHeader.html"
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/indexHeader.html"
 	# settings interface files
+	linkFile "/usr/share/2web/settings/selectPath.php" "$webDirectory/settings/selectPath.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
 	linkFile "/usr/share/2web/settings/users.php" "$webDirectory/settings/users.php"
