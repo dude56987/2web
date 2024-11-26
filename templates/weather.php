@@ -35,58 +35,112 @@
 ?>
 
 <hr>
-
-<div class='titleCard'>
-<h1>Stations</h1>
-<div class='listCard'>
 <?php
+	$updateStarted=false;
+	$stationPath="/var/cache/2web/web/weather/data/station/";
+	$forcastPath="/var/cache/2web/web/weather/data/forcast/";
+	$currentPath="/var/cache/2web/web/weather/data/current/";
 	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/weather/data/station_*.index | sort"));
-	// reverse the time sort
-	$sourceFiles = array_reverse($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".index")){
-					// read the index entry
-					$data=file_get_contents($sourceFile);
-					// write the index entry
-					echo "$data";
-					flush();
-					ob_flush();
-				}
+	if (is_dir($stationPath)){
+		$stationFiles = scandir($stationPath);
+		$stationFiles = array_diff($stationFiles,Array("..","."));
+		sort($stationFiles);
+	}
+	$refreshPath="/var/cache/2web/web/weather/refresh.cfg";
+	$refreshFinishedPath="/var/cache/2web/web/weather/refreshComplete.cfg";
+	# if index entry is over one hour old update the weather information
+	if ( file_exists($refreshPath) ){
+		if (! file_exists($refreshFinishedPath)){
+			$updateStarted=true;
+		}else if ( ( time() - filemtime($refreshPath) ) > ( ( (60 * 60) ) ) ){
+			# weather2web will
+			# - only run one instance at a time
+			#	- update only once every hour even if activated by this
+			$updateStarted=true;
+			file_put_contents($refreshPath,time());
+			if (file_exists($refreshFinishedPath)){
+				unlink($refreshFinishedPath);
 			}
+		}
+	}else{
+		$updateStarted=true;
+		file_put_contents($refreshPath,time());
+		if (file_exists($refreshFinishedPath)){
+			unlink($refreshFinishedPath);
 		}
 	}
-?>
-</div>
-</div>
-<?php
-	// get a list of all the genetrated index links for the page
-	$sourceFiles = explode("\n",shell_exec("ls -1 /var/cache/2web/web/weather/data/forcast_*.index | sort"));
-	// reverse the time sort
-	$sourceFiles = array_reverse($sourceFiles);
-	foreach($sourceFiles as $sourceFile){
-		$sourceFileName = $sourceFile;
-		if (file_exists($sourceFile)){
-			if (is_file($sourceFile)){
-				if (strpos($sourceFile,".index")){
-					// read the index entry
-					$data=file_get_contents($sourceFile);
-					// write the index entry
-					echo "<div class='settingsList'>";
-					echo "$data";
-					// write the current condititons at the bottom of the extended forecast
-					echo "<div class='titleCard'>";
-					echo file_get_contents(str_replace("forcast_","current_",$sourceFile));
-					echo "</div>";
-					echo "</div>";
-					flush();
-					ob_flush();
-				}
-			}
+	# if the finished file is more than 90 seconds old
+	#if ( ( time() - filemtime($refreshFinishedPath) ) > ( ( (30) ) ) ){
+	#	$updateStarted=true;
+	#}
+	# render the page if the info is fresh
+	if($updateStarted == false){
+		echo "<div class='titleCard'>";
+		echo "<h1>Stations</h1>";
+		echo "<div class='listCard'>";
+		echo "<a class='button' href='?'>Overview</a>";
+		echo "<a class='button' href='?all'>All</a>";
+		# read each station file
+		foreach($stationFiles as $stationFile){
+			# read the index entry
+			echo file_get_contents($stationPath.$stationFile);
+			flush();
+			ob_flush();
 		}
+		echo "</div>";
+		echo "</div>";
+		if (array_key_exists("station",$_GET)){
+			# draw the weather info for a single station
+			$stationFile=$_GET["station"].".index";
+			echo "<div class='titleCard'>";
+			echo		file_get_contents( ($currentPath.$stationFile) );
+			echo "</div>";
+			// write the current condititons at the bottom of the extended forecast
+			echo	file_get_contents($forcastPath.$stationFile);
+			flush();
+			ob_flush();
+		}else if (array_key_exists("all",$_GET)){
+			# draw weather info for all stations
+			foreach($stationFiles as $stationFile){
+				echo "<div class='titleCard'>";
+				// write the index entry
+				echo file_get_contents( ($currentPath.$stationFile) );
+				echo "</div>";
+				// write the current condititons at the bottom of the extended forecast
+				echo file_get_contents($forcastPath.$stationFile);
+				flush();
+				ob_flush();
+			}
+		}else{
+			echo "<div class='titleCard'>";
+			# draw the default view showing all station current info as links to individual stations
+			foreach($stationFiles as $stationFile){
+				$stationName=str_replace(".index","",$stationFile);
+				echo "<div class='inputCard'>\n";
+				echo "<a href='?station=$stationName'>\n";
+				echo "<h2>\n";
+				echo "$stationName\n";
+				echo "</h2>\n";
+				echo "</a>\n";
+				echo file_get_contents($currentPath.$stationFile)."\n";
+				echo "</div>\n";
+				flush();
+				ob_flush();
+			}
+			echo "</div>";
+		}
+	}else{
+		# if weather2web is not running queue a update job
+		if (! file_exists("/var/cache/2web/web/weather2web.active")){
+			addToQueue("multi","weather2web");
+			addToLog("DEBUG","weather check", "weather updated");
+		}
+		echo "<div class='inputCard'>";
+		echo "<h1>Updating Weather Information</h1>";
+		echo "Weather information is out of date. Updating weather information from remote server...";
+		echo "</div>";
+		# reload the page after 10 seconds
+		reloadPage(10);
 	}
 ?>
 <?php

@@ -47,8 +47,8 @@ include("settingsHeader.php");
 </div>
 <!-- create the theme picker based on installed themes -->
 <div id='setHomepageWeatherLocation' class='inputCard'>
+	<h2>Homepage Weather Location</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Homepage Weather Location</h2>
 			<ul>
 				<li>
 					Is the location for which the current weather will be displayed on the homepage.
@@ -140,8 +140,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addWeatherLocation' class='inputCard'>
+	<h2>Add Weather Location</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add Weather Location</h2>
 		<ul>
 			<li>
 				Add a location to show weather forcasts.
