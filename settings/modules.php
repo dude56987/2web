@@ -44,6 +44,7 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 			<ul>
 <?PHP
 $modules=listModules(true);
+sort($modules);
 foreach($modules as $module){
 	echo "				<li><a href='#".$module."'>$module</a></li>";
 }
@@ -176,8 +177,13 @@ foreach($modules as $module){
 	}
 	// add force update button
 	echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
-	echo "			<button class='button' type='submit' name='".$module."_update' value='yes'>⚙️ Force Update</button>\n";
+	echo "			<button class='button' type='submit' name='".$module."_update' value='yes'>🗘 Force Update</button>\n";
 	echo "		</form>\n";
+
+	echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
+	echo "			<button class='button' type='submit' name='".$module."_nuke' value='yes'>☢️ Nuke</button>\n";
+	echo "		</form>\n";
+
 	echo "	</div>";
 	echo "</div>";
 }
