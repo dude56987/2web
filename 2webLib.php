@@ -1179,6 +1179,21 @@ if( ! function_exists("redirect")){
 	}
 }
 ########################################################################
+if( ! function_exists("reloadPage")){
+	function reloadPage($delaySeconds=10){
+		# reloadPage($delaySeconds=10){
+		#
+		# Reload a webpage after a delay with javascript or meta refresh if scripts are disabled
+		echo "<script>\n";
+		# show the spinner to indicate activity to the user
+		echo "showSpinner()\n";
+		# start the delayed page reload
+		echo "delayedRefresh($delaySeconds);\n";
+		echo "</script>\n";
+		echo "<noscript><meta http-equiv='refresh' content='$delaySeconds'></noscript>";
+	}
+}
+########################################################################
 if( ! function_exists("cleanPostInput")){
 	function cleanPostInput(){
 		# Cleanup post data values to remove shell commands injected, This is a security measure
