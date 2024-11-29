@@ -95,19 +95,26 @@ function searchWeather(){
 	searchSum=$3
 	outputPath="$webDirectory/search/${searchSum}__weather_stations.index"
 	# check for any stations
-	foundStations=$(find "/var/cache/2web/web/weather/data/" -type f -name "station_*.index")
+	foundStations=$(find "/var/cache/2web/web/weather/data/station/" -type f -name "*.index")
 	# if there are any stations
 	foundData="no"
 	# draw the stations in a listcard for correct scaling
 	# read all the weather station names
 	echo "$foundStations" | while read stationFilePath;do
-		fileData="$(cat "$stationFilePath")"
+		foundData="no"
 		# search the contents of the index file
-		if echo "$fileData" | grep -q --ignore-case "$searchQuery";then
+		if echo "$stationFilePath" | grep -q --ignore-case "$searchQuery";then
+			foundData="yes"
+		fi
+		if [ "$searchQuery" == "weather" ] ||  [ "$searchQuery" == "forecast" ] || [ "$searchQuery" == "forcast" ];then
+			foundData="yes"
+		fi
+		if [ "$foundData" == "yes" ];then
 			#if echo "$foundData" | grep -q "no";then
 			#	foundData="yes"
 			#	echo "<div class='listCard'>" > "$outputPath"
 			#fi
+			fileData="$(cat "$stationFilePath")"
 			# show the found data
 			echo "$fileData" >> "$outputPath"
 		fi
