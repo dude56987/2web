@@ -729,9 +729,9 @@ renderPage(){
 	if [[ 10#$previousPage -le 0 ]];then
 		if [ $isChapter = true ];then
 			# if the previous page is 0 then link back to the index
-			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/0000.html"
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/0000.php"
 		else
-			linkFile "index.php" "$webDirectory/comics/$pageComicName/0000.html"
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/0000.php"
 		fi
 
 		if [ $isChapter = true ];then
@@ -762,12 +762,12 @@ renderPage(){
 	fi
 	if [ $isChapter = true ];then
 		# link the image file into the web directory
-		pagePath="$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.html"
+		pagePath="$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.php"
 		#
 		linkFile "/usr/share/2web/templates/comic_page.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.php"
 	else
 		# single chapter comic
-		pagePath="$webDirectory/comics/$pageComicName/$pageNumber.html"
+		pagePath="$webDirectory/comics/$pageComicName/$pageNumber.php"
 		#
 		linkFile "/usr/share/2web/templates/comic_page.php" "$webDirectory/comics/$pageComicName/$pageNumber.php"
 	fi
@@ -813,7 +813,7 @@ renderPage(){
 		#if ! [ -f "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.jpg" ];then
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if there is no next page in this chapter of the comic
-			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.html"
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$pageChapterName/$nextPage.php"
 			# if this is the last chapter of a multi chapter comic
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
 				buildPagesIndex=true
@@ -824,7 +824,7 @@ renderPage(){
 		#if ! [ -f "$webDirectory/comics/$pageComicName/$nextPage.jpg" ];then
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# link to the index page
-			linkFile "index.php" "$webDirectory/comics/$pageComicName/$nextPage.html"
+			linkFile "index.php" "$webDirectory/comics/$pageComicName/$nextPage.php"
 			buildPagesIndex=true
 		fi
 	fi
