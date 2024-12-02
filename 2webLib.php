@@ -272,6 +272,27 @@ if( ! function_exists("checkModStatus")){
 		return yesNoCfgCheck($filePath);
 	}
 }
+################################################################################
+if( ! function_exists("is_url")){
+	function is_url($urlText){
+		# check if a string is a valid url link
+
+		# validate the url
+		if (filter_var($urlText, FILTER_VALIDATE_URL) !== false){
+			# check for http or https protocol
+			if (substr($urlText,0,7) == "http://"){
+				return true;
+			}else if (substr($urlText,0,8) == "https://"){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
+		}
+	}
+}
+################################################################################
 if( ! function_exists("formatText")){
 	function formatText($text,$tabs=0,$newline="\n"){
 		# write a line with a number of tabs and a custom newline character to variable

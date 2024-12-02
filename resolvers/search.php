@@ -358,6 +358,21 @@ function checkSpelling($searchQuery){
 	}
 }
 ################################################################################
+function webPlayerCheck($searchQuery){
+	# check if this is a url and if it is then add a link that pushes it into the web player
+	if(requireGroup("webPlayer", false)){
+		# if the user has web player permissions check if a link can be created
+		if(is_url($searchQuery)){
+			echo "<div class='titleCard'>";
+			echo "	<h2>Open Link In Web Player</h2>";
+			echo "	<div class='listCard'>";
+			echo "		<a class='button' href='/web-player.php?shareURL=\"".$searchQuery."\"'>🎞️ Load Link In Web Player</a>";
+			echo "	</div>";
+			echo "</div>";
+		}
+	}
+}
+################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# check for bangs prior to building any part of the webpage
 	# - This must be done before anything is writen to the page for the redirect to work
@@ -578,6 +593,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "</script>";
 		echo "<noscript><meta http-equiv='refresh' content='1;URL=search.php?autoRefresh=true&q=".$_GET["q"]."'></noscript>";
 	}
+
+	# check if web player links need created
+	webPlayerCheck($_GET["q"]);
 	# add ai search links if they exist
 	if (file_exists($webDirectory."/ai/txt2img/index.php") || file_exists($webDirectory."/ai/prompt/index.php")){
 		echo "<div class='titleCard'>";
