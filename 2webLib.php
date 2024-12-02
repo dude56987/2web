@@ -1222,6 +1222,8 @@ if( ! function_exists("cleanPostInput")){
 		foreach( array_keys($_POST) as $postKey ){
 			# escape all post keys given to admin script to prevent breaking out of shell commands when used
 			$_POST[$postKey] = escapeshellcmd($_POST[$postKey]);
+			# replace double quotes with single quotes
+			$_POST[$postKey] = str_replace('"',"'",$_POST[$postKey]);
 		}
 	}
 }
@@ -1233,6 +1235,8 @@ if( ! function_exists("cleanGetInput")){
 		foreach( array_keys($_GET) as $getKey ){
 			# escape all post keys given to admin script to prevent breaking out of shell commands when used
 			$_GET[$getKey] = escapeshellcmd($_GET[$getKey]);
+			# replace double quotes with single quotes
+			$_GET[$getKey] = str_replace('"',"'",$_GET[$getKey]);
 		}
 	}
 }

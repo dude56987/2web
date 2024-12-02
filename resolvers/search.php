@@ -374,6 +374,7 @@ function webPlayerCheck($searchQuery){
 }
 ################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
+	cleanGetInput();
 	# check for bangs prior to building any part of the webpage
 	# - This must be done before anything is writen to the page for the redirect to work
 	$searchQuery = $_GET["q"];
