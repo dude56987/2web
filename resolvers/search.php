@@ -286,15 +286,15 @@ function checkForBangs($searchQuery){
 ################################################################################
 function drawHead(){
 	# start building the webpage
-	echo "<html class='randomFanart'>";
-	echo "<head>";
-	echo " <title>2web Search</title>";
-	echo " <script src='/2webLib.js'></script>";
-	echo " <link rel='stylesheet' type='text/css' href='/style.css'>";
-	echo " <link rel='icon' type='image/png' href='/favicon.png'>";
-	echo " <link rel='search' type='application/opensearchdescription+xml' title='2web' href='/opensearch.xml'>";
-	echo "</head>";
-	echo "<body>";
+	echo "<html class='randomFanart'>\n";
+	echo "<head>\n";
+	echo " <title>2web Search</title>\n";
+	echo " <script src='/2webLib.js'></script>\n";
+	echo " <link rel='stylesheet' type='text/css' href='/style.css'>\n";
+	echo " <link rel='icon' type='image/png' href='/favicon.png'>\n";
+	echo " <link rel='search' type='application/opensearchdescription+xml' title='2web' href='/opensearch.xml'>\n";
+	echo "</head>\n";
+	echo "<body>\n";
 }
 ################################################################################
 ################################################################################
@@ -455,10 +455,12 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 					# check the permissions
 					if (checkFilePathPermissions($filePath)){
 						# draw the matching search content
-						echo "<h2 id='$jumpLink'>$headerTitle</h2>";
-						echo "<div>";
+						echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
+						echo "<div>\n";
+						echo "<hr>\n";
 						echo file_get_contents($webDirectory."/search/".$filePath);
-						echo "</div>";
+						echo "<hr>\n";
+						echo "</div>\n";
 					}
 				}
 			}
@@ -551,7 +553,9 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 						# draw the matching search content
 						echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
 						echo "<div>";
+						echo "<hr>\n";
 						echo file_get_contents($webDirectory."/search/".$filePath);
+						echo "<hr>\n";
 						echo "</div>";
 					}
 				}
