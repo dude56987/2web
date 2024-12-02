@@ -115,19 +115,25 @@ getStat("freeSpace.index", "Free Space");
 
 echo "	</div>";
 
+echo "		<div>";
 # draw session login time
 if (isset($_SESSION["user"])){
 	if (isset($_SESSION["loginTime"])){
 		$loginTime=$_SESSION["loginTime"];
 		# draw the login time
-		echo "		<div>";
 		echo "			<span class='singleStat'>";
 		echo "				Login Time:";
 		timeElapsedToHuman($loginTime);
 		echo "			</span>";
-		echo "		</div>";
 	}
 }
+
+$activeJobs=count(array_diff(scanDir("/var/cache/2web/queue/active/"),Array(".","..")));
+echo "			<span class='singleStat'>";
+echo "				Active Jobs:".$activeJobs."\n";
+echo "			</span>";
+
+echo "		</div>";
 
 # check the status of the fortunes for drawing large or small widgets
 $fortuneEnabled = False;
@@ -162,7 +168,7 @@ if (file_exists("weather.index")){
 	$todaysWeather= file_get_contents("weather.index");
 	if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
 		if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
-			echo "<a class='homeFortune' href='/weather/#".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
+			echo "<a class='homeFortune' href='/weather/?station=".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
 			if ($fortuneEnabled){
 				echo "<div class='inputCard'>";
 			}else{
