@@ -116,18 +116,12 @@ $sourceFiles = scandir("/etc/2web/comics/webSources.d/");
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/webSources.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
-//print_r($sourceFiles);
-//echo "<table class='settingsTable'>";
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
-				//echo "<hr>\n";
-				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
@@ -164,7 +158,10 @@ foreach($sourceFiles as $sourceFile){
 		<th>HTTP</th>
 	</tr>
 <?PHP
-$extractors = explode("\n", shell_exec("gallery-dl --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq"));
+$gallery_dl_path="/var/cache/2web/generated/pip/gallery-dl/bin/gallery-dl";
+$pathInfo='export PYTHONPATH="/var/cache/2web/generated/pip/gallery-dl/";';
+$extractors = explode("\n", shell_exec($pathInfo.$gallery_dl_path." --list-extractors | grep http | cut -d' ' -f3 | cut -d'/' -f3 | uniq"));
+
 foreach($extractors as $extractor_name){
 	if ($extractor_name != ''){
 		echo "<tr>";
