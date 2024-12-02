@@ -40,17 +40,17 @@ include("settingsHeader.php");
 <div class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-	<li><a href='#cacheQuality'>Cache Quality</a></li>
-	<li><a href='#cacheUpgradeQuality'>Cache Upgrade Quality</a></li>
-	<li><a href='#cacheResize'>HLS Size</a></li>
-	<li><a href='#cacheFramerate'>HLS Framerate(FPS)</a></li>
-	<li><a href='#cacheDelay'>Cache Time</a></li>
+		<li><a href='#cacheQuality'>Cache Quality</a></li>
+		<li><a href='#cacheUpgradeQuality'>Cache Upgrade Quality</a></li>
+		<li><a href='#cacheResize'>HLS Size</a></li>
+		<li><a href='#cacheFramerate'>HLS Framerate(FPS)</a></li>
+		<li><a href='#cacheDelay'>Cache Time</a></li>
 	<ul>
 </div>
 <!-- create the theme picker based on installed themes -->
 <div id='cacheQuality' class='inputCard'>
+	<h2>Cache Stream Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache Stream Quality</h2>
 		<p>
 			Change the quality of video cached videos.
 		</p>
@@ -78,8 +78,8 @@ include("settingsHeader.php");
 
 <!-- create the theme picker based on installed themes -->
 <div id='cacheUpgradeQuality' class='inputCard'>
+	<h2>Cache Upgrade Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache Upgrade Quality</h2>
 		<p>
 		<ul>
 			<li>
@@ -114,8 +114,8 @@ include("settingsHeader.php");
 </div>
 
 <div id='cacheDelay' class='inputCard'>
+	<h2>Cache Time</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Cache Time</h2>
 		<ul>
 			<li>
 				Change the number of days that the system caches will retain videos.
@@ -151,26 +151,26 @@ include("settingsHeader.php");
 
 <div id='cacheNewEpisodes' class='inputCard'>
 	<h2>Cache New Episodes</h2>
-		<ul>
-			<li>
-				Automatically cache episodes that first aired this month.
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/cacheNewEpisodes.cfg","Caching New Episodes","cacheNewEpisodes");
-		?>
+	<ul>
+		<li>
+			Automatically cache episodes that first aired this month.
+		</li>
+	</ul>
+	<?php
+	buildYesNoCfgButton("/etc/2web/cacheNewEpisodes.cfg","Caching New Episodes","cacheNewEpisodes");
+	?>
 </div>
 
 <div id='transcodeForWebpages' class='inputCard'>
 	<h2>Transcode</h2>
-		<ul>
-			<li>
-				Automatically transcode videos into a format that can be played though the webplayer.
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/transcodeForWebpages.cfg","Webpage Transcoding","transcodeForWebpages");
-		?>
+	<ul>
+		<li>
+			Automatically transcode videos into a format that can be played though the webplayer.
+		</li>
+	</ul>
+	<?php
+	buildYesNoCfgButton("/etc/2web/transcodeForWebpages.cfg","Webpage Transcoding","transcodeForWebpages");
+	?>
 </div>
 
 <?PHP

@@ -98,8 +98,8 @@ foreach($sourceFiles as $sourceFile){
 ?>
 
 	<div id='addRadioLink' class='inputCard'>
+		<h2>Add Radio Link</h2>
 		<form action='admin.php' method='post'>
-			<h2>Add Radio Link</h2>
 			<ul>
 				<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>
 			</ul>
@@ -144,8 +144,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addRadioStation' class='inputCard'>
+		<h2>Add Radio Station</h2>
 		<form action='admin.php' method='post'>
-			<h2>Add Radio Station</h2>
 			<ul>
 				<li>Add the direct path to the remote audio stream
 					<ul>

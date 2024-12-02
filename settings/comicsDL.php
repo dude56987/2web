@@ -89,8 +89,8 @@ foreach($sourceFiles as $sourceFile){
 ?>
 
 <div id='addComicDownloadLink' class='inputCard'>
-<form action='admin.php' method='post'>
 <h2>Add Comic Download Link</h2>
+<form action='admin.php' method='post'>
 <ul>
 	<li>Add webpage links from <a href='#gallery-dl_links'>supported websites</a></li>
 </ul>
@@ -143,8 +143,8 @@ foreach($sourceFiles as $sourceFile){
 ?>
 
 <div id='addComicDownloadLink' class='inputCard'>
-<form action='admin.php' method='post'>
 <h2>Add WebComic By Name</h2>
+<form action='admin.php' method='post'>
 <ul>
 	<li>Add a webcomic by name path from <a href='#dosage_links'>supported comics</a>.</li>
 </ul>

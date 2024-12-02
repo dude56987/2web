@@ -114,8 +114,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='ytdl_add_source' class='inputCard'>
-	<form action='admin.php' method='post'>
 	<h2>Add Website Source</h2>
+	<form action='admin.php' method='post'>
 	<ul>
 		<li>
 			Website sources will be added as shows based on video links found on source pages.
@@ -180,8 +180,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addUsernameSource' class='inputCard'>
-	<form action='admin.php' method='post'>
 	<h2>Add Username Source</h2>
+	<form action='admin.php' method='post'>
 	<ul>
 		<li>
 			For websites with usernames, will create a show with all of that usernames content.

@@ -135,8 +135,8 @@ foreach($sourceFiles as $sourceFile){
 ?>
 
 	<div id='addLink' class='inputCard'>
-	<form action='admin.php' method='post'>
 	<h2>Add Link</h2>
+	<form action='admin.php' method='post'>
 	<ul>
 		<li>Add a link directly to a livestream webpage</li>
 		<li>Add a link to a remote m3u/m3u8 playlist containing a list of channels</li>

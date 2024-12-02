@@ -128,8 +128,8 @@ include("settingsHeader.php");
 </div>
 
 <div id='autoRebootTime' class='inputCard'>
+	<h2>Automatic Reboot Time</h2>
 	<form action='admin.php' method='post' class='buttonForm'>
-		<h2>Automatic Reboot Time</h2>
 		<ul>
 			<li>
 				The hour that the reboot should be scheduled for.

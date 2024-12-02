@@ -80,8 +80,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addPortalScanPort' class='inputCard'>
+	<h2>Add Scan Port</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add Scan Port</h2>
 		<ul>
 			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
 			<li>Title,PORT,Description</li>
@@ -125,8 +125,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addportalScanPath' class='inputCard'>
+	<h2>Add Scan Path</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add Scan Path</h2>
 		<ul>
 			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
 			<li>Title,PATH,Description</li>

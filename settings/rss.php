@@ -78,8 +78,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addRssSource' class='inputCard'>
+	<h2>Add rss Source Path</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add rss Source Path</h2>
 		<ul>
 			<li>You can manually add rss links with a comma seperated list. One entry per line.</li>
 			<li>Title,URL,Description</li>

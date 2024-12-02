@@ -144,8 +144,8 @@ function randomColor(){
 </div>
 
 <div id='webTheme' class='inputCard'>
+	<h2>Web Theme</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<h2>Web Theme</h2>
 			<ul>
 				<li>
 					Custom themes can be installed in /usr/share/2web/themes/

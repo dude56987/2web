@@ -47,16 +47,16 @@ include("settingsHeader.php");
 </div>
 
 <div id='blockGroup' class='inputCard'>
-<form action='admin.php' method='post'>
 <h2>Block Group</h2>
+<form action='admin.php' method='post'>
 <input width='60%' class='inputText' type='text' name='blockGroup' placeholder='GroupName...'>
 <button class='button' type='submit'>🚫 Block</button>
 </form>
 </div>
 
 <div id='unblockGroup' class='inputCard'>
-<form action='admin.php' method='post'>
 <h2>Unblock Group</h2>
+<form action='admin.php' method='post'>
 <input width='60%' class='inputText' type='text' name='unblockGroup' placeholder='GroupName...'>
 <button class='button' type='submit'>❎ Unblock</button>
 </form>

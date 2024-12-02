@@ -115,8 +115,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addkodiLocation' class='inputCard'>
+	<h2>Add kodi Location Path</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add kodi Location Path</h2>
 		<ul>
 			<li>
 				Add a remote kodi client to automatically update content on.
@@ -163,8 +163,8 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addkodiPlayer' class='inputCard'>
+	<h2>Add kodi player Path</h2>
 	<form action='admin.php' method='post'>
-		<h2>Add kodi player Path</h2>
 		<ul>
 			<li>
 				Add a remote kodi client that the "Play on KODI" button will play media on.
