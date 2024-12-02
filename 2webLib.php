@@ -253,7 +253,7 @@ if( ! function_exists("detectEnabledStatus")){
 if( ! function_exists("listModules")){
 	function listModules($allModules=false){
 		# by default only the modules used by content filters will be shown
-		$modules=Array("nfo2web","comic2web","music2web","iptv2web","graph2web","wiki2web","git2web","portal2web","php2web");
+		$modules=Array("2web","nfo2web","comic2web","music2web","iptv2web","graph2web","wiki2web","git2web","portal2web","php2web");
 		if ($allModules){
 			# all background loading modules
 			$modules=array_merge($modules,Array("kodi2web","ytdl2nfo","rss2nfo","weather2web","ai2web"));
