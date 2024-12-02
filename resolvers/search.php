@@ -608,7 +608,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<input type='text' name='debug' value='no' hidden>\n";
 			echo "<input type='text' name='imageInputPrompt' value='".$_GET["q"]."' hidden>";
 			echo "<input type='text' name='imageNegativeInputPrompt' hidden>";
-			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>Generate Image From Query 🎨</button>";
+			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>🎨 Generate Image From Query</button>";
 			echo "</form>\n";
 		}
 		if (file_exists($webDirectory."/ai/prompt/index.php")){
@@ -617,7 +617,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<input type='text' name='hidden' value='no' hidden>\n";
 			echo "<input type='text' name='debug' value='no' hidden>\n";
 			echo "<input type='text' name='prompt' value='".$_GET["q"]."' hidden>";
-			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>Prompt AI Models with Query 👽</button>";
+			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>👽 Prompt AI Models with Query</button>";
 			echo "</form>\n";
 		}
 		echo "</div>\n";
