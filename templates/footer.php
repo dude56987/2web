@@ -424,7 +424,7 @@ if ($drawRemote){
 }
 if (detectEnabledStatus("php2web")){
 	if (requireGroup("php2web",false)){
-		echo formatText("<a class='footerButton' href='/apps/'>",2);
+		echo formatText("<a class='footerButton' href='/applications/'>",2);
 		echo formatText("🖥️",3);
 		echo formatText("<span class='footerText'>",3);
 		echo formatText("Applications",4);
