@@ -161,6 +161,10 @@ function generateLink(){
 		convert "$webDirectory/portal/${domain}_$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}_$linkSum-qr.png"
 		# save the combined file as the image to use in the web interface
 		composite -gravity "center" "$webDirectory/portal/${domain}_$linkSum-qr.png" "$webDirectory/portal/${domain}_$linkSum-web.png" "$webDirectory/portal/${domain}_$linkSum.png"
+		# if the image creation failed create a image using the hash image function
+		if ! test -f  "$webDirectory/portal/${domain}_$linkSum.png";then
+			hashImage "${domain}" "$webDirectory/portal/${domain}_$linkSum.png" "1920x1080"
+		fi
 		# create .index files for direct links
 		{
 			echo "<div class='showPageEpisode'>"
