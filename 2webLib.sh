@@ -18,35 +18,47 @@
 ########################################################################
 function cleanText(){
 	# clean up the text for use in web urls and directory paths
+	# - uses fullwidth versions of caracters that interfere with URLs
 	cleanedText="$1"
-	# remove bangs as they break URLS
-	cleanedText=$(echo "$cleanedText" | tr -d '#`')
-	cleanedText=$(echo "$cleanedText" | tr -d "'" )
-	cleanedText=$(echo "$cleanedText" | sed "s/_/ /g" )
+	# convert html entities into the characters
+	#cleanedText=$(echo -n "$cleanedText" | recode html )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/&amp;/＆/g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/&quot;/＇/g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/&apos;/＇/g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/&lt;/</g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/&gt;/>/g' )
+	# remove grave accents
+	cleanedText=$(echo -n "$cleanedText" | sed 's/`/｀/g' )
+	# remove hash marks as they break URLS
+	cleanedText=$(echo -n "$cleanedText" | sed "s/#/＃/g" )
+	# remove single quotes
+	cleanedText=$(echo -n "$cleanedText" | sed "s/'/＇/g" )
+	# convert underscores into spaces
+	cleanedText=$(echo -n "$cleanedText" | sed "s/_/ /g" )
 	################################################################################
 	# convert symbols that cause issues to full width versions of those characters
 	################################################################################
 	# convert question marks into wide question marks so they look
 	# the same but wide question marks do not break URLS
-	cleanedText=$(echo "$cleanedText" | sed "s/?/？/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/?/？/g" )
 	# cleanup ampersands, they break URLs
-	cleanedText=$(echo "$cleanedText" | sed "s/&/＆/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/&/＆/g" )
 	# cleanup @ symbols, they break URLs
-	cleanedText=$(echo "$cleanedText" | sed "s/@/＠/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/@/＠/g" )
 	# remove percent signs they break print functions
-	cleanedText=$(echo "$cleanedText" | sed "s/%/％/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/%/％/g" )
 	# hyphens break grep searches
-	cleanedText=$(echo "$cleanedText" | sed "s/-/－/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/-/－/g" )
 	# exclamation marks can also cause problems
-	cleanedText=$(echo "$cleanedText" | sed "s/!/！/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/!/！/g" )
 	# plus signs are used in URLs so they must be changed
-	cleanedText=$(echo "$cleanedText" | sed "s/+/＋/g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/+/＋/g" )
 	# remove forward slashes, they will break all paths
-	cleanedText=$(echo "$cleanedText" | sed "s/\///g" )
+	cleanedText=$(echo -n "$cleanedText" | sed "s/\///g" )
 	# squeeze double spaces into single spaces
-	cleanedText=$(echo "$cleanedText" | tr -s ' ')
+	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
-	echo "$cleanedText"
+	echo -n "$cleanedText"
 }
 ########################################################################
 function createDir(){
