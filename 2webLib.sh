@@ -1008,14 +1008,14 @@ function returnModStatus(){
 	# the config exists check the config
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
 		if grep -q "yes" "/etc/2web/mod_status/${moduleName}.cfg";then
-			echo -e "MOD $moduleName IS ${greenFG}ENABLED${resetTerm}!"
+			#echo -e "MOD $moduleName IS ${greenFG}ENABLED${resetTerm}!"
 			return 0
 		else
-			echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
+			#echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
 			return 1
 		fi
 	else
-		echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
+		#echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
 		return 1
 	fi
 }
