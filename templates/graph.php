@@ -49,9 +49,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <div class='settingListCard'>
 <?php
 $title=file_get_contents("title.cfg");
-#$title=str_replace("\n","",file_get_contents("title.cfg"));
-#$title=str_replace("\r","",file_get_contents("title.cfg"));
-#$title=str_replace(" ","_",file_get_contents("title.cfg"));
 
 if (array_key_exists("timespan",$_GET)){
 	$timespan=($_GET['timespan']);
@@ -74,14 +71,11 @@ if (array_key_exists("timespan",$_GET)){
 }
 ?>
 <div class='titleCard'>
-	<h2></h2>
 	<div class='listCard'>
-		<h2></h2>
 		<?php
 			foreach( $timeScale as $timeFrame ){
 				# check if timeframe graph exists and build link
 				# - all graphs are required to have a -day.png graph for the default graph
-				#echo ($_SERVER['DOCUMENT_ROOT']."/graphs/".$title."/".$title."-".$timeFrame.".png\n");
 				if(is_file($timeFrame.".png")){
 					echo "<a class='button' href='?timespan=$timeFrame'>".ucfirst($timeFrame)."</a>";
 				}
