@@ -32,7 +32,7 @@
 	# set the timeout to 1 minute since most webbrowsers timeout loading before this
 	$databaseObj->busyTimeout(60000);
 
-	# run query to get 800 random
+	# run query to get the random entry
 	$result = $databaseObj->query('select * from "'.$filterType.'" order by random() limit 1;');
 
 	# fetch the row data
@@ -48,6 +48,11 @@
 		header('Cache-Control: max-age=90');
 		header('Location: '.$fileContent);
 	}else{
+		# log the failed loading of the background
+		include("/usr/share/2web/2webLib.php");
+		$backgroundPath=$_SERVER['DOCUMENT_ROOT'].$fileContent;
+		addToLog("ERROR","Invalid Background","Failed to load random background at path '".$backgroundPath."'");
+		# redirect to the failsafe image
 		header('Content-type: image/png');
 		header('Cache-Control: max-age=90');
 		header('Location: /plasmaFanart.png');
