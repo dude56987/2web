@@ -82,7 +82,7 @@ function update(){
 			locationSum=$(cleanText "$weatherLocation")
 			{
 				# create the index entry
-				echo -n "<a class='button' href='/weather/?station=$weatherLocation'>$weatherLocation</a>"
+				echo -n "<a class='button' href='/weather/?station=$weatherLocation'>📍 $weatherLocation</a>"
 			} > "$webDirectory/weather/data/station/$locationSum.index"
 			# fetch the weather info
 			# look for the weather command

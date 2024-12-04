@@ -78,8 +78,7 @@
 		echo "<div class='titleCard'>";
 		echo "<h1>Stations</h1>";
 		echo "<div class='listCard'>";
-		echo "<a class='button' href='?'>Overview</a>";
-		echo "<a class='button' href='?all'>All</a>";
+		echo "<a class='button' href='?'>🪟 Overview</a>";
 		# read each station file
 		foreach($stationFiles as $stationFile){
 			# read the index entry
@@ -87,6 +86,7 @@
 			flush();
 			ob_flush();
 		}
+		echo "<a class='button' href='?all'>🌎 View All Stations</a>";
 		echo "</div>";
 		echo "</div>";
 		if (array_key_exists("station",$_GET)){
