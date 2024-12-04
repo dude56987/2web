@@ -5,7 +5,7 @@ SEE ALSO
 COPYRIGHT
 =========
 
-Copyright (C) 2022  Carl J Smith
+Copyright (C) 2024  Carl J Smith
 
 AUTHOR
 ======
@@ -29,7 +29,9 @@ Bugs can be reported on the github page.
 SUPPORT THIS PROJECT
 ====================
 
-This project can be supported though monero.
+- Use 2web in your homelab
+- Share 2web with others
+  - [https://github.com/dude56987/2web](https://github.com/dude56987/2web)
 
 SUPPORTING PROJECTS
 ===================
