@@ -27,8 +27,8 @@
 
 <?php
 	ini_set('display_errors', 1);
-	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	include("/usr/share/2web/2webLib.php");
+	include("/var/cache/2web/web/header.php");
 ?>
 
 <?php
@@ -93,7 +93,7 @@
 	drawPosterWidget("applications", True);
 
 	# add the footer
-	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+	include("/var/cache/2web/web/footer.php");
 ?>
 
 </body>
