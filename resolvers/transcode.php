@@ -39,7 +39,7 @@ function cacheResolve($sum,$webDirectory){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream2.ts")){
+			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream0.ts")){
 				header("Content-type: application/mpegurl;");
 				# redirect to the stream
 				redirect("/TRANSCODE-CACHE/$sum/video.m3u");
