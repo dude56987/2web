@@ -73,26 +73,28 @@ build: build-deb
 	# install the build tools
 	sudo make build-deb;
 upgrade-hls:
-	if ! test -f node_modules/hls.js/dist/hls.js;then npm install --save hls.js;fi
+	# upgrade the hls.js package used in the build
+	if ! test -f node_modules/hls.js/dist/hls.js;then npm --prefix ./ install --save hls.js;fi
 build-deb: upgrade-hls
 	# build the directories inside the package
-	mkdir -p debian;
-	mkdir -p debian/DEBIAN;
-	mkdir -p debian/usr;
-	mkdir -p debian/usr/bin;
-	mkdir -p debian/usr/share/applications;
-	mkdir -p debian/usr/share/2web/nfo;
-	mkdir -p debian/usr/share/2web/iptv;
+	mkdir -p debian/;
+	mkdir -p debian/DEBIAN/;
+	mkdir -p debian/usr/;
+	mkdir -p debian/usr/bin/;
+	mkdir -p debian/usr/share/applications/;
+	mkdir -p debian/usr/share/2web/example_apps/;
+	mkdir -p debian/usr/share/2web/nfo/;
+	mkdir -p debian/usr/share/2web/iptv/;
 	mkdir -p debian/usr/share/2web/;
 	mkdir -p debian/usr/share/2web/resolvers/;
 	mkdir -p debian/usr/share/2web/help/;
 	mkdir -p debian/usr/share/man/man1/;
-	mkdir -p debian/usr/share/2web/themes;
-	mkdir -p debian/usr/share/2web/theme-templates;
-	mkdir -p debian/usr/share/2web/templates;
-	mkdir -p debian/usr/share/2web/settings;
-	mkdir -p debian/var/cache/2web/cache;
-	mkdir -p debian/etc;
+	mkdir -p debian/usr/share/2web/themes/;
+	mkdir -p debian/usr/share/2web/theme-templates/;
+	mkdir -p debian/usr/share/2web/templates/;
+	mkdir -p debian/usr/share/2web/settings/;
+	mkdir -p debian/var/cache/2web/cache/;
+	mkdir -p debian/etc/;
 	mkdir -p debian/etc/2web/;
 	mkdir -p debian/etc/2web/cache;
 	mkdir -p debian/etc/2web/themes;
@@ -397,7 +399,7 @@ build-deb: upgrade-hls
 	# copy over the theme templates
 	cp -v themes/*.css debian/usr/share/2web/theme-templates/
 	# copy over the disabled themes
-	cp -v themes/*.disabled debian/usr/share/2web/theme-templates/
+	cp -v themes/*.disabled debian/usr/share/2web/theme-templates/ || echo "No Disabled Themes Included..."
 	# get the latest hls.js from npm and include it in the package
 	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/iptv/hls.js
 	cp -v node_modules/hls.js/dist/hls.js debian/usr/share/2web/hls.js
