@@ -1,7 +1,7 @@
 /*
 ########################################################################
 # 2web round theme mod
-# Copyright (C) 2023 Carl J Smith
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,25 +18,25 @@
 ########################################################################
 */
 .button{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .searchButton{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 input{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .indexSeries{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .titleCard{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .inputCard{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .seasonContainer{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 /*
 .titleCard h1,h2,h3{
@@ -44,13 +44,13 @@ input{
 }
 */
 .showPageEpisode{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .channelList{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 video{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 @media all and (display-mode: fullscreen){
 	video{
@@ -58,18 +58,26 @@ video{
 	}
 }
 .weatherForcast{
-	border-radius: 0.3rem;
+	border-radius: 5px;
 }
 .portalPreviewContainer{
-	border-top-left-radius: 0.3rem;
-	border-top-right-radius: 0.3rem;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
 }
+/*
 h1, h2, h3{
-	border-radius: 0.3rem 0.3rem 0rem 0rem;
+	border-radius: 5px 5px 0px 0px;
 }
+*/
 @media only screen and (max-width: 800px), (orientation: portrait){
 	#topButton{
 		/* Disable the border radius on the top button*/
 		border-radius: 0px;
 	}
+}
+.homeActivityGraph{
+	border-radius: 5px;
+}
+.gitRepoGraph{
+	border-radius: 5px;
 }

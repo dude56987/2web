@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web small theme without custom font
-# Copyright (C) 2023 Carl J Smith
+# 2web gray flat theme
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-html{
-	font-size: 11px;
+:root{
+	--solidBackground: #383838;
+	--glassBackground: rgb(100,100,100);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: white;
+	--highlightBorder: lightgray;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }

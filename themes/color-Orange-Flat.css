@@ -1,6 +1,6 @@
 /*
 ########################################################################
-# 2web brown theme
+# 2web orange flat theme
 # Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@
 ########################################################################
 */
 :root{
-	--solidBackground: #302505;
-	--glassBackground: rgba(54,29,0,0.85);
+	--solidBackground: #c38a22;
+	--glassBackground: rgb(181,102,0);
 	--borderColor: white;
 	--textColor: white;
 	--shadowColor: black;

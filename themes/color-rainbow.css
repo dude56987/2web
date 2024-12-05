@@ -1,7 +1,7 @@
 /*
 ########################################################################
 # 2web rainbow theme
-# Copyright (C) 2023 Carl J Smith
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,26 +18,56 @@
 ########################################################################
 */
 :root{
-	--solidBackground: repeating-linear-gradient(to bottom,
-		rgba(255,0,0,0.85),
-		rgba(181,165,0,0.85) 14%,
-		rgba(0,0,255,0.85) 28%,
-		rgba(255,0,255,0.85) 42%,
-		rgba(0,255,0,0.85) 56%,
-		rgba(0,255,255,0.85) 70%,
-		rgba(112,0,115,0.85) 84%,
-		rgba(255,0,0,0.85) 98%
-	);
+	/*  */
 	/* red orange yellow green blue indigo violet */
-	--glassBackground: repeating-linear-gradient(90deg,
+	--solidBackground: repeating-linear-gradient(176deg,
+		/* red */
 		rgba(255,0,0,0.85),
-		rgba(181,165,0,0.85) 14%,
-		rgba(0,0,255,0.85) 28%,
-		rgba(255,0,255,0.85) 42%,
+		rgba(255,0,0,0.85) 14%,
+		/* orange */
+		rgba(255,165,0,0.85) 14%,
+		rgba(255,165,0,0.85) 28%,
+		/* yellow */
+		rgba(255,255,0,0.85) 28%,
+		rgba(255,255,0,0.85) 42%,
+		/* green */
+		rgba(0,255,0,0.85) 42%,
 		rgba(0,255,0,0.85) 56%,
-		rgba(0,255,255,0.85) 70%,
-		rgba(112,0,115,0.85) 84%,
-		rgba(255,0,0,0.85) 98%
+		/* blue */
+		rgba(0,0,255,0.85) 56%,
+		rgba(0,0,255,0.85) 70%,
+		/* indigo */
+		rgba(75,0,130,0.85) 70%,
+		rgba(75,0,130,0.85) 84%,
+		/* violet */
+		rgba(238,130,238,0.85) 84%,
+		rgba(238,130,238,0.85) 100%
+	);
+
+
+	/* red orange yellow green blue indigo violet */
+	--glassBackground: repeating-linear-gradient(34deg,
+		/* red */
+		rgba(255,0,0,0.85),
+		rgba(255,0,0,0.85) 14%,
+		/* orange */
+		rgba(255,165,0,0.85) 14%,
+		rgba(255,165,0,0.85) 28%,
+		/* yellow */
+		rgba(255,255,0,0.85) 28%,
+		rgba(255,255,0,0.85) 42%,
+		/* green */
+		rgba(0,255,0,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		/* blue */
+		rgba(0,0,255,0.85) 56%,
+		rgba(0,0,255,0.85) 70%,
+		/* indigo */
+		rgba(75,0,130,0.85) 70%,
+		rgba(75,0,130,0.85) 84%,
+		/* violet */
+		rgba(238,130,238,0.85) 84%,
+		rgba(238,130,238,0.85) 100%
 	);
 	--borderColor: white;
 	--textColor: white;
@@ -47,20 +77,47 @@
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
-body{
+html{
 	/* outline all text in black so it is readable on the rainbow gradient.*/
 	/* -webkit-text-stroke: 0.04em black; */
-	text-shadow: 0.1em 0.1em black;
+	/* text-shadow: 0.1em 0.1em black; */
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+	background-image: var(--solidBackground);
+	/* Make the font thicker for readability */
+	font-weight: bolder;
+}
+h1,h2,h3{
+	background-image: var(--solidBackground) !important;
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText) !important;
+}
+td{
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+}
+th{
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+	background-image: var(--solidBackground);
+}
+table{
+	background-image: var(--glassBackground);
+}
+.singleStat{
+	background-image: var(--solidBackground);
+}
+.comicPageButton{
+	background-image: var(--solidBackground);
+}
+.comicPagePopup{
+	background-image: var(--solidBackground);
+}
+.searchButton{
 	background-image: var(--solidBackground);
 }
 .titleCard{
 	background-image: var(--glassBackground);
 }
 .button{
-	background-image: var(--glassBackground);
-}
-.button{
-	background-image: var(--glassBackground);
+	background-image: var(--solidBackground) !important;
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
 }
 .menuButton{
 	background-image: var(--glassBackground);
@@ -86,9 +143,6 @@ body{
 .seasonContainer{
 	background-image: var(--glassBackground);
 }
-h1,h2{
-	background-image: var(--glassBackground);
-}
 
 .listCard::-webkit-scrollbar:horizontal{
 	background: var(--glassBackground);
@@ -101,6 +155,7 @@ html::-webkit-scrollbar:horizontal{
 }
 html::-webkit-scrollbar-thumb:horizontal{
 	background: var(--glassBackground);
+	border-width: 2px !important;
 }
 .channelList::-webkit-scrollbar:horizontal{
 	background: var(--glassBackground);
@@ -108,9 +163,6 @@ html::-webkit-scrollbar-thumb:horizontal{
 .channelList::-webkit-scrollbar-thumb:horizontal{
 	background: var(--glassBackground);
 }
-
-
-
 .listCard::-webkit-scrollbar:vertical{
 	background: var(--solidBackground);
 }
@@ -122,6 +174,7 @@ html::-webkit-scrollbar:vertical{
 }
 html::-webkit-scrollbar-thumb:vertical{
 	background: var(--solidBackground);
+	border-width: 2px !important;
 }
 .channelList::-webkit-scrollbar:vertical{
 	background: var(--solidBackground);

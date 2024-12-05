@@ -28,3 +28,10 @@
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
+html{
+	text-shadow: 0px 0px 0.1rem var(--highlightText), 0px 0px 0.1rem var(--highlightText), 0px 0px 0.1rem var(--highlightText);
+	font-weight: bolder;
+}
+:hover{
+	text-shadow: none;
+}

@@ -196,22 +196,99 @@ if (array_key_exists("theme",$_GET)){
 	echo "</div>";
 }
 ?>
-
+<form class='searchBoxForm' method='get'>
+	<?PHP
+	if (array_key_exists("search",$_GET)){
+		# place query into the search bar to allow editing of the query and resubmission
+		echo "<input id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' value='".$_GET["search"]."' >";
+	}else{
+		echo "<input id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' >";
+	}
+	?>
+	<button class='button' type='submit'>🔎</button>
+	<a class='button' href='/settings/themes.php'>❌</a>
+</form>
 <?PHP
 # read in theme files in /usr/share/2web/
 $sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/2web/themes/*.css"));
-foreach($sourceFiles as $sourceFile){
-	if (strpos($sourceFile,".css")){
-		$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
-		$themeName=str_replace(".css","",$tempTheme);
-		$tempThemeData=file_get_contents("/usr/share/2web/themes/".$tempTheme);
-		# remove comment lines
-		$tempThemeData=preg_replace("/^#.*$/","",$tempThemeData);
-		# remove all newlines for building the example
-		$tempThemeData=str_replace("\n","",$tempThemeData);
-		# embed a iframe for the example page that uses the theme
-		echo "<iframe class='inputCard' src='/settings/themeExample.php?theme=$tempTheme' style='height: 25rem;' seamless></iframe>";
+# check for the search filter
+if (array_key_exists("search",$_GET)){
+	# filter the search results
+
+	# get the serch term
+	$searchTerm=$_GET["search"];
+	#
+	$tempSourceFiles=Array();
+	# filter the files by the search term
+	foreach($sourceFiles as $sourceFile){
+		if (strpos($sourceFile,".css")){
+			#
+			if ( stripos($sourceFile, $searchTerm) !== false ){
+				#
+				$tempSourceFiles=array_merge($tempSourceFiles, Array($sourceFile));
+			}
+		}
 	}
+	#
+	$sourceFiles=$tempSourceFiles;
+}else{
+	# check if a page number is set
+	$tempSourceFiles=Array();
+	# filter the files
+	foreach($sourceFiles as $sourceFile){
+		# only include css files
+		if (strpos($sourceFile,".css") !== false){
+			$tempSourceFiles=array_merge($tempSourceFiles, Array($sourceFile));
+		}
+	}
+	#
+	$sourceFiles=$tempSourceFiles;
+	# figure out which page to draw
+	if (array_key_exists("page",$_GET)){
+		$pageNumber=( $_GET["page"] );
+	}else{
+		$pageNumber=1;
+	}
+	# items per page
+	$itemsPerPage=20;
+	# chunk up the themes into pages
+	$sourceFilePages=array_chunk($sourceFiles,$itemsPerPage);
+	#
+	$pageCount=count($sourceFilePages);
+	#
+	$sourceFiles=$sourceFilePages[$pageNumber - 1];
+}
+echo "<div class='titleCard'>";
+echo "<h2>Theme Preview</h2>";
+#
+foreach($sourceFiles as $sourceFile){
+	$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
+	$themeName=str_replace(".css","",$tempTheme);
+	$tempThemeData=file_get_contents("/usr/share/2web/themes/".$tempTheme);
+	# remove comment lines
+	$tempThemeData=preg_replace("/^#.*$/","",$tempThemeData);
+	# remove all newlines for building the example
+	$tempThemeData=str_replace("\n","",$tempThemeData);
+	# embed a iframe for the example page that uses the theme
+	echo "<iframe class='inputCard' src='/settings/themeExample.php?theme=$tempTheme' style='height: 25rem;' seamless></iframe>\n";
+}
+echo "</div>";
+#
+if ( ! array_key_exists("search",$_GET) ){
+	#
+	echo "<div class='titleCard'>\n";
+	echo "<div class='listCard'>\n";
+	#foreach( range(0,$pageCount) as $currentPage ){
+	foreach( array_keys($sourceFilePages) as $currentPage ){
+		# if this is the bottom of a page
+		if ( ($currentPage+1) == $pageNumber){
+			echo "<a class='activeButton' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+		}else{
+			echo "<a class='button' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+		}
+	}
+	echo "</div>\n";
+	echo "</div>\n";
 }
 ?>
 	<div class='titleCard'>

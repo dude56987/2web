@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web yellow flat theme
-# Copyright (C) 2023 Carl J Smith
+# 2web default size theme font for hermit
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,25 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-:root{
-	--solidBackground: gold;
-	--glassBackground: rgba(184,184,0);
-	--borderColor: yellow;
-	--textColor: black;
-	--textShadowColor: white;
-	--shadowColor: black;
-	--highlightText: white;
-	--highlightBackground: black;
-	--highlightBorder: lightgray;
-	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+@font-face{
+	font-family: font2web;
+	src: url("/fonts/Hermit-medium.otf");
+}
+button{
+	font-family: font2web;
 }
 html{
-	text-shadow: 0.1em 0.1em 3px var(--textShadowColor),
-	-0.1em 0.1em 3px var(--textShadowColor),
-	0.1em -0.1em 3px var(--textShadowColor),
-	-0.1em -0.1em 3px var(--textShadowColor),
-	0px 0px var(--textShadowColor);
-}
-:hover{
-	text-shadow: none;
+	font-family: font2web;
+	font-size: 14px;
 }

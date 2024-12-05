@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web brown flat theme
-# Copyright (C) 2023 Carl J Smith
+# 2web small theme font for opendyslexic
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,14 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-:root{
-	--solidBackground: #302505;
-	--glassBackground: rgb(54,29,0);
-	--borderColor: white;
-	--textColor: white;
-	--shadowColor: black;
-	--highlightText: black;
-	--highlightBackground: white;
-	--highlightBorder: lightgray;
-	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+@font-face{
+	font-family: font2web;
+	src: url("/fonts/OpenDyslexic-Regular.otf");
+}
+button{
+	font-family: font2web;
+}
+html{
+	font-family: font2web;
+	font-size: 8px;
 }

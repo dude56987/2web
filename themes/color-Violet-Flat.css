@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web red flat theme
-# Copyright (C) 2023 Carl J Smith
+# 2web violet flat theme
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
 ########################################################################
 */
 :root{
-	--solidBackground: darkred;
-	--glassBackground: rgb(100,0,0);
+	--solidBackground: #37003b;
+	--glassBackground: rgb(112,0,115);
 	--borderColor: white;
 	--textColor: white;
 	--shadowColor: black;
 	--highlightText: black;
-	--highlightBackground: white;
+	--highlightBackground: rgb(255,255,255);
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }

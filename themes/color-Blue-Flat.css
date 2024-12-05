@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web cyan flat theme
-# Copyright (C) 2023 Carl J Smith
+# 2web Blue Flat theme
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,26 +18,13 @@
 ########################################################################
 */
 :root{
-	--solidBackground: cyan;
-	--glassBackground: rgb(0,155,155);
-	--borderColor: black;
-	--textColor: black;
-	--textShadowColor: white;
+	--solidBackground: darkblue;
+	--glassBackground: rgb(0,0,100);
+	--borderColor: white;
+	--textColor: white;
 	--shadowColor: black;
 	--highlightText: black;
 	--highlightBackground: white;
-	--highlightBorder: white;
+	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
-/*
-html{
-	text-shadow: 0.1em 0.1em 3px var(--textShadowColor),
-	-0.1em 0.1em 3px var(--textShadowColor),
-	0.1em -0.1em 3px var(--textShadowColor),
-	-0.1em -0.1em 3px var(--textShadowColor),
-	0px 0px var(--textShadowColor);
-}
-:hover{
-	text-shadow: none;
-}
-*/

@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web default size theme font for hermit
-# Copyright (C) 2023 Carl J Smith
+# 2web sharp theme mod
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,14 +17,3 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 */
-@font-face{
-	font-family: font2web;
-	src: url("/fonts/Hermit-medium.otf");
-}
-button{
-	font-family: font2web;
-}
-html{
-	font-family: font2web;
-	font-size: 14px;
-}

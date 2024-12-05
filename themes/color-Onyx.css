@@ -1,7 +1,7 @@
 /*
 ########################################################################
 # 2web onyx theme
-# Copyright (C) 2023 Carl J Smith
+# Copyright (C) 2024 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 	--borderColor: #c1c1c1;
 	--textColor: #c1c1c1;
 	--shadowColor: black;
-	--highlightText: white;
+	--highlightText: black;
 	--highlightBackground: lightgray;
 	--highlightBorder: black;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
