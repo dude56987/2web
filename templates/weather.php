@@ -116,14 +116,14 @@
 			# draw the default view showing all station current info as links to individual stations
 			foreach($stationFiles as $stationFile){
 				$stationName=str_replace(".index","",$stationFile);
-				echo "<div class='inputCard'>\n";
 				echo "<a href='?station=$stationName'>\n";
+				echo "<div class='inputCard'>\n";
 				echo "<h2>\n";
 				echo "$stationName\n";
 				echo "</h2>\n";
-				echo "</a>\n";
 				echo file_get_contents($currentPath.$stationFile)."\n";
 				echo "</div>\n";
+				echo "</a>\n";
 				flush();
 				ob_flush();
 			}
