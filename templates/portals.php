@@ -32,28 +32,45 @@
 <?php
 ################################################################################
 # add header
-include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include("/var/cache/2web/web/header.php");
 ?>
 
 <?php
 drawPosterWidget("portal");
 ################################################################################
+$portalLinks=file("portal.index");
+$domainLinks=file("domain.index");
 ?>
+<div class='settingListCard'>
+	<h1>
+		Domains
+	</h1>
+	<div class='listCard'>
+<?php
+# scan for links
+foreach($domainLinks as $portalLink){
+	//if (is_readable($portalLink)){
+		# load each portal link
+		//echo file_get_contents($portalLink);
+		echo file_get_contents(str_replace("\n","",$portalLink));
+	//}
+}
+?>
+	</div>
+</div>
 <div class='settingListCard'>
 <h1>
 	Portal
 	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <?php
-$portalLinks=scanDir(".");
-sort($portalLinks);
-$portalLinks=array_diff($portalLinks, Array("portal.index"));
 # scan for links
 foreach($portalLinks as $portalLink){
-	if (stripos($portalLink, ".index")){
+	//if (is_readable($portalLink)){
+		//echo file_get_contents($portalLink);
 		# load each portal link
-		echo file_get_contents($portalLink);
-	}
+		echo file_get_contents(str_replace("\n","",$portalLink));
+	//}
 }
 ?>
 </div>
@@ -61,7 +78,7 @@ foreach($portalLinks as $portalLink){
 // add random music above the footer
 drawPosterWidget("portal", True);
 // add the footer
-include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+include("/var/cache/2web/web/footer.php");
 ?>
 </body>
 </html>

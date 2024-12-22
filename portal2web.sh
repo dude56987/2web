@@ -146,39 +146,49 @@ function generateLink(){
 	if echo "$domain" | grep -q ":";then
 		domain=$(echo "$domain" | cut -d':' -f1 )
 	fi
+	# create the domain directory
+	createDir "$webDirectory/kodi/portal/${domain}/"
+	createDir "$webDirectory/portal/${domain}/"
 	#if echo "$domain" | grep -q ".local";then
 	#	domain=$(echo "$domain" | sed "s/\.local//g" )
 	#fi
 	# generate qr codes for each link
 	# update the link once every 14 days
-	if cacheCheck "$webDirectory/portal/${domain}_$linkSum-web.png" "14";then
+	if cacheCheck "$webDirectory/portal/${domain}/$linkSum-web.png" "14";then
 		addToLog "DOWNLOAD" "Building portal link" "$link"
 		# build the qr code image with a transparent background
-		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}_$linkSum-qr.png" "$link"
+		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}/$linkSum-qr.png" "$link"
 		# create a screenshot of the webpage link
-		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 30000 "$link" "$webDirectory/portal/${domain}_$linkSum-web.png"
+		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 30000 "$link" "$webDirectory/portal/${domain}/$linkSum-web.png"
 		# resize the qr code in order to use it in composite
-		convert "$webDirectory/portal/${domain}_$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}_$linkSum-qr.png"
+		convert "$webDirectory/portal/${domain}/$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}/$linkSum-qr.png"
 		# save the combined file as the image to use in the web interface
-		composite -gravity "center" "$webDirectory/portal/${domain}_$linkSum-qr.png" "$webDirectory/portal/${domain}_$linkSum-web.png" "$webDirectory/portal/${domain}_$linkSum.png"
+		composite -gravity "center" "$webDirectory/portal/${domain}/$linkSum-qr.png" "$webDirectory/portal/${domain}/$linkSum-web.png" "$webDirectory/portal/${domain}/$linkSum.png"
 		# if the image creation failed create a image using the hash image function
-		if ! test -f  "$webDirectory/portal/${domain}_$linkSum.png";then
-			hashImage "${domain}" "$webDirectory/portal/${domain}_$linkSum.png" "1920x1080"
+		if ! test -f  "$webDirectory/portal/${domain}/$linkSum.png";then
+			hashImage "${domain}${linkSum}" "$webDirectory/portal/${domain}/$linkSum.png" "1920x1080"
 		fi
 		# create .index files for direct links
 		{
-			echo "<div class='showPageEpisode'>"
-			echo "	<a href='/portal/$domain.php'>"
+			echo "	<a class='showPageEpisode' target='_BLANK' href='$link'>"
 			echo "		<h2>$domain</h2>"
-			echo "	</a>"
-			echo "	<a target='_BLANK' href='$link'>"
-			echo "		<img src='/portal/${domain}_$linkSum.png'>"
+			echo "		<img src='/portal/${domain}/$linkSum.png'>"
 			echo "		<div class='showIndexNumbers'>$name</div>"
-			echo "			$description"
+			echo "		$description"
 			echo "	</a>"
-			#echo "	<a href='${domain}_$linkSum.php'>ℹ️</a>"
-			echo "</div>"
-		} > "$webDirectory/portal/${domain}_$linkSum.index"
+		} > "$webDirectory/portal/${domain}/$linkSum.index"
+		if ! test -f "$webDirectory/portal/${domain}.index";then
+			# create .index files for domain
+			{
+				echo "	<a class='button' href='/portal/$domain/'>"
+				echo "		$domain"
+				echo "	</a>"
+			} > "$webDirectory/portal/${domain}.index"
+			# add the domain to the domain index
+			addToIndex "$webDirectory/portal/${domain}.index" "$webDirectory/portal/domain.index"
+		fi
+
+
 		# build the .desktop file link for all linux/bsd systems
 		{
 			echo "[Desktop Entry]"
@@ -187,27 +197,28 @@ function generateLink(){
 			echo "Type=Link"
 			echo "URL=$link"
 			echo "Icon=text-html"
-		} > "$webDirectory/kodi/portal/${domain}_${name}.desktop"
-		chmod +x "$webDirectory/kodi/portal/${domain}_${name}.desktop"
+		} > "$webDirectory/kodi/portal/${domain}/${name}.desktop"
+		chmod +x "$webDirectory/kodi/portal/${domain}/${name}.desktop"
 		# build the windows url file link
 		{
 			echo "[InternetShortcut]"
 			echo "URL=$link"
-		} > "$webDirectory/kodi/portal/${domain}_${name}.url"
-		chmod +x "$webDirectory/kodi/portal/${domain}_${name}.url"
+		} > "$webDirectory/kodi/portal/${domain}/${name}.url"
+		chmod +x "$webDirectory/kodi/portal/${domain}/${name}.url"
 		# link the portal info button to the portal page
-		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain.php"
+		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain/index.php"
 
-		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/portal/portal.index"
+		addToIndex "$linkSum.index" "$webDirectory/portal/$domain/portal.index"
+		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/portal/portal.index"
 
-		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/new/all.index"
-		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/random/all.index"
+		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/new/all.index"
+		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/random/all.index"
 
-		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/new/portal.index"
-		addToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/random/portal.index"
+		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/new/portal.index"
+		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/random/portal.index"
 
 		# add to sql
-		SQLaddToIndex "$webDirectory/portal/${domain}_$linkSum.index" "$webDirectory/data.db" "portal"
+		SQLaddToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/data.db" "portal"
 	fi
 }
 ################################################################################

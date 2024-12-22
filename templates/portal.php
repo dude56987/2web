@@ -36,6 +36,7 @@ function replaceLink($search, $replace, $filePath){
 	$fileObject = file($filePath);
 	$tempText="";
 	foreach($fileObject as $line){
+		$line = str_replace("\n", "", $line);
 		# replace lines that contain the href
 		if (stripos($line, "href=") !== false){
 			# if the line is a link replace the string
@@ -59,13 +60,15 @@ echo "	<img class='globalPulse' src='/pulse.gif'>";
 ?>
 <div class='settingListCard'>
 <?php
-$portalLinks=scanDir(".");
-sort($portalLinks);
-$portalLinks=array_diff($portalLinks, Array("portal.index"));
+#
+$portalLinks=file("portal.index");
 # scan for links
-$scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
-$scriptDomain=str_ireplace("/portal/","",$scriptDomain);
+$scriptDomain=basename(dirname($_SERVER["SCRIPT_NAME"]));
+#$scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
+#$scriptDomain=str_ireplace("/portal/","",$scriptDomain);
 $hostnameIp=gethostbyname($scriptDomain);
+# remove the domain link itself
+$portalLinks=array_diff($portalLinks, Array($scriptDomain.".index"));
 # load each portal link that is also in this domain
 echo "<h1>";
 echo "	$scriptDomain";
@@ -90,8 +93,11 @@ echo "</div>\n";
 $is_ip=false;
 # draw each of the links
 foreach($portalLinks as $portalLink){
+	$portalLink=str_replace("\n","",$portalLink);
 	if (strpos($portalLink, ".index") !== false){
-		if (strpos($portalLink, $scriptDomain) !== false){
+		#if (strpos($portalLink, $scriptDomain) !== false){
+			# cleanup the path
+			$portalLink=str_replace("/var/cache/2web/web/portal/","",$portalLink);
 			# load each portal link
 			echo "<div class='listCard'>";
 			if (key_exists("ip",$_GET)){
@@ -100,7 +106,7 @@ foreach($portalLinks as $portalLink){
 				$is_ip=true;
 			}else if (key_exists("domain",$_GET)){
 				# build the regular link
-				echo "	".file_get_contents($portalLink);
+				echo "	".file_get_contents(str_replace("\n","",$portalLink));
 			}else{
 				# automatic detection of ip address
 				# - this will replace the link if the current URL is being accessed with a direct IP
@@ -108,7 +114,7 @@ foreach($portalLinks as $portalLink){
 					echo "	".replaceLink($scriptDomain, $hostnameIp, $portalLink);
 					$is_ip=true;
 				}else{
-					echo "	".file_get_contents($portalLink);
+					echo "	".file_get_contents(str_replace("\n","",$portalLink));
 				}
 			}
 			# draw the preview box
@@ -121,9 +127,9 @@ foreach($portalLinks as $portalLink){
 			# draw the qr code based on the access method
 			if($is_ip){
 				# build the paths
-				$qrLink=str_replace(".index","$hostnameIp-qr-ip.png",$portalLink);
+				$qrLink=str_replace(".index","-qr-ip.png",$portalLink);
 				# join the path to create the full path
-				$qrPath=$_SERVER["DOCUMENT_ROOT"]."/portal/".$qrLink;
+				$qrPath=$_SERVER["DOCUMENT_ROOT"]."/portal/$scriptDomain/".$qrLink;
 				# check for the ip qr code image
 				if (! file_exists($qrPath)){
 					# make a qrcode image using the job queue for this ip
@@ -151,7 +157,7 @@ foreach($portalLinks as $portalLink){
 				echo "	</div>";
 				echo "</div>";
 			}
-		}
+		#}
 	}
 }
 ?>
