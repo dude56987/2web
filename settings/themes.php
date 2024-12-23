@@ -143,6 +143,24 @@ function randomColor(){
 		</form>
 </div>
 
+<?PHP
+# read in theme files in /usr/share/2web/
+$sourceFiles=scandir("/usr/share/2web/themes/");
+$sourceFiles=array_diff($sourceFiles,Array("..","."));
+# check if a page number is set
+$tempSourceFiles=Array();
+# filter the files
+foreach($sourceFiles as $sourceFile){
+	# only include css files
+	if (strpos($sourceFile,".css") !== false){
+		$tempSourceFiles=array_merge($tempSourceFiles, Array($sourceFile));
+	}
+}
+#
+$sourceFiles=$tempSourceFiles;
+$totalThemes=count($sourceFiles);
+?>
+
 <div id='webTheme' class='inputCard'>
 	<h2>Web Theme</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
@@ -153,6 +171,11 @@ function randomColor(){
 				<li>
 					Themes may not display until your browser cache has been refreshed.
 				</li>
+				<li>
+				<?PHP
+					echo "Total installed Themes: ".$totalThemes."\n";
+				?>
+				</li>
 			</ul>
 			<select name='theme'>
 			<?PHP
@@ -161,19 +184,16 @@ function randomColor(){
 			if (file_exists($themePath)){
 				$activeTheme=file_get_contents($themePath);
 				$activeTheme=str_replace("\n","",$activeTheme);
-				# read in theme files in /usr/share/2web/
-				$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/2web/themes/*.css"));
+				#
 				foreach($sourceFiles as $sourceFile){
-					if (strpos($sourceFile,".css")){
-						$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
-						$themeName=str_replace(".css","",$tempTheme);
-						if ($tempTheme == $activeTheme){
-							# mark the active theme as selected
-							echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
-						}else{
-							# add other theme options found
-							echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
-						}
+					$tempTheme=str_replace("/usr/share/2web/themes/","",$sourceFile);
+					$themeName=str_replace(".css","",$tempTheme);
+					if ($tempTheme == $activeTheme){
+						# mark the active theme as selected
+						echo "<option value='".$tempTheme."' selected>".$themeName."</option>\n";
+					}else{
+						# add other theme options found
+						echo "<option value='".$tempTheme."' >".$themeName."</option>\n";
 					}
 				}
 			}
@@ -209,8 +229,12 @@ if (array_key_exists("theme",$_GET)){
 	<a class='button' href='/settings/themes.php'>❌</a>
 </form>
 <?PHP
-# read in theme files in /usr/share/2web/
-$sourceFiles = explode("\n",shell_exec("ls -1 /usr/share/2web/themes/*.css"));
+# if no settings are set show the random page first
+if ( ! array_key_exists("search",$_GET) ){
+	if ( ! array_key_exists("page",$_GET) ){
+		$_GET["random"]=0;
+	}
+}
 # check for the search filter
 if (array_key_exists("search",$_GET)){
 	# filter the search results
@@ -221,28 +245,15 @@ if (array_key_exists("search",$_GET)){
 	$tempSourceFiles=Array();
 	# filter the files by the search term
 	foreach($sourceFiles as $sourceFile){
-		if (strpos($sourceFile,".css")){
+		#
+		if ( stripos($sourceFile, $searchTerm) !== false ){
 			#
-			if ( stripos($sourceFile, $searchTerm) !== false ){
-				#
-				$tempSourceFiles=array_merge($tempSourceFiles, Array($sourceFile));
-			}
-		}
-	}
-	#
-	$sourceFiles=$tempSourceFiles;
-}else{
-	# check if a page number is set
-	$tempSourceFiles=Array();
-	# filter the files
-	foreach($sourceFiles as $sourceFile){
-		# only include css files
-		if (strpos($sourceFile,".css") !== false){
 			$tempSourceFiles=array_merge($tempSourceFiles, Array($sourceFile));
 		}
 	}
 	#
 	$sourceFiles=$tempSourceFiles;
+}else{
 	# figure out which page to draw
 	if (array_key_exists("page",$_GET)){
 		$pageNumber=( $_GET["page"] );
@@ -251,6 +262,12 @@ if (array_key_exists("search",$_GET)){
 	}
 	# items per page
 	$itemsPerPage=20;
+	# check if the random option has been picked
+	if (array_key_exists("random",$_GET)){
+		# shuffle the pages
+		shuffle($sourceFiles);
+		$pageNumber=1;
+	}
 	# chunk up the themes into pages
 	$sourceFilePages=array_chunk($sourceFiles,$itemsPerPage);
 	#
@@ -277,23 +294,33 @@ echo "</div>";
 if ( ! array_key_exists("search",$_GET) ){
 	#
 	echo "<div class='titleCard'>\n";
-	echo "<div class='listCard'>\n";
-	#foreach( range(0,$pageCount) as $currentPage ){
+	echo "	<div class='listCard'>\n";
+	if (array_key_exists("random",$_GET) ){
+		echo "		<a class='activeButton' href='?random'>Random</a>\n";
+	}else{
+		echo "		<a class='button' href='?random'>Random</a>\n";
+	}
 	foreach( array_keys($sourceFilePages) as $currentPage ){
 		# if this is the bottom of a page
 		if ( ($currentPage+1) == $pageNumber){
-			echo "<a class='activeButton' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+			if (array_key_exists("random",$_GET) ){
+				echo "		<a class='button' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+			}else{
+				echo "		<a class='activeButton' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+			}
 		}else{
-			echo "<a class='button' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
+			echo "		<a class='button' href='?page=".($currentPage+1)."'>".($currentPage+1)."</a>\n";
 		}
 	}
-	echo "</div>\n";
+	echo "	</div>\n";
 	echo "</div>\n";
 }
 ?>
 	<div class='titleCard'>
 		<h2>More Themes</h2>
-
+		<?PHP
+			echo "<p>Total installed Themes: ".$totalThemes."</p>";
+		?>
 		<p>You can enable more generated theme variations or write completely custom themes for the CSS of the webserver.</p>
 		<p>You can create custom colors for the existing generated themes with <a href='#createColor'>Create Color Profile</a> above.</p>
 
