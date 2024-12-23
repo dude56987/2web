@@ -39,6 +39,7 @@ if (array_key_exists("url",$_GET)){
 	$orignalVideoLink=$videoLink;
 	# set the linkfailed state to true
 	$linkFailed=true;
+
 	# check the link for failures
 	if (stripos($videoLink,"http://") !== false){
 		# link is http the link has passed
@@ -53,7 +54,12 @@ if (array_key_exists("url",$_GET)){
 		# redirect failed links to the error page
 		redirect("?failure=".$videoLink);
 	}
-	#
+
+	# remove parenthesis from video link if they exist
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+
+	# create the sum of the file
 	$videoLinkSum=hash("sha512",$videoLink,false);
 
 	# create a file based on the md5sum in a cache
