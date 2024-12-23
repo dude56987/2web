@@ -279,7 +279,10 @@ if (array_key_exists("edit",$_GET)){
 	echo "		<a class='button' href='?edit'>Edit</a>";
 }
 if (file_exists("todo.csv")){
-	echo "		<a class='button' href='todo.csv' target='_new' download>Download Spreadsheet</a>";
+	echo "		<a class='button' href='todo.csv' target='_new' download>";
+	echo "			<span class='downloadIcon'>▼</span>\n";
+	echo "			Download Spreadsheet";
+	echo "		</a>";
 }
 echo "	</div>";
 echo "</div>";

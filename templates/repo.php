@@ -136,7 +136,7 @@ function drawHeader(){
 	#echo "			<a class='button' href='/zip-gen.php?repo=".file_get_contents("title.index")."'>\n";
 	echo "			<a class='button' href='".file_get_contents("title.index").".zip'>\n";
 	#echo "			<a class='button' href='source.zip'>\n";
-	echo "				<span class='downloadIcon'>↓</span>\n";
+	echo "				<span class='downloadIcon'>▼</span>\n";
 	echo "				Download Source\n";
 	echo "			</a>\n";
 	echo "		</div>\n";

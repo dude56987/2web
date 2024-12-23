@@ -624,7 +624,10 @@
 				unset($_GET["fullChart"]);
 				#echo "		<a class='button' href='?".http_build_query($_GET)."'>📏 Local Chart</a>\n";
 				echo "		<a class='button' target='_new' href='sub_".$parentHash.".svg' download>⬇️ Download Vector Chart</a>\n";
-				echo "		<a class='button' href='sub_".$parentHash.".png' download>⬇️ Download Chart</a>\n";
+				echo "		<a class='button' href='sub_".$parentHash.".png' download>";
+				echo "			<span class='downloadIcon'>▼</span>\n";
+				echo "			Download Chart";
+				echo "		</a>\n";
 				echo "	</div>\n";
 				echo "<div class='ticketFlowchart listCard'>\n";
 				include("sub_".$parentHash.".svg");
@@ -1083,10 +1086,12 @@
 		echo "		<button class='button' type='submit'>Add New Ticket</button>\n";
 		echo "	</form>\n";
 		echo "</div>\n";
-
 		echo "<div class='titleCard'>";
 		echo "	<div class='listCard'>";
-		echo "		<a class='button' href='tickets.csv' download>⬇️ Download Ticket Spreadsheet</a>\n";
+		echo "		<a class='button' href='tickets.csv' download>";
+		echo "			<span class='downloadIcon'>▼</span>\n";
+		echo "			Download Ticket Spreadsheet";
+		echo "		</a>\n";
 		echo "	</div>\n";
 		echo "</div>\n";
 	?>
