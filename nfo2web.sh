@@ -633,10 +633,10 @@ checkForThumbnail(){
 			# check if the thumb download failed
 		fi
 		addToLog "DEBUG" "THUMBNAIL TESTING" "Thumbnail extension found to be '$thumbnailExt' for video path '$videoPath'"
-		#INFO "[DEBUG]: file size $tempFileSize"
-		if test -s $thumbnailPath$thumbnailExt;then
+		#
+		if test -s "$thumbnailPath$thumbnailExt";then
 			INFO "Existing thumbnail file found '$thumbnailPath$thumbnailExt'!"
-		elif test -L $thumbnailPath$thumbnailExt;then
+		elif test -L "$thumbnailPath$thumbnailExt";then
 			INFO "Existing thumbnail was linked already '$thumbnailPath$thumbnailExt'!"
 		else
 			# if the downloaded file is blank use mediainfo to determine if it is a video or audio link
@@ -1324,7 +1324,7 @@ processShow(){
 		# get the list of image files
 		# create the failsafe background by combining all the thumbnails of episodes into a image
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 24 | shuf |sed "s/ /\ /g"| sed -z "s/\n/ /g" )
-		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
+		thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
 		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
@@ -1980,71 +1980,36 @@ function processPath(){
 	# Given a path it will determine if the path is a show or movie and update
 	# the content
 	show="$1"
-	eventType="$2"
-	webDirectory="$3"
-
+	# cleanup extra path slashes
+	#show=$(echo -n "$show" | tr -s '/')
+	webDirectory="$2"
 	################################################################################
 	# process page metadata
 	################################################################################
 	# if the show directory contains a nfo file defining the show
 	if test -f "$show/tvshow.nfo";then
-		#INFO "found metadata at '$show/tvshow.nfo'"
 		# load update the tvshow.nfo file and get the metadata required for
 		showMeta=$(cat "$show/tvshow.nfo")
 		showTitle=$(ripXmlTag "$showMeta" "title")
-		#INFO "showTitle = '$showTitle'"
+		#
 		showTitle=$(cleanText "$showTitle")
 		showTitle=$(alterArticles "$showTitle")
-		#INFO "showTitle after cleanText() = '$showTitle'"
+		#
 		if echo "$showMeta" | grep -q "<tvshow>";then
-			# pipe the output to a black hole and cache
-			episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
-			# make sure show has episodes
-			if [ $episodeSearchResults -gt 0 ];then
-				# if this is a delete event the show must be rebuilt on the webserver
-				if [ "$eventType" == "DELETE" ];then
-					addToLog "UPDATE" "DELETE EVENT" "The show '$show' has had media removed. The web directory will be removed and rebuilt."
-					# if a file has been removed from the directory all the content needs rescaned after the web content has been deleted
-					ALERT "Removing '$webDirectory/shows/$showTitle/'"
-					# remove existing web directory for rebuild of the show
-					# - this will remove the removed content from the server
-					rm -v "$webDirectory/shows/$showTitle/"
-				fi
-				#ALERT "ADDING SHOW $show"
-				#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
-				processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
-				# write log info from show to the log, this must be done here to keep ordering
-				# of the log and to make log show even when the state of the show is unchanged
-				#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-				#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
-			else
-				echo "[ERROR]: Show has no episodes!"
-				addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'"
-			fi
+			addToLog "UPDATE" "Updating Show Information" "$showTitle updating from <pre>$show</pre>"
+			processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 		else
 			echo "[ERROR]: Show nfo file is invalid!"
 			addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo"
 		fi
-	elif grep -q "<movie>" "$show"/*.nfo;then
-		# if a file has been removed from the directory all the content needs rescaned from scratch
-		# if this is a delete event the show must be rebuilt on the webserver
-		if [ "$eventType" == "DELETE" ];then
-			# find the movie nfo in the movie path
-			moviePath=$(find "$show"/*.nfo)
-			################################################################################
-			# read the discovered nfo data
-			nfoInfo=$(cat "$moviePath")
-			# rip the movie title cleanup and rip the year of the movie
-			movieTitle=$(cleanXml "$nfoInfo" "title")
-			movieTitle=$(alterArticles "$movieTitle" )
-			movieYear=$(cleanXml "$nfoInfo" "year")
-			# Add the year to the movie title to get the web path
-			movieWebPath="${movieTitle} ($movieYear)"
-			# The existing web content must be be deleted and process movie will rebuild that content
-			ALERT "rm -v '$webDirectory/movies/$movieWebPath/'"
+	else
+		if cat "$show"/*.nfo | grep -q "<movie>";then
+			addToLog "UPDATE" "Updating Movie Information" "Updating movie at <pre>$show</pre>"
+			# this is a move directory not a show
+			processMovie "$show" "$webDirectory"
+		else
+			addToLog "ERROR" "Movie NFO Invalid" "$show"
 		fi
-		# this is a move directory not a show
-		processMovie "$show" "$webDirectory"
 	fi
 }
 ################################################################################
@@ -2132,50 +2097,14 @@ function update(){
 				echo "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
-
+				# read each of the paths and process them
+				#echo -n "$foundLibaryPaths" | while read -r show;do
 				for show in $foundLibaryPaths;do
-					################################################################################
-					# process page metadata
-					################################################################################
-					# if the show directory contains a nfo file defining the show
-					if test -f "$show/tvshow.nfo";then
-						#INFO "found metadata at '$show/tvshow.nfo'"
-						# load update the tvshow.nfo file and get the metadata required for
-						showMeta=$(cat "$show/tvshow.nfo")
-						showTitle=$(ripXmlTag "$showMeta" "title")
-						#INFO "showTitle = '$showTitle'"
-						showTitle=$(cleanText "$showTitle")
-						showTitle=$(alterArticles "$showTitle")
-						#INFO "showTitle after cleanText() = '$showTitle'"
-						if echo "$showMeta" | grep -q "<tvshow>";then
-							# pipe the output to a black hole and cache
-							episodeSearchResults=$(find "$show" -maxdepth 2 -mindepth 2 -type f -name '*.nfo' | wc -l)
-							# make sure show has episodes
-							if [ $episodeSearchResults -gt 0 ];then
-								#ALERT "ADDING SHOW $show"
-								#ALERT "ADDING NEW PROCESS TO QUEUE $(jobs)"
-								processShow "$show" "$showMeta" "$showTitle" "$webDirectory" &
-								# pause execution while no cpus are open
-								waitQueue 0.5 "$totalCPUS"
-								# write log info from show to the log, this must be done here to keep ordering
-								# of the log and to make log show even when the state of the show is unchanged
-								#INFO "Adding logs from $webDirectory/shows/$showTitle/log.index to $logPagePath"
-								#cat "$webDirectory/shows/$showTitle/log.index" >> "$webDirectory/log.php"
-							else
-								echo "[ERROR]: Show has no episodes!"
-								addToLog "ERROR" "Show has no episodes" "No episodes found for '$showTitle' in '$show'\n\nTo remove this empty folder use below command.\n\nrm -rvi '$show'" "$logPagePath"
-							fi
-						else
-							echo "[ERROR]: Show nfo file is invalid!"
-							addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo" "$logPagePath"
-						fi
-					elif grep -q "<movie>" "$show"/*.nfo;then
-						# this is a move directory not a show
-						processMovie "$show" "$webDirectory" &
-						# pause execution while no cpus are open
-						waitQueue 0.5 "$totalCPUS"
-					fi
+					processPath "$show" "$webDirectory" &
+					waitQueue 0.5 "$totalCPUS"
 				done
+				# block for parallel threads here
+				blockQueue 1
 			else
 				ALERT "$show does not exist!"
 			fi
@@ -2294,224 +2223,224 @@ showHelp(){
 	cat /usr/share/2web/help/nfo2web.txt
 }
 ########################################################################
-main(){
-	debugCheck
-	if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		showHelp
-	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
-		# generate demo data for 2web modules for use in screenshots, make it random as can be
+debugCheck
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	showHelp
+elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+	# generate demo data for 2web modules for use in screenshots, make it random as can be
 
-		# check for parallel processing and count the cpus
-		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(cpuCount)
-		else
-			totalCPUS=1
-		fi
-		#########################################################################################
-		# nfo2web demo movies
-		#########################################################################################
-		createDir "/var/cache/2web/generated/demo/nfo/movies/"
-		# create 5 random demo movies
-		for index in $(seq $(( $RANDOM % 6 )) );do
-			# write a fake movie nfo with random data
-			randomTitle="$RANDOM $(randomWord) $(randomWord)"
-			createDir "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/"
-			# generate the random plot string
-			randomPlot="$(randomWord)"
-			for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
-				randomPlot="$randomPlot $(randomWord)"
-			done
-			{
-				echo "<movie>";
-				echo "	<title>$randomTitle</title>";
-				echo "	<year>$RANDOM</year>";
-				echo "	<plot>$randomPlot</plot>";
-				echo "</movie>";
-			} > "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.nfo"
-			# generate a randomized artwork to use
-			# - poster
-			demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/poster.png" "$randomTitle" "200" "500" &
-			waitQueue 0.2 "$totalCPUS"
-			# - fanart
-			demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
-			waitQueue 0.2 "$totalCPUS"
-			# generate the video type
-			videoType=$(( $RANDOM % 3 ))
-			# generate the fake video file using the site spinner gif
-			if [ $videoType  -eq 0 ];then
-				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
-			elif [ $videoType  -eq 1 ];then
-				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
-			else
-				ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
-			fi
-			waitQueue 0.2 "$totalCPUS"
-		done
-		#########################################################################################
-		# nfo2web demo shows
-		#########################################################################################
-		createDir "/var/cache/2web/generated/demo/nfo/shows/"
-		# create 5 random demo shows with 10 random demo episodes
-		for index in $(seq $(( 1 + ( $RANDOM % 10 ) )) );do
-			randomTitle="$RANDOM $(randomWord) $(randomWord)"
-			createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/"
-			# generate the random plot string
-			randomPlot="$(randomWord)"
-			for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
-				randomPlot="$randomPlot $(randomWord)"
-			done
-			# create the show nfo
-			{
-				echo "<tvshow>"
-				echo "	<title>$randomTitle</title>"
-				echo "	<year>$RANDOM</year>"
-				echo "	<plot>$randomPlot</plot>"
-				echo "</tvshow>"
-			} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/tvshow.nfo"
-			# create show poster
-			demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/poster.png" "$randomTitle" "200" "500" &
-			waitQueue 0.2 "$totalCPUS"
-			# create show fanart
-			demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
-			waitQueue 0.2 "$totalCPUS"
-			# create random seasons for show
-			for index2 in $(seq $(( 2 + ( $RANDOM % 9 ) )) );do
-				# random season
-				createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/"
-				# create random episodes, at least 5 minimum should be created
-				for index3 in $(seq $(( 5 + ( $RANDOM % 16 ) )) );do
-					# create a random name for the episode
-					randomEpisodeTitle="$(randomWord) $(randomWord)"
-					randomPlot="$(randomWord)"
-					for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
-						randomPlot="$randomPlot $(randomWord)"
-					done
-					# create episode nfo
-					{
-						echo "<episodedetails>"
-						echo "	<showtitle>$randomTitle</showtitle>"
-						echo "	<title>$randomEpisodeTitle</title>"
-						# set the episode number from the sequence number
-						echo "	<season>$index2</season>"
-						echo "	<episode>$index3</episode>"
-						echo "	<plot>$randomPlot</plot>"
-						echo "</episodedetails>"
-					} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.nfo"
-					# create episode thumbnail
-					demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle-thumb.png" "$randomEpisodeTitle" "800" "600" &
-					waitQueue 0.2 "$totalCPUS"
-					# generate the video type
-					videoType=$(( $RANDOM % 3 ))
-					# generate the fake video file using the site spinner gif
-					if [ $videoType  -eq 0 ];then
-						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
-					elif [ $videoType  -eq 1 ];then
-						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
-					else
-						ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
-					fi
-					waitQueue 0.2 "$totalCPUS"
-				done
-			done
-		done
-		blockQueue 1
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "nfo2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "nfo2web"
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		# verbose removal of found files allows files to be visible as they are removed
-		# remove found .index files as they store web generated data
-		echo "[INFO]: Reseting web cache states..."
-		echo "[INFO]: Removing *.index files shows/movies/new..."
-		find "$(webRoot)/shows/" -type f -name '*.index' -exec rm -v {} \;
-		find "$(webRoot)/movies/" -type f -name '*.index' -exec rm -v {} \;
-		find "$(webRoot)/new/" -type f -name '*.index' -exec rm -v {} \;
-		echo "[INFO]: Reseting state files for shows/movies..."
-		find "$(webRoot)/shows/" -type f -name 'state_*.cfg' -exec rm -v {} \;
-		find "$(webRoot)/movies/" -type f -name 'state_*.cfg' -exec rm -v {} \;
-		echo "[INFO]: Reseting web log for individual shows/movies..."
-		find "$(webRoot)/movies/"  -mindepth 1 -type f -name 'log.index' -exec rm -v {} \;
-		find "$(webRoot)/shows/"  -mindepth 2 -type f -name 'log.index' -exec rm -v {} \;
-		# remove all individual episode files that lock rebuilding of the episode data
-		echo "[INFO]: Reseting video player pages shows/movies..."
-		find "$(webRoot)/movies/" -mindepth 1 -type f -name '*.php' -exec rm -v {} \;
-		find "$(webRoot)/shows/" -mindepth 2  -type f -name '*.php' -exec rm -v {} \;
-		# remove cached m3u files
-		echo "[INFO]: Reseting m3u playlist cache..."
-		find "$(webRoot)/m3u_cache/" -type f -name '*.m3u' -exec rm -v {} \;
-		echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
-		echo "[SUCCESS]: Site will remain the same until updated."
-		echo "[INFO]: Use 'nfo2web update' to generate a new website..."
-	elif [ "$1" == "--certs" ] || [ "$1" == "certs" ] ;then
-		echo "[INFO]: Checking for local SSL certs..."
-		updateCerts
-	elif [ "$1" == "--CERTS" ] || [ "$1" == "CERTS" ] ;then
-		# force update certs
-		updateCerts 'yes'
-	elif [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
-		# only launch the service if the module is enabled
-		checkModStatus "nfo2web"
-		# lock the module execution
-		lockProc "nfo2web"
-		# launch the watch service
-		nfo2web_watch_service
-		# remove active state file
-		if test -f /tmp/nfo2web.active;then
-			rm /tmp/nfo2web.active
-		fi
-	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		nuke
-	elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
-		clean
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "nfo2web"
-		# upgrade streamlink
-		upgrade-pip "nfo2web" "streamlink"
-		# install nightly version of yt-dlp
-		upgrade-yt-dlp
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "nfo2web"
-		lockProc "nfo2web"
-		update "$@"
-		# remove active state file
-		if test -f /tmp/nfo2web.active;then
-			rm /tmp/nfo2web.active
-		fi
-	elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
-		checkModStatus "nfo2web"
-		lockProc "nfo2web"
-		update "$@" --parallel
-		# remove active state file
-		if test -f /tmp/nfo2web.active;then
-			rm /tmp/nfo2web.active
-		fi
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "nfo2web Version: "
-		cat /usr/share/2web/version_nfo2web.cfg
+	# check for parallel processing and count the cpus
+	if echo "$@" | grep -q -e "--parallel";then
+		totalCPUS=$(cpuCount)
 	else
-		checkModStatus "nfo2web"
-		lockProc "nfo2web"
-		update "$@"
-		# remove active state file
-		if test -f /tmp/nfo2web.active;then
-			rm /tmp/nfo2web.active
-		fi
-		#main update "$@"
-		# show the server link at the bottom of the interface
-		showServerLinks
-		# show the module links
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/movies/"
-		drawLine
-		echo "http://$(hostname).local:80/shows/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/nfo.php"
-		drawLine
+		totalCPUS=1
 	fi
-}
-main $@
+	#########################################################################################
+	# nfo2web demo movies
+	#########################################################################################
+	createDir "/var/cache/2web/generated/demo/nfo/movies/"
+	# create 5 random demo movies
+	for index in $(seq $(( $RANDOM % 6 )) );do
+		# write a fake movie nfo with random data
+		randomTitle="$RANDOM $(randomWord) $(randomWord)"
+		createDir "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/"
+		# generate the random plot string
+		randomPlot="$(randomWord)"
+		for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+			randomPlot="$randomPlot $(randomWord)"
+		done
+		{
+			echo "<movie>";
+			echo "	<title>$randomTitle</title>";
+			echo "	<year>$RANDOM</year>";
+			echo "	<plot>$randomPlot</plot>";
+			echo "</movie>";
+		} > "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.nfo"
+		# generate a randomized artwork to use
+		# - poster
+		demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/poster.png" "$randomTitle" "200" "500" &
+		waitQueue 0.2 "$totalCPUS"
+		# - fanart
+		demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
+		waitQueue 0.2 "$totalCPUS"
+		# generate the video type
+		videoType=$(( $RANDOM % 3 ))
+		# generate the fake video file using the site spinner gif
+		if [ $videoType  -eq 0 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
+		elif [ $videoType  -eq 1 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
+		else
+			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+		fi
+		waitQueue 0.2 "$totalCPUS"
+	done
+	#########################################################################################
+	# nfo2web demo shows
+	#########################################################################################
+	createDir "/var/cache/2web/generated/demo/nfo/shows/"
+	# create 5 random demo shows with 10 random demo episodes
+	for index in $(seq $(( 1 + ( $RANDOM % 10 ) )) );do
+		randomTitle="$RANDOM $(randomWord) $(randomWord)"
+		createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/"
+		# generate the random plot string
+		randomPlot="$(randomWord)"
+		for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+			randomPlot="$randomPlot $(randomWord)"
+		done
+		# create the show nfo
+		{
+			echo "<tvshow>"
+			echo "	<title>$randomTitle</title>"
+			echo "	<year>$RANDOM</year>"
+			echo "	<plot>$randomPlot</plot>"
+			echo "</tvshow>"
+		} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/tvshow.nfo"
+		# create show poster
+		demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/poster.png" "$randomTitle" "200" "500" &
+		waitQueue 0.2 "$totalCPUS"
+		# create show fanart
+		demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
+		waitQueue 0.2 "$totalCPUS"
+		# create random seasons for show
+		for index2 in $(seq $(( 2 + ( $RANDOM % 9 ) )) );do
+			# random season
+			createDir "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/"
+			# create random episodes, at least 5 minimum should be created
+			for index3 in $(seq $(( 5 + ( $RANDOM % 16 ) )) );do
+				# create a random name for the episode
+				randomEpisodeTitle="$(randomWord) $(randomWord)"
+				randomPlot="$(randomWord)"
+				for index4 in $(seq -w $(( 10 + ( $RANDOM % 300 ) )) );do
+					randomPlot="$randomPlot $(randomWord)"
+				done
+				# create episode nfo
+				{
+					echo "<episodedetails>"
+					echo "	<showtitle>$randomTitle</showtitle>"
+					echo "	<title>$randomEpisodeTitle</title>"
+					# set the episode number from the sequence number
+					echo "	<season>$index2</season>"
+					echo "	<episode>$index3</episode>"
+					echo "	<plot>$randomPlot</plot>"
+					echo "</episodedetails>"
+				} > "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.nfo"
+				# create episode thumbnail
+				demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle-thumb.png" "$randomEpisodeTitle" "800" "600" &
+				waitQueue 0.2 "$totalCPUS"
+				# generate the video type
+				videoType=$(( $RANDOM % 3 ))
+				# generate the fake video file using the site spinner gif
+				if [ $videoType  -eq 0 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
+				elif [ $videoType  -eq 1 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
+				else
+					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+				fi
+				waitQueue 0.2 "$totalCPUS"
+			done
+		done
+	done
+	blockQueue 1
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "nfo2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "nfo2web"
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	# verbose removal of found files allows files to be visible as they are removed
+	# remove found .index files as they store web generated data
+	echo "[INFO]: Reseting web cache states..."
+	echo "[INFO]: Removing *.index files shows/movies/new..."
+	find "$(webRoot)/shows/" -type f -name '*.index' -exec rm -v {} \;
+	find "$(webRoot)/movies/" -type f -name '*.index' -exec rm -v {} \;
+	find "$(webRoot)/new/" -type f -name '*.index' -exec rm -v {} \;
+	echo "[INFO]: Reseting state files for shows/movies..."
+	find "$(webRoot)/shows/" -type f -name 'state_*.cfg' -exec rm -v {} \;
+	find "$(webRoot)/movies/" -type f -name 'state_*.cfg' -exec rm -v {} \;
+	echo "[INFO]: Reseting web log for individual shows/movies..."
+	find "$(webRoot)/movies/"  -mindepth 1 -type f -name 'log.index' -exec rm -v {} \;
+	find "$(webRoot)/shows/"  -mindepth 2 -type f -name 'log.index' -exec rm -v {} \;
+	# remove all individual episode files that lock rebuilding of the episode data
+	echo "[INFO]: Reseting video player pages shows/movies..."
+	find "$(webRoot)/movies/" -mindepth 1 -type f -name '*.php' -exec rm -v {} \;
+	find "$(webRoot)/shows/" -mindepth 2  -type f -name '*.php' -exec rm -v {} \;
+	# remove cached m3u files
+	echo "[INFO]: Reseting m3u playlist cache..."
+	find "$(webRoot)/m3u_cache/" -type f -name '*.m3u' -exec rm -v {} \;
+	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
+	echo "[SUCCESS]: Site will remain the same until updated."
+	echo "[INFO]: Use 'nfo2web update' to generate a new website..."
+elif [ "$1" == "--certs" ] || [ "$1" == "certs" ] ;then
+	echo "[INFO]: Checking for local SSL certs..."
+	updateCerts
+elif [ "$1" == "--CERTS" ] || [ "$1" == "CERTS" ] ;then
+	# force update certs
+	updateCerts 'yes'
+elif [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
+	# only launch the service if the module is enabled
+	checkModStatus "nfo2web"
+	# lock the module execution
+	lockProc "nfo2web"
+	# launch the watch service
+	nfo2web_watch_service
+	# remove active state file
+	if test -f /tmp/nfo2web.active;then
+		rm /tmp/nfo2web.active
+	fi
+elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	nuke
+elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
+	clean
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "nfo2web"
+	# upgrade streamlink
+	upgrade-pip "nfo2web" "streamlink"
+	# install nightly version of yt-dlp
+	upgrade-yt-dlp
+elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	checkModStatus "nfo2web"
+	lockProc "nfo2web"
+	update "$@"
+	# remove active state file
+	if test -f /tmp/nfo2web.active;then
+		rm /tmp/nfo2web.active
+	fi
+elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
+	checkModStatus "nfo2web"
+	lockProc "nfo2web"
+	update "$@" --parallel
+	# remove active state file
+	if test -f /tmp/nfo2web.active;then
+		rm /tmp/nfo2web.active
+	fi
+elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
+	webDirectory=$(webRoot)
+	processPath "$2" "$webDirectory"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "nfo2web Version: "
+	cat /usr/share/2web/version_nfo2web.cfg
+else
+	checkModStatus "nfo2web"
+	lockProc "nfo2web"
+	update "$@"
+	# remove active state file
+	if test -f /tmp/nfo2web.active;then
+		rm /tmp/nfo2web.active
+	fi
+	#main update "$@"
+	# show the server link at the bottom of the interface
+	showServerLinks
+	# show the module links
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/movies/"
+	drawLine
+	echo "http://$(hostname).local:80/shows/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/nfo.php"
+	drawLine
+fi

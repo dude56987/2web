@@ -307,7 +307,6 @@ function verifyChoice(){
 	}else{
 		return true;
 	}
-
 }
 ################################################################################
 # clean up the post input before processing
@@ -831,6 +830,36 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/generateAudioWaveforms.cfg", $_POST['nfo_generateAudioWaveforms']);
 	echo "<hr><a class='button' href='/settings/system.php#nfo_generateAudioWaveforms'>🛠️ Return To Settings</a><hr>";
 	clear();
+}else if (array_key_exists("rescanShow",$_POST)){
+	if(verifyChoice()){
+		$showName=$_POST["rescanShow"];
+		#
+		if(file_exists("/var/cache/2web/web/shows/$showName/sources.cfg")){
+			outputLog("Preparing to rescan '$showName'");
+			# delete existing meta data
+			# - remove kodi path
+			# - remove web path
+			# - rescan the source  paths stored int the current metadata
+			$command="set -x\n";
+			$command.="rm -rv \"/var/cache/2web/web/shows/".$showName."/\"\n";
+			$command.="rm -rv \"/var/cache/2web/web/kodi/shows/".$showName."/\"\n";
+			#
+			$metaPaths=file("/var/cache/2web/web/shows/$showName/sources.cfg");
+			foreach($metaPaths as $metaPath){
+				$metaPath=str_replace("\n","",$metaPath);
+				# - launch a process to rescan the data
+				$command.="nfo2web --process \"$metaPath\"\n";
+			}
+			outputLog("Running Script <pre>$command</pre>");
+			# add rescan script to the queue
+			addToQueue("single",$command);
+			#
+			addToLog("WARNING","seasons.php processing command","<pre>".$command."</pre>");
+			echo "<hr><a class='button' href='/shows/$showName/'>🛠️ Return To Settings</a><hr>";
+		}else{
+			addToLog("ERROR","seasons.php","Could not find any sources.cfg file for show");
+		}
+	}
 }else if (array_key_exists("autoReboot",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['autoReboot']);
 	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);

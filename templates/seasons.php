@@ -131,6 +131,15 @@ if (requireGroup("admin",false)){
 		echo "<pre>\n";
 		echo file_get_contents("sources.cfg");
 		echo "</pre>\n";
+		#
+		$showScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
+		echo "<h2>Admin Actions</h2>\n";
+		echo "	<div class='listCard'>\n";
+		echo "		<form action='/settings/admin.php' method='post'>";
+		echo "			<input type='text' name='rescanShow' value='$showScanPath' hidden>";
+		echo "			<button class='button' type='submit'>🗘 Force Media Rescan</button>";
+		echo "		</form>";
+		echo "	</div>\n";
 		echo "</div>\n";
 	}
 }
