@@ -70,59 +70,49 @@ function cachedMimeType($videoLink){
 	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
-		# if 90 seconds of the video has been downloaded then launch the video
-		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
-			# redirect to discovered mp3
-			return ("audio/mpeg");
-		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-			# once verified
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
-				# file is fully downloaded and converted play instantly
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+				return ("audio/mpeg");
+			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
 				return ("video/mp4");
-			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm") and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
-				# only load webm files that are not being written
-				# - only redirect to KODI clients
-				if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
-					# redirect to intermediary webm files
-					return ("video/webm");
-				}
-				return ("application/mpegurl");
 			}else{
-				# send unverified mp4 links to the playlist
 				return ("application/mpegurl");
 			}
-		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm") and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
-			if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
-				# redirect to intermediary webm files
-				return ("video/webm");
-			}
+		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90) ){
+			return ("video/webm");
+		}else if( file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
 			return ("application/mpegurl");
-		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
-			# if the stream has x segments (segments start as 0)
-			# - currently 10 seconds of video
-			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts")){
-				# redirect to the stream
-				return ("application/mpegurl");
-			}
-		}
-		if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp3")){
-			# redirect to discovered mp3
-			return ("audio/mpeg");
-		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp4")){
-			# file is fully downloaded and converted play instantly
-			return ("video/mp4");
-		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.m3u")){
-			# if the stream has x segments (segments start as 0)
-			# - currently 10 seconds of video
-			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream0.ts")){
-				# redirect to the stream
-				return ("application/mpegurl");
-			}
 		}
 		# if no media can be resolved return loading as the metadata type
 		return ("loading");
+	}
+}
+########################################################################
+function getCacheLink($videoLink,$mimeType){
+	# return the path to a found cache link once it is available
+
+	# set the default web directory
+	$webDirectory="/var/cache/2web/web";
+	# cleanup the video link
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+	# get the sum
+	$sum = hash("sha512",$videoLink,false);
+	#
+	if ("video/mp4" == $mimeType){
+		return ("/RESOLVER-CACHE/$sum/video.mp4");
+	}else if ("video/webm" == $mimeType){
+		return ("/RESOLVER-CACHE/$sum/video.webm");
+	}else if ("audio/mpeg" == $mimeType){
+		return ("/RESOLVER-CACHE/$sum/video.mp3");
+	}else if ("application/mpegurl" == $mimeType){
+		return ("/RESOLVER-CACHE/$sum/video.m3u");
+	}else if ("video/ogg" == $mimeType){
+		return ("/RESOLVER-CACHE/$sum/video.ogg");
+	}else if ("video/mp4" == $mimeType){
+		# all cached locations have failed to find this video
+		addToLog("ERROR","videoPlayer.php","No mime type '$mimeType' exists for getCacheLink()");
+		return ("$videoLink");
 	}
 }
 ########################################################################
@@ -330,45 +320,7 @@ document.body.addEventListener('keydown', function(event){
 		if(property_exists($jsonData, "title")){
 			$titleData=$jsonData->title;
 		}
-		# get the uploder url
-		if(property_exists($jsonData, "uploader_url")){
-			$videoChannelUrl=$jsonData->uploader_url;
-			# Build the html for the bottom of the page
-			$tempVideoChannelUrl="<table>\n";
-			$tempVideoChannelUrl.="<tr>\n";
-			$tempVideoChannelUrl.="<th>Channel Source</th>\n";
-			if (requireGroup("admin",false)){
-				$tempVideoChannelUrl.="<th>Admin Actions</th>\n";
-			}
-			$tempVideoChannelUrl.="</tr>\n";
-			$tempVideoChannelUrl.="<tr>\n";
-			$tempVideoChannelUrl.="	<td>\n";
-			$tempVideoChannelUrl.="		<a href='".$videoChannelUrl."'>".$videoChannelUrl."</a>\n";
-			$tempVideoChannelUrl.="	</td>\n";
-			if (requireGroup("admin",false)){
-				# if the user has admin permissions load the button that will add the channel
-				$tempVideoChannelUrl.="	<td>\n";
-				$tempVideoChannelUrl.="		<form action='/settings/admin.php' method='post'>\n";
-				$tempVideoChannelUrl.="			<input width='60%' type='text' name='ytdl_add_username_source' value='".$videoChannelUrl."' hidden>\n";
-				$tempVideoChannelUrl.="			<button class='button' type='submit'>➕ Add Channel</button>\n";
-				$tempVideoChannelUrl.="		</form>\n";
-				$tempVideoChannelUrl.="	</td>\n";
-			}
-			$tempVideoChannelUrl.="</tr>\n";
-			$tempVideoChannelUrl.="</table>\n";
-			#
-			$videoChannelUrl=$tempVideoChannelUrl;
-		}
-		# get the plot data
-		if(property_exists($jsonData, "description")){
-			$plotData="<div class='plot'>\n";
-			$plotData.=str_replace("\n","<br>",$jsonData->description);
-			$plotData.="</div>\n";
-		}else{
-			# there is no description so blank it out
-			$plotData="";
-		}
-
+		#
 		if(property_exists($jsonData, "age_limit")){
 			$ratingText="<span class='button'>Required Viewing Age: ".$jsonData->age_limit."</span>";
 		}else{
@@ -391,24 +343,107 @@ document.body.addEventListener('keydown', function(event){
 					$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
 				}else{
 					# set the current thumbnail to be the poster.png
-					$posterPath="/spinner.gif";
+					$posterPath="/plasmaPoster.png";
 				}
 			}else{
 				# set the current thumbnail to be the poster.png
-				$posterPath="/spinner.gif";
+				$posterPath="/plasmaPoster.png";
 			}
 		}
+		# get the plot data
+		if(property_exists($jsonData, "description")){
+			$plotData="<div class='plot'>\n";
+			$plotData.=str_replace("\n","<br>",$jsonData->description);
+			$plotData.="</div>\n";
+		}else{
+			# there is no description so blank it out
+			$plotData="";
+		}
+		# get the uploder url
+		$tempVideoChannelUrl="<table>\n";
+		if(property_exists($jsonData, "uploader_url")){
+			$videoChannelUrl=$jsonData->uploader_url;
+			# Build the html for the bottom of the page
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="<th>Channel Source</th>\n";
+			if (requireGroup("admin",false)){
+				$tempVideoChannelUrl.="<th>Admin Actions</th>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="	<td>\n";
+			$tempVideoChannelUrl.="		<a href='".$videoChannelUrl."'>".$videoChannelUrl."</a>\n";
+			$tempVideoChannelUrl.="	</td>\n";
+			if (requireGroup("admin",false)){
+				# if the user has admin permissions load the button that will add the channel
+				$tempVideoChannelUrl.="	<td>\n";
+				$tempVideoChannelUrl.="		<form action='/settings/admin.php' method='post'>\n";
+				$tempVideoChannelUrl.="			<input width='60%' type='text' name='ytdl_add_username_source' value='".$videoChannelUrl."' hidden>\n";
+				$tempVideoChannelUrl.="			<button class='button' type='submit'>➕ Add Channel</button>\n";
+				$tempVideoChannelUrl.="		</form>\n";
+				$tempVideoChannelUrl.="	</td>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+		}
+		# Build the html for the bottom of the page
+		$tempVideoChannelUrl.="<tr>\n";
+		$tempVideoChannelUrl.="<th>Video URL</th>\n";
+		if (requireGroup("admin",false)){
+			$tempVideoChannelUrl.="<th>Admin Actions</th>\n";
+		}
+		$tempVideoChannelUrl.="</tr>\n";
+		if (file_exists($directLinkPath)){
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="	<td>\n";
+			$tempVideoChannelUrl.="		<a href='".$directLinkData."'>".$directLinkData."</a>\n";
+			$tempVideoChannelUrl.="	</td>\n";
+			if (requireGroup("admin",false)){
+				# if the user has admin permissions load the button that will add the channel
+				$tempVideoChannelUrl.="	<td>\n";
+				$tempVideoChannelUrl.="		<form action='/settings/admin.php' method='post'>\n";
+				$tempVideoChannelUrl.="		<input width='60%' type='text' name='archiveVideoUrl' value='".$directLinkData."' hidden>\n";
+
+				if (file_exists("show.title")){
+					# write the data
+					$archiveTitle="$showTitle $numericTitleData";
+				}else if($useJson){
+					# use the title data if this is a video in the cache
+					$archiveTitle=$titleData;
+				}else{
+					# write the movie data
+					$archiveTitle=$movieTitle;
+				}
+				#
+				$tempVideoChannelUrl.="		<input width='60%' type='text' name='archiveVideoUrl_title' value='".$archiveTitle."' hidden>\n";
+				#$tempVideoChannelUrl.="		<input width='60%' type='text' name='archiveVideoUrl_plot' value='".$plotData."' hidden>\n";
+				$tempVideoChannelUrl.="		<input width='60%' type='text' name='archiveVideoUrl_posterPath' value='".$posterPath."' hidden>\n";
+				#
+				$tempVideoChannelUrl.="			<button class='button' type='submit'>➕ Archive Video</button>\n";
+				$tempVideoChannelUrl.="		</form>\n";
+				$tempVideoChannelUrl.="	</td>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+		}
+		$tempVideoChannelUrl.="</table>\n";
+		#
+		$videoChannelUrl=$tempVideoChannelUrl;
 	}else{
 		# get the video thumb path for the video player
 		# - check for PNG and JPG versions
 		$posterPath=str_replace(".php","-thumb.png",$_SERVER["SCRIPT_FILENAME"]);
 		$posterPathJPG=str_replace(".php","-thumb.jpg",$_SERVER["SCRIPT_FILENAME"]);
+		$moviePosterPath="poster.png";
+		$moviePosterPathJPG="poster.jpg";
 		if (file_exists($posterPath)){
 			$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPath);
 		}else if (file_exists($posterPathJPG)){
 			$posterPath=$proto.$_SERVER["HTTP_HOST"].str_replace($_SERVER["DOCUMENT_ROOT"],"",$posterPathJPG);
+		}else if (file_exists($moviePosterPath)){
+			$posterPath=$moviePosterPath;
+		}else if (file_exists($moviePosterPathJPG)){
+			$posterPath=$moviePosterPathJPG;
 		}else{
-			$posterPath="/spinner.gif";
+			$posterPath="/plasmaPoster.png";
 		}
 		$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
 		$plotData="";
@@ -498,6 +533,8 @@ document.body.addEventListener('keydown', function(event){
 			$videoMimeType=cachedMimeType($directLinkData);
 			#
 			$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="'.$directLinkData.'"';
+			# attempt to verify the cached file
+			verifyCacheFile("/var/cache/2web/web/RESOLVER-CACHE/$sum/",$directLinkData);
 		}else{
 			# if the trancode is enabled run the transcode job
 			# - the transcoder will transcode all local videos for playback on webpages.
@@ -520,66 +557,78 @@ document.body.addEventListener('keydown', function(event){
 				$videoMimeType=$videoMimeType["Content-Type"];
 			}
 		}
+		# get the link to the cache location on the server
+		$tempVideoLink=getCacheLink($directLinkData, $videoMimeType);
 		# check if the video is still loading in the cache
 		if (is_in_array("loading", $videoMimeType)){
-			# set the video type to load the hls player which will keep trying to play until the video loads
-			$videoMimeType="application/mpegurl";
-		}
-		# draw the player based on the video link mime type
-		if (is_in_array("video/mp4", $videoMimeType)){
+			# reload the page if no mime type could be found for playback
+			# - some videos will not generate a hls stream but will generate another playable
+			#   stream eventually so the page will reload until it finds a playable one
+			echo "<div class='titleCard'>";
+			echo "Video is loading, page will automatically refresh...";
+			echo "</div>";
 			echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 			echo "</video>\n";
-		}else if (is_in_array("audio/mpeg", $videoMimeType)){
-			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
-			echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
-			echo "</audio>\n";
-		}else if (is_in_array("video/webm", $videoMimeType)){
-			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
-			echo "	<source src='$fullPathVideoLink' type='video/webm'>\n";
-			echo "</audio>\n";
-		}else if (is_in_array("video/ogg", $videoMimeType)){
-			echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
-			echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
-			echo "</audio>\n";
-		}else if (is_in_array("application/mpegurl", $videoMimeType)){
-			# hls stream
-			# draw the hls stream player webpage player
-			echo "<script>\n";
-			echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
-			echo "	if(Hls.isSupported()) {\n";
-			echo "		var video = document.getElementById('video');\n";
-			echo "		var hls = new Hls({\n";
-			echo "			startPosition: 0,\n";
-			echo "			enableWebVTT: true,\n";
-			echo "			enableWorker: true,\n";
-			echo "			enableSoftwareAES: true,\n";
-			echo "			autoStartLoad: true,\n";
-			echo "			debug: true\n";
-			echo "		});\n";
-			echo "		hls.loadSource('$fullPathVideoLink');\n";
-			echo "		hls.attachMedia(video);\n";
-			echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
-			#echo"	echo \"			video.muted = false;\";"
-			echo "			video.play();\n";
-			echo "		});\n";
-			echo "	}\n";
-			echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
-			echo "		video.src = '$fullPathVideoLink';\n";
-			echo "		video.addEventListener('canplay',function() {\n";
-			echo "			video.play();\n";
-			echo "		});\n";
-			echo "	}\n";
-			# start playback on page load
-			echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
-			echo "</script>\n";
-			noscriptRefresh(10);
+			# reload the page after a 10 second delay
+			reloadPage(10);
 		}else{
-			# This is a unsupported media file that can not be played with the web player
-			# - This is the message displayed when a local media type is given but transcoding is disabled
-			echo "<div class='titleCard'>\n";
-			echo "The server administrator has disabled video transcoding.<br> Video player can not currently play this file type '$videoMimeType'.<br> Use the direct links or external links below to download or access media with a external application.\n";
-			echo "</div>\n";
+			# draw the player based on the video link mime type
+			if (is_in_array("video/mp4", $videoMimeType)){
+				echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
+				echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
+				echo "</video>\n";
+			}else if (is_in_array("audio/mpeg", $videoMimeType)){
+				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
+				echo "</audio>\n";
+			}else if (is_in_array("video/webm", $videoMimeType)){
+				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				echo "	<source src='$fullPathVideoLink' type='video/webm'>\n";
+				echo "</audio>\n";
+			}else if (is_in_array("video/ogg", $videoMimeType)){
+				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
+				echo "</audio>\n";
+			}else if (is_in_array("application/mpegurl", $videoMimeType)){
+				# hls stream
+				# draw the hls stream player webpage player
+				echo "<script>\n";
+				echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
+				echo "	if(Hls.isSupported()) {\n";
+				echo "		var video = document.getElementById('video');\n";
+				echo "		var hls = new Hls({\n";
+				echo "			startPosition: 0,\n";
+				echo "			enableWebVTT: true,\n";
+				echo "			enableWorker: true,\n";
+				echo "			enableSoftwareAES: true,\n";
+				echo "			autoStartLoad: true,\n";
+				echo "			debug: true\n";
+				echo "		});\n";
+				echo "		hls.loadSource('$tempVideoLink');\n";
+				echo "		hls.attachMedia(video);\n";
+				echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
+				#echo"	echo \"			video.muted = false;\";"
+				echo "			video.play();\n";
+				echo "		});\n";
+				echo "	}\n";
+				echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
+				echo "		video.src = '$tempVideoLink';\n";
+				echo "		video.addEventListener('canplay',function() {\n";
+				echo "			video.play();\n";
+				echo "		});\n";
+				echo "	}\n";
+				# start playback on page load
+				echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
+				echo "</script>\n";
+				noscriptRefresh(10);
+			}else{
+				# This is a unsupported media file that can not be played with the web player
+				# - This is the message displayed when a local media type is given but transcoding is disabled
+				echo "<div class='titleCard'>\n";
+				echo "The server administrator has disabled video transcoding.<br> Video player can not currently play this file type '$videoMimeType'.<br> Use the direct links or external links below to download or access media with a external application.\n";
+				echo "</div>\n";
+			}
 		}
 	?>
 <div class='descriptionCard'>

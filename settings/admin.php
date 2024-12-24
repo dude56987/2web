@@ -1285,6 +1285,95 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("Munin Graph Plugin is already disabled '$graphName'","badLog");
 	}
 	clear();
+}else if (array_key_exists("archiveVideoUrl",$_POST)){
+	# store a url in the '2web Archive' meta show as a new episode
+	$videoUrl=$_POST["archiveVideoUrl"];
+	$videoTitle=cleanText($_POST["archiveVideoUrl_title"]);
+	#$videoPlot=$_POST["archiveVideoUrl_plot"];
+	$videoPosterPath=$_POST["archiveVideoUrl_posterPath"];
+	# create the tvshow.nfo for the video archive
+	# - videos archived this way will not be placed under the channel for the video
+	# - videos will be placed into a special '2web archive' channel
+	$showTitle="2web Archive";
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/")){
+		outputLog("Generating the library directory '/var/cache/2web/downloads/nfo_archive/'");
+		mkdir("/var/cache/2web/downloads/nfo_archive/");
+	}
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/")){
+		outputLog("Generating the '2web Archive' directory");
+		mkdir("/var/cache/2web/downloads/nfo_archive/2web Archive/");
+	}
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/tvshow.nfo")){
+		outputLog("Generating the show NFO");
+		#
+		$showNFO="<tvshow>\n";
+		$showNFO.="<title>";
+		$showNFO.="2web Archive";
+		$showNFO.="</title>\n";
+		$showNFO.="<studio>";
+		$showNFO.="Internet";
+		$showNFO.="</studio>\n";
+		$showNFO.="<genre>";
+		$showNFO.="Internet";
+		$showNFO.="</genre>\n";
+		$showNFO.="<plot>";
+		$showNFO.="Videos Archived on ".gethostname();
+		$showNFO.="</plot>\n";
+		$showNFO.="<premiered>";
+		$showNFO.=date("y/m/d",time());
+		$showNFO.="</premiered>\n";
+		$showNFO.="<director>";
+		$showNFO.="";
+		$showNFO.="</director>\n";
+		$showNFO.="</tvshow>\n";
+		# write the file
+		file_put_contents("/var/cache/2web/downloads/nfo_archive/2web Archive/tvshow.nfo", $showNFO);
+	}
+	# use the current year as the season
+	$videoSeason=date("y",time());
+	# generate the airdate as the current date
+	$videoAirDate=date("y/m/d",time());
+	# build the season folder
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/")){
+		outputLog("Creating the show season directory");
+		mkdir("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/");
+	}
+	# create a .strm file
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle.strm")){
+		outputLog("Generating the .strm file");
+		file_put_contents("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle.strm", $videoUrl);
+	}
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle.nfo")){
+		outputLog("Generating the NFO data");
+		# generate the nfo file
+		$episodeNFO="<episodedetails>\n";
+		$episodeNFO.="<season>$videoSeason</season>\n";
+		# use the timestamp as the episode number
+		$episodeNFO.="<episode>".time()."</episode>\n";
+		$episodeNFO.="<showtitle>2web Archive</showtitle>\n";
+		$episodeNFO.="<title>$videoTitle</title>\n";
+		$episodeNFO.="<director>2web Archive</director>\n";
+		$episodeNFO.="<credits>2web Archive</credits>\n";
+		#$episodeNFO.="<plot>\n";
+		#$episodeNFO.="$episodePlot\n";
+		#$episodeNFO.="</plot>\n";
+		$episodeNFO.="<aired>$videoAirDate</aired>\n";
+		$episodeNFO.="</episodedetails>\n";
+		#
+		file_put_contents("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle.nfo", $episodeNFO);
+	}
+	if ( ! file_exists("/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle-thumb.png")){
+		outputLog("Copy the thumbnail to the episode directory");
+		# copy the path that matches
+		if (file_exists("/var/cache/2web/web".$videoPosterPath)){
+			# relative path converted to absolute path
+			copy("/var/cache/2web/web".$videoPosterPath, "/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle-thumb.png");
+		}else if (file_exists($videoPosterPath)){
+			copy($videoPosterPath, "/var/cache/2web/downloads/nfo_archive/2web Archive/$videoSeason/$videoTitle-thumb.png");
+		}
+	}
+	outputLog("Added video to archive. Force a update to nfo2web in order to add it now or wait for the next scheduled update.");
+	echo "<hr><a class='button' href='/web-player.php'>📥 Return To Web Player</a><hr>";
 }else if (array_key_exists("colorName",$_POST)){
 	# load the template name
 	$newColorName=$_POST["colorName"];

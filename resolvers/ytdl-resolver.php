@@ -77,7 +77,7 @@ function cacheUrl($sum,$videoLink){
 	}
 	# link the player into the resolver cache
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/index.php")){
-		link("/usr/share/templates/videoPlayer.php","$webDirectory/RESOLVER-CACHE/$sum/index.php");
+		symlink("/usr/share/2web/templates/videoPlayer.php","$webDirectory/RESOLVER-CACHE/$sum/index.php");
 	}
 	# link the video bump
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/bump.m3u")){
@@ -120,31 +120,32 @@ function cacheUrl($sum,$videoLink){
 	################################################################################
 	// if the cache flag has been set to true then download the file and play it from the cache
 	debug("Build the command<br>");
-	$command = "nice -n -5 ";
+	$command = "set -x;";
+	$command .= "nice -n -5 ";
 	// add the download to the cache with the processing queue
 	if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
-		$command = $command."/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error --sponsorblock-mark all ";
+		$command .= "/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
 		# add the sponsorblock video bookmarks to the video file when using yt-dlp
-		$command = $command."/usr/local/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
+		$command .= "/usr/local/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/youtube-dl")){
 		debug("PIP version of youtube-dl found<br>");
-		$command = $command."/usr/local/bin/youtube-dl";
+		$command .= "/usr/local/bin/youtube-dl";
 	} else {
-		$command = $command."youtube-dl";
+		$command .= "youtube-dl";
 	}
 	$quality = getQualityConfig($webDirectory);
 	$cacheMode = getCacheMode($webDirectory);
 	debug("The web interface set quality is '".$quality."'");
 	// abort if parts of the stream are missing
-	$command = $command." --abort-on-unavailable-fragments";
+	$command .= " --abort-on-unavailable-fragments";
 	// max download file size should be 6 gigs, this is a insane file size for a youtube video
 	// if a way of detecting livestreams is found this is unnessary
-	$command = $command." --max-filesize '6g'";
-	$command = $command." --retries 'infinite'";
-	$command = $command." --no-mtime";
-	$command = $command." --fragment-retries 'infinite'";
+	$command .= " --max-filesize '6g'";
+	$command .= " --retries 'infinite'";
+	$command .= " --no-mtime";
+	$command .= " --fragment-retries 'infinite'";
 
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
 	$command = $command." --continue";
@@ -206,7 +207,9 @@ function cacheUrl($sum,$videoLink){
 	fclose($logFile);
 
 	# add the upgrade command after writing the commands to the log
-	$command = $command.";".$dlCommand;
+	$command .= ";".$dlCommand;
+	# run curl after download to access the video link and activate the verification process
+	#$command .= ";sleep 95;curl \"https://localhost/ytdl-resolver.php?url=$videoLink\" > /dev/null";
 	# Add the command to the processing queue
 	addToQueue("multi",$command);
 }
@@ -215,51 +218,37 @@ function cacheResolve($sum,$webDirectory){
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
 		# if 90 seconds of the video has been downloaded then launch the video
-		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
-			header("Content-type: audio/mpeg;");
-			# redirect to discovered mp3
-			redirect("/RESOLVER-CACHE/$sum/video.mp3");
-		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+				header("Content-type: audio/mpeg;");
+				# redirect to discovered mp3
+				redirect("/RESOLVER-CACHE/$sum/video.mp3");
+			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
 				header("Content-type: video/mp4;");
 				# file is fully downloaded and converted play instantly
 				redirect("/RESOLVER-CACHE/$sum/video.mp4");
-			}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
-				if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
-					# redirect to intermediary webm files
-					header("Content-type: video/webm;");
-					redirect("/RESOLVER-CACHE/$sum/video.webm");
-				}
-				# unfinished webm files link to
-				header("Content-type: application/mpegurl;");
-				redirect("/RESOLVER-CACHE/$sum/video.m3u");
 			}else{
-				# send unverified links to the HLS stream
+				# load the HLS stream as a last resort fallback
+				# - nothing verified should get here so this is a fallback for crazy exceptions
 				header("Content-type: application/mpegurl;");
-				# redirect to the stream
 				redirect("/RESOLVER-CACHE/$sum/video.m3u");
 			}
-		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi")){
+		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mkv")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.mkv") ) > 90) ){
+			header("Content-type: video/x-matroska;");
+			redirect("/RESOLVER-CACHE/$sum/video.mkv");
+		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90) ){
 			# only load webm files that are not being written
 			# - only redirect to KODI clients
-			if ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90){
-				# redirect to intermediary webm files
-				header("Content-type: video/webm;");
-				redirect("/RESOLVER-CACHE/$sum/video.webm");
-			}
-			# load the hls stream if the webm is incomplete
-			header("Content-type: application/mpegurl;");
-			# redirect to the stream
-			redirect("/RESOLVER-CACHE/$sum/video.m3u");
-		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
+			# redirect to intermediary webm files
+			header("Content-type: video/webm;");
+			redirect("/RESOLVER-CACHE/$sum/video.webm");
+		}else if( file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts")){
-				header("Content-type: application/mpegurl;");
-				# redirect to the stream
-				redirect("/RESOLVER-CACHE/$sum/video.m3u");
-			}
+			header("Content-type: application/mpegurl;");
+			# redirect to the stream
+			redirect("/RESOLVER-CACHE/$sum/video.m3u");
 		}
 		# Sleep at end of the loop then try to find a redirect again
 		sleep(1);
@@ -331,84 +320,11 @@ if (array_key_exists("url",$_GET)){
 		$url = "/RESOLVER-CACHE/$sum/video.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
-		$cacheFile=false;
 		#check for the first x segments of the hls playback, ~30 seconds
 		if (file_exists("$webDirectory$url")){
 			# if the json data has not yet been verified to have downloaded the entire file
-			if (! file_exists($storagePath."verified.cfg")){
-				# check the file downloaded correctly by comparing the json data file length with local file length
-				if (file_exists($storagePath."video.mp3") or file_exists($storagePath."video.mp4")){
-					if(file_exists($storagePath."video.mp3")){
-						$foundExt=".mp3";
-					}else if (file_exists($storagePath."video.mp4")){
-						$foundExt=".mp4";
-					}
-					# if the file was last modified more than 90 seconds ago
-					# - checks should wait for caching to complete in order to properly read file metadata
-					if ( ( time() - filemtime($storagePath."video$foundExt") ) > 90){
-						if ( (file_exists($storagePath."video.info.json")) || (file_exists($storagePath."video.mp3.info.json")) || (file_exists($storagePath."video.mp4.info.json")) ){
-							if (file_exists($storagePath."video.info.json")){
-								$jsonInfoPath=$storagePath."video.info.json";
-							}else if(file_exists($storagePath."video.mp3.info.json")){
-								$jsonInfoPath=$storagePath."video.mp3.info.json";
-							}else if(file_exists($storagePath."video.mp4.info.json")){
-								$jsonInfoPath=$storagePath."video.mp4.info.json";
-							}
-							# The json downloaded from the remote and stored by the resolver
-							$remoteJson = json_decode(file_get_contents($jsonInfoPath));
-							# check the remote json contains a duration value
-							# - not all websites support the duration metadata value
-							if(property_exists($remoteJson, "duration")){
-								$remoteJsonValue=(int)$remoteJson->duration;
-								# reduce the value to add variance for rounding errors
-								# - Depending on the json data and how it was generated the rounding of time may go up or down by one
-								$remoteJsonValue-=5;
-								# the json data from reading the current downloaded file
-								$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video$foundExt"));
-								$localJsonValue= (int)$localJson->media->track[0]->Duration;
-								# compare the lenght in the remote json to the local file, including the variance above
-								if ($localJsonValue >= $remoteJsonValue){
-									addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was verified for link '$videoLink'");
-									debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-									# if the length is correct the file is verified to have downloaded completely, mark the file as verified
-									touch($storagePath."verified.cfg");
-								}else{
-									addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because the length was incorrect<br>\nLink = '$videoLink'<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
-									debug("The video was corrupt and could not be verified...");
-									# re cache the corrupted file
-									$cacheFile=true;
-								}
-							}else{
-								# the duration can not be used to verify the value so a attempt will be made to generate a thumbnail
-								addToLog("DOWNLOAD","Track Verification Issue","Track has no track duration metadata. Running Mime type check...");
-								$tempMimeType=mime_content_type($storagePath."video$foundExt");
-								if (($tempMimeType == "audio/mp3") and ($foundExt == ".mp3")){
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-									debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
-									# mark the file as verified
-									touch($storagePath."verified.cfg");
-								}else if (($tempMimeType == "video/mp4") and ($foundExt == ".mp4")){
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-									debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-									# mark the file as verified
-									touch($storagePath."verified.cfg");
-								}else{
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp4' <br>\n");
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp3' <br>\n");
-									debug("The video was corrupt and could not be verified...");
-									# re cache the corrupted file
-									$cacheFile=true;
-								}
-							}
-						}else{
-							addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with.\n<br>The link given was '$videoLink'");
-							# the mp4 was found but the json was not
-							$cacheFile=true;
-						}
-					}
-				}
-			}
-			if($cacheFile == true){
+			$isVerified=verifyCacheFile($storagePath,$videoLink);
+			if($isVerified == false){
 				# delete the existing mp4 file so it will be recreated by the caching code
 				unlink($storagePath."video.mp4");
 				# this means the download has failed and must be re-cached to get the full video
@@ -496,20 +412,57 @@ if (array_key_exists("url",$_GET)){
 	$tempSourceFiles=Array();
 	foreach($sourceFiles as $sourceFile){
 		# add the video.mp4 to the path, this is the file the dates will be sorted by
-		$tempSourceFile=$_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/video.mp4";
-		# add the path if it contains a cached video
-		if (file_exists($tempSourceFile)){
-			$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
-			#$tempSourceFiles=array_merge($tempSourceFiles,Array($_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/video.mp4"));
-		}
+		$tempSourceFile=$_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/";
+		$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
 	}
 	# sort the diretories by date
 	$sourceFiles = sortPathsByDate($tempSourceFiles);
+	# draw the table containing cached videos and statuses of those videos
+	echo "<table>";
 
-	foreach($sourceFiles as $sourceFile){
+	echo "<tr>";
+	echo "<th>Verified</th>";
+	echo "<th>Thumbnail</th>";
+	echo "<th>HLS</th>";
+	echo "<th>MP4</th>";
+	echo "<th>json</th>";
+	echo "<th>title</th>";
+	echo "<th>link</th>";
+	echo "</tr>";
+	foreach($sourceFiles as $sourcePath){
+		echo "<tr>";
 		# remove file name left from date sort
-		$sourcePath=str_replace("video.mp4","",$sourceFile);
 		$sourceWebPath=str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourcePath);
+		# check for verified video
+		if (is_readable($sourcePath."verified.cfg")){
+			echo "<td>Verified</td>";
+		}else{
+			echo "<td>Not Verified</td>";
+		}
+		# check for thumbnail
+		if (is_readable($sourcePath."video.png")){
+			echo "<td>PNG Found</td>";
+		}else{
+			echo "<td>No PNG</td>";
+		}
+		# check for HLS stream
+		if (is_readable($sourcePath."video.m3u")){
+			echo "<td>M3U Found</td>";
+		}else{
+			echo "<td>No M3U</td>";
+		}
+		# check for mp4 file
+		if (is_readable($sourcePath."video.mp4")){
+			echo "<td>MP4 Found</td>";
+		}else{
+			echo "<td>No MP4</td>";
+		}
+		# check for json data
+		if (is_readable($sourcePath."video.info.json")){
+			echo "<td>Json Found</td>";
+		}else{
+			echo "<td>No Json</td>";
+		}
 		# draw the entries for each directory
 		# check for a json file to load the video title
 		if (file_exists($sourcePath."video.info.json")){
@@ -518,14 +471,23 @@ if (array_key_exists("url",$_GET)){
 			$jsonData=json_decode($jsonData);
 			$videoTitle=$jsonData->title;
 		}else{
-			$videoTitle=$sourceFile;
+			$videoTitle=$sourcePath;
 		}
-		echo "<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
-		echo "<img loading='lazy' src='".$sourceWebPath."video.png"."' />\n";
-		echo "	<h3>".$videoTitle."</h3>\n";
-		echo "</a>\n";
+		echo "<td>$videoTitle</td>";
 
+		echo "<td>";
+		echo "	<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
+		if (is_readable($sourcePath."video.png")){
+			echo "		<img loading='lazy' src='".$sourceWebPath."video.png"."' />\n";
+		}
+		echo "		<h3>".$videoTitle."</h3>\n";
+		echo "	</a>\n";
+		echo "</td>";
+
+		echo "</tr>";
 	}
+	echo "</table>";
+
 	echo "</div>\n";
 	echo "</body>";
 	echo "</html>";

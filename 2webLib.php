@@ -308,12 +308,14 @@ if( ! function_exists("formatText")){
 		return $returnValue;
 	}
 }
+################################################################################
 if( ! function_exists("formatEcho")){
 	function formatEcho($text,$tabs=0,$newline="\n"){
 		# Write a line with a number of tabs and a custom newline character to page
 		echo formatText($text,$tabs,$newline);
 	}
 }
+################################################################################
 if( ! function_exists("logPrint")){
 	function logPrint($logMessage){
 		# Print data into the console log of a page with javascript
@@ -322,6 +324,7 @@ if( ! function_exists("logPrint")){
 		echo "</script>\n";
 	}
 }
+################################################################################
 if( ! function_exists("is_in_array")){
 	function is_in_array($needle,$haystack){
 		# search for a needle in a string or array haystack
@@ -336,6 +339,7 @@ if( ! function_exists("is_in_array")){
 		}
 	}
 }
+################################################################################
 if( ! function_exists("addToQueue")){
 	function addToQueue($type,$command){
 		# addToQueue($type,$command)
@@ -1109,6 +1113,7 @@ if( ! function_exists("recursiveScan")){
 		return $finalFoundLinks;
 	}
 }
+################################################################################
 if( ! function_exists("sortPathsByDate")){
 	function sortPathsByDate($finalFoundLinks){
 		# sort the files by mtime
@@ -1139,6 +1144,7 @@ if( ! function_exists("sortPathsByDate")){
 		return $finalFoundLinks;
 	}
 }
+################################################################################
 if( ! function_exists("filterPathsByMime")){
 	function filterPathsByMime($finalFoundLinks, $filterMimeType){
 		#filterPathsByMime($finalFoundLinks, $filterMimeType)
@@ -1773,4 +1779,154 @@ if( ! function_exists("addToLog")){
 	}
 }
 ########################################################################
+if( ! function_exists("cleanText")){
+	function cleanText($inputText){
+		# clean up the text for use in web urls and directory paths
+		# - uses fullwidth versions of caracters that interfere with URLs
+		$cleanedText="$inputText";
+		# convert html entities into the characters
+		#cleanedText=$(echo -n "$cleanedText" | recode html )
+		$cleanedText=str_replace("&amp;","＆",$cleanedText);
+		$cleanedText=str_replace("&quot;","＇",$cleanedText);
+		$cleanedText=str_replace("&apos;","＇",$cleanedText);
+		$cleanedText=str_replace("&lt;","<",$cleanedText);
+		$cleanedText=str_replace("&gt;",">",$cleanedText);
+		# remove grave accents
+		$cleanedText=str_replace("`","｀",$cleanedText);
+		# remove hash marks as they break URLS
+		$cleanedText=str_replace("#","＃",$cleanedText);
+		# remove single quotes
+		$cleanedText=str_replace("'","＇",$cleanedText);
+		# convert underscores into spaces
+		$cleanedText=str_replace("_"," ",$cleanedText);
+		################################################################################
+		# convert symbols that cause issues to full width versions of those characters
+		################################################################################
+		# convert question marks into wide question marks so they look
+		# the same but wide question marks do not break URLS
+		$cleanedText=str_replace("?","？",$cleanedText);
+		# cleanup ampersands, they break URLs
+		$cleanedText=str_replace("&","＆",$cleanedText);
+		# cleanup @ symbols, they break URLs
+		$cleanedText=str_replace("@","＠",$cleanedText);
+		# remove percent signs they break print functions
+		$cleanedText=str_replace("%","％",$cleanedText);
+		# hyphens break grep searches
+		$cleanedText=str_replace("-","－",$cleanedText);
+		# exclamation marks can also cause problems
+		$cleanedText=str_replace("!","！",$cleanedText);
+		# plus signs are used in URLs so they must be changed
+		$cleanedText=str_replace("+","＋",$cleanedText);
+		# remove forward slashes, they will break all paths
+		$cleanedText=str_replace("/","",$cleanedText);
+		$cleanedText=str_replace("\\","",$cleanedText);
+		# squeeze double spaces into single spaces
+		$cleanedText=str_replace("  "," ",$cleanedText);
+		# print the cleaned up text
+		return "$cleanedText";
+	}
+}
+################################################################################
+if( ! function_exists("verifyCacheFile")){
+	function verifyCacheFile($storagePath,$videoLink){
+		# verifyCacheFile($storagePath,$videoLink)
+		#
+		# - Return true if the file is verified
+		# - Return false if the file could not be verified
+		$isVerified=true;
+		if (! file_exists($storagePath."verified.cfg")){
+			# check the file downloaded correctly by comparing the json data file length with local file length
+			if (file_exists($storagePath."video.mp3") or file_exists($storagePath."video.mp4")){
+				if(file_exists($storagePath."video.mp3")){
+					$foundExt=".mp3";
+				}else if (file_exists($storagePath."video.mp4")){
+					$foundExt=".mp4";
+				}
+				# if the file was last modified more than 90 seconds ago
+				# - checks should wait for caching to complete in order to properly read file metadata
+				if ( ( time() - filemtime($storagePath."video$foundExt") ) > 90 ){
+					#
+					if ( (file_exists($storagePath."video.info.json")) || (file_exists($storagePath."video.mp3.info.json")) || (file_exists($storagePath."video.mp4.info.json")) ){
+						#
+						if (file_exists($storagePath."video.info.json")){
+							$jsonInfoPath=$storagePath."video.info.json";
+						}else if(file_exists($storagePath."video.mp3.info.json")){
+							# fix the path
+							symlink(($storagePath."video.mp3.info.json"), ($storagePath."video.info.json"));
+							$jsonInfoPath=$storagePath."video.info.json";
+						}else if(file_exists($storagePath."video.mp4.info.json")){
+							# fix the path
+							symlink(($storagePath."video.mp4.info.json"), ($storagePath."video.info.json"));
+							$jsonInfoPath=$storagePath."video.info.json";
+						}
+
+						# fix wierd thumbnail paths
+						if(file_exists($storagePath."video.mp3.png")){
+							symlink(($storagePath."video.mp3.png"), ($storagePath."video.png"));
+						}else if(file_exists($storagePath."video.mp4.png")){
+							symlink(($storagePath."video.mp4.png"), ($storagePath."video.png"));
+						}
+
+						# The json downloaded from the remote and stored by the resolver
+						$remoteJson = json_decode(file_get_contents($jsonInfoPath));
+
+						# check the remote json contains a duration value
+						# - not all websites support the duration metadata value
+						if(property_exists($remoteJson, "duration")){
+							#
+							$remoteJsonValue=(int)$remoteJson->duration;
+							# reduce the value to add variance for rounding errors
+							# - Depending on the json data and how it was generated the rounding of time may go up or down by one
+							$remoteJsonValue-=5;
+							# the json data from reading the current downloaded file
+							$localJson = json_decode(shell_exec("mediainfo --output=JSON ".$storagePath."video$foundExt"));
+							$localJsonValue= (int)$localJson->media->track[0]->Duration;
+							# compare the lenght in the remote json to the local file, including the variance above
+							if ($localJsonValue >= $remoteJsonValue){
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was verified for link '$videoLink'");
+								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+								# if the length is correct the file is verified to have downloaded completely, mark the file as verified
+								touch($storagePath."verified.cfg");
+							}else{
+								addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because the length was incorrect<br>\nLink = '$videoLink'<br>\nLOCAL='".$localJsonValue."' >= REMOTE='".$remoteJsonValue."'<br>\n");
+								debug("The video was corrupt and could not be verified...");
+								# re cache the corrupted file
+								$isVerified=false;
+							}
+						}else{
+							# the duration can not be used to verify the value so a attempt will be made to generate a thumbnail
+							addToLog("DOWNLOAD","Track Verification Issue","Track has no track duration metadata. Running Mime type check...");
+							$tempMimeType=mime_content_type($storagePath."video$foundExt");
+							if (($tempMimeType == "audio/mp3") and ($foundExt == ".mp3")){
+								addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+								debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
+								# mark the file as verified
+								touch($storagePath."verified.cfg");
+							}else if (($tempMimeType == "video/mp4") and ($foundExt == ".mp4")){
+								addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+								# mark the file as verified
+								touch($storagePath."verified.cfg");
+							}else{
+								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp4' <br>\n");
+								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp3' <br>\n");
+								debug("The video was corrupt and could not be verified...");
+								# re cache the corrupted file
+								$isVerified=false;
+							}
+						}
+					}else{
+						addToLog("DOWNLOAD","Attempt to Verify Track Length","Track was NOT verified because no .info.json data could be found to verify length with.\n<br>The link given was '$videoLink'");
+						# the mp4 was found but the json was not
+						$isVerified=false;
+					}
+				}
+			}
+		}
+		if($isVerified){
+			sleep(1);
+		}
+		return $isVerified;
+	}
+}
 ?>
