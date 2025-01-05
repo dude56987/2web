@@ -973,6 +973,19 @@ function lockProc(){
 		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '$webDirectory/${procName}.active'."
 		exit
 	else
+		# if the steam lockout is enabled, default is yes
+		if yesNoCfgCheck "/etc/2web/steamLockout.cfg" "yes";then
+			# check for active steam games by searching for the in-game overlay interface
+			if pgrep "gameoverlayui" > /dev/null;then
+				# if the gameoverlayui is active then a game is currently running
+				# - skip over this launch as if the module is already running
+				echo "[INFO]: A Steam game is currently running."
+				echo "[INFO]: ${procName} will not run while a steam game is running."
+				echo "[INFO]: Change you setting in /etc/2web/steamLockout.cfg"
+				# exit without launch
+				exit
+			fi
+		fi
 		ALERT "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
 		echo "$(date "+%s")" > "$webDirectory/${procName}.active"
@@ -1664,6 +1677,12 @@ function yesNoCfgCheck(){
 	# - Return 0 (true) if config file is set to 'yes'
 	# - Return 1 (false) if config is anything other than no or does not exist
 	configFilePath="$1"
+	# set the default value if none has been set
+	if [ "$2" == "yes" ];then
+		defaultValue="yes"
+	else
+		defaultValue="no"
+	fi
 	if test -f "$configFilePath";then
 		# file exists check if it is a yes value
 		if grep --quiet --ignore-case "yes" "$configFilePath";then
@@ -1672,6 +1691,11 @@ function yesNoCfgCheck(){
 			return 1
 		fi
 	else
+		# write the default config value
+		echo -n "$defaultValue" > "$configFilePath"
+		# fix permissions so the config can be edited by the web interface
+		chown www-data:www-data "$configFilePath"
+		# return the no state
 		return 1
 	fi
 }

@@ -1237,6 +1237,11 @@ if (array_key_exists("newUserName",$_POST)){
 	# draw the back button
 	echo "<hr><a class='button' href='/settings/themes.php#webTheme'>🛠️ Return To Settings</a><hr>";
 	clear();
+}else if (array_key_exists("steamLockoutStatus",$_POST)){
+	outputLog("Steam lockout set to ".$_POST['steamLockoutStatus']);
+	yesNoCfgSet("/etc/2web/steamLockout.cfg", $_POST['steamLockoutStatus']);
+	echo "<hr><a class='button' href='/settings/system.php#steamLockoutStatus'>🛠️ Return To Settings</a><hr>";
+	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
 	addCustomPathConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");
 }else if(array_key_exists("removeMusicLibary",$_POST)){
