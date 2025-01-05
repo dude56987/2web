@@ -525,6 +525,10 @@ function cpuCount(){
 	#
 	# RETURN STDOUT
 	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+	# if the spinner is active add a extra slot for it
+	if [ "$SPINNER_PID" -gt 0 ];then
+		totalCPUS=$(( $totalCPUS + 1 ))
+	fi
 	# remove one cpu from the total cpu count, this will prevent service interuptions
 	totalCPUS=$(( $totalCPUS - 1 ))
 	if [ $totalCPUS -lt 2 ];then
@@ -652,8 +656,13 @@ function blockQueue(){
 	#
 	# RETURN NULL
 	sleepTime=$1
+	# set the number of processes to unlock the queue at
+	unlockAt=0
+	if [ "$SPINNER_PID" -gt 0 ];then
+		unlockAt=1
+	fi
 	while true;do
-		if [ $(jobs -r | wc -l) -gt 0 ];then
+		if [ $(jobs -r | wc -l) -gt $unlockAt ];then
 			sleep $sleepTime
 		else
 			break
@@ -1874,3 +1883,122 @@ function hashImage(){
 	# mirror the image around the center
 	convert "$outputFilePath" -background transparent -extent 200%x100% -flop +clone -composite -background transparent -extent 100%x200% -flip +clone -composite "$outputFilePath"
 }
+########################################################################
+function rotateSpinner(){
+	# rotateSpinner $animationName $animationDelayTime
+	#
+	# It is recommended to use the startSpinner() function to launch the spinner.
+	#
+	# This will create the spinner using the selected animation
+	#
+	# Animation name can be any of the preset themes
+	# - spin_white_square
+	# - spin_white_circle
+	# - spin_block
+	# - spin_sextant
+	# - spin_triangles
+	# - spin_checkers
+	# - spin_circle_edges
+	# - spin_box_split_fill
+	# - spin_box_cross_fill
+	# - fast_circle_cross
+	# - other_left_right_parallel_opposite_arrows
+	# - other_left_right_opposite_arrows
+	# - other_left_right_opposite_arrows_wall
+	# - other_up_down_opposite_arrows
+	# - fill_empty_blocks
+	# - fill_empty_diamond
+	# - greater_than
+	#
+	#	The animation delay is measured in seconds.
+	#
+	animationName="$1"
+	delayTime="$2"
+	# set the default animation
+	if [ "$animationName" == "" ];then
+		animationName=""
+	fi
+	if [ "$delayTime" == "" ];then
+		delayTime="0.2"
+	fi
+	if [ "$animationName" == "spin_white_square" ];then
+		# spinner animations
+		animation="◳◲◱◰"
+	elif [ "$animationName" == "spin_white_circle" ];then
+		animation="◷◶◵◴"
+	elif [ "$animationName" == "spin_block" ];then
+		animation="▝▗▖▘"
+	elif [ "$animationName" == "spin_sextant" ];then
+		animation="🬁🬇🬞🬏🬃🬀"
+	elif [ "$animationName" == "spin_triangles" ];then
+		animation="▴▸▾◂"
+	elif [ "$animationName" == "spin_checkers" ];then
+		animation="⛀⛁⛃⛂"
+	elif [ "$animationName" == "spin_circle_edges" ];then
+		animation="◝◞◟◜"
+	elif [ "$animationName" == "spin_box_split_fill" ];then
+		animation="◨⬓◧⬒"
+	elif [ "$animationName" == "spin_box_cross_fill" ];then
+		animation="⬔◪⬕◩"
+	elif [ "$animationName" == "fast_circle_cross" ];then
+		# fast spin animations
+		animation="⊗⊕"
+	elif [ "$animationName" == "other_left_right_parallel_opposite_arrows" ];then
+		# other loop animations
+		animation="⇆⇇⇄⇉"
+	elif [ "$animationName" == "other_left_right_opposite_arrows" ];then
+		animation="⇆⇄"
+	elif [ "$animationName" == "other_left_right_opposite_arrows_wall" ];then
+		animation="↹↹"
+	elif [ "$animationName" == "other_up_down_opposite_arrows" ];then
+		animation="⇅⇵"
+	elif [ "$animationName" == "fill_empty_blocks" ];then
+		animation="▝▐▟█▙▌▘ "
+	elif [ "$animationName" == "fill_empty_diamond" ];then
+		animation="🮡🮥🮪🮮🮫🮤🮠 "
+	elif [ "$animationName" == "greater_than" ];then
+		animation=">≫⋙"
+	else
+		# draw the default spinner
+		animation="🬁🬇🬞🬏🬃🬀"
+	fi
+	animationLength=${#animation}
+	echo -ne "  "
+	# animate the spinner
+	while [ "yes" == "yes" ];do
+		# loop though the animation
+		for (( index=0;index<$animationLength;index++ ));do
+			echo -ne "\b${animation:$index:1}"
+			sleep $delayTime
+		done
+	done
+}
+########################################################################
+function startSpinner(){
+	# startSpinner
+	#
+	# Launches rotateSpinner in a background process you can give a animation name and animation delay to this function and it will be passed into rotateSpinner()
+	#
+	# Stores the process id of the spinner background process so stopSpinner() can stop the background process later in a script.
+	#
+
+	# disable cursor blinking while spinner is active
+	#tput civis
+	# start the animated spinner
+	# - pass the spinner theme and animation delay time
+	rotateSpinner "$1" "$2" &
+	# store the PID of the spinner
+	SPINNER_PID=$!
+}
+########################################################################
+function stopSpinner(){
+	# stopSpinner
+	#
+	# stop a already running spinner animation
+
+	# enable cursor blinking on stop
+	#tput cvvis
+	# stop the animated spinner
+	kill $SPINNER_PID
+}
+########################################################################

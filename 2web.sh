@@ -2308,9 +2308,11 @@ main(){
 		date "+%s" > /etc/2web/forceRescan.cfg
 		ALERT "A RESCAN of content has been scheduled during the next update of each module."
 	else
+		startSpinner
 		# update main components
 		# - this builds the base site without anything enabled
 		update2web
+		stopSpinner
 		# this is the default option to be ran without arguments
 		#main --help
 		showServerLinks
