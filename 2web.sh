@@ -1201,15 +1201,45 @@ function buildPulseGif(){
 function screenshot(){
 	webPath=$1
 	localPath=$2
-	mkdir -p "/var/cache/2web/generated/comics/2web/2web Screenshots/"
+	#
+	desktopPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/desktop_$localPath"
+	phonePath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/phone_$localPath"
+	#
+	desktopSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/desktop_${localPath}_%03d.png"
+	phoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/phone_${localPath}_%03d.png"
+
+	#
+	addToLog "DEBUG" "Screenshots" "Creating screenshot from '$webPath' at '$localPath'"
+
 	# make desktop screenshot
-	wkhtmltoimage --cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
-		--format jpg --enable-javascript --javascript-delay 2000 --width 1920 --disable-smart-width --height 1080 \
-		"$webPath" "/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_$localPath"
+	wkhtmltoimage --ssl-crt-path "/var/cache/2web/ssl-cert.crt" \
+		--cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
+		--format jpg --enable-javascript --javascript-delay 2000 --width 1920 \
+		--disable-smart-width \
+		"$webPath" "$desktopPath"
+	#	--height 1080 \
+
+	#xvfb-run firefox -screenshot "$desktopPath" "$webPath" --window-size=1920,1080
+
+	# resize the image
+	#convert "$desktopPath" --resize 720x480 "$desktopPath"
+
 	# make phone screenshot
-	wkhtmltoimage --cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
-	  --format jpg --enable-javascript --javascript-delay 2000 --width 800 --disable-smart-width --height 2000 \
-		"$webPath" "/var/cache/2web/generated/comics/2web/2web Screenshots/phone_$localPath"
+	wkhtmltoimage --ssl-crt-path "/var/cache/2web/ssl-cert.crt" \
+		--cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
+	  --format jpg --enable-javascript --javascript-delay 2000 --width 700 \
+		--disable-smart-width \
+		"$webPath" "$phonePath"
+	#	--height 900 \
+
+	# split the long images into multuple screenshots
+	convert "$desktopPath" -crop x1080 +repage "$desktopSplitPath"
+	convert "$phonePath" -crop x900 +repage "$phoneSplitPath"
+
+	#xvfb-run firefox -screenshot "$phonePath" "$webPath" --window-size=700,900
+
+	# resize the image
+	#convert "$phonePath" --resize 720x480 "$phonePath"
 }
 ################################################################################
 function clientSetupMessage(){
@@ -1548,172 +1578,272 @@ main(){
 		# git2web demo repos
 		#########################################################################################
 		git2web --demo-data
+		#########################################################################################
+		drawLine
+		ALERT "Data has been generated at '/var/cache/2web/generated/demo/'"
+		drawLine
+		ALERT "Add generated subdirectories to modules to use the demo data"
+		drawLine
+		ALERT "nfo2web '/var/cache/2web/generated/demo/nfo/'"
+		ALERT "comic2web '/var/cache/2web/generated/demo/comics/'"
+		ALERT "repo2web '/var/cache/2web/generated/demo/repos/'"
+		drawLine
 	elif [ "$1" == "-S" ] || [ "$1" == "--screenshots" ] || [ "$1" == "screenshots" ] ;then
 		totalCPUs=$(cpuCount)
+		#
+		createDir "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/"
 		# remove existing cookie file
 		# - cookie file allows screenshots of admin section when no admin is yet configured
 		if test -f "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg";then
 			rm -v "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg"
 		fi
 		################################################################################
-		screenshot  "http://localhost/" "01_home.jpg" &
+		function screenshotExamplePath(){
+			# read a directory and list all php files in the subdirctory excluding the index.php file
+			foundExamplePath=$(find "$1" -maxdepth 1 -mindepth 1 -type l -name '*.php')
+			#addToLog "DEBUG" "screenshot path processing 0" "$foundExamplePath"
+			#foundExamplePath=$(echo -n "$foundExamplePath" | sed "s/^.*index.php$//g")
+			foundExamplePath=$(echo -n "$foundExamplePath" | shuf )
+			#addToLog "DEBUG" "screenshot path processing 1" "$foundExamplePath"
+			foundExamplePath=$(echo -n "$foundExamplePath" | head -1)
+			#addToLog "DEBUG" "screenshot path processing 2" "$foundExamplePath"
+			# get the base file name
+			foundExamplePath=$(basename "$foundExamplePath")
+			#addToLog "DEBUG" "screenshot path processing 3" "$foundExamplePath"
+			# verify the example is not a real index file
+			if [ "$foundExamplePath" == "index.php" ];then
+				#addToLog "DEBUG" "screenshot path processing failed, recursing..." "$foundExamplePath"
+				screenshotExamplePath "$foundExamplePath"
+			else
+				addToLog "DEBUG" "screenshot path found" "$foundExamplePath"
+				# output the found path
+				echo -n "$foundExamplePath"
+			fi
+		}
+		################################################################################
+		screenshot  "http://localhost/" "01_home" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot  "http://localhost/help.php" "02_help.jpg" &
+		screenshot  "http://localhost/help.php" "02_help" &
 		waitQueue 0.5 "$totalCPUs"
 		# playlists new
-		screenshot "http://localhost/new/" "02_playlist_new.jpg" &
+		screenshot "http://localhost/new/" "02_playlist_new" &
 		waitQueue 0.5 "$totalCPUs"
 		# playlists random
-		screenshot "http://localhost/random/" "02_playlist_random.jpg" &
+		screenshot "http://localhost/random/" "02_playlist_random" &
 		waitQueue 0.5 "$totalCPUs"
 		# nfo2web movies index
-		screenshot "http://localhost/movies/" "03_index_movies.jpg" &
+		screenshot "http://localhost/movies/" "03_index_movies" &
 		waitQueue 0.5 "$totalCPUs"
 		# nfo2web shows index
-		screenshot "http://localhost/shows/" "03_index_shows.jpg" &
+		screenshot "http://localhost/shows/" "03_index_shows" &
+		waitQueue 0.5 "$totalCPUs"
+		# find a random show and show the season page
+		# find a random episode and show the episode page
+		randomShow=$(basename "$(find "/var/cache/2web/web/shows/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		randomSeason=$(basename "$(find "/var/cache/2web/web/shows/$randomShow/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		#randomEpisode=$(basename "$(find "/var/cache/2web/web/shows/$randomShow/$randomSeason" -maxdepth 1 -mindepth 1 -type s -name '*.php' | sed "s/^.*index.php$//g" | shuf | head -1)")
+		randomEpisode=$(screenshotExamplePath "/var/cache/2web/web/shows/$randomShow/$randomSeason")
+		# example show page
+		screenshot "http://localhost/shows/$randomShow/"  "03_index_shows_example_show" &
+		waitQueue 0.5 "$totalCPUs"
+		# example episode from example show
+		screenshot "http://localhost/shows/$randomShow/$randomSeason/$randomEpisode" "03_index_shows_example_episode" &
 		waitQueue 0.5 "$totalCPUs"
 		# iptv index
-		screenshot "http://localhost/live/" "03_index_live.jpg" &
+		screenshot "http://localhost/live/" "03_index_live" &
 		waitQueue 0.5 "$totalCPUs"
 		# comic index
-		screenshot "http://localhost/comics/" "03_index_comics.jpg" &
+		screenshot "http://localhost/comics/" "03_index_comics" &
 		waitQueue 0.5 "$totalCPUs"
+		# draw a random comic overview page
+		randomComic=$(basename "$(find "/var/cache/2web/web/comics/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		# draw a random comic book page
+		screenshot "http://localhost/comics/$randomComic/" "03_index_comics_example_comic_overview" &
+		# draw a random comic scroll page
+		screenshot "http://localhost/comics/$randomComic/scroll.php" "03_index_comics_example_comic_scroll" &
 		# weather index
-		screenshot "http://localhost/weather/" "03_index_weather.jpg" &
+		screenshot "http://localhost/weather/" "03_index_weather" &
 		waitQueue 0.5 "$totalCPUs"
 		# portal index
-		screenshot "http://localhost/portal/" "03_index_portal.jpg" &
+		screenshot "http://localhost/portal/" "03_index_portal" &
 		waitQueue 0.5 "$totalCPUs"
 		# repo index
-		screenshot "http://localhost/repos/" "03_index_repos.jpg" &
+		screenshot "http://localhost/repos/" "03_index_repos" &
 		waitQueue 0.5 "$totalCPUs"
 		# graph index
-		screenshot "http://localhost/graphs/" "03_index_graphs.jpg" &
+		screenshot "http://localhost/graphs/" "03_index_graphs" &
+		waitQueue 0.5 "$totalCPUs"
+		randomGraph=$(basename "$(find "/var/cache/2web/web/graphs/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		screenshot "http://localhost/graphs/$randomGraph/" "03_index_graphs_graph_page" &
 		waitQueue 0.5 "$totalCPUs"
 		# wiki index
-		screenshot "http://localhost/wiki/" "03_index_wiki.jpg" &
+		screenshot "http://localhost/wiki/" "03_index_wiki" &
 		waitQueue 0.5 "$totalCPUs"
 		# music2web index
 		# - need example of a music artist and a album, and a track playing
-		screenshot "http://localhost/music/" "05_index_music.jpg" &
+		screenshot "http://localhost/music/" "05_index_music" &
+		waitQueue 0.5 "$totalCPUs"
+		#
+		randomArtist=$(basename "$(find "/var/cache/2web/web/music/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		randomAlbum=$(basename "$(find "/var/cache/2web/web/music/$randomArtist/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		#
+		screenshot "http://localhost/music/$randomArtist/" "05_index_music_artist" &
+		waitQueue 0.5 "$totalCPUs"
+		#
+		screenshot "http://localhost/music/$randomArtist/$randomAlbum/" "05_index_music_album" &
+		waitQueue 0.5 "$totalCPUs"
+		#
+		screenshot "http://localhost/music/$randomArtist/$randomAlbum/?play=001" "05_index_music_track" &
 		waitQueue 0.5 "$totalCPUs"
 		# ai index
-		screenshot "http://localhost/ai/" "03_index_ai.jpg" &
+		screenshot "http://localhost/ai/" "03_index_ai" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# search
 		################################################################################
-		screenshot "http://localhost/search.php?q=" "06_index_search.jpg" &
+		screenshot "http://localhost/search.php?q=" "06_index_search" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=!help" "06_search_bang_help.jpg" &
+		screenshot "http://localhost/search.php?q=!help" "06_search_bang_help" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=the" "06_search_the.jpg" &
+		screenshot "http://localhost/search.php?q=the" "06_search_the" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=a" "06_search_a.jpg" &
+		screenshot "http://localhost/search.php?q=a" "06_search_a" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=cpu" "06_search_cpu.jpg" &
+		screenshot "http://localhost/search.php?q=cpu" "06_search_cpu" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=2web" "06_search_2web.jpg" &
+		screenshot "http://localhost/search.php?q=2web" "06_search_2web" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/search.php?q=awesome" "06_search_awesome.jpg" &
+		screenshot "http://localhost/search.php?q=awesome" "06_search_awesome" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# git2web index
 		################################################################################
-		screenshot "http://localhost/repos/" "07_index_repos.jpg" &
+		#
+		screenshot "http://localhost/repos/" "07_index_repos" &
 		waitQueue 0.5 "$totalCPUs"
+		# pick a random repo and take screenshots of the repo pages
+		randomRepo=$(basename "$(find "/var/cache/2web/web/repos/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
 		# test repo view
-		screenshot "http://localhost/repos/2web/" "07_repos_2web_overview.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/" "07_repos_repo_overview" &
 		waitQueue 0.5 "$totalCPUs"
 		# all commits
-		screenshot "http://localhost/repos/2web/?list" "08_repos_2web_commits.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?list" "08_repos_repo_commits" &
 		waitQueue 0.5 "$totalCPUs"
 		# lint lists
-		screenshot "http://localhost/repos/2web/?listLint" "08_repos_2web_lint.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?listLint" "08_repos_repo_lint" &
 		waitQueue 0.5 "$totalCPUs"
 		# inspector
-		screenshot "http://localhost/repos/2web/?inspector" "08_repos_2web_inspector.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?inspector" "08_repos_repo_inspector" &
 		waitQueue 0.5 "$totalCPUs"
 		# graph view diff
-		screenshot "http://localhost/repos/2web/?graph=diff_month" "08_repos_2web_graph_diff.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?graph=diff_month" "08_repos_repo_graph_diff" &
 		waitQueue 0.5 "$totalCPUs"
 		# graph view commit
-		screenshot "http://localhost/repos/2web/?graph=commit_month" "08_repos_2web_graph_commit.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?graph=commit_month" "08_repos_2web_graph_commit" &
 		waitQueue 0.5 "$totalCPUs"
 		# documentation
-		screenshot "http://localhost/repos/2web/?listDoc" "08_repos_2web_docs.jpg" &
+		screenshot "http://localhost/repos/$randomRepo/?listDoc" "08_repos_2web_docs" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/repos/2web/?doc=2webLib.sh.index" "08_repos_2web_doc_example.jpg" &
-		waitQueue 0.5 "$totalCPUs"
+		#screenshot "http://localhost/repos/$randomRepo?doc=2webLib.sh.index" "08_repos_2web_doc_example" &
+		#waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# ai2web index
 		################################################################################
-		screenshot "http://localhost/ai/" "08_ai_2web_index.jpg" &
+		screenshot "http://localhost/ai/" "08_ai_2web_index" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/ai/prompt/" "08_ai_2web_prompt.jpg" &
+		screenshot "http://localhost/ai/prompt/" "08_ai_2web_prompt" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# portal2web index
 		################################################################################
-		screenshot "http://localhost/portal/" "08_portal_2web_portal.jpg" &
+		screenshot "http://localhost/portal/" "08_portal_index" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "http://localhost/portal/localhost.php" "08_portal_2web_portal_localhost.jpg" &
+		#
+		randomPortalLink=$(screenshotExamplePath "/var/cache/2web/web/portal/")
+		#
+		screenshot "http://localhost/portal/$randomPortalLink" "08_portal_index_portal" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# graph2web index
 		################################################################################
-		screenshot "http://localhost/graphs/cpu/" "08_graph_2web_cpu.jpg" &
+		screenshot "http://localhost/graphs/cpu/" "08_graph_2web_cpu" &
+		waitQueue 0.5 "$totalCPUs"
+		################################################################################
+		# php2web index
+		################################################################################
+		screenshot "http://localhost/applications/" "09_applications_index" &
+		waitQueue 0.5 "$totalCPUs"
+		#
+		randomApplication=$(basename "$(find "/var/cache/2web/web/applications/" -maxdepth 1 -mindepth 1 -type d | shuf | head -1)")
+		#
+		screenshot "http://localhost/applications/$randomApplication/" "09_applications_index_example_app" &
 		waitQueue 0.5 "$totalCPUs"
 		################################################################################
 		# settings screenshots, 2web must be in passwordless mode, e.g. no admin users
 		# settings required https
 		################################################################################
 		ALERT "Screenshots of Admin locations only work if no admin is set."
-		screenshot "https://localhost/views/" "10_settings_views.jpg" &
+		screenshot "https://localhost/views/" "10_settings_views" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/log/" "10_settings_log.jpg" &
+		screenshot "https://localhost/log/" "10_settings_log" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/modules.php" "10_settings_modules.jpg" &
+		screenshot "https://localhost/settings/modules.php" "10_settings_modules" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/system.php" "10_settings_system.jpg" &
+		screenshot "https://localhost/settings/system.php" "10_settings_system" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/nfo.php" "10_settings_nfo2web.jpg" &
+		screenshot "https://localhost/settings/nfo.php" "10_settings_nfo2web" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/ytdl2nfo.php" "10_settings_ytdl2web.jpg" &
+		screenshot "https://localhost/settings/ytdl2nfo.php" "10_settings_ytdl2web" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/music.php" "10_settings_music.jpg" &
+		screenshot "https://localhost/settings/music.php" "10_settings_music" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/comics.php" "10_settings_comics.jpg" &
+		screenshot "https://localhost/settings/comics.php" "10_settings_comics" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/comicsDL.php" "10_settings_comics_downloads.jpg" &
+		screenshot "https://localhost/settings/comicsDL.php" "10_settings_comics_downloads" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/tv.php" "10_settings_iptv_tv.jpg" &
+		screenshot "https://localhost/settings/tv.php" "10_settings_iptv_tv" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/radio.php" "10_settings_iptv_radio.jpg" &
+		screenshot "https://localhost/settings/radio.php" "10_settings_iptv_radio" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/iptv_blocked.php" "10_settings_iptv_blocked.jpg" &
+		screenshot "https://localhost/settings/iptv_blocked.php" "10_settings_iptv_blocked" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/weather.php" "10_settings_weather.jpg" &
+		screenshot "https://localhost/settings/weather.php" "10_settings_weather" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/ai.php" "10_settings_ai.jpg" &
+		screenshot "https://localhost/settings/ai.php" "10_settings_ai" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/portal.php" "10_settings_portal.jpg" &
+		screenshot "https://localhost/settings/portal.php" "10_settings_portal" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/repos.php" "10_settings_repos.jpg" &
+		screenshot "https://localhost/settings/repos.php" "10_settings_repos" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/graphs.php" "10_settings_graphs.jpg" &
+		screenshot "https://localhost/settings/graphs.php" "10_settings_graphs" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/settings/about.php" "10_settings_about.jpg" &
+		screenshot "https://localhost/settings/about.php" "10_settings_about" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/logout.php" "10_settings_logout.jpg" &
+		screenshot "https://localhost/logout.php" "10_settings_logout" &
 		waitQueue 0.5 "$totalCPUs"
-		screenshot "https://localhost/login.php" "10_settings_login.jpg" &
+		screenshot "https://localhost/login.php" "10_settings_login" &
 		waitQueue 0.5 "$totalCPUs"
 		blockQueue 1
 		# remove the cookies used in the screenshots
 		rm -v "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg"
 		# change ownership
 		chown -R www-data:www-data "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
+		# blank out the index
+		echo "" > "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index"
+		echo "" > "/var/cache/2web/generated/comics/2web/2web Screenshots/index.html"
+		# build a list of all the screenshots
+		find "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/" -type f | while read -r screenshotPath;do
+			screenshotPath=$(basename "$screenshotPath")
+			# build the screenshots html page
+			{
+				#echo -n "<a href='screenshots/$screenshotPath'>"
+				#echo -n "<img onclick='toggleFullscreen(\"listCard\")' loading='lazy' class='screenshotImage' src='screenshots/$screenshotPath'>"
+				echo "<img onclick='toggleFullscreen(\"$screenshotPath\")' id='$screenshotPath' loading='lazy' class='screenshotImage' src='screenshots/$screenshotPath'>"
+				#echo "</a>"
+			} >> "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index"
+		done
+		cat "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index" | sort -u > "/var/cache/2web/generated/comics/2web/2web Screenshots/index.html"
+		#
 		ALERT "Finished building the 2web screenshots"
 		ALERT "Screenshots are stored in /var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		ALERT "Run 'comic2web' in order to add the screenshots to the comic section of 2web"
