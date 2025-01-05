@@ -35,7 +35,6 @@ if (isset($_SESSION["user"])){
 ?>
 <!-- create top jump button -->
 <img class='globalPulse' src='/pulse.gif'>
-<img class='globalSpinner' src='/spinner.gif'>
 <a href='#' id='topButton' class='button'>&uarr;<div><div id='scrollProgress'></div></div></a>
 
 <script>
@@ -363,7 +362,9 @@ if (isset($_SESSION["user"])){
 }
 
 formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
-formatEcho( "❓",3);
+formatEcho("<span class='helpQuestionMark'>");
+formatEcho("?");
+formatEcho("</span>");
 formatEcho("<span class='headerText'>",3);
 formatEcho("Help",4);
 formatEcho("</span>",3);
@@ -420,7 +421,9 @@ if (isset($_SESSION["user"])){
 echo "	<hr>";
 // draw the help button
 formatEcho("<a class='button' href='/help.php'>",2);
-formatEcho( "❓",3);
+formatEcho("<span class='helpQuestionMark'>");
+formatEcho("?");
+formatEcho("</span>");
 formatEcho("<span class='headerText'>",3);
 formatEcho("Help",4);
 formatEcho("</span>",3);

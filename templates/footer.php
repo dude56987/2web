@@ -433,7 +433,9 @@ if (detectEnabledStatus("php2web")){
 	}
 }
 echo "<a class='footerButton' href='/help.php'>";
-echo "❔";
+echo "<span class='helpQuestionMark'>";
+echo "?";
+echo "</span>";
 echo "<span class='footerText'>";
 echo " HELP";
 echo "</span>";

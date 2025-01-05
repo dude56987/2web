@@ -1001,6 +1001,9 @@ a:visited {
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
 @media only screen and (orientation: portrait){
+	.globalPulse{
+		bottom: 4rem !important;
+	}
 	.comicPane{
 		/*This means the picture is a portrat picture*/
 		font-size: 0.5rem;
@@ -1793,9 +1796,6 @@ th{
 .goodWeather{
 	font-size: 1.2rem;
 }
-.downloadIcon{
-	color: lightgreen;
-}
 .loginLogoutBox{
 	display: block;
 	text-align: right;
@@ -2095,11 +2095,15 @@ pre{
 .globalPulse{
 	position: fixed;
 	width: 100dvw;
-	height: 1rem;
+	height: 2rem;
 	left: 0px;
-	top: 0px;
-	border-bottom: solid var(--borderColor) 0.1rem;
-	background-color: var(--glassBackground);
+	bottom: 0px;
+	border-top: solid var(--borderColor) 0.1rem;
+	background: var(--glassBackground);
+	z-index: 0;
+}
+.globalPulse:hover{
+	z-index: 0 !important;
 }
 .globalSpinner{
 	position: fixed;
@@ -2524,4 +2528,34 @@ details[open] summary h2::before {
 }
 .censorImage{
 	filter: blur(5px);
+}
+.downloadIcon{
+	display: inline-block;
+	width: 1rem;
+	height: 1rem;
+	border: solid white 0.2rem;
+	font-weight: bold;
+	border-radius: 1rem;
+	font-size: 0.8rem;
+	color: white;
+	background-color: darkseagreen;
+	line-height: 1rem;
+	padding: 0.2rem;
+	text-shadow: none;
+	vertical-align: middle;
+}
+.helpQuestionMark{
+	display: inline-block;
+	width: 1rem;
+	height: 1rem;
+	border: solid white 0.2rem;
+	font-weight: bold;
+	border-radius: 1rem;
+	font-size: 0.8rem;
+	color: white;
+	background-color: cornflowerblue;
+	line-height: 1rem;
+	padding: 0.2rem;
+	text-shadow: none;
+	vertical-align: middle;
 }
