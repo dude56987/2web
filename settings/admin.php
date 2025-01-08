@@ -1272,6 +1272,12 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Fortune added to queue");
 	echo "<hr><a class='button' href='/fortune.php'>🛠️ Return To Fortune</a><hr>";
 	clear();
+}else if (array_key_exists("removeCachedVideo",$_POST)){
+	outputLog("Remove cached file in '/var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/'");
+	# remove the cached file
+	addToQueue("multi",("rm -rv /var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/"));
+	echo "<hr><a class='button' href='/web_player/".$_POST["removeCachedVideo"]."/".$_POST["removeCachedVideo"].".php'>🛠️ Return To Web Player</a><hr>";
+	clear();
 }else if (array_key_exists("setFortuneFileStatus",$_POST)){
 	outputLog("Set fortune file ".$_POST["fortuneFileName"]." status to ".$_POST['setFortuneFileStatus']);
 	yesNoCfgSet( ("/etc/2web/fortune/".$_POST["fortuneFileName"].".cfg"), $_POST['setFortuneFileStatus'] );

@@ -423,6 +423,32 @@ document.body.addEventListener('keydown', function(event){
 				$tempVideoChannelUrl.="	</td>\n";
 			}
 			$tempVideoChannelUrl.="</tr>\n";
+
+			# build the remove button
+			$tempVideoChannelUrl.="<tr>\n";
+			$tempVideoChannelUrl.="<th>Cache Sum</th>\n";
+			if (requireGroup("admin",false)){
+				$tempVideoChannelUrl.="<th>Admin Actions</th>\n";
+			}
+			$tempVideoChannelUrl.="</tr>\n";
+			if (file_exists($directLinkPath)){
+				$tempVideoChannelUrl.="<tr>\n";
+				$tempVideoChannelUrl.="	<td>\n";
+				$tempVideoChannelUrl.="		<a href='".$jsonSum."'>".$jsonSum."</a>\n";
+				$tempVideoChannelUrl.="	</td>\n";
+				if (requireGroup("admin",false)){
+					if (is_readable("/var/cache/2web/web/RESOLVER-CACHE/$jsonSum/")){
+						# if the user has admin permissions load the button that will add the channel
+						$tempVideoChannelUrl.="	<td>\n";
+						$tempVideoChannelUrl.="		<form action='/settings/admin.php' method='post'>\n";
+						$tempVideoChannelUrl.="			<input width='60%' type='text' name='removeCachedVideo' value='".$jsonSum."' hidden>\n";
+						$tempVideoChannelUrl.="			<button class='button' type='submit'>🗑️ Remove Cached Video</button>\n";
+						$tempVideoChannelUrl.="		</form>\n";
+						$tempVideoChannelUrl.="	</td>\n";
+					}
+				}
+				$tempVideoChannelUrl.="</tr>\n";
+			}
 		}
 		$tempVideoChannelUrl.="</table>\n";
 		#
@@ -443,7 +469,7 @@ document.body.addEventListener('keydown', function(event){
 		}else if (file_exists($moviePosterPathJPG)){
 			$posterPath=$moviePosterPathJPG;
 		}else{
-			$posterPath="/plasmaPoster.png";
+			$posterPath="/spinner.png";
 		}
 		$plotPath=$_SERVER["SCRIPT_FILENAME"].".plot";
 		$plotData="";
