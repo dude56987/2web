@@ -413,7 +413,9 @@ if (array_key_exists("url",$_GET)){
 	foreach($sourceFiles as $sourceFile){
 		# add the video.mp4 to the path, this is the file the dates will be sorted by
 		$tempSourceFile=$_SERVER['DOCUMENT_ROOT']."/RESOLVER-CACHE/".$sourceFile."/";
-		$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
+		#if (is_readable($tempSourceFile."/video.mp4")){
+			$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
+		#}
 	}
 	# sort the diretories by date
 	$sourceFiles = sortPathsByDate($tempSourceFiles);
@@ -421,23 +423,29 @@ if (array_key_exists("url",$_GET)){
 	echo "<table>";
 
 	echo "<tr>";
+	echo "<th>Last Watched</th>";
 	echo "<th>Verified</th>";
 	echo "<th>Thumbnail</th>";
 	echo "<th>HLS</th>";
 	echo "<th>MP4</th>";
-	echo "<th>json</th>";
-	echo "<th>title</th>";
-	echo "<th>link</th>";
+	echo "<th>JSON</th>";
+	echo "<th>Title</th>";
+	echo "<th>Web Player</th>";
+	echo "<th>Link</th>";
 	echo "</tr>";
 	foreach($sourceFiles as $sourcePath){
 		echo "<tr>";
 		# remove file name left from date sort
 		$sourceWebPath=str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourcePath);
+		# check the last watched time
+		echo "<td>";
+		echo timeElapsedToHuman(filemtime($sourcePath));
+		echo "</td>";
 		# check for verified video
 		if (is_readable($sourcePath."verified.cfg")){
-			echo "<td>Verified</td>";
+			echo "<td class='enabledSetting'>Verified</td>";
 		}else{
-			echo "<td>Not Verified</td>";
+			echo "<td class='disabledSetting'>Not Verified</td>";
 		}
 		# check for thumbnail
 		if (is_readable($sourcePath."video.png")){
@@ -457,9 +465,16 @@ if (array_key_exists("url",$_GET)){
 		}else{
 			echo "<td>No MP4</td>";
 		}
+
+		$sourceHash=basename($sourcePath);
+
 		# check for json data
 		if (is_readable($sourcePath."video.info.json")){
-			echo "<td>Json Found</td>";
+			echo "<td>";
+			echo "<a href='/RESOLVER-CACHE/$sourceHash/video.info.json'>";
+			echo "Json Found";
+			echo "</a>";
+			echo "</td>";
 		}else{
 			echo "<td>No Json</td>";
 		}
@@ -476,10 +491,17 @@ if (array_key_exists("url",$_GET)){
 		echo "<td>$videoTitle</td>";
 
 		echo "<td>";
-		echo "	<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
-		if (is_readable($sourcePath."video.png")){
-			echo "		<img loading='lazy' src='".$sourceWebPath."video.png"."' />\n";
+		# use the web player if it is available
+		if (is_readable("/var/cache/2web/web/web_player/".$sourceHash."/".$sourceHash.".php")){
+			echo "	<a class='showPageEpisode' href='/web_player/".$sourceHash."/".$sourceHash.".php'>Web Player Link</a>\n";
+		}else{
+			echo "No Web Player Link Was Found";
 		}
+		echo "</td>";
+
+		echo "<td>";
+		echo "	<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
+		echo "		<img loading='lazy' src='".$sourceWebPath."video.png"."' />\n";
 		echo "		<h3>".$videoTitle."</h3>\n";
 		echo "	</a>\n";
 		echo "</td>";
