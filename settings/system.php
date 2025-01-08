@@ -40,7 +40,6 @@ include("settingsHeader.php");
 	<ul>
 		<li><a href='#webPlayerStatus'>Web Player Status</a></li>
 		<li><a href='#webClientStatus'>Web Client Status</a></li>
-		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
 		<li><a href='#additionalDictionaryResults'>Additional Dictionary Results</a></li>
 		<li><a href='#websiteCachePath'>2web Cache Path</a></li>
 		<li><a href='#websiteDownloadPath'>2web Download Path</a></li>
@@ -109,30 +108,6 @@ include("settingsHeader.php");
 		</ul>
 		<?PHP
 		buildYesNoCfgButton("/etc/2web/client.cfg","Web Client","webClientStatus");
-		?>
-</div>
-
-<div id='homepageFortuneStatus' class='inputCard'>
-	<h2>Fortune</h2>
-		<ul>
-			<li>
-				Enable or disable the fortune message on the homepage.
-			</li>
-			<li>
-				You can use the package manager to add or remove fortunes. The following packages contain the fortune databases.
-				<ul>
-					<li>fortunes-off<sup>Offensive To the Senses</sup></li>
-					<li>fortunes-mario<sup>Video Game Quotes</sup></li>
-					<li>fortunes-spam<sup>BBS Spam</sup></li>
-					<li>fortunes-bofh-excuses<sup>Admin Excuses</sup></li>
-					<li>fortunes-ubuntu-server<sup>Ubuntu Server Tips</sup></li>
-					<li>fortunes-debian-hints<sup>Debian Server Tips</sup></li>
-					<li>fortunes-min<sup>Basic Default Fortunes</sup></li>
-				</ul>
-			</li>
-		</ul>
-		<?PHP
-		buildYesNoCfgButton("/etc/2web/fortuneStatus.cfg","Homepage Fortunes","homepageFortuneStatus");
 		?>
 </div>
 
