@@ -51,6 +51,8 @@ echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 echo "	<button class='button' type='submit' name='theme' value='$tempTheme'>Set Theme</button>\n";
 echo "	</form>\n";
 echo "	🌏 🌎 🌍 <a class='button' href='/settings/themes.php?theme=$tempTheme'>Test Theme</a> 🌏 🌎 🌍\n";
+echo "<span class='helpQuestionMark'>?</span>\n";
+echo "<span class='downloadIcon'>▼</span>\n";
 echo "<p>";
 echo "abcdefghijklmnopqrstuvwxyz ";
 echo "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
