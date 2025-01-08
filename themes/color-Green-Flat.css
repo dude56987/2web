@@ -28,3 +28,6 @@
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
+.downloadIcon{
+	background: yellowGreen !important;
+}
