@@ -177,7 +177,7 @@ include("settingsHeader.php");
 			}
 			echo "<input type='number' name='autoRebootTime' placeholder='Reboot Hour...' min='0' max='23' value='".$automaticRebootTime."' />";
 		?>
-		<button type='submit' class='button'>Change Reboot Time</button>
+		<button type='submit' class='button'>⏰ Change Reboot Time</button>
 	</form>
 </div>
 

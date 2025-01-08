@@ -139,7 +139,7 @@ function randomColor(){
 					: Highlight Border
 				</li>
 			</ul>
-		<button class='button' type='submit'>Create New Template</button>
+		<button class='button' type='submit'>➕ Create New Template</button>
 		</form>
 </div>
 
@@ -199,7 +199,7 @@ $totalThemes=count($sourceFiles);
 			}
 			?>
 		</select>
-		<button class='button' type='submit'>Change Theme</button>
+		<button class='button' type='submit'>🖌️ Change Theme</button>
 	</form>
 </div>
 

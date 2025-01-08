@@ -93,7 +93,7 @@ include("settingsHeader.php");
 		echo "<tr>";
 		echo "</table>";
 	?>
-	<button type='submit' class='button'>Change Session Timeout</button>
+	<button type='submit' class='button'>⏱️ Change Session Timeout</button>
 </form>
 </div>
 
@@ -208,7 +208,7 @@ include("settingsHeader.php");
 				</li>
 			</ul>
 		</ul>
-		<button class='button' type='submit'>Add New Administrator</button>
+		<button class='button' type='submit'>🧑‍💻 Add New Administrator</button>
 	</form>
 	</div>
 
@@ -230,7 +230,7 @@ include("settingsHeader.php");
 				</li>
 			</ul>
 		</ul>
-		<button class='button' type='submit'>Add New User</button>
+		<button class='button' type='submit'>🧑 Add New User</button>
 	</form>
 	</div>
 </div>
