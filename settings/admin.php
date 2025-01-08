@@ -1263,6 +1263,20 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/repos/renderVideo.cfg", $_POST['repoRenderVideo']);
 	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>🛠️ Return To Settings</a><hr>";
 	clear();
+}else if (array_key_exists("reloadFortune",$_POST)){
+	outputLog("Remove cached file in '/var/cache/2web/web/fortune.index'");
+	unlink("/var/cache/2web/web/fortune.index");
+	outputLog("Building a new fortune");
+	# remove the cached fortune and make a new one
+	addToQueue("multi","2web --fortune");
+	outputLog("Fortune added to queue");
+	echo "<hr><a class='button' href='/fortune.php'>🛠️ Return To Fortune</a><hr>";
+	clear();
+}else if (array_key_exists("setFortuneFileStatus",$_POST)){
+	outputLog("Set fortune file ".$_POST["fortuneFileName"]." status to ".$_POST['setFortuneFileStatus']);
+	yesNoCfgSet( ("/etc/2web/fortune/".$_POST["fortuneFileName"].".cfg"), $_POST['setFortuneFileStatus'] );
+	echo "<hr><a class='button' href='/settings/fortune.php#fortuneFiles'>🛠️ Return To Settings</a><hr>";
+	clear();
 }else if (array_key_exists("enableGraphPlugin",$_POST)){
 	$graphName=$_POST['enableGraphPlugin'];
 	outputLog("Enable Munin Graph Plugin '$graphName'");

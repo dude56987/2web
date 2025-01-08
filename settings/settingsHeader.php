@@ -179,7 +179,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="php2web";
 }else if ($pageURL == "/settings/wiki.php"){
 	$moduleName="wiki2web";
-}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php")){
+}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php") || ($pageURL == "/settings/fortune.php")){
 	$moduleName="none";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
@@ -188,6 +188,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🧩","Modules","/settings/modules.php");
 	drawHeaderButton("👪","Users & Groups","/settings/users.php");
 	drawHeaderButton("🎨","Themes","/settings/themes.php");
+	drawHeaderButton("🔮","Fortunes","/settings/fortune.php");
 	drawHeaderButton("📥","Cache","/settings/cache.php");
 	drawHeaderButton("📋","Log","/log/");
 	drawHeaderButton("👁️","Views","/views/");

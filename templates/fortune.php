@@ -43,10 +43,17 @@ if (file_exists("fortune.index")){
 	echo "<div class='fortuneText'>";
 	echo "$todaysFortune";
 	echo "</div>";
+	if (requireGroup("admin",false)){
+		echo "		<form action='/settings/admin.php' method='post'>\n";
+		echo "			<input width='60%' type='text' name='reloadFortune' value='yes' hidden>\n";
+		echo "			<button class='button' type='submit'>👐 New Server Fortune</button>\n";
+		echo "		</form>\n";
+	}
 }else{
-	echo "No fortune has been generated yet...";
+	echo "No fortune has been generated yet...<br>";
+	echo "Reloading page automatically...";
+	reloadPage(10);
 }
-
 ?>
 </div>
 <?php

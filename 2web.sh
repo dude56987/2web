@@ -96,6 +96,58 @@ function disableCronJob(){
 	rm -v "/etc/cron.d/2web"
 }
 ########################################################################
+function generateFortune(){
+	webDirectory="$1"
+	# build the fortune if the config is set
+	if yesNoCfgCheck "/etc/2web/fortuneStatus.cfg";then
+		# only build a new fortune once every 24 hours
+		if cacheCheck "$webDirectory/fortune.index" "1";then
+			# write the fortune for this processing run...
+			if test -f /usr/games/fortune;then
+				# create the directory
+				createDir "/etc/2web/fortune/"
+				fortuneFiles=""
+				# get all the enabled fortunes
+				#find "/usr/share/games/fortunes/" -type f | while read -r fortuneFile;do
+				IFS_BACKUP=$IFS
+				IFS=$'\n'
+				for fortuneFile in $(find "/usr/share/games/fortunes/");do
+					if echo "$fortuneFile" | grep ".db";then
+						INFO "Incorrect database format $fortuneFile"
+					elif echo "$fortuneFile" | grep ".cfg";then
+						INFO "Incorrect database format $fortuneFile"
+					elif echo "$fortuneFile" | grep ".u8";then
+						INFO "Incorrect database format $fortuneFile"
+					elif echo "$fortuneFile" | grep ".dat";then
+						INFO "Incorrect database format $fortuneFile"
+					else
+						# if the fortune file is enabled
+						# - default fortune files to yes
+						if yesNoCfgCheck "/etc/2web/fortune/$(basename "$fortuneFile").cfg" "no";then
+							# add the fortune file to the generate command
+							fortuneFiles="${fortuneFiles} $(basename "${fortuneFile}")"
+						fi
+					fi
+				done
+				IFS=$IFS_BACKUP
+
+				todaysFortune=$(/usr/games/fortune -e ${fortuneFiles} | sed "s/\t/ /g")
+				addToLog "INFO" "Generate New Fortune" "<pre>/usr/games/fortune -e ${fortuneFiles}</pre><pre>${todaysFortune}</pre>"
+
+				# replace tabs with spaces for ascii art
+				#
+				echo "$todaysFortune" > "$webDirectory/fortune.index"
+			fi
+		fi
+	else
+		# the config is disabled check for any cached fortunes
+		if test -f "$webDirectory/fortune.index";then
+			# remove the fortune index file
+			rm -v "$webDirectory/fortune.index"
+		fi
+	fi
+}
+########################################################################
 function checkActiveStatusForGraph(){
 	graphName="$1"
 	webDirectory="$2"
@@ -525,6 +577,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
 	linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
 	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
+	linkFile "/usr/share/2web/settings/fortune.php" "$webDirectory/settings/fortune.php"
 	linkFile "/usr/share/2web/settings/themes.php" "$webDirectory/settings/themes.php"
 	linkFile "/usr/share/2web/settings/themeExample.php" "$webDirectory/settings/themeExample.php"
 	linkFile "/usr/share/2web/settings/weather.php" "$webDirectory/settings/weather.php"
@@ -699,26 +752,7 @@ function update2web(){
 			echo "$data" > "/etc/at.deny"
 		fi
 	fi
-
-	# build the fortune if the config is set
-	if yesNoCfgCheck "/etc/2web/fortuneStatus.cfg";then
-		# only build a new fortune once every 24 hours
-		if cacheCheck "$webDirectory/fortune.index" "1";then
-			# write the fortune for this processing run...
-			if test -f /usr/games/fortune;then
-				# replace tabs with spaces for ascii art
-				todaysFortune=$(/usr/games/fortune -a | sed "s/\t/ /g")
-				echo "$todaysFortune" > "$webDirectory/fortune.index"
-			fi
-		fi
-	else
-		# the config is disabled check for any cached fortunes
-		if test -f "$webDirectory/fortune.index";then
-			# remove the fortune index file
-			rm -v "$webDirectory/fortune.index"
-		fi
-	fi
-
+	generateFortune "$webDirectory"
 	# check for the web player config
 	if yesNoCfgCheck "/etc/2web/webPlayer.cfg";then
 		# create the group
@@ -2299,6 +2333,8 @@ main(){
 		rm -v /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
 		# remove the kiosk user from the system
 		deluser --remote-all-files kiosk
+	elif [ "$1" == "--fortune" ] || [ "$1" == "fortune" ];then
+		generateFortune "$(webRoot)"
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "2web"
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
