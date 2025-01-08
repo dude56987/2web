@@ -1299,6 +1299,13 @@ function clientSetupMessage(){
 	fi
 }
 ################################################################################
+function nuke(){
+	# remove all website content and disable the website
+	rm -rv /var/cache/2web/web/*
+	disableApacheServer
+	disableCronJob
+}
+################################################################################
 main(){
 	if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 		# update main components
@@ -1554,10 +1561,7 @@ main(){
 		/usr/bin/portal2web nuke
 		/usr/bin/ai2web nuke
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
-		# remove all website content and disable the website
-		rm -rv /var/cache/2web/web/*
-		disableApacheServer
-		disableCronJob
+		nuke
 	elif [ "$1" == "--cleanup-log" ] || [ "$1" == "cleanup-log" ];then
 		# force the log cleanup
 		cleanupLog
