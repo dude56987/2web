@@ -37,6 +37,7 @@ test-apps:
 	# compress the apps into the install location
 	zip -9 -r -j "/usr/share/2web/example_apps/list.zip" "example_apps/list/."
 	zip -9 -r -j "/usr/share/2web/example_apps/ticket.zip" "example_apps/ticket/."
+	zip -9 -r -j "/usr/share/2web/example_apps/calc.zip" "example_apps/calc/."
 	# re-install the example apps
 	php2web nuke
 	php2web
@@ -390,6 +391,7 @@ build-deb: upgrade-hls
 	################################################################################
 	zip -9 -r -j "debian/usr/share/2web/example_apps/list.zip" "example_apps/list/."
 	zip -9 -r -j "debian/usr/share/2web/example_apps/ticket.zip" "example_apps/ticket/."
+	zip -9 -r -j "debian/usr/share/2web/example_apps/calc.zip" "example_apps/calc/."
 	################################################################################
 	# build the readme manual page
 	################################################################################
