@@ -1311,14 +1311,10 @@ main(){
 		# update main components
 		update2web
 		# update the metadata and build webpages for all generators
-		/usr/bin/weather2web
-		/usr/bin/graph2web
-		/usr/bin/comic2web
-		/usr/bin/nfo2web
-		/usr/bin/music2web
-		/usr/bin/iptv2web
-		/usr/bin/wiki2web
-		/usr/bin/git2web
+		moduleNames=$(loadModules)
+		for module in $moduleNames;do
+			/usr/bin/$module
+		done
 		rebootCheck
 	elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ];then
 		# read all the modules from loadModules
@@ -1381,7 +1377,7 @@ main(){
 		fi
 		# parallel and regular processing is available for --verify
 		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+			totalCPUS=$(cpuCount)
 			# verify the 2web content indexes
 			verifyDatabasePaths "$webDirectory/data.db" &
 			waitQueue 0.5 "$totalCPUS"
@@ -1414,57 +1410,19 @@ main(){
 		ALERT "================================================================================"
 		ALERT "PARALLEL MODE"
 		ALERT "================================================================================"
-		totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
+		totalCPUS=$(cpuCount)
 		webDirectory=$(webRoot)
 		# parllelize the update processes
 		###########################
 		# update main components
 		# - all processes are locked so conflicts will not arise from launching this process multuple times
 		update2web
-		# update the on-demand downloads
-		ALERT "Launching ytdl2nfo..."
-		/usr/bin/ytdl2nfo &
-		waitQueue 1 "$totalCPUS"
-		# update weather
-		ALERT "Launching weather2web..."
-		/usr/bin/weather2web &
-		waitQueue 1 "$totalCPUS"
-		# update the metadata and build webpages for all generators
-		###########################################################################
-		ALERT "Launching nfo2web..."
-		/usr/bin/nfo2web --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching graph2web..."
-		/usr/bin/graph2web &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching iptv2web..."
-		/usr/bin/iptv2web &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching comic2web..."
-		/usr/bin/comic2web --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching music2web..."
-		/usr/bin/music2web --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching wiki2web..."
-		/usr/bin/wiki2web --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching git2web..."
-		/usr/bin/git2web --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching rss2nfo..."
-		/usr/bin/rss2nfo --parallel &
-		waitQueue 1 "$totalCPUS"
-		###########################################################################
-		ALERT "Launching ai2web..."
-		/usr/bin/ai2web --parallel &
+		moduleNames=$(loadModules)
+		for module in $moduleNames;do
+			ALERT "Launching $module..."
+			/usr/bin/$module --parallel &
+			waitQueue 1 "$totalCPUS"
+		done
 		blockQueue 1
 		# wait for all background services to stop
 		waitForIdleServer "$webDirectory"
@@ -1518,16 +1476,13 @@ main(){
 	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ];then
 		# update main components
 		update2web
-		# update the metadata and build webpages for all generators
-		/usr/bin/nfo2web update
-		/usr/bin/iptv2web update
-		/usr/bin/comic2web update
-		/usr/bin/weather2web
-		/usr/bin/music2web
-		/usr/bin/wiki2web
-		/usr/bin/graph2web
-		/usr/bin/portal2web
-		/usr/bin/ai2web
+		moduleNames=$(loadModules)
+		# update all modules
+		for module in $moduleNames;do
+			ALERT "Launching $module..."
+			/usr/bin/$module --update
+		done
+		#
 		rebootCheck
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ];then
 		# - upgrade streamlink and yt-dlp and gallery-dl pip packages
@@ -1548,18 +1503,12 @@ main(){
 		ai2web --upgrade
 		rss2nfo --upgrade
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ];then
-		# remove all genereated web content
-		/usr/bin/nfo2web nuke
-		/usr/bin/comic2web nuke
-		/usr/bin/iptv2web nuke
-		/usr/bin/weather2web nuke
-		/usr/bin/music2web nuke
-		/usr/bin/wiki2web nuke
-		/usr/bin/weather2web nuke
-		/usr/bin/graph2web nuke
-		/usr/bin/git2web nuke
-		/usr/bin/portal2web nuke
-		/usr/bin/ai2web nuke
+		moduleNames=$(loadModules)
+		# update all modules
+		for module in $moduleNames;do
+			ALERT "Launching $module..."
+			/usr/bin/$module --nuke
+		done
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ];then
 		nuke
 	elif [ "$1" == "--cleanup-log" ] || [ "$1" == "cleanup-log" ];then
