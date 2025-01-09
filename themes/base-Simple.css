@@ -1,7 +1,7 @@
 /*
 ########################################################################
 # 2web base theme for generating default themes
-# Copyright (C) 2023 Carl J Smith
+# Copyright (C) 2025 Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,13 @@ html{
 }
 ::selection{
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
+	text-shadow: none;
 }
 ::-moz-selection{
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
+	text-shadow: none;
 }
 body{
 	background: linear-gradient(to top, var(--glassBackground),transparent);
@@ -130,7 +132,7 @@ html::-webkit-scrollbar-thumb{
 }
 html{
 	background-size: 100dvw;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
 	text-align: center;
@@ -153,12 +155,12 @@ html{
 	text-align: left;
 	font-size: 1rem;
 	word-wrap: break-word;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	border-size: 0.02rem;
 }
 .channelLink:hover {
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	color: var(--highlightText);
 }
 .indexLink{
@@ -215,17 +217,112 @@ html{
 	width: auto;
 	margin: 1rem;
 }
+marquee{
+	text-align: left;
+}
+h1,h2,h3,h4{
+	border-bottom: solid 0.2rem;
+	border-top: solid 0.2rem;
+}
+/* */
+.titleCard a > h1:first-child{
+	border-top: none !important;
+}
+.titleCard a > h2:first-child{
+	border-top: none !important;
+}
+.titleCard a > h3:first-child{
+	border-top: none !important;
+}
+.titleCard a > h4:first-child{
+	border-top: none !important;
+}
+.inputCard a > h1:first-child{
+	border-top: none !important;
+}
+.inputCard a > h2:first-child{
+	border-top: none !important;
+}
+.inputCard a > h3:first-child{
+	border-top: none !important;
+}
+.inputCard a > h4:first-child{
+	border-top: none !important;
+}
+.settingListCard a > h1:first-child{
+	border-top: none !important;
+}
+.settingListCard a > h2:first-child{
+	border-top: none !important;
+}
+.settingListCard a > h3:first-child{
+	border-top: none !important;
+}
+.settingListCard a > h4:first-child{
+	border-top: none !important;
+}
+/* */
+.titleCard > h1:first-child{
+	border-top: none !important;
+}
+.titleCard > h2:first-child{
+	border-top: none !important;
+}
+.titleCard > h3:first-child{
+	border-top: none !important;
+}
+.titleCard > h4:first-child{
+	border-top: none !important;
+}
+.inputCard > h1:first-child{
+	border-top: none !important;
+}
+.inputCard > h2:first-child{
+	border-top: none !important;
+}
+.inputCard > h3:first-child{
+	border-top: none !important;
+}
+.inputCard > h4:first-child{
+	border-top: none !important;
+}
+.settingListCard > h1:first-child{
+	border-top: none !important;
+}
+.settingListCard > h2:first-child{
+	border-top: none !important;
+}
+.settingListCard > h3:first-child{
+	border-top: none !important;
+}
+.settingListCard > h4:first-child{
+	border-top: none !important;
+}
 h1 {
-	text-align: center;
 	color: var(--textColor);
-	-webkit-text-stroke: 0.04rem black;
+	/*
+	-webkit-text-stroke: 0.05rem var(--highlightText);
+	*/
+	text-shadow: 0px 0px 8px var(--highlightText);
+	text-align: center;
 	padding: 0.5rem;
 }
 h2 {
-	text-align: center;
 	color: var(--textColor);
-	-webkit-text-stroke: 0.04rem black;
-	padding: 0.5rem;
+	/*
+	-webkit-text-stroke: 0.05rem var(--highlightText);
+	*/
+	text-shadow: 0px 0px 8px var(--highlightText);
+	text-align: center;
+	padding: 0.3rem;
+}
+h3 {
+	color: var(--textColor);
+	/*
+	-webkit-text-stroke: 0.05rem var(--highlightText);
+	*/
+	text-shadow: 0px 0px 8px var(--highlightText);
+	text-align: center;
 }
 ol li{
 	margin-left: 1rem;
@@ -251,39 +348,56 @@ ol li{
 	font-weight: bold;
 }
 .logEntry{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: floralwhite !important;
 	/*
 	-webkit-text-stroke: 0.04rem black;
 	*/
 }
 .logEntry a{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: floralwhite !important;
+	text-shadow: none;
 }
 .ERROR{
-	background-color: red;
+	color: white !important;
+	background: darkred;
+	text-shadow: none;
 }
 .DOWNLOAD{
-	background-color: darkgreen;
+	color: white !important;
+	background: darkgreen;
+	text-shadow: none;
 }
 .DEBUG{
-	background-color: gray;
+	color: white !important;
+	background: gray;
+	text-shadow: none;
 }
 .WARNING{
-	background-color: darkorange;
+	color: white !important;
+	background: darkorange;
+	text-shadow: none;
 }
 .NEW{
-	background-color: green;
+	color: white !important;
+	background: green;
+	text-shadow: none;
 }
 .UPDATE{
-	background-color: darkslateblue;
+	color: white !important;
+	background: darkslateblue;
+	text-shadow: none;
 }
 .INFO{
-	background-color: darkslategray;
+	color: white !important;
+	background: darkslategray;
+	text-shadow: none;
 }
 .ADMIN{
-	background-color: purple;
+	color: white !important;
+	background: purple;
+	text-shadow: none;
 }
 .outputLog{
 	background: white;
@@ -295,6 +409,7 @@ ol li{
 	margin-left: auto;
 	margin-right: auto;
 	text-align: left;
+	text-shadow: none;
 }
 .goodLog{
 	background: green;
@@ -306,6 +421,7 @@ ol li{
 	margin-left: auto;
 	margin-right: auto;
 	text-align: left;
+	text-shadow: none;
 }
 .goodLog pre{
 	color: var(--textColor);
@@ -330,16 +446,16 @@ ol li{
 /*
 .seasonHeader {
 	box-shadow: 0px 0px 10px black;
-	background-color: rgba(100,100,100,0.10);
+	background: rgba(100,100,100,0.10);
 }
 */
 .seasonContainer{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	text-align: center;
 	/*
-	background-color: rgba(100,100,100,0.85);
+	background: rgba(100,100,100,0.85);
 	*/
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 }
 .episodeList{
 	margin-left: auto;
@@ -361,19 +477,28 @@ ol li{
 	position: relative;
 	z-index: 1;
 }
+.menuButtonBox:hover{
+	.menuButton{
+		background: var(--highlightBackground);
+		border-color: var(--highlightText);
+	}
+
+}
 .menuButton{
-	background-color: var(--glassBackground);
-	width: 100%;
+	background: var(--glassBackground);
+	width: 98%;
 	border: 0.2rem solid var(--borderColor);
 	/* thicken menubuttons */
-	height: 0.6rem;
+	height: 0.5rem;
 	margin: 0px;
-	margin-top: 0.1rem;
+	margin-top: 0.2rem;
+	margin-left: 0.1rem;
 	display: inline-block !important;
 }
 .enabledSetting{
- background-color: #99ff33 !important;
+ background: #99ff33 !important;
  color: black !important;
+ font-weight: bolder;
 }
 .settingsEntry h3{
 	font-size: 3rem;
@@ -383,10 +508,12 @@ ol li{
 	text-shadow: 1rem 1rem 1rem 1rem var(--borderColor);
 	-webkit-text-stroke: 0.04rem black;
 	margin: 0px;
+	border: none !important;
 }
 .disabledSetting{
- background-color: #CC0000 !important;
- color: black !important;
+ background: #CC0000 !important;
+ color: white !important;
+ font-weight: bolder;
 }
 #videoPlayerContainer{
 	display: inline-block;
@@ -473,10 +600,12 @@ ol li{
 	}
 	.menuButton{
 		display: block !important;
-		background-color: var(--glassBackground);
+		background: var(--glassBackground);
 		height: 0.6rem;
 		margin: 0px;
 		margin-top:0.1rem;
+		margin-left: auto;
+		margin-right: auto;
 		/*
 		margin-bottom:0.5rem;
 		*/
@@ -505,10 +634,11 @@ ol li{
 	*/
 }
 ol{
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 }
 .seriesBackground{
 	background: var(--backgroundFanart) !important;
+	background-color: var(--solidBackground);
 	background-size: 100dvw 100dvh !important;
 	background-repeat: repeat !important;
 	background-attachment: fixed !important;
@@ -579,12 +709,22 @@ ol{
 		width:80dvw;
 	}
 	.searchBox{
-		width: auto;
+		width: 90dvw;
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+		padding-right: 0px !important;
+	}
+	.searchButton{
+		width: 10dvw;
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+		padding-left: 0px !important;
 	}
 	.settingsEntry{
 		width: 90dvw !important;
 	}
 	.inputCard{
+		text-decoration: none;
 		width: 80dvw !important;
 		float: none !important;
 	}
@@ -679,15 +819,15 @@ ol{
 }
 @media only screen and (max-width: 400px), (orientation: portrait){
 	html{
-		font-size: 2rem;
+		font-size: 1.5rem;
 		/* Make the scrollbar width thin on small touchscreen devices for FIREFOX */
 		scrollbar-width: thin;
 	}
 	.searchButton{
+		width: 80dvw !important;
 		/*
-		width: 100% !important;
-		*/
 		display: none;
+		*/
 	}
 }
 .nfoMediaPlayer, video, audio{
@@ -699,13 +839,13 @@ ol{
 	box-shadow: 0px 0px 1.5rem var(--borderColor);
 	height: 400px;
 	min-width: 800px;
-	background-color: black;
+	background: black;
 }
 .progressIndicator{
 	width: 100dvw;
 	margin: 0px;
 	text-align: center;
-	background-color: darkgreen;
+	background: darkgreen;
 	color: var(--textColor);
 	position: fixed;
 	top: 0px;
@@ -742,7 +882,7 @@ ol{
 	min-height: 20rem;
 }
 #videoPlayerContainer{
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	vertical-align: top;
 }
@@ -750,23 +890,34 @@ ol{
 	width: 100% !important;
 	box-shadow: none !important;
 }
+.videoPlayerControls:hover{
+	opacity: 1;
+}
 @media all and (display-mode: fullscreen){
 	#videoPlayerContainer #video{
-		width: 100% !important;
-		height: 95% !important;
+		width: 100dvw !important;
+		height: 100dvh !important;
 	}
 	.videoPlayerControls{
-		width: 100% !important;
-		height: 5% !important;
-		background-color: black;
+		width: 100dvw !important;
+		height: 10dvh !important;
+		background: var(--glassBackground);
+		position: fixed;
+		bottom: 0px;
 		opacity: 0;
 	}
-	.videoPlayerControls:hover{
-		opacity: 1;
+	#showControls{
+		display: none;
+	}
+	#hideControls{
+		display: none;
 	}
 	#videoPlayerContainer{
-		background-color: black;
+		background: black;
 	}
+}
+.breakWord{
+	line-break: anywhere;
 }
 .dropBox{
 	height: 2rem;
@@ -791,23 +942,39 @@ ol{
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
 	padding: 0.4rem;
-	border: solid var(--borderColor) 0.3rem;
-	background-color: var(--glassBackground);
+	border: solid var(--borderColor) 0.2rem;
+	background: var(--glassBackground);
 	color: var(--textColor);
-	border-width: 0.2rem;
 	text-decoration: none;
 	text-align: center;
 	cursor: pointer;
 }
+.smallButton{
+	border: solid var(--borderColor) 0.2rem;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	font-size: 1rem;
+	margin: 0.2rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
+	padding: 0.2rem;
+	background: var(--glassBackground);
+	color: var(--textColor);
+	text-decoration: none;
+	text-align: center;
+	cursor: pointer;
+}
+.smallButton:hover{
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	box-shadow: none;
+}
 a .inputCard:hover{
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
+	text-decoration: none;
 }
 a .inputCard h3{
 	color: var(--textColor) !important;
-}
-a:visited {
-	color: inherit;
 }
 .titlecard .button{
 	white-space: nowrap;
@@ -829,21 +996,21 @@ a:visited {
 }
 .mw-headline{
 	display: block;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	font-size: 2rem;
 }
 .highlightText{
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 }
 .highlightText:hover{
 	color: var(--textColor);
-	background-color: transparent;
+	background: transparent;
 }
 .activeButton{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText) !important;
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
@@ -857,7 +1024,7 @@ a:visited {
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border-style: solid;
 	border-color: var(--borderColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	text-decoration: none;
 	text-align: center;
@@ -865,7 +1032,7 @@ a:visited {
 .button:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
@@ -946,6 +1113,7 @@ a:visited {
 	width: 60dvw !important;
 	height: 100dvh !important;
 	height: -webkit-fill-available !important;
+	cursor: zoom-in;
 }
 .comicScrollViewImg{
 	display: inline-block;
@@ -955,7 +1123,6 @@ a:visited {
 }
 .comicScrollViewImgReal{
 	max-width: 100%;
-	min-width: 60%;
 }
 .comicScrollPageCount{
 	max-width: 25dvw;
@@ -987,7 +1154,7 @@ a:visited {
 	text-decoration: none;
 }
 .comicFullscreenButton:hover{
-	background-color: var(--highlightBackground) !important;
+	background: var(--highlightBackground) !important;
 }
 .comicFullscreenSpinner{
 	position: absolute;
@@ -1110,7 +1277,7 @@ a:visited {
 	border-color: var(--borderColor);
 	opacity: 0 !important;
 	transition: opacity 1s ease-in-out;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	/*
 	font-size: 2rem;
 	*/
@@ -1122,7 +1289,7 @@ a:visited {
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	/*
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	*/
@@ -1141,7 +1308,7 @@ a:visited {
 	padding: 1rem;
 	border-style: solid;
 	border-color: var(--borderColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	border-width: 0.2rem;
 	text-decoration: none;
@@ -1158,7 +1325,7 @@ a:visited {
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	/*
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	*/
 	border-style: inset !important;
@@ -1182,6 +1349,13 @@ a:visited {
 	overflow-x: auto;
 	padding: 0.5rem;
 	min-height: 3rem;
+}
+.selectPathOpenForm{
+	text-align:	left;
+}
+form{
+	margin: 0px;
+	margin-block-end: 0px;
 }
 .listCard form{
 	display: inline-block;
@@ -1209,69 +1383,73 @@ a:visited {
 }
 .settingListCard h1{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .settingListCard h2{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .settingListCard h3{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .titleCard h1{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .titleCard h2{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .titleCard h3{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .titleCard h4{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .descriptionCard h1{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .descriptionCard h2{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .descriptionCard h3{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .inputCard h1{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .inputCard h2{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .inputCard h3{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
+}
+.inputCard textarea{
+	font-size: 1.5rem;
+	width: 90% !important;
 }
 .seasonContainer h1{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .seasonContainer h2{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .titleCard{
 	/*
-	background-color: rgba(100,100,100,0.85);
+	background: rgba(100,100,100,0.85);
 	*/
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: solid var(--borderColor) 0.2rem;
 	margin: 1rem;
@@ -1311,7 +1489,7 @@ a:visited {
 	margin-right: 0.2rem;
 	display: inline-block;
 	color: var(--textColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	border: 0.3rem solid var(--borderColor);
 	width: 7rem;
 	/*
@@ -1328,7 +1506,7 @@ a:visited {
 .indexSeries:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
@@ -1341,7 +1519,7 @@ a:visited {
 }
 .indexSeries img{
 	/*
-	background-color: white;
+	background: white;
 	*/
 	width: 100%;
 	max-height: 15rem;
@@ -1368,10 +1546,23 @@ a{
 }
 a:hover{
 	text-decoration: none;
-	color: var(--highlightText);
+	text-shadow: none;
 	/*
-	background-color: var(--hightlightBackground);
+	color: var(--highlightText);
+	background: var(--highlightBackground);
 	*/
+	text-decoration: none;
+}
+a:visited {
+	/*
+	color: inherit;
+	color: var(--textColor);
+	text-decoration: underline;
+	border-bottom: solid 0.2rem var(--borderColor);
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	*/
+	text-decoration: none;
 }
 p:before {
 	content: " ";
@@ -1414,14 +1605,14 @@ ol{
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
 	display: inline-block;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	width: 8rem;
 	/*
 	height: 8rem;
 	height: 10dvw;
 	height: 300px;
-	*/
 	background-size: 100dvw 100dvw;
+	*/
 	vertical-align: top;
 	overflow-y: hidden;
 	overflow-x: hidden;
@@ -1433,13 +1624,16 @@ ol{
 	margin-right: 6px;
 }
 .showPageEpisode h2{
+	-webkit-text-stroke-width: 0px;
 	margin: 0px;
 	font-size: 1rem;
 	/*
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	*/
+	width: 100%;
 }
 .showPageEpisode h3{
+	-webkit-text-stroke-width: 0px;
 	font-size: 0.5rem;
 	/*
 	width: 200px;
@@ -1453,23 +1647,34 @@ ol{
 	overflow-y: hidden;
 	overflow-x: hidden;
 	*/
+	width: 100%;
 }
 #content{
 	color: var(--textColor) !important;
-	background-color: var(--glassBackground) !important;
+	background: var(--glassBackground) !important;
 }
 .showPageEpisode:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
 }
+.showPageEpisode a{
+	text-decoration: none;
+}
+.showPageEpisode a:hover{
+	box-shadow: none;
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	border-style: inset !important;
+}
 .showPageEpisode img{
 	width: 100%;
 	height: 4rem;
-	background-color: white;
+	background: white;
 	background-image: var(--staticBackground);
 }
 .showPageEpisode:hover img{
@@ -1485,12 +1690,20 @@ ol{
 /*******************************/
 table, th, td{
 	border: 1px solid var(--borderColor);
+	/*
 	color: var(--textColor);
+	*/
 	border-spacing: 0px;
 	margin-left: auto;
 	margin-right: auto;
-	text-shadow: none;
 	text-align: center;
+	word-wrap: break-word;
+}
+.settingListCard table{
+	table-layout: fixed !important;
+}
+.descriptionCard table{
+	table-layout: fixed !important;
 }
 .controlTable{
 	border: none !important;
@@ -1541,21 +1754,21 @@ table{
 	margin-top: 1rem;
 	text-align: left;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	min-height: 30rem;
 	border-bottom: solid var(--borderColor) 0.2rem;
 	border-top: solid var(--borderColor) 0.2rem;
 }
 /*
 .descriptionCard h2{
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 }
 */
 .settingListCard{
 	text-align: left;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	color: var(--textColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	min-height: 8rem;
 	text-align: center;
 	margin-bottom: 1rem;
@@ -1564,14 +1777,14 @@ table{
 }
 .remoteCard{
 	color: var(--textColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	text-align: center;
 }
 #player{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	object-fit: cover;
 	float: left;
-	background-color: lightgray;
+	background: lightgray;
 	height: 530px;
 	text-align: center;
 }
@@ -1593,15 +1806,16 @@ table{
 .settingsEntry h2{
 	display: inline;
 	float: left;
-	background-color: transparent;
+	background: transparent;
+	border: none !important;
 }
 .settingsEntry ::selection{
 	color: var(--highlightText);
-	background-color: var(--solidBackgroun);
+	background: var(--solidBackgroun);
 }
 .settingsEntry ::-moz-selection{
 	color: var(--highlightText);
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .settingsEntry form{
 	display: inline;
@@ -1612,7 +1826,6 @@ table{
 	float: left;
 }
 .settingsEntry .button{
-	width: 95%;
 	display: ruby;
 	float: right;
 	font-size: 1rem;
@@ -1625,7 +1838,7 @@ table{
 	margin-left: auto;
 	margin-right: auto;
 	*/
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: var(--textColor);
 	overflow: auto;
 	word-wrap: break-word;
@@ -1641,15 +1854,17 @@ table{
 .searchSpacer{
 	min-height: 50dvh;
 }
+/*
 .searchBoxForm{
 	margin: 1rem;
 }
+*/
 .searchBox{
 	width: 80dvw;
 	font-size: 2rem;
 	border-style: solid;
 	border-color: var(--borderColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	border-width: 0.2rem;
 	text-align: center;
@@ -1677,7 +1892,7 @@ table{
 	padding: 0.4rem;
 	border-style: solid;
 	border-color: var(--borderColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	border-width: 0.2rem;
 	text-decoration: none;
@@ -1687,7 +1902,7 @@ table{
 .searchbutton:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
 	text-shadow: 0px 0px 0.5rem var(--textColor);
@@ -1701,9 +1916,9 @@ table{
 .inputCard{
 	text-align: center;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	border: solid var(--borderColor) 0.2rem;
-	width: 45dvw;
+	width: 44dvw;
 	display: inline-block;
 	margin: 1rem;
 	float: none;
@@ -1738,10 +1953,12 @@ tr{
 	width: 100%;
 }
 th{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
+	font-size: 1.5rem;
+	padding: 0.5rem;
 }
 .evenTableRow{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .settingsTable{
 	/*
@@ -1765,7 +1982,7 @@ th{
 	font-size: 0.01rem;
 }
 .weatherForcast{
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	width: 10rem;
 	vertical-align: top;
 	display: inline-block;
@@ -1781,7 +1998,7 @@ th{
 	text-align: left;
 }
 .weatherForcast h3{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	margin: 0px;
 	/*
 	height: 2rem;
@@ -1943,8 +2160,11 @@ th{
 	padding: 0.5rem;
 }
 pre{
-	border: solid;
-	background-color: var(--solidBackground);
+	border: solid var(--borderColor);
+	background: var(--solidBackground);
+	color: var(--textColor);
+	text-shadow: 0px 0px 4px var(--highlightText);
+	font-weight: bold;
 	padding: 1rem;
 	margin: 0.5rem;
 }
@@ -1962,6 +2182,7 @@ pre{
 		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 	}
 }
+
 /* WIKI styles*/
 .footer{
 	min-height: 2rem;
@@ -1989,23 +2210,25 @@ pre{
 /* END WIKI styles*/
 .viewCounterBox{
 	text-align: left;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	font-size: 1rem;
 	float: left;
+	position: relative;
+	z-index: 1;
 }
 .viewCounterHeader{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	border: solid var(--borderColor) 0.3rem;
 	border-right: none;
 	text-decoration: none;
 }
 .viewCounterHeader:hover{
 	border-color: var(--highlightBorder);
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	color: var(--highlightText);
 }
 .executionTimeHeader{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	border: solid var(--borderColor) 0.3rem;
 	border-left: none;
 }
@@ -2056,7 +2279,7 @@ pre{
 	width: 49dvw;
 }
 .graphLinkThumbnail{
-	background-color: white;
+	background: white;
 	background-image: none !important;
 }
 .graphLink{
@@ -2073,7 +2296,7 @@ pre{
 }
 .graphLink img{
 	width: 100%;
-	background-color: white;
+	background: white;
 }
 .homeWeather{
 	text-decoration: none;
@@ -2113,30 +2336,31 @@ pre{
 	/*
 	height: 6dvh;
 	border: solid var(--borderColor) 0.1rem;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	*/
+	z-index: 20;
 }
 .localPulse{
 	position: fixed;
 	width: 100dvw;
-	height: 0.8rem;
+	height: 2rem;
 	left: 0px;
 	top: 0px;
 	border-bottom: solid var(--borderColor) 0.1rem;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 }
 .gitRepoGraph{
 	border: solid var(--borderColor) 0.1rem;
-	border-radius: 0.2rem;
 	width: 98%;
 	height: 3rem;
 }
 .gitCommitListMonthGraph{
 	width: 98%;
+	background: var(--staticBackground);
 }
 svg {
 	display: block;
-	width: 100%;
+	max-width: 100%;
 	height: auto;
 }
 .moreEpisodesLink{
@@ -2145,7 +2369,6 @@ svg {
 }
 .homeActivityGraph{
 	max-width: 98%;
-	border-radius: 0.2rem;
 }
 .copyButton:before{
 	/*
@@ -2216,7 +2439,7 @@ details{
 	width: 40%;
 	max-width: 40% !important;
 	min-width: 40% !important;
-	background-color: lightpink;
+	background: lightpink;
 }
 .aiSubmit{
 	width: 15%;
@@ -2224,13 +2447,13 @@ details{
 	min-height: 4rem;
 	margin: auto;
 	vertical-align: bottom;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	color: var(--textColor);
 	font-size: 100%;
 	cursor: pointer;
 }
 .aiSubmit:hover{
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	color: var(--highlightText);
 }
 .hidden{
@@ -2255,15 +2478,15 @@ details{
 .singleStat{
 	display: inline-block;
 	border: 0.2rem var(--borderColor) solid;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	white-space: nowrap;
 	margin: 0.1rem;
 	padding: 0.2rem;
 }
 .errorBanner{
 	width: 100%;
-	background-color: red;
-	color: white;
+	background: red;
+	color: white !important;
 }
 .imageUploadPreview{
 	vertical-align: top;
@@ -2276,7 +2499,7 @@ details{
 	max-height: 10rem;
 	height: 100%;
 	border: 0.2rem var(--borderColor) solid;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 }
 .groupedMenuItem{
 	white-space: nowrap;
@@ -2287,7 +2510,7 @@ details{
 .aiGenPreview{
 	text-align: center;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	width: 15rem;
 	display: inline-block;
 	margin: 1rem;
@@ -2305,17 +2528,17 @@ details{
 	margin-right: auto;
 	border: 0.2rem var(--borderColor) solid;
 	width: 90%;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 }
 .progressBarBar{
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	color: var(--solidBackground);
 	min-width: 10%;
 	word-wrap: normal;
 }
 .searchCacheFileDateSize{
 	margin: 0px;
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	text-align: center;
 	color: var(--textColor);
 	-webkit-text-stroke: 0.04rem black;
@@ -2330,13 +2553,14 @@ details{
 	vertical-align: top;
 }
 #scrollProgress{
-	background-color: var(--highlightBackground);
+	background: var(--highlightBackground);
 	height: 0.5rem;
 	width: 0px;
 }
 .portalPreview{
 	height: 15rem;
 	max-width: 100%;
+	background: white;
 }
 .portalPreviewContainer{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
@@ -2355,7 +2579,7 @@ details{
 }
 .loggedInUsername{
 	width: 30dvw;
-	background-color: var(--glassBackground);
+	background: var(--glassBackground);
 	border: solid 0.2rem;
 	border-top: none;
 	margin: auto;
@@ -2372,26 +2596,33 @@ details{
 	width: 2rem;
 	display: inline-block;
 }
+.singleButtonForm{
+	display: inline-block;
+}
 input{
 	font-size: 1.5rem;
 	width: 90%;
 }
+textarea{
+	font-size: 1.5rem;
+	width: 100%;
+}
 input[type=text]{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: var(--textColor);
 	caret-color: var(--textColor);
 	caret-shape: block;
 }
 input[type=number]{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: var(--textColor);
 }
 input[type=password]{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: var(--textColor);
 }
 select{
-	background-color: var(--solidBackground);
+	background: var(--solidBackground);
 	color: var(--textColor);
 	font-size: 1.5rem;
 	width: 90%;
@@ -2523,6 +2754,13 @@ details[open] summary h2::before {
 	min-width: 800px;
 	min-height: 400px;
 }
+.wikiFrame{
+	width: 100%;
+	height: 100dvh;
+}
+.wikiIcon{
+	max-width: 100%;
+}
 .appScreenshot{
 	height: 10rem;
 }
@@ -2558,4 +2796,32 @@ details[open] summary h2::before {
 	padding: 0.2rem;
 	text-shadow: none;
 	vertical-align: middle;
+}
+#footer{
+	position: relative;
+	z-index: 1;
+}
+@media print{
+	.header{
+		display: none !important;
+	}
+	.loginLogoutBox{
+		display: none !important;
+	}
+	.searchBoxForm{
+		display: none !important;
+	}
+	#footer{
+		display: none !important;
+	}
+	.viewCounterBox{
+		display: none !important;
+	}
+	#topButton{
+		display: none !important;
+	}
+	.topButtonSpace{
+		display: none !important;
+	}
+	text-shadow: none !important;
 }
