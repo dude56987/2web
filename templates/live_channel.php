@@ -132,7 +132,7 @@
 		🇰Play on KODI
 	</a>
 	<?PHP
-	echo "<a class='button vlcButton' href='vlc://$channelLink'>";
+	echo "<a class='button vlcButton' href='vlc://".str_replace(" ","%20",urldecode($decodedChannelLink))."'>";
 	?>
 		<span id='vlcIcon'>&#9650;</span> VLC
 	</a>
@@ -200,23 +200,29 @@
 		}
 	}
 ?>
-<div class='videoPlayerControls'>
-<button id='playButton' class='button' style='display:none;' onclick='playPause()' alt='play'>&#9654;</button>
-<button id='pauseButton' onload='setPlayButtonState()' class='button' onclick='playPause()' alt='pause'>&#9208;</button>
-<span>
-<button class='button' onclick='volumeDown()'>&#128264;</button>
-<span id='currentVolume'>100</span>%
-<button class='button' onclick='volumeUp()'>&#128266;</button>
-</span>
-<span>
-<button id='showControls' onload='hideControls()' class='button' onclick='showControls()'>&#127899;</button>
-<button id='hideControls' class='button' style='display:none;' onclick='hideControls()'>&#128317;</button>
-</span>
-<span>
-<button id='fullscreenButton' class='button' onclick='openFullscreen()'>&#11028;</button>
-<button id='exitFullscreenButton' class='button' style='display:none;' onclick='closeFullscreen()'>&#11029;</button>
-</span>
-</div>
+	<div class='videoPlayerControls'>
+		<div class='left'>
+			<span>
+				<button id='playButton' class='button' style='display:none;' onclick='playPause()' alt='play'>&#9654;</button>
+				<button id='pauseButton' onload='setPlayButtonState()' class='button' onclick='playPause()' alt='pause'>&#9208;</button>
+			</span>
+		</div>
+		<div class='right'>
+			<span>
+				<button class='button' onclick='volumeDown()'>🔉</button>
+				<span id='currentVolume'>100</span>%
+					<button class='button' onclick='volumeUp()'>🔊</button>
+				</span>
+				<span>
+					<button id='showControls' onload='hideControls()' class='button' onclick='showControls()'>🔼</button>
+					<button id='hideControls' class='button' style='display:none;' onclick='hideControls()'>🔽</button>
+				</span>
+			<span>
+				<button id='fullscreenButton' class='button' onclick='openFullscreen()'>⛶</button>
+				<button id='exitFullscreenButton' class='button' style='display:none;' onclick='closeFullscreen()'>⛶</button>
+			</span>
+		</div>
+	</div>
 </div>
 	<div class='channelList'>
 		<?PHP
@@ -232,7 +238,6 @@
 		echo "<a class='channelLink' href='/live/channels/channel_".$channelNumber.".php#".$channelNumber."'>";
 		echo "$channelTitle";
 		?>
-		<img id='spinner' src='/spinner.gif' />
 	</a>
 	<?PHP
 	echo "<a class='button hardLink' href='$decodedChannelLink'>"
@@ -250,7 +255,7 @@
 		🇰Play on KODI
 	</a>
 	<?PHP
-	echo "<a class='button hardLink vlcButton' href='vlc://$channelLink'>";
+	echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",urldecode($decodedChannelLink))."'>";
 	?>
 		<span id='vlcIcon'>&#9650;</span> VLC
 	</a>
@@ -259,18 +264,12 @@
 		echo "$channelGroups";
 		?>
 	</div>
-	<table>
-		<tr>
-			<th>Link</th>
-		</tr>
-		<tr>
-			<td>
+	<div class='titleCard'>
+	<h2>Link</h2>
 				<?PHP
 				echo urldecode($channelLink);
 				?>
-			</td>
-		</tr>
-	</table>
+	</div>
 </div>
 <?PHP
 	include('/var/cache/2web/web/randomChannels.php');
