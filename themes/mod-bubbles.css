@@ -1,0 +1,115 @@
+/*
+########################################################################
+# 2web bubble theme mod
+# Copyright (C) 2025 Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+*/
+.button{
+	border-radius: 5rem;
+}
+.smallButton{
+	border-radius: 5rem;
+}
+.activeButton{
+	border-radius: 5rem;
+}
+.searchButton{
+	border-radius: 5rem;
+}
+input{
+	border-radius: 5rem;
+}
+.indexSeries{
+	overflow: hidden;
+	border-radius: 5rem;
+	padding-bottom: 3rem;
+}
+.listCard .indexSeries{
+	padding-bottom: 0px;
+}
+.titleCard{
+	border-radius: 5rem;
+	overflow: hidden;
+}
+.inputCard{
+	overflow: hidden;
+	border-radius: 5rem;
+}
+.seasonContainer{
+	border-radius: 5rem;
+}
+/*
+.titleCard h1,h2,h3{
+	border-radius: 0.3rem;
+}
+*/
+.showPageEpisode{
+	padding-bottom: 3rem;
+	border-radius: 5rem;
+}
+.showPageEpisode h2{
+	padding-top:3rem;
+}
+.channelList{
+	border-radius: 5rem;
+}
+video{
+	border-radius: 5rem;
+}
+@media all and (display-mode: fullscreen){
+	video{
+		border-radius: 0rem;
+	}
+}
+.weatherForcast{
+	border-radius: 5rem;
+	overflow: hidden;
+	padding-bottom: 3rem;
+}
+.weatherForcast h3{
+	padding-top:3rem;
+	border-top: none;
+}
+.portalPreviewContainer{
+	border-top-left-radius: 5rem;
+	border-top-right-radius: 5rem;
+}
+/*
+h1, h2, h3{
+	border-radius: 5rem 5rem 0px 0px;
+}
+*/
+@media only screen and (max-width: 800px), (orientation: portrait){
+	#topButton{
+		/* Disable the border radius on the top button*/
+		border-radius: 0px;
+	}
+}
+.homeActivityGraph{
+	border-radius: 5rem;
+}
+.gitRepoGraph{
+	border-radius: 5rem;
+}
+.singleStat{
+	border-radius: 5rem;
+}
+pre{
+	border-radius: 5rem;
+	overflow: hidden;
+	padding-top: 3rem !important;
+	padding-bottom: 3rem !important;
+}
