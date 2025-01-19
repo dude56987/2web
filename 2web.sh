@@ -1000,6 +1000,16 @@ rebootCheck(){
 					INFO "Waiting for system to become idle in order to reboot. LOAD:($(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad) ACTIVE JOBS:($(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l))"
 					sleep 30
 				done
+				# check for running apt-get processes
+				while pgrep "apt-get" > /dev/null;do
+					INFO "${procName} will not run while system updates are being installed. Waiting 30 seconds..."
+					sleep 30
+				done
+				# check for running dpkg instances
+				while pgrep "dpkg" > /dev/null;do
+					INFO "${procName} will not run while system updates are being installed. Waiting 30 seconds..."
+					sleep 30
+				done
 				# start the reboot process by showing a delay before rebooting the system
 				echo -n "Rebooting"
 				# 5 second delay
