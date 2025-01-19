@@ -972,41 +972,70 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("disableLibrary",$_POST)){
 	addCustomPathConfig("disableLibrary","/etc/2web/nfo/disabledLibaries.d/","nfo.php");
 }else if (array_key_exists("addWeatherLocation",$_POST)){
-	$link=$_POST['addWeatherLocation'];
-	outputLog("Running addWeatherLocation on link ".$link);
-	$sumOfLink=md5($link);
-	# run the weather command as a search command and check that the location has a result
-	$weatherTest=shell_exec("weather '".$_POST['addWeatherLocation']."'");
-	# check if the location has failed
-	if (strpos($weatherTest, "Your search is ambiguous")){
-		$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'");
-		echo "<div>";
-		echo "ERROR: Your location was not specific enough.";
-		echo "</div>";
-		echo "<pre class='settingListCard'>";
-		echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
-		echo $weatherTest;
-		echo "</pre>";
-	}else if(strpos($weatherTest, "Current conditions")){
+	$weatherLocation=$_POST["addWeatherLocation"];
+	#
+	$locations=file("/var/cache/2web/generated/weather/locations.index");
+	#
+	if (array_key_exists("verifyWeatherLocation",$_POST)){
+		# set the weather
+		$sumOfLink=md5($weatherLocation);
 		# read the link and create a custom config
 		$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
 		outputLog("Checking for Config file ".$configPath);
 		# write the libary path to a file at the configPath if the path does not already exist
 		if ( ! file_exists($configPath)){
-			echo "Adding ".$link." to weather stations...<br>\n";
+			echo "Adding ".$weatherLocation." to weather stations...<br>\n";
 			# write the config file
-			file_put_contents($configPath,$link);
+			file_put_contents($configPath,$weatherLocation);
 		}
 	}else{
-		$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'\n");
-		echo "<div>";
-		echo "ERROR: Your search has no results.";
+		outputLog("Searching for weather station '".$weatherLocation."'");
+		echo "<div class='titleCard'>";
+		echo "<h2>Station Search Results</h2>";
+		# search the locations file
+		foreach($locations as $location){
+			if(stripos("$location","$weatherLocation") !== false){
+				echo "<form class='singleButtonForm' action='admin.php' method='post'>";
+				echo "	<input width='60%' type='text' name='verifyWeatherLocation' value='yes' hidden />";
+				echo "	<input width='60%' type='text' name='addWeatherLocation' value='$location' hidden />";
+				echo "	<button class='button' type='submit'>Add '$location' Station</button>";
+				echo "</form>";
+			}
+		}
 		echo "</div>";
-		echo "<pre class='settingListCard'>";
-		echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
-		echo $weatherTest;
-		echo "</pre>";
 	}
+	## run the weather command as a search command and check that the location has a result
+	#$weatherTest=shell_exec("weather '".$_POST['addWeatherLocation']."'");
+	## check if the location has failed
+	#if (strpos($weatherTest, "Your search is ambiguous")){
+	#	$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'");
+	#	echo "<div>";
+	#	echo "ERROR: Your location was not specific enough.";
+	#	echo "</div>";
+	#	echo "<pre class='settingListCard'>";
+	#	echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
+	#	echo $weatherTest;
+	#	echo "</pre>";
+	#}else if(strpos($weatherTest, "Current conditions")){
+	#	# read the link and create a custom config
+	#	$configPath="/etc/2web/weather/location.d/".$sumOfLink.".cfg";
+	#	outputLog("Checking for Config file ".$configPath);
+	#	# write the libary path to a file at the configPath if the path does not already exist
+	#	if ( ! file_exists($configPath)){
+	#		echo "Adding ".$link." to weather stations...<br>\n";
+	#		# write the config file
+	#		file_put_contents($configPath,$link);
+	#	}
+	#}else{
+	#	$weatherTest=shell_exec("weather --info '".$_POST['addWeatherLocation']."'\n");
+	#	echo "<div>";
+	#	echo "ERROR: Your search has no results.";
+	#	echo "</div>";
+	#	echo "<pre class='settingListCard'>";
+	#	echo ("weather --info '".$_POST['addWeatherLocation']."'\n");
+	#	echo $weatherTest;
+	#	echo "</pre>";
+	#}
 	echo "<hr><a class='button' href='/settings/weather.php#addWeatherLocation'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if(array_key_exists("removeWeatherLocation",$_POST)){

@@ -443,6 +443,17 @@ function update(){
 			echo "$totalWeatherLocations" > "$webDirectory/totalWeatherStations.index"
 		fi
 	fi
+	# check for the location index
+	if cacheCheck "/var/cache/2web/generated/weather/locations.index" 14;then
+		createDir "/var/cache/2web/generated/weather/"
+		# generate the locations index
+		{
+			echo "$(gzip -cd "/usr/share/weather-util/places.gz" | grep "^description" | cut -d'=' -f2 | cut -d' ' -f2-)"
+			echo "$(gzip -cd "/usr/share/weather-util/zones.gz" | grep "^description" | cut -d'=' -f2 | cut -d' ' -f2-)"
+			echo "$(gzip -cd "/usr/share/weather-util/stations.gz" | grep "^description" | cut -d'=' -f2 | cut -d' ' -f2-)"
+		} > "/var/cache/2web/generated/weather/locations.index"
+	fi
+
 	# mark the update as complete
 	date "+%s" > "/var/cache/2web/web/weather/refreshComplete.cfg"
 }
