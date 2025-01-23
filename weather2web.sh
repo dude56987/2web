@@ -134,6 +134,8 @@ function update(){
 			# if no hompage weather location exists set the first added weather location as the homepage location since this data is gathered here anyway
 			if ! test -f "/etc/2web/weather/homepageLocation.cfg";then
 				echo "$weatherLocation" > "/etc/2web/weather/homepageLocation.cfg"
+				# fix pemissions
+				chown www-data:www-data "/etc/2web/weather/homepageLocation.cfg"
 			fi
 			# write the weather info for homepage
 			if echo "$weatherLocation" | grep "$(cat '/etc/2web/weather/homepageLocation.cfg')";then
@@ -363,10 +365,13 @@ function update(){
 							# daytime forcast
 							if echo "$timeOfForcast" | grep -q --ignore-case "MEMORIAL DAY";then
 								echo -n "	<h3>MEMORIAL <br>DAY"
-								echo -n " 🪖";
+								echo -n " 🪖"
+							elif echo "$timeOfForcast" | grep -q --ignore-case "MARTIN LUTHER KING JR DAY";then
+								echo -n "	<h3>MARTIN LUTHER<br>KING JR<br>DAY"
+								echo -n " ✝️"
 							elif echo "$timeOfForcast" | grep -q --ignore-case "VETERANS DAY";then
 								echo -n "	<h3>VETERANS <br>DAY"
-								echo -n " 🪖";
+								echo -n " 🪖"
 							elif echo "$timeOfForcast" | grep -q --ignore-case "CHRISTMAS";then
 								echo -n "	<h3>CHRISTMAS<br>DAY"
 								echo -n " 🎄"
@@ -566,6 +571,7 @@ webUpdate(){
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/weather/randomPoster.php"
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/weather/randomFanart.php"
+
 }
 ################################################################################
 function resetCache(){
