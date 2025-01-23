@@ -232,6 +232,7 @@ function buildHomePage(){
 	# set the timeout
 	timeout=60000
 	databasePath="$(webRoot)/data.db"
+	INFO "Building stats for total comic count"
 	if test -d "$webDirectory/comics/";then
 		if cacheCheck "$webDirectory/totalComics.index" "1";then
 			# get the count stats from SQL database
@@ -239,121 +240,155 @@ function buildHomePage(){
 			echo "$totalComics" > "$webDirectory/totalComics.index"
 		fi
 	fi
+	INFO "Building stats for total music count"
 	if test -d "$webDirectory/music";then
+		INFO "Building stats for total track count"
 		if cacheCheck "$webDirectory/totalTracks.index" "1";then
 			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_tracks\";")
 			echo "$totalEpisodes" > "$webDirectory/totalTracks.index"
 		fi
+		INFO "Building stats for total artist count"
 		if cacheCheck "$webDirectory/totalArtists.index" "1";then
 			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_artists\";")
 			echo "$totalEpisodes" > "$webDirectory/totalArtists.index"
 		fi
+		INFO "Building stats for total album count"
 		if cacheCheck "$webDirectory/totalAlbums.index" "1";then
 			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_albums\";")
 			echo "$totalEpisodes" > "$webDirectory/totalAlbums.index"
 		fi
 	fi
+	INFO "Building stats for show metadata"
 	if test -d "$webDirectory/shows/";then
+		INFO "Building stats for total episode count"
 		if cacheCheck "$webDirectory/totalEpisodes.index" "1";then
 			totalEpisodes=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_episodes\";")
 			echo "$totalEpisodes" > "$webDirectory/totalEpisodes.index"
 		fi
+		INFO "Building stats for total show count"
 		if cacheCheck "$webDirectory/totalShows.index" "1";then
 			totalShows=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_shows\";")
 			echo "$totalShows" > "$webDirectory/totalShows.index"
 		fi
 	fi
+	INFO "Building stats for total movie count"
 	if cacheCheck "$webDirectory/totalMovies.index" "1";then
 		totalMovies=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_movies\";")
 		echo "$totalMovies" > "$webDirectory/totalMovies.index"
 	fi
+	INFO "Building stats for total wiki count"
 	if cacheCheck "$webDirectory/totalWikis.index" "1";then
 		totalWikis=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_wikis\";")
 		echo "$totalWikis" > "$webDirectory/totalWikis.index"
 	fi
+	INFO "Building stats for total repo count"
 	if cacheCheck "$webDirectory/totalRepos.index" "1";then
 		totalRepos=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_repos\";")
 		echo "$totalRepos" > "$webDirectory/totalRepos.index"
 	fi
+	INFO "Building stats for total application count"
+	if cacheCheck "$webDirectory/totalApps.index" "1";then
+		totalApps=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_applications\";")
+		echo "$totalApps" > "$webDirectory/totalApps.index"
+	fi
+	INFO "Building stats for total weather station count"
 	if cacheCheck "$webDirectory/totalWeather.index" "1";then
 		totalWeather=$(find "$webDirectory/weather/data/" -name "station_*.index" | wc -l)
 		echo "$totalWeather" > "$webDirectory/totalWeather.index"
 	fi
 	#
+	INFO "Building stats for total wiki count"
 	if cacheCheck "$webDirectory/totalWiki.index" "1";then
 		totalWeather=$(cat "$webDirectory/wiki/wikis.index" | wc -l)
 		echo "$totalWeather" > "$webDirectory/totalWiki.index"
 	fi
+	INFO "Building stats for channel metadata"
 	if test -f "$webDirectory/live/channels.m3u";then
+		INFO "Building stats for total channel count"
 		if cacheCheck "$webDirectory/totalChannels.index" "7";then
 			totalChannels=$(grep -c 'radio="false' "$webDirectory/kodi/channels.m3u" )
 			echo "$totalChannels" > "$webDirectory/totalChannels.index"
 		fi
+		INFO "Building stats for total radio station count"
 		if cacheCheck "$webDirectory/totalRadio.index" "7";then
 			totalRadio=$(grep -c 'radio="true' "$webDirectory/kodi/channels.m3u" )
 			echo "$totalRadio" > "$webDirectory/totalRadio.index"
 		fi
 	fi
+	INFO "Building stats for generated website size"
 	# Run filesystem size checks for stats
 	if cacheCheck "$webDirectory/webSize.index" "1";then
 		# count website size in total ignoring symlinks
 		webSize=$(du -shP "$webDirectory" | cut -f1)
 		echo "$webSize" > "$webDirectory/webSize.index"
 	fi
+	INFO "Building stat for generated website thumbnail size"
 	if cacheCheck "$webDirectory/webThumbSize.index" "1";then
 		# count website thumbnail size in total ignoring symlinks
 		webThumbSize=$(du -shP "$webDirectory/thumbnails/" | cut -f1)
 		echo "$webThumbSize" > "$webDirectory/webThumbSize.index"
 	fi
+	INFO "Building stat for generated website resolver cache size"
 	if cacheCheck "$webDirectory/cacheSize.index" "1";then
 		# cache size for resolver-cache
 		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
 		echo "$cacheSize" > "$webDirectory/cacheSize.index"
 	fi
+	INFO "Building stat for generated repo cache size"
 	if cacheCheck "$webDirectory/repoGenSize.index" "1";then
 		repoGenSize=$(du -shP "$webDirectory/repos/" | cut -f1)
 		echo "$repoGenSize" > "$webDirectory/repoGenSize.index"
 	fi
+	INFO "Building stat for size of all media files hosted on the server"
 	if cacheCheck "$webDirectory/mediaSize.index" "1";then
 		# count symlinks in kodi to get the total size of all media on all connected drives containing libs
 		mediaSize=$(du -shL "$webDirectory/kodi/" | cut -f1)
 		echo "$mediaSize" > "$webDirectory/mediaSize.index"
 	fi
+	INFO "Building stat for the free space left on the system"
 	if cacheCheck "$webDirectory/freeSpace.index" "1";then
 		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		echo "$freeSpace" > "$webDirectory/freeSpace.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI models"
 	if cacheCheck "$webDirectory/aiSize.index" "6";then
 		# count total size of AI models
 		aiSize=$(du -shL "/var/cache/2web/downloads/ai/" | cut -f1)
 		echo "$aiSize" > "$webDirectory/aiSize.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI prompt models"
 	if cacheCheck "$webDirectory/promptAi.index" "1";then
 		# the number of prompt ais that are installed on the system
 		promptAi=$(find "/var/cache/2web/downloads/ai/prompt/" -name "*.bin" | wc -l)
 		echo "$promptAi" > "$webDirectory/promptAi.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI image models"
 	if cacheCheck "$webDirectory/imageAi.index" "1";then
 		imageAi=$(find "/var/cache/2web/downloads/ai/txt2img/" -maxdepth 1 -type d -name "models--*" | wc -l)
 		echo "$imageAi" > "$webDirectory/imageAi.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI text models"
 	if cacheCheck "$webDirectory/txtGenAi.index" "1";then
 		txtGenAi=$(find "/var/cache/2web/downloads/ai/txt2txt/" -maxdepth 1 -type d -name "models--*" | wc -l)
 		echo "$txtGenAi" > "$webDirectory/txtGenAi.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI image editing models"
 	if cacheCheck "$webDirectory/imageEditAi.index" "1";then
 		imageEditAi=$(find "/var/cache/2web/downloads/ai/img2img/" -maxdepth 1 -type d -name "models--*" | wc -l)
 		echo "$imageEditAi" > "$webDirectory/imageEditAi.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded AI subtitling models"
 	if cacheCheck "$webDirectory/subAi.index" "1";then
 		subAi=$(find "/var/cache/2web/downloads/ai/subtitles/" -type f -name "*.pt" | wc -l)
 		echo "$subAi" > "$webDirectory/subAi.index"
 	fi
+	INFO "Building stat for the disk space used by downloaded show metadata"
 	if cacheCheck "$webDirectory/ytdlShows.index" "1";then
 		ytdlShows=$(find "/var/cache/2web/downloads/nfo/" -maxdepth 2 -type f -name "tvshow.nfo" | wc -l)
 		echo "$ytdlShows" > "$webDirectory/ytdlShows.index"
 	fi
+	INFO "Building stat for the disk space used by all AI models"
 	if cacheCheck "$webDirectory/localAi.index" "1";then
 		# the total number of AIs
 		localAi=0
