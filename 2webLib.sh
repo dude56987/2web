@@ -383,7 +383,11 @@ function cacheCheck(){
 	if test -f "$filePath";then
 		# check the file date
 		fileMtime=$(stat -c "%Y" "$filePath")
-		if [ $(($(date "+%s") - $fileMtime)) -gt $(( ( ( (60 * 60) * 60 ) * 24 ) * $cacheDays )) ];then
+
+		#addToLog "DEBUG" "CACHE CHECK" "filePath = '$filePath'"
+		#addToLog "DEBUG" "CACHE CHECK" "fileMtime = '$fileMtime'"
+		#addToLog "DEBUG" "CACHE CHECK" "$(timeToHuman "$(($(date "+%s") - $fileMtime))") -gt $(timeToHuman "$(( ( (60 * 60) * 24 ) * $cacheDays ))")"
+		if [ $(($(date "+%s") - $fileMtime)) -gt $(( ( (60 * 60) * 24 ) * $cacheDays )) ];then
 			# the file is more than "$cacheDays" days old, it needs updated
 			#INFO "File is to old, update the file $1"
 			return 0
