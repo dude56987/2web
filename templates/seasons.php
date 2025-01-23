@@ -87,7 +87,7 @@ echo "<a class='button vlcButton' href='vlc://".$_SERVER['SERVER_ADDR']."/m3u-ge
 $seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
 $newestSeason="";
 
-echo "	<a href='?all#seriesSearchBox' class='button'>";
+echo "	<a href='?all#seasonsTop' class='button'>";
 echo "		📁 All";
 echo "	</a>";
 foreach($seasonDirs as $seasonDir){
@@ -97,7 +97,7 @@ foreach($seasonDirs as $seasonDir){
 		#	$seasonName = str_replace($activeDir.'/','',$seasonName);
 			$seasonName = str_replace($activeDir.'/','',$seasonDir);
 			$newestSeason = $seasonName;
-			echo "	<a href='?search=$seasonName#$seasonName' class='button'>";
+			echo "	<a href='?season=$seasonName#$seasonName' class='button'>";
 			if ($seasonName == "Season 0000"){
 				echo "		📁 Specials";
 			}else{
@@ -166,12 +166,12 @@ echo "</div>";
 <!--
 <input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
 -->
-<form class='searchBoxForm' action="#seriesSearchBox" method='get'>
+<form class='searchBoxForm' action="#seasonsTop" method='get'>
 	<input id='seriesSearchBox' class='searchBox' type='text' name='search' placeholder='Series Episode Search...' >
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
-	<a class='searchButton' href='?#seriesSearchBox'>❌</a>
+	<a class='searchButton' href='?#seasonsTop'>❌</a>
 </form>
-<hr>
+<hr id='seasonsTop'>
 <div class='episodeList'>
 <?PHP
 if (array_key_exists("search",$_GET)){
@@ -180,59 +180,88 @@ if (array_key_exists("search",$_GET)){
 $searchResults=False;
 foreach($seasonDirs as $seasonDir){
 	if (is_dir($seasonDir)){
-		$seasonName = str_replace($activeDir.'/','',$seasonDir);
-		$firstRun=True;
+		if (is_readable("$seasonDir/season.index")){
+			$seasonName = str_replace($activeDir.'/','',$seasonDir);
+			$firstRun=True;
 
-		// set so script keeps running even if user cancels it
-		ignore_user_abort(true);
-		$episodeFiles = scanDir($seasonDir);
-		sort($episodeFiles);
-		$seasonHeader="";
-		$seasonHeader.="<div class='seasonContainer'>";
-		$seasonHeader.="<div class='seasonHeader'>";
-		if ($seasonName == "Season 0000"){
-			$seasonHeader.="<h2 id='$seasonName'>Specials</h2>";
-		}else{
-			$seasonHeader.="<h2 id='$seasonName'>$seasonName</h2>";
-		}
-		$seasonHeader.="</div>";
-		$seasonHeader.="<hr>";
+			// set so script keeps running even if user cancels it
+			ignore_user_abort(true);
+			#$episodeFiles = scanDir($seasonDir);
+			$episodeFiles = file("$seasonDir/season.index");
+			# sort the episode names
+			sort($episodeFiles);
+			$seasonHeader="";
+			$seasonHeader.="<div class='seasonContainer'>";
+			$seasonHeader.="<div class='seasonHeader'>";
+			if ($seasonName == "Season 0000"){
+				$seasonHeader.="<h2 id='$seasonName'>Specials</h2>";
+			}else{
+				$seasonHeader.="<h2 id='$seasonName'>$seasonName</h2>";
+			}
+			$seasonHeader.="</div>";
+			$seasonHeader.="<hr>";
+			if (array_key_exists("season",$_GET)){
+				if($seasonName == $_GET["season"]){
+					foreach($episodeFiles as $episodeFile){
+						#
+						$episodeFile=str_replace("\n","",$episodeFile);
+						if (strpos($episodeFile,".index")){
+							if ($firstRun){
+								echo $seasonHeader;
+								$firstRun=False;
+								$searchResults=True;
+							}
+							#echo file_get_contents($seasonDir."/".basename($episodeFile));
+							echo file_get_contents($episodeFile);
+							flush();
+							ob_flush();
+						}
+					}
+				}
+				if ($firstRun == False){
+					echo "</div>";
+				}
+			}else if (array_key_exists("search",$_GET)){
+				foreach($episodeFiles as $episodeFile){
+					if (stripos($episodeFile,".index") !== false){
+						$episodeFile=str_replace("\n","",$episodeFile);
+						#$tempData=file_get_contents($seasonDir."/".$episodeFile);
+						#$tempData=file_get_contents($episodeFile);
+						# filter by search term
+						if (stripos($episodeFile,$searchTerm) !== false){
+							if ($firstRun){
+								echo $seasonHeader;
+								$firstRun=False;
+								$searchResults=True;
+							}
+							# write the data
+							#echo $tempData;
+							echo file_get_contents($episodeFile);
 
-		if (array_key_exists("search",$_GET)){
-			foreach($episodeFiles as $episodeFile){
-				if (strpos($episodeFile,".index")){
-					$tempData=file_get_contents($seasonDir."/".$episodeFile);
-					# filter by search term
-					if (stripos($tempData,$searchTerm)){
+							flush();
+							ob_flush();
+						}
+					}
+				}
+			}else{
+				foreach($episodeFiles as $episodeFile){
+					$episodeFile=str_replace("\n","",$episodeFile);
+					if (strpos($episodeFile,".index")){
 						if ($firstRun){
 							echo $seasonHeader;
 							$firstRun=False;
 							$searchResults=True;
 						}
-
-						# write the data
-						echo $tempData;
+						#echo file_get_contents($seasonDir."/".basename($episodeFile));
+						echo file_get_contents($episodeFile);
 						flush();
 						ob_flush();
 					}
 				}
 			}
-		}else{
-			foreach($episodeFiles as $episodeFile){
-				if (strpos($episodeFile,".index")){
-					if ($firstRun){
-						echo $seasonHeader;
-						$firstRun=False;
-						$searchResults=True;
-					}
-					echo file_get_contents($seasonDir."/".$episodeFile);
-					flush();
-					ob_flush();
-				}
+			if ($firstRun == False){
+				echo "</div>";
 			}
-		}
-		if ($firstRun == False){
-			echo "</div>";
 		}
 	}
 }
@@ -240,7 +269,7 @@ if ($searchResults == False){
 	# no search results found
 	echo "<div class='titleCard'>";
 	echo "<h2>No search results found for episode search.</h2>";
-	echo "<a class='searchButton' href='?#seriesSearchBox'>Show All Episodes</a>";
+	echo "<a class='searchButton' href='?#seasonsTop'>Show All Episodes</a>";
 	echo "</div>";
 }
 ?>

@@ -1048,11 +1048,10 @@ processEpisode(){
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</div>"
 		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
 
-		#if [ "$episodeNumber" -eq 1 ];then
-		#	echo -ne "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
-		#else
-		#	echo -ne "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" >> "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
-		#fi
+		# add the episode to the season index
+		addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		# sort the season episodes alphabetically
+		#cat "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index" | sort > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 
 		# mark the season as updated by creating a episode season path in the web directory as a season lock file
 		# - this is used to generate a .nomedia file
