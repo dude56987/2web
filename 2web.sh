@@ -1262,11 +1262,11 @@ function screenshot(){
 	webPath=$1
 	localPath=$2
 	#
-	desktopPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/desktop_$localPath"
-	phonePath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/phone_$localPath"
+	desktopPath="/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_$localPath"
+	phonePath="/var/cache/2web/generated/comics/2web/2web Screenshots/phone_$localPath"
 	#
-	desktopSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/desktop_${localPath}_%03d.png"
-	phoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/phone_${localPath}_%03d.png"
+	desktopSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_${localPath}_%03d.png"
+	phoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/phone_${localPath}_%03d.png"
 
 	#
 	addToLog "DEBUG" "Screenshots" "Creating screenshot from '$webPath' at '$localPath'"
