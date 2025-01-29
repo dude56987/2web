@@ -990,27 +990,38 @@ rebootCheck(){
 				ALERT "Reboot is now scheduled to happen when system becomes idle..."
 				# put up the reboot alert on the website
 				touch /var/cache/2web/web/rebootAlert.cfg
-				# ten percent of the idle load
-				idleLoad=$(( totalCPUS / 5 ))
-				# the idle load should never be below 1
-				if [ $idleLoad -le 0 ];then
-					idleLoad=1
-				fi
-				# wait for the reboot until the job queue empties and the server becomes idle
-				while [ $( echo "$(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad" | bc ) -eq 1 ] && [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -gt 0 ];do
-					INFO "Waiting for system to become idle in order to reboot. LOAD:($(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad) ACTIVE JOBS:($(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l))"
-					sleep 30
-				done
-				# check for running apt-get processes
-				while pgrep "apt-get" > /dev/null;do
-					INFO "${procName} will not run while system updates are being installed. Waiting 30 seconds..."
-					sleep 30
-				done
-				# check for running dpkg instances
-				while pgrep "dpkg" > /dev/null;do
-					INFO "${procName} will not run while system updates are being installed. Waiting 30 seconds..."
-					sleep 30
-				done
+			else
+				ALERT "It has been less than a hour since the last reboot. The system will not reboot more than once per hour."
+			fi
+		else
+			ALERT "The Time check failed this is not a hour on which a reboot is scheduled."
+		fi
+	fi
+	# if the reboot alert has been issued then check for correct conditions
+	if test -f "/var/cache/2web/web/rebootAlert.cfg";then
+		# ten percent of the idle load
+		idleLoad=$(( totalCPUS / 5 ))
+		# the idle load should never be below 1
+		if [ $idleLoad -le 0 ];then
+			idleLoad=1
+		fi
+		#
+		rebootTimeoutCounter=0
+		while [ "yes" == "yes" ];do
+			# only reboot if no blocking events are found
+			if [ $( echo "$(cat /proc/loadavg | cut -d' ' -f1) > $idleLoad" | bc ) -eq 1 ];then
+				# system load is to high
+				sleep 30
+			elif [ $(find "/var/cache/2web/queue/active/" -name "*.active" | wc -l) -gt 0 ];then
+				# 2web queue contains running processes
+				sleep 30
+			elif pgrep "apt-get" > /dev/null;then
+				# system is installing packages
+				sleep 30
+			elif pgrep "dpkg" > /dev/null;then
+				# system is installing packages
+				sleep 30
+			else
 				# start the reboot process by showing a delay before rebooting the system
 				echo -n "Rebooting"
 				# 5 second delay
@@ -1038,12 +1049,16 @@ rebootCheck(){
 				elif test -f /usr/sbin/shutdown;then
 					/usr/sbin/shutdown -r 'now'
 				fi
-			else
-				ALERT "It has been less than a hour since the last reboot. The system will not reboot more than once per hour."
 			fi
-		else
-			ALERT "The Time check failed this is not a hour on which a reboot is scheduled."
-		fi
+			# increment the counter
+			rebootTimeoutCounter=$(( $rebootTimeoutCounter + 1 ))
+			# 10 minutes
+			if [ $rebootTimeoutCounter -gt 20 ];then
+				# the reboot has timed out let the process go because 2web needs the process lock released in order to keep updating the graphs
+				ALERT "The reboot check has timed out 2web will run again soon to update the graphs."
+				break
+			fi
+		done
 	fi
 }
 ################################################################################
