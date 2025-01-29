@@ -1483,7 +1483,7 @@ main(){
 		update2web
 		/usr/bin/graph2web
 		rebootCheck
-	elif [ "$1" == "-G" ] || [ "$1" == "--git" ] || [ "$1" == "git" ];then
+	elif [ "$1" == "-G" ] || [ "$1" == "--git" ] || [ "$1" == "git" ] || [ "$1" == "repo" ] || [ "$1" == "--repo" ];then
 		update2web
 		/usr/bin/git2web
 		rebootCheck
