@@ -1173,13 +1173,23 @@ if( ! function_exists("recursiveScan")){
 }
 ################################################################################
 if( ! function_exists("sortPathsByDate")){
-	function sortPathsByDate($finalFoundLinks){
+	function sortPathsByDate($finalFoundLinks,$subPath=""){
+		# sortPathsByDate($arrayOfPaths,$subPath)
+		#
+		# The array of paths will be scanned and sorted by the modification time of
+		# the paths
+		#
+		# The subPath is not required
+		#
+		# The subPath will be added to the paths and that combined path will be used
+		# to get the modification time used for sorting the orignal list of paths
+
 		# sort the files by mtime
 		$sortedList=Array();
 		# sort the link list by modification date
 		foreach($finalFoundLinks as $sourceFile){
 			# get the timestamp for the file modification date
-			$tempTimeStamp=lstat($sourceFile)["mtime"];
+			$tempTimeStamp=lstat($sourceFile.$subPath)["mtime"];
 			# check if the timestamp exists in the sorted array
 			if(! array_key_exists($tempTimeStamp,$sortedList)){
 				# the time stamp array does not yet exist, create it
