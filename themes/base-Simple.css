@@ -2366,6 +2366,11 @@ svg {
 .moreEpisodesLink{
 	height: 11rem;
 	line-height: 2rem;
+	overflow: hidden;
+}
+.moreEpisodesLinkIcon{
+	font-size: 3rem;
+	line-height: 5rem;
 }
 .homeActivityGraph{
 	max-width: 98%;

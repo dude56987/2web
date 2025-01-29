@@ -169,58 +169,62 @@ if( ! function_exists("drawPosterWidget")){
 					if ($linkType == "icon"){
 						if ($random){
 							// create a final link to the full new list
-							fwrite($fileObj,"<a class='button indexIconLink' href='/random/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full ");
-							fwrite($fileObj,"List ");
+							fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}else{
 							// create a final link to the full new list
-							fwrite($fileObj,"<a class='button indexIconLink' href='/new/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full ");
-							fwrite($fileObj,"List ");
+							fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}
 					}else if ($linkType == "episode"){
 						# show page episode
 						if ($random){
 							// create a final link to the full new list
-							fwrite($fileObj,"<a class='showPageEpisode moreEpisodesLink' href='/random/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full ");
-							fwrite($fileObj,"<br>");
-							fwrite($fileObj,"List ");
-							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}else{
 							// create a final link to the full new list
-							fwrite($fileObj,"<a class='showPageEpisode moreEpisodesLink' href='/new/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full ");
-							fwrite($fileObj,"<br>");
-							fwrite($fileObj,"List ");
-							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}
 					}else{
 						if ($random){
 							// create a final link to the full new list
 							fwrite($fileObj,"<a class='indexSeries' href='/random/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full");
-							fwrite($fileObj,"<br>");
-							fwrite($fileObj,"List");
-							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"🔀");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}else{
 							// create a final link to the full new list
 							fwrite($fileObj,"<a class='indexSeries' href='/new/index.php?filter=$filterType'>");
-							fwrite($fileObj,"Full");
-							fwrite($fileObj,"<br>");
-							fwrite($fileObj,"List");
-							fwrite($fileObj,"<br>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
 							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
 							fwrite($fileObj,"</a>");
 						}
 					}
