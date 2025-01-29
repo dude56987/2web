@@ -572,6 +572,7 @@ if( ! function_exists("readFileInPackets")){
 ################################################################################
 if( ! function_exists("displayIndexWithPages")){
 	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=45,$sortMethod="forward"){
+		#
 		if (! file_exists($indexFilePath)){
 			echo "$emptyMessage";
 			return false;
@@ -623,20 +624,64 @@ if( ! function_exists("displayIndexWithPages")){
 		}
 
 		if ( $pageCount > 1 ){
-			echo "<div class='titleCard'>";
+			#echo "<div class='titleCard'>\n";
+			echo "<div class='titleCard'>\n";
+			echo "<div class='listCard'>\n";
+			echo "<table class='controlTable'>\n";
+			echo "	<tr>\n";
 
-			echo "<div class='listCard'>";
+			## check status for the special all page
+			#echo "		<td>\n";
+			#echo "			<a class='button' href='?page=all$otherVars'>";
+			#echo "∞";
+			#echo "</a>\n";
+			#echo "		</td>\n";
+
 			if (is_numeric($_GET["page"]) and ( $_GET["page"] > 1 )){
 				# build the left button for pages
-				echo "<a class='button' href='?page=".($_GET["page"] - 1).$otherVars."'>";
-				echo "⇦ Back";
-				echo "</a>";
+				echo "		<td>\n";
+				echo "			<a class='button' href='?page=".($_GET["page"] - 1).$otherVars."'>";
+				echo "◁ Back";
+				echo "</a>\n";
+				echo "		</td>\n";
 			}
+			#echo "</tr>";
+			#echo "<tr>";
 
-			# check status for the special all page
-			echo "<a class='button' href='?page=all$otherVars'>";
-			echo "∞";
-			echo "</a>";
+			#echo "		<td>\n";
+
+			#echo "<div class='listCard'>\n";
+			#echo "<div class=''>\n";
+
+			if (array_key_exists("page",$_GET)){
+				#
+				if ($_GET["page"] == 1){
+					# first page
+					$pageMargin=8;
+				}else if ($_GET["page"] == $pageCount){
+					# last page
+					$pageMargin=8;
+				}else{
+					#
+					$pageMargin=4;
+					#
+					if($_GET["page"] < $pageMargin ){
+						$pageMargin=$pageMargin + $_GET["page"];
+					}else if($_GET["page"] > ( $pageCount - $pageMargin ) ){
+						$pageMargin=( $pageMargin + ($pageCount - $_GET["page"] ) ) - 1;
+					#	#$pageMargin=$_GET["page"] - ( $pageCount - $pageMargin );
+					}else{
+						$pageMargin=4;
+					}
+				}
+			}else{
+				$pageMargin=8;
+			}
+			# clamp the margin
+			if ($pageMargin > 8){
+				$pageMargin=8;
+			}
+			#
 			$pageDrawCounter=0;
 			foreach((range(1,$pageCount)) as $currentPageNumber){
 				$activePage = False;
@@ -654,7 +699,7 @@ if( ! function_exists("displayIndexWithPages")){
 						if ($currentPageNumber == $_GET['page']){
 							$activePage = True;
 						}
-					}else if (($currentPageNumber < ($_GET['page'] + 5)) && ($currentPageNumber > ($_GET['page'] - 5))){
+					}else if (($currentPageNumber < ($_GET['page'] + $pageMargin)) && ($currentPageNumber > ($_GET['page'] - $pageMargin))){
 						$drawPage = True;
 						$pageDrawCounter += 1;
 						if ($currentPageNumber == $_GET['page']){
@@ -662,34 +707,45 @@ if( ! function_exists("displayIndexWithPages")){
 						}
 					}else{
 						if ($currentPageNumber == 2){
-							echo "...";
+							echo "<td>\n";
+							echo "⋯\n";
+							echo "</td>\n";
 						}else if($currentPageNumber == ($pageCount - 1)){
-							echo "...";
+							echo "<td>\n";
+							echo "⋯\n";
+							echo "</td>\n";
 						}
 					}
 				}
 				# check if the page number should be drawn
 				if ($drawPage){
+					echo "<td>\n";
 					# draw the page
 					if ($activePage){
 						# if the page is active set the class
 						echo "<a class='activeButton' href='?page=$currentPageNumber$otherVars'>";
 						echo "$currentPageNumber";
-						echo "</a>";
+						echo "</a>\n";
 					}else{
 						echo "<a class='button' href='?page=$currentPageNumber$otherVars'>";
 						echo "$currentPageNumber";
-						echo "</a>";
+						echo "</a>\n";
 					}
+					echo "</td>\n";
 				}
 			}
 
 			if (is_numeric($_GET["page"]) and ( $_GET["page"] < $pageCount )){
+				echo "		<td>\n";
 				# build the next button for pages
-				echo "<a class='button' href='?page=".($_GET["page"] + 1)."$otherVars'>";
-				echo "Next ⇨";
-				echo "</a>";
+				echo "			<a class='button' href='?page=".($_GET["page"] + 1)."$otherVars'>";
+				echo "Next ▷";
+				echo "</a>\n";
+				echo "		</td>\n";
 			}
+
+			echo "	</tr>\n";
+			echo "</table>\n";
 
 			echo "</div>";
 			echo "</div>";
