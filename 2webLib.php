@@ -1131,7 +1131,7 @@ if( ! function_exists("appendFile")){
 ################################################################################
 if( ! function_exists("recursiveScan")){
 	function recursiveScan($directoryPath){
-		# recursiveScan($directoryPath,$sort="none",$filterMimeType="none",$maxDepth)
+		# recursiveScan($directoryPath)
 		#
 		# Recursively scan a directory and all subdirectories and return an array of the full paths to all discovered files.
 		#
