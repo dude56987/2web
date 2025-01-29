@@ -350,20 +350,18 @@ if( ! function_exists("addToQueue")){
 		# - Set type to 'multi' for multithreaded queue processing
 		# - Set the type to 'single' for linear processing
 		# - Both queues will be processed, just diffrently
-		if ($type == "single"){
-			# place the command in the single threaded queue
-			# - Use microtime but remove the decimal place
-			file_put_contents( ( "/var/cache/2web/queue/single/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
-		}else if ($type == "multi"){
-			# place command in the multithreaded queue
-			file_put_contents( ( "/var/cache/2web/queue/multi/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
-		}else if ($type == "idle"){
-			# place command in the idle queue
-			file_put_contents( ( "/var/cache/2web/queue/idle/".str_replace(".","",microtime())."-".md5($command).".cmd" ), $command );
-		}else{
-			# unknown type
+		if (! in_array($type, Array("single","multi","idle"))){
+			# if the type is a unknown type that has no existing queue
 			addToLog("DEBUG","Unknown Type","Unknown type used in addToQueue(), Use 'multi', 'single', or 'idle' as the types.");
+			$queueAvailable=$false;
+			return false;
 		}
+		# build the path for the job file
+		$jobPath=( "/var/cache/2web/queue/$type/".str_replace(".","",microtime())."-".md5($command));
+		# place command in the idle queue
+		file_put_contents($jobPath.".cmd", $command );
+		# return the path to the job file
+		return $jobPath;
 	}
 }
 ################################################################################
