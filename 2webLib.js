@@ -378,6 +378,21 @@ function delayedRefresh(timeout) {
 	},(1000*timeout));
 }
 ////////////////////////////////////////////////////////////////////////////////
+function delayedRedirect(timeout,url) {
+	// redirect the page after a timeout
+	setTimeout(function() {
+		// redirect the page only if the search bar does not have focus
+		if(document.activeElement.tagName == "INPUT"){
+			// if the search box is focused delay the reload another cycle
+			delayedRedirect(timeout,url);
+		}else{
+			// redirect the current page
+			window.location = url;
+		}
+	},(1000*timeout));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 function copyToClipboard(copyText){
 	// copy text given as $copyText to the system clipboard
 	// - Text should be passed to this function encoded by encodeURIComponent() or
