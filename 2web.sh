@@ -462,6 +462,7 @@ function update2web(){
 		fi
 	fi
 	if [ "$updateThemes" == "yes" ];then
+		ALERT "Rebuilding all themes..."
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
 		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
 		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
@@ -480,6 +481,7 @@ function update2web(){
 					for themeBase in $themeBases;do
 						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
 						tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
+						INFO "Building theme '$tempThemeName'..."
 						# build the theme
 						{
 							if test -f "$themeColor";then
