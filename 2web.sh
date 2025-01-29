@@ -102,44 +102,43 @@ function generateFortune(){
 	if yesNoCfgCheck "/etc/2web/fortuneStatus.cfg";then
 		# only build a new fortune once every 24 hours
 		if cacheCheck "$webDirectory/fortune.index" "1";then
-			# write the fortune for this processing run...
-			if test -f /usr/games/fortune;then
-				# create the directory
-				createDir "/etc/2web/fortune/"
-				fortuneFiles=""
-				# get all the enabled fortunes
-				#find "/usr/share/games/fortunes/" -type f | while read -r fortuneFile;do
-				IFS_BACKUP=$IFS
-				IFS=$'\n'
-				for fortuneFile in $(find "/usr/share/games/fortunes/");do
-					if echo "$fortuneFile" | grep ".db";then
-						INFO "Incorrect database format $fortuneFile"
-					elif echo "$fortuneFile" | grep ".cfg";then
-						INFO "Incorrect database format $fortuneFile"
-					elif echo "$fortuneFile" | grep ".u8";then
-						INFO "Incorrect database format $fortuneFile"
-					elif echo "$fortuneFile" | grep ".dat";then
-						INFO "Incorrect database format $fortuneFile"
-					else
-						# if the fortune file is enabled
-						# - default fortune files to yes
-						if yesNoCfgCheck "/etc/2web/fortune/$(basename "$fortuneFile").cfg" "no";then
-							# add the fortune file to the generate command
-							fortuneFiles="${fortuneFiles} $(basename "${fortuneFile}")"
-						fi
+			# create the directory
+			createDir "/etc/2web/fortune/"
+			fortuneFiles=""
+			# get all the enabled fortunes
+			#find "/usr/share/games/fortunes/" -type f | while read -r fortuneFile;do
+			IFS_BACKUP=$IFS
+			IFS=$'\n'
+			for fortuneFile in $(find "/usr/share/games/fortunes/");do
+				if echo "$fortuneFile" | grep ".db";then
+					INFO "Incorrect database format $fortuneFile"
+				elif echo "$fortuneFile" | grep ".cfg";then
+					INFO "Incorrect database format $fortuneFile"
+				elif echo "$fortuneFile" | grep ".u8";then
+					INFO "Incorrect database format $fortuneFile"
+				elif echo "$fortuneFile" | grep ".dat";then
+					INFO "Incorrect database format $fortuneFile"
+				else
+					# if the fortune file is enabled
+					# - default fortune files to yes
+					if yesNoCfgCheck "/etc/2web/fortune/$(basename "$fortuneFile").cfg" "no";then
+						# add the fortune file to the generate command
+						fortuneFiles="${fortuneFiles} $(basename "${fortuneFile}")"
 					fi
-				done
-				IFS=$IFS_BACKUP
-
-				todaysFortune=$(/usr/games/fortune -e ${fortuneFiles} | sed "s/\t/ /g")
-				addToLog "INFO" "Generate New Fortune" "<pre>/usr/games/fortune -e ${fortuneFiles}</pre><pre>${todaysFortune}</pre>"
-
-				# replace tabs with spaces for ascii art
-				#
-				echo "$todaysFortune" > "$webDirectory/fortune.index"
-			fi
+				fi
+			done
+			IFS=$IFS_BACKUP
+			#
+			todaysFortune=$(/usr/games/fortune -e ${fortuneFiles} | sed "s/\t/ /g")
+			#
+			addToLog "INFO" "Generate New Fortune" "<pre>/usr/games/fortune -e ${fortuneFiles}</pre><pre>${todaysFortune}</pre>"
+			#
+			echo "$todaysFortune" > "$webDirectory/fortune.index"
+		else
+			addToLog "INFO" "Generate New Fortune" "Fortune file is less than one day old, no new fortune was generated."
 		fi
 	else
+		addToLog "INFO" "Generate New Fortune" "Homepage fortune generation is disabled."
 		# the config is disabled check for any cached fortunes
 		if test -f "$webDirectory/fortune.index";then
 			# remove the fortune index file
