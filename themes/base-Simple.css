@@ -2825,3 +2825,142 @@ details[open] summary h2::before {
 	}
 	text-shadow: none !important;
 }
+/******************************************************************************/
+/* CSS ANIMATIONS */
+/******************************************************************************/
+@keyframes fallIn{
+	0% {margin-top: -50%;opacity: 0;}
+	100% {margin-top: 0%;opacity: 1;}
+}
+.fallIn{
+	animation-name: fallIn;
+	animation-duration: 0.08s;
+	animation-fill-mode: forwards;
+	/* animation delay is set on the element */
+}
+@keyframes dropBounce{
+	0% {
+		opacity: 0;
+		transform: scale(2);
+	}
+	95% {
+		transform: scale(0.9);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+@keyframes bigDropBounce{
+	0% {
+		opacity: 0;
+		transform: scaleY(1.2);
+	}
+	95% {
+		transform: scaleY(0.9);
+	}
+	100% {
+		opacity: 1;
+		transform: scaleY(1);
+	}
+}
+@keyframes spiralDrop{
+	0% {
+		opacity: 0;
+		transform: translateY(100px) scale(5);
+	}
+	25% {
+		opacity: 1;
+		transform: translateY(0px) translateX(-100px) scale(4);
+	}
+	50% {
+		transform: translateY(-100px) translateX(0px) scale(3);
+	}
+	75% {
+		transform: translateY(0px) translateX(100px) scale(2);
+	}
+	100% {
+		transform: translateY(0px) translateX(0px) scale(1);
+	}
+}
+@keyframes pulseate{
+	0% {
+		transform: scaleY(1) scaleX(1);
+	}
+	50% {
+		transform: scaleY(1.1) scaleX(1.1);
+	}
+	100% {
+		transform: scaleY(1) scaleX(1);
+	}
+
+}
+@keyframes tvOn{
+	0% {
+		opacity: 0;
+		transform: scaleY(0.01) scaleX(0.02);
+	}
+	5% {
+		opacity: 1;
+		transform: scaleY(0.01) scaleX(0.02);
+	}
+	70% {
+		transform: scaleY(0.01) scaleX(0.8);
+	}
+	90% {
+		transform: scaleY(0.9) scaleX(0.9);
+	}
+	100% {
+		transform: scaleY(1) scaleX(1);
+	}
+}
+video{
+	animation-name: tvOn;
+	animation-duration: 0.8s;
+	animation-fill-mode: both;
+	animation-delay: 0.2s;
+}
+.singleStat{
+	animation-name: dropBounce;
+	animation-duration: 0.3s;
+	animation-fill-mode: both;
+	animation-delay: 0.2s;
+}
+.indexSeries{
+	animation-name: dropBounce;
+	animation-duration: 0.3s;
+	animation-fill-mode: both;
+	animation-delay: 0.2s;
+}
+.showPageEpisode{
+	animation-name: dropBounce;
+	animation-duration: 0.3s;
+	animation-fill-mode: both;
+	animation-delay: 0.2s;
+}
+.searchBoxForm{
+	animation-name: bigDropBounce;
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+}
+.titleCard{
+	animation-name: bigDropBounce;
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+}
+.inputCard{
+	animation-name: bigDropBounce;
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+	animation-delay: 0.2s;
+}
+.settingListCard{
+	animation-name: bigDropBounce;
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+}
+details[open]{
+	animation-name: bigDropBounce;
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+}
