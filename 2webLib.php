@@ -1395,7 +1395,7 @@ if( ! function_exists("startSession")){
 }
 ########################################################################
 if( ! function_exists("sessionSetValue")){
-	function sessionSetValue($indexKey,$storedValue,$timeout=600){
+	function sessionSetValue($indexKey,$storedValue){
 		# store a value in the session data and set a timeout for the value
 		#
 		# - This function can not store a value of null because the sessionGetValue()
@@ -1404,15 +1404,14 @@ if( ! function_exists("sessionSetValue")){
 		# - Default timeout is high because it will mostly effect users who are not
 		#   modifying these values
 		#
-		if (! isset($_SESSION)){
-			# the session does not yet exist so start the session
-			# - this is only for users that are not logged in
-			session_start();
-		}
+		# - Timeout defaults to 600 seconds (10 Minutes)
+
+		# the session does not yet exist so start the session
+		# - this is only for users that are not logged in
+		startSession();
+		addToLog("DEBUG","Session Set Value",$indexKey."_value = ".var_export($storedValue,true));
 		# set the timestamp
 		$_SESSION[$indexKey."_timeStamp"]=time();
-		# set the timeout
-		$_SESSION[$indexKey."_timeOut"]=$timeout;
 		# store the value itself
 		$_SESSION[$indexKey."_value"]=$storedValue;
 	}
@@ -1424,35 +1423,47 @@ if( ! function_exists("sessionGetValue")){
 		#
 		# - This will return null if the value could not be loaded
 		#
+
 		# store a value in the session
-		if (! isset($_SESSION)){
-			# the session does not yet exist so start the session
-			# - this is only for users that are not logged in
-			session_start();
-		}
+		startSession();
 		if (array_key_exists($indexKey."_value",$_SESSION)){
 			# the value is stored check the value timeout
 			if (array_key_exists($indexKey."_timeStamp",$_SESSION)){
 				# load up the timestamp
 				$timeStamp=$_SESSION[$indexKey."_timeStamp"];
-				#addToLog("DEBUG","Found timestamp","$timeStamp");
-				if (array_key_exists($indexKey."_timeOut",$_SESSION)){
-					# load up the timeout
-					$timeOut=$_SESSION[$indexKey."_timeOut"];
-					#addToLog("DEBUG","Found timeOut","$timeOut");
-					# the timestamp exists check the value of the timestamp
-					if ((time() - $timeStamp) < $timeOut){
-						# the cached data is not to old so load the data
-						#addToLog("DEBUG","Found value",$_SESSION[$indexKey."_value"]);
-						# return the stored value
-						return $_SESSION[$indexKey."_value"];
-					}
+				# load up the timeout
+				$timeOut=600;
+				# the timestamp exists check the value of the timestamp
+				if ((time() - $timeStamp) < $timeOut){
+					# the cached data is not to old so load the data
+
+					# return the stored value
+					return $_SESSION[$indexKey."_value"];
 				}
 			}
 		}
-		#addToLog("DEBUG","Failed to load value from key",$indexKey);
 		# the data could not be got, so fail
 		return null;
+	}
+}
+########################################################################
+if( ! function_exists("sessionRemoveValue")){
+	function sessionRemoveValue($indexKey){
+		# remove a value stored in the session data
+
+		# remove a value stored in the session
+		startSession();
+		# set the timestamp to 0 to force re checking the data
+		$_SESSION[$indexKey."_timeStamp"] = 0;
+
+		#if (isset($_SESSION[$indexKey."_value"])){
+		#	unset($_SESSION[$indexKey."_value"]);
+		#}
+		#if (isset($_SESSION[$indexKey."_timeStamp"])){
+		#	$_SESSION[$indexKey."_timeStamp"] = 0;
+		#	#unset($_SESSION[$indexKey."_timeStamp"]);
+		#}
+		return true;
 	}
 }
 ########################################################################
