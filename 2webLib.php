@@ -1242,11 +1242,7 @@ if( ! function_exists("filterPathsByMime")){
 ################################################################################
 if( ! function_exists("popPath")){
 	function popPath($sourceFile){
-		# Pop the path from a absolute path
-		$fileName = explode("/",$sourceFile);
-		$fileName = array_reverse($fileName);
-		$fileName = $fileName[0];
-		return $fileName;
+		return basename($sourceFile);
 	}
 }
 ################################################################################
