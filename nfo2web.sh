@@ -24,6 +24,10 @@ tabs 4
 ########################################################################
 source /var/lib/2web/common
 ########################################################################
+if echo "$@" | grep -q -e "--debug";then
+	set -x
+fi
+########################################################################
 STOP(){
 	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<"
 	read -r
@@ -2393,23 +2397,26 @@ elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 	clean
 elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 	# upgrade the pip packages if the module is enabled
+	lockProc "nfo2web"
 	checkModStatus "nfo2web"
 	# upgrade streamlink
 	upgrade-pip "nfo2web" "streamlink"
 	# install nightly version of yt-dlp
 	upgrade-yt-dlp
 elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-	checkModStatus "nfo2web"
 	lockProc "nfo2web"
+	checkModStatus "nfo2web"
 	update "$@"
 	# remove active state file
 	if test -f /tmp/nfo2web.active;then
 		rm /tmp/nfo2web.active
 	fi
 elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
-	checkModStatus "nfo2web"
 	lockProc "nfo2web"
+	checkModStatus "nfo2web"
+	startSpinner
 	update "$@" --parallel
+	stopSpinner
 	# remove active state file
 	if test -f /tmp/nfo2web.active;then
 		rm /tmp/nfo2web.active
@@ -2423,8 +2430,8 @@ elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 	echo -n "nfo2web Version: "
 	cat /usr/share/2web/version_nfo2web.cfg
 else
-	checkModStatus "nfo2web"
 	lockProc "nfo2web"
+	checkModStatus "nfo2web"
 	update "$@"
 	# remove active state file
 	if test -f /tmp/nfo2web.active;then
