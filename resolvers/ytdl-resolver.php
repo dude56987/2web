@@ -449,34 +449,34 @@ if (array_key_exists("url",$_GET)){
 		}
 		# check for thumbnail
 		if (is_readable($sourcePath."video.png")){
-			echo "<td>PNG Found</td>";
+			echo "<td class='enabledSetting'>PNG Found</td>";
 		}else{
-			echo "<td>No PNG</td>";
+			echo "<td class='disabledSetting'>No PNG</td>";
 		}
 		# check for HLS stream
 		if (is_readable($sourcePath."video.m3u")){
-			echo "<td>M3U Found</td>";
+			echo "<td class='enabledSetting'>M3U Found</td>";
 		}else{
-			echo "<td>No M3U</td>";
+			echo "<td class='disabledSetting'>No M3U</td>";
 		}
 		# check for mp4 file
 		if (is_readable($sourcePath."video.mp4")){
-			echo "<td>MP4 Found</td>";
+			echo "<td class='enabledSetting'>MP4 Found</td>";
 		}else{
-			echo "<td>No MP4</td>";
+			echo "<td class='disabledSetting'>No MP4</td>";
 		}
 
 		$sourceHash=basename($sourcePath);
 
 		# check for json data
 		if (is_readable($sourcePath."video.info.json")){
-			echo "<td>";
-			echo "<a href='/RESOLVER-CACHE/$sourceHash/video.info.json'>";
+			echo "<td class='enabledSetting'>";
+			echo "<a class='button' href='/RESOLVER-CACHE/$sourceHash/video.info.json'>";
 			echo "Json Found";
 			echo "</a>";
 			echo "</td>";
 		}else{
-			echo "<td>No Json</td>";
+			echo "<td class='disabledSetting'>No Json</td>";
 		}
 		# draw the entries for each directory
 		# check for a json file to load the video title
@@ -490,14 +490,16 @@ if (array_key_exists("url",$_GET)){
 		}
 		echo "<td>$videoTitle</td>";
 
-		echo "<td>";
 		# use the web player if it is available
 		if (is_readable("/var/cache/2web/web/web_player/".$sourceHash."/".$sourceHash.".php")){
+			echo "<td class='enabledSetting'>";
 			echo "	<a class='showPageEpisode' href='/web_player/".$sourceHash."/".$sourceHash.".php'>Web Player Link</a>\n";
+			echo "</td>";
 		}else{
+			echo "<td class='disabledSetting'>";
 			echo "No Web Player Link Was Found";
+			echo "</td>";
 		}
-		echo "</td>";
 
 		echo "<td>";
 		echo "	<a class='showPageEpisode' href='".$sourceWebPath."video.mp4"."'>\n";
