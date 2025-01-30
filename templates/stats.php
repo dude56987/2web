@@ -33,34 +33,43 @@ foreach($moduleNames as $moduleName){
 if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
 	echo "	<div>";
 	echo "<span class='singleStat'>";
-	echo "		Last Updated : ";
+	echo "		<span class='singleStatLabel'>Last Updated</span>\n";
+	echo "		<span class='singleStatValue'>";
 	timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
+	echo "		</span>";
 	echo "</span>";
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
 		echo "<span class='singleStat'>";
-		echo "		Last Update Check : ";
+		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
+		echo "		<span class='singleStatValue'>";
 		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "		</span>";
 		echo "</span>";
 	}else{
 		echo "<span class='singleStat'>";
-		echo "		Last Update Check : Never";
+		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
+		echo "		<span class='singleStatValue'>Never</span>\n";
 		echo "</span>";
 	}
 	echo "	</div>";
 }else{
 	echo "	<div>";
 	echo "<span class='singleStat'>";
-	echo "		Last updated : Never";
+	echo "		<span class='singleStatLabel'>Last Updated</span>\n";
+	echo "		<span class='singleStatValue'>Never</span>\n";
 	echo "</span>";
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
 		echo "<span class='singleStat'>";
-		echo "		Last Update Check : ";
+		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
+		echo "		<span class='singleStatValue'>";
 		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "		</span>\n";
 		echo "</span>";
 	}else{
-		echo "<span class='singleStat'>";
-		echo "		Last Update Check : Never";
-		echo "</span>";
+		echo "<span class='singleStat'>\n";
+		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
+		echo "		<span class='singleStatValue'>Never</span>\n";
+		echo "</span>\n";
 	}
 	echo "	</div>";
 }
@@ -79,6 +88,9 @@ if (detectEnabledStatus("comic2web")){
 }
 if (detectEnabledStatus("git2web")){
 	getStat("totalRepos.index", "Repos");
+}
+if (detectEnabledStatus("php2web")){
+	getStat("totalApps.index", "Applications");
 }
 if (detectEnabledStatus("iptv2web")){
 	getStat("totalChannels.index", "TV Channels");
@@ -122,15 +134,18 @@ if (isset($_SESSION["user"])){
 		$loginTime=$_SESSION["loginTime"];
 		# draw the login time
 		echo "			<span class='singleStat'>";
-		echo "				Login Time:";
+		echo "				<span class='singleStatLabel'>Login Time</span>\n";
+		echo "				<span class='singleStatValue'>";
 		timeElapsedToHuman($loginTime);
+		echo "				</span>\n";
 		echo "			</span>";
 	}
 }
 
 $activeJobs=count(array_diff(scanDir("/var/cache/2web/queue/active/"),Array(".","..")));
 echo "			<span class='singleStat'>";
-echo "				Active Jobs:".$activeJobs."\n";
+echo "				<span class='singleStatLabel'>Active Jobs</span>\n";
+echo "				<span class='singleStatValue'>".$activeJobs."</span>\n";
 echo "			</span>";
 
 echo "		</div>";
