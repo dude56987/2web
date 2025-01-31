@@ -426,7 +426,7 @@ if (array_key_exists("inspector",$_GET)){
 	drawHeader();
 	$graphName=$_GET['graph'];
 	#$graphTitles=Array("day","week","month","year","365_day","diff_365_day","diff_day","diff_week","diff_month","diff_year");
-	$graphTitles=Array("commit_day","commit_week","commit_month","commit_year","commit_365_day","diff_day","diff_week","diff_month","diff_year");
+	$graphTitles=Array("commit_24_hour","commit_72_hour","commit_day","commit_week","commit_month","commit_year","commit_365_day","diff_24_hour","diff_72_hour","diff_day","diff_week","diff_month","diff_year");
 	if (in_array($graphName,$graphTitles)){
 		$graphName=$_GET['graph'];
 	}else{

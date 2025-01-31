@@ -660,6 +660,14 @@ function processRepo(){
 		waitQueue 0.5 "$totalCPUS"
 		buildDiffGraph "days" 365 "graph_diff_365" "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "hours" 24 "graph_commit_24_hour" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "hours" 24 "graph_diff_24_hour" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildCommitGraph "hours" 72 "graph_commit_72_hour" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
+		buildDiffGraph "hours" 72 "graph_diff_72_hour" "$repoName" &
+		waitQueue 0.5 "$totalCPUS"
 		buildCommitGraph "days" 90 "graph_commit_day" "$repoName" &
 		waitQueue 0.5 "$totalCPUS"
 		buildDiffGraph "days" 90 "graph_diff_day" "$repoName" &
