@@ -1021,17 +1021,20 @@ function lockProc(){
 		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '$webDirectory/${procName}.active'."
 		exit
 	else
-		# if the steam lockout is enabled, default is yes
-		if yesNoCfgCheck "/etc/2web/steamLockout.cfg" "yes";then
-			# check for active steam games by searching for the in-game overlay interface
-			if pgrep "gameoverlayui" > /dev/null;then
-				# if the gameoverlayui is active then a game is currently running
-				# - skip over this launch as if the module is already running
-				echo "[INFO]: A Steam game is currently running."
-				echo "[INFO]: ${procName} will not run while a steam game is running."
-				echo "[INFO]: Change you setting in /etc/2web/steamLockout.cfg"
-				# exit without launch
-				exit
+		# disable lockout for main 2web module to prevent the mangling of graphs
+		if [ "$procName" != "2web" ];then
+			# if the steam lockout is enabled, default is yes
+			if yesNoCfgCheck "/etc/2web/steamLockout.cfg" "yes";then
+				# check for active steam games by searching for the in-game overlay interface
+				if pgrep "gameoverlayui" > /dev/null;then
+					# if the gameoverlayui is active then a game is currently running
+					# - skip over this launch as if the module is already running
+					echo "[INFO]: A Steam game is currently running."
+					echo "[INFO]: ${procName} will not run while a steam game is running."
+					echo "[INFO]: Change you setting in /etc/2web/steamLockout.cfg"
+					# exit without launch
+					exit
+				fi
 			fi
 		fi
 		ALERT "Setting Active Flag $webDirectory/${procName}.active"
