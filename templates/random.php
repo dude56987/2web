@@ -187,6 +187,8 @@ if ($hideFilter){
 		# open the cache file for writing
 		$fileHandle = fopen($cacheFile,'w');
 
+		# set the delay counter for CSS animations
+		$animationDelayCounter=1;
 		# fetch each row data individually and display results
 		while($row = $result->fetchArray()){
 			$sourceFile = $row['title'];
@@ -194,13 +196,31 @@ if ($hideFilter){
 				if (is_file($sourceFile)){
 					if (strpos($sourceFile,".index")){
 						//echo "sourceFile = $sourceFile<br>\n";
+						#$tempData="<span class='fallIn' style='animation-delay: ".$animationDelayCounter."s !important'>";
 						// read the index entry
-						$data=file_get_contents($sourceFile);
+						$tempFileData=file_get_contents($sourceFile);
+						# add the animation class
+						$tempData=str_replace("class='indexSeries","class='fallIn indexSeries",$tempFileData);
+						#
+						$tempData=str_replace("class='showPageEpisode","class='fallIn showPageEpisode ",$tempData);
+						# add the custom animation delay to the element
+						$tempData=str_replace("class='fallIn","style='opacity: 0;animation-delay: ".$animationDelayCounter."s' class='fallIn",$tempData);
+						$tempData.="</span>";
 						// write the index entry
-						echo "$data";
-						fwrite($fileHandle, "$data");
+						fwrite($fileHandle, "$tempFileData");
+						# flush output to the user
+						echo "$tempData";
+						#
 						flush();
 						ob_flush();
+						#
+						#sleep(0.08);
+						# increment the counter
+						$animationDelayCounter += 0.08;
+						# clamp the animation delay
+						if ($animationDelayCounter > 5){
+							$animationDelayCounter = 5;
+						}
 					}
 				}
 			}
