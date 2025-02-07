@@ -600,6 +600,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/help.php" "$webDirectory/help.php"
 	linkFile "/usr/share/2web/templates/support.php" "$webDirectory/support.php"
 	linkFile "/usr/share/2web/templates/viewCounter.php" "$webDirectory/views/index.php"
+	linkFile "/usr/share/2web/templates/exit.php" "$webDirectory/exit.php"
 	# caching resolvers
 	linkFile "/usr/share/2web/resolvers/search.php" "$webDirectory/search.php"
 	linkFile "/usr/share/2web/resolvers/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
