@@ -412,14 +412,24 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			# figure out how long the search was processing for using start and end time stamps
 			$processingTime=$finishedTime - $startedTime;
 			# write when the search was completed in human readable format
-			echo "<p>";
-			echo "Search completed: ";
+			echo "<hr>\n";
+			echo "<span class='singleStat'>\n";
+			echo "	<span class='singleStatLabel'>\n";
+			echo "		Search completed\n";
+			echo "	</span>\n";
+			echo "	<span class='singleStatValue'>\n";
 			timeElapsedToHuman($finishedTime);
-			echo "</p>";
-			echo "<p>";
-			echo "Search Processing Time: ";
+			echo "	</span>\n";
+			echo "</span>\n";
+			echo "<span class='singleStat'>\n";
+			echo "	<span class='singleStatLabel'>\n";
+			echo "		Search Processing Time\n";
+			echo "	</span>\n";
+			echo "	<span class='singleStatValue'>\n";
 			timeToHuman($processingTime);
-			echo "</p>";
+			echo "	</span>\n";
+			echo "</span>\n";
+			echo "<hr>\n";
 			checkSpelling($_GET["q"]);
 			$noFoundCategories=true;
 			# draw the jump buttons
