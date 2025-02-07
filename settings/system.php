@@ -48,32 +48,35 @@ include("settingsHeader.php");
 </div>
 </div>
 
-<div id='steamLockoutStatus' class='inputCard'>
-	<h2>🎮 Steam Lockout</h2>
-		<ul>
-			<li>
-				Enable or disable the Steam lockout.
-			</li>
-			<li>
-				When enabled the steam lockout will disable 2web background processing of libraries.
-			</li>
-			<li>
-				Modules will not update, download, or scan for any content while steam games are running on the same PC.
-			</li>
-			<li>
-				Web, kodi, and client transcode jobs will still recieve normal priority when lockout is enabled.
-			</li>
-			<li>
-				Helpfull if your 2web server is also used as a game desktop.
-			</li>
-			<li>
-				If you do not have Steam installed you can ignore this option.
-			</li>
-		</ul>
-		<?PHP
-		buildYesNoCfgButton("/etc/2web/steamLockout.cfg","Steam Lockout","steamLockoutStatus");
-		?>
-</div>
+<?PHP
+
+if(file_exists("/usr/games/steam")){
+	echo "<div id='steamLockoutStatus' class='inputCard'>";
+	echo "	<h2>🎮 Steam Lockout</h2>";
+	echo "		<ul>";
+	echo "			<li>";
+	echo "				Enable or disable the Steam lockout.";
+	echo "			</li>";
+	echo "			<li>";
+	echo "				When enabled the steam lockout will disable 2web background processing of libraries.";
+	echo "			</li>";
+	echo "			<li>";
+	echo "				Modules will not update, download, or scan for any content while steam games are running on the same PC.";
+	echo "			</li>";
+	echo "			<li>";
+	echo "				Web, kodi, and client transcode jobs will still recieve normal priority when lockout is enabled.";
+	echo "			</li>";
+	echo "			<li>";
+	echo "				Helpfull if your 2web server is also used as a game desktop.";
+	echo "			</li>";
+	echo "			<li>";
+	echo "				If you do not have Steam installed you can ignore this option.";
+	echo "			</li>";
+	echo "		</ul>";
+	buildYesNoCfgButton("/etc/2web/steamLockout.cfg","Steam Lockout","steamLockoutStatus");
+	echo "</div>";
+}
+?>
 
 <div id='webPlayerStatus' class='inputCard'>
 	<h2>Web Player</h2>
