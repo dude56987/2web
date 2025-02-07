@@ -123,7 +123,12 @@ getStat("webThumbSize.index", "Thumbnail Cache");
 getStat("cacheSize.index", "Video Cache");
 getStat("webSize.index", "Total Web");
 getStat("mediaSize.index", "Local Media");
-getStat("freeSpace.index", "Free Space");
+getStat("freeSpace.index", "Total Free Space");
+
+if (is_readable("drives.index")){
+	echo " ";
+	echo file_get_contents("drives.index");
+}
 
 echo "	</div>";
 

@@ -351,6 +351,41 @@ function buildHomePage(){
 		freeSpace=$(df -h -x "tmpfs" --total | grep "total" | tr -s ' ' | cut -d' ' -f4)
 		echo "$freeSpace" > "$webDirectory/freeSpace.index"
 	fi
+	INFO "Building stat for the free space left each drive on the system"
+	if cacheCheck "$webDirectory/drives.index" "1";then
+		# count total freespace on all connected drives, ignore temp filesystems (snap packs)
+		#driveList=$(df -h -x "tmpfs" --total | grep "^/dev/sd" | tr -s ' ' )
+		driveList=$(df -h -x "tmpfs" --total | grep "^/dev/" | tr -s ' ' )
+		#driveList=$(df -h -x "tmpfs" --total | tr -s ' ' )
+		#
+		echo -n "" > "$webDirectory/drives.index"
+		IFSBACKUP=$IFS
+		IFS=$'\n'
+		for driveData in $driveList;do
+			#
+			tempFreeSpace=$(echo -n "$driveData" | cut -d' ' -f4 )
+			#
+			tempFreeSpaceLabel=$(echo -n "$driveData" | cut -d' ' -f6 )
+			#
+			if [ $tempFreeSpaceLabel == "/" ];then
+				tempFreeSpaceLabel="ROOT"
+			else
+				tempFreeSpaceLabel=$(basename "$driveData" )
+			fi
+			{
+				echo "<span class='singleStat'>"
+				echo "	<span class='singleStatLabel'>"
+				echo "		$tempFreeSpaceLabel Free Space"
+				echo "	</span>"
+				echo "	<span class='singleStatValue'>"
+				echo "		$tempFreeSpace"
+				echo "	</span>"
+				echo "</span>"
+			} >> "$webDirectory/drives.index"
+		done
+		IFS=$IFSBACKUP
+	fi
+
 	INFO "Building stat for the disk space used by downloaded AI models"
 	if cacheCheck "$webDirectory/aiSize.index" "6";then
 		# count total size of AI models
