@@ -90,7 +90,7 @@ drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modu
 		drawModuleHeaderButton("iptv2web","📡","Live","/settings/tv.php",Array("/settings/tv.php","/settings/radio.php","/settings/iptv_blocked.php"));
 		drawModuleHeaderButton("wiki2web","⛵","Wiki","/settings/wiki.php");
 		drawModuleHeaderButton("git2web","💾","Repos","/settings/repos.php");
-		drawModuleHeaderButton("portal2web","🚪","Portal","/settings/portal.php");
+		drawModuleHeaderButton("portal2web","🚪","Portal","/settings/portal.php",Array("/settings/portal.php","/settings/portal_scanning.php"));
 		drawModuleHeaderButton("weather2web","🌤️","Weather","/settings/weather.php");
 		drawModuleHeaderButton("ai2web","🧠","AI","/settings/ai.php");
 		drawModuleHeaderButton("graph2web","📊","Graphs","/settings/graphs.php");
