@@ -164,9 +164,15 @@ if ($hideFilter){
 	$emptyMessage .= "</ul>";
 	# draw the last updated time
 	if (file_exists($filterType.".cfg")){
-		echo "<div>Last Updated : ";
+		echo "<span class='singleStat'>";
+		echo "	<span class='singleStatLabel'>";
+		echo "		Last Updated";
+		echo "	</span>";
+		echo "	<span class='singleStatValue'>";
 		timeElapsedToHuman(file_get_contents($filterType.".cfg"));
-		echo "</div>";
+		echo "	</span>";
+		echo "</span>";
+		echo "<hr>";
 	}
 	# loop though and display the playlist index
 	displayIndexWithPages($filterType.".index",$emptyMessage,48,"reverse");
