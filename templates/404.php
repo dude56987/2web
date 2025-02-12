@@ -32,9 +32,10 @@
 		<p>
 			The path could not be resolved on our server.
 		</p>
-		<pre><?PHP echo $_SERVER['REQUEST_URI'];?></pre>
+		<pre><?PHP echo $_SERVER['REQUEST_URI']; ?></pre>
 		<div class='listCard'>
-			<a class='button' onclick='window.location.reload(true)'>🔃 Reload Link</a>
+			<a class='button' onclick='window.location.reload(true);'>🔃 Reload Link</a>
+			<a class='button' onclick='history.back();'>🔙 Return To Last Page</a>
 			<a class='button' href='/'>🏠 Return to Homepage</a>
 		</div>
 		<?PHP
