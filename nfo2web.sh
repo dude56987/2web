@@ -480,7 +480,8 @@ processMovie(){
 		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "studio" "$movieStudio" "movies"
 		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "grade" "$movieGrade" "movies"
 
-
+		# add this to the search index
+		addToSearchIndex "$webDirectory/movies/$movieWebPath/movies.index" "${movieWebPath} ${movieStudio} ${movieGrade} ${movieYear}"
 
 		# link the video player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$moviePagePath"
@@ -636,7 +637,7 @@ checkForThumbnail(){
 			#touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
 		fi
-		addToLog "DEBUG" "THUMBNAIL TESTING" "Thumbnail extension found to be '$thumbnailExt' for video path '$videoPath'"
+		#addToLog "DEBUG" "THUMBNAIL TESTING" "Thumbnail extension found to be '$thumbnailExt' for video path '$videoPath'"
 		#
 		if test -s "$thumbnailPath$thumbnailExt";then
 			INFO "Existing thumbnail file found '$thumbnailPath$thumbnailExt'!"
@@ -1083,6 +1084,9 @@ processEpisode(){
 		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "studio" "$episodeStudio" "episodes"
 		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "grade" "$episodeGrade" "episodes"
 
+		# add this to the search index
+		addToSearchIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "${episodePath} ${episodeShowTitle} ${episodeGrade} ${episodeStudio} ${airedYear}"
+
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
 	fi
@@ -1377,6 +1381,9 @@ processShow(){
 
 	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "studio" "$episodeStudio" "shows"
 	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "grade" "$episodeGrade" "shows"
+
+	# add this to the search index
+	addToSearchIndex "$webDirectory/shows/$showTitle/shows.index" "${showTitle} ${episodeGrade} ${episodeStudio}"
 
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
@@ -1681,6 +1688,8 @@ scanForRandomBackgrounds(){
 }
 ########################################################################
 function nuke(){
+	# Remove this module from the website and remove all related metadata
+	#
 	echo "[INFO]: Reseting web cache to blank..."
 	rm -rv $(webRoot)/movies/*
 	rm -rv $(webRoot)/kodi/movies/
@@ -1694,10 +1703,12 @@ function nuke(){
 	rm -rv $(webRoot)/new/episodes.index
 	rm -rv $(webRoot)/tags/*.index
 	rm -rv $(webRoot)/sums/nfo2web_*.cfg || echo "No file sums found..."
+
 	# remove sql data
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table shows;"
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table movies;"
 	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table episodes;"
+
 	# remove widgets cached
 	rm -v $(webRoot)/web_cache/widget_random_movies.index
 	rm -v $(webRoot)/web_cache/widget_random_shows.index
@@ -1705,6 +1716,11 @@ function nuke(){
 	rm -v $(webRoot)/web_cache/widget_new_movies.index
 	rm -v $(webRoot)/web_cache/widget_new_shows.index
 	rm -v $(webRoot)/web_cache/widget_new_episodes.index
+
+	# remove the entries from the search index
+	#removeSectionFromSearchIndex "movies"
+	#removeSectionFromSearchIndex "shows"
+
 	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 	echo "[SUCCESS]: Site will remain the same until updated."
 	echo "[INFO]: Use 'nfo2web update' to generate a new website..."
