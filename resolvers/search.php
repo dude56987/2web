@@ -197,6 +197,9 @@ function checkForBangs($searchQuery){
 	################################################################################
 	# build the array of bang commands that can be checked for
 	################################################################################
+	# replace fullwidth version of ! if found
+	$searchQuery=str_replace("！","!",$searchQuery);
+	#
 	$bangCommands=new ArrayObject();
 	# dict and thesaurus
 	$bangCommands->append(array("!define","https://www.dictionary.com/browse/"));
