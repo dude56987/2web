@@ -1638,6 +1638,111 @@ if( ! function_exists("requireGroup")){
 	}
 }
 ########################################################################
+if( ! function_exists("loadSearchIndexResults")){
+	function loadSearchIndexResults($searchQuery,$filter="all"){
+		# loadSearchIndexResults($searchQuery,$filter="all")
+		#
+		# Output the results of a search query to the search index
+		#
+		# - The filter allows only results from a specific subsection of the 2web website
+		#   - comics
+		#   - movies
+		#   - shows
+		#
+
+		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		# cleanup the query
+		$searchQuery=str_replace("\\"," ",$searchQuery);
+		$searchQuery=str_replace("'s"," ",$searchQuery);
+		$searchQuery=str_replace("\n"," ",$searchQuery);
+		$searchQuery=str_replace("\r"," ",$searchQuery);
+		$searchQuery=str_replace(","," ",$searchQuery);
+		$searchQuery=str_replace(":"," ",$searchQuery);
+		$searchQuery=str_replace("-"," ",$searchQuery);
+		$searchQuery=str_replace("("," ",$searchQuery);
+		$searchQuery=str_replace(")"," ",$searchQuery);
+		$searchQuery=str_replace("{"," ",$searchQuery);
+		$searchQuery=str_replace("}"," ",$searchQuery);
+		$searchQuery=str_replace("["," ",$searchQuery);
+		$searchQuery=str_replace("]"," ",$searchQuery);
+		# use the cleantext function
+		#$searchQuery=cleanText("$searchQuery");
+		#
+		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		#
+		$searchQuery=explode(" ",$searchQuery);
+		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		#
+		$allIndex="";
+		#echo ("<h2>index</h2><pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		foreach ($searchQuery as $word){
+			$cleanWord=strtolower("$word");
+			if (is_readable("/var/cache/2web/generated/searchIndex/$cleanWord.index")){
+				# check if the filter is enabled
+				if($filter=="all"){
+					# load the index for each word
+					$allIndex .= file_get_contents("/var/cache/2web/generated/searchIndex/$cleanWord.index");
+				}else{
+					$tempIndex="";
+					# load the word file
+					$tempFileIndex = file("/var/cache/2web/generated/searchIndex/$cleanWord.index");
+					# filter file by the secondary web path
+					# - comics
+					# - movies
+					# - shows
+					foreach ($tempFileIndex as $tempIndexEntry){
+						if(stripos($tempIndexEntry,"/var/cache/2web/web/$filter/") !== false){
+							$tempIndex .= $tempIndexEntry;
+						}
+					}
+					# add the filtered temp index to the all index
+					$allIndex .= $tempIndex;
+				}
+			}
+		}
+		#
+		#echo ("<pre>".var_export($allIndex,true)."</pre>");ob_flush();flush();#DEBUG
+		# split the index into a array
+		$allIndex=explode("\n",$allIndex);
+		# sort the all index
+		sort($allIndex);
+		#echo ("<pre>".var_export($allIndex,true)."</pre>");ob_flush();flush();#DEBUG
+		# count the unique items
+		$countValues=array_count_values($allIndex);
+		#echo ("<h2>Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
+		arsort($countValues);
+		#echo ("<h2>Sorted Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
+		#$countValues=array_reverse($countValues);
+		#echo ("<h2>Sorted Reversed Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
+		# limit output to 40 results
+		$countValues=array_slice($countValues,0,40);
+		#echo ("<h2>Sliced Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
+		#echo ("<h2>Key Names</h2><pre>".var_export(array_keys($countValues),true)."</pre>");ob_flush();flush();#DEBUG
+		#	output the index
+		$outputFound=false;
+		$outputText="";
+		foreach (array_keys($countValues) as $word){
+			if(is_readable($word)){
+				$outputFound=true;
+				$outputText .= file_get_contents($word)."\n";
+			}
+		}
+		# only draw the widget if there is output
+		if($outputFound){
+			echo "<div class='titleCard'>\n";
+			if($filter=="all"){
+				echo "<h1>Related Media</h1>\n";
+			}else{
+				echo "<h1>Related ".ucfirst($filter)."</h1>\n";
+			}
+			echo "<div class='listCard'>\n";
+			echo $outputText;
+			echo "</div>\n";
+			echo "</div>\n";
+		}
+	}
+}
+########################################################################
 if( ! function_exists("requireAdmin")){
 	function requireAdmin(){
 		# check permissions for admin
@@ -1893,8 +1998,14 @@ if( ! function_exists("cleanText")){
 		# plus signs are used in URLs so they must be changed
 		$cleanedText=str_replace("+","＋",$cleanedText);
 		# remove forward slashes, they will break all paths
-		$cleanedText=str_replace("/","",$cleanedText);
-		$cleanedText=str_replace("\\","",$cleanedText);
+		$cleanedText=str_replace("/","／",$cleanedText);
+		$cleanedText=str_replace("\\","＼",$cleanedText);
+		# remove pipes
+		$cleanedText=str_replace("|","｜",$cleanedText);
+		# remove semicolons
+		$cleanedText=str_replace(";","；",$cleanedText);
+		# remove dollar signs
+		$cleanedText=str_replace("$","＄",$cleanedText);
 		# squeeze double spaces into single spaces
 		$cleanedText=str_replace("  "," ",$cleanedText);
 		# print the cleaned up text
