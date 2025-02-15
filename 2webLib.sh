@@ -16,6 +16,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+function spaceCleanedText(){
+	# clean up the text for use in web urls and directory paths
+	# - uses fullwidth versions of caracters that interfere with URLs
+	cleanedText="$1"
+	characters=", ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ＄"
+	spacedText=""
+	for specialCharacter in $characters;do
+		cleanedText=$(echo -n "$cleanedText" | sed "s/${specialCharacter}/ ${specialCharacter} /g" )
+	done
+	#
+	cleanedText=$(echo -n "$cleanedText" | sed 's/{/ { /g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/}/ } /g' )
+	#
+	cleanedText=$(echo -n "$cleanedText" | sed 's/(/ ( /g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/)/ ) /g' )
+	#
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\[/ [ /g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/]/ ] /g' )
+
+	# squeeze double spaces into single spaces
+	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
+	# print the cleaned up text
+	echo -n "$cleanedText"
+}
+########################################################################
 function cleanText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
@@ -54,7 +79,14 @@ function cleanText(){
 	# plus signs are used in URLs so they must be changed
 	cleanedText=$(echo -n "$cleanedText" | sed "s/+/＋/g" )
 	# remove forward slashes, they will break all paths
-	cleanedText=$(echo -n "$cleanedText" | sed "s/\///g" )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\//／/g' )
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\\/＼/g' )
+	# remove pipes
+	cleanedText=$(echo -n "$cleanedText" | sed "s/|/｜/g" )
+	# remove semicolons
+	cleanedText=$(echo -n "$cleanedText" | sed "s/;/；/g" )
+	# remove dollar signs
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\$/＄/g' )
 	# squeeze double spaces into single spaces
 	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
