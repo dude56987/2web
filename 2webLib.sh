@@ -1915,6 +1915,151 @@ function addPlaylist(){
 	addToIndex "$indexFile" "$webDirectory/tags/all_${tagName}_all.index"
 }
 ########################################################################
+function addToSearchIndex(){
+	#	addPlaylist "/path/to/index/file.index" "searchTag" "tagName" "filterName"
+	#
+	# Add a playlist to the web playlist interface
+	#
+	# - This will generate all the variations of the playlist filters
+	local indexFile="$1"
+	# the data to be searched for indexing
+	local searchData="$2"
+	createDir "/var/cache/2web/generated/searchIndex/"
+	#
+	searchData="$(echo "$searchData" | sed "s/\n/ /g")"
+	searchData="$(echo "$searchData" | sed "s/\r/ /g")"
+	# remove possessiveness of nouns it complicates the search index
+	searchData="$(echo "$searchData" | sed "s/'s/ /g")"
+	# convert all words to lowercase for search index simplicity
+	searchData="$(echo "$searchData" | tr "[:upper:]" "[:lower:]")"
+	#
+	searchData="$(cleanText "$searchData")"
+	#
+	searchData="$(spaceCleanedText "$searchData")"
+	# scan the search data for words to build into the index
+	IFSBACKUP=$IFS
+	IFS=" "
+	for word in $searchData;do
+		local cleanWord="$word"
+		# do not add groups of ONLY numbers into the search index
+		if echo "$cleanWord" | grep -q "[[:digit:]]";then
+			if echo "$cleanWord" | grep -q "[[:alpha:]]";then
+				# contains digits and characters add it to the word index
+				addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
+			elif echo "$cleanWord" | grep -q "[[:punct:]]";then
+				# contains punctuation and digits so add it to the word index
+				addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
+			else
+				# if the word is only digits include it in the word index only if it is below 1000
+				if [ "$cleanWord" -lt 1000 ];then
+					# for each word build a index
+					addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
+				fi
+			fi
+		else
+			# add a normal word
+			addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
+		fi
+	done
+	IFS=$IFSBACKUP
+}
+########################################################################
+function removeSectionFromSearchIndex(){
+	# removeSectionFromSearchIndex $sectionName
+	#
+	# remove a section of entries from the search index
+	#
+	# - movies
+	# - shows
+	# - music
+	# - comics
+	# - live
+	# - portal
+	# - weather
+	# - applications
+	# - repos
+	#
+	sectionName="$1"
+	# setup for multi threading otherwise this will take forever
+	totalCPUS=$(cpuCount)
+	# remove the entries from the search index
+	searchIndexFiles=$(find "/var/cache/2web/generated/searchIndex/" -type f )
+	#
+	searchIndexLength=$(echo -n "$searchIndexFiles" | wc -l)
+	searchIndexCounter=0
+	echo "$searchIndexFiles" | while read -r filePath;do
+		cleanFileName="$(basename "$filePath")"
+		#
+		removeFromSearchIndexFile "$filePath" "^/var/cache/2web/web/$sectionName/" &
+		waitQueue 0.2 "$totalCPUS"
+		#
+		searchIndexCounter=$(( $searchIndexCounter + 1 ))
+		INFO "Cleaning Search Index ${searchIndexCounter}/${searchIndexLength} '${cleanFileName}'"
+	done
+	blockQueue 1
+}
+########################################################################
+function removeFromSearchIndexFile(){
+	# removeFromSearchIndexFile $removalSearchQuery
+	#
+	# Remove all lines from a index file containing the $removalSearchQuery
+	#
+	filePath="$1"
+	removalSearchQuery="$2"
+	if test -f "$filePath";then
+		# cleanup the file and store the result
+		tempCleanFile="$( cat "$filePath" | grep --invert-match "$removalSearchQuery" )"
+		# write the result
+		echo "$tempCleanFile" > "$filePath"
+	else
+		ALERT "No index file exists '${filePath}'"
+	fi
+}
+########################################################################
+function loadSearchIndexResults(){
+	# loadSearchIndexResults $searchQuery
+	#
+	# Output the results of a search query to the search index
+	#
+	local searchQuery="$1"
+	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query</p><pre>${searchQuery}</pre>"
+	# cleanup the query
+	searchQuery="$(echo -n "$searchQuery" | sed "s/'s//g")"
+	searchQuery="$(echo -n "$searchQuery" | sed "s/＇s//g")"
+	searchQuery="$(cleanText "$searchQuery")"
+	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query Post Cleanup</p><pre>${searchQuery}</pre>"
+	# add spaces around special characters to make the search index not care about "query" vs "query?"
+	searchQuery="$(spaceCleanedText "$searchQuery")"
+	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query Post Spacing</p><pre>${searchQuery}</pre>"
+	#
+	local allIndex=""
+	IFSBACKUP=$IFS
+	IFS=" "
+	for word in $searchQuery;do
+		local cleanWord=$(echo "$word" | tr "[:upper:]" "[:lower:]")
+		if test -f "/var/cache/2web/generated/searchIndex/${cleanWord}.index";then
+			# load the index for each word
+			allIndex="$allIndex$(cat "/var/cache/2web/generated/searchIndex/${cleanWord}.index")"
+		fi
+	done
+	IFS=$IFSBACKUP
+	addToLog "DEBUG" "Fuzzy Search" "<p>Index Pre Sort</p><pre>${allIndex}</pre>"
+	# sort the all index
+	allIndex="$(echo "$allIndex" | sort )"
+	# count the unique items
+	allIndex="$(echo "$allIndex" | uniq -c )"
+	# sort in reverse smallest numbers are listed at the top of the sort
+	allIndex="$(echo "$allIndex" | sort -nr )"
+	# remove leading whitespace
+	allIndex="$(echo "$allIndex" | sed "s/^[ \t]*//g" )"
+	#
+	addToLog "DEBUG" "Fuzzy Search" "<p>Index Post Sort</p><pre>${allIndex}</pre>"
+	#
+	allIndex="$(echo "$allIndex" | cut -d' ' -f2- )"
+	#	output the index
+	echo "$allIndex"
+}
+########################################################################
 function randomWord(){
 	# randomWord
 	#
