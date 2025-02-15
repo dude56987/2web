@@ -188,6 +188,70 @@ function searchDict(){
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
 ################################################################################
+function filterWordIndex(){
+	#
+	webDirectory="$1"
+	searchSum="$2"
+	filter="$3"
+	searchIndexResults="$4"
+	outputPath="$5"
+	#
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+	filterCount=0
+	for indexEntry in $searchIndexResults;do
+		if echo -n "$indexEntry" | grep -q "^/var/cache/2web/web/$filter/";then
+			if [ $filterCount -ge 40 ];then
+				# break the loop if the output has found more than 40 entries
+				break
+			fi
+			cat "$indexEntry" >> "$outputPath"
+			#
+			filterCount=$(( $filterCount + 1 ))
+		fi
+	done
+	IFS=$IFSBACKUP
+}
+################################################################################
+function searchWordIndex(){
+	webDirectory=$1
+	searchQuery=$2
+	searchSum=$3
+	#
+	#outputPath="$webDirectory/search/${searchSum}__fuzzy_match.index"
+	#
+	searchIndexResults="$(loadSearchIndexResults "$searchQuery")"
+
+	## load the index results
+	#IFSBACKUP=$IFS
+	#IFS=$'\n'
+	#for indexFilePath in $searchIndexResults;do
+	#		cat "$indexFilePath" >> "$outputPath"
+	#done
+	#IFS=$IFSBACKUP
+
+	# split up the search results into categories
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_movies_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "movies" "$searchIndexResults" "$outputPath"
+	#
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_shows_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "shows" "$searchIndexResults" "$outputPath"
+	#
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_music_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "music" "$searchIndexResults" "$outputPath"
+	#
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_comics_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "comics" "$searchIndexResults" "$outputPath"
+	#
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_repos_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "repos" "$searchIndexResults" "$outputPath"
+	#
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_portal_match.index"
+	filterWordIndex "$webDirectory" "$searchSum" "portal" "$searchIndexResults" "$outputPath"
+	#
+	incrementProgressFile "$webDirectory" "$searchSum"
+}
+################################################################################
 function searchIndex(){
 	webDirectory=$1
 	indexPath=$2
@@ -323,6 +387,9 @@ function search(){
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
+	waitQueue 0.2 "$totalCPUS"
+	#
+	searchWordIndex "$webDirectory" "$searchQuery" "$searchSum" &
 	waitQueue 0.2 "$totalCPUS"
 	# search the weather stations
 	searchWeather "$webDirectory" "$searchQuery" "$searchSum" &
