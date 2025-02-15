@@ -206,17 +206,18 @@ if (array_key_exists("events",$_GET)){
 
 		# check the status
 		$currentStatus = loadCacheData("status.json", $cache);
+		$playType = loadCacheData("playType.json", $cache);
 		if ($currentStatus != $lastStatus["media"]){
 			# get the media path data
 			$mediaPath = loadCacheData("media.json", $cache);
 			# check the media path for absolute paths
-			if (! (substr($mediaPath,0,4) == "http")){
-				# make the path absolute if it is relative
-				$mediaPath="http://".$_SERVER["HTTP_HOST"].$mediaPath;
-			}
+			#if (! (substr($mediaPath,0,4) == "http")){
+			#	# make the path absolute if it is relative
+			#	$mediaPath="http://".$_SERVER["HTTP_HOST"].$mediaPath;
+			#}
 			# send the event
 			# - double new lines seprate events
-			echo 'data: play='.$mediaPath;
+			echo 'data: '.$playType.'='.$mediaPath;
 			echo "\n\n";
 			# send the generated event
 			clear();
@@ -285,13 +286,15 @@ if (array_key_exists("play",$_GET)){
 		$cache=loadCache();
 		# store the url as the playback url
 		setCacheData("media.json",urldecode($_GET["play"]), $cache);
+		# set the playback type
+		setCacheData("playType.json","play", $cache);
 		# store the time of the playback start
 		$playbackTime=filemtime("media.cfg");
 		setCacheData("time.json",$playbackTime, $cache);
 		# generate the sum
 		$urlSum=md5($_GET["play"].time());
 		# store the hash sum
-		setCacheData("status.json",$urlSum, $cache);
+		setCacheData("status.json", $urlSum, $cache);
 		# redirect to the client remote page after starting playback
 		redirect("/client/?remote");
 	}else{
@@ -299,6 +302,50 @@ if (array_key_exists("play",$_GET)){
 		# a attempt to play something without permissions was made
 		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
 	}
+}else if (array_key_exists("stream",$_GET)){
+	if (requireGroup("clientRemote",false)){
+		$cache=loadCache();
+		# store the url as the playback url
+		setCacheData("media.json",urldecode($_GET["stream"]), $cache);
+		# set the playback type
+		setCacheData("playType.json","stream", $cache);
+		# store the time of the playback start
+		$playbackTime=filemtime("media.cfg");
+		setCacheData("time.json",$playbackTime, $cache);
+		# generate the sum
+		$urlSum=md5($_GET["play"].time());
+		# store the hash sum
+		setCacheData("status.json", $urlSum, $cache);
+		# redirect to the client remote page after starting playback
+		redirect("/client/?remote");
+	}else{
+		addToLog("ERROR","Play on Client Failed","The user '".$_SESSION["user"]."' with the user agent string ".$_SERVER["HTTP_USER_AGENT"]." has attempted to play a video on the client without permissions.");
+		# a attempt to play something without permissions was made
+		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
+	}
+}else if (array_key_exists("audio",$_GET)){
+	if (requireGroup("clientRemote",false)){
+		$cache=loadCache();
+		# store the url as the playback url
+		setCacheData("media.json",urldecode($_GET["audio"]), $cache);
+		# set the playback type
+		setCacheData("playType.json","audio", $cache);
+		# store the time of the playback start
+		$playbackTime=filemtime("media.cfg");
+		setCacheData("time.json",$playbackTime, $cache);
+		# generate the sum
+		$urlSum=md5($_GET["play"].time());
+		# store the hash sum
+		setCacheData("status.json", $urlSum, $cache);
+		# redirect to the client remote page after starting playback
+		redirect("/client/?remote");
+	}else{
+		addToLog("ERROR","Play on Client Failed","The user '".$_SESSION["user"]."' with the user agent string ".$_SERVER["HTTP_USER_AGENT"]." has attempted to play a video on the client without permissions.");
+		# a attempt to play something without permissions was made
+		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
+	}
+
+
 }else if (array_key_exists("resolveStream",$_GET)){
 	if (requireGroup("clientRemote",false)){
 		$cache=loadCache();
@@ -713,7 +760,60 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 <head>
 <title>2web Client Player</title>
 <link rel='stylesheet' href='/style.css'>
+<style>
+	#nightmode{
+		background-color: red;
+		opacity: 0.3;
+		position: absolute;
+		height: 100dvh;
+		width: 100dvw;
+		z-index: 2;
+	}
+	#duskmode{
+		background-color: red;
+		opacity: 0.2;
+		position: absolute;
+		height: 100dvh;
+		width: 100dvw;
+		z-index: 2;
+	}
+	#sleepmode{
+		background-color: black;
+		opacity: 1;
+		position: absolute;
+		height: 100dvh;
+		width: 100dvw;
+		z-index: 4;
+	}
+	.clientBackButton{
+		z-index: 3;
+	}
+	.clientRemoteButton{
+		z-index: 3;
+	}
+	#notification{
+		background-color: var(--glassBackground);
+		color: var(--textColor);
+		position: absolute;
+		opacity: 0.9;
+		z-index: 1;
+		height: 100dvh;
+		width: 100dvw;
+		font-size: 20dvh;
+		transition: opacity 0.5s ease-in-out;
+		line-height: 100dvh;
+	}
+</style>
 <script src='/2webLib.js'></script>
+<script src='/hls.js'></script>
+
+<script>
+	<?PHP
+		# load the qr code based on the host sum
+		echo "var hostSum=\"$hostSum\";\n";
+	?>
+</script>
+
 <script>
 	function pageKeys() {
 		document.body.addEventListener('keydown', function(event){
@@ -747,18 +847,6 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 		});
 	}
 	// use the event server API
-	<?PHP
-	#	# use the event server config if set to setup the remote client
-	#	if (file_exists("/etc/2web/client-event.cfg")){
-	#		# load the event server config and remove all newlines
-	#		$eventServerPath=file_get_contents("/etc/2web/client-event.cfg");
-	#		$eventServerPath=str_replace("\n","",$eventServerPath);
-	#		echo "const eventData = new EventSource(\"".$eventServerPath."\");\n";
-	#	}else{
-	#		# load up the local event server
-	#		echo "const eventData = new EventSource(\"?events\");\n";
-	#	}
-	?>
 	const eventData = new EventSource("?events");
 	console.log(eventData);
 
@@ -766,38 +854,58 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 	var defaultWindow = "";
 	//
 	defaultWindow += "<a class='clientBackButton button' href='/'>↖️</a>";
-	<?PHP
-	if (requireGroup("clientRemote", false)){
-		# only show the remote button if the user has remote control permissions
-		echo "defaultWindow += \"<a class='clientRemoteButton button' href='/client/?remote'>🎛️</a>\";\n";
-	}
-	?>
-	//defaultWindow += "<a class='clientRemoteButton button' href='/client/?remote'>🎛️</a>";
+	// only show the remote button if the user has remote control permissions
+	defaultWindow += "<a class='clientRemoteButton button' href='/client/?remote'>🎛️</a>";
 	defaultWindow += "<img class='clientQrCode' loading='lazy' src='";
-	<?PHP
-		# load the qr code based on the host sum
-		echo "defaultWindow += 'qr_".$hostSum.".png';\n";
-	?>
+	// load the qr code based on the host sum
+	defaultWindow += "qr_" + hostSum + ".png";
 	defaultWindow += "' />\n";
 	defaultWindow += "<img class='clientQrCodeIp' loading='lazy' src='";
-	<?PHP
-		# load the qr code based on the host sum
-		echo "defaultWindow += 'qr_ip_".$hostSum.".png';\n";
-	?>
+	// load the qr code based on the host sum
+	defaultWindow += "qr_ip_" + hostSum + ".png";
 	defaultWindow += "' />\n";
 	//
 	var defaultWindowResetTimer="";
+	//
+	function notify(message){
+		console.log("notify="+message);
+		// if a notification is being displayed, remove it
+		if(document.getElementById("notification") != null){
+			document.getElementById("notification").remove();
+		}
+		if(document.getElementById("notification") == null){
+			console.log("notify passed="+message);
+			// build the notification
+			var notifyObj = document.createElement("div");
+			notifyObj.setAttribute("id", "notification");
+			document.getElementById("pageContent").appendChild(notifyObj);
+			//
+			document.getElementById("notification").style.opacity=0.9;
+			document.getElementById("notification").innerHTML=message;
+			// hide the message after 1 second
+			notificationTimer = setTimeout(() =>{
+				document.getElementById("notification").style.opacity=0;
+				// allow animation time to run then remove the object
+				notificationTimeoutTimer = setTimeout(() =>{
+					document.getElementById("notification").remove();
+				}, 500);
+			}, 355);
+		}
+	}
 	//
 	function resetPlayer(defaultWindow){
 		// function to reset the player to the default window
 		document.getElementById("pageContent").innerHTML = defaultWindow;
 		// redirect the page and stop playback
-		//window.location = "?stopPlayer";
-		console.log("Setup function to reload page automatically after delay...");
+		////window.location = "?stopPlayer";
+		//console.log("Setup function to reload page automatically after delay...");
 		// set the timer to reload the default page after a delay
 		defaultWindowResetTimer = setTimeout(() =>{
-			console.log("Reloading page...");
-			location.reload();
+			//console.log("Reloading page...");
+			//location.reload();
+			// reload the inner html of the page after a delay
+			//document.getElementById("pageContent").innerHTML = defaultWindow;
+			resetPlayer();
 		}, 60000);
 	}
 	//function logEvent(event){
@@ -812,9 +920,40 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 		//console.log(event.data);
 		console.log(event);
 		console.log(event.data);
-		if(event.data.substr(0,5) == "resetPlayer"){
+		if(event.data.substr(0,11) == "resetPlayer"){
+			notify("⏹️");
 			//document.getElementById("pageContent").innerHTML = defaultWindow;
 			resetPlayer(defaultWindow);
+		}else if(event.data.substr(0,12) == "unsupported="){
+			notify("🚫");
+			// check for unsupported events
+			console.log("Got command to play unsupported video type");
+		}else if(event.data.substr(0,6) == "audio="){
+			console.log("Got command to run 'play video'");
+			// get the video path
+			let mediaPath = event.data.substr(6);
+			if (mediaPath == ""){
+				console.log("reset media player because mediaPath="+mediaPath);
+				resetPlayer(defaultWindow);
+			}else{
+				notify("🔗");
+				// clear the timer that keeps the page from losing focus by reloading
+				clearTimeout(defaultWindowResetTimer);
+				console.log("mediaPath="+mediaPath);
+				// build the video player data
+				let tempData="";
+				tempData += "<audio id='video' class='clientVideoPlayer' controls autoplay>";
+				tempData += "<source src='"+mediaPath+"'>";
+				tempData += "</audio>";
+				//console.log("tempData="+tempData);
+				// insert the video player created above into the page
+				document.getElementById("pageContent").innerHTML = tempData;
+				// when the end of playback is reached reload the default window
+				document.getElementById('video').addEventListener('ended',() => {
+					//the function to be executed at the end of playback
+					resetPlayer(defaultWindow);
+				},false);
+			}
 		}else if(event.data.substr(0,5) == "play="){
 			console.log("Got command to run 'play video'");
 			// get the video path
@@ -823,6 +962,7 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 				console.log("reset media player because mediaPath="+mediaPath);
 				resetPlayer(defaultWindow);
 			}else{
+				notify("🔗");
 				// clear the timer that keeps the page from losing focus by reloading
 				clearTimeout(defaultWindowResetTimer);
 				console.log("mediaPath="+mediaPath);
@@ -840,28 +980,145 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 					resetPlayer(defaultWindow);
 				},false);
 			}
+		}else if(event.data.substr(0,7) == "stream="){
+			console.log("Got command to run 'stream HLS video'");
+			// get the video path
+			let mediaPath = event.data.substr(7);
+			if (mediaPath == ""){
+				console.log("reset media player because mediaPath="+mediaPath);
+				resetPlayer(defaultWindow);
+			}else{
+				notify("🔗");
+				// clear the timer that keeps the page from losing focus by reloading
+				clearTimeout(defaultWindowResetTimer);
+				console.log("mediaPath="+mediaPath);
+				// blank out the content box
+				document.getElementById("pageContent").innerHTML="";
+				// build the video player
+				var playerObj = document.createElement("video");
+				playerObj.setAttribute("id", "video");
+				playerObj.setAttribute("class", "livePlayer clientVideoPlayer");
+				playerObj.setAttribute("controls", "true");
+				playerObj.setAttribute("autoplay", "true");
+				// insert the new element
+				document.getElementById("pageContent").appendChild(playerObj);
+
+				if(Hls.isSupported()) {
+					var video = document.getElementById('video');
+					var hls = new Hls({
+						startPosition: 0,
+						enableWebVTT: true,
+						enableWorker: true,
+						enableSoftwareAES: true,
+						autoStartLoad: true,
+						debug: true
+					});
+					hls.loadSource(mediaPath);
+					hls.attachMedia(video);
+					hls.on(Hls.Events.MEDIA_ATTACHED, function() {
+						video.play();
+					});
+				}else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+					video.src = '" + mediaPath + "';
+					video.addEventListener('canplay',function() {
+						video.play();
+					});
+				}
+				// start playback on page load
+				hls.on(Hls.Events.MANIFEST_PARSED,playVideo);
+				//console.log("tempData="+tempData);
+				// insert the video player created above into the page
+				document.getElementById("pageContent").innerHTML = tempData;
+				// when the end of playback is reached reload the default window
+				document.getElementById('video').addEventListener('ended',() => {
+					//the function to be executed at the end of playback
+					resetPlayer(defaultWindow);
+				},false);
+			}
 		}else if(event.data == "playpause"){
+			notify("⏯️");
 			console.log("Got command to run 'playpause'");
 			playPause();
-		}else if(event.data == "skipforwards"){
+		}else if(event.data == "skipforward"){
+			notify("⏩");
 			console.log("Got command to run 'skipforward'");
 			seekForward();
-		}else if(event.data == "skipbackwards"){
+		}else if(event.data == "skipbackward"){
+			notify("⏪");
 			console.log("Got command to run 'skipbackward'");
 			seekBackward();
 		}else if(event.data == "volumeup"){
+			tempVolumeObj = document.getElementById("video");
+			if(tempVolumeObj != null){
+				notify("🔉"+Math.floor((tempVolumeObj.volume) * 100)+"%");
+			}else{
+				notify("🚫");
+			}
 			console.log("Got command to run 'volumedown'");
 			volumeUp();
 		}else if(event.data == "volumedown"){
+			tempVolumeObj = document.getElementById("video");
+			if(tempVolumeObj != null){
+				notify("🔈"+Math.floor((tempVolumeObj.volume) * 100)+"%");
+			}else{
+				notify("🚫");
+			}
 			console.log("Got command to run 'volumeup'");
 			volumeDown();
 		}else if(event.data == "mute"){
+			notify("🔇");
 			console.log("Got command to run 'mute'");
-			mute();
+			muteUnMute();
 		}else if(event.data == "stop"){
+			notify("⏹️");
 			console.log("Got command to run 'stop'");
 			//location.reload();
 			resetPlayer(defaultWindow);
+		}else if(event.data == "nightmode"){
+			notify("🌇");
+			// create the tint
+			var tintBox = document.createElement("div");
+			if (document.getElementById("nightmode")){
+				console.log("nightmode is already active");
+				notify("🚫");
+			}else{
+				tintBox.setAttribute("id", "nightmode");
+
+				document.getElementById("pageContent").style.filter = "grayscale(1)";
+
+				// insert the new element
+				document.body.appendChild(tintBox);
+				//
+				document.getElementById("duskmode").remove();
+			}
+		}else if(event.data == "duskmode"){
+			if (document.getElementById("duskmode")){
+				console.log("duskmode is already active");
+				notify("🚫");
+			}else{
+				notify("🌇");
+				// create the tint
+				var tintBox = document.createElement("div");
+				tintBox.setAttribute("id", "duskmode");
+
+				document.getElementById("pageContent").style.filter = "grayscale(0.5)";
+
+				// insert the new element
+				document.body.appendChild(tintBox);
+				//
+				document.getElementById("nightmode").remove();
+			}
+		}else if(event.data == "daymode"){
+			notify("🌇");
+			//
+			document.getElementById("pageContent").style.filter = "grayscale(0)";
+			//
+			if (document.getElementById("duskmode")){
+				document.getElementById("duskmode").remove();
+			}
+			if (document.getElementById("nightmode")){
+				document.getElementById("nightmode").remove();
+			}
 		}
 	};
 	eventData.onerror = (errorData) => {

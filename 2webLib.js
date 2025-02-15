@@ -140,11 +140,15 @@ function playPause(){
 	//var playButton = document.getElementById("playButton");
 	//var pauseButton = document.getElementById("pauseButton");
 	if(video.paused){
-		video.play();
+		video.play().catch(error => {
+			console.log("Playback failed because user has not interacted with the page yet.");
+		});
 		//playButton.style.display = 'none';
 		//pauseButton.style.display = 'inline-block';
 	}else{
-		video.pause();
+		video.pause().catch(error => {
+			console.log("Playback failed because user has not interacted with the page yet.");
+		});
 		//playButton.style.display = 'inline-block';
 		//pauseButton.style.display = 'none';
 	}
@@ -162,26 +166,27 @@ function forcePlay(){
 }
 ////////////////////////////////////////////////////////////////////////////////
 function seekForward(){
+	// get the element pointer
+	var element = document.getElementById("video");
+	// increment the time forward in seconds
+	element.currentTime += 15;
 	// get the current time and the total duration to not exceed the end of the video
-	var currentTime = document.getElementById("video").currentTime;
-	var duration = document.getElementById("video").duration;
-	// increment the time forward
-	document.getElementById("video").currentTime += 10;
-	if ( currentTime > duration ){
+	if ( element.currentTime > element.duration ){
 		// dont let volume go beyond the duration
-		document.getElementById("video").currentTime = duration;
+		element.currentTime = element.duration;
 	}
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function seekBackward(){
+	// get the element pointer
+	var element = document.getElementById("video");
+	// increment the time backward in seconds
+	element.currentTime -= 15;
 	// get the current time and the total duration to not exceed the end of the video
-	var currentTime = document.getElementById("video").currentTime;
-	// increment the time forward
-	document.getElementById("video").currentTime -= 10;
-	if ( currentTime < 0 ){
-		// dont let volume go beyond the duration
-		document.getElementById("video").currentTime = 0;
+	if ( element.currentTime < 0 ){
+		// dont let the seek go below 0
+		element.currentTime = 0;
 	}
 	return false;
 }
@@ -193,7 +198,7 @@ function volumeUp(){
 		tempVolume = 1;
 		document.getElementById("video").volume = 1;
 	} else {
-		document.getElementById("video").volume += 0.05;
+		document.getElementById("video").volume += 0.10;
 	}
 	tempVolume = Math.floor(tempVolume * 100);
 	if (tempVolume < 10){
@@ -214,7 +219,7 @@ function volumeDown(){
 		tempVolume = 0;
 		document.getElementById("video").volume = 0;
 	} else {
-		document.getElementById("video").volume -= 0.05;
+		document.getElementById("video").volume -= 0.10;
 	}
 	tempVolume = Math.floor(tempVolume * 100);
 	if (tempVolume < 10){
@@ -233,13 +238,17 @@ function muteUnMute(){
 	var muteButton = document.getElementById("muteButton");
 	var unMuteButton = document.getElementById("unMuteButton");
 	if(video.muted){
-		video.muted = true;
-		muteButton.style.display = 'none';
-		unMuteButton.style.display = 'inline-block';
-	}else{
 		video.muted = false;
-		muteButton.style.display = 'inline-block';
-		unMuteButton.style.display = 'none';
+		if(muteButton){
+			muteButton.style.display = 'inline-block';
+			unMuteButton.style.display = 'none';
+		}
+	}else{
+		video.muted = true;
+		if(muteButton){
+			muteButton.style.display = 'none';
+			unMuteButton.style.display = 'inline-block';
+		}
 	}
 	return false;
 }
