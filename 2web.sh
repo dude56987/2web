@@ -412,6 +412,8 @@ function update2web(){
 	createDir "/etc/2web/mod_status/"
 	createDir "/var/cache/2web/sessions/"
 
+	totalCPUS=$(cpuCount)
+
 	INFO "Building web directory at '$webDirectory'"
 	# force overwrite symbolic link to web directory
 	# - link must be used to also use premade apache settings
@@ -461,6 +463,36 @@ function update2web(){
 			fi
 		fi
 	fi
+	function buildSingleTheme(){
+		local tempPathBase="$1"
+		local tempPathColor="$2"
+		local tempPathFont="$3"
+		local tempPathMod="$4"
+		#
+		local themeColor="$5"
+		local themeFont="$6"
+		local themeMod="$7"
+		local themeBase="$8"
+		#
+		local tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
+		#
+		INFO "Building theme '$tempThemeName'..."
+		# build the theme
+		{
+			if test -f "$themeColor";then
+				cat "$themeColor"
+			fi
+			if test -f "$themeFont";then
+				cat "$themeFont"
+			fi
+			if test -f "$themeMod";then
+				cat "$themeMod"
+			fi
+			if test -f "$themeBase";then
+				cat "$themeBase"
+			fi
+		} > "/usr/share/2web/themes/$tempThemeName.css"
+	}
 	if [ "$updateThemes" == "yes" ];then
 		ALERT "Rebuilding all themes..."
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
@@ -480,27 +512,13 @@ function update2web(){
 					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
 					for themeBase in $themeBases;do
 						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-						tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
-						INFO "Building theme '$tempThemeName'..."
-						# build the theme
-						{
-							if test -f "$themeColor";then
-								cat "$themeColor"
-							fi
-							if test -f "$themeFont";then
-								cat "$themeFont"
-							fi
-							if test -f "$themeMod";then
-								cat "$themeMod"
-							fi
-							if test -f "$themeBase";then
-								cat "$themeBase"
-							fi
-						} > "/usr/share/2web/themes/$tempThemeName.css"
+						buildSingleTheme "$tempPathBase" "$tempPathColor" "$tempPathFont" "$tempPathMod" "$themeColor" "$themeFont" "$themeMod" "$themeBase" &
+						waitQueue 0.5 "$totalCPUS"
 					done
 				done
 			done
 		done
+		blockQueue 1
 		# update the checksum files for all the checks
 		setFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg"
 		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
