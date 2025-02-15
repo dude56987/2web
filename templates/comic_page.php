@@ -246,6 +246,12 @@
 					echo "window.open('fullscreen.php?page=$page','_parent');";
 					?>
 					break;
+					case 'ArrowDown':
+					event.preventDefault();
+					<?PHP
+					echo "window.open('fullscreen.php?page=$page','_parent');";
+					?>
+					break;
 				}
 			});
 		}

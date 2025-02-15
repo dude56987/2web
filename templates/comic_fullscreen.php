@@ -47,6 +47,12 @@
 					document.getElementById("enable").click();
 					console.log("Fullscreen Key Detected");
 					break;
+					case 'ArrowDown':
+					event.preventDefault();
+					//comicFullscreenEnable();
+					document.getElementById("enable").click();
+					console.log("Fullscreen Key Detected");
+					break;
 					case 'ArrowLeft':
 					event.preventDefault();
 					document.getElementById("comicFullscreen").contentWindow.document.getElementById("leftButton").click();
