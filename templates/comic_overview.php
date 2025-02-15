@@ -172,9 +172,7 @@ if($topLevel){
 	$chapterTitle=array_pop($comicTitleData);
 	$comicTitle=array_pop($comicTitleData);
 }
-
 ?>
-
 <html>
 <head>
 <?PHP
@@ -187,7 +185,9 @@ if($topLevel){
 ?>
 </title>
 <style>
-html{ background-image: url("thumb.png") }
+	html{
+		background-image: url("thumb.png")
+	}
 </style>
 <link rel='stylesheet' href='../../style.css'>
 <script src='/2webLib.js'></script>
@@ -254,7 +254,9 @@ echo "$previousDirButton";
 <div>
 	<?PHP
 	echo "<a class='button comicTitleButton' href='..'>";
+	#echo "<h2 class='moreEpisodesLinkIcon'>";
 	echo "⬆️";
+	#echo "</h2>";
 	echo "</a>";
 	if($topLevel){
 		echo "	<h2>".$comicTitle."</h2>";
@@ -282,7 +284,7 @@ echo "$previousDirButton";
 			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle'>";
 		}
 		?>
-			<span class='downloadIcon'>↓</span>
+			<span class='downloadIcon'>▼</span>
 			Download ZIP
 		</a>
 		<?PHP
@@ -292,7 +294,7 @@ echo "$previousDirButton";
 			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle&cbz'>";
 		}
 		?>
-			<span class='downloadIcon'>↓</span>
+			<span class='downloadIcon'>▼</span>
 			Download CBZ
 		</a>
 	</div>
