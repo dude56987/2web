@@ -20,7 +20,7 @@ function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
 	cleanedText="$1"
-	characters=", ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ＄"
+	characters=", ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ＄ ＂ ＇"
 	spacedText=""
 	for specialCharacter in $characters;do
 		cleanedText=$(echo -n "$cleanedText" | sed "s/${specialCharacter}/ ${specialCharacter} /g" )
@@ -34,6 +34,8 @@ function spaceCleanedText(){
 	#
 	cleanedText=$(echo -n "$cleanedText" | sed 's/\[/ [ /g' )
 	cleanedText=$(echo -n "$cleanedText" | sed 's/]/ ] /g' )
+	#
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\./ ] /g' )
 
 	# squeeze double spaces into single spaces
 	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
@@ -58,6 +60,8 @@ function cleanText(){
 	cleanedText=$(echo -n "$cleanedText" | sed "s/#/＃/g" )
 	# remove single quotes
 	cleanedText=$(echo -n "$cleanedText" | sed "s/'/＇/g" )
+	# remove double quotes
+	cleanedText=$(echo -n "$cleanedText" | sed 's/"/＂/g' )
 	# convert underscores into spaces
 	cleanedText=$(echo -n "$cleanedText" | sed "s/_/ /g" )
 	################################################################################
