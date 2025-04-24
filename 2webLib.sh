@@ -16,6 +16,100 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
+function resetColor(){
+	# display termail code to reset all color codes
+	echo -ne "\033[0m"
+}
+################################################################################
+function blueText(){
+	# make text blue
+	echo -ne "\033[34m"
+}
+################################################################################
+function greenText(){
+	# make text green
+	echo -ne "\033[32m"
+}
+################################################################################
+function yellowText(){
+	# make text yellow
+	echo -ne "\033[33m"
+}
+################################################################################
+function boldText(){
+	# make bold text
+	echo -ne "\033[1m"
+}
+################################################################################
+function boldText(){
+	# make bold text
+	echo -ne "\033[5m"
+}
+################################################################################
+function redText(){
+	# make text yellow
+	echo -ne "\033[31m"
+}
+################################################################################
+function blackText(){
+	# make text black
+	echo -ne "\033[30m"
+}
+################################################################################
+function whiteBackground(){
+	# make text background white
+	echo -ne "\033[47m"
+}
+################################################################################
+function blackBackground(){
+	# make text background black
+	echo -ne "\033[40m"
+}
+################################################################################
+function yellowBackground(){
+	# make text background yellow
+	echo -ne "\033[43m"
+}
+################################################################################
+function redBackground(){
+	# make text background red
+	echo -ne "\033[41m"
+}
+################################################################################
+function greenBackground(){
+	# make text background green
+	echo -ne "\033[42m"
+}
+################################################################################
+function blueBackground(){
+	# make text background blue
+	echo -ne "\033[44m"
+}
+################################################################################
+function magentaBackground(){
+	# make text background magenta
+	echo -ne "\033[45m"
+}
+################################################################################
+function magentaText(){
+	# make text magenta
+	echo -ne "\033[35m"
+}
+################################################################################
+function cyanBackground(){
+	# make text background cyan
+	echo -ne "\033[46m"
+}
+################################################################################
+function cyanText(){
+	# make text cyan
+	echo -ne "\033[36m"
+}
+################################################################################
+function whiteText(){
+	echo -ne "\033[37m"
+}
+################################################################################
 function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
