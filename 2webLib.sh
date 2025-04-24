@@ -97,6 +97,116 @@ function cleanText(){
 	echo -n "$cleanedText"
 }
 ########################################################################
+function delete(){
+	# Remove a directory and all files in the directory showing progress
+	#
+	# Should replace any rm -rv
+	#
+	# $1 = directoryPath : The directory to create with webserver permissions
+	#
+	# - Create a directory with permissions for the web user www-data
+	# - Create path recursively if necessary
+	#
+	# RETURN FILES
+	if test -d "$1";then
+		# get files and symlinks
+		tempDirFiles=$(find "$1" -type l -o -type f)
+		# sort the dirs and reverse them so they are removed longest path to shortest
+		tempDirDirs=$(find "$1" -type d | sort -u | tac )
+		#
+		tempDirFileCount=$(echo -n "$tempDirFiles" | wc -l)
+		tempDirDirCount=$(echo -n "$tempDirDirs" | wc -l)
+		#
+		theTotal=$(( $tempDirFileCount + $tempDirDirCount ))
+		#
+		tempTotalProgress=0
+		#
+		progressCount=0
+		#
+		totalCPUS=$(cpuCount)
+		ALERT "Preparing to remove '$theTotal' files in '$1'"
+		# check if fast mode is enabled
+		if ! [ $theTotal -gt 10000 ];then
+			# read all subdirectory files and remove them
+			echo "$tempDirFiles" | while read -r tempDirFilePath;do
+				if test -e "$tempDirFilePath";then
+					# fremove files
+					rm "$tempDirFilePath" &
+					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
+					INFO "[$progressCount/$theTotal] ${progressPercent}% Removing file '$tempDirFilePath'"
+					waitFastQueue 0.001 "$totalCPUS"
+					progressCount=$(( $progressCount + 1 ))
+				elif test -h "$tempDirFilePath";then
+					# remove symlinks
+					rm "$tempDirFilePath" &
+					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
+					INFO "[$progressCount/$theTotal] ${progressPercent}% Removing file '$tempDirFilePath'"
+					waitFastQueue 0.001 "$totalCPUS"
+					progressCount=$(( $progressCount + 1 ))
+				else
+					ERROR "File could not be removed at '$tempDirFilePath'"
+				fi
+			done
+			blockQueue 1
+		fi
+		#ALERT "DOING THE DIRECTORIES"
+		progressCount=$tempDirFileCount
+		# remove any skeleton directory structure
+		echo "$tempDirDirs" | while read -r tempDirDirPath;do
+			# fix the trailing / in the directory path
+			tempDirDirPath="$( echo "$tempDirDirPath/" | tr -s '/' )"
+			if test -d "$tempDirDirPath";then
+				# check if fast mode is enabled
+				if [ $theTotal -gt 10000 ];then
+					rm -r "$tempDirDirPath" &
+				else
+					rmdir "$tempDirDirPath" &
+				fi
+				# calculate the percent and remove decimals
+				progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
+				INFO "[$progressCount/$theTotal] ${progressPercent}% Removing directory '$tempDirDirPath'"
+				waitFastQueue 0.001 "$totalCPUS"
+				progressCount=$(( $progressCount + 1 ))
+			else
+				ERROR "Path could not be removed at $( echo -e "${tempDirDirPath}\n" )$( tree "$tempDirDirPath" )"
+			fi
+		done
+		blockQueue 1
+		# return codes
+		if test -d "$1";then
+			ERROR "Removal of directory '$1' Failed!"
+			return 1
+		else
+			ALERT "Removal of directory '$1' complete !"
+			return 0
+		fi
+	elif test -f "$1";then
+		# this is a single file path, remove the file
+		rm -v "$1"
+		if ! test -f "$1";then
+			ALERT "Removal of file '$1' complete !"
+			return 0
+		else
+			ERROR "Removal of file '$1' Failed!"
+			return 1
+		fi
+	elif test -s "$1";then
+		# this is a symlink remove it
+		rm -v "$1"
+		if ! test -s "$1";then
+			ALERT "Removal of symlink '$1' complete !"
+			return 0
+		else
+			ERROR "Removal of symlink '$1' Failed!"
+			return 1
+		fi
+		return "$?"
+	else
+		ALERT "Skipping path '$1' it is already removed!"
+		return 0
+	fi
+}
+########################################################################
 function createDir(){
 	# Create a path for use in the webserver
 	#
