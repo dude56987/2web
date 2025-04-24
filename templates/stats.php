@@ -121,6 +121,11 @@ if (detectEnabledStatus("git2web")){
 }
 getStat("webThumbSize.index", "Thumbnail Cache");
 getStat("cacheSize.index", "Video Cache");
+getStat("webCacheSize.index", "Page Cache");
+getStat("transcodeCacheSize.index", "Transcode Cache");
+getStat("zipCacheSize.index", "Zip Cache");
+getStat("m3uCacheSize.index", "Playlist Cache");
+getStat("searchCacheSize.index", "Search Cache");
 getStat("webSize.index", "Total Web");
 getStat("mediaSize.index", "Local Media");
 getStat("freeSpace.index", "Total Free Space");

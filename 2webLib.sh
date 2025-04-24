@@ -480,6 +480,36 @@ function buildHomePage(){
 		cacheSize=$(du -shP "$webDirectory/RESOLVER-CACHE/" | cut -f1)
 		echo "$cacheSize" > "$webDirectory/cacheSize.index"
 	fi
+	INFO "Building stat for generated website transcode cache size"
+	if cacheCheck "$webDirectory/transcodeCacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/TRANSCODE-CACHE/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/transcodeCacheSize.index"
+	fi
+	INFO "Building stat for generated website m3u cache size"
+	if cacheCheck "$webDirectory/m3uCacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/m3u_cache/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/m3uCacheSize.index"
+	fi
+	INFO "Building stat for generated website search cache size"
+	if cacheCheck "$webDirectory/searchCacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/search/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/searchCacheSize.index"
+	fi
+	INFO "Building stat for generated website zip cache size"
+	if cacheCheck "$webDirectory/zipCacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/zip/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/zipCacheSize.index"
+	fi
+	INFO "Building stat for generated website page cache size"
+	if cacheCheck "$webDirectory/webCacheSize.index" "1";then
+		# cache size for resolver-cache
+		cacheSize=$(du -shP "$webDirectory/web_cache/" | cut -f1)
+		echo "$cacheSize" > "$webDirectory/webCacheSize.index"
+	fi
 	INFO "Building stat for generated repo cache size"
 	if cacheCheck "$webDirectory/repoGenSize.index" "1";then
 		repoGenSize=$(du -shP "$webDirectory/repos/" | cut -f1)
