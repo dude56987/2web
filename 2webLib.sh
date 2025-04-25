@@ -1089,26 +1089,47 @@ function ALERT(){
 	#
 	# RETURN STDOUT
 	#
+	colorCode="\033[33m"
+	resetCode="\033[0m"
+	#
 	width=$(tput cols)
 	buffer=" "
 	# make the buffer the width of the terminal
 	for index in $(seq $width);do
 		buffer="$buffer "
 	done
-	# store the color codes for colorizing the terminal output
-	resetCode="\033[0m"
-	yellowCode="\033[0;33m"
-	# - cut the line to make it fit on one line using ncurses tput command
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
-	output="$(echo -n "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
+
+	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
+		output="$1"
+	else
+		# - cut the line to make it fit on one line using ncurses tput command
+		# - add the buffer to the end of the line and cut to terminal width
+		#   - this will overwrite any previous text wrote to the line
+		#   - cut one off the width in order to make space for the \r
+		# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
+		#output="$(echo -ne "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
+		output="$(echo -n "[${colorCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
+	fi
 	# printf uses percentage signs for formatting so you must use two in a row to print
 	# a single regular one
-	output="$(echo "$output" | sed "s/%/%%/g")"
+	#output="$(echo -n "$output" | sed "s/%/%%/g")"
+
 	#
-	printf "\n$output\n";
+	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
+		#
+		yellowText
+		drawSmallHeader "ALERT"
+		resetColor
+		echo -e "$output";
+		yellowText
+		drawLine
+		resetColor
+	else
+		#
+		#echo "$output";
+		echo -e "$output";
+		#printf "$output";
+	fi
 }
 ################################################################################
 function startDebug(){
