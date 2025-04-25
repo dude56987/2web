@@ -1297,19 +1297,17 @@ function ERROR(){
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[${redCode}ERROR${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	#output="$(echo -n "$1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
+	output="$1"
 	# print the line
 	echo
-	echo -n "$redCode"
-	echo "################################################################################"
-	echo "#################################### ERROR! ####################################"
-	echo "################################################################################"
-	echo -n "$resetCode"
+	echo -ne "$redCode"
+	drawLine
+	drawHeader "!!! ERROR !!!"
+	drawLine
 	echo "$output"
-	echo -n "$redCode"
-	echo "################################################################################"
-	echo -n "$resetCode"
-	echo
+	drawLine
+	echo -ne "$resetCode"
 }
 ################################################################################
 function upgrade-pip(){
