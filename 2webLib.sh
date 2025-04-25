@@ -1634,6 +1634,26 @@ function showServerLinks(){
 	drawLine
 }
 ################################################################################
+function addSourcePath(){
+	# addSourcePath $sourcePath $sourceFilePath
+	#
+	# - add a sourcePath to the sourceFilePath
+	# - prevent duplicates
+	sourcePath="$1"
+	sourceFilePath="$2"
+	# add the path to the list of paths for duplicate checking and rescans
+	if test -f "$sourceFilePath";then
+		# check if the directory path exist
+		if ! grep -Fq "$sourcePath" "$sourceFilePath";then
+			# if the path is not in the file add it to the file
+			echo "$sourcePath" >> "$sourceFilePath"
+		fi
+	else
+		# create the file
+		echo "$sourcePath" > "$sourceFilePath"
+	fi
+}
+################################################################################
 function addToIndex(){
 	indexItem="$1"
 	indexPath="$2"
