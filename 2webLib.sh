@@ -1262,7 +1262,11 @@ function INFO(){
 	# - Line length will be cut to the size of the active terminal
 	#
 	# RETURN STDOUT
+
+	#
+	height=$(tput lines)
 	width=$(tput cols)
+	#
 	buffer=""
 	# make the buffer the width of the terminal
 	for index in $(seq $width);do
@@ -1276,12 +1280,14 @@ function INFO(){
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
 	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
-	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
-	# printf uses percentage signs for formatting so you must use two in a row to print
+	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
 	# a single regular one
-	output="$(echo "$output" | sed "s/%/%%/g")"
-	# print the line
-	printf "$output\r"
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# place the cursor at the start of the bottom line
+	tput cup "$height" "0"
+	# write the output text without a newline
+	# - add 2 blank spaces to the end of the line for the spinner
+	echo -ne "$output  \r"
 }
 ################################################################################
 function ERROR(){
