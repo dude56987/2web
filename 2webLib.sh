@@ -1047,11 +1047,9 @@ function startDebug(){
 	# - All commands executed will be displayed after this command is ran
 	#
 	# RETURN NULL
-	echo
-	echo "################################################################################"
-	echo "#                              START DEBUG BLOCK                               #"
-	echo "################################################################################"
-	echo
+	drawLine
+	drawHeader "START DEBUG BLOCK"
+	drawLine
 	set -x
 }
 ################################################################################
@@ -1061,11 +1059,9 @@ function stopDebug(){
 	#
 	# RETURN NULL
 	set +x
-	echo
-	echo "################################################################################"
-	echo "#                               STOP DEBUG BLOCK                               #"
-	echo "################################################################################"
-	echo
+	drawLine
+	drawHeader "STOP DEBUG BLOCK"
+	drawLine
 }
 ########################################################################
 function drawCellLine(){
