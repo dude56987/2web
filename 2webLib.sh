@@ -1466,6 +1466,22 @@ function loadWithoutComments(){
 	return 0
 }
 ################################################################################
+function drawHeader(){
+	# draw a header with figlet
+	termWidth=$(tput cols)
+	#
+	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
+	#
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	#
+	figlet -w "$termWidth" -c -f "smblock" "$1"
+	#figlet -w "$termWidth" -c -f "smblock" "$1" | lolcat -a
+	#figlet -w "$termWidth" -c -f "pagga" "$1"
+	#figlet -w "$termWidth" -c -f "future" "$1"
+	#figlet -w "$termWidth" -c -f "smbraille" "$1"
+	#figlet -w "$termWidth" -c -f "emboss" "$1"
+}
+################################################################################
 function drawLine(){
 	# Draw a line across the terminal using curses to determine the length
 	width=$(tput cols)
