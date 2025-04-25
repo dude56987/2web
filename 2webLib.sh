@@ -1482,6 +1482,42 @@ function drawLine(){
 	#printf "$output\n"
 }
 ################################################################################
+function drawSmallHeader(){
+	# Draw a line across the terminal using curses to determine the length
+	width=$(tput cols)
+	buffer=""
+	# make the buffer the width of the terminal
+	#█🮮◙⭗🟕🟗═
+	headerText="$1"
+	# count the bytes
+	headerTextLength=${#headerText}
+	# get the size of the first half of the line
+	bufferSize=$(( ( $width - ( $headerTextLength + 2 ) ) / 2 ))
+	for index in $(seq $bufferSize);do
+		if [ $(( $index % 2 )) -eq 0 ];then
+			buffer="$buffer🟕"
+		else
+			buffer="$buffer🟗"
+		fi
+	done
+	# draw the text in the middle of the line
+	buffer="$buffer $1 "
+	# Figure out the remaining width of the terminal
+	# - This must be done for odd numbered widths
+	currentBufferSize=${#buffer}
+	bufferSize=$(( $width - $currentBufferSize ))
+	# fill out the remaining width of the terminal
+	for index in $(seq $(( $bufferSize )) );do
+		if [ $(( $index % 2 )) -eq 0 ];then
+			buffer="$buffer🟕"
+		else
+			buffer="$buffer🟗"
+		fi
+	done
+	# draw the output to the terminal
+	echo "$buffer";
+}
+################################################################################
 function showServerLinks(){
 	# In the CLI show the server links to the homepage and the settings
 	#
