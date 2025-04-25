@@ -1958,6 +1958,65 @@ if( ! function_exists("addToLog")){
 		unset($databaseObj);
 	}
 }
+################################################################################
+if( ! function_exists("uncleanText")){
+	function uncleanText($inputText){
+		# clean up the text for use in web urls and directory paths
+		# - uses fullwidth versions of caracters that interfere with URLs
+		$uncleanedText="$inputText";
+		# add grave accents
+		$uncleanedText=str_replace("｀","`",$uncleanedText);
+		# add hash marks
+		$uncleanedText=str_replace("＃","#",$uncleanedText);
+		# add single quotes
+		$uncleanedText=str_replace("＇","'",$uncleanedText);
+		################################################################################
+		# convert symbols that cause issues to full width versions of those characters
+		################################################################################
+		# convert question marks into wide question marks so they look
+		# the same but wide question marks do not break URLS
+		$uncleanedText=str_replace("？","?",$uncleanedText);
+		# cleanup ampersands, they break URLs
+		$uncleanedText=str_replace("＆","&",$uncleanedText);
+		# cleanup @ symbols, they break URLs
+		$uncleanedText=str_replace("＠","@",$uncleanedText);
+		# remove percent signs they break print functions
+		$uncleanedText=str_replace("％","%",$uncleanedText);
+		# hyphens break grep searches
+		$uncleanedText=str_replace("－","-",$uncleanedText);
+		# exclamation marks can also cause problems
+		$uncleanedText=str_replace("！","!",$uncleanedText);
+		# plus signs are used in URLs so they must be changed
+		$uncleanedText=str_replace("＋","+",$uncleanedText);
+		# remove forward slashes, they will break all paths
+		$uncleanedText=str_replace("／","/",$uncleanedText);
+		$uncleanedText=str_replace("＼","\\",$uncleanedText);
+		# remove pipes
+		$uncleanedText=str_replace("｜","|",$uncleanedText);
+		# remove semicolons
+		$uncleanedText=str_replace("；",";",$uncleanedText);
+		# remove dollar signs
+		$uncleanedText=str_replace("＄","$",$uncleanedText);
+		# print the cleaned up text
+		return "$uncleanedText";
+	}
+}
+########################################################################
+if( ! function_exists("spaceCleanedText")){
+	function spaceCleanedText($cleanedText){
+		# clean up the text for use in web urls and directory paths
+		# - uses fullwidth versions of caracters that interfere with URLs
+		$characters=Array(",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","＄","＂","＇","{","}","(",")","[","]",".");
+		$spacedText="";
+		foreach($characters as $specialCharacter){
+			$cleanedText=str_replace("$specialCharacter"," $specialCharacter ","$cleanedText");
+		}
+		# squeeze double spaces into single spaces
+		$cleanedText=str_replace("  "," ","$cleanedText");
+		# print the cleaned up text
+		return "$cleanedText";
+	}
+}
 ########################################################################
 if( ! function_exists("cleanText")){
 	function cleanText($inputText){
