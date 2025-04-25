@@ -2174,4 +2174,46 @@ if( ! function_exists("verifyCacheFile")){
 		return $isVerified;
 	}
 }
+################################################################################
+if( ! function_exists("bytesToHuman")){
+	function bytesToHuman($bytes){
+		# bytesToHuman($bytes)
+		#
+		# Take a interger value of bytes and convert it to human readable string.
+		#
+
+		if ( $bytes <= 999 ){
+			# bytes
+			return ( ( $bytes ) . "B");
+		}else if ( $bytes <= 999999 ){
+			# kilobytes
+			return ( number_format( ( $bytes / 1000 ) , 0) . "K");
+		}else if ( $bytes <= 999999999){
+			# megabytes
+			return ( number_format( ( $bytes / 1000000 ) , 1) . "M");
+		}else if ( $bytes <= 999999999999){
+			# gigabytes
+			return ( number_format( ( $bytes / 1000000000 ) , 1) . "G");
+		}else if ( $bytes <= 999999999999999999999 ){
+			# petabytes
+			return ( number_format( ( $bytes / 1000000000000000 ) , 1) . "P");
+		}else if ( $bytes <= 999999999999999 ){
+			# terabytes
+			return ( number_format( ( $bytes / 1000000000000 ) , 1) . "T");
+		}else{
+			# if the filesize is to large show it in petabytes
+			# petabytes
+			return ( number_format( ( $bytes / 1000000000000000 ) , 1) . "P");
+		}
+	}
+}
+################################################################################
+if( ! function_exists("clear")){
+	function clear(){
+		# send all text output to the browser
+		flush();
+		ob_flush();
+	}
+}
+################################################################################
 ?>
