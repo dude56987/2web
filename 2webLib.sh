@@ -2513,6 +2513,121 @@ function hashImage(){
 	convert "$outputFilePath" -background transparent -extent 200%x100% -flop +clone -composite -background transparent -extent 100%x200% -flip +clone -composite "$outputFilePath"
 }
 ########################################################################
+function sleepSpinner(){
+	# sleepSpinner $animationName $animationTime
+	#
+	# This will create the spinner using the selected animation in a time
+	#
+	# Animation name can be any of the preset themes
+	# - spin_white_square
+	# - spin_white_circle
+	# - spin_block
+	# - spin_sextant
+	# - spin_triangles
+	# - spin_checkers
+	# - spin_circle_edges
+	# - spin_box_split_fill
+	# - spin_box_cross_fill
+	# - fast_circle_cross
+	# - other_left_right_parallel_opposite_arrows
+	# - other_left_right_opposite_arrows
+	# - other_left_right_opposite_arrows_wall
+	# - other_up_down_opposite_arrows
+	# - fill_empty_blocks
+	# - fill_empty_diamond
+	# - greater_than
+	#
+	#	The animation delay is measured in seconds. Decimals can be used. ex) 0.1, 1, 2.4, 0.02
+	#
+	#	The default animation delay is 0.1 seconds.
+	#
+	sleepTime="$1"
+	spinnerName="$1"
+	#animationName="$2"
+	#delayTime="$3"
+	# set the default animation
+	if [ "$animationName" == "" ];then
+		animationName="spin_split_fill"
+	fi
+
+	if [ "$delayTime" == "" ];then
+		delayTime="0.1"
+	fi
+
+	if [ "$animationName" == "spin_white_square" ];then
+		# spinner animations
+		animation="◳◲◱◰"
+	elif [ "$animationName" == "spin_white_circle" ];then
+		animation="◷◶◵◴"
+	elif [ "$animationName" == "spin_block" ];then
+		animation="▝▗▖▘"
+	elif [ "$animationName" == "spin_sextant" ];then
+		animation="🬁🬇🬞🬏🬃🬀"
+	elif [ "$animationName" == "spin_triangles" ];then
+		animation="▴▸▾◂"
+	elif [ "$animationName" == "spin_checkers" ];then
+		animation="⛀⛁⛃⛂"
+	elif [ "$animationName" == "spin_circle_edges" ];then
+		animation="◝◞◟◜"
+	elif [ "$animationName" == "spin_split_fill" ];then
+		animation="⬔◨◪⬓⬕◧◩⬒"
+	elif [ "$animationName" == "spin_box_split_fill" ];then
+		animation="◨⬓◧⬒"
+	elif [ "$animationName" == "spin_box_cross_fill" ];then
+		animation="⬔◪⬕◩"
+	elif [ "$animationName" == "fast_circle_cross" ];then
+		# fast spin animations
+		animation="⊗⊕"
+	elif [ "$animationName" == "other_left_right_parallel_opposite_arrows" ];then
+		# other loop animations
+		animation="⇆⇇⇄⇉"
+	elif [ "$animationName" == "other_left_right_opposite_arrows" ];then
+		animation="⇆⇄"
+	elif [ "$animationName" == "other_left_right_opposite_arrows_wall" ];then
+		animation="↹↹"
+	elif [ "$animationName" == "other_up_down_opposite_arrows" ];then
+		animation="⇅⇵"
+	elif [ "$animationName" == "fill_empty_blocks" ];then
+		animation="▝▐▟█▙▌▘ "
+	elif [ "$animationName" == "fill_empty_diamond" ];then
+		animation="🮡🮥🮪🮮🮫🮤🮠 "
+	elif [ "$animationName" == "greater_than" ];then
+		animation=">≫⋙"
+	fi
+
+	# store the color codes for coloring
+	resetCode="\033[0m"
+	# green
+	colorCode="\033[0;32m"
+	#
+	spinnerPositionX=$(tput cols)
+	spinnerPositionY=$(tput lines)
+	#
+	animationLength=${#animation}
+	#echo -ne "\b"
+	# animate the spinner
+	# loop though the animation once and exit
+	for (( index=0;index<$animationLength;index++ ));do
+		# find the bottom right corner of the terminal
+		spinnerPositionX="$(tput cols)"
+		spinnerPositionY="$(tput lines)"
+		# check the global flag used to draw to the terminal without interacting with the spinner
+		#if [ "$SHOW_SPINNER" == "yes" ];then
+		#if test -f "/var/cache/2web/ram/$spinnerName/showSpinner.cfg";then
+			# move the cursor to the bottom right position of the terminal
+			tput cup "$spinnerPositionY" "$spinnerPositionX"
+			# draw the spinner at the current animation step
+			echo -ne "${colorCode}"
+			echo -ne "\b${animation:$index:1}"
+			echo -ne "${resetCode}"
+			# move the cursor back to the start of the line
+			tput cup "$spinnerPositionY" "0"
+		#fi
+		# use a consistant sleep time to make the animation play smoothly
+		sleep $delayTime
+	done
+}
+########################################################################
 function rotateSpinner(){
 	# rotateSpinner $animationName $animationDelayTime
 	#
