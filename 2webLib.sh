@@ -109,6 +109,76 @@ function cyanText(){
 function whiteText(){
 	echo -ne "\033[37m"
 }
+########################################################################
+function timeToHuman(){
+	# remove newlines in timestamp
+	timestamp="$(echo -n "$1" | sed "s/\n//g" )"
+
+	yearInSeconds=$(( ( (60 * 60) * 24 ) * 365 ))
+	dayInSeconds=$(( ( (60 * 60) * 24 ) ))
+	hourInSeconds=$(( 60 * 60 ))
+	minuteInSeconds=60
+
+	yearsPassed=0
+	daysPassed=0
+	hoursPassed=0
+	minutesPassed=0
+
+	if [ $timestamp -gt $yearInSeconds ];then
+		yearsPassed=$(( $timestamp / $yearInSeconds ))
+		timestamp=$(( $timestamp - ( $yearsPassed * $yearInSeconds ) ))
+		if [ $yearsPassed == 1 ];then
+			echo -n "$yearsPassed year "
+		elif ($yearsPassed > 1);then
+			echo -n "$yearsPassed years "
+		fi
+	fi
+
+	if [ $timestamp -gt $dayInSeconds ];then
+		daysPassed=$(( $timestamp / $dayInSeconds ))
+		timestamp=$(( $timestamp - ( $daysPassed * $dayInSeconds ) ))
+		if [ $daysPassed == 1 ];then
+			echo -n "$daysPassed day "
+		elif [ $daysPassed -gt 1 ];then
+			echo -n "$daysPassed days "
+		fi
+		if [ $yearsPassed -gt 0 ];then
+			return
+		fi
+	fi
+
+	if [ $timestamp -gt $hourInSeconds ];then
+		hoursPassed=$(( $timestamp / $hourInSeconds ))
+		timestamp=$(( $timestamp - ( $hoursPassed * $hourInSeconds ) ))
+		if [ $hoursPassed == 1 ];then
+			echo -n "$hoursPassed hour "
+		elif [ $hoursPassed -gt 1 ];then
+			echo -n "$hoursPassed hours "
+		fi
+		if [ $daysPassed -gt 0 ];then
+			return
+		fi
+	fi
+
+	if [ $timestamp -gt $minuteInSeconds ];then
+		minutesPassed=$(( $timestamp / $minuteInSeconds ))
+		timestamp=$(( $timestamp - ( $minutesPassed * $minuteInSeconds ) ))
+		if [ $minutesPassed == 1 ];then
+			echo -n "$minutesPassed minute "
+		elif [ $minutesPassed -gt 1 ];then
+			echo -n "$minutesPassed minutes "
+		fi
+		if [ $hoursPassed -gt 0 ];then
+			return
+		fi
+	fi
+	# write out the remaining seconds
+	if [ $timestamp == 1 ];then
+		echo -n "$timestamp second "
+	else
+		echo -n "$timestamp seconds "
+	fi
+}
 ################################################################################
 function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
