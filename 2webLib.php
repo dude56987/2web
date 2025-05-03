@@ -2072,6 +2072,28 @@ if( ! function_exists("cleanText")){
 	}
 }
 ################################################################################
+if( ! function_exists("linkFile")){
+	function linkFile($targetPath,$symlinkPath){
+		# create a symlink if it does not exist
+		if (is_file($targetPath)){
+			if (is_link($symlinkPath)){
+				# the symlink path already exists
+				return false;
+			}else if (is_file($symlinkPath)){
+				# the symlink path already exists and is a file
+				return false;
+			}else{
+				# everything is good create the symlink
+				symlink($targetPath,$symlinkPath);
+				return true;
+			}
+		}else{
+			# the target is not a file
+			return false;
+		}
+	}
+}
+################################################################################
 if( ! function_exists("verifyCacheFile")){
 	function verifyCacheFile($storagePath,$videoLink){
 		# verifyCacheFile($storagePath,$videoLink)
