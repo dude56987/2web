@@ -938,11 +938,9 @@ function cpuCount(){
 	# List the total number of cores the system has available for multithreading
 	#
 	# RETURN STDOUT
+
+	#
 	totalCPUS=$(grep "processor" "/proc/cpuinfo" | wc -l)
-	# if the spinner is active add a extra slot for it
-	if [ "$SPINNER_PID" -gt 0 ];then
-		totalCPUS=$(( $totalCPUS + 1 ))
-	fi
 	# remove one cpu from the total cpu count, this will prevent service interuptions
 	totalCPUS=$(( $totalCPUS - 1 ))
 	if [ $totalCPUS -lt 2 ];then
@@ -964,17 +962,30 @@ function waitQueue(){
 	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
+	#
+	if [ $totalCPUS == "" ];then
+		# failsafe to one CPU if a total is not given
+		totalCPUS=1
+	fi
+	#
 	if [ $totalCPUS -eq 1 ];then
 		# if there is only one cpu use the fastqueue, one at a time, ignore system load
 		waitFastQueue $sleepTime 1
 		return 0
 	fi
+	firstRun="yes"
 	while true;do
 		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
 		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
 			#INFO "Waiting for free CPU cores..."
-			sleep $sleepTime
+			#ALERT "WAITING IN QUEUE"
+			if [ $firstRun == "yes" ];then
+				firstRun="no"
+			else
+				sleepSpinner
+			fi
+			#sleep $sleepTime
 		else
 			# if the load exceeds the number of cpus block the queue, this means the system is maxed out globally
 			# - this will make all 2web modules parallel process without blocking each other
@@ -982,11 +993,19 @@ function waitQueue(){
 			# convert load into interger and compare
 			if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
 				INFO "System is overloaded, Waiting for system resources..."
-				sleep 1
+				#ALERT "WAITING IN QUEUE for reduced system load"
+				#sleep 1
+				if [ $firstRun == "yes" ];then
+					# skip drawing the spinner on the first loop for fast finishing queue items
+					firstRun="no"
+				else
+					sleepSpinner
+				fi
 			else
 				break
 			fi
 		fi
+
 	done
 }
 ################################################################################
@@ -1003,10 +1022,16 @@ function waitSlowQueue(){
 	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
+	firstRun="yes"
 	while true;do
 		if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
 			INFO "System is overloaded, Waiting for system resources..."
-			sleep 1
+			if [ $firstRun == "yes" ];then
+				firstRun="no"
+			else
+				sleepSpinner
+			fi
+			#sleep 1
 		else
 			break
 		fi
@@ -1025,12 +1050,19 @@ function waitFastQueue(){
 	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
+	firstRun="yes"
 	while true;do
 		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
 		if [ $(jobs -r | wc -l) -ge $totalCPUS ];then
 			#INFO "Waiting for free CPU cores..."
-			sleep $sleepTime
+			#ALERT "Waiting Fast Queue"
+			#sleep $sleepTime
+			if [ "$firstRun" == "yes" ];then
+				firstRun="no"
+			else
+				sleepSpinner
+			fi
 		else
 			# if the load exceeds the number of cpus block the queue, this means the
 			# system is maxed out globally
@@ -1072,12 +1104,15 @@ function blockQueue(){
 	sleepTime=$1
 	# set the number of processes to unlock the queue at
 	unlockAt=0
-	if [ "$SPINNER_PID" -gt 0 ];then
-		unlockAt=1
-	fi
+	#
+	firstRun="yes"
 	while true;do
 		if [ $(jobs -r | wc -l) -gt $unlockAt ];then
-			sleep $sleepTime
+			if [ $firstRun == "yes" ];then
+				firstRun="no"
+			else
+				sleepSpinner
+			fi
 		else
 			break
 		fi
