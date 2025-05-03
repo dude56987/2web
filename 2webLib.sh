@@ -871,11 +871,11 @@ function updateCerts(){
 	# if the certs are older than 364 days renew recreate a new valid key
 	if cacheCheck /var/cache/2web/ssl-cert.crt "365";then
 		# the cert has expired
-		echo "[INFO]: Updating cert..."
+		INFO "Updating cert..."
 		# generate a new private key and public cert for the SSL certification
 		genCert='yes'
 	else
-		echo "[INFO]: Cert still active..."
+		INFO "Cert still active..."
 		return
 	fi
 	if $force;then
