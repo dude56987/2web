@@ -1316,8 +1316,6 @@ function INFO(){
 	#   - cut one off the width in order to make space for the \r
 	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
 	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
-	# a single regular one
-	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# place the cursor at the start of the bottom line
 	tput cup "$height" "0"
 	# write the output text without a newline
@@ -1354,10 +1352,14 @@ function ERROR(){
 function upgrade-pip(){
 	# list the package names in a space seprated list
 	moduleName="$1"
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
 	packageNames="$2"
 	# download package source code into the download path
 	pipDownloadPath="/var/cache/2web/downloads/pip"
-	#
+	# update downloaded packages
+	# - downloads are not throttled but installs are in loop below
 	for packageName in $packageNames;do
 		# create the pip install and download cache
 		createDir "$pipDownloadPath/$packageName/"
@@ -1382,6 +1384,9 @@ function upgrade-pip(){
 function upgrade-single-pip(){
 	# list the package names in a space seprated list
 	moduleName="$1"
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
 	packageName="$2"
 	installPath="$3"
 	# download package source code into the download path
@@ -1495,6 +1500,9 @@ function returnModStatus(){
 	#
 	# RETURN BOOL
 	moduleName="$1"
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
 	# foreground color codes
 	redFG="\033[38;5;9m"
 	greenFG="\033[38;5;10m"
@@ -1527,6 +1535,10 @@ function checkModStatus(){
 	# RETURN NULL
 
 	moduleName=$1
+	#
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
 
 	# check the mod status
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
@@ -1560,6 +1572,11 @@ function enableMod(){
 	#
 	# RETURN FILES
 	moduleName=$1
+	#
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
+
 	ALERT "Enabling the module $moduleName"
 	# create a group for the module when it is enabled
 	createDir "/etc/2web/groups/${moduleName}/"
@@ -1576,6 +1593,9 @@ function disableMod(){
 	#
 	# RETURN FILES
 	moduleName=$1
+	if [ "$moduleName" == "" ];then
+		moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	fi
 	ALERT "Disabling the module $moduleName"
 	echo -n "no" > /etc/2web/mod_status/${moduleName}.cfg
 	# fix ownership so the web interface can change settings
@@ -1597,8 +1617,6 @@ function drawHeader(){
 	termWidth=$(tput cols)
 	#
 	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
-	#
-	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	#
 	figlet -w "$termWidth" -c -f "smblock" "$1"
 	#figlet -w "$termWidth" -c -f "smblock" "$1" | lolcat -a
