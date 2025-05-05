@@ -1372,11 +1372,16 @@ function upgrade-pip(){
 	if returnModStatus "$moduleName";then
 		# build and install the packages
 		for packageName in $packageNames;do
-			# create the install path for this package
-			createDir "$pipInstallPath/$packageName/"
-			# if the mod is disabled only download the package into the cache
-			# - This makes packages available to install even if no network connection is available
-			pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$packageName/" --target "$pipInstallPath/$packageName/" --upgrade --upgrade-strategy=only-if-needed
+			# only allow upgrades every 7 days
+			if cacheCheck "/var/cache/2web/generated/pip/${moduleName}_${packageName}_timestamp.cfg" "7";then
+				# create the install path for this package
+				createDir "$pipInstallPath/$packageName/"
+				# if the mod is disabled only download the package into the cache
+				# - This makes packages available to install even if no network connection is available
+				pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$packageName/" --target "$pipInstallPath/$packageName/" --upgrade --upgrade-strategy=only-if-needed
+				# update the timestamp of the package upgrade
+				touch "/var/cache/2web/generated/pip/${moduleName}_${packageName}_timestamp.cfg"
+			fi
 		done
 	fi
 }
@@ -1400,23 +1405,39 @@ function upgrade-single-pip(){
 	pipInstallPath="/var/cache/2web/generated/pip"
 	# install packages if the mod is enabled
 	if returnModStatus "$moduleName";then
-		# create the install path for this package
-		createDir "$pipInstallPath/$installPath/"
-		# if the mod is disabled only download the package into the cache
-		# - This makes packages available to install even if no network connection is available
-		pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$installPath/" --target "$pipInstallPath/$installPath/" --upgrade --upgrade-strategy "only-if-needed"
+		# limit upgrades to once every 7 days
+		if cacheCheck "/var/cache/2web/generated/pip/${moduleName}_${packageName}_timestamp.cfg" "7";then
+			# create the install path for this package
+			createDir "$pipInstallPath/$installPath/"
+			# if the mod is disabled only download the package into the cache
+			# - This makes packages available to install even if no network connection is available
+			pip3 install "$packageName" --no-index --find-links "$pipDownloadPath/$installPath/" --target "$pipInstallPath/$installPath/" --upgrade --upgrade-strategy "only-if-needed"
+		fi
 	fi
 }
 ################################################################################
 function upgrade-yt-dlp(){
 	# upgrade the yt-dlp binary to the latest version
+	#
+	# - https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp
+	# - https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+
+	# the stable version of yt-dlp
+	stableLink="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+	# the nightly builds of yt-dlp
+	unstableLink="https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp"
 
 	# create the directories to store the download
 	createDir "/var/cache/2web/generated/yt-dlp/"
 	createDir "/var/cache/2web/downloads/yt-dlp/"
 	# download yt-dlp directly
 	# - only download the file if the modified time is newer
-	wget -N "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" -P "/var/cache/2web/downloads/yt-dlp/"
+	# - fetch the stable or unstable version based on cfg file
+	if yesNoCfgCheck "/etc/2web/download-yt-dlp-stable-version.cfg" "yes";then
+		wget -N "$stableLink" -P "/var/cache/2web/downloads/yt-dlp/"
+	else
+		wget -N "$unstableLink" -P "/var/cache/2web/downloads/yt-dlp/"
+	fi
 	# get the sum of the downloaded cache file
 	newFileSum=$(md5sum "/var/cache/2web/downloads/yt-dlp/yt-dlp" | cut -d' ' -f1 )
 	# check if the file is already installed
