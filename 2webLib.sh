@@ -1469,13 +1469,22 @@ function lockProc(){
 	# - Creates a activeGraph file to mark the activity graph
 	#
 	# RETURN FILES
-	procName=$1
+
+	# get the module name for use as the proc name
+	procName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# get the set web root
 	webDirectory=$(webRoot)
-	ALERT "$webDirectory/${procName}.active"
+	# store the color codes for coloring
+	resetCode="\033[0m"
+	greenCode="\033[0;32m"
+	#
+	INFO "$webDirectory/${procName}.active"
 	if test -f "$webDirectory/${procName}.active";then
 		# system is already running exit
-		echo "[INFO]: ${procName} is already processing data in another process."
-		echo "[INFO]: IF THIS IS IN ERROR REMOVE LOCK FILE AT '$webDirectory/${procName}.active'."
+		drawLine
+		ALERT "${procName} is already processing data in another process."
+		ALERT "IF THIS IS IN ERROR REMOVE LOCK FILE AT '$webDirectory/${procName}.active'."
+		drawLine
 		exit
 	else
 		# disable lockout for main 2web module to prevent the mangling of graphs
@@ -1486,26 +1495,63 @@ function lockProc(){
 				if pgrep "gameoverlayui" > /dev/null;then
 					# if the gameoverlayui is active then a game is currently running
 					# - skip over this launch as if the module is already running
-					echo "[INFO]: A Steam game is currently running."
-					echo "[INFO]: ${procName} will not run while a steam game is running."
-					echo "[INFO]: Change you setting in /etc/2web/steamLockout.cfg"
+					drawLine
+					ALERT "A Steam game is currently running."
+					ALERT "${procName} will not run while a steam game is running."
+					ALERT "Change you setting in /etc/2web/steamLockout.cfg"
+					drawLine
 					# exit without launch
 					exit
 				fi
 			fi
 		fi
-		ALERT "Setting Active Flag $webDirectory/${procName}.active"
+		INFO "Setting Active Flag $webDirectory/${procName}.active"
 		# set the active flag
 		echo "$(date "+%s")" > "$webDirectory/${procName}.active"
 		# the activegraph file will be removed when the graph is updated
 		# - this detects when  a module runs but is finished before the graph is updated
 		touch "$webDirectory/${procName}.activeGraph"
-		ALERT "Setting Active Trap $webDirectory/${procName}.active"
+		INFO "Setting Active Trap $webDirectory/${procName}.active"
 		# create a trap to remove module lockfile
-		trap "rm $webDirectory/${procName}.active" EXIT
+		trap "exitModuleTrap ${procName}" EXIT
 		# set the last updated time
 		date "+%s" > "$webDirectory/lastUpdate.index"
+		# create the ram disk directory if it does not exist
+		createDir "/var/cache/2web/ram/${procName}/"
+		# create ramdisk for the module to use
+		mount -t tmpfs -o size=1M tmpfs /var/cache/2web/ram/${procName}/ || ERROR "MOUNTING RAMDISK FAILED"
 	fi
+	echo -ne "${greenCode}"
+	drawLine
+	drawHeader "$procName"
+	drawLine
+	echo -ne "${resetCode}"
+}
+################################################################################
+function exitModuleTrap(){
+	procName="$1"
+	# store the color codes for coloring
+	resetCode="\033[0m"
+	redCode="\033[0;31m"
+	# return the cursor to normal operation
+	tput cnorm
+	# stop the spinner before removing the ramdisk since it uses the ramdisk
+	#stopSpinner
+	# remove the ramdisk
+	if test -d "/var/cache/2web/ram/${procName}/";then
+		# umount is used to unmount the ramdisk
+		umount "/var/cache/2web/ram/${procName}/"
+		# remove the ramdisk directory contents
+		rm -r  "/var/cache/2web/ram/${procName}/"
+	fi
+	# remove the process lock
+	rm /var/cache/2web/web/${procName}.active
+	#
+	echo -ne "${redCode}"
+	drawLine
+	drawHeader "$procName"
+	drawLine
+	echo -ne "${resetCode}"
 }
 ################################################################################
 function returnModStatus(){
