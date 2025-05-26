@@ -1732,21 +1732,692 @@ function drawHeader(){
 	#figlet -w "$termWidth" -c -f "emboss" "$1"
 }
 ################################################################################
+function drawAltPattern(){
+	# drawGeoSymbols $line_x_position
+	#
+	# Draw 2 geometric symbols one after the other
+	#
+	# --default
+	#	  🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
+	# --quilt
+	#   🙪 🙨 🙪 🙨 🙪 🙨
+	# --flower
+	#   ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
+	# --bowtie
+	#   ⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗
+	# --book
+	#   🕮 🕮 🕮 🕮 🕮 🕮
+	# --castle
+	#   ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
+	if [ $1 -ge 0 ];then
+		tempValue=$1
+	else
+		tempValue=$RANDOM
+	fi
+	if echo "$@" | grep -q -e "--quilt";then
+		# 🙪 🙨 🙪 🙨 🙪 🙨 🙪
+		tempValue=$(( $tempValue % 4 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "🙪"
+		elif [ $tempValue -eq 1 ];then
+			echo -n " "
+		elif [ $tempValue -eq 2 ];then
+			echo -n "🙨"
+		else
+			echo -n " "
+		fi
+	elif echo "$@" | grep -q -e "--flower";then
+		# ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "⚘"
+		else
+			echo -n "𑽇"
+		fi
+	elif echo "$@" | grep -q -e "--bowtie";then
+		# ⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "⬖"
+		else
+			echo -n "⬗"
+		fi
+	elif echo "$@" | grep -q -e "--book";then
+		# 🕮 🕮 🕮 🕮 🕮 🕮
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n " "
+		else
+			echo -n "🕮"
+		fi
+	elif echo "$@" | grep -q -e "--castle";then
+		# ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "═"
+		else
+			echo -n "⛫"
+		fi
+	elif echo "$@" | grep -q -e "--floppy";then
+		# 🖫 🖪 🖬 🖫 🖪 🖬 🖫 🖪 🖬 🖫 🖪 🖬
+		tempValue=$(( $tempValue % 6 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "☐"
+		elif [ $tempValue -eq 1 ];then
+			echo -n "🖫"
+		elif [ $tempValue -eq 2 ];then
+			echo -n "☐"
+		elif [ $tempValue -eq 3 ];then
+			echo -n "🖪"
+		elif [ $tempValue -eq 4 ];then
+			echo -n "☐"
+		elif [ $tempValue -eq 5 ];then
+			echo -n "🖬"
+		fi
+	elif echo "$@" | grep -q -e "--computers";then
+		# 🖳 🖧l🖳 🖧l🖳 🖧l🖳 🖧l
+		tempValue=$(( $tempValue % 4 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n " "
+		elif [ $tempValue -eq 1 ];then
+			echo -n "🖳"
+		elif [ $tempValue -eq 2 ];then
+			echo -n "┉"
+		elif [ $tempValue -eq 3 ];then
+			echo -n "🖧"
+		fi
+	elif echo "$@" | grep -q -e "--computer";then
+		# 🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "┉"
+		else
+			echo -n "🖳"
+		fi
+	elif echo "$@" | grep -q -e "--term";then
+		# 🗔 🖳 🗔 🖳 🗔 🖳 🗔 🖳
+		tempValue=$(( $tempValue % 4 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n " "
+		elif [ $tempValue -eq 1 ];then
+			echo -n "🗔"
+		elif [ $tempValue -eq 2 ];then
+			echo -n " "
+		elif [ $tempValue -eq 3 ];then
+			echo -n "🖳"
+		fi
+	elif echo "$@" | grep -q -e "--altdice";then
+		# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "☐"
+		else
+			echo -n "$(rolldie)"
+		fi
+	elif echo "$@" | grep -q -e "--grass";then
+		# - grass        🗤 🗤 🗤 🗤 🗤 🗤 🗤 🗤
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n " "
+		else
+			echo -n "🗤"
+		fi
+	elif echo "$@" | grep -q -e "--vines";then
+		# - vines        🗥 🗥 🗥 🗥 🗥 🗥 🗥 🗥
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n " "
+		else
+			echo -n "🗥"
+		fi
+	else
+		# 🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
+		tempValue=$(( $tempValue % 2 ))
+		if [ $tempValue -eq 0 ];then
+			echo -n "🟕"
+		else
+			echo -n "🟗"
+		fi
+	fi
+}
+################################################################################
+lineThemeDemo(){
+	drawLineTheme
+}
+################################################################################
+loadLineTheme(){
+	# loadLineTheme "$index" "$themeName"
+	#
+	# Draw a single character in a line using the given line theme
+	#
+	# Load a line theme, the following themes are available
+	#
+	# - dice         ⚁⚂⚄⚄⚁⚁⚄⚄⚂⚁⚁⚁⚂⚂⚄⚁
+	# - flowers      ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
+	# - wood         🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
+	# - quilt        🙪 🙨 🙪 🙨 🙪 🙨 🙪 🙪
+	# - suit         ♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡
+	# - card
+	# - solid        ━━━━━━━━━━━━━━━━
+	# - double       ════════════════
+	# - stitch       ╳╳╳╳╳╳╳╳╳╳╳╳╳╳╳╳
+	# - diamond      🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮🮮
+	# - smallDotted  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉
+	# - dotted       ┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅
+	# - boxes        ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐
+	# - note
+	# - hollowBlock  🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀🮀
+	# - bowtie       ⬖⬗⬖⬗⬖⬗⬖⬗⬖⬖⬗⬖⬗⬖⬗⬖
+	# - block        ████████████████
+	# - bottomBlock  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+	# - fadeDown     🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒🮒
+	# - fadeUp       🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑🮑
+	# - book         🕮 🕮 🕮 🕮 🕮 🕮 🕮 🕮
+	# - castle       ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
+	# - floppy       🖫☐🖬☐🖪☐🖫☐🖬☐🖪☐🖫☐🖬☐
+	# - computer     🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉
+	# - computers    🖳┉🖧 🖳┉🖧 🖳┉🖧 🖳┉🖧
+	# - term         🗔 🖳 🗔 🖳 🗔 🖳 🗔 🖳
+	# - lines        𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛
+	# - sine         ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿
+	# - grass        🗤 🗤 🗤 🗤 🗤 🗤 🗤 🗤
+	# - vines        🗥 🗥 🗥 🗥 🗥 🗥 🗥 🗥
+	# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
+	# - cloud        ☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️
+	# - sid          𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗
+	# - chem
+
+	#
+	# - ﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏
+	#
+	index="$1"
+	lineTheme="$2"
+	if [ "$LINE_THEME" == "" ];then
+		lineTheme="fadeUp"
+	else
+		lineTheme="$LINE_THEME"
+	fi
+	# default theme
+	if [ "$lineTheme" == "" ];then
+		lineTheme="flower"
+	fi
+
+	if [ "$lineTheme" == "dice" ];then
+		# draw random dice for each line
+		echo -n "$(rollDie)"
+	elif [ "$lineTheme" == "flower" ];then
+		# draw a flowers
+		echo -n "$(drawAltPattern "$index" --flower)"
+	elif [ "$lineTheme" == "wood" ];then
+		echo -n "$(drawAltPattern "$index" --wood)"
+	elif [ "$lineTheme" == "quilt" ];then
+		echo -n "$(drawAltPattern "$index" --quilt)"
+	elif [ "$lineTheme" == "bowtie" ];then
+		echo -n "$(drawAltPattern "$index" --bowtie)"
+	elif [ "$lineTheme" == "book" ];then
+		echo -n "$(drawAltPattern "$index" --book)"
+	elif [ "$lineTheme" == "castle" ];then
+		echo -n "$(drawAltPattern "$index" --castle)"
+	elif [ "$lineTheme" == "suit" ];then
+		# draw a card suite
+		echo -n "$(drawCardSuite "$index")"
+	elif [ "$lineTheme" == "card" ];then
+		# draw a random card from a standard deck of cards
+		echo -n "$(drawCard "$index")"
+	elif [ "$lineTheme" == "solid" ];then
+		echo -n "━"
+	elif [ "$lineTheme" == "double" ];then
+		echo -n "═"
+	elif [ "$lineTheme" == "stitch" ];then
+		echo -n "╳"
+	elif [ "$lineTheme" == "diamond" ];then
+		echo -n "🮮"
+	elif [ "$lineTheme" == "small_dotted" ];then
+		echo -n "┉"
+	elif [ "$lineTheme" == "dotted" ];then
+		echo -n "┅"
+	elif [ "$lineTheme" == "block" ];then
+		echo -n "█"
+	elif [ "$lineTheme" == "bottomBlock" ];then
+		echo -n "▄"
+	elif [ "$lineTheme" == "hollowBlock" ];then
+		echo -n "🮀"
+	elif [ "$lineTheme" == "boxes" ];then
+		echo -n "☐"
+	elif [ "$lineTheme" == "fadeUp" ];then
+		echo -n "🮑"
+	elif [ "$lineTheme" == "fadeDown" ];then
+		echo -n "🮒"
+	elif [ "$lineTheme" == "lines" ];then
+		echo -n "𝄛"
+	elif [ "$lineTheme" == "note" ];then
+		#
+		tempValue=$(( $index % 4 ))
+		#
+		if [ $tempValue -eq 0 ];then
+			echo -n "🎜"
+		elif [ $tempValue -eq 1 ];then
+			echo -n "♬"
+		elif [ $tempValue -eq 2 ];then
+			echo -n "♫"
+		elif [ $tempValue -eq 3 ];then
+			echo -n "♬"
+		fi
+		#𝄚
+		#echo -n "♪"
+		#echo -n "♩"
+		#echo -n "♮"
+		#echo -n "𝅘𝅥𝅱"
+		#echo -n "𝆕"
+		#echo -n "𝅘𝅥𝅮"
+		#echo -n "♭"
+		#echo -n "𝅝"
+	elif [ "$lineTheme" == "floppy" ];then
+		# - floppy       🖫 🖬 🖪 🖫 🖬 🖪 🖫 🖬
+		echo -n "$(drawAltPattern "$index" --floppy)"
+	elif [ "$lineTheme" == "computers" ];then
+		# - computers    🖳 🖧 🖳 🖧 🖳 🖧 🖳 🖧
+		echo -n "$(drawAltPattern "$index" --computers)"
+	elif [ "$lineTheme" == "computer" ];then
+		# - computer     🖳 🖳 🖳 🖳 🖳 🖳 🖳 🖳
+		echo -n "$(drawAltPattern "$index" --computer)"
+	elif [ "$lineTheme" == "term" ];then
+		# - term         🗔 🖳 🗔 🖳 🗔 🖳 🗔 🖳
+		echo -n "$(drawAltPattern "$index" --term)"
+	elif [ "$lineTheme" == "sine" ];then
+		# - sine         ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿
+		echo -n "∿"
+	elif [ "$lineTheme" == "grass" ];then
+		# - grass        🗤 🗤 🗤 🗤 🗤 🗤 🗤 🗤
+		echo -n "🗤"
+	elif [ "$lineTheme" == "vines" ];then
+		# - vines        🗥 🗥 🗥 🗥 🗥 🗥 🗥 🗥
+		echo -n "🗥"
+	elif [ "$lineTheme" == "altdice" ];then
+		# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
+		echo -n "$(drawAltPattern "$index" --altdice)"
+	elif [ "$lineTheme" == "cloud" ];then
+		# - cloud        ☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️
+		echo -n "☁️"
+	elif [ "$lineTheme" == "sid" ];then
+		# - siddham mark
+		echo -n "𑗗"
+	elif [ "$lineTheme" == "chem" ];then
+		# - random chemestry symbols
+		echo -n "$(randomChem)"
+	else
+		# draw the default theme if no theme could be matched
+		# - solid
+		echo -n "━"
+	fi
+}
+################################################################################
 function drawLine(){
 	# Draw a line across the terminal using curses to determine the length
 	width=$(tput cols)
 	buffer=""
 	# make the buffer the width of the terminal
-	#█🮮═
+	#█🮮◙⭗🟕🟗═
 	for index in $(seq $width);do
-		buffer="$buffer═"
+		# draw random dice for each line
+		buffer="$buffer$(loadLineTheme "$index" )"
 	done
 	# draw the buffer
 	echo "$buffer";
-	#output="$(echo -n "$buffer" | cut -b"1-$(( $width - 1 ))")"
-	#echo "$output";
-	#printf "$output\n"
 }
+################################################################################
+function drawCardSuite(){
+	# drawCardSuite $numericSuiteValue --color
+	#
+	# Draw a card suite icon
+	#
+	# --color ♠️ ♦️ ♣️ ♥️ ♠️ ♦️ ♣️ ♥️ ♠️ ♦️ ♣️ ♥️ ♠️ ♦️ ♣️ ♥️ ♠️ ♦️ ♣️ ♥️
+	#
+	# --default ♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡
+	#
+	# If no color option is given the default is used
+	#
+	# - '--color' will draw icons as colored emojis
+	# - defaults to random
+	# - takes a input and draws a suite
+	#
+
+	tempValue="$1"
+
+	# check for color flag
+	if echo "$@" | grep -xq "--color";then
+		color="yes"
+	else
+		color="no"
+	fi
+	# if color mode is enabled
+	if [ "$color" == "yes" ];then
+		tempValue=$(( $tempValue % 8 ))
+		#
+		if [ $tempValue -eq 0 ];then
+			buffer="$buffer♠️"
+		elif [ $tempValue -eq 1 ];then
+			buffer="$buffer "
+		elif [ $tempValue -eq 2 ];then
+			buffer="$buffer♦️"
+		elif [ $tempValue -eq 3 ];then
+			buffer="$buffer "
+		elif [ $tempValue -eq 4 ];then
+			buffer="$buffer♣️"
+		elif [ $tempValue -eq 5 ];then
+			buffer="$buffer "
+		elif [ $tempValue -eq 6 ];then
+			buffer="$buffer♥️"
+		elif [ $tempValue -eq 7 ];then
+			buffer="$buffer "
+		fi
+	else
+		tempValue=$(( $tempValue % 4 ))
+		if [ $tempValue -eq 0 ];then
+			buffer="$buffer♤"
+		elif [ $tempValue -eq 1 ];then
+			buffer="$buffer♢"
+		elif [ $tempValue -eq 2 ];then
+			buffer="$buffer♧"
+		elif [ $tempValue -eq 3 ];then
+			buffer="$buffer♡"
+		fi
+	fi
+}
+################################################################################
+function drawCard(){
+	# drawCard
+	#
+	# draw a random card and print the ascii character code for that card
+	#
+	tempValue=$(( $RANDOM % 13 ))
+	if [ $tempValue -eq 0 ];then
+		echo -n "🂡"
+	elif [ $tempValue -eq 1 ];then
+		echo -n "🂢"
+	elif [ $tempValue -eq 2 ];then
+		echo -n "🂣"
+	elif [ $tempValue -eq 3 ];then
+		echo -n "🂤"
+	elif [ $tempValue -eq 4 ];then
+		echo -n "🂥"
+	elif [ $tempValue -eq 5 ];then
+		echo -n "🂦"
+	elif [ $tempValue -eq 6 ];then
+		echo -n "🂧"
+	elif [ $tempValue -eq 7 ];then
+		echo -n "🂨"
+	elif [ $tempValue -eq 8 ];then
+		echo -n "🂩"
+	elif [ $tempValue -eq 9 ];then
+		echo -n "🂪"
+	elif [ $tempValue -eq 10 ];then
+		echo -n "🂫"
+	elif [ $tempValue -eq 11 ];then
+		echo -n "🂭"
+	elif [ $tempValue -eq 12 ];then
+		echo -n "🂮"
+	fi
+}
+################################################################################
+function rollDie(){
+	#
+	tempValue=$(( $RANDOM % 6 ))
+	#
+	if [ $tempValue -eq 0 ];then
+		echo -n "⚀"
+	elif [ $tempValue -eq 1 ];then
+		echo -n "⚁"
+	elif [ $tempValue -eq 2 ];then
+		echo -n "⚂"
+	elif [ $tempValue -eq 3 ];then
+		echo -n "⚃"
+	elif [ $tempValue -eq 4 ];then
+		echo -n "⚄"
+	elif [ $tempValue -eq 5 ];then
+		echo -n "⚅"
+	fi
+}
+################################################################################
+function randomChem(){
+	#
+	tempValue=$(( $RANDOM % 117 ))
+	#
+	if [ $tempValue -eq 0 ];then
+		echo -n "🜁"
+	elif [ $tempValue -eq 1 ];then
+		echo -n "🝪"
+	elif [ $tempValue -eq 2 ];then
+		echo -n "🜶"
+	elif [ $tempValue -eq 3 ];then
+		echo -n "🜷"
+	elif [ $tempValue -eq 4 ];then
+		echo -n "🝅"
+	elif [ $tempValue -eq 5 ];then
+		echo -n "🝛"
+	elif [ $tempValue -eq 6 ];then
+		echo -n "🜫"
+	elif [ $tempValue -eq 7 ];then
+		echo -n "🜆"
+	elif [ $tempValue -eq 8 ];then
+		echo -n "🜇"
+	elif [ $tempValue -eq 9 ];then
+		echo -n "🜈"
+	elif [ $tempValue -eq 10 ];then
+		echo -n "🜉"
+	elif [ $tempValue -eq 11 ];then
+		echo -n "🜅"
+	elif [ $tempValue -eq 12 ];then
+		echo -n "🜺"
+	elif [ $tempValue -eq 13 ];then
+		echo -n "🝗"
+	elif [ $tempValue -eq 14 ];then
+		echo -n "🜽"
+	elif [ $tempValue -eq 15 ];then
+		echo -n "🝫"
+	elif [ $tempValue -eq 16 ];then
+		echo -n "🝬"
+	elif [ $tempValue -eq 17 ];then
+		echo -n "🜾"
+	elif [ $tempValue -eq 18 ];then
+		echo -n "🜏"
+	elif [ $tempValue -eq 19 ];then
+		echo -n "🝂"
+	elif [ $tempValue -eq 20 ];then
+		echo -n "🝃"
+	elif [ $tempValue -eq 21 ];then
+		echo -n "🝄"
+	elif [ $tempValue -eq 22 ];then
+		echo -n "🝙"
+	elif [ $tempValue -eq 23 ];then
+		echo -n "🝐"
+	elif [ $tempValue -eq 24 ];then
+		echo -n "🝌"
+	elif [ $tempValue -eq 25 ];then
+		echo -n "🝎"
+	elif [ $tempValue -eq 26 ];then
+		echo -n "🜓"
+	elif [ $tempValue -eq 27 ];then
+		echo -n "🜥"
+	elif [ $tempValue -eq 28 ];then
+		echo -n "🜠"
+	elif [ $tempValue -eq 29 ];then
+		echo -n "🜣"
+	elif [ $tempValue -eq 30 ];then
+		echo -n "🜤"
+	elif [ $tempValue -eq 31 ];then
+		echo -n "🜞"
+	elif [ $tempValue -eq 32 ];then
+		echo -n "🝥"
+	elif [ $tempValue -eq 33 ];then
+		echo -n "🝦"
+	elif [ $tempValue -eq 34 ];then
+		echo -n "🝧"
+	elif [ $tempValue -eq 35 ];then
+		echo -n "🝨"
+	elif [ $tempValue -eq 36 ];then
+		echo -n "🝩"
+	elif [ $tempValue -eq 37 ];then
+		echo -n "🝰"
+	elif [ $tempValue -eq 38 ];then
+		echo -n "🝡"
+	elif [ $tempValue -eq 39 ];then
+		echo -n "🝢"
+	elif [ $tempValue -eq 40 ];then
+		echo -n "🝠"
+	elif [ $tempValue -eq 42 ];then
+		echo -n "🜃"
+	elif [ $tempValue -eq 43 ];then
+		echo -n "🜂"
+	elif [ $tempValue -eq 44 ];then
+		echo -n "🜚"
+	elif [ $tempValue -eq 45 ];then
+		echo -n "🝉"
+	elif [ $tempValue -eq 46 ];then
+		echo -n "🝲"
+	elif [ $tempValue -eq 47 ];then
+		echo -n "🝳"
+	elif [ $tempValue -eq 48 ];then
+		echo -n "🝖"
+	elif [ $tempValue -eq 49 ];then
+		echo -n "🝮"
+	elif [ $tempValue -eq 50 ];then
+		echo -n "🜜"
+	elif [ $tempValue -eq 51 ];then
+		echo -n "🜝"
+	elif [ $tempValue -eq 52 ];then
+		echo -n "🜡"
+	elif [ $tempValue -eq 53 ];then
+		echo -n "🜪"
+	elif [ $tempValue -eq 54 ];then
+		echo -n "🜡"
+	elif [ $tempValue -eq 55 ];then
+		echo -n "🜪"
+	elif [ $tempValue -eq 56 ];then
+		echo -n "🝓"
+	elif [ $tempValue -eq 57 ];then
+		echo -n "🜸"
+	elif [ $tempValue -eq 58 ];then
+		echo -n "🜐"
+	elif [ $tempValue -eq 59 ];then
+		echo -n "🝱"
+	elif [ $tempValue -eq 60 ];then
+		echo -n "🝯"
+	elif [ $tempValue -eq 61 ];then
+		echo -n "🜕"
+	elif [ $tempValue -eq 62 ];then
+		echo -n "🝆"
+	elif [ $tempValue -eq 63 ];then
+		echo -n "🜎"
+	elif [ $tempValue -eq 64 ];then
+		echo -n "🝘"
+	elif [ $tempValue -eq 65 ];then
+		echo -n "🝋"
+	elif [ $tempValue -eq 66 ];then
+		echo -n "🝚"
+	elif [ $tempValue -eq 67 ];then
+		echo -n "🝟"
+	elif [ $tempValue -eq 68 ];then
+		echo -n "🝣"
+	elif [ $tempValue -eq 69 ];then
+		echo -n "🝤"
+	elif [ $tempValue -eq 70 ];then
+		echo -n "🝁"
+	elif [ $tempValue -eq 71 ];then
+		echo -n "🜀"
+	elif [ $tempValue -eq 72 ];then
+		echo -n "🜻"
+	elif [ $tempValue -eq 73 ];then
+		echo -n "🜼"
+	elif [ $tempValue -eq 74 ];then
+		echo -n "🜲"
+	elif [ $tempValue -eq 75 ];then
+		echo -n "🜰"
+	elif [ $tempValue -eq 76 ];then
+		echo -n "🜱"
+	elif [ $tempValue -eq 77 ];then
+		echo -n "🜟"
+	elif [ $tempValue -eq 78 ];then
+		echo -n "🜳"
+	elif [ $tempValue -eq 79 ];then
+		echo -n "🜴"
+	elif [ $tempValue -eq 80 ];then
+		echo -n "🜵"
+	elif [ $tempValue -eq 81 ];then
+		echo -n "🝭"
+	elif [ $tempValue -eq 82 ];then
+		echo -n "🜘"
+	elif [ $tempValue -eq 83 ];then
+		echo -n "🜙"
+	elif [ $tempValue -eq 84 ];then
+		echo -n "🜹"
+	elif [ $tempValue -eq 85 ];then
+		echo -n "🜔"
+	elif [ $tempValue -eq 86 ];then
+		echo -n "🜭"
+	elif [ $tempValue -eq 87 ];then
+		echo -n "🜦"
+	elif [ $tempValue -eq 88 ];then
+		echo -n "🝏"
+	elif [ $tempValue -eq 89 ];then
+		echo -n "🜛"
+	elif [ $tempValue -eq 90 ];then
+		echo -n "🝔"
+	elif [ $tempValue -eq 91 ];then
+		echo -n "🝇"
+	elif [ $tempValue -eq 92 ];then
+		echo -n "🝒"
+	elif [ $tempValue -eq 93 ];then
+		echo -n "🝜"
+	elif [ $tempValue -eq 94 ];then
+		echo -n "🝝"
+	elif [ $tempValue -eq 95 ];then
+		echo -n "🜬"
+	elif [ $tempValue -eq 96 ];then
+		echo -n "🜢"
+	elif [ $tempValue -eq 97 ];then
+		echo -n "🜮"
+	elif [ $tempValue -eq 98 ];then
+		echo -n "🜧"
+	elif [ $tempValue -eq 99 ];then
+		echo -n "🝞"
+	elif [ $tempValue -eq 100 ];then
+		echo -n "🜍"
+	elif [ $tempValue -eq 101 ];then
+		echo -n "🜿"
+	elif [ $tempValue -eq 102 ];then
+		echo -n "🝀"
+	elif [ $tempValue -eq 103 ];then
+		echo -n "🜩"
+	elif [ $tempValue -eq 104 ];then
+		echo -n "🝈"
+	elif [ $tempValue -eq 105 ];then
+		echo -n "🝑"
+	elif [ $tempValue -eq 106 ];then
+		echo -n "🝍"
+	elif [ $tempValue -eq 107 ];then
+		echo -n "🝕"
+	elif [ $tempValue -eq 108 ];then
+		echo -n "🜨"
+	elif [ $tempValue -eq 109 ];then
+		echo -n "🜊"
+	elif [ $tempValue -eq 110 ];then
+		echo -n "🜯"
+	elif [ $tempValue -eq 111 ];then
+		echo -n "🜋"
+	elif [ $tempValue -eq 112 ];then
+		echo -n "🜌"
+	elif [ $tempValue -eq 113 ];then
+		echo -n "🜖"
+	elif [ $tempValue -eq 114 ];then
+		echo -n "🜗"
+	elif [ $tempValue -eq 115 ];then
+		echo -n "🜄"
+	elif [ $tempValue -eq 116 ];then
+		echo -n "🝊"
+	fi
+}
+
 ################################################################################
 function drawSmallHeader(){
 	# Draw a line across the terminal using curses to determine the length
@@ -1760,11 +2431,8 @@ function drawSmallHeader(){
 	# get the size of the first half of the line
 	bufferSize=$(( ( $width - ( $headerTextLength + 2 ) ) / 2 ))
 	for index in $(seq $bufferSize);do
-		if [ $(( $index % 2 )) -eq 0 ];then
-			buffer="$buffer🟕"
-		else
-			buffer="$buffer🟗"
-		fi
+		#
+		buffer="$buffer$(loadLineTheme "$index" )"
 	done
 	# draw the text in the middle of the line
 	buffer="$buffer $1 "
@@ -1774,11 +2442,8 @@ function drawSmallHeader(){
 	bufferSize=$(( $width - $currentBufferSize ))
 	# fill out the remaining width of the terminal
 	for index in $(seq $(( $bufferSize )) );do
-		if [ $(( $index % 2 )) -eq 0 ];then
-			buffer="$buffer🟕"
-		else
-			buffer="$buffer🟗"
-		fi
+		#
+		buffer="$buffer$(loadLineTheme "$index" )"
 	done
 	# draw the output to the terminal
 	echo "$buffer";
