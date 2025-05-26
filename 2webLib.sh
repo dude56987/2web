@@ -292,6 +292,7 @@ function delete(){
 	#
 	# RETURN FILES
 	if test -d "$1";then
+		ALERT "Preparing to remove files in '$1'"
 		# get files and symlinks
 		tempDirFiles=$(find "$1" -type l -o -type f)
 		# sort the dirs and reverse them so they are removed longest path to shortest
