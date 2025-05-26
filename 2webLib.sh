@@ -1562,10 +1562,18 @@ function exitModuleTrap(){
 	# store the color codes for coloring
 	resetCode="\033[0m"
 	redCode="\033[0;31m"
+	yellowText
+		drawLine
+		drawHeader "Closing $procName Please Wait..."
+		drawLine
+	resetColor
+	ALERT "Please wait for module to close..."
+	INFO "Reseting Cursor settings..."
 	# return the cursor to normal operation
 	tput cnorm
 	# stop the spinner before removing the ramdisk since it uses the ramdisk
 	#stopSpinner
+	INFO "Removing '$procName' Ramdisk..."
 	# remove the ramdisk
 	if test -d "/var/cache/2web/ram/${procName}/";then
 		# umount is used to unmount the ramdisk
@@ -1573,9 +1581,11 @@ function exitModuleTrap(){
 		# remove the ramdisk directory contents
 		rm -r  "/var/cache/2web/ram/${procName}/"
 	fi
+	INFO "Unlocking '$procName'..."
 	# remove the process lock
 	rm /var/cache/2web/web/${procName}.active
 	#
+	INFO "'$procName' Has successfully exited."
 	echo -ne "${redCode}"
 	drawLine
 	drawHeader "$procName"
