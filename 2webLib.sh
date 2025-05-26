@@ -1223,7 +1223,7 @@ function drawCellLine(){
 	# draw a line above or below a cell
 	colums=$1
 
-	totalWidth=$(( $(tput cols) - 3 ))
+	totalWidth=$(( $(tput cols) - 0 ))
 	width=$(( ( $totalWidth / $colums ) - 1 ))
 
 	buffer=""
@@ -1258,7 +1258,7 @@ function drawCell(){
 	text="$1"
 	colums=$2
 	# divide the total width by the number of collums in this table
-	totalWidth=$(( $(tput cols) - 3 ))
+	totalWidth=$(( $(tput cols) - 0 ))
 	width=$(( ( $totalWidth / $colums ) - 1 ))
 	#
 	buffer=""
@@ -1300,7 +1300,7 @@ function highlightCell(){
 	# reset all color codes
 	resetColor="\033[0m"
 	# divide the total width by the number of collums in this table
-	totalWidth=$(( $(tput cols) - 3 ))
+	totalWidth=$(( $(tput cols) - 0 ))
 	width=$(( ( $totalWidth / $colums ) - 1 ))
 	#
 	buffer=""
