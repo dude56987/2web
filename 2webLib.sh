@@ -1149,6 +1149,15 @@ function ALERT(){
 	#
 	width=$(tput cols)
 	buffer=" "
+	# get the header text
+	headerText="$2"
+	# set the default if empty
+	if [ "$headerText" == "" ];then
+		headerText="ALERT"
+	fi
+	#
+	headerTextWidth=$( echo -n "$headerText" | wc -c )
+
 	# make the buffer the width of the terminal
 	for index in $(seq $width);do
 		buffer="$buffer "
@@ -1163,7 +1172,7 @@ function ALERT(){
 		#   - cut one off the width in order to make space for the \r
 		# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
 		#output="$(echo -ne "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
-		output="$(echo -n "[${colorCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
+		output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
 	fi
 	# printf uses percentage signs for formatting so you must use two in a row to print
 	# a single regular one
@@ -1173,7 +1182,7 @@ function ALERT(){
 	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
 		#
 		yellowText
-		drawSmallHeader "ALERT"
+		drawSmallHeader "$headerText"
 		resetColor
 		echo -e "$output";
 		yellowText
