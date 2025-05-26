@@ -192,7 +192,7 @@ function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
 	cleanedText="$1"
-	characters=", ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ＄ ＂ ＇"
+	characters="． , ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ： ＄ ＂ ＇ ＊"
 	spacedText=""
 	for specialCharacter in $characters;do
 		cleanedText=$(echo -n "$cleanedText" | sed "s/${specialCharacter}/ ${specialCharacter} /g" )
@@ -206,8 +206,8 @@ function spaceCleanedText(){
 	#
 	cleanedText=$(echo -n "$cleanedText" | sed 's/\[/ [ /g' )
 	cleanedText=$(echo -n "$cleanedText" | sed 's/]/ ] /g' )
-	#
-	cleanedText=$(echo -n "$cleanedText" | sed 's/\./ ] /g' )
+	# space out periods
+	cleanedText=$(echo -n "$cleanedText" | sed 's/\．/ ． /g' )
 
 	# squeeze double spaces into single spaces
 	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
@@ -226,6 +226,8 @@ function cleanText(){
 	cleanedText=$(echo -n "$cleanedText" | sed 's/&apos;/＇/g' )
 	cleanedText=$(echo -n "$cleanedText" | sed 's/&lt;/</g' )
 	cleanedText=$(echo -n "$cleanedText" | sed 's/&gt;/>/g' )
+	# replace html spaces
+	cleanedText=$(echo -n "$cleanedText" | sed 's/%20/ /g' )
 	# remove grave accents
 	cleanedText=$(echo -n "$cleanedText" | sed 's/`/｀/g' )
 	# remove hash marks as they break URLS
@@ -261,9 +263,18 @@ function cleanText(){
 	cleanedText=$(echo -n "$cleanedText" | sed "s/|/｜/g" )
 	# remove semicolons
 	cleanedText=$(echo -n "$cleanedText" | sed "s/;/；/g" )
+	#
+	cleanedText=$(echo -n "$cleanedText" | sed "s/:/：/g" )
 	# remove dollar signs
 	cleanedText=$(echo -n "$cleanedText" | sed 's/\$/＄/g' )
+	# replace periods
+	cleanedText=$(echo -n "$cleanedText" | sed "s/\./．/g" )
+	# repace astrisks
+	cleanedText=$(echo -n "$cleanedText" | sed "s/\*/＊/g" )
+	# replace any broken replacement characters
+	cleanedText=$(echo -n "$cleanedText" | sed "s/�/ /g" )
 	# squeeze double spaces into single spaces
+	#cleanedText=$(echo -n "$cleanedText" | sed "s/  / /g" )
 	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
 	# print the cleaned up text
 	echo -n "$cleanedText"
