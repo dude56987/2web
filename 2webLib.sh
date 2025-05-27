@@ -3159,7 +3159,9 @@ function addPlaylist(){
 	# - This will generate all the variations of the playlist filters
 	indexFile="$1"
 	groupName="$2"
+	groupName="$(cleanText "$groupName")"
 	tagName="$3"
+	tagName="$(cleanText "$tagName")"
 	filterName="$4"
 	# if the tag is blank mark it as unknown
 	if [ "$tagName" == "" ];then
