@@ -2808,6 +2808,11 @@ function downloadThumbnail(){
 	thumbnailPath=$2
 	thumbnailExt=$3
 	sumName=$(echo -n "$thumbnailLink" | sha512sum | cut -d' ' -f1)
+	# check for hashes used by sites for tracking, some sites use these for uncool purposes
+	if echo -n "$thumbnailLink" | grep -q "#";then
+		# remove the hash in the url
+		thumbnailLink=$(echo -n "$thumbnailLink" | cut -d'#' -f1)
+	fi
 	# get the module name
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# if it dont exist download it
@@ -2845,10 +2850,22 @@ function generateThumbnailFromMedia(){
 	thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
 	# check link type
 	if [ "$(echo "$videoPath" | cut -f1-8)" == "https://" ];then
+		# check for hashes used by sites for tracking, some sites use these for uncool purposes
+		# - This should only be done for URLs
+		if echo -n "$videoPath" | grep -q "#";then
+			# remove the hash in the url
+			videoPath=$(echo -n "$videoPath" | cut -d'#' -f1)
+		fi
 		# generate the thumbnail directory if it does not exist
 		createDir /var/cache/2web/downloads/thumbnails/$moduleName/
 		thumbnailCachePath="/var/cache/2web/downloads/thumbnails/${moduleName}/$thumbSum-gen.png"
 	elif [ "$(echo "$videoPath" | cut -f1-7)" == "http://" ];then
+		# check for hashes used by sites for tracking, some sites use these for uncool purposes
+		# - This should only be done for URLs
+		if echo -n "$videoPath" | grep -q "#";then
+			# remove the hash in the url
+			videoPath=$(echo -n "$videoPath" | cut -d'#' -f1)
+		fi
 		# generate the thumbnail directory if it does not exist
 		createDir /var/cache/2web/downloads/thumbnails/$moduleName/
 		thumbnailCachePath="/var/cache/2web/downloads/thumbnails/${moduleName}/$thumbSum-gen.png"
@@ -2863,7 +2880,6 @@ function generateThumbnailFromMedia(){
 
 	# try to generate a thumbnail from video file
 	# - filesize of images is directly related to visual complexity
-	startDebug
 
 	# stop processing the thumbnail if it is already cached
 	if ! test -e "$thumbnailCachePath";then
@@ -2922,7 +2938,6 @@ function generateThumbnailFromMedia(){
 	#	# create the web page link thumbnail, this is smaller than the kodi thumbnail
 	#	convert -quiet "$thumbnailPath.png" -resize "300x200" "/var/cache/2web/web/thumbnails/$thumbSum-web.png"
 	#fi
-	stopDebug
 }
 ########################################################################
 function mediaJson(){
