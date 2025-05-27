@@ -2737,6 +2737,31 @@ function setDirSum(){
 
 }
 ########################################################################
+function rmDirSum(){
+	# rmDirSum $webDirectory $directory
+	#
+	#
+
+	# for use with checkdir sum, to remove a existing sum
+	webDirectory="$1"
+	directory="$2"
+
+	# get the data for the file path
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	pathSum="$(echo "$directory" | sha512sum | cut -d' ' -f1 )"
+
+	# only remove existing hash files
+	if test -f "$webDirectory/sums/${moduleName}_$pathSum.cfg";then
+		# remove the existing sum file
+		rm -v "$webDirectory/sums/${moduleName}_$pathSum.cfg"
+		# pipe the return value of rm to the output return value
+		return $?
+	else
+		# return true if the file does not exist in the hash directory
+		return 0
+	fi
+}
+########################################################################
 function generateWaveform(){
 	# Generate a waveform from a audio source
 	#
