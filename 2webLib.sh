@@ -3123,7 +3123,7 @@ function loadConfigs(){
 	# read the additional configs
 	find "$configDirectory" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libraryConfigPath;do
 		# load up config without comments
-		grep -v "^#" "$libraryConfigPath"
+		grep -v "^#" "$libraryConfigPath" | tr -s "\n"
 		# create a space just in case none exists
 		printf "\n"
 	done
