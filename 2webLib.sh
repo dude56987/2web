@@ -2991,6 +2991,8 @@ function addToLog(){
 	errorType=$1
 	errorDescription=$2
 	errorDetails=$3
+
+	#
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 
 	# create identifier date to organize the data, this is really accurate
@@ -2998,31 +3000,16 @@ function addToLog(){
 	logDate="$(date "+%D")"
 	logTime="$(date "+%R:%S")"
 
-	#logDescription=$(echo -e "$errorDescription" | txt2html --extract | recode TXT..HTML )
-	#logDescription=$(echo -e "$errorDescription" | txt2html --extract)
-	#logDescription=$(echo -e "$errorDescription")
-	#logDescription=$(echo -e "$errorDescription")
-	#logDescription=$(sqliteEscape "$errorDescription")
-	#logDescription=$(echo -e "$errorDescription" | php -R 'echo addslashes($argn);')
-	#logDescription=$(echo -e "$errorDescription" | txt2html --extract --link_only)
-	#logDescription=$(echo -e "$errorDescription" | tr --delete "[:punct:]" | tr --delete "[:digit:]" )
-	#logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
-	logDescription=$(echo -e "$errorDescription" | txt2html --extract --link_only | sed "s/'/''/g" )
-	#logDetails=$(echo -e "$errorDetails" | txt2html --extract | recode TXT..HTML )
-	#logDetails=$(echo -e "$errorDetails" | txt2html --extract)
-	#logDetails=$(echo -e "$errorDetails")
-	#logDetails=$(echo -e "$errorDetails")
-	#logDetails=$(sqliteEscape "$errorDetails")
-	#logDetails=$(echo -e "$errorDetails" | php -R 'echo addslashes($argn);')
-	#logDetails=$(echo -e "$errorDetails" | txt2html --extract --link_only)
-	#logDetails=$(echo -e "$errorDetails" | tr --delete "[:punct:]" |  tr --delete "[:digit:]" )
-	#logDetails=$(echo -e "$errorDetails" | sed "s/'/''/g" )
-	logDetails=$(echo -e "$errorDetails" | txt2html --extract --link_only | sed "s/'/''/g" )
+	#
+	logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
+	#
+	logDetails=$(echo -e "$errorDetails" | sed "s/'/''/g" )
 
 	# set the log database path
 	indexPath="/var/cache/2web/web/log/log.db"
 	databaseTable="log"
 	timeout=60000
+
 	# check if the table exists in the database
 	if ! sqlite3 -cmd ".timeout $timeout"  "$indexPath" "select name from sqlite_master where type='table';" | grep -q "$databaseTable";then
 		# create the database if it does not exist
@@ -3034,8 +3021,6 @@ function addToLog(){
 		chown www-data:www-data "$indexPath"
 	fi
 	# if the data is already stored in the database
-	#sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
-	#sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType',quote('$logDescription'),quote('$logDetails'),'$logDate','$logTime');"
 	sqlite3 -cmd ".timeout $timeout" "$indexPath" "replace into $databaseTable values('$logIdentifier','$moduleName','$errorType','$logDescription','$logDetails','$logDate','$logTime');"
 }
 ########################################################################
