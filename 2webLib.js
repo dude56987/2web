@@ -135,7 +135,43 @@ function setPlayButtonState(){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
+function pauseVideo(){
+	// pauseVideo()
+	//
+	// Attempt to pause the video element with the ID 'video'
+	//
+	var video = document.getElementById("video");
+	if(video.paused){
+		console.log("Video is already paused.");
+	}else{
+		video.pause().catch(error => {
+			console.log("Playback failed because user has not interacted with the page yet.");
+		});
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function playVideo(){
+	// playVideo()
+	//
+	// Attempt to play the video element with the ID 'video'
+	//
+	var video = document.getElementById("video");
+	if(video.paused){
+		video.play().catch(error => {
+			console.log("Playback failed because user has not interacted with the page yet.");
+		});
+	}else{
+		console.log("Video is already playing.");
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
 function playPause(){
+	// playPause()
+	//
+	// Toggle play/pause state of the video element with the ID 'video'
+	//
 	var video = document.getElementById("video");
 	//var playButton = document.getElementById("playButton");
 	//var pauseButton = document.getElementById("pauseButton");
@@ -283,8 +319,9 @@ function stopVideo(){
 	document.getElementById("video").stop();
 }
 ////////////////////////////////////////////////////////////////////////////////
-function toggleFullscreen(elementId="") {
+function toggleFullscreen(elementId="",enableScroll=false) {
 	var chosenElement;
+	var topButton;
 	if (elementId == ""){
 		// use the body if no element is set
 		chosenElement=document.body;
@@ -300,6 +337,16 @@ function toggleFullscreen(elementId="") {
 		} else if (chosenElement.msRequestFullscreen) {
 			chosenElement.msRequestFullscreen();
 		}
+		// remove the top button
+		if (document.getElementById("topButton")){
+			topButton = document.getElementById("topButton");
+			topButton.style.display="none";
+		}
+		// enable scrolling
+		if (enableScroll){
+			// renable the scrolling on the element
+			chosenElement.style.overflowY="scroll";
+		}
 	}else{
 		// Close fullscreen
 		if (document.exitFullscreen) {
@@ -309,7 +356,13 @@ function toggleFullscreen(elementId="") {
 		} else if (document.msExitFullscreen) {
 			document.msExitFullscreen();
 		}
+		// add back the top button
+		if (document.getElementById("topButton")){
+			topButton = document.getElementById("topButton");
+			topButton.style.display="block";
+		}
 	}
+
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,6 +479,36 @@ function CreateCopyButtons(){
 		clipboardData = clipboardData.replaceAll("'", "%27");
 		// build the copy button
 		elementArray[index].innerHTML = "<button class='copyButton' onclick='"+'copyToClipboard("' + clipboardData + '")' + ";return false;'></button>" + elementArray[index].innerHTML;
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+function notify(message){
+	console.log("notify="+message);
+	// if a notification is being displayed, remove it
+	if(document.getElementById("notification") != null){
+		document.getElementById("notification").remove();
+	}
+	if(document.getElementById("notification") == null){
+		console.log("notify passed="+message);
+		// build the notification
+		var notifyObj = document.createElement("div");
+		notifyObj.setAttribute("id", "notification");
+		document.getElementById("pageContent").appendChild(notifyObj);
+		//
+		document.getElementById("notification").style.opacity=0.9;
+		document.getElementById("notification").innerHTML=message;
+		// hide the message after 1 second
+		notificationTimer = setTimeout(() =>{
+			//
+			if(document.getElementById("notification") != null){
+				//
+				document.getElementById("notification").style.opacity=0;
+				// allow animation time to run then remove the object
+				notificationTimeoutTimer = setTimeout(() =>{
+					document.getElementById("notification").remove();
+				}, 500);
+			}
+		}, 355);
 	}
 }
 /*

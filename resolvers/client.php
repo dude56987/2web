@@ -280,14 +280,83 @@ include("/usr/share/2web/2webLib.php");
 # require the web player group
 requireGroup("client");
 ################################################################################
+function cachedMimeType($videoLink){
+	# return the path to a found cache link once it is available
+
+	# set the default web directory
+	$webDirectory="/var/cache/2web/web";
+	# cleanup the video link
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+	# get the sum
+	$sum = hash("sha512",$videoLink,false);
+	#
+	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
+	$maxSleep=20;
+	$sleepCounter=0;
+	# wait for either the bump or the file to be downloaded and redirect
+	while(true){
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
+			if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")) and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.mp3") ) > 90) ){
+				return ("audio/mpeg");
+			}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")) and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.mp4") ) > 90) ){
+				return ("video/mp4");
+			}else{
+				return ("application/mpegurl");
+			}
+		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90) ){
+			return ("video/webm");
+		}else if( file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
+			return ("application/mpegurl");
+		}
+		if ($sleepCounter > $maxSleep){
+			$sleepCounter+=1;
+		}else{
+			# if no media can be resolved return loading as the metadata type
+			return ("loading");
+		}
+		sleep(1);
+	}
+}
+################################################################################
 # check for get data used to set the playback link
 if (array_key_exists("play",$_GET)){
 	if (requireGroup("clientRemote",false)){
+		if (array_key_exists("mime",$_GET)){
+			# get the mime type for the link
+			$playbackType=$_GET["mime"];
+		}else{
+			# get the mime type for the link
+			if( (stripos( $_GET["play"] , "http://" ) !== false) or (stripos( $_GET["play"] , "https://" ) !== false) ){
+				$videoMimeType=cachedMimeType($_GET["play"]);
+			}else{
+				# get the mime type for the file
+				$videoMimeType=mime_content_type(str_replace("//","/", ($_SERVER["DOCUMENT_ROOT"].$_GET["play"]) ));
+				# build the link to the local server location of the file
+				if($_SERVER["HTTPS"]){
+					$_GET["play"] = "https://".($_SERVER["HTTP_HOST"]."/".$_GET["play"]);
+				}else{
+					$_GET["play"] = "http://".($_SERVER["HTTP_HOST"]."/".$_GET["play"]);
+				}
+			}
+			# figure out the playback type
+			if ($videoMimeType == "application/mpegurl"){
+				$playbackType="stream";
+			}else if ($videoMimeType == "video/mp4"){
+				$playbackType="play";
+			}else if ($videoMimeType == "video/webm"){
+				$playbackType="play";
+			}else if ($videoMimeType == "audio/mpeg"){
+				$playbackType="audio";
+			}else{
+				$playbackType="unsupported=$videoMimeType&";
+			}
+		}
 		$cache=loadCache();
 		# store the url as the playback url
 		setCacheData("media.json",urldecode($_GET["play"]), $cache);
 		# set the playback type
-		setCacheData("playType.json","play", $cache);
+		setCacheData("playType.json","$playbackType", $cache);
 		# store the time of the playback start
 		$playbackTime=filemtime("media.cfg");
 		setCacheData("time.json",$playbackTime, $cache);
@@ -344,8 +413,6 @@ if (array_key_exists("play",$_GET)){
 		# a attempt to play something without permissions was made
 		echo "<h1 class='errorBanner'>You have attempted to play a video on the client without permissions. Please login to a user with correct permissions to play videos on the client page.</h1>";
 	}
-
-
 }else if (array_key_exists("resolveStream",$_GET)){
 	if (requireGroup("clientRemote",false)){
 		$cache=loadCache();
@@ -867,32 +934,6 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 	//
 	var defaultWindowResetTimer="";
 	//
-	function notify(message){
-		console.log("notify="+message);
-		// if a notification is being displayed, remove it
-		if(document.getElementById("notification") != null){
-			document.getElementById("notification").remove();
-		}
-		if(document.getElementById("notification") == null){
-			console.log("notify passed="+message);
-			// build the notification
-			var notifyObj = document.createElement("div");
-			notifyObj.setAttribute("id", "notification");
-			document.getElementById("pageContent").appendChild(notifyObj);
-			//
-			document.getElementById("notification").style.opacity=0.9;
-			document.getElementById("notification").innerHTML=message;
-			// hide the message after 1 second
-			notificationTimer = setTimeout(() =>{
-				document.getElementById("notification").style.opacity=0;
-				// allow animation time to run then remove the object
-				notificationTimeoutTimer = setTimeout(() =>{
-					document.getElementById("notification").remove();
-				}, 500);
-			}, 355);
-		}
-	}
-	//
 	function resetPlayer(defaultWindow){
 		// function to reset the player to the default window
 		document.getElementById("pageContent").innerHTML = defaultWindow;
@@ -969,7 +1010,7 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 				// build the video player data
 				let tempData="";
 				tempData += "<video id='video' class='clientVideoPlayer' controls autoplay>";
-				tempData += "<source src='"+mediaPath+"'>";
+				tempData += "<source src='"+mediaPath+"' type='video/mp4'>";
 				tempData += "</video>";
 				//console.log("tempData="+tempData);
 				// insert the video player created above into the page
@@ -1129,9 +1170,6 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 </script>
 </head>
 <body onload='pageKeys();resetPlayer(defaultWindow);'>
-<?PHP
-#include("/usr/share/2web/templates/header.php");
-?>
 <div id='pageContent' onload='resetPlayer(defaultWindow)'>
 <noscript>
 <h1 class='errorBanner'>This page can not work without javascript enabled.</h1>
@@ -1143,7 +1181,6 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 ?>
 </div>
 <?PHP
-#include("/usr/share/2web/templates/footer.php");
 echo "</body>";
 echo "</html>";
 ?>

@@ -2119,19 +2119,19 @@ if( ! function_exists("verifyCacheFile")){
 							$jsonInfoPath=$storagePath."video.info.json";
 						}else if(file_exists($storagePath."video.mp3.info.json")){
 							# fix the path
-							symlink(($storagePath."video.mp3.info.json"), ($storagePath."video.info.json"));
+							linkFile(($storagePath."video.mp3.info.json"), ($storagePath."video.info.json"));
 							$jsonInfoPath=$storagePath."video.info.json";
 						}else if(file_exists($storagePath."video.mp4.info.json")){
 							# fix the path
-							symlink(($storagePath."video.mp4.info.json"), ($storagePath."video.info.json"));
+							linkFile(($storagePath."video.mp4.info.json"), ($storagePath."video.info.json"));
 							$jsonInfoPath=$storagePath."video.info.json";
 						}
 
 						# fix wierd thumbnail paths
 						if(file_exists($storagePath."video.mp3.png")){
-							symlink(($storagePath."video.mp3.png"), ($storagePath."video.png"));
+							linkFile(($storagePath."video.mp3.png"), ($storagePath."video.png"));
 						}else if(file_exists($storagePath."video.mp4.png")){
-							symlink(($storagePath."video.mp4.png"), ($storagePath."video.png"));
+							linkFile(($storagePath."video.mp4.png"), ($storagePath."video.png"));
 						}
 
 						# The json downloaded from the remote and stored by the resolver
@@ -2164,19 +2164,33 @@ if( ! function_exists("verifyCacheFile")){
 							# the duration can not be used to verify the value so a attempt will be made to generate a thumbnail
 							addToLog("DOWNLOAD","Track Verification Issue","Track has no track duration metadata. Running Mime type check...");
 							$tempMimeType=mime_content_type($storagePath."video$foundExt");
-							if (($tempMimeType == "audio/mp3") and ($foundExt == ".mp3")){
-								addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-								debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
-								# mark the file as verified
-								touch($storagePath."verified.cfg");
+							if (($tempMimeType == "audio/mpeg") and ($foundExt == ".mp3")){
+								addToLog("DEBUG","Attempt to Verify Track","filesize='".filesize($storagePath."video".$foundExt)."'");
+								if (filesize($storagePath."video$foundExt") == 0){
+									addToLog("ERROR","Attempt to Verify Track","File was empty '$storagePath"."video$foundExt' for '$videoLink'");
+									# remove the blank file
+									unlink($storagePath."video$foundExt");
+								}else{
+									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+									debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
+									# mark the file as verified
+									touch($storagePath."verified.cfg");
+								}
 							}else if (($tempMimeType == "video/mp4") and ($foundExt == ".mp4")){
-								addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-								debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-								# mark the file as verified
-								touch($storagePath."verified.cfg");
+								addToLog("DEBUG","Attempt to Verify Track","filesize='".filesize($storagePath."video".$foundExt)."'");
+								if (filesize($storagePath."video$foundExt") == 0){
+									addToLog("ERROR","Attempt to Verify Track","File was empty '$storagePath"."video$foundExt' for '$videoLink'");
+									# remove the blank file
+									unlink($storagePath."video$foundExt");
+								}else{
+									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+									debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+									# mark the file as verified
+									touch($storagePath."verified.cfg");
+								}
 							}else{
 								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp4' <br>\n");
-								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp3' <br>\n");
+								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'audio/mpeg' <br>\n");
 								debug("The video was corrupt and could not be verified...");
 								# re cache the corrupted file
 								$isVerified=false;
