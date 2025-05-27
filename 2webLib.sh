@@ -3663,16 +3663,19 @@ function rotateSpinner(){
 	# - fill_empty_diamond
 	# - greater_than
 	#
-	#	The animation delay is measured in seconds.
+	#	The animation delay is measured in seconds. Decimals can be used. ex) 0.1, 1, 2.4, 0.02
 	#
-	animationName="$1"
-	delayTime="$2"
+	#	The default animation delay is 0.1 seconds.
+	#
+	spinnerName="$1"
+	animationName="$2"
+	delayTime="$3"
 	# set the default animation
 	if [ "$animationName" == "" ];then
-		animationName=""
+		animationName="spin_split_fill"
 	fi
 	if [ "$delayTime" == "" ];then
-		delayTime="0.2"
+		delayTime="0.1"
 	fi
 	if [ "$animationName" == "spin_white_square" ];then
 		# spinner animations
@@ -3689,6 +3692,8 @@ function rotateSpinner(){
 		animation="⛀⛁⛃⛂"
 	elif [ "$animationName" == "spin_circle_edges" ];then
 		animation="◝◞◟◜"
+	elif [ "$animationName" == "spin_split_fill" ];then
+		animation="⬔◨◪⬓⬕◧◩⬒"
 	elif [ "$animationName" == "spin_box_split_fill" ];then
 		animation="◨⬓◧⬒"
 	elif [ "$animationName" == "spin_box_cross_fill" ];then
@@ -3715,15 +3720,43 @@ function rotateSpinner(){
 		# draw the default spinner
 		animation="🬁🬇🬞🬏🬃🬀"
 	fi
+	#
+	spinnerPositionX=$(tput cols)
+	spinnerPositionY=$(tput lines)
+	#
 	animationLength=${#animation}
-	echo -ne "  "
+	echo -ne "\b"
 	# animate the spinner
 	while [ "yes" == "yes" ];do
+		# check the position after each animation loop
+		spinnerPositionX="$(tput cols)"
+		spinnerPositionY="$(tput lines)"
 		# loop though the animation
 		for (( index=0;index<$animationLength;index++ ));do
-			echo -ne "\b${animation:$index:1}"
+			# check the global flag used to draw to the terminal without interacting with the spinner
+			#if [ "$SHOW_SPINNER" == "yes" ];then
+			#if test -f "/var/cache/2web/ram/$spinnerName/showSpinner.cfg";then
+				# move the cursor to the bottom right position of the terminal
+				tput cup "$spinnerPositionY" "$spinnerPositionX"
+				# draw the spinner at the current animation step
+				#echo -ne "${animation:$index:1}\b"
+				# delete the existing character and draw the spinner
+				echo -ne "\b${animation:$index:1}"
+				# move the cursor back to the start of the line
+				tput cup "$spinnerPositionY" "0"
+			#fi
+			# use a consistant sleep time to make the animation play smoothly
 			sleep $delayTime
 		done
+		#spinnerPositionX="$(tput cols)"
+		#spinnerPositionY="$(tput lines)"
+		# cleanup the right column
+		#for (( index=0;index<$spinnerPositionY;index++ ));do
+		#	# position the cursor
+		#	tput cup "$index" "$spinnerPositionX"
+		#	# blank out the character
+		#	echo -ne " "
+		#done
 	done
 }
 ########################################################################
@@ -3736,22 +3769,31 @@ function startSpinner(){
 	#
 
 	# disable cursor blinking while spinner is active
-	#tput civis
+	tput civis
 	# start the animated spinner
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# - pass the spinner theme and animation delay time
-	rotateSpinner "$1" "$2" &
+	rotateSpinner "$moduleName" "$2" "$3" &
 	# store the PID of the spinner
 	SPINNER_PID=$!
+	#
+	echo -n "$SPINNER_PID"
+	return $SPINNER_PID
 }
 ########################################################################
 function stopSpinner(){
-	# stopSpinner
+	# stopSpinner $SPINNER_PID
 	#
+	# pass the spinner PID from the return value of startSpinner()
+	#
+	SPINNER_PID="$1"
 	# stop a already running spinner animation
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 
 	# enable cursor blinking on stop
-	#tput cvvis
+	tput cnorm
+
 	# stop the animated spinner
-	kill $SPINNER_PID
+	kill "$SPINNER_PID" || INFO "No Spinner could be stopped..."
 }
 ########################################################################
