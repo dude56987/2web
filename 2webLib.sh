@@ -2454,6 +2454,8 @@ function showServerLinks(){
 	#
 	# - For people who click links in the terminal
 	drawLine
+	drawHeader "Server Links"
+	drawLine
 	echo "To access the webserver go to the below link."
 	drawLine
 	echo "http://$(hostname).local:80/"
