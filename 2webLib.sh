@@ -3189,6 +3189,7 @@ function addToSearchIndex(){
 	# the data to be searched for indexing
 	local searchData="$2"
 	createDir "/var/cache/2web/generated/searchIndex/"
+	createDir "/var/cache/2web/generated/wordIndex/"
 	#
 	searchData="$(echo "$searchData" | sed "s/\n/ /g")"
 	searchData="$(echo "$searchData" | sed "s/\r/ /g")"
@@ -3225,6 +3226,17 @@ function addToSearchIndex(){
 			addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
 		fi
 	done
+
+	# create the relational LLM, also used for search results
+	for word1 in $searchData;do
+		for word2 in $searchData;do
+			# if the word pair is in the data add it to the index
+			if echo "$searchData" | grep -q "${word1} ${word2}";then
+				addToIndex "$indexFile" "/var/cache/2web/generated/wordIndex/${word1} ${word2}.index"
+			fi
+		done
+	done
+
 	IFS=$IFSBACKUP
 }
 ########################################################################
@@ -3260,6 +3272,72 @@ function removeSectionFromSearchIndex(){
 		searchIndexCounter=$(( $searchIndexCounter + 1 ))
 		INFO "Cleaning Search Index ${searchIndexCounter}/${searchIndexLength} '${cleanFileName}'"
 	done
+	#
+	blockQueue 1
+}
+########################################################################
+function verifySearchIndex(){
+	# Verify all entries in the search index
+	#
+	# setup for multi threading otherwise this will take forever
+	totalCPUS=$(cpuCount)
+
+	# load each word index and sort out the paths that do not exist
+
+	# remove the entries from the search index
+	searchIndexFiles=$(find "/var/cache/2web/generated/searchIndex/" -type f )
+	# load the all index from random because it contains everything
+	allMediaIndex=$( cat "/var/cache/2web/web/random/all.index" )
+	#
+	searchIndexLength=$(echo -n "$searchIndexFiles" | wc -l)
+	#
+	mediaIndexLength=$(echo -n "$allMediaIndex" | wc -l)
+	#
+	totalEntries=$(( $mediaIndexLength * $searchIndexLength ))
+	#
+	searchIndexCounter=0
+	#
+	tempIndexFiles=""
+	# search for entries in the search index itself
+	echo "$searchIndexFiles" | while read -r indexFilePath;do
+		if test -f "$indexFilePath";then
+			INFO "[${searchIndexCounter}/${searchIndexLength}] Adding index file for scanning '$indexFilePath'"
+			#
+			tempIndexData="$(cat "$indexFilePath")"
+			#
+			#tempIndexFiles="$(echo "${tempIndexFiles}\n$tempIndexData" | sort -u )"
+			tempIndexFiles="$(echo "${tempIndexFiles}\n$tempIndexData" )"
+		else
+			ERROR "The search index file '$indexFilePath' could not be opened!"
+		fi
+		searchIndexCounter=$(( $searchIndexCounter + 1 ))
+	done
+	# do a final sort
+	allMediaIndex="$(echo "${tempIndexFiles}\n$allMediaIndex" | sort -u )"
+	#allMediaIndex="$(echo "$allMediaIndex" | sort -u )"
+	searchIndexCounter=0
+	# read and check media paths are correct
+	echo "$allMediaIndex" | while read -r mediaFilePath;do
+		cleanMediaFilePath="$(basename "$mediaFilePath")"
+		#
+		INFO "Verifying Search Index ${searchIndexCounter}/${totalEntries} for '$cleanMediaFilePath'"
+		# if the media path does not exist
+		if ! test -f "$mediaFilePath";then
+			# remove the media from all word indexes in the search index
+			echo "$searchIndexFiles" | while read -r indexFilePath;do
+				#
+				cleanFileName="$(basename "$mediaFilePath")"
+				INFO "Verifying Search Index ${searchIndexCounter}/${totalEntries} for '$cleanMediaFilePath' in '${cleanFileName}'"
+				#
+				removeFromSearchIndexFile "$indexFilePath" "^$mediaFilePath" &
+				waitQueue 0.2 "$totalCPUS"
+				#
+				searchIndexCounter=$(( $searchIndexCounter + 1 ))
+			done
+		else
+			searchIndexCounter=$(( $searchIndexCounter + $searchIndexLength ))
+		fi
+	done
 	blockQueue 1
 }
 ########################################################################
@@ -3270,14 +3348,10 @@ function removeFromSearchIndexFile(){
 	#
 	filePath="$1"
 	removalSearchQuery="$2"
-	if test -f "$filePath";then
-		# cleanup the file and store the result
-		tempCleanFile="$( cat "$filePath" | grep --invert-match "$removalSearchQuery" )"
-		# write the result
-		echo "$tempCleanFile" > "$filePath"
-	else
-		ALERT "No index file exists '${filePath}'"
-	fi
+	# cleanup the file and store the result
+	tempCleanFile="$( cat "$filePath" | grep --invert-match "$removalSearchQuery" )"
+	# write the result
+	echo "$tempCleanFile" > "$filePath"
 }
 ########################################################################
 function loadSearchIndexResults(){
@@ -3296,20 +3370,29 @@ function loadSearchIndexResults(){
 	searchQuery="$(spaceCleanedText "$searchQuery")"
 	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query Post Spacing</p><pre>${searchQuery}</pre>"
 	#
-	local allIndex=""
+	allIndex=""
 	IFSBACKUP=$IFS
 	IFS=" "
 	for word in $searchQuery;do
-		local cleanWord=$(echo "$word" | tr "[:upper:]" "[:lower:]")
+		cleanWord=$(echo -n "$word" | tr "[:upper:]" "[:lower:]")
 		if test -f "/var/cache/2web/generated/searchIndex/${cleanWord}.index";then
 			# load the index for each word
-			allIndex="$allIndex$(cat "/var/cache/2web/generated/searchIndex/${cleanWord}.index")"
+			allIndex="${allIndex}\n$(cat "/var/cache/2web/generated/searchIndex/${cleanWord}.index")"
 		fi
+		# load the word association index results
+		for secondWord in $searchQuery;do
+			secondCleanWord=$(echo -n "$secondWord" | tr "[:upper:]" "[:lower:]")
+			if echo -n "$searchQuery" | grep -q "${cleanWord} ${secondCleanWord}";then
+				if test -f "/var/cache/2web/generated/wordIndex/${cleanWord} ${secondCleanWord}.index";then
+					allIndex="${allIndex}\n$(cat "/var/cache/2web/generated/wordIndex/${cleanWord} ${secondCleanWord}.index")"
+				fi
+			fi
+		done
 	done
 	IFS=$IFSBACKUP
 	addToLog "DEBUG" "Fuzzy Search" "<p>Index Pre Sort</p><pre>${allIndex}</pre>"
 	# sort the all index
-	allIndex="$(echo "$allIndex" | sort )"
+	allIndex="$(echo -e "$allIndex" | sort )"
 	# count the unique items
 	allIndex="$(echo "$allIndex" | uniq -c )"
 	# sort in reverse smallest numbers are listed at the top of the sort
