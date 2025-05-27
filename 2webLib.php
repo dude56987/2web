@@ -2238,4 +2238,45 @@ if( ! function_exists("clear")){
 	}
 }
 ################################################################################
+if( ! function_exists("cacheCheck")){
+	function cacheCheck($filePath,$cacheDays=1){
+		# Check if a file is more than x days old and needs updated.
+		#
+		# $1 = filePath : Path to the cached file to check for.
+		# $2 = cacheDays : The max age in days of the file
+		#
+		# - Will return true if the files does not exist or the file is older than $cacheDays
+		# - This should activate code that changes the file
+		#
+		# RETURN BOOL
+		return cacheCheckMin($filePath,( $cacheDays * ( 60 * 24 ) ) );
+	}
+}
+################################################################################
+if( ! function_exists("cacheCheckMin")){
+	function cacheCheckMin($filePath,$cacheMinutes=60){
+		# Check if a file is more than x minutes old and needs updated.
+		#
+		# $1 = filePath : Path to the cached file to check for.
+		# $2 = cacheMinutes : The max age in minutes of the file
+		#
+		# - Will return true if the files does not exist or the file is older than $cacheMinutes
+		# - This should activate code that changes the file
+		#
+		# RETURN BOOL
+		if (file_exists($filePath)){
+			if (time()-filemtime($filePath) > ( $cacheMinutes * ( 60 ) ) ){
+				# update the cached file
+				return true;
+			}else{
+				# read from the already cached file
+				return false;
+			}
+		}else{
+			# write the file if it does not exist
+			return true;
+		}
+	}
+}
+################################################################################
 ?>
