@@ -2487,6 +2487,10 @@ function addSourcePath(){
 }
 ################################################################################
 function addToIndex(){
+	# addToIndex $indexItem $indexPath
+	#
+	# Add a item to a index file, prevent duplicate entries
+	#
 	indexItem="$1"
 	indexPath="$2"
 	#INFO "Checking if the indexPath '$indexPath' exists"
@@ -2656,6 +2660,12 @@ function setDirDataSum(){
 }
 ################################################################################
 function getDirSum(){
+	# getDirSum $dirPath
+	#
+	# Create a sum of a directory by recursively listing all the files beneath it
+	# and converting them into a hash sum
+	#
+	# - Altering the file at /etc/2web/forceRescan.cfg will force all sums to change
 	line=$1
 	# check the libary sum against the existing one
 	totalList=$(find "$line" | sort)
@@ -2666,7 +2676,7 @@ function getDirSum(){
 	if test -f /etc/2web/forceRescan.cfg;then
 		totalList="$totalList$(cat /etc/2web/forceRescan.cfg)"
 	fi
-	# convert lists into sum
+	# convert lists into a sum
 	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
 	# write the sum to stdout
 	echo "$tempLibList"
