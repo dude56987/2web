@@ -3417,6 +3417,43 @@ function randomWord(){
 	shuf -n 1 /usr/share/dict/words
 }
 ########################################################################
+function prefixZeros(){
+	# prefixZeros $number
+	#
+	# Prefix a number with zeros to maintain a width of 4 characters
+	#
+	# - Will keep numbers 4 characters wide by prefixing small numbers
+	#   with leading zeros
+	# - Numbers that are to large will be returned unchanged, without any
+	#   leading zeros
+
+	# convert to a number
+	unformatedNumber="$(( $1 ))"
+	if test -z $unformatedNumber;then
+		addToLog "ERROR" "Incorrect Input" "A blank string was given to prefixZeros() number is defaulting to zero"
+		# this is a broken number
+		formatedNumber="$(( 0 ))"
+	fi
+	# figure out the prefix amount based on the value
+	if [ "$(( 10#$unformatedNumber ))" -le 0 ];then
+		formatedNumber="0000"
+	elif [ "$(( 10#$unformatedNumber ))" -lt 10 ];then
+		# add a zero to make it format correctly
+		formatedNumber="000$unformatedNumber"
+	elif [ "$(( 10#$unformatedNumber ))" -lt 100 ];then
+		# add a zero to make it format correctly
+		formatedNumber="00$unformatedNumber"
+	elif [  "$(( 10#$unformatedNumber ))" -lt 1000 ];then
+		formatedNumber="0$unformatedNumber"
+	elif [ "$(( 10#$unformatedNumber ))" -ge 1000 ];then
+		formatedNumber="$unformatedNumber"
+	else
+		formatedNumber="0000"
+	fi
+	# return the number formatted as a string
+	echo -n "$formatedNumber"
+}
+########################################################################
 function hashImage(){
 	# hashImage $inputText $hashSize $outputFilePath $newSize
 	#
