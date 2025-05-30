@@ -1559,6 +1559,8 @@ function lockProc(){
 ################################################################################
 function exitModuleTrap(){
 	procName="$1"
+	# lock control-c
+	trap "ALERT 'Please wait for module to close...'" INT
 	# store the color codes for coloring
 	resetCode="\033[0m"
 	redCode="\033[0;31m"
@@ -1567,7 +1569,7 @@ function exitModuleTrap(){
 		drawHeader "Closing $procName Please Wait..."
 		drawLine
 	resetColor
-	ALERT "Please wait for module to close..."
+	#ALERT "Please wait for module to close..."
 	INFO "Reseting Cursor settings..."
 	# return the cursor to normal operation
 	tput cnorm
@@ -1591,6 +1593,8 @@ function exitModuleTrap(){
 	drawHeader "$procName"
 	drawLine
 	echo -ne "${resetCode}"
+	# unlock control-c
+	trap INT
 }
 ################################################################################
 function returnModStatus(){
