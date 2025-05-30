@@ -1650,21 +1650,12 @@ if( ! function_exists("loadSearchIndexResults")){
 		#   - shows
 		#
 
+		# get the orignal query
+		$ogQuery=$searchQuery;
+		$searchQuery=cleanText($searchQuery);
+		$searchQuery=spaceCleanedText($searchQuery);
 		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
-		# cleanup the query
-		$searchQuery=str_replace("\\"," ",$searchQuery);
-		$searchQuery=str_replace("'s"," ",$searchQuery);
-		$searchQuery=str_replace("\n"," ",$searchQuery);
-		$searchQuery=str_replace("\r"," ",$searchQuery);
-		$searchQuery=str_replace(","," ",$searchQuery);
-		$searchQuery=str_replace(":"," ",$searchQuery);
-		$searchQuery=str_replace("-"," ",$searchQuery);
-		$searchQuery=str_replace("("," ",$searchQuery);
-		$searchQuery=str_replace(")"," ",$searchQuery);
-		$searchQuery=str_replace("{"," ",$searchQuery);
-		$searchQuery=str_replace("}"," ",$searchQuery);
-		$searchQuery=str_replace("["," ",$searchQuery);
-		$searchQuery=str_replace("]"," ",$searchQuery);
+
 		# use the cleantext function
 		#$searchQuery=cleanText("$searchQuery");
 		#
@@ -1737,6 +1728,15 @@ if( ! function_exists("loadSearchIndexResults")){
 			}
 			echo "<div class='listCard'>\n";
 			echo $outputText;
+			# create the search link
+			echo "<a class='indexSeries' href='/search.php?q=$ogQuery'>";
+			echo "	<h2 class='moreEpisodesLinkIcon'>";
+			echo "		🔍";
+			echo "	</h2>";
+			echo "	Full ";
+			echo "	List";
+			echo "</a>";
+			#
 			echo "</div>\n";
 			echo "</div>\n";
 		}
