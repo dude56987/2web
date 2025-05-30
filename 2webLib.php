@@ -1760,24 +1760,53 @@ if( ! function_exists("getIdentity")){
 }
 ########################################################################
 if( ! function_exists("getStat")){
-	function getStat($totalPath, $label){
+	function getStat($totalPath, $label, $showEmpty=false){
 		# get a value from a file and print a stat on a webpage
 		#
 		# RETURN OUTPUT
 		if (file_exists($totalPath)){
-			$total = file_get_contents($totalPath);
+			if (filesize($totalPath) > 0){
+				$total = file_get_contents($totalPath);
+			}else{
+				$total=0;
+			}
 		}else{
-			$total= 0;
+			$total=0;
 		}
+		# format the value if it is only numbers
 		if (is_numeric($total)){
 			# add commas
 			$total=number_format($total);
 		}
+		# if the value is not a number
+		if (is_string($total)){
+			# and it is blank
+			# - remove newlines before checking if blank
+			if (str_replace("\n","",$total) == ""){
+				# set the value to zero
+				$total=0;
+			}
+		}
+		#
+		$drawValue=false;
 		# only draw stats that are greater than zero
 		if ($total > 0){
-			echo "		<span class='singleStat'>";
-			echo "			$label:$total";
-			echo "		</span>";
+			$drawValue=true;
+		}else{
+			# do not draw empty values by default, but allow a overide with $showEmpty
+			if ($showEmpty){
+				$drawValue=true;
+			}
+		}
+		if ( $total == 0 ){
+			#
+			$total="∅";
+		}
+		if ($drawValue){
+			echo "		<span class='singleStat'>\n";
+			echo "			<span class='singleStatLabel'>$label</span>\n";
+			echo "			<span class='singleStatValue'>$total</span>\n";
+			echo "		</span>\n";
 		}
 	}
 }
