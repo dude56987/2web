@@ -1935,8 +1935,10 @@ if( ! function_exists("getDateStat")){
 		# only draw stats that are greater than zero
 		if ($total > 0){
 			echo "<span class='singleStat'>";
-			echo "$label:";
+			echo "<span class='singleStatLabel'>$label</span>";
+			echo "<span class='singleStatValue'>";
 			timeElapsedToHuman($total);
+			echo "</span>";
 			echo "</span>\n";
 		}
 	}
