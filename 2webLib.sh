@@ -2973,6 +2973,11 @@ function popPath(){
 	# e.g. popPath "/path/to/your/file/test.jpg" gives you "test.jpg"
 	basename "$1"
 }
+################################################################################
+function pickPath(){
+	# pop a element from the end of the path, $2 is how far back in the path is pulled
+	echo "$1" | rev | cut -d'/' -f$2 | rev
+}
 ########################################################################
 function sqliteEscape(){
 	printf -v var "%q" "$1"

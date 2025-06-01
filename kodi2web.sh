@@ -94,55 +94,42 @@ function update(){
 	done
 }
 ################################################################################
-popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
-################################################################################
-pickPath(){
-	# pop a element from the end of the path, $2 is how far back in the path is pulled
-	echo "$1" | rev | cut -d'/' -f$2 | rev
-}
-################################################################################
 nuke(){
 	echo "[INFO]: kodi2web has nothing to nuke!"
 	echo "[INFO]: This module stores no data in cache so nothing is to be removed."
 }
 ################################################################################
-main(){
-	################################################################################
-	webRoot
-	################################################################################
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		# check if the mod is enabled
-		checkModStatus "kodi2web"
-		# lock the process
-		lockProc "kodi2web"
-		update "$@"
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "kodi2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "kodi2web"
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/kodi2web.txt"
-	else
-		# check if the mod is enabled
-		checkModStatus "kodi2web"
-		# lock the process
-		lockProc "kodi2web"
-		# update sources
-		update "$@"
-		# display the help
-		main --help
-		# show the server link at the bottom of the interface
-		showServerLinks
-		# add the link to this specific module content, this module only updates kodi clients when the library changes
-		drawLine
-		echo "http://$(hostname).local:80/kodi/"
-		drawLine
-	fi
-}
+# set the theme of the lines in CLI output
+LINE_THEME="bowtie"
+
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	# lock the process
+	lockProc "kodi2web"
+	# check if the mod is enabled
+	checkModStatus "kodi2web"
+	update "$@"
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	nuke
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "kodi2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "kodi2web"
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/kodi2web.txt"
+else
+	# lock the process
+	lockProc "kodi2web"
+	# check if the mod is enabled
+	checkModStatus "kodi2web"
+	# update sources
+	update "$@"
+	# display the help
+	cat "/usr/share/2web/help/kodi2web.txt"
+	# show the server link at the bottom of the interface
+	showServerLinks
+	# add the link to this specific module content, this module only updates kodi clients when the library changes
+	drawLine
+	echo "http://$(hostname).local:80/kodi/"
+	drawLine
+fi
 ################################################################################
-main "$@"
-exit
