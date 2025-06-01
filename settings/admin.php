@@ -248,11 +248,11 @@ function removeCustomConfig($keyName, $baseConfigPath, $settingsWebpage){
 	}else{
 		outputLog("Can not remove non existing file from ".$configPath, "badLog");
 	}
-	echo "<hr><a class='button' href='/settings/".$settingsWebpage."#".$keyName."'>🛠️ Return To Settings</a><hr>";
+	backButton(("/settings/".$settingsWebpage."#".$keyName),"🛠️ Return To Settings");
 	clear();
 }
 ################################################################################
-function verifyChoice(){
+function verifyChoice($cancelLink="/settings/"){
 	#
 	# Use in a if statement to verify the choice
 	#
@@ -293,20 +293,39 @@ function verifyChoice(){
 		foreach(array_keys($_POST) as $postKey){
 			echo "	<input type='text' name='".$postKey."' value='".$_POST[$postKey]."' readonly hidden>\n";
 		}
-		echo "	<input type='text' name='confirmedChoice' value='yes' readonly hidden>\n";
 		echo "	<div class='errorBanner'>\n";
 		echo "		This is a potentially dangerous action. Only confirm this choice if you are positive that you know what you are doing.";
 		echo "	</div>\n";
 		echo "	<div>\n";
 		echo "		Would you like to confirm this change?";
 		echo "	</div>\n";
+		echo "	<input type='text' name='confirmedChoice' value='yes' readonly hidden>\n";
 		echo "	<input class='button' type='submit' value='Yes' />\n";
 		echo "</form>\n";
+		echo "<a class='button' href='".$cancelLink."'>No, Return to Settings</a>\n";
 		echo "</div>\n";
 		return false;
 	}else{
 		return true;
 	}
+}
+################################################################################
+function backButton($returnLink,$buttonText,$delaySeconds=1,$redirect=true){
+	# backButton($returnLink,$buttonText,$delaySeconds)
+	#
+	# Draw a redirect button and automatically redirect after a delay
+	if($redirect){
+		# Reload a webpage after a delay with javascript or meta refresh if scripts are disabled
+		echo "<script>\n";
+		# show the spinner to indicate activity to the user
+		echo "showSpinner();\n";
+		# start the delayed page reload
+		echo "delayedRedirect($delaySeconds,\"$returnLink\");\n";
+		echo "</script>\n";
+		echo "<noscript><meta http-equiv='refresh' content='$delaySeconds' $returnLink></noscript>\n";
+	}
+	# draw the button
+	echo "<hr><a class='button' href='$returnLink'>$buttonText</a><hr>\n";
 }
 ################################################################################
 # clean up the post input before processing
@@ -362,12 +381,12 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("No password was given for the new user!", "badLog");
 		outputLog("Processing failed!", "badLog");
 	}
-	echo ("<hr><a class='button' href='/settings/users.php'>🛠️ Return To Settings</a><hr>");
+	backButton("/settings/users.php","🛠️ Return To Settings");
 }else if (array_key_exists("removeUser",$_POST)){
 	$userName=$_POST['removeUser'];
 	outputLog("Removing user $userName from authorization list");
 	unlink("/etc/2web/users/".$userName.".cfg");
-	echo ("<hr><a class='button' href='/settings/users.php'>🛠️ Return To Settings</a><hr>");
+	backButton("/settings/users.php","🛠️ Return To Settings");
 }else if (array_key_exists("addUserToGroup_userName",$_POST)){
 	$userName=$_POST['addUserToGroup_userName'];
 	$groupName=$_POST['addUserToGroup_groupName'];
@@ -386,7 +405,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		outputLog("The user '".$userName."' does not yet exist so it can not be added to the group '".$groupName."'","badLog");
 	}
-	echo ("<hr><a class='button' href='/settings/users.php'>🛠️ Return To Settings</a><hr>");
+	backButton("/settings/users.php","🛠️ Return To Settings");
 }else if (array_key_exists("removeUserFromGroup_userName",$_POST)){
 	$userName=$_POST['removeUserFromGroup_userName'];
 	$groupName=$_POST['removeUserFromGroup_groupName'];
@@ -403,7 +422,7 @@ if (array_key_exists("newUserName",$_POST)){
 			outputLog("The user '".$userName."' does not yet exist in this group. So it can not be added to the group '".$groupName."'","badLog");
 		}
 	}
-	echo ("<hr><a class='button' href='/settings/users.php'>🛠️ Return To Settings</a><hr>");
+	backButton("/settings/users.php","🛠️ Return To Settings");
 }else if (array_key_exists("newBasicUserName",$_POST)){
 	# make all chacters lowercase for password
 	$userName=strtolower($_POST['newBasicUserName']);
@@ -452,186 +471,188 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("No password was given for the new user!", "badLog");
 		outputLog("Processing failed!", "badLog");
 	}
-	echo ("<hr><a class='button' href='/settings/users.php'>🛠️ Return To Settings</a><hr>");
+	backButton("/settings/users.php","🛠️ Return To Settings");
 }else if (array_key_exists("2web_update",$_POST)){
 	outputLog("Scheduling 2web update!");
+	# do not use --parallel on 2web command this will launch all modules in parallel
 	addToQueue("multi","2web");
-	echo "<hr><a class='button' href='/settings/modules.php#2web'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("nfo2web_update",$_POST)){
 	outputLog("Scheduling nfo update!");
 	addToQueue("multi","nfo2web --parallel");
-	echo "<hr><a class='button' href='/settings/modules.php#nfo2web'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#nfo2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("iptv2web_update",$_POST)){
 	outputLog("Scheduling iptv2web update!");
-	addToQueue("multi","iptv2web");
-	echo "<hr><a class='button' href='/settings/modules.php#iptv2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","iptv2web --parallel");
+	backButton("/settings/modules.php#iptv2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("comic2web_update",$_POST)){
 	outputLog("Scheduling comic2web update!");
 	addToQueue("multi","comic2web --parallel");
-	echo "<hr><a class='button' href='/settings/modules.php#comic2web'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#comic2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("weather2web_update",$_POST)){
 	outputLog("Scheduling weather2web update!");
-	addToQueue("multi","weather2web");
-	echo "<hr><a class='button' href='/settings/modules.php#weather2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","weather2web --parallel");
+	backButton("/settings/modules.php#weather2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("ytdl2nfo_update",$_POST)){
 	outputLog("Scheduling ytdl2nfo update!");
-	addToQueue("multi","ytdl2nfo");
-	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfo'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","ytdl2nfo --parallel");
+	backButton("/settings/modules.php#ytdl2nfo","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("graph2web_update",$_POST)){
 	outputLog("Scheduling graph2web update!");
-	addToQueue("multi","graph2web");
-	echo "<hr><a class='button' href='/settings/modules.php#graph2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","graph2web --parallel");
+	backButton("/settings/modules.php#graph2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("music2web_update",$_POST)){
 	outputLog("Scheduling music2web update!");
 	addToQueue("multi","music2web --parallel");
-	echo "<hr><a class='button' href='/settings/modules.php#music2web'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#music2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("portal2web_update",$_POST)){
 	outputLog("Scheduling portal2web update!");
-	addToQueue("multi","portal2web");
-	echo "<hr><a class='button' href='/settings/modules.php#portal2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","portal2web --parallel");
+	backButton("/settings/modules.php#portal2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("git2web_update",$_POST)){
 	outputLog("Scheduling git2web update!");
-	addToQueue("multi","git2web");
-	echo "<hr><a class='button' href='/settings/modules.php#git2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","git2web --parallel");
+	backButton("/settings/modules.php#git2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("ai2web_update",$_POST)){
 	outputLog("Scheduling ai2web update!");
-	addToQueue("multi","ai2web");
+	addToQueue("multi","ai2web --parallel");
 	echo "<hr><a class='button' href='/settings/modules.php#ai2web'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#ai2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("wiki2web_update",$_POST)){
 	outputLog("Scheduling wiki2web update!");
-	addToQueue("multi","wiki2web");
-	echo "<hr><a class='button' href='/settings/modules.php#wiki2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","wiki2web --parallel");
+	backButton("/settings/modules.php#wiki2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("rss2nfo_update",$_POST)){
 	outputLog("Scheduling rss2nfo update!");
-	addToQueue("multi","rss2nfo");
-	echo "<hr><a class='button' href='/settings/modules.php#rss2nfo'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","rss2nfo --parallel");
+	backButton("/settings/modules.php#rss2nfo","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("kodi2web_update",$_POST)){
 	outputLog("Scheduling kodi2web update!");
-	addToQueue("multi","kodi2web");
-	echo "<hr><a class='button' href='/settings/modules.php#kodi2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","kodi2web --parallel");
+	backButton("/settings/modules.php#kodi2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("php2web_update",$_POST)){
 	outputLog("Scheduling php2web update!");
-	addToQueue("multi","php2web");
-	echo "<hr><a class='button' href='/settings/modules.php#php2web'>🛠️ Return To Settings</a><hr>";
+	addToQueue("multi","php2web --parallel");
+	backButton("/settings/modules.php#php2web","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#2web")){
 		outputLog("Scheduling 2web nuke!");
 		addToQueue("multi","2web --nuke");
+		backButton("/settings/modules.php#2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("nfo2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#nfo2web")){
 		outputLog("Scheduling nfo nuke!");
 		addToQueue("multi","nfo2web --nuke");
+		backButton("/settings/modules.php#nfo2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#nfo2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("iptv2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#iptv2web")){
 		outputLog("Scheduling iptv2web nuke!");
 		addToQueue("multi","iptv2web --nuke");
+		backButton("/settings/modules.php#iptv2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#iptv2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("comic2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#comic2web")){
 		outputLog("Scheduling comic2web nuke!");
 		addToQueue("multi","comic2web --nuke");
+		backButton("/settings/modules.php#comic2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#comic2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("weather2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#weather2web")){
 		outputLog("Scheduling weather2web nuke!");
 		addToQueue("multi","weather2web --nuke");
+		backButton("/settings/modules.php#weather2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#weather2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("ytdl2nfo_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#ytdl2nfo")){
 		outputLog("Scheduling ytdl2nfo nuke!");
 		addToQueue("multi","ytdl2nfo --nuke");
+		backButton("/settings/modules.php#ytdl2nfo","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfo'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("graph2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#graph2web")){
 		outputLog("Scheduling graph2web nuke!");
 		addToQueue("multi","graph2web --nuke");
+		backButton("/settings/modules.php#graph2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#graph2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("music2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#music2web")){
 		outputLog("Scheduling music2web nuke!");
 		addToQueue("multi","music2web --nuke");
+		backButton("/settings/modules.php#music2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#music2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("portal2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#portal2web")){
 		outputLog("Scheduling portal2web nuke!");
 		addToQueue("multi","portal2web --nuke");
+		backButton("/settings/modules.php#portal2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#portal2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("git2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#git2web")){
 		outputLog("Scheduling git2web nuke!");
 		addToQueue("multi","git2web --nuke");
+		backButton("/settings/modules.php#git2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#git2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("ai2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#ai2web")){
 		outputLog("Scheduling ai2web nuke!");
 		addToQueue("multi","ai2web --nuke");
+		backButton("/settings/modules.php#ai2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#ai2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("wiki2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#wiki2web")){
 		outputLog("Scheduling wiki2web nuke!");
 		addToQueue("multi","wiki2web --nuke");
+		backButton("/settings/modules.php#wiki2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#wiki2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("rss2nfo_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#rss2nfo")){
 		outputLog("Scheduling rss2nfo nuke!");
 		addToQueue("multi","rss2nfo --nuke");
+		backButton("/settings/modules.php#rss2nfo","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#rss2nfo'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("kodi2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#kodi2web")){
 		outputLog("Scheduling kodi2web nuke!");
 		addToQueue("multi","kodi2web --nuke");
+		backButton("/settings/modules.php#kodi2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#kodi2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("php2web_nuke",$_POST)){
-	if(verifyChoice()){
+	if(verifyChoice("/settings/modules.php#php2web")){
 		outputLog("Scheduling php2web nuke!");
 		addToQueue("multi","php2web --nuke");
+		backButton("/settings/modules.php#php2web","🛠️ Return To Settings");
 	}
-	echo "<hr><a class='button' href='/settings/modules.php#php2web'>🛠️ Return To Settings</a><hr>";
 	clear();
 }else if (array_key_exists("setSessionTimeoutMinutes",$_POST)){
 	$timeoutMinutes=$_POST['setSessionTimeoutMinutes'];
@@ -641,7 +662,7 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Setting Session Timeout hours to $timeoutHours");
 	file_put_contents("/etc/2web/loginTimeoutHours.cfg",$timeoutHours);
 	outputLog("Set to timeout after ".$timeoutHours." hours and ".$timeoutMinutes." minutes", "goodLog");
-	echo "<hr><a class='button' href='/settings/users.php#loginInactivityTimeout'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/users.php#loginInactivityTimeout","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("purgeNomediaFiles",$_POST)){
 	# create a job to remove all existing .nomedia files
@@ -685,7 +706,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		outputLog("[ERROR]: Custom Radio Title not found");
 	}
-	echo "<hr><a class='button' href='/settings/radio.php'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/radio.php","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addCustomLink",$_POST)){
 	# this will add a custom m3u file with a single entry
@@ -728,7 +749,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		outputLog("[ERROR]: Custom Title not found");
 	}
-	echo "<hr><a class='button' href='/settings/tv.php'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/tv.php","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addRadioLink",$_POST)){
 	$link=$_POST['addRadioLink'];
@@ -743,7 +764,7 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		file_put_contents($configPath,$link);
 	}
-	echo "<hr><a class='button' href='/settings/radio.php#addRadioLink'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/radio.php#addRadioLink","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheQuality",$_POST)){
 	$cacheQuality=$_POST['cacheQuality'];
@@ -751,7 +772,7 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Changing cache quality to '".$cacheQuality."'");
 	# write the config file
 	file_put_contents("/etc/2web/cache/cacheQuality.cfg",$cacheQuality);
-	echo "<hr><a class='button' href='/settings/cache.php#cacheQuality'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheQuality","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheUpgradeQuality",$_POST)){
 	$cacheUpgradeQuality=$_POST['cacheUpgradeQuality'];
@@ -763,7 +784,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/cache/cacheUpgradeQuality.cfg",$cacheUpgradeQuality);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheUpgradeQuality'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheUpgradeQuality","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
@@ -775,7 +796,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/cache/cacheFramerate.cfg",$cacheFramerate);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheFramerate'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheFramerate","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheResize",$_POST)){
 	$cacheResize=$_POST['cacheResize'];
@@ -787,7 +808,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/cache/cacheResize.cfg",$cacheResize);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheResize'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheResize","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheDelay",$_POST)){
 	$cacheDelay =$_POST['cacheDelay'];
@@ -799,7 +820,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/cache/cacheDelay.cfg",$cacheDelay);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheDelay'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheDelay","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("cacheNewEpisodes",$_POST)){
 	$cacheNewEpisodes=$_POST['cacheNewEpisodes'];
@@ -811,7 +832,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/cacheNewEpisodes.cfg",$cacheNewEpisodes);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheNewEpisodes","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("transcodeForWebpages",$_POST)){
 	$cacheNewEpisodes=$_POST['transcodeForWebpages'];
@@ -823,7 +844,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		file_put_contents("/etc/2web/transcodeForWebpages.cfg",$cacheNewEpisodes);
 	}
-	echo "<hr><a class='button' href='/settings/cache.php#cacheNewEpisodes'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/cache.php#cacheNewEpisodes","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("nfo_generateAudioWaveforms",$_POST)){
 	outputLog("Setting audio waveform generator to ".$_POST['nfo_generateAudioWaveforms']);
@@ -863,19 +884,19 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("autoReboot",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['autoReboot']);
 	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);
-	echo "<hr><a class='button' href='/settings/system.php#autoReboot'>🛠️ Return To Settings</a><hr>";
+	backButton('/settings/system.php#autoReboot',"🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("autoRebootTime",$_POST)){
 	$time=$_POST['autoRebootTime'];
 	outputLog("Setting Reboot Time to Hour $time");
 	file_put_contents("/etc/2web/autoRebootTime.cfg", $time);
 	outputLog("Set the reboot hour to ".$time." hour on a 24 hour clock.", "goodLog");
-	echo "<hr><a class='button' href='/settings/system.php#autoRebootTime'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/system.php#autoRebootTime","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
-	echo "<hr><a class='button' href='/settings/themes.php#randomTheme'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/themes.php#randomTheme","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addKodiLocation",$_POST)){
 	# add kodi location
@@ -916,7 +937,7 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("scanAvahi",$_POST)){
 	outputLog("Changing setting to scan for services using avahi on the local network to '".$_POST['scanAvahi']."'");
 	yesNoCfgSet("/etc/2web/portal/scanAvahi.cfg", $_POST['scanAvahi']);
-	echo "<hr><a class='button' href='/settings/portal.php#scanAvahi'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/portal.php#scanAvahi","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("aiSubsGenerate",$_POST)){
 	outputLog("Setting AI lyrics generation status to ".$_POST['aiSubsGenerate']);
@@ -928,18 +949,18 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Setting AI lyrics generation status to ".$_POST['aiLyricsGenerate']);
 	# generate lyrics for music2web tracks
 	yesNoCfgSet("/etc/2web/ai/aiLyricsGenerate.cfg", $_POST['aiLyricsGenerate']);
-	echo "<hr><a class='button' href='/settings/ai.php#aiLyricsGenerate'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/ai.php#aiLyricsGenerate","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("aiCompareGenerate",$_POST)){
 	outputLog("Setting AI comparison generation status to ".$_POST['aiCompareGenerate']);
 	# run the ai comparison generators
 	yesNoCfgSet("/etc/2web/ai/aiCompareGenerate.cfg", $_POST['aiCompareGenerate']);
-	echo "<hr><a class='button' href='/settings/ai.php#aiCompareGenerate'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/ai.php#aiCompareGenerate","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("nomediaFiles",$_POST)){
 	outputLog("Setting Status for .nomedia files ".$_POST['nomediaFiles']);
 	yesNoCfgSet("/etc/2web/kodi/nomediaFiles.cfg", $_POST['nomediaFiles']);
-	echo "<hr><a class='button' href='/settings/kodi.php#nomediaFiles'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/kodi.php#nomediaFiles","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addAiPromptModel",$_POST)){
 	addCustomConfig("addAiPromptModel","/etc/2web/ai/promptModels.d/","ai.php");
@@ -953,7 +974,7 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Setting music2web visual generation status to ".$_POST['generateVisualisationsForWeb']);
 	# run the ai comparison generators
 	yesNoCfgSet("/etc/2web/music/generateVisualisationsForWeb.cfg", $_POST['generateVisualisationsForWeb']);
-	echo "<hr><a class='button' href='/settings/music.php#generateVisualisationsForWeb'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/music.php#generateVisualisationsForWeb","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addLink",$_POST)){
 	addCustomConfig("addLink","/etc/2web/iptv/sources.d/","tv.php");
@@ -1049,7 +1070,7 @@ if (array_key_exists("newUserName",$_POST)){
 		# delete the custom config created for the link
 		unlink($configPath);
 	}
-	echo "<hr><a class='button' href='/settings/weather.php#currentLinks'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/weather.php#currentLinks","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("setHomepageWeatherLocation",$_POST)){
 	$link=$_POST['setHomepageWeatherLocation'];
@@ -1071,27 +1092,27 @@ if (array_key_exists("newUserName",$_POST)){
 			file_put_contents($configPath,$link);
 		}
 	}
-	echo "<hr><a class='button' href='/settings/weather.php#setWeatherHomepageLocation'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/weather.php#setWeatherHomepageLocation","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("playOnKodiButton",$_POST)){
 	$link=$_POST['playOnKodiButton'];
 	yesNoCfgSet("/etc/2web/kodi/playOnKodiButton.cfg", $_POST['playOnKodiButton']);
-	echo "<hr><a class='button' href='/settings/kodi.php#playOnKodiButton'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/kodi.php#playOnKodiButton","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
 	$link=$_POST['homepageFortuneStatus'];
 	yesNoCfgSet("/etc/2web/fortuneStatus.cfg", $_POST['homepageFortuneStatus']);
-	echo "<hr><a class='button' href='/settings/system.php#homepageFortuneStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/system.php#homepageFortuneStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("webPlayerStatus",$_POST)){
 	$link=$_POST['webPlayerStatus'];
 	yesNoCfgSet("/etc/2web/webPlayer.cfg", $_POST['webPlayerStatus']);
-	echo "<hr><a class='button' href='/settings/system.php#webpagePlayerStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/system.php#webpagePlayerStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("webClientStatus",$_POST)){
 	$link=$_POST['webClientStatus'];
 	yesNoCfgSet("/etc/2web/client.cfg", $_POST['webClientStatus']);
-	echo "<hr><a class='button' href='/settings/system.php#webClientStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/system.php#webClientStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("lockGroup",$_POST)){
 	$group=$_POST["lockGroup"];
@@ -1101,7 +1122,7 @@ if (array_key_exists("newUserName",$_POST)){
 		outputLog("Locking access to the group '".$group."'","goodLog");
 		touch("/etc/2web/lockedGroups/".$group.".cfg");
 	}
-	echo "<hr><a class='button' href='/settings/users.php#groupLock_".$group."'>🛠️ Return To Settings</a><hr>";
+	backButton(("/settings/users.php#groupLock_".$group),"🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("unlockGroup",$_POST)){
 	$group=$_POST["unlockGroup"];
@@ -1111,80 +1132,80 @@ if (array_key_exists("newUserName",$_POST)){
 	}else{
 		outputLog("The group '".$group."' is already unlocked, Nothing is to be done.","badLog");
 	}
-	echo "<hr><a class='button' href='/settings/users.php#groupLock_".$group."'>🛠️ Return To Settings</a><hr>";
+	backButton(("/settings/users.php#groupLock_".$group),"🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("rss2nfoStatus",$_POST)){
 	$status=$_POST['rss2nfoStatus'];
 	setModStatus("rss2nfo",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#rss2nfoStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#rss2nfoStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("wiki2webStatus",$_POST)){
 	$status=$_POST['wiki2webStatus'];
 	setModStatus("wiki2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#wiki2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#wiki2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("graph2webStatus",$_POST)){
 	$status=$_POST['graph2webStatus'];
 	setModStatus("graph2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#graph2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#graph2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("nfo2webStatus",$_POST)){
 	$status=$_POST['nfo2webStatus'];
 	setModStatus("nfo2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#nfo2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#nfo2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("comic2webStatus",$_POST)){
 	$status=$_POST['comic2webStatus'];
 	setModStatus("comic2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#comic2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#comic2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("music2webStatus",$_POST)){
 	$status=$_POST['music2webStatus'];
 	setModStatus("music2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#music2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#music2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("iptv2webStatus",$_POST)){
 	$status=$_POST['iptv2webStatus'];
 	setModStatus("iptv2web",$status);
 	# also enable epg2web if iptv2web is enabled
 	setModStatus("epg2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#iptv2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#iptv2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("weather2webStatus",$_POST)){
 	$status=$_POST['weather2webStatus'];
 	setModStatus("weather2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#weather2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#weather2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("kodi2webStatus",$_POST)){
 	$status=$_POST['kodi2webStatus'];
 	setModStatus("kodi2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#kodi2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#kodi2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("ytdl2nfoStatus",$_POST)){
 	$status=$_POST['ytdl2nfoStatus'];
 	setModStatus("ytdl2nfo",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#ytdl2nfoStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#ytdl2nfoStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("git2webStatus",$_POST)){
 	$status=$_POST['git2webStatus'];
 	setModStatus("git2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#git2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#git2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("ai2webStatus",$_POST)){
 	$status=$_POST['ai2webStatus'];
 	setModStatus("ai2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#ai2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#ai2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("portal2webStatus",$_POST)){
 	$status=$_POST['portal2webStatus'];
 	setModStatus("portal2web",$status);
-	echo "<hr><a class='button' href='/settings/modules.php#portal2webStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/modules.php#portal2webStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("changeLogLimit",$_POST)){
 	outputLog("Changing the max log entries to '".$_POST["changeLogLimit"]."'");
 	# set the log limit
 	file_put_contents("/etc/2web/maxLogSize.cfg",$_POST["changeLogLimit"]);
-	echo "<hr><a class='button' href='/log/'>🛠️ Return To Settings</a><hr>";
+	backButton("/log/","🛠️ Return To Log");
 	clear();
 }else if (array_key_exists("addComicDownloadLink",$_POST)){
 	addCustomConfig("addComicDownloadLink","/etc/2web/comics/sources.d/","comicsDL.php");
@@ -1219,7 +1240,7 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
-	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/tv.php#currentLinks","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("moveCustomToBottom",$_POST)){
 	$link=$_POST['moveCustomToBottom'];
@@ -1234,7 +1255,7 @@ if (array_key_exists("newUserName",$_POST)){
 		# write the config file
 		touch($configPath);
 	}
-	echo "<hr><a class='button' href='/settings/tv.php#currentLinks'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/tv.php#currentLinks","🛠️ Return To Settings");
 	clear();
 }else if(array_key_exists("removeLink",$_POST)){
 	removeCustomConfig("removeLink","/etc/2web/iptv/sources.d/","tv.php");
@@ -1264,12 +1285,12 @@ if (array_key_exists("newUserName",$_POST)){
 	# recreate the symlink to update the website
 	symlink(("/usr/share/2web/themes/".$theme),"/var/cache/2web/web/style.css");
 	# draw the back button
-	echo "<hr><a class='button' href='/settings/themes.php#webTheme'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/themes.php#webTheme","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("steamLockoutStatus",$_POST)){
 	outputLog("Steam lockout set to ".$_POST['steamLockoutStatus']);
 	yesNoCfgSet("/etc/2web/steamLockout.cfg", $_POST['steamLockoutStatus']);
-	echo "<hr><a class='button' href='/settings/system.php#steamLockoutStatus'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/system.php#steamLockoutStatus","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("addMusicLibary",$_POST)){
 	addCustomPathConfig("addMusicLibary","/etc/2web/music/libaries.d/","music.php");
@@ -1323,7 +1344,7 @@ if (array_key_exists("newUserName",$_POST)){
 		addToQueue("multi","ln -s '/usr/share/munin/plugins/$graphName' '/etc/munin/plugins/$graphName' ");
 		#link("/usr/share/munin/plugins/$graphName", "/etc/munin/plugins/$graphName");
 	}
-	echo "<hr><a class='button' href='/settings/graphs.php#pluginStatus_$graphName'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/graphs.php#pluginStatus_$graphName","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("disableGraphPlugin",$_POST)){
 	$graphName=$_POST['disableGraphPlugin'];
@@ -1334,10 +1355,10 @@ if (array_key_exists("newUserName",$_POST)){
 		# - use the queue to manage munin enable/disable
 		addToQueue("multi","rm -v '/etc/munin/plugins/$graphName'");
 		#unlink("/etc/munin/plugins/$graphName");
-		echo "<hr><a class='button' href='/settings/graphs.php#pluginStatus_$graphName'>🛠️ Return To Settings</a><hr>";
 	}else{
 		outputLog("Munin Graph Plugin is already disabled '$graphName'","badLog");
 	}
+	backButton("/settings/graphs.php#pluginStatus_$graphName","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("archiveVideoUrl",$_POST)){
 	# store a url in the '2web Archive' meta show as a new episode
@@ -1463,7 +1484,7 @@ if (array_key_exists("newUserName",$_POST)){
 	# save the new template
 	file_put_contents($themePath, $newColorStyle);
 	# new theme will be generated on next run of '2web' command
-	echo "<hr><a class='button' href='/settings/themes.php#createColor'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/themes.php#createColor","🛠️ Return To Settings");
 }else{
 	$userAgent=$_SERVER["HTTP_USER_AGENT"];
 	$remoteIP=$_SERVER["REMOTE_ADDR"];
