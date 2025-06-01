@@ -775,16 +775,7 @@ function update2web(){
 
 	# update the certificates
 	updateCerts
-
-	# check the scheduler and make sure www-data is allowed to use the at command for php resolver
-	if test -f "/etc/at.deny";then
-		# the file exists check for the www-data line
-		if grep -q "www-data" "/etc/at.deny";then
-			# remove www-data from the deny file for scheduler
-			data=$(grep --invert-match "www-data" "/etc/at.deny")
-			echo "$data" > "/etc/at.deny"
-		fi
-	fi
+	# generate fortunes
 	generateFortune "$webDirectory"
 	# check for the web player config
 	if yesNoCfgCheck "/etc/2web/webPlayer.cfg";then
