@@ -2265,12 +2265,12 @@ if( ! function_exists("bytesToHuman")){
 		}else if ( $bytes <= 999999999999){
 			# gigabytes
 			return ( number_format( ( $bytes / 1000000000 ) , 1) . "G");
-		}else if ( $bytes <= 999999999999999999999 ){
-			# petabytes
-			return ( number_format( ( $bytes / 1000000000000000 ) , 1) . "P");
-		}else if ( $bytes <= 999999999999999 ){
+		}else if ( $bytes <= 999999999999999){
 			# terabytes
 			return ( number_format( ( $bytes / 1000000000000 ) , 1) . "T");
+		}else if ( $bytes <= 999999999999999999999){
+			# petabytes
+			return ( number_format( ( $bytes / 1000000000000000 ) , 1) . "P");
 		}else{
 			# if the filesize is to large show it in petabytes
 			# petabytes
