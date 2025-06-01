@@ -136,7 +136,8 @@ rss2nfo_update(){
 	INFO "Loading up sources..."
 	# check for defined sources
 	rssSources=$(loadConfigs "/etc/2web/rss/sources.cfg" "/etc/2web/rss/sources.d/" "/etc/2web/config_default/rss2nfo_sources.cfg")
-
+	# show the sources
+	ALERT "RSS SOURCES:\n$rssSources"
 	################################################################################
 	# create show and cache directories
 	createDir "/var/cache/2web/downloads/rss/"
@@ -211,48 +212,47 @@ function nuke(){
 	ALERT "The RSS is still stored as json in /var/cache/2web/downloads/rss/"
 }
 ################################################################################
-main(){
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "rss2nfo"
-		lockProc "rss2nfo"
-		rss2nfo_update $@
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "rss2nfo"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "rss2nfo"
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "rss2nfo"
-		upgrade-yt-dlp
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockProc "rss2nfo"
-		ALERT "Removing the downloaded RSS feeds."
-		# cleanup the rss data
-		rm -rv "/var/cache/2web/web/downloads/rss/"
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockProc "rss2nfo"
-		ALERT "Removing NFO data generated from rss feeds."
-		ALERT "All this data can be regenerated without redownload of the rss feed."
-		#
-		rm -rv "/var/cache/2web/web/generated/rss/"
-		#
-		nuke
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "rss2nfo Version: "
-		cat /usr/share/2web/version_rss2nfo.cfg
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/rss2nfo.txt"
-	else
-		checkModStatus "rss2nfo"
-		lockProc "rss2nfo"
-		rss2nfo_update $@
-		drawLine
-		echo "NFO Library generated at /var/cache/2web/generated/rss/"
-		drawLine
-	fi
-}
+# set the theme of the lines in CLI output
+LINE_THEME="boxes"
 ################################################################################
-main "$@"
-exit
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	lockProc "rss2nfo"
+	checkModStatus "rss2nfo"
+	rss2nfo_update $@
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "rss2nfo"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "rss2nfo"
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	lockProc "rss2nfo"
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "rss2nfo"
+	upgrade-yt-dlp
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	lockProc "rss2nfo"
+	ALERT "Removing the downloaded RSS feeds."
+	# cleanup the rss data
+	rm -rv "/var/cache/2web/web/downloads/rss/"
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "rss2nfo"
+	ALERT "Removing NFO data generated from rss feeds."
+	ALERT "All this data can be regenerated without redownload of the rss feed."
+	#
+	rm -rv "/var/cache/2web/web/generated/rss/"
+	#
+	nuke
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "rss2nfo Version: "
+	cat /usr/share/2web/version_rss2nfo.cfg
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/rss2nfo.txt"
+else
+	lockProc "rss2nfo"
+	checkModStatus "rss2nfo"
+	rss2nfo_update $@
+	drawLine
+	echo "NFO Library generated at /var/cache/2web/generated/rss/"
+	drawLine
+fi
