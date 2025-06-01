@@ -348,7 +348,7 @@ function buildActivityGraph(){
 		# write the times on the bottom of the graph
 		timeCounterHours="$(date "+%H")"
 		timeCounterMinutes="$(date "+%M")"
-		if [[ $timeCounterMinutes -gt 30 ]];then
+		if [[ $(( 10#$timeCounterMinutes )) -gt 30 ]];then
 			timeCounter="$timeCounterHours.5"
 		else
 			timeCounter="$timeCounterHours.0"
