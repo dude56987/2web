@@ -38,30 +38,36 @@ include("/var/cache/2web/web/header.php");
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 ################################################################################
 if (array_key_exists("to",$_GET)){
-	echo "<div class='inputCard'>\n";
-	echo "<h2>External Redirect</h2>\n";
-	echo "<ul>\n";
-	echo "<li>\n";
-	echo "This link will redirect to a external website.\n";
-	echo "</li>\n";
-	echo "<li>\n";
-	echo "Click the below link to proceed.\n";
-	echo "</li>\n";
-	echo "</ul>\n";
+	echo "<div class='titleCard'>\n";
+	echo "	<h2>External Redirect</h2>\n";
+	echo "	<ul>\n";
+	echo "		<li>\n";
+	echo "			This link will redirect to a external website.\n";
+	echo "		</li>\n";
+	echo "		<li>\n";
+	echo "			Click the below link to proceed.\n";
+	echo "		</li>\n";
+	echo "	</ul>\n";
 	# build the link to the extrnal link
-	echo "<a class='button' target='_BLANK' rel='noreferer' href='".urldecode($_GET['to'])."'>🌐 ".urldecode($_GET['to'])."</a>\n";
-	echo "<ul>\n";
-	echo "<li>\n";
-	echo "Or you can return to the last page with the button below.\n";
-	echo "</li>\n";
-	echo "</ul>\n";
-	echo "<a class='button' onclick='history.back()'>🔙 Go Back To Last Page</a>\n";
+	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' target='_BLANK' rel='noreferer' href='".urldecode($_GET['to'])."'>🌐 ".urldecode($_GET['to'])."</a>\n";
+	echo "	</div>\n";
+	echo "	<ul>\n";
+	echo "		<li>\n";
+	echo "			Or you can return to the last page with the button below.\n";
+	echo "		</li>\n";
+	echo "	</ul>\n";
+	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' onclick='history.back()'>🔙 Go Back To Last Page</a>\n";
+	echo "	</div>\n";
+	echo "	<hr>";
 	echo "</div>\n";
 }else{
 	echo "<div class='inputCard'>\n";
-	echo "<h2>No Redirect was given</h2>\n";
-	echo "<a class='button' onclick='history.back()'>🔙 Go Back To Last Page</a>\n";
-	echo "<a class='button' href='/'>🏠 Return To The Home Page</a>\n";
+	echo "	<h2>No Redirect was given</h2>\n";
+	echo "	<a class='button' onclick='history.back()'>🔙 Go Back To Last Page</a>\n";
+	echo "	<a class='button' href='/'>🏠 Return To The Home Page</a>\n";
+	echo "	<hr>";
 	echo "</div>\n";
 }
 include("/var/cache/2web/web/footer.php");
