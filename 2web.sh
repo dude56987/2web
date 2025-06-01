@@ -109,21 +109,29 @@ function generateFortune(){
 			#find "/usr/share/games/fortunes/" -type f | while read -r fortuneFile;do
 			IFS_BACKUP=$IFS
 			IFS=$'\n'
-			for fortuneFile in $(find "/usr/share/games/fortunes/");do
-				if echo "$fortuneFile" | grep ".db";then
+			#for fortuneFile in $(find "/usr/share/games/fortunes/" -type f);do
+			#
+			find "/usr/share/games/fortunes/" -type f | while read -r fortuneFile;do
+				if echo "$fortuneFile" | grep -q "\.";then
 					INFO "Incorrect database format $fortuneFile"
-				elif echo "$fortuneFile" | grep ".cfg";then
+				elif echo "$fortuneFile" | grep -q "\.db";then
 					INFO "Incorrect database format $fortuneFile"
-				elif echo "$fortuneFile" | grep ".u8";then
+				elif echo "$fortuneFile" | grep -q "\.cfg";then
 					INFO "Incorrect database format $fortuneFile"
-				elif echo "$fortuneFile" | grep ".dat";then
+				elif echo "$fortuneFile" | grep -q "\.u8";then
+					INFO "Incorrect database format $fortuneFile"
+				elif echo "$fortuneFile" | grep -q "\.dat";then
 					INFO "Incorrect database format $fortuneFile"
 				else
+					INFO "Found fortune file '$fortuneFile'"
 					# if the fortune file is enabled
 					# - default fortune files to yes
 					if yesNoCfgCheck "/etc/2web/fortune/$(basename "$fortuneFile").cfg" "no";then
+						ALERT "Fortune file '$fortuneFile' is Enabled."
 						# add the fortune file to the generate command
 						fortuneFiles="${fortuneFiles} $(basename "${fortuneFile}")"
+					else
+						INFO "Fortune file '$fortuneFile' is Disabled."
 					fi
 				fi
 			done
@@ -132,6 +140,11 @@ function generateFortune(){
 			todaysFortune=$(/usr/games/fortune -e ${fortuneFiles} | sed "s/\t/ /g")
 			#
 			addToLog "INFO" "Generate New Fortune" "<pre>/usr/games/fortune -e ${fortuneFiles}</pre><pre>${todaysFortune}</pre>"
+			#
+			drawLine
+			drawHeader "New Fortune"
+			drawLine
+			ALERT "$todaysFortune"
 			#
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		else
