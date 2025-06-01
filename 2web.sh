@@ -1178,32 +1178,114 @@ function waitForIdleServer(){
 }
 ################################################################################
 function buildSpinnerGif(){
+	# buildSpinnerGif "$animationName" "$animationDelay"
+	#
+	# Animation Names
+	# - spin_white_square
+	# - spin_white_circle
+	# - spin_block
+	# - spin_sextant
+	# - spin_triangles
+	# - spin_checkers
+	# - spin_circle_edges
+	# - spin_split_fill
+	# - spin_box_split_fill
+	# - spin_box_cross_fill
+	# - fast_circle_cross
+	# - other_left_right_parallel_opposite_arrows
+	# - other_left_right_opposite_arrows
+	# - other_left_right_opposite_arrows_wall
+	# - other_up_down_opposite_arrows
+	# - fill_empty_blocks
+	# - fill_empty_diamond
+	# - greater_than
+	#
+	# Build the animated gif spinner using the box drawing characters used for the spinner in the CLI interface
+	#
 	mkdir -p /tmp/2web/spinner/
+	createDir /var/cache/2web/spinners/
 	backgroundColor="transparent"
 	foregroundColor="white"
-	outputPathPrefix="/tmp/2web/spinner/frame"
 	newSize="32x32"
-	# draw all the frames of the gif
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,0' -scale $newSize "${outputPathPrefix}_08.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,1' -scale $newSize "${outputPathPrefix}_07.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 0,2' -scale $newSize "${outputPathPrefix}_06.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,2' -scale $newSize "${outputPathPrefix}_05.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,2' -scale $newSize "${outputPathPrefix}_04.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,1' -scale $newSize "${outputPathPrefix}_03.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 2,0' -scale $newSize "${outputPathPrefix}_02.gif"
-	convert -size 3x3 xc:$backgroundColor -fill $foregroundColor -draw 'point 1,0' -scale $newSize "${outputPathPrefix}_01.gif"
-
+	if [ "$1" == "" ];then
+		animationName="spin_split_fill"
+	else
+		animationName="$1"
+	fi
+	if [ "$2" == "" ];then
+		# 12 fps = 1000 / 12 = 83
+		animationDelay="10"
+	else
+		animationDelay="$2"
+	fi
+	#
+	outputPathPrefix="/tmp/2web/spinner/$animationName/"
+	createDir "$outputPathPrefix"
+	#
+	if [ "$animationName" == "spin_white_square" ];then
+		# spinner animations
+		animation="◳◲◱◰"
+	elif [ "$animationName" == "spin_white_circle" ];then
+		animation="◷◶◵◴"
+	elif [ "$animationName" == "spin_block" ];then
+		animation="▝▗▖▘"
+	elif [ "$animationName" == "spin_sextant" ];then
+		animation="🬁🬇🬞🬏🬃🬀"
+	elif [ "$animationName" == "spin_triangles" ];then
+		animation="▴▸▾◂"
+	elif [ "$animationName" == "spin_checkers" ];then
+		animation="⛀⛁⛃⛂"
+	elif [ "$animationName" == "spin_circle_edges" ];then
+		animation="◝◞◟◜"
+	elif [ "$animationName" == "spin_split_fill" ];then
+		animation="⬔◨◪⬓⬕◧◩⬒"
+	elif [ "$animationName" == "spin_box_split_fill" ];then
+		animation="◨⬓◧⬒"
+	elif [ "$animationName" == "spin_box_cross_fill" ];then
+		animation="⬔◪⬕◩"
+	elif [ "$animationName" == "fast_circle_cross" ];then
+		# fast spin animations
+		animation="⊗⊕"
+	elif [ "$animationName" == "other_left_right_parallel_opposite_arrows" ];then
+		# other loop animations
+		animation="⇆⇇⇄⇉"
+	elif [ "$animationName" == "other_left_right_opposite_arrows" ];then
+		animation="⇆⇄"
+	elif [ "$animationName" == "other_left_right_opposite_arrows_wall" ];then
+		animation="↹↹"
+	elif [ "$animationName" == "other_up_down_opposite_arrows" ];then
+		animation="⇅⇵"
+	elif [ "$animationName" == "fill_empty_blocks" ];then
+		animation="▝▐▟█▙▌▘ "
+	elif [ "$animationName" == "fill_empty_diamond" ];then
+		animation="🮡🮥🮪🮮🮫🮤🮠 "
+	elif [ "$animationName" == "greater_than" ];then
+		animation=">≫⋙"
+	else
+		# draw the default spinner
+		animation="🬁🬇🬞🬏🬃🬀"
+	fi
+	#
+	animationLength=${#animation}
+	#
+	#animationDelay=$(( $animationLength * 2 ))
+	#
+	outputPaths=""
+	# loop though the animation
+	for (( index=0;index<$animationLength;index++ ));do
+		# draw the spinner at the current animation step
+		title="${animation:$index:1}"
+		if [ "$title" != "" ];then
+			#convert -background transparent -pointsize 128 pango:"$title" "${outputPathPrefix}_$index.gif"
+			convert -background transparent -fill white -pointsize 32 pango:"$title" -fuzz "5%" -trim "${outputPathPrefix}$index.gif"
+			#
+			outputPaths="$outputPaths -dispose Background -delay $animationDelay -page +0+0 ${outputPathPrefix}$index.gif"
+		fi
+	done
 	# convert frames into transparent gif
-	convert -transparent "#000000" -delay 16 -dispose Background \
-		-page +0+0 "${outputPathPrefix}_01.gif" \
-		-page +0+0 "${outputPathPrefix}_02.gif" \
-		-page +0+0 "${outputPathPrefix}_03.gif" \
-		-page +0+0 "${outputPathPrefix}_04.gif" \
-		-page +0+0 "${outputPathPrefix}_05.gif" \
-		-page +0+0 "${outputPathPrefix}_06.gif" \
-		-page +0+0 "${outputPathPrefix}_07.gif" \
-		-page +0+0 "${outputPathPrefix}_08.gif" \
-		-loop 0 "/var/cache/2web/spinner.gif"
+	convert $outputPaths -layers "optimize" -loop 0 "/var/cache/2web/spinners/${animationName}.gif"
+	#
+	linkFile "/var/cache/2web/spinners/${animationName}.gif" "/var/cache/2web/spinner.gif"
 }
 ################################################################################
 function buildPulseGif(){
