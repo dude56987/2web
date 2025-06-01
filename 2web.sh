@@ -52,15 +52,15 @@ function getDirSum(){
 }
 ########################################################################
 function enableApacheServer(){
-	rm -v "/etc/apache2/conf-enabled/0000-default.conf"
-	rm -v "/etc/apache2/conf-enabled/000-default.conf"
-	rm -v "/etc/apache2/conf-enabled/00-default.conf"
-	rm -v "/etc/apache2/conf-enabled/0-default.conf"
+	delete "/etc/apache2/conf-enabled/0000-default.conf"
+	delete "/etc/apache2/conf-enabled/000-default.conf"
+	delete "/etc/apache2/conf-enabled/00-default.conf"
+	delete "/etc/apache2/conf-enabled/0-default.conf"
 	# disable default site by removing symlink
-	rm -v "/etc/apache2/sites-enabled/0000-default.conf"
-	rm -v "/etc/apache2/sites-enabled/000-default.conf"
-	rm -v "/etc/apache2/sites-enabled/00-default.conf"
-	rm -v "/etc/apache2/sites-enabled/0-default.conf"
+	delete "/etc/apache2/sites-enabled/0000-default.conf"
+	delete "/etc/apache2/sites-enabled/000-default.conf"
+	delete "/etc/apache2/sites-enabled/00-default.conf"
+	delete "/etc/apache2/sites-enabled/0-default.conf"
 	# copy over the config files
 	linkFile "/etc/apache2/sites-available/0000-2web-website.conf" "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
@@ -2332,6 +2332,9 @@ main(){
 		# remove the kiosk user from the system
 		deluser --remote-all-files kiosk
 	elif [ "$1" == "--fortune" ] || [ "$1" == "fortune" ];then
+		# remove the existing fortune
+		delete "/var/cache/2web/web/fortune.index"
+		# generate the fortune
 		generateFortune "$(webRoot)"
 	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 		enableMod "2web"
