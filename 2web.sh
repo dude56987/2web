@@ -285,7 +285,7 @@ function buildActivityGraph(){
 	# - this is used by the loops that draw the graph elements in SVG
 	moduleNames="$(loadModules)"
 
-	ALERT "MODULE NAMES ='$moduleNames'"
+	#ALERT "MODULE NAMES ='$moduleNames'"
 
 	# storage varable for active modules
 	enabledModules=""
@@ -304,7 +304,7 @@ function buildActivityGraph(){
 	# remove spaces at the end of lines
 	enabledModules=$(echo "$enabledModules" | sed "s/ $//g")
 
-	ALERT "ENABLED MODULES ='$enabledModules'"
+	#ALERT "ENABLED MODULES ='$enabledModules'"
 
 	# add to the height for the time codes
 	graphHeightCounter=$(( graphHeightCounter + 3 ))
