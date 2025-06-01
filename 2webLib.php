@@ -2037,7 +2037,7 @@ if( ! function_exists("spaceCleanedText")){
 	function spaceCleanedText($cleanedText){
 		# clean up the text for use in web urls and directory paths
 		# - uses fullwidth versions of caracters that interfere with URLs
-		$characters=Array(",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","＄","＂","＇","{","}","(",")","[","]",".");
+		$characters=Array("．",",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","：","＄","＂","＇","{","}","(",")","[","]","＊");
 		$spacedText="";
 		foreach($characters as $specialCharacter){
 			$cleanedText=str_replace("$specialCharacter"," $specialCharacter ","$cleanedText");
