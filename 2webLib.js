@@ -511,6 +511,21 @@ function notify(message){
 		}, 355);
 	}
 }
+////////////////////////////////////////////////////////////////////////////////
+function typeText(textInput,elementID="default",typingSpeed=50,index=0){
+	// type out a text string like a oldschool videogame
+	if (index < textInput.length){
+		//
+		if(elementID=="default"){
+			// add text to the body if no element is selected
+			document.body.innerHTML += textInput.charAt(index);
+		}else{
+			document.getElementById(elementID).innerHTML += textInput.charAt(index);
+		}
+		index+=1;
+		setTimeout(typeText, typingSpeed, textInput, elementID, typingSpeed, index );
+	}
+}
 /*
 //-----------------------------------------------------------------------------
 function startVideoUpdateLoop(){

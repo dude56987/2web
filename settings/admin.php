@@ -34,7 +34,6 @@ include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 
 <div class='settingListCard'>
 <h1>Running adminstrative action, This will be logged!</h1>
-<img class='globalPulse' src='/pulse.gif'>
 <?php
 # enable error reporting
 ini_set("display_errors", 1);
@@ -86,31 +85,38 @@ function yesNoCfgSet($configPath, $newConfigSetting){
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function outputLog($stringData,$class="outputLog"){
+function outputLog($stringData,$class="outputLog",$typeOut=false){
 	# Write output and do three dots with randomized delays to simulate processing
 	#
 	# RETURN OUTPUT
 
 	# write $stringData to the log then to the webpage
 	addToLog("ADMIN","Admin Action by user '".$_SESSION["user"]."'","$stringData");
-	echo "<div class='$class'>";
-	echo "$stringData";
-	$index=0;
-	$waitTime=3;
-	while($index < $waitTime){
-		$index += 1;
-		echo ".";
+	$outputID=md5($stringData);
+	echo "<div id='$outputID' class='$class'>\n";
+	if($typeOut){
+		echo "</div>\n";
+		echo "<script>typeText('$stringData','$outputID');</script>";
 		clear();
-		if ( ($index % 2) == 0 ){
-			sleep(1);
+	}else{
+		echo "$stringData\n";
+		$index=0;
+		$waitTime=3;
+		while($index < $waitTime){
+			$index += 1;
+			echo ".";
+			clear();
+			if ( ($index % 2) == 0 ){
+				sleep(1);
+			}
 		}
+		# 50/50 shot
+		if ( rand(0,1) == 0 ){
+			sleep(1);
+			clear();
+		}
+		echo "</div>\n";
 	}
-	# 50/50 shot
-	if ( rand(0,1) == 0 ){
-		sleep(1);
-		clear();
-	}
-	echo "</div>";
 }
 ////////////////////////////////////////////////////////////////////////////////
 function setModStatus($modName,$modStatus){
