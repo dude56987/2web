@@ -20,24 +20,7 @@ source "/var/lib/2web/common"
 ################################################################################
 #set -x
 ################################################################################
-ytdl2kodi_caption(){
-	# ytdl2kodi_caption "pathToImage" "captionToUse"
-	if ! test -f /etc/2web/ytdl/captionFont.cfg;then
-		# create the defaut font
-		echo "OpenDyslexic-Bold" > /etc/2web/ytdl/captionFont.cfg
-	fi
-	captionFont=$(cat /etc/2web/ytdl/captionFont.cfg)
-	if echo "$(convert -list font)" | grep "$captionFont";then
-		# the caption font chosen exists and can be used
-		echo "$chosenFont"
-	else
-		echo "ERROR: The caption font '$captionFont' does not exist on the current system!" > /etc/2web/ytdl/captionFont.cfg
-		echo "Choose from one of the following fonts by editing this file /etc/2web/ytdl/captionFont.cfg" >> /etc/2web/ytdl/captionFont.cfg
-		echo "$(convert -list font)" >> /etc/2web/ytdl/captionFont.cfg
-	fi
-}
-################################################################################
-getDownloadPath(){
+function getDownloadPath(){
 	# Print the download path
 	#
 	# - This function needs removed because 2web now has a global download path
@@ -47,41 +30,36 @@ getDownloadPath(){
 	echo "/var/cache/2web/downloads/nfo/"
 }
 ################################################################################
-ytdl2kodi_channel_extractor(){
+function ytdl2kodi_channel_extractor(){
 	################################################################################
 	# import and run the debug check
 	################################################################################
 	# NOTE: look at youtube-dl-selection for ripping info for nfo files
 	# NOTE: also use youtube-dl for ripping the link to the video/or downloading
 	channelLink=$(echo "$1")
-	echo "################################################################################"
-	echo "[INFO]: Running Channel Extractor on = '$channelLink'"
-	echo "################################################################################"
+	drawLine
+	ALERT "Running Channel Extractor on = '$channelLink'"
+	drawLine
 	# rip the show title
 	baseUrl=$(echo "$channelLink" | cut -d'/' -f3)
-	#echo "[INFO]: baseUrl 1 cut = '$baseUrl'"
 	baseUrl=$(echo "$baseUrl" | cut -d':' -f1)
-	#echo "[INFO]: baseUrl 2 cut = '$baseUrl'"
 	################################################################################
-	echo "[INFO]: Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
+	ALERT "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	downloadPath="$(getDownloadPath)"
-	echo "[INFO]: DownloadPath set to = $downloadPath"
+	ALERT "DownloadPath set to = $downloadPath"
 	################################################################################
 	# remove domain prefix since since some sites vary the use of the prefix
 	if [ $(echo "$baseUrl" | grep -oP "\." | wc -l) -gt 1 ];then
-		echo "[INFO]: baseUrl needs restructuring '$baseUrl'"
+		ALERT "baseUrl needs restructuring '$baseUrl'"
 		# create a baseurl without the prefix
 		newUrl=$(echo "$baseUrl" | cut -d'.' -f2)
-		#echo "[INFO]: newUrl 1 = $newUrl"
 		newUrl=$(echo "$newUrl.")
-		#echo "[INFO]: newUrl 2 = $newUrl"
 		tempSufix=$(echo "$baseUrl" | cut -d'.' -f3)
 		newUrl=$(echo "$newUrl$tempSufix")
-		#echo "[INFO]: newUrl 3 = $newUrl"
 		baseUrl="$newUrl"
 	fi
 
-	echo "[INFO]: baseUrl = '$baseUrl'"
+	ALERT "baseUrl = '$baseUrl'"
 	if [ "$baseUrl" == "" ];then
 		# ignore blank lines
 		return
@@ -102,33 +80,33 @@ ytdl2kodi_channel_extractor(){
 	# create a default channel cache
 	touch /etc/2web/ytdl/channelUpdateCache.cfg
 	# if that entry exists then
-	echo "[INFO]: searching for channelLink : '$channelLink'"
+	ALERT "Searching for channelLink : '$channelLink'"
 	if grep -q "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg";then
 		# get the line containing the channel link
 		temp=$(grep "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg")
 		#  check the second field which will be a date
 		resetTime=$(echo "$temp" | cut -d " " -f2)
-		echo "[INFO]: { resetTime = $resetTime } > { now = ~$(date '+%s' ) }"
+		ALERT "{ resetTime = $resetTime } > { now = ~$(date '+%s' ) }"
 		# update the channel updated cache if the reset time is less than the current time
 		if [ "$resetTime" -gt "$(date "+%s")" ];then
 			# this means the reset time has not yet passed so exit out without downloading
-			echo "[WARNING]: The reset time has not yet passed skipping..."
-			echo "[INFO]: channelLink : '$channelLink'"
+			ALERT "The reset time has not yet passed skipping..."
+			ALERT "channelLink : '$channelLink'"
 			return
 		else
-			echo "[INFO]: The reset time has passed, Processing link..."
+			ALERT "The reset time has passed, Processing link..."
 		fi
 	fi
-	echo "[INFO]: Downloading '$channelLink'"
+	ALERT "Downloading '$channelLink'"
 	################################################################################
-	echo "[INFO]: Running playlist link extractor..."
+	ALERT "Running playlist link extractor..."
 	linkList=""
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
-	echo "[INFO]: Updating the playlist..."
+	ALERT "Updating the playlist..."
 	# try to rip as a playlist
 	tempLinkList=$(/var/cache/2web/generated/yt-dlp/yt-dlp --flat-playlist --abort-on-error -j "$channelLink")
 	errorCode=$?
-	echo "[INFO]: tempLinkList = $tempLinkList"
+	ALERT "tempLinkList = $tempLinkList"
 	# get uploader from the json data and set it as the show title
 	#showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
 
@@ -149,7 +127,7 @@ ytdl2kodi_channel_extractor(){
 
 	#tempLinkList=$(echo "$tempLinkList" | jq -r ".url")
 	linkList=""
-	echo "[INFO]: Checking error code = '$errorCode'"
+	ALERT "Checking error code = '$errorCode'"
 	# check if the error code is true
 	#if [[ $errorCode -eq 0 ]];then
 	if [ $errorCode -eq 0 ];then
@@ -157,11 +135,10 @@ ytdl2kodi_channel_extractor(){
 		#echo "$tempLinkList" > "$webDirectory/sums/ytdl_channel_$channelSum.cfg"
 		# list only the urls from the json data retrived
 		linkList=$(echo "$tempLinkList" | jq -r ".url")
-		echo "[INFO]: linkList after cleanup = $tempLinkList"
+		ALERT "linkList after cleanup = $tempLinkList"
 	else
 		# write in the database that this channel link has failed
-		logPagePath="$webDirectory/log/$(date "+%s").log"
-		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist from link '$channelLink'" "$logPagePath"
+		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist from link '$channelLink'"
 		# exit and do not mark as processed since no playlist/linklist could be retrieved
 		# this should also fail out if the network connection is down
 		return 1
@@ -172,7 +149,7 @@ ytdl2kodi_channel_extractor(){
 	#echo "[INFO]: tempLinkList after cleanup = $tempLinkList"
 
 	# reverse sort of list since most lists show newest at the top of the webpage
-	echo "[INFO]: Reversing list because most pages list newest to oldest..."
+	ALERT "Reversing list because most pages list newest to oldest..."
 	linkList=$(echo "$linkList" | tac)
 
 	# set the show title based on the data from the latest video posted on the channel playlist
@@ -214,17 +191,17 @@ ytdl2kodi_channel_extractor(){
 			tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
 			tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".channel")
 
-			echo "[INFO]: [ $tempJsonData == $tempJsonData2 ]"
+			ALERT "[ $tempJsonData == $tempJsonData2 ]"
 			if [ "$tempJsonData" == "$tempJsonData2" ];then
-				echo "[INFO]: comparison correct"
+				ALERT "comparison correct"
 				showTitle=$tempJsonData
 			fi
 			if ! validString "$showTitle";then
 				tempJsonData=$(echo "$tempJsonInfo" | jq -r ".uploader")
 				tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".uploader")
-				echo "[INFO]: [ $tempJsonData == $tempJsonData2 ]"
+				ALERT "[ $tempJsonData == $tempJsonData2 ]"
 				if [ "$tempJsonData" == "$tempJsonData2" ];then
-					echo "[INFO]: comparison correct"
+					ALERT "comparison correct"
 					showTitle=$tempJsonData
 				fi
 			fi
@@ -274,9 +251,9 @@ ytdl2kodi_channel_extractor(){
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$tempSum.cfg"
 	touch "$previousDownloadsPath"
 	previousDownloads=$(cat "$previousDownloadsPath")
-	echo "[INFO]: Link List = $linkList"
+	ALERT "Link List = $linkList"
 	# get the number of links
-	echo "[INFO]: Link List entries = $(echo \"$linkList\" | wc -l)"
+	ALERT "Link List entries = $(echo \"$linkList\" | wc -l)"
 	# create the channel metadata path
 	mkdir -p "/etc/2web/ytdl/meta/"
 	# write the channel metadata for total episodes
@@ -306,23 +283,23 @@ ytdl2kodi_channel_extractor(){
 		# episode processing limit should be checked before any work
 		# is done in processing the episode
 		if [ $processedEpisodes -ge $episodeProcessingLimit ];then
-			echo "[INFO]: Exceeded Episode Processing Limit, skipping rendering episode..."
+			ALERT "Exceeded Episode Processing Limit, skipping rendering episode..."
 			return 2
 		fi
-		echo "[INFO]: Preprocessing '$link' ..."
-		echo "[INFO]: Running metadata extractor on '$link' ..."
+		ALERT "Preprocessing '$link' ..."
+		ALERT "Running metadata extractor on '$link' ..."
 		if [ "$link" == "$channelLink" ];then
 			# this means a link was found to the channel itself, this can cause problems
-			echo "[INFO]: Found link to the channel on the channel page..."
+			ALERT "Found link to the channel on the channel page..."
 		else
 			# check links aginst existing stream files to pervent duplicating the work
 			if echo "$@" | grep -q "\-\-username";then
-				echo "[INFO]: Running username video extraction..."
+				INFO "Running username video extraction..."
 				if ytdl2kodi_video_extractor "$link" "$channelLink" "$showTitle" --username;then
 					processedEpisodes=$(($processedEpisodes + 1))
 				fi
 			else
-				echo "[INFO]: Running video extraction...."
+				INFO "Running video extraction...."
 				if ytdl2kodi_video_extractor "$link" "$channelLink";then
 					processedEpisodes=$(($processedEpisodes + 1))
 				fi
@@ -353,7 +330,7 @@ ytdl2kodi_channel_extractor(){
 	#lastProcessed=$(date "+%s")
 }
 ################################################################################
-ytdl2kodi_channel_meta_extractor(){
+function ytdl2kodi_channel_meta_extractor(){
 	################################################################################
 	# META DATA EXTRACTOR
 	################################################################################
@@ -413,7 +390,7 @@ ytdl2kodi_channel_meta_extractor(){
 	return
 }
 ################################################################################
-ytdl2kodi_reset_cache(){
+function ytdl2kodi_reset_cache(){
 	if test -f /etc/2web/ytdl/downloadPath.cfg;then
 		downloadPath="$(cat /etc/2web/ytdl/downloadPath.cfg)"
 		# remove the download data stored
@@ -436,7 +413,7 @@ ytdl2kodi_reset_cache(){
 	fi
 }
 ################################################################################
-ytdl2kodi_rip_title(){
+function ytdl2kodi_rip_title(){
 	webpageLink=$1
 	# extract the domain name from the link
 	showTitle=$(echo "$webpageLink" | cut -d'/' -f3)
@@ -452,10 +429,9 @@ ytdl2kodi_rip_title(){
 	return
 }
 ################################################################################
-ytdl2kodi_sleep(){
-	################################################################################
+function ytdl2kodi_sleep(){
 	# checking sleepTime.cfg to see the max wait time between downloads
-	echo "Loading up sleep config '/etc/2web/ytdl/sleepTime.cfg'"
+	INFO "Loading up sleep config '/etc/2web/ytdl/sleepTime.cfg'"
 	if test -f /etc/2web/ytdl/sleepTime.cfg;then
 		# load the config file
 		sleepTime=$(cat /etc/2web/ytdl/sleepTime.cfg)
@@ -465,7 +441,6 @@ ytdl2kodi_sleep(){
 		# write the new config from the path variable
 		echo "$sleepTime" > /etc/2web/ytdl/sleepTime.cfg
 	fi
-	################################################################################
 	# sleep between 0 and 10 seconds between each link download
 	if [ $sleepTime -gt 0 ];then
 		tempTime="$(($RANDOM % $sleepTime))"
@@ -479,7 +454,7 @@ ytdl2kodi_sleep(){
 	return
 }
 ################################################################################
-ytdl2kodi_update(){
+function ytdl2kodi_update(){
 	################################################################################
 	# import and run the debug check
 	# check dependencies to get the latest version of youtube-dl
@@ -506,23 +481,20 @@ ytdl2kodi_update(){
 	################################################################################
 	# for each link in the sources
 	siteLinkList=$(loadConfigs "/etc/2web/ytdl/sources.cfg" "/etc/2web/ytdl/sources.d/" "/etc/2web/config_default/ytdl2nfo_websiteSources.cfg" | shuf)
-	echo "Processing sources..."
-	echo "Site Link List = '$siteLinkList'"
+	ALERT "Processing sources..."
+	ALERT "Site Link List = '$siteLinkList'"
 	siteLinkList="$(echo "$siteLinkList" | tr -s '\n')"
 	siteLinkList="$(echo "$siteLinkList" | sed "s/\n/ /g")"
-	echo "Site Link List = '$siteLinkList'"
-	#echo "$siteLinkList" | while read link;do
+	ALERT "Site Link List = '$siteLinkList'"
 	for link in $siteLinkList;do
-		#echo "[INFO]:Checking site link '$link' ..."
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
-			echo "[INFO]: Channel Processing Limit Reached!"
+			ALERT "Channel Processing Limit Reached!"
 			break
 		fi
 		if [ "$link" == "" ];then
 			echo "'$link' is blank..."
 		else
-			#echo "Running channel metadata extractor on '$link'..."
 			# check links aginst existing stream files to pervent duplicating the work
 			ytdl2kodi_channel_extractor "$link"
 		fi
@@ -533,23 +505,22 @@ ytdl2kodi_update(){
 	################################################################################
 	# for each link in the users sources
 	userlinkList=$(loadConfigs "/etc/2web/ytdl/usernameSources.cfg" "/etc/2web/ytdl/usernameSources.d/" "/etc/2web/config_default/ytdl2nfo_usernameSources.cfg" | shuf)
-	echo "Processing user sources..."
-	echo "User Link List = '$userlinkList'"
+	ALERT "Processing user sources..."
+	ALERT "User Link List = '$userlinkList'"
 	userlinkList="$(echo "$userlinkList" | tr -s '\n')"
 	userlinkList="$(echo "$userlinkList" | sed "s/\n/ /g")"
-	echo "User Link List post cleanup = '$userlinkList'"
-	#echo "$userLinkList" | while read -r link;do
+	ALERT "User Link List post cleanup = '$userlinkList'"
 	for link in $userlinkList;do
-		echo "[INFO]:Checking user link '$link' ..."
+		ALERT "Checking user link '$link' ..."
 		currentlyProcessing="$(($currentlyProcessing + 1))"
 		if [ $currentlyProcessing -gt $(($channelProcessingLimit - 1)) ];then
-			echo "[INFO]: Channel Processing Limit Reached!"
+			ALERT "Channel Processing Limit Reached!"
 			break
 		fi
 		if [ "$link" == "" ];then
-			echo "'$link' is blank..."
+			ALERT "'$link' is blank..."
 		else
-			echo "[INFO]:Running channel metadata extractor on '$link' ..."
+			ALERT "Running channel metadata extractor on '$link' ..."
 			# check links aginst existing stream files to pervent duplicating the work
 			ytdl2kodi_channel_extractor "$link" --username
 		fi
@@ -558,27 +529,27 @@ ytdl2kodi_update(){
 	return
 }
 ################################################################################
-validString(){
+function validString(){
 	stringToCheck="$1"
-	echo "[INFO]: Checking string '$stringToCheck'"
+	ALERT "Checking string '$stringToCheck'"
 	# convert string letters to all uppercase and look for returned NULL string
 	# jq returns these strings instead of failing outright
 	if echo "$stringToCheck" | grep -q --ignore-case "^NULL";then
 		# this means the function is a null string returned by jq
-		echo "[WARNING]:string is a NULL value"
+		ALERT "[WARNING]:string is a NULL value"
 		return 2
 	elif [ 2 -ge "$(echo "$stringToCheck" | wc -c)" ];then
 		# this means the string is only one character
-		echo "[WARNING]:String length is less than three"
+		ALERT "[WARNING]:String length is less than three"
 		return 1
 	else
 		# all checks have been passed the string is correct
-		echo "[INFO]: String passed all checks and is correct"
+		ALERT "String passed all checks and is correct"
 		return 0
 	fi
 }
 ########################################################################
-addProcessedSum(){
+function addProcessedSum(){
 	selectionToAdd=$1
 	channelSumToAdd=$2
 	# generate the sum
@@ -593,7 +564,7 @@ addProcessedSum(){
 	fi
 }
 ################################################################################
-checkProcessedSum(){
+function checkProcessedSum(){
 	selectionToCheck=$1
 	channelSumToCheck=$2
 	# generate the sum
@@ -607,7 +578,7 @@ checkProcessedSum(){
 	fi
 }
 ################################################################################
-ytdl2kodi_video_extractor(){
+function ytdl2kodi_video_extractor(){
 	################################################################################
 	# VIDEO EXTRACTOR
 	################################################################################
@@ -629,20 +600,20 @@ ytdl2kodi_video_extractor(){
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$channelSum.cfg"
 	#selectionSum=$(echo -n "$selection" | sha256sum | cut -d' ' -f1)
 	if checkProcessedSum "$selection" "$channelSum";then
-		echo "The data for the selection '$selection' has already been processed."
+		INFO "The data for the selection '$selection' has already been processed."
 		return 1
 	fi
-	echo "################################################################################"
-	echo "# Now extracting '$selection' #"
-	echo "################################################################################"
-	echo "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
+	drawLine
+	ALERT "Now extracting '$selection'"
+	drawLine
+	ALERT "Checking for download configuration at '/etc/2web/ytdl/downloadPath.cfg'"
 	# check for a user defined download path
 	downloadPath="$(getDownloadPath)"
-	echo "DownloadPath set to = $downloadPath"
+	ALERT "DownloadPath set to = $downloadPath"
 	# create the path if it does not exist, then move into it
 	mkdir -p "$downloadPath"
 	################################################################################
-	echo "Checking for video fetch time limit '/etc/2web/ytdl/videoFetchTimeLimit.cfg'"
+	ALERT "Checking for video fetch time limit '/etc/2web/ytdl/videoFetchTimeLimit.cfg'"
 	if ! test -f "/etc/2web/ytdl/videoFetchTimeLimit.cfg";then
 		# if no episodes have bee set create the variable
 		echo "30" > "/etc/2web/ytdl/videoFetchTimeLimit.cfg"
@@ -650,37 +621,33 @@ ytdl2kodi_video_extractor(){
 	# create the episode numbering specific to the show
 	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
-	echo "Extracting metadata from '$selection'..."
+	ALERT "Extracting metadata from '$selection'..."
 	# use the pip package
-	echo "timeout --preserve-status \"$timeLimitSeconds\" /var/cache/2web/generated/yt-dlp/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
+	ALERT "timeout --preserve-status \"$timeLimitSeconds\" /var/cache/2web/generated/yt-dlp/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
 	info=$(timeout --preserve-status "$timeLimitSeconds" /var/cache/2web/generated/yt-dlp/yt-dlp -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
 	infoCheck=$?
 	if [ $infoCheck -eq 0 ];then
-		echo "Return code of ytdl = $infoCheck"
-		echo "Extraction Successfull!"
+		INFO "Return code of ytdl = $infoCheck"
+		INFO "Extraction Successfull!"
 	elif [ $infoCheck -gt 123 ];then
 		# exit code 124 or greater only comes from a timeout happening with the timeout command
 		# this means that youtube-dl ran for more than $timeLimitSeconds and was stopped
 		addProcessedSum "$selection" "$channelSum"
-		echo "The info extractor timed out after $timeLimitSeconds seconds..."
-		echo "Skipping..."
-		echo
+		ALERT "The info extractor timed out after $timeLimitSeconds seconds, Skipping..."
 		return 1
 	else
 		# if the extractor failed then try to extract info with ffprobe
 		probeData=$(ffprobe "$selection" |& cat)
 		if ! validString "$probeData";then
 			# get the file title in metadata
-			echo "$probeData" | grep "^title"| tr -s ' ' | cut -d':' -f2
+			ALERT "$probeData" | grep "^title"| tr -s ' ' | cut -d':' -f2
 		fi
 		if ! validString "$probeData";then
-			echo "Return code of ytdl = $infoCheck"
+			ALERT "Return code of ytdl = $infoCheck"
 			# if the info returns a failure code
 			# add it to the previous downloads to stop rescanning repeated links
 			addProcessedSum "$selection" "$channelSum"
-			echo "The info extractor failed..."
-			echo "Skipping..."
-			echo
+			ALERT "The info extractor failed, Skipping..."
 			return 1
 		fi
 	fi
@@ -692,31 +659,28 @@ ytdl2kodi_video_extractor(){
 		# this is not a video file link so ignore it
 		addProcessedSum "$selection" "$channelSum"
 		#check if the link contains a url of any kind as the link to play
-		echo "The url to play this video can not be found."
-		echo "Found URL = '$formatCheck'"
-		echo "Skipping..."
-		echo
+		ALERT "The url to play this video can not be found."
+		ALERT "Found URL = '$formatCheck'"
+		ALERT "Skipping..."
 		return 1
 	fi
 	if echo "$formatCheck" | grep ".zip";then
 		# this is not a video file link its a zip file so ignore it
 		addProcessedSum "$selection" "$channelSum"
-		echo "This is a zip file not a video link"
-		echo "Skipping..."
-		echo
+		ALERT "This is a zip file not a video link"
+		ALERT "Skipping..."
 		return 1
 	fi
 	if echo "$formatCheck" | grep ".swf";then
 		# this is not a video file link its a zip file so ignore it
 		addProcessedSum "$selection" "$channelSum"
-		echo "This is a swf file not a video link"
-		echo "Skipping..."
-		echo
+		ALERT "This is a swf file not a video link"
+		ALERT "Skipping..."
 		return 1
 	fi
 	################################################################################
 	# Build the filename from the download path id and title
-	echo 'Building filename...'
+	ALERT 'Building filename...'
 	# get the id and the title info
 	id=$(echo "$info" | jq -r ".id?" | xargs -0 | cut -d$'\n' -f1 )
 	title=$(echo "$info" | jq -r ".fulltitle?" | xargs -0 | cut -d$'\n' -f1 )
@@ -734,7 +698,6 @@ ytdl2kodi_video_extractor(){
 	fi
 
 	# write the webpage as the plot
-	#plot=$(echo "$info" | jq -r ".webpage_url")
 	plot=$(echo "$info" | jq -r ".description" | xargs -0)
 	# figure out airdate
 	airdate=$(echo "$info" | jq -r ".upload_date")
@@ -758,51 +721,11 @@ ytdl2kodi_video_extractor(){
 		uploader=$(echo "$info" | jq -r ".uploader")
 	fi
 	################################################################################
-	# create the show title
-	#if echo "$@" | grep "\-\-username";then
-	#	#if [ 5 -lt $(expr length "$uploader") ];then
-	#	if validString "$uploader";then
-	#		# create the username from the uploader, this is toggled by a switch
-	#		showTitle="$uploader"
-	#	else
-	#		echo "No uploader name was found and use username as showname was selected."
-	#		echo "Uploader = '$uploader'"
-	#		# if this download is not listed in previousDownloads then add it
-	#		addProcessedSum "$selection" "$channelSum"
-	#		echo "Skipping video..."
-	#		echo
-	#		return 1
-	#	fi
-	#if validString "$3";then
-	#	# get uploader from  channel extractor
-	#	echo "[INFO]: uploader='$3' was a valid string"
-	#	echo "[INFO]: uploader wil now become showTitle..."
-	#	# create the username from the uploader, this is toggled by a switch
-	#	showTitle="$3"
-	#else
-	#	echo "[INFO]: uploader='$uploader' was not a valid string"
-	#	echo "[INFO]: ripping title from url..."
-	#	# create the showtitle from the base url this is default
-	#	showTitle=$(ytdl2kodi_rip_title "$selection")
-	#	echo "[INFO]: Discovered title is '$showTitle'..."
-	#fi
-	echo "Show Title = $showTitle"
-	#if echo "$@" | grep "\-\-username";then
-	#	# the show title should be the same as the playlist show title
-	#	if [ "$showTitle" != "$3" ];then
-	#		# this means this link is invalid
-	#		echo "Episode processing stopped, This video link is a diffrent username."
-	#		# if this download is not listed in previousDownloads then add it
-	#		addProcessedSum "$selection" "$channelSum"
-	#		echo "Skipping video..."
-	#		echo
-	#		return 1
-	#	fi
-	#fi
+	ALERT "Show Title = $showTitle"
 	################################################################################
 	# create season directory
 	downloadPath="$downloadPath$showTitle/Season $episodeSeason/"
-	echo "DownloadPath set to = $downloadPath"
+	ALERT "DownloadPath set to = $downloadPath"
 	mkdir -p "$downloadPath"
 	################################################################################
 	# if titleget failed and plot get was successfull
@@ -817,10 +740,9 @@ ytdl2kodi_video_extractor(){
 		fi
 	fi
 	if [ $(expr length "$title") -lt 5 ];then
-		#this means no viable title could be found or created from the plot
-		echo "No title was found or created..."
+		# this means no viable title could be found or created from the plot
+		ALERT "No title was found or created..."
 		addProcessedSum "$selection" "$channelSum"
-		echo
 		return 1
 	fi
 	################################################################################
@@ -831,8 +753,7 @@ ytdl2kodi_video_extractor(){
 		# if no episodes exist create the variable
 		echo "0" > "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg"
 	fi
-	#ALERT
-	#set -x
+	#
 	if test -f "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg";then
 		# create the episode numbering specific to the show
 		epNum=$(cat "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg")
@@ -841,19 +762,10 @@ ytdl2kodi_video_extractor(){
 	else
 		epNum="1"
 	fi
-	#set +x
-	#ALERT
-	#read
-	# if the episode number is less than 10 add a 0 prefix for proper file sorting
-	#if [ $epNum -lt 10 ];then
-	#	# format extra zero
-	#	epNum="0$epNum"
-	#fi
 	################################################################################
-	echo "downloadPath = '$downloadPath' + title = '$title' + '-' + id = '$id'"
+	ALERT "downloadPath = '$downloadPath' + title = '$title' + '-' + id = '$id'"
 	# add season and episode numbering
 	echo "The title is '$title'"
-	#echo "Title length is $(expr length "$title"), is this greater than 5"
 	if [ 5 -lt $(echo "$title" | wc -c) ];then
 		# cleanup the filename
 		tempTitle=$(echo "$title" | sed "s/[[:punct:]]//g")
@@ -862,7 +774,7 @@ ytdl2kodi_video_extractor(){
 		fileName="$showTitle - s${episodeSeason}e$epNum"
 	fi
 	shortName="$fileName"
-	#add the downloadpath
+	# add the downloadpath
 	fileName="$downloadPath$fileName"
 	################################################################################
 	# generate the plot
@@ -876,17 +788,7 @@ ytdl2kodi_video_extractor(){
 		fi
 	fi
 	################################################################################
-	echo "File path set to $fileName"
-	# check if the file already exists from previous runs
-	#if test -f "$fileName.nfo";then
-	#	echo "The data for $filename.nfo has already been processed."
-	#	# this is the only failure mode that occurs after episode numbering
-	#	# so decremnt the episode number to prevent gaps
-	#	addProcessedSum "$selection" "$channelSum"
-	#	echo "Skipping..."
-	#	echo
-	#	return
-	#fi
+	ALERT "File path set to $fileName"
 	################################################################################
 	# build stream file for video or download video file
 	# save stream file sources
@@ -896,18 +798,15 @@ ytdl2kodi_video_extractor(){
 	mkdir -p /etc/2web/ytdl/foundLinks/
 	foundLinksPath=/etc/2web/ytdl/foundLinks/$channelSum.cfg
 	################################################################################
-	echo "[INFO]: Checking for found video links '$foundLinksPath'"
+	ALERT "Checking for found video links '$foundLinksPath'"
 	################################################################################
-	#set -x
 	# check the length of the source url is long enough to be a link
 	if [ 5 -gt "$(echo "$selection" | wc -c)" ];then
-		echo "[INFO]: There is no video link available!"
-		echo "[INFO]: Skipping..."
-		#fi
+		INFO "There is no video link available! Skipping..."
 		return 1
 	else
 		touch "$foundLinksPath"
-		echo "[INFO]: Writing source url to strm file..."
+		INFO "Writing source url to strm file..."
 		echo "$selection" > "$fileName.strm"
 		# mark link as found
 		echo "$selection" >> "$foundLinksPath"
@@ -918,9 +817,8 @@ ytdl2kodi_video_extractor(){
 	################################################################################
 	# get thumbnail data if it is available
 	thumbnail=$(echo "$info" | jq -r ".thumbnail")
-	################################################################################
 	# if the thumbnail lists nothing or returned in error generate a thumbnail from the webpage link
-	echo "[INFO]: Analyzing thumbnail '$thumbnail'"
+	INFO "Analyzing thumbnail '$thumbnail'"
 	# if the thumbnail link is valid
 	if validString "$thumbnail";then
 		# download the thumbnail via the cache from the found link data
@@ -985,11 +883,9 @@ ytdl2kodi_video_extractor(){
 		echo "</episodedetails>"
 	} > "$fileName.nfo"
 	# display the created nfo file
-	echo "--------------------------------------------------------------------------------"
-	echo "$fileName.nfo"
-	echo "--------------------------------------------------------------------------------"
+	drawSmallHeader "$fileName.nfo"
 	cat "$fileName.nfo"
-	echo "--------------------------------------------------------------------------------"
+	drawLine
 	# add the current time of day to the airdate to make newly added videos sort properly
 	tempTimeHours=$(date "+%H" | sed "s/^[0]*//g")
 	tempTimeMinutes=$(date "+%M" | sed "s/^[0]*//g")
@@ -1015,28 +911,10 @@ ytdl2kodi_video_extractor(){
 		# if a thumbnail image exists change the date on it too
 		touch -d "@$tempTime" "$fileName-thumb.png"
 	fi
-	################################################################################
 	# wait random period after processing link unless debug flag is set
 	ytdl2kodi_sleep
-	################################################################################
 	# now that everything has finished properly add it to the list so it will be
 	# skipped on the next encounter to prevent work being duplicated
-	#ALERT
-	#set -x
-	# if the selection does not exist inside of the previous downloads
-	#if ! grep "$selection" "$previousDownloadsPath";then
-	#	#	# cast the string to a number, removes extra 0 prefixes
-	#	#epNum=$(echo "$epNum" | sed "s/^[0]*//g")
-	#	#epNum=$(( $epNum + 1 ))
-	#	# set the new episode number and save it
-	#	echo "$epNum" > "/etc/2web/ytdl/episodeDatabase/$showTitle-$episodeSeason.cfg"
-	#	# if this download is not listed in previousDownloads then add it
-	#	echo "$selection" >> "$previousDownloadsPath"
-	#fi
-	# add the download to previous downloads
-	#echo "$selection" >> "$previousDownloadsPath"
-	#set -x
-	#ALERT
 	# add the selection sum to the list of previously downloaded links, if they are not already present
 	#if ! checkProcessedSum "$selection" "$channelSum";then
 		# update the episode number
@@ -1044,30 +922,7 @@ ytdl2kodi_video_extractor(){
 		# mark the episode as processed
 		addProcessedSum "$selection" "$channelSum"
 	#fi
-	#set +x
-	#ALERT
-	#read
-	# add the selection sum to the list of previously downloaded links, if they are not already present
-	#if ! grep -q "$selectionSum" "/etc/2web/ytdl/processedSums/$channelSum.cfg";then
-	#	echo "$selectionSum" >> "/etc/2web/ytdl/processedSums/$channelSum.cfg"
-	#fi
 	################################################################################
-	# Create the nfo file last since it is the switch this entire script checks for
-	################################################################################
-	#seriesFileName="$downloadPath/$showTitle/tvshow.nfo"
-	#if ! test -f "$seriesFileName";then
-	#	{
-	#		echo "<?xml version='1.0' encoding='UTF-8'?>"
-	#		echo "<tvshow>"
-	#		echo "<title>$showTitle</title>"
-	#		echo "<studio>Internet</studio>"
-	#		echo "<genre>Internet</genre>"
-	#		echo "<plot>Source URL: $channelLink</plot>"
-	#		echo "<premiered>$(date +%F)</premiered>"
-	#		echo "<director>$showTitle</director>"
-	#		echo "</tvshow>"
-	#	} > "$seriesFileName"
-	#fi
 	# The video extraction was successfull, run the channel creator
 	if echo "$@" | grep -q "\-\-username";then
 		ytdl2kodi_channel_meta_extractor "$showTitle" "$selection" "$channelLink" --username
@@ -1075,56 +930,58 @@ ytdl2kodi_video_extractor(){
 		ytdl2kodi_channel_meta_extractor "$showTitle" "$selection" "$channelLink"
 	fi
 	################################################################################
-	echo "[INFO]:################################################################################"
-	echo "[INFO]:# The extractor has finished #"
-	echo "[INFO]:################################################################################"
+	drawLine
+	drawSmallHeader "The extractor has finished!"
+	drawLine
 	return 0
 }
 ################################################################################
 function nuke(){
-	echo "########################################################################"
-	echo "[INFO]: NUKE is disabled for ytdl2nfo..."
-	echo "[INFO]: This is so you can disable the module but keep metadata."
-	echo "[INFO]: Use 'ytdl2nfo reset' to remove all downloaded metadata."
-	echo "########################################################################"
+	drawLine
+	ALERT "NUKE is disabled for ytdl2nfo..."
+	ALERT "This is so you can disable the module but keep metadata."
+	ALERT "Use 'ytdl2nfo reset' to remove all downloaded metadata."
+	drawLine
 }
 ################################################################################
-main(){
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "ytdl2nfo"
-		lockProc "ytdl2nfo"
-		ytdl2kodi_update
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "ytdl2nfo"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "ytdl2nfo"
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "ytdl2nfo"
-		#
-		upgrade-yt-dlp
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockProc "ytdl2nfo"
-		ytdl2kodi_reset_cache
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockProc "ytdl2nfo"
-		nuke
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "ytdl2nfo Version: "
-		cat /usr/share/2web/version_ytdl2nfo.cfg
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/ytdl2nfo.txt"
-	else
-		checkModStatus "ytdl2nfo"
-		lockProc "ytdl2nfo"
-		ytdl2kodi_update
-		drawLine
-		echo "NFO Library generated at $(getDownloadPath)"
-		drawLine
-	fi
-}
+# set the theme of the lines in CLI output
+LINE_THEME="chem"
 ################################################################################
-main "$@"
-exit
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	lockProc "ytdl2nfo"
+	checkModStatus "ytdl2nfo"
+	ytdl2kodi_update
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ;then
+	rm -v "/var/cache/2web/web/ytdl2nfo.active"
+	killall "ytdl2nfo"
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "ytdl2nfo"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "ytdl2nfo"
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	lockProc "ytdl2nfo"
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "ytdl2nfo"
+	#
+	upgrade-yt-dlp
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	lockProc "ytdl2nfo"
+	ytdl2kodi_reset_cache
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "ytdl2nfo"
+	nuke
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "ytdl2nfo Version: "
+	cat /usr/share/2web/version_ytdl2nfo.cfg
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/ytdl2nfo.txt"
+else
+	lockProc "ytdl2nfo"
+	checkModStatus "ytdl2nfo"
+	ytdl2kodi_update
+	drawLine
+	ALERT "NFO Library generated at $(getDownloadPath)"
+	drawLine
+fi
