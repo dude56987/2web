@@ -182,6 +182,10 @@ function processTrack(){
 			artist=$(echo -n "$artist" | tr '[:upper:]' '[:lower:]' | tr --delete '`' )
 			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | tr --delete '`' )
 
+			#
+			artist="$( cleanText "$artist" )"
+			album="$( cleanText "$album" )"
+
 			# add the disk number preceding the track, this should fix strange formatting issues with multi disk albums
 			#if [ "$disc" != "" ];then
 			#	track="$disc$track"
@@ -412,6 +416,7 @@ function processTrack(){
 				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/backgrounds.db" "music_fanart"
 				SQLaddToIndex "/music/$artist/poster.png" "$webDirectory/backgrounds.db" "artist_fanart"
 
+
 				# add artist to the main music index
 				touchFile "$webDirectory/music/music.index"
 				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/music/music.index"
@@ -428,9 +433,12 @@ function processTrack(){
 				touchFile "$webDirectory/new/music.index"
 				touchFile "$webDirectory/new/all.index"
 
-				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/artists.index"
-				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/music.index"
-				echo "$webDirectory/music/$artist/artist.index" >> "$webDirectory/new/all.index"
+				addToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/new/artists.index"
+				addToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/new/music.index"
+				addToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/new/all.index"
+
+				# add music to the search index
+				addToSearchIndex "$webDirectory/music/$artist/artist.index" "$artist"
 
 				# update last updated times
 				date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -473,17 +481,20 @@ function processTrack(){
 				SQLaddToIndex "/music/$artist/$album/album.png" "$webDirectory/backgrounds.db" "albums_fanart"
 
 				# add album to the artist index
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/music/$artist/albums.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/music/$artist/albums.index"
 
 				# add to new indexes
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/albums.index"
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/music.index"
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/new/all.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/new/albums.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/new/music.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/new/all.index"
 
 				# add to random indexes
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/albums.index"
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/music.index"
-				echo "$webDirectory/music/$artist/$album/album.index" >> "$webDirectory/random/all.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/random/albums.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/random/music.index"
+				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/random/all.index"
+
+				# add music to the search index
+				addToSearchIndex "$webDirectory/music/$artist/$album/album.index" "$album"
 
 				# update content found times
 				date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -544,14 +555,17 @@ function processTrack(){
 			date "+%s" > /var/cache/2web/web/new/tracks.cfg
 
 			# add track to album track index
-			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/music/$artist/$album/tracks.index"
+			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/music/$artist/$album/tracks.index"
 			# add tracks to the new tracks index
-			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/new/tracks.index"
+			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/new/tracks.index"
 			# random tracks index
-			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/random/tracks.index"
+			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/random/tracks.index"
 			# add to all
-			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/random/all.index"
-			echo "$webDirectory/music/$artist/$album/${track}.index" >> "$webDirectory/new/all.index"
+			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/random/all.index"
+			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/new/all.index"
+
+			# add music to the search index
+			addToSearchIndex "$webDirectory/music/$artist/$album/${track}.index" "$track"
 
 			# cleanup the track list for the album
 			if test -f "$webDirectory/music/$artist/$album/tracks.index";then
@@ -764,17 +778,6 @@ function getJson(){
 	return 0
 }
 ################################################################################
-function popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
-################################################################################
-function pickPath(){
-	# pop a element from the end of the path, $2 is how far back in the path is pulled
-	echo "$1" | rev | cut -d'/' -f$2 | rev
-}
-################################################################################
 function webUpdate(){
 	webDirectory=$(webRoot)
 	#downloadDirectory="$(downloadDir)"
@@ -786,42 +789,23 @@ function webUpdate(){
 function resetCache(){
 	webDirectory=$(webRoot)
 	# remove web cache
-	rm -rv "$webDirectory/music/"
-	exit
-	find "$webDirectory/music/" -mindepth 1 -maxdepth 1 -type d | while read -r musicPath;do
-		if [ ! "$musicPath" == "$webDirectory/musicCache/" ];then
-			# music
-			echo "rm -rv '$musicPath'"
-		fi
-	done
-}
-################################################################################
-function INFO(){
-	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	output="$(echo -n "[INFO]: $1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
-	# print the line
-	printf "$output\r"
+	delete "$webDirectory/music/"
 }
 ################################################################################
 function nuke(){
 	webDirectory=$(webRoot)
 	# remove the kodi and web music files
-	rm -rv "$webDirectory/music/" || echo "No files found in music web directory..."
-	rm -rv "$webDirectory/kodi/music/" || echo "No files found in kodi directory..."
-	rm -rv $webDirectory/sums/music2web_*.cfg || echo "No file sums found..."
+	delete "$webDirectory/music/" || ALERT "No files found in music web directory..."
+	delete "$webDirectory/kodi/music/" || ALERT "No files found in kodi directory..."
+	rm -v $webDirectory/sums/music2web_*.cfg || ALERT "No file sums found..."
 	#
-	rm -rv $webDirectory/web_cache/widget_random_music.index || echo "No file sums found..."
-	rm -rv $webDirectory/web_cache/widget_random_artists.index || echo "No file sums found..."
-	rm -rv $webDirectory/web_cache/widget_random_albums.index || echo "No file sums found..."
+	delete $webDirectory/web_cache/widget_random_music.index || ALERT "No file sums found..."
+	delete $webDirectory/web_cache/widget_random_artists.index || ALERT "No file sums found..."
+	delete $webDirectory/web_cache/widget_random_albums.index || ALERT "No file sums found..."
 	#
-	rm -rv $webDirectory/web_cache/widget_updated_music.index || echo "No file sums found..."
-	rm -rv $webDirectory/web_cache/widget_updated_artists.index || echo "No file sums found..."
-	rm -rv $webDirectory/web_cache/widget_updated_albums.index || echo "No file sums found..."
+	delete $webDirectory/web_cache/widget_updated_music.index || ALERT "No file sums found..."
+	delete $webDirectory/web_cache/widget_updated_artists.index || ALERT "No file sums found..."
+	delete $webDirectory/web_cache/widget_updated_albums.index || ALERT "No file sums found..."
 	# create the database path
 	databasePath="$webDirectory/data.db"
 	# remove sql data
@@ -829,58 +813,56 @@ function nuke(){
 	SQLremoveTable "$databasePath" "_albums"
 	SQLremoveTable "$databasePath" "_artists"
 	# new indexes
-	rm -rv "$webDirectory/new/music.index" || echo "No music index..."
-	rm -rv "$webDirectory/new/albums.index" || echo "No album index..."
-	rm -rv "$webDirectory/new/artists.index" || echo "No artist index..."
-	rm -rv "$webDirectory/new/tracks.index" || echo "No track index..."
+	delete "$webDirectory/new/music.index" || ALERT "No music index..."
+	delete "$webDirectory/new/albums.index" || ALERT "No album index..."
+	delete "$webDirectory/new/artists.index" || ALERT "No artist index..."
+	delete "$webDirectory/new/tracks.index" || ALERT "No track index..."
 	# random indexes
-	rm -rv "$webDirectory/random/music.index" || echo "No music index..."
-	rm -rv "$webDirectory/random/albums.index" || echo "No album index..."
-	rm -rv "$webDirectory/random/artists.index" || echo "No artist index..."
-	rm -rv "$webDirectory/random/tracks.index" || echo "No track index..."
+	delete "$webDirectory/random/music.index" || ALERT "No music index..."
+	delete "$webDirectory/random/albums.index" || ALERT "No album index..."
+	delete "$webDirectory/random/artists.index" || ALERT "No artist index..."
+	delete "$webDirectory/random/tracks.index" || ALERT "No track index..."
 }
 ################################################################################
-function main(){
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		checkModStatus "music2web"
-		lockProc "music2web"
-		webUpdate $@
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "music2web"
-		lockProc "music2web"
-		update $@
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockProc "music2web"
-		resetCache
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockProc "music2web"
-		nuke
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "music2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "music2web"
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "music2web Version: "
-		cat /usr/share/2web/version_music2web.cfg
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/music2web.txt"
-	else
-		checkModStatus "music2web"
-		lockProc "music2web"
-		update $@
-		#webUpdate $@
-		#main --help $@
-		showServerLinks
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/music/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/music.php"
-		drawLine
-	fi
-}
-################################################################################
-main "$@"
-exit
+# set the theme of the lines in CLI output
+LINE_THEME="note"
+#
+if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+	checkModStatus "music2web"
+	lockProc "music2web"
+	webUpdate $@
+elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	checkModStatus "music2web"
+	lockProc "music2web"
+	update $@
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	lockProc "music2web"
+	resetCache
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "music2web"
+	nuke
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "music2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "music2web"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "music2web Version: "
+	cat /usr/share/2web/version_music2web.cfg
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/music2web.txt"
+else
+	checkModStatus "music2web"
+	lockProc "music2web"
+	update $@
+	#webUpdate $@
+	#main --help $@
+	showServerLinks
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/music/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/music.php"
+	drawLine
+fi
