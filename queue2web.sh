@@ -169,11 +169,30 @@ function processIdleJobQueue(){
 }
 ########################################################################
 function processMultiJobQueue(){
-	# process all the jobs found in the queue system
-	# - multi queue job queue takes into account the single job queue as a job in the multi queue
+	# processMultiJobQueue
+	#
+	# Process all the jobs found in the queue system.
+	#
+	# - Multi queue job queue takes into account the single job queue as a job in the multi queue
+	# - The size of the multi queue is determined by the interger value in /etc/2web/multiQueueSize.cfg
+	#
+
+	# load the setting for the number of multi jobs to run in parallel
+	if test -f "/etc/2web/multiQueueSize.cfg";then
+		# load the config setting
+		multiQueueSize="$( cat '/etc/2web/multiQueueSize.cfg' | tr -d '\n' )"
+	else
+		# save the default config
+		# - This will process 3 jobs in parallel
+		{
+			echo -n "3"
+		} > "/etc/2web/multiQueueSize.cfg"
+		multiQueueSize="3"
+	fi
 
 	# check for parallel processing and count the cpus
-	totalCPUS=$(cpuCount)
+	#totalCPUS=$(cpuCount)
+	totalCPUS="$multiQueueSize"
 
 	# while there are still jobs in the queue keep reloading them into the queue
 	while [ $(find "/var/cache/2web/queue/multi/" -name "*.cmd" | wc -l ) -gt 0 ];do
@@ -493,24 +512,112 @@ elif [ "$1" == "-r" ] || [ "$1" == "--retry" ] || [ "$1" == "retry" ] ;then
 	mv -v /var/cache/2web/queue/failed/*.cmd "/var/cache/2web/queue/multi/"
 elif [ "$1" == "-c" ] || [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 	# cleanup failed jobs
-	rm -v /var/cache/2web/queue/failed/*.cmd
+	delete "/var/cache/2web/queue/failed/"
+	createDir "/var/cache/2web/queue/failed/"
 	# clean up log files of command output
-	rm -v /var/cache/2web/queue/log/*.log
-elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
+	delete "/var/cache/2web/queue/log/"
+	createDir "/var/cache/2web/queue/log/"
+elif [ "$1" == "--view-active" ] ;then
+	allJobCommands=""
+	# show the active job commands running in the queue
+	activeJobFiles=$(find /var/cache/2web/queue/active/ -type f -name '*.active' | sort)
 	#
-	activeJobs=$(find /var/cache/2web/queue/active/ -type f -name '*.active')
-	failedJobs=$(find /var/cache/2web/queue/failed/ -type f -name '*.cmd')
-	idleJobs=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd')
-	multiJobs=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd')
-	singleJobs=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd')
-	logJobFiles=$(find /var/cache/2web/queue/log/ -type f -name '*.log')
-	#
-	activeJobCount=$(echo -n "$activeJobs" | wc -l)
-	failedJobCount=$(echo -n "$failedJobs" | wc -l)
-	idleJobCount=$(echo -n "$idleJobs" | wc -l)
-	multiJobCount=$(echo -n "$multiJobCount"  | wc -l)
-	singleJobCount=$(echo -n "$singleJobCount" | wc -l)
+	idleJobFiles=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd' | sort)
+	multiJobFiles=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd' | sort)
+	singleJobFiles=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd' | sort)
+	IFSBACKUP=$IFS
+	IFS=!'\n'
+	for jobCommandFile in $idleJobFiles;do
+		if echo "$activeJobFiles" | grep -q "$(basename "$jobCommandFile")" ;then
+			drawLine
+			cat "$jobCommandFile"
+		fi
+	done
+	for jobCommandFile in $multiJobFiles;do
+		if echo "$activeJobFiles" | grep -q "$(basename "$jobCommandFile")" ;then
+			drawLine
+			cat "$jobCommandFile"
+		fi
+	done
+	for jobCommandFile in $singleJobFiles;do
+		if echo "$activeJobFiles" | grep -q "$(basename "$jobCommandFile")" ;then
+			drawLine
+			cat "$jobCommandFile"
+		fi
+	done
+	IFS=$IFSBACKUP
+elif [ "$1" == "-l" ] || [ "$1" == "--log" ] || [ "$1" == "log" ] ;then
+	logJobFiles=$(find /var/cache/2web/queue/log/ -type f -name '*.log' | sort)
 	logJobCount=$(echo -n "$logJobFiles" | wc -l)
+	drawLine
+	drawHeader "Job Queue Log"
+	drawLine
+	echo "$logJobFiles" | while read -r jobPath;do
+		# display each of the jobs
+		drawSmallHeader "$(basename "$jobPath")"
+		cat "$jobPath"
+		drawLine
+	done
+elif [ "$1" == "-j" ] || [ "$1" == "--jobs" ] || [ "$1" == "jobs" ] ;then
+	activeJobFiles=$(find /var/cache/2web/queue/active/ -type f -name '*.active' | sort)
+	activeJobCount=$(echo -n "$activeJobFiles" | wc -l)
+	idleJobFiles=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd' | sort)
+	idleJobCount=$(echo -n "$idleJobFiles" | wc -l)
+	multiJobFiles=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd' | sort)
+	multiJobCount=$(echo -n "$multiJobFiles" | wc -l)
+	singleJobFiles=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd' | sort)
+	singleJobCount=$(echo -n "$singleJobFiles" | wc -l)
+	# calc the total jobs
+	totalJobs=$(( singleJobCount + multiJobCount + idleJobCount ))
+	drawCellLine 2
+	# draw the headers
+	startCellRow
+	drawCell "Total Jobs" 2
+	drawCell "Active Jobs" 2
+	endCellRow
+	# create a new row
+	drawCellLine 2
+	# draw the data
+	startCellRow
+	drawCell "$totalJobs" 2
+	drawCell "$activeJobCount" 2
+	endCellRow
+	drawCellLine 2
+	drawHeader "Multi Queue Jobs"
+	echo "$multiJobFiles" | while read -r jobPath;do
+		# display each of the jobs
+		drawSmallHeader "$(basename "$jobPath")"
+		cat "$jobPath"
+		drawLine
+	done
+	drawHeader "Single Queue Jobs"
+	echo "$singleJobFiles" | while read -r jobPath;do
+		# display each of the jobs
+		drawSmallHeader "$(basename "$jobPath")"
+		cat "$jobPath"
+		drawLine
+	done
+	drawHeader "Idle Queue Jobs"
+	echo "$idleJobFiles" | while read -r jobPath;do
+		# display each of the jobs
+		drawSmallHeader "$(basename "$jobPath")"
+		cat "$jobPath"
+		drawLine
+	done
+elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
+	activeJobFiles=$(find /var/cache/2web/queue/active/ -type f -name '*.active' | sort)
+	activeJobCount=$(echo -n "$activeJobFiles" | wc -l)
+	failedJobFiles=$(find /var/cache/2web/queue/failed/ -type f -name '*.cmd' | sort)
+	failedJobCount=$(echo -n "$failedJobFiles" | wc -l)
+	idleJobFiles=$(find /var/cache/2web/queue/idle/ -type f -name '*.cmd' | sort)
+	idleJobCount=$(echo -n "$idleJobFiles" | wc -l)
+	multiJobFiles=$(find /var/cache/2web/queue/multi/ -type f -name '*.cmd' | sort)
+	multiJobCount=$(echo -n "$multiJobFiles" | wc -l)
+	singleJobFiles=$(find /var/cache/2web/queue/single/ -type f -name '*.cmd' | sort)
+	singleJobCount=$(echo -n "$singleJobFiles" | wc -l)
+	logJobFiles=$(find /var/cache/2web/queue/log/ -type f -name '*.log' | sort)
+	logJobCount=$(echo -n "$logJobFiles" | wc -l)
+
 	drawCellLine 6
 	# draw the headers
 	startCellRow
@@ -533,59 +640,59 @@ elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
 	drawCell "$logJobCount" 6
 	endCellRow
 	drawCellLine 6
-	# draw each of the unfinished jobs
-	if [ $singleJobCount -gt 0 ];then
-		drawLine
-		echo "Single Job Queue"
-		drawLine
-		echo "$singleJobs" | while read -r jobPath;do
-			if test -f "$jobPath";then
-				echo "Job From: $jobPath"
-				cat "$jobPath"
-				echo
-				echo
-			fi
-		done
-	fi
-	if [ $multiJobCount -gt 0 ];then
-		drawLine
-		echo "Multi Job Queue"
-		drawLine
-		echo "$multiJobs" | while read -r jobPath;do
-			if test -f "$jobPath";then
-				echo "Job From: $jobPath"
-				cat "$jobPath"
-				echo
-				echo
-			fi
-		done
-	fi
-	if [ $idleJobCount -gt 0 ];then
-		drawLine
-		echo "Idle Queue"
-		drawLine
-		echo "$idleJobs" | while read -r jobPath;do
-			if test -f "$jobPath";then
-				echo "Job From: $jobPath"
-				cat "$jobPath"
-				echo
-				echo
-			fi
-		done
-	fi
-	if [ $failedJobCount -gt 0 ];then
-		drawLine
-		echo "Failed Jobs"
-		drawLine
-		echo "$failedJobs" | while read -r jobPath;do
-			if test -f "$jobPath";then
-				echo "Job From: $jobPath"
-				cat "$jobPath"
-				echo
-				echo
-			fi
-		done
-	fi
+	## draw each of the unfinished jobs
+	#if [ $singleJobCount -gt 0 ];then
+	#	drawLine
+	#	echo "Single Job Queue"
+	#	drawLine
+	#	echo "$singleJobs" | while read -r jobPath;do
+	#		if test -f "$jobPath";then
+	#			echo "Job From: $jobPath"
+	#			cat "$jobPath"
+	#			echo
+	#			echo
+	#		fi
+	#	done
+	#fi
+	#if [ $multiJobCount -gt 0 ];then
+	#	drawLine
+	#	echo "Multi Job Queue"
+	#	drawLine
+	#	echo "$multiJobs" | while read -r jobPath;do
+	#		if test -f "$jobPath";then
+	#			echo "Job From: $jobPath"
+	#			cat "$jobPath"
+	#			echo
+	#			echo
+	#		fi
+	#	done
+	#fi
+	#if [ $idleJobCount -gt 0 ];then
+	#	drawLine
+	#	echo "Idle Queue"
+	#	drawLine
+	#	echo "$idleJobs" | while read -r jobPath;do
+	#		if test -f "$jobPath";then
+	#			echo "Job From: $jobPath"
+	#			cat "$jobPath"
+	#			echo
+	#			echo
+	#		fi
+	#	done
+	#fi
+	#if [ $failedJobCount -gt 0 ];then
+	#	drawLine
+	#	echo "Failed Jobs"
+	#	drawLine
+	#	echo "$failedJobs" | while read -r jobPath;do
+	#		if test -f "$jobPath";then
+	#			echo "Job From: $jobPath"
+	#			cat "$jobPath"
+	#			echo
+	#			echo
+	#		fi
+	#	done
+	#fi
 elif [ "$1" == "-a" ] || [ "$1" == "--add" ] || [ "$1" == "add" ];then
 	# add a job to the queue
 	addJob "$2" "$3"
