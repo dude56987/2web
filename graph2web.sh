@@ -263,17 +263,6 @@ getJson(){
 	return 0
 }
 ################################################################################
-popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
-################################################################################
-pickPath(){
-	# pop a element from the end of the path, $2 is how far back in the path is pulled
-	echo "$1" | rev | cut -d'/' -f$2 | rev
-}
-################################################################################
 webUpdate(){
 	webDirectory=$(webRoot)
 	#downloadDirectory="$(downloadDir)"
@@ -345,6 +334,9 @@ function nuke(){
 }
 ################################################################################
 main(){
+	# set the theme of the lines in CLI output
+	LINE_THEME="lines"
+	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "graph2web"
 		lockProc "graph2web"
