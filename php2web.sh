@@ -315,6 +315,9 @@ function nuke(){
 ################################################################################
 main(){
 	################################################################################
+	# set the theme of the lines in CLI output
+	LINE_THEME="term"
+	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		lockProc "php2web"
 		checkModStatus "php2web"
