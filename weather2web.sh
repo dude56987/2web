@@ -518,46 +518,6 @@ function getWeatherIcon(){
 	echo "$iconCode"
 }
 ################################################################################
-cleanText(){
-	echo "$1" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
-	return
-	# remove punctuation from text, remove leading whitespace, and double spaces
-	if [ -f /usr/bin/inline-detox ];then
-		echo "$1" | inline-detox --remove-trailing | sed "s/-/ /g" | sed -e "s/^[ \t]*//g" | tr -s ' ' | sed "s/\ /_/g" | tr -d '#`' | tr -d "'" | sed "s/_/ /g"
-	else
-		# use sed to remove punctuation
-		echo "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g" | sed "s/\ /_/g" | tr -d '#`'
-	fi
-}
-################################################################################
-popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
-################################################################################
-pickPath(){
-	# pop a element from the end of the path, $2 is how far back in the path is pulled
-	echo "$1" | rev | cut -d'/' -f$2 | rev
-}
-################################################################################
-prefixNumber(){
-	#set -x
-	pageNumber=$(( 10#$1 ))
-	# set the page number prefix to make file sorting work
-	# - this makes 1 occur before 10 by adding zeros ahead of the number
-	# - this will work unless the comic has a chapter over 9999 pages
-	if [ $pageNumber -lt 10 ];then
-		pageNumber="000$pageNumber"
-	elif [ $pageNumber -lt 100 ];then
-		pageNumber="00$pageNumber"
-	elif [ $pageNumber -lt 1000 ];then
-		pageNumber="0$pageNumber"
-	fi
-	# output the number with a prefix on it
-	echo $pageNumber
-}
-################################################################################
 webUpdate(){
 	webDirectory=$(webRoot)
 
@@ -591,6 +551,9 @@ function nuke(){
 }
 ################################################################################
 main(){
+	# set the theme of the lines in CLI output
+	LINE_THEME="sid"
+	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "weather2web"
 		# lock the process
