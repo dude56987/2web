@@ -770,7 +770,7 @@ function processRepo(){
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
 			timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git diff "$commitAddress"~ "$commitAddress" | recode ..HTML > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+			timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
 			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
@@ -1016,6 +1016,10 @@ function processRepo(){
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/repos/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/repos.index"
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"
+
+		# add this comic to the search index
+		addToSearchIndex "$webDirectory/repos/$repoName/repos.index" "$repoName"
+
 		# update update times
 		date "+%s" > /var/cache/2web/web/new/all.cfg
 		date "+%s" > /var/cache/2web/web/new/repos.cfg
@@ -1155,24 +1159,27 @@ function nuke(){
 	downloadDirectory="$(downloadDir)"
 	# delete intermediate conversion directories
 	# remove new and random indexes
-	rm -rv "$webDirectory/new/git_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/git_*.index'"
-	rm -rv "$webDirectory/random/git_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/git_*.index'"
+	delete "$webDirectory/new/git_*.index"
+	delete "$webDirectory/random/git_*.index"
 	# remove git directory and indexes
-	rm -rv $webDirectory/repos/
-	rm -rv $webDirectory/kodi/repos/
-	rm -rv $webDirectory/new/repos.index
-	rm -rv $webDirectory/random/repos.index
+	delete $webDirectory/repos/
+	delete $webDirectory/kodi/repos/
+	delete $webDirectory/new/repos.index
+	delete $webDirectory/random/repos.index
 	rm -rv $webDirectory/sums/git2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 $webDirectory/data.db "drop table _repos;"
 	sqlite3 $webDirectory/data.db "drop table _repos_fanart;"
 	# remove widgets cached
-	rm -v $webDirectory/web_cache/widget_random_repos.index
-	rm -v $webDirectory/web_cache/widget_new_repos.index
+	delete $webDirectory/web_cache/widget_random_repos.index
+	delete $webDirectory/web_cache/widget_new_repos.index
 }
 ################################################################################
 main(){
 	################################################################################
+	# set the theme of the lines in CLI output
+	LINE_THEME="floppy"
+	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		lockProc "git2web"
 		checkModStatus "git2web"
