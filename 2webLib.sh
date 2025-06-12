@@ -520,6 +520,14 @@ function downloadRoot(){
 	readPathConfig "/etc/2web/download.cfg" "/var/cache/2web/downloads_cache/"
 }
 ########################################################################
+function kodiRoot(){
+	# Read config for the kodi root path, this is where symlinks to all media
+	# will be stored.
+	#
+	# RETURN STDOUT
+	readPathConfig "/etc/2web/kodi.cfg" "/var/cache/2web/generated/kodi_cache/"
+}
+########################################################################
 function checkFileDataSum(){
 	# return true if the directory has been updated/changed
 	# store sums in $webdirectory/$sums

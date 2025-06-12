@@ -418,10 +418,13 @@ function update2web(){
 	webDirectory="$(realWebRoot)"
 	downloadDirectory="$(downloadRoot)"
 	generatedDirectory="$(generatedRoot)"
+	kodiDirectory="$(kodiRoot)"
 
 	createDir "$webDirectory"
 	createDir "$downloadDirectory"
 	createDir "$generatedDirectory"
+	createDir "$kodiDirectory"
+
 	createDir "/etc/2web/mod_status/"
 	createDir "/var/cache/2web/sessions/"
 
@@ -435,6 +438,14 @@ function update2web(){
 	ln -sfn "$downloadDirectory" "/var/cache/2web/downloads"
 	# link the user setable generated directory cache
 	ln -sfn "$generatedDirectory" "/var/cache/2web/generated"
+	# check if the kodi http share is enabled
+	if yesNoCfgCheck "/etc/2web/kodi/enableHttpShare.cfg" "yes";then
+		# link the kodi directory to its location
+		ln -sfn "$kodiDirectory" "/var/cache/2web/web/kodi"
+	else
+		# remove the kodi directory link
+		unlink "/var/cache/2web/web/kodi/"
+	fi
 
 	if returnModStatus "graph2web";then
 		# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
