@@ -21,6 +21,48 @@ function resetColor(){
 	echo -ne "\033[0m"
 }
 ################################################################################
+function randomColorText(){
+	# Set the terminal output text to a random color. Excludes black and white.
+	tempValue=$(( $RANDOM % 7 ))
+	#
+	if [ $tempValue -eq 0 ];then
+		blueText
+	elif [ $tempValue -eq 1 ];then
+		greenText
+	elif [ $tempValue -eq 2 ];then
+		yellowText
+	elif [ $tempValue -eq 3 ];then
+		redText
+	elif [ $tempValue -eq 4 ];then
+		blueText
+	elif [ $tempValue -eq 5 ];then
+		purpleText
+	elif [ $tempValue -eq 6 ];then
+		cyanText
+	fi
+}
+################################################################################
+function randomColorBackground(){
+	# Set the terminal output background to a random color. Excludes black and white.
+	tempValue=$(( $RANDOM % 7 ))
+	#
+	if [ $tempValue -eq 0 ];then
+		blueBackground
+	elif [ $tempValue -eq 1 ];then
+		greenBackground
+	elif [ $tempValue -eq 2 ];then
+		yellowBackground
+	elif [ $tempValue -eq 3 ];then
+		redBackground
+	elif [ $tempValue -eq 4 ];then
+		blueBackground
+	elif [ $tempValue -eq 5 ];then
+		purpleBackground
+	elif [ $tempValue -eq 6 ];then
+		cyanBackground
+	fi
+}
+################################################################################
 function blueText(){
 	# make text blue
 	echo -ne "\033[34m"
