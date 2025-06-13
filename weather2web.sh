@@ -552,7 +552,7 @@ function nuke(){
 ################################################################################
 main(){
 	# set the theme of the lines in CLI output
-	LINE_THEME="sid"
+	LINE_THEME="weather"
 	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "weather2web"
