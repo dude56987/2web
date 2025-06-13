@@ -1584,7 +1584,12 @@ if( ! function_exists("checkFilePathPermissions")){
 ########################################################################
 if( ! function_exists("requireGroup")){
 	function requireGroup($group, $redirect=true){
-		# check the logged in user has permissions for the group given or if the group is unlocked
+		# requireGroup($group, $redirect=true)
+		#
+		# Check the logged in user has permissions for the group given or if the group is unlocked
+		#
+		# - Redirect user to the login page automatically if they do not have permission.
+		#
 		// try to load a session in the current window
 		startSession();
 		# check if the current user has admin privileges
