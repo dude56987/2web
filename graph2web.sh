@@ -335,7 +335,7 @@ function nuke(){
 ################################################################################
 main(){
 	# set the theme of the lines in CLI output
-	LINE_THEME="lines"
+	LINE_THEME="papersRand"
 	#
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		checkModStatus "graph2web"
