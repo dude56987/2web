@@ -112,95 +112,93 @@ requireAdmin();
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <hr>
-<div class='settingsListCard'>
-	<div class='settingsTable'>
-		<hr id='tableTop'>
-		<table>
-		<tr>
-			<th>Module</th>
-			<th>Type</th>
-			<th>Description</th>
-			<th>Debug<br>
-			<?PHP
-			if (array_key_exists("refresh",$_GET)){
-				if ($_GET['refresh'] == 'true'){
-					echo "<img class='localPulse' src='/pulse.gif'>\n";
-				}
-			}
-			?>
-			</th>
-			<th>Date</th>
-			<th>Time</th>
-		</tr>
+<div class='settingListCard'>
+	<hr id='tableTop'>
+	<table>
+	<tr>
+		<th>Module</th>
+		<th>Type</th>
+		<th>Description</th>
+		<th>Debug<br>
 		<?PHP
-		# load database
-		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
-		# set the timeout to 1 minute since most webbrowsers timeout loading before this
-		$databaseObj->busyTimeout(60000);
-		if (array_key_exists("search", $_GET)){
-			# set the search limit to all if it is a search
-			$_GET["limit"] = "all";
-		}
-		# get the limit for how many items are displayed from the log
-		if (array_key_exists("limit", $_GET)){
-			if ($_GET["limit"] == "all"){
-				$result = $databaseObj->query('select * from "log" order by logIdentifier DESC;');
-			}else{
-				if (is_numeric($_GET["limit"])){
-					$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit '.$_GET["limit"].';');
-				}else{
-					# display error
-					echo "<div class='errorBanner'>\n";
-					echo "<hr>\n";
-					echo "Invalid limit value: '".$_GET["limit"]."'<br>\n";
-					echo "<hr>\n";
-					echo "</div>\n";
-				}
+		if (array_key_exists("refresh",$_GET)){
+			if ($_GET['refresh'] == 'true'){
+				echo "<img class='localPulse' src='/pulse.gif'>\n";
 			}
-		}else{
-			# run query to get the 100 most recent log entries
-			$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit 500;');
-		}
-
-		# fetch each row data individually and display results
-		while($row = $result->fetchArray()){
-			$data  = "<tr class='logEntry ".$row['type']."'>\n";
-			$data .= "<td>\n";
-			$data .= $row['module'];
-			$data .= "</td>\n";
-			$data .= "<td>\n";
-			$data .= $row['type'];
-			$data .= "</td>\n";
-			$data .= "<td class='logDetails'>\n";
-			$data .= $row['description'];
-			$data .= "</td>\n";
-			$data .= "<td class='logDetails'>\n";
-			$data .= $row['details'];
-			$data .= "</td>\n";
-			$data .= "<td>\n";
-			$data .= $row['date'];
-			$data .= "</td>\n";
-			$data .= "<td>\n";
-			$data .= $row['time'];
-			$data .= "</td>\n";
-			$data .= "</tr>\n";
-			# if a search has been set search loaded data for the search string
-			if (array_key_exists("search",$_GET)){
-				# remove tags and search for search terms in data row
-				if (stripos(strip_tags($data), $_GET["search"]) !== false){
-					# write matching found data
-					echo "$data";
-				}
-			}else{
-				# write all the index entries
-				echo "$data";
-			}
-			flush();
-			ob_flush();
 		}
 		?>
-		</table>
-	</div>
+		</th>
+		<th>Date</th>
+		<th>Time</th>
+	</tr>
+	<?PHP
+	# load database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/log/log.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(60000);
+	if (array_key_exists("search", $_GET)){
+		# set the search limit to all if it is a search
+		$_GET["limit"] = "all";
+	}
+	# get the limit for how many items are displayed from the log
+	if (array_key_exists("limit", $_GET)){
+		if ($_GET["limit"] == "all"){
+			$result = $databaseObj->query('select * from "log" order by logIdentifier DESC;');
+		}else{
+			if (is_numeric($_GET["limit"])){
+				$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit '.$_GET["limit"].';');
+			}else{
+				# display error
+				echo "<div class='errorBanner'>\n";
+				echo "<hr>\n";
+				echo "Invalid limit value: '".$_GET["limit"]."'<br>\n";
+				echo "<hr>\n";
+				echo "</div>\n";
+			}
+		}
+	}else{
+		# run query to get the 100 most recent log entries
+		$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit 500;');
+	}
+
+	# fetch each row data individually and display results
+	while($row = $result->fetchArray()){
+		$data  = "<tr class='logEntry ".$row['type']."'>\n";
+		$data .= "<td>\n";
+		$data .= $row['module'];
+		$data .= "</td>\n";
+		$data .= "<td>\n";
+		$data .= $row['type'];
+		$data .= "</td>\n";
+		$data .= "<td class='logDetails'>\n";
+		$data .= $row['description'];
+		$data .= "</td>\n";
+		$data .= "<td class='logDetails'>\n";
+		$data .= $row['details'];
+		$data .= "</td>\n";
+		$data .= "<td>\n";
+		$data .= $row['date'];
+		$data .= "</td>\n";
+		$data .= "<td>\n";
+		$data .= $row['time'];
+		$data .= "</td>\n";
+		$data .= "</tr>\n";
+		# if a search has been set search loaded data for the search string
+		if (array_key_exists("search",$_GET)){
+			# remove tags and search for search terms in data row
+			if (stripos(strip_tags($data), $_GET["search"]) !== false){
+				# write matching found data
+				echo "$data";
+			}
+		}else{
+			# write all the index entries
+			echo "$data";
+		}
+		flush();
+		ob_flush();
+	}
+	?>
+	</table>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT'].'/footer.php');
