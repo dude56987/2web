@@ -1779,10 +1779,35 @@ function drawHeader(){
 	#figlet -w "$termWidth" -c -f "emboss" "$1"
 }
 ################################################################################
+function drawRandomizedPattern(){
+	# store the pattern
+	pattern="$1"
+	# get the length of the pattern
+	patternLength="${#pattern}"
+	# get the value to pull from the pattern
+	tempValue=$(( $RANDOM % ( $patternLength ) ))
+	# pull the character from the pattern
+	echo -n "${pattern:$tempValue:1}"
+}
+################################################################################
+function drawPattern(){
+	# store the pattern
+	pattern="$1"
+	#ALERT "$2" "input index"
+	# get the length of the pattern
+	patternLength="${#pattern}"
+	#ALERT "$patternLength" "patternLength"
+	# get the value to pull from the pattern
+	tempValue=$(( $2 % ( $patternLength ) ))
+	#ALERT "$tempValue" "tempValue"
+	# pull the character from the pattern
+	echo -n "${pattern:$tempValue:1}"
+}
+################################################################################
 function drawAltPattern(){
 	# drawGeoSymbols $line_x_position
 	#
-	# Draw 2 geometric symbols one after the other
+	# Draw 2 or more geometric symbols in a pattern
 	#
 	# --default
 	#	  🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
@@ -1795,7 +1820,12 @@ function drawAltPattern(){
 	# --book
 	#   🕮 🕮 🕮 🕮 🕮 🕮
 	# --castle
-	#   ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
+	#   ⛫🜁🜁⛫🜁🜁⛫🜁🜁⛫🜁🜁
+	# --flowerRand
+	#   ❁❀✾✿❁✾✿❀✾✿❀✾
+	# --brick
+	#   𝍁𝌙𝌌𝌎𝌽𝍔𝍖𝍏𝌺𝌸𝌌𝌺
+	#
 	if [ $1 -ge 0 ];then
 		tempValue=$1
 	else
@@ -1803,128 +1833,72 @@ function drawAltPattern(){
 	fi
 	if echo "$@" | grep -q -e "--quilt";then
 		# 🙪 🙨 🙪 🙨 🙪 🙨 🙪
-		tempValue=$(( $tempValue % 4 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "🙪"
-		elif [ $tempValue -eq 1 ];then
-			echo -n " "
-		elif [ $tempValue -eq 2 ];then
-			echo -n "🙨"
-		else
-			echo -n " "
-		fi
+		echo -n "$(drawPattern "🙪 🙨 " "$tempValue")"
+	elif echo "$@" | grep -q -e "--flowerRand2";then
+		echo -n "$(drawRandomizedPattern "✿✾❀❁𑽇⚘")"
+	elif echo "$@" | grep -q -e "--flowerRand";then
+		echo -n "$(drawRandomizedPattern "✿✾❀❁")"
 	elif echo "$@" | grep -q -e "--flower";then
 		# ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "⚘"
-		else
-			echo -n "𑽇"
-		fi
+		echo -n "$(drawPattern "⚘𑽇" "$tempValue")"
 	elif echo "$@" | grep -q -e "--bowtie";then
 		# ⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "⬖"
-		else
-			echo -n "⬗"
-		fi
+		echo -n "$(drawPattern "⬗⬖" "$tempValue")"
 	elif echo "$@" | grep -q -e "--book";then
 		# 🕮 🕮 🕮 🕮 🕮 🕮
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n " "
-		else
-			echo -n "🕮"
-		fi
+		echo -n "$(drawPattern "🕮 " "$tempValue")"
 	elif echo "$@" | grep -q -e "--castle";then
-		# ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "═"
-		else
-			echo -n "⛫"
-		fi
+		# ⛫🜁🜁⛫🜁🜁⛫🜁🜁⛫🜁🜁⛫🜁🜁⛫🜁🜁⛫🜁🜁
+		echo -n "$(drawPattern "⛫🜁🜁" "$tempValue")"
+	elif echo "$@" | grep -q -e "--papersRand";then
+		# 🗉🗏🗟🗉🗏🗟🗉🗏🗟🗉🗏🗟🗉🗏🗏🗟🗉🗏🗟🗉🗟
+		echo -n "$(drawRandomizedPattern "🗉🗏🗟")"
+	elif echo "$@" | grep -q -e "--papersRand2";then
+		# 🗉🗌🗆🗏🗟🗉🗌🗆🗏🗟🗉🗌🗆🗏🗟🗉🗌🗆🗏🗟🗉
+		echo -n "$(drawRandomizedPattern "🗉🗌🗆🗏🗟")"
+	elif echo "$@" | grep -q -e "--brick";then
+		# 𝍁𝌙𝌌𝌎𝌽𝍔𝍖𝍏𝌺𝌸𝌌𝌺𝌸𝌎𝌎𝌽𝍔𝍖𝍏𝌎𝌽𝍔𝍖𝍏
+		tempValue=$(( $RANDOM % 81 ))
+		pattern=""
+		# store all the tetragrams
+		pattern="${pattern}𝍁𝌙𝍑𝌌𝌉𝌣𝌎𝌆𝌡𝌽𝌦𝍏𝍎𝍒𝌸𝌕"
+		pattern="${pattern}𝌞𝌋𝍈𝌢𝌏𝍇𝍔𝌼𝍉𝌐𝍃𝌠𝌜𝍂𝌰𝌟"
+		pattern="${pattern}𝌳𝌺𝍊𝍐𝌶𝍖𝌘𝌇𝌫𝌨𝌿𝌯𝌲𝌾𝍍𝌖"
+		pattern="${pattern}𝌒𝍆𝌝𝌊𝌧𝍕𝌭𝌥𝍀𝌹𝌈𝍓𝌍𝌤𝌴𝌓"
+		pattern="${pattern}𝌪𝌔𝌚𝌬𝌛𝌮𝌵𝍋𝍅𝍌𝍌𝌱𝌩"
+		pattern="${pattern}𝌻𝌷𝌗𝍄𝌑"
+		echo -n "$(drawRandomizedPattern "$pattern")"
 	elif echo "$@" | grep -q -e "--floppy";then
 		# 🖫 🖪 🖬 🖫 🖪 🖬 🖫 🖪 🖬 🖫 🖪 🖬
-		tempValue=$(( $tempValue % 6 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "☐"
-		elif [ $tempValue -eq 1 ];then
-			echo -n "🖫"
-		elif [ $tempValue -eq 2 ];then
-			echo -n "☐"
-		elif [ $tempValue -eq 3 ];then
-			echo -n "🖪"
-		elif [ $tempValue -eq 4 ];then
-			echo -n "☐"
-		elif [ $tempValue -eq 5 ];then
-			echo -n "🖬"
-		fi
+		echo -n "$(drawPattern "🖫☐🖪☐🖬☐" "$tempValue")"
 	elif echo "$@" | grep -q -e "--computers";then
-		# 🖳 🖧l🖳 🖧l🖳 🖧l🖳 🖧l
-		tempValue=$(( $tempValue % 4 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n " "
-		elif [ $tempValue -eq 1 ];then
-			echo -n "🖳"
-		elif [ $tempValue -eq 2 ];then
-			echo -n "┉"
-		elif [ $tempValue -eq 3 ];then
-			echo -n "🖧"
-		fi
+		# 🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧
+		echo -n "🖧"
 	elif echo "$@" | grep -q -e "--computer";then
 		# 🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "┉"
-		else
-			echo -n "🖳"
-		fi
+		echo -n "$(drawPattern "🖳┉" "$tempValue")"
 	elif echo "$@" | grep -q -e "--term";then
 		# 🗔 🖳 🗔 🖳 🗔 🖳 🗔 🖳
-		tempValue=$(( $tempValue % 4 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n " "
-		elif [ $tempValue -eq 1 ];then
-			echo -n "🗔"
-		elif [ $tempValue -eq 2 ];then
-			echo -n " "
-		elif [ $tempValue -eq 3 ];then
-			echo -n "🖳"
-		fi
+		echo -n "$(drawPattern "🗔 🖳 " "$tempValue")"
 	elif echo "$@" | grep -q -e "--altdice";then
 		# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
 		tempValue=$(( $tempValue % 2 ))
 		if [ $tempValue -eq 0 ];then
 			echo -n "☐"
 		else
-			echo -n "$(rolldie)"
+			echo -n "$(rollDie)"
 		fi
 	elif echo "$@" | grep -q -e "--grass";then
 		# - grass        🗤 🗤 🗤 🗤 🗤 🗤 🗤 🗤
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n " "
-		else
-			echo -n "🗤"
-		fi
+		echo -n "$(drawPattern "🗤 " "$tempValue")"
 	elif echo "$@" | grep -q -e "--vines";then
 		# - vines        🗥 🗥 🗥 🗥 🗥 🗥 🗥 🗥
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n " "
-		else
-			echo -n "🗥"
-		fi
+		echo -n "$(drawPattern "🗥 " "$tempValue")"
+	elif echo "$@" | grep -q -e "--crossAlt";then
+		echo -n "$(drawPattern "🕇🕆" "$tempValue")"
 	else
 		# 🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
-		tempValue=$(( $tempValue % 2 ))
-		if [ $tempValue -eq 0 ];then
-			echo -n "🟕"
-		else
-			echo -n "🟗"
-		fi
+		echo -n "$(drawPattern "🟕🟗" "$tempValue")"
 	fi
 }
 ################################################################################
@@ -1941,6 +1915,11 @@ loadLineTheme(){
 	#
 	# - dice         ⚁⚂⚄⚄⚁⚁⚄⚄⚂⚁⚁⚁⚂⚂⚄⚁
 	# - flowers      ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
+	# - flower       ❀❀❀❀❀❀❀❀❀❀❀❀❀❀❀❀
+	# - flower2      ✾✾✾✾✾✾✾✾✾✾✾✾✾✾✾✾
+	# - flower3      ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+	# - flower4      ❁❁❁❁❁❁❁❁❁❁❁❁❁❁❁❁
+	# - flowerRand   ❁❀✾✿❁✾✿❀✾✿❀✾✿❁✾❀
 	# - wood         🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
 	# - quilt        🙪 🙨 🙪 🙨 🙪 🙨 🙪 🙪
 	# - suit         ♤♢♧♡♤♢♧♡♤♢♧♡♤♢♧♡
@@ -1963,19 +1942,16 @@ loadLineTheme(){
 	# - castle       ⛫═⛫═⛫═⛫═⛫═⛫═⛫═⛫═
 	# - floppy       🖫☐🖬☐🖪☐🖫☐🖬☐🖪☐🖫☐🖬☐
 	# - computer     🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉🖳┉
-	# - computers    🖳┉🖧 🖳┉🖧 🖳┉🖧 🖳┉🖧
+	# - computers    🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧🖧
 	# - term         🗔 🖳 🗔 🖳 🗔 🖳 🗔 🖳
 	# - lines        𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛𝄛
 	# - sine         ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿
 	# - grass        🗤 🗤 🗤 🗤 🗤 🗤 🗤 🗤
 	# - vines        🗥 🗥 🗥 🗥 🗥 🗥 🗥 🗥
 	# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
-	# - cloud        ☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️
+	# - weather
 	# - sid          𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗𑗗
 	# - chem
-
-	#
-	# - ﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏
 	#
 	index="$1"
 	lineTheme="$2"
@@ -1992,9 +1968,6 @@ loadLineTheme(){
 	if [ "$lineTheme" == "dice" ];then
 		# draw random dice for each line
 		echo -n "$(rollDie)"
-	elif [ "$lineTheme" == "flower" ];then
-		# draw a flowers
-		echo -n "$(drawAltPattern "$index" --flower)"
 	elif [ "$lineTheme" == "wood" ];then
 		echo -n "$(drawAltPattern "$index" --wood)"
 	elif [ "$lineTheme" == "quilt" ];then
@@ -2005,6 +1978,8 @@ loadLineTheme(){
 		echo -n "$(drawAltPattern "$index" --book)"
 	elif [ "$lineTheme" == "castle" ];then
 		echo -n "$(drawAltPattern "$index" --castle)"
+	elif [ "$lineTheme" == "brick" ];then
+		echo -n "$(drawAltPattern "$index" --brick)"
 	elif [ "$lineTheme" == "suit" ];then
 		# draw a card suite
 		echo -n "$(drawCardSuite "$index")"
@@ -2083,15 +2058,56 @@ loadLineTheme(){
 	elif [ "$lineTheme" == "altdice" ];then
 		# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
 		echo -n "$(drawAltPattern "$index" --altdice)"
-	elif [ "$lineTheme" == "cloud" ];then
-		# - cloud        ☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️☁️
-		echo -n "☁️"
+	elif [ "$lineTheme" == "weather" ];then
+		# - cloud
+		echo -n "$(drawRandomizedPattern "🌣🗲🌢🌢🌢🌢🌢🌢")"
+	elif [ "$lineTheme" == "cross" ];then
+		echo -n "🕇"
+	elif [ "$lineTheme" == "cross2" ];then
+		echo -n "🕆"
+	elif [ "$lineTheme" == "crossAlt" ];then
+		#echo -n "$(drawPattern "🕇🕆" "$tempValue")"
+		#echo -n "$(drawRandomizedPattern "🕇🕆" "$tempValue")"
+		echo -n "$(drawAltPattern "$index" --crossAlt)"
 	elif [ "$lineTheme" == "sid" ];then
 		# - siddham mark
 		echo -n "𑗗"
 	elif [ "$lineTheme" == "chem" ];then
 		# - random chemestry symbols
 		echo -n "$(randomChem)"
+	elif [ "$lineTheme" == "flower" ];then
+		# - flower       ❀❀❀❀❀❀❀❀❀❀❀❀❀❀❀❀
+		echo -n "❀"
+	elif [ "$lineTheme" == "flower2" ];then
+		# - flower2      ✾✾✾✾✾✾✾✾✾✾✾✾✾✾✾✾
+		echo -n "✾"
+	elif [ "$lineTheme" == "flower3" ];then
+		# - flower3      ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+		echo -n "✿"
+	elif [ "$lineTheme" == "flower4" ];then
+		# - flower4      ❁❁❁❁❁❁❁❁❁❁❁❁❁❁❁❁
+		echo -n "❁"
+	elif [ "$lineTheme" == "flower5" ];then
+		# - flower5      ⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘⚘
+		echo -n "⚘"
+	elif [ "$lineTheme" == "flower6" ];then
+		# - flower6      𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇𑽇
+		echo -n "𑽇"
+	elif [ "$lineTheme" == "flowers" ];then
+		# - flowers      ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
+		echo -n "$(drawPattern "⚘𑽇" "$tempValue")"
+	elif [ "$lineTheme" == "flowerRand" ];then
+		# - flowerRand   ⚘❁❀⚘⚘✾✿⚘❁✾✿❀⚘✾✿⚘❀
+		echo -n "$(drawRandomizedPattern "⚘𑽇❁❀✾✿" "$tempValue")"
+	elif [ "$lineTheme" == "flowerRand2" ];then
+		# - flowerRand2   ❁❀✾✿❁✾✿❀✾✿❀✾✿❁✾❀
+		echo -n "$(drawRandomizedPattern "❁❀✾✿" "$tempValue")"
+	elif [ "$lineTheme" == "papersRand" ];then
+		echo -n "$(drawRandomizedPattern "🗉🗏🗟🖻🖺🗈🗎")"
+	elif [ "$lineTheme" == "papersRand2" ];then
+		echo -n "$(drawRandomizedPattern "🗉🗌🗆🗏🗟🖻🖺🗈🗎")"
+	elif [ "$lineTheme" == "graph" ];then
+		echo -n "🗠"
 	else
 		# draw the default theme if no theme could be matched
 		# - solid
@@ -2132,7 +2148,7 @@ function drawCardSuite(){
 	tempValue="$1"
 
 	# check for color flag
-	if echo "$@" | grep -xq "--color";then
+	if echo "$@" | grep -q -e "--color";then
 		color="yes"
 	else
 		color="no"
@@ -2142,32 +2158,32 @@ function drawCardSuite(){
 		tempValue=$(( $tempValue % 8 ))
 		#
 		if [ $tempValue -eq 0 ];then
-			buffer="$buffer♠️"
+			echo -n "♠️"
 		elif [ $tempValue -eq 1 ];then
-			buffer="$buffer "
+			echo -n " "
 		elif [ $tempValue -eq 2 ];then
-			buffer="$buffer♦️"
+			echo -n "♦️"
 		elif [ $tempValue -eq 3 ];then
-			buffer="$buffer "
+			echo -n " "
 		elif [ $tempValue -eq 4 ];then
-			buffer="$buffer♣️"
+			echo -n "♣️"
 		elif [ $tempValue -eq 5 ];then
-			buffer="$buffer "
+			echo -n " "
 		elif [ $tempValue -eq 6 ];then
-			buffer="$buffer♥️"
+			echo -n "♥️"
 		elif [ $tempValue -eq 7 ];then
-			buffer="$buffer "
+			echo -n " "
 		fi
 	else
 		tempValue=$(( $tempValue % 4 ))
 		if [ $tempValue -eq 0 ];then
-			buffer="$buffer♤"
+			echo -n "♤"
 		elif [ $tempValue -eq 1 ];then
-			buffer="$buffer♢"
+			echo -n "♢"
 		elif [ $tempValue -eq 2 ];then
-			buffer="$buffer♧"
+			echo -n "♧"
 		elif [ $tempValue -eq 3 ];then
-			buffer="$buffer♡"
+			echo -n "♡"
 		fi
 	fi
 }
