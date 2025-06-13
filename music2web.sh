@@ -395,7 +395,7 @@ function processTrack(){
 				# Create the artist index link
 				{
 					echo "<a class='indexSeries' href='/music/$artist'>"
-					echo "	<img class='' loading='lazy' src='/music/$artist/poster-web.png'>"
+					echo "	<img title='$artistOG' class='' loading='lazy' src='/music/$artist/poster-web.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$artistOG"
 					echo "	</div>"
@@ -458,7 +458,7 @@ function processTrack(){
 				# add the album to the artist index
 				{
 					echo "<a class='indexSeries' href='/music/$artist/$album'>"
-					echo "	<img class='' loading='lazy' src='/music/$artist/$album/album-web.png'>"
+					echo "	<img title='$artist - $album' class='' loading='lazy' src='/music/$artist/$album/album-web.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$albumOG"
 					if [ "$date" != "" ];then
@@ -512,7 +512,7 @@ function processTrack(){
 				{
 					echo "<a class='showPageEpisode track' href='/music/$artist/$album/?play=$track'>"
 					echo "	<h2>$artist <hr> $album</h2>";
-					echo "	<img class='indexIcon' loading='lazy' src='/music/$artist/$album/web-$track.png'>"
+					echo "	<img title='$artist - $album - $title' class='indexIcon' loading='lazy' src='/music/$artist/$album/web-$track.png'>"
 					echo "	<div class='indexTitle'>"
 					echo "		$track $title"
 					echo "	</div>"
