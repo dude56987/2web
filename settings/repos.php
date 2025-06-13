@@ -49,6 +49,34 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='git2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#git2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='git2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <div id='repoRenderVideo' class='inputCard'>
 	<h2>Render Videos</h2>
 		<ul>
@@ -64,12 +92,12 @@ include("settingsHeader.php");
 		?>
 </div>
 <?php
-echo "<div id='repoServerLibraryPaths' class='settingListCard'>\n";
-echo "<h2>Repo Server Library Paths</h2>\n";
+echo "<details id='repoServerLibraryPaths' class='titleCard'>\n";
+echo "<summary><h2>Repo Server Library Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/repos/libaries.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='reposLibraryPaths' class='settingListCard'>";
 echo "<h2>Repos Library Paths</h2>\n";
@@ -108,12 +136,12 @@ foreach($sourceFiles as $sourceFile){
 	</div>
 </div>
 <?php
-echo "<div id='repoServerSourcePaths' class='settingListCard'>\n";
-echo "<h2>Repo Server Source Paths</h2>\n";
+echo "<details id='repoServerSourcePaths' class='titleCard'>\n";
+echo "<summary><h2>Repo Server Source Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/repos/sources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='repoSourcePaths' class='settingListCard'>";
 echo "<h2>Repo Source Paths</h2>\n";

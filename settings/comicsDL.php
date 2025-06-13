@@ -47,13 +47,42 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='comic2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#comic2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='comic2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
+
 <?PHP
-echo "<div id='serverDownloadLinkConfig' class='settingListCard'>\n";
-echo "<h2>Server Comic Download Link Config</h2>\n";
+echo "<details id='serverDownloadLinkConfig' class='titleCard'>\n";
+echo "<summary><h2>Server Comic Download Link Config</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/comics/sources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
@@ -102,12 +131,12 @@ foreach($sourceFiles as $sourceFile){
 </div>
 
 <?PHP
-echo "<div id='serverWebDownloadLinkConfig' class='settingListCard'>\n";
-echo "<h2>Server WebComic Download Link Config</h2>\n";
+echo "<details id='serverWebDownloadLinkConfig' class='titleCard'>\n";
+echo "<summary><h2>Server WebComic Download Link Config</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/comics/webSources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current Webcomic links</h2>\n";

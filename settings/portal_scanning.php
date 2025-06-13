@@ -47,13 +47,41 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='portal2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#portal2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='portal2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <?php
-echo "<div id='portalServerScanPort' class='settingListCard'>\n";
-echo "<h2>Portal Server Scan Ports</h2>\n";
+echo "<details id='portalServerScanPort' class='titleCard'>\n";
+echo "<summary><h2>Portal Server Scan Ports</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/portal/scanPorts.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='removePortalScanPort' class='settingListCard'>";
 echo "<h2>Portal Scan Ports</h2>\n";
@@ -93,12 +121,12 @@ foreach($sourceFiles as $sourceFile){
 </div>
 
 <?php
-echo "<div id='portalServerScanPaths' class='settingListCard'>\n";
-echo "<h2>Portal Server Scan Paths</h2>\n";
+echo "<details id='portalServerScanPaths' class='titleCard'>\n";
+echo "<summary><h2>Portal Server Scan Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/portal/scanPaths.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='portalScanPaths' class='settingListCard'>";
 echo "<h2>Portal Scan Paths</h2>\n";

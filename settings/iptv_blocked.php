@@ -33,7 +33,7 @@ requireAdmin();
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
-include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include("/var/cache/2web/web/header.php");
 include("settingsHeader.php");
 ?>
 <div id='index' class='inputCard'>
@@ -44,6 +44,34 @@ include("settingsHeader.php");
 	<li><a href='#serverBlockedGroups'>Server Blocked Groups</a></li>
 	<li><a href='#activeBlockedGroups'>Active/Blocked Groups</a></li>
 	<ul>
+</div>
+
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='iptv2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#iptv2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='iptv2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
 </div>
 
 <div id='blockGroup' class='inputCard'>
@@ -63,13 +91,12 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-echo "<div id='serverBlockedGroups' class='titleCard'>";
-echo "<h2>Server Blocked Groups</h2>\n";
+echo "<details id='serverBlockedGroups' class='titleCard'>";
+echo "<summary><h2>Server Blocked Groups</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/iptv/blockedGroups.cfg");
 echo "</pre>\n";
-echo "</div>";
-
+echo "</details>";
 
 $sourceFiles = scandir("/etc/2web/iptv/blockedGroups.d/");
 $blockedGroups = array();
@@ -159,7 +186,7 @@ if (file_exists("/var/cache/2web/web/live/groups/")){
 ?>
 </div>
 <?PHP
-	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+	include("/var/cache/2web/web/footer.php");
 ?>
 </body>
 </html>

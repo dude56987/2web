@@ -33,7 +33,7 @@ requireAdmin();
 // redirect the given file to the resoved url found with youtube-dl
 ################################################################################
 ini_set('display_errors', 1);
-include($_SERVER['DOCUMENT_ROOT']."/header.php");
+include("/var/cache/2web/web/header.php");
 include("settingsHeader.php");
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 ?>
@@ -48,14 +48,41 @@ $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 	<ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='iptv2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#iptv2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='iptv2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
 
 <?php
-echo "<div id='serverLinkConfig' class='settingListCard'>\n";
-echo "<h2>Server Link Config</h2>\n";
+echo "<details id='serverLinkConfig' class='titleCard'>\n";
+echo "<summary><h2>Server Link Config</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/iptv/sources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
@@ -79,19 +106,6 @@ foreach($sourceFiles as $sourceFile){
 				//echo "<hr>\n";
 				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
-				/*
-				# try to find a icon for the link
-				$iconLink=md5("http://".$_SERVER["HTTP_HOST"]."/iptv-resolver.php?url=\"".$link."\"");
-
-				if (file_exists(md5($link).".png")){
-					# if the link is direct
-					echo "	<img class='settingsThumb' src='".md5($link).".png'>";
-				}
-				if (file_exists($iconLink)){
-					# if the link is a redirected generated link get a diffrent icon
-					echo "	<img class='settingsThumb' src='".$iconLink.".png'>";
-				}
-				*/
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
@@ -172,7 +186,7 @@ foreach($sourceFiles as $sourceFile){
 
 </div>
 <?PHP
-	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+	include("/var/cache/2web/web/footer.php");
 ?>
 </body>
 </html>

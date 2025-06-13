@@ -46,6 +46,34 @@ include("settingsHeader.php");
 	<ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='nfo2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#nfo2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='nfo2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <div id='nfo_generateAudioWaveform' class='inputCard'>
 	<h2>Generate Waveform Thumbnails</h2>
 		<ul>
@@ -62,20 +90,20 @@ include("settingsHeader.php");
 </div>
 
 <?php
-echo "<div id='serverLibaryPaths' class='titleCard'>\n";
-echo "<h2>Server Library Paths</h2>\n";
+echo "<details id='serverLibaryPaths' class='titleCard'>\n";
+echo "<summary><h2>Server Library Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/nfo/libaries.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 ?>
 <?php
-echo "<div id='serverDisabledLibaryPaths' class='titleCard'>\n";
-echo "<h2>Server Disabled Libary Paths</h2>\n";
+echo "<details id='serverDisabledLibaryPaths' class='titleCard'>\n";
+echo "<summary><h2>Server Disabled Libary Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/nfo/disabledLibaries.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 ?>
 
 <?php

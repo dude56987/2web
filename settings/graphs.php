@@ -45,25 +45,33 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 		<li><a href='#muninDisabled'>Munin Disabled</a></li>
 	</ul>
 </div>
-<div id='vnstat' class='inputCard'>
-	<h2>Vnstat</h2>
-	<ul>
-		<li>
-			<?PHP
-			if(file_exists("/usr/bin/vnstati")){
-				echo "<span class='enabledSetting'>Vnstati Enabled</span>";
-			}else{
-				echo "<span class='disabledSetting'>Vnstati Disabled</span> ";
-				echo "Install the vnstati package in order to include graphs.";
-			}
-			?>
-		</li>
-		<li>Graphs are added from vnstat via vnstati package
-			<ul>
-				<li>If vnstat and vnstati package is installed these graphs will be automatically generated.</li>
-			</ul>
-		</li>
-	</ul>
+
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='graph2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#graph2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='graph2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
 </div>
 
 <?PHP

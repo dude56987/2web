@@ -54,26 +54,41 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='ytdl2nfo_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#ytdl2nfo'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='ytdl2nfo_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <?php
-echo "<div id='serverWebsiteSources' class='titleCard'>\n";
-echo "<h2>Server Website Sources</h2>\n";
+echo "<details id='serverWebsiteSources' class='titleCard'>\n";
+echo "<summary><h2>Server Website Sources</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/ytdl/sources.cfg");
-/*
-$data = fopen("/etc/2web/ytdl/sources.cfg",'r');
-if ($data){
-	while (($line = fgets($data)) !== false){
-		if(strpos("#",$line) == 0){
-			echo "<div class='codeCommentLine'>".$line."</div>";
-		}else{
-			echo "<div class='codeLine'>".$line."</div>";
-		}
-	}
-	fclose($data);
-}
-*/
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 ?>
 <?php
 echo "<div id='ytdl_remove_source' class='settingListCard'>";
@@ -133,12 +148,12 @@ foreach($sourceFiles as $sourceFile){
 	</div>
 </div>
 <?PHP
-echo "<div id='serverUsernameSources' class='titleCard'>\n";
-echo "<h2>Server Username Sources</h2>\n";
+echo "<details id='serverUsernameSources' class='titleCard'>\n";
+echo "<summary><h2>Server Username Sources</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/ytdl/usernameSources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 ?>
 
 <?php

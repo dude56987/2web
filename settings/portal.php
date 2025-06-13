@@ -48,6 +48,34 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='portal2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#portal2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='portal2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <div id='scanAvahi' class='inputCard'>
 	<h2>Scan using Avahi</h2>
 		<ul>
@@ -64,12 +92,12 @@ include("settingsHeader.php");
 </div>
 
 <?php
-echo "<div id='portalServerscanSourcesPaths' class='settingListCard'>\n";
-echo "<h2>portal Server scanSources Paths</h2>\n";
+echo "<details id='portalServerscanSourcesPaths' class='titleCard'>\n";
+echo "<summary><h2>Portal Server scanSources Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/portal/scanSources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='portalscanSourcesPaths' class='settingListCard'>";
 echo "<h2>Portal scanSources Paths</h2>\n";
@@ -108,12 +136,12 @@ foreach($sourceFiles as $sourceFile){
 </div>
 
 <?php
-echo "<div id='portalServerSourcePaths' class='settingListCard'>\n";
-echo "<h2>portal Server Source Paths</h2>\n";
+echo "<details id='portalServerSourcePaths' class='titleCard'>\n";
+echo "<summary><h2>portal Server Source Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/portal/sources.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='portalSourcePaths' class='settingListCard'>";
 echo "<h2>portal Source Paths</h2>\n";

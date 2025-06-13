@@ -45,6 +45,35 @@ include("settingsHeader.php");
 		<li><a href='#currentLocations'>Current Configured Locations</a></li>
 	</ul>
 </div>
+
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='weather2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#weather2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='weather2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <!-- create the theme picker based on installed themes -->
 <div id='setHomepageWeatherLocation' class='inputCard'>
 	<h2>Homepage Weather Location</h2>
@@ -100,39 +129,30 @@ include("settingsHeader.php");
 </div>
 
 <?PHP
-echo "<div id='serverLocations' class='settingListCard'>\n";
-echo "<h2>Server Weather Location Config</h2>\n";
+echo "<details id='serverLocations' class='titleCard'>\n";
+echo "<summary><h2>Server Weather Location Config</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/weather/location.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='currentLocations' class='settingListCard'>";
 echo "<h2>Current locations</h2>\n";
 $sourceFiles = scandir("/etc/2web/weather/location.d/");
-//print_r($sourceFiles);
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/weather/location.d/*.cfg"));
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
-//print_r($sourceFiles);
-//echo "<table class='settingsTable'>";
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
-				//echo "<hr>\n";
-				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
 				$link=file_get_contents($sourceFile);
 				echo "	<h2>".$link."</h2>";
-				//echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "		<button class='button' type='submit' name='removeWeatherLocation' value='".$link."'>Remove</button>\n";
+				echo "		<button class='button' type='submit' name='removeWeatherLocation' value='".$link."'>❌ Remove</button>\n";
 				echo "	</form>\n";
-				//echo "</div>\n";
 				echo "</div>\n";
 			}
 		}
@@ -144,19 +164,19 @@ foreach($sourceFiles as $sourceFile){
 	<form action='admin.php' method='post'>
 		<ul>
 			<li>
-				Add a location to show weather forcasts.
+				Search for a location to show weather forcasts.
 			</li>
 			<li>
-				If a city returns no results add city after the city name.
+				If a city returns no results reduce your query size for more results.
 				<ul>
 					<li>
-						'springfield, NY' vs 'springfield city, NY'
+						'springfield, NY' vs 'spring'
 					</li>
 				</ul>
 			</li>
 		</ul>
 		<input width='60%' type='text' name='addWeatherLocation' placeholder='New York City, NY'>
-		<button class='button' type='submit'>➕ Add Location</button>
+		<button class='button' type='submit'>➕ Search For Location</button>
 	</form>
 	</div>
 </div>
