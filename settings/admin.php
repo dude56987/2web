@@ -1105,6 +1105,16 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/kodi/playOnKodiButton.cfg", $_POST['playOnKodiButton']);
 	backButton("/settings/kodi.php#playOnKodiButton","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("kodiHttpShareStatus",$_POST)){
+	$link=$_POST['kodiHttpShareStatus'];
+	yesNoCfgSet("/etc/2web/kodi/enableHttpShare.cfg", $_POST['kodiHttpShareStatus']);
+	backButton("/settings/kodi.php#kodiHttpShareStatus","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("kodiHttpShareLinkStatus",$_POST)){
+	$link=$_POST['kodiHttpShareLinkStatus'];
+	yesNoCfgSet("/etc/2web/kodi/enableHttpShareLink.cfg", $_POST['kodiHttpShareLinkStatus']);
+	backButton("/settings/kodi.php#kodiHttpShareLinkStatus","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("homepageFortuneStatus",$_POST)){
 	$link=$_POST['homepageFortuneStatus'];
 	yesNoCfgSet("/etc/2web/fortuneStatus.cfg", $_POST['homepageFortuneStatus']);

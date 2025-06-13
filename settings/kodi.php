@@ -44,6 +44,34 @@ include("settingsHeader.php");
 	</ul>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='kodi2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#kodi2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='kodi2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <div id='playOnKodiButton' class='inputCard'>
 	<h2>Play On KODI</h2>
 		<ul>
@@ -56,6 +84,30 @@ include("settingsHeader.php");
 		</ul>
 		<?PHP
 		buildYesNoCfgButton("/etc/2web/kodi/playOnKodiButton.cfg","Play On KODI Button","playOnKodiButton");
+		?>
+</div>
+
+<div id='kodiHttpShareStatus' class='inputCard'>
+	<h2>KODI HTTP Share</h2>
+		<ul>
+			<li>
+				Enable or disable the kodi HTTP share. This is a unencrypted http share of all media for use on a LAN with KODI.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/kodi/enableHttpShare.cfg","KODI HTTP Share","kodiHttpShareStatus");
+		?>
+</div>
+
+<div id='kodiHttpShareLinkStatus' class='inputCard'>
+	<h2>KODI HTTP Share Header Button</h2>
+		<ul>
+			<li>
+				Enable or disable the kodi HTTP share link in the header.
+			</li>
+		</ul>
+		<?PHP
+		buildYesNoCfgButton("/etc/2web/kodi/enableHttpShareLink.cfg","KODI HTTP Share Link","kodiHttpShareLinkStatus");
 		?>
 </div>
 
@@ -83,12 +135,12 @@ include("settingsHeader.php");
 </div>
 
 <?php
-echo "<div id='kodiServerLocationPaths' class='settingListCard'>\n";
-echo "<h2>kodi Server Location Paths</h2>\n";
+echo "<details id='kodiServerLocationPaths' class='titleCard'>\n";
+echo "<summary><h2>kodi Server Location Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/kodi/locations.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='kodiLocationPaths' class='settingListCard'>";
 echo "<h2>kodi Location Paths</h2>\n";
