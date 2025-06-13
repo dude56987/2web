@@ -1302,71 +1302,72 @@ nuke(){
 	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
+# if --debug flag used activate bash debugging for script
+if echo "$@" | grep "debug";then
+	set -x
+fi
 ################################################################################
-main(){
-	################################################################################
-	# if --debug flag used activate bash debugging for script
-	if echo "$@" | grep "debug";then
-		set -x
-	fi
-	################################################################################
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		# check if the module is enabled
-		checkModStatus "iptv2web"
-		webGen
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "iptv2web"
-		enableMod "epg2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "iptv2web"
-		disableMod "epg2web"
-	elif [ "$1" == "-E" ] || [ "$1" == "--epg" ] || [ "$1" == "epg" ] ;then
-		ALERT "This will download and build a updated combined EPG file"
-		checkModStatus "epg2web"
-		lockProc "epg2web"
-		webDirectory=$(webRoot)
-		updateEPG "$webDirectory"
-		buildEPG "$webDirectory"
-		ALERT "EPG processing is complete your iptv clients should update automatically"
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		# check if the module is enabled
-		checkModStatus "iptv2web"
-		################################################################################
-		lockProc "iptv2web"
-		# run full update
-		fullUpdate
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		resetCache
-	elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		nuke
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "iptv2web"
-		upgrade-pip "iptv2web" "streamlink"
-		upgrade-yt-dlp
-	elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
-		# copy local hls.js included in package to the website
-		linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/iptv2web.txt"
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "iptv2web Version: "
-		cat /usr/share/2web/version_iptv2web.cfg
-	else
-		main --update
-		main --webgen
-		main --help
-		showServerLinks
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/live/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/tv.php"
-		drawLine
-	fi
-}
-################################################################################
-main "$@"
-exit
+# set the theme of the lines in CLI output
+LINE_THEME="stitch"
+if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+	lockProc "iptv2web"
+	# check if the module is enabled
+	checkModStatus "iptv2web"
+	webGen
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ;then
+	rm -v "/var/cache/2web/web/iptv2web.active"
+	killall "iptv2web"
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "iptv2web"
+	enableMod "epg2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "iptv2web"
+	disableMod "epg2web"
+elif [ "$1" == "-E" ] || [ "$1" == "--epg" ] || [ "$1" == "epg" ] ;then
+	ALERT "This will download and build a updated combined EPG file"
+	lockProc "epg2web"
+	checkModStatus "epg2web"
+	webDirectory=$(webRoot)
+	updateEPG "$webDirectory"
+	buildEPG "$webDirectory"
+	ALERT "EPG processing is complete your iptv clients should update automatically"
+elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	lockProc "iptv2web"
+	# check if the module is enabled
+	checkModStatus "iptv2web"
+	# run full update
+	fullUpdate
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	resetCache
+elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	nuke
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	lockProc "iptv2web"
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "iptv2web"
+	upgrade-pip "iptv2web" "streamlink"
+	upgrade-yt-dlp
+elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
+	# copy local hls.js included in package to the website
+	linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/iptv2web.txt"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "iptv2web Version: "
+	cat /usr/share/2web/version_iptv2web.cfg
+else
+	lockProc "iptv2web"
+	checkModStatus "iptv2web"
+	fullUpdate
+	webGen
+	cat "/usr/share/2web/help/iptv2web.txt"
+	showServerLinks
+	drawLine
+	drawSmallHeader "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/live/"
+	echo "http://$(hostname).local:80/settings/tv.php"
+	drawLine
+fi
