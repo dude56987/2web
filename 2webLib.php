@@ -144,7 +144,8 @@ if( ! function_exists("drawPosterWidget")){
 								fwrite($fileObj,"$data");
 							}
 						}
-						if ($counter >= 40){
+						# limit results
+						if ($counter >= 16){
 							// break the loop
 							break;
 						}
