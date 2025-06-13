@@ -79,7 +79,7 @@ if (is_dir("/var/cache/2web/web/views/")){
 			# fetch each row data individually and display results
 			while($row = $result->fetchArray()){
 				// read the index entry
-				$data="<tr><td class='viewsPathCell'>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				$data="<tr><td class='viewsPathCell'>".uncleanText($row["url"])."</td><td>".$row["views"]."</td></tr>";
 				// write the index entry
 				echo "$data";
 				fwrite($fileHandle, "$data");
@@ -111,7 +111,7 @@ if (is_dir("/var/cache/2web/web/views/")){
 			# fetch each row data individually and display results
 			while($row = $result->fetchArray()){
 				// read the index entry
-				$data="<tr><td class='viewsPathCell'>".$row["url"]."</td><td>".$row["views"]."</td></tr>";
+				$data="<tr><td class='viewsPathCell'>".uncleanText($row["url"])."</td><td>".$row["views"]."</td></tr>";
 				// write the index entry
 				echo "$data";
 				fwrite($fileHandle, "$data");

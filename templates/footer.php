@@ -84,7 +84,9 @@ $keyCounter = 0;
 foreach(array_keys($_GET) as $keyName){
 	$keyCounter +=1;
 	$tempKeyValue = $_GET[$keyName];
-	$tempKeyValue = str_replace("/","(#)",$tempKeyValue);
+	#$tempKeyValue = str_replace("/","(#)",$tempKeyValue);
+	# cleanup the path for storage
+	$tempKeyValue = cleanText($tempKeyValue);
 
 	# do not add the and to the last element in the array
 	if ($keyCounter >= $totalKeys){
