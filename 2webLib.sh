@@ -937,19 +937,17 @@ function updateCerts(){
 	# RETURN NULL, FILES
 	force=$1
 	genCert='no'
-	# if the cert exists
-	# if the certs are older than 364 days renew recreate a new valid key
-	if cacheCheck /var/cache/2web/ssl-cert.crt "365";then
-		# the cert has expired
-		INFO "Updating cert..."
+	if ! test -f "/var/cache/2web/ssl-cert.crt";then
+		# the cert does not yet exist create a default one
+		INFO "Updating SSL cert..."
 		# generate a new private key and public cert for the SSL certification
 		genCert='yes'
 	else
-		INFO "Cert still active..."
+		INFO "SSL cert Already exists at '/var/cache/2web/ssl-cert.crt'..."
 		return
 	fi
 	if $force;then
-		# force cert generation
+		# force default cert generation, will overwite orignal
 		genCert='yes'
 	fi
 	if [ $genCert == 'yes' ];then
