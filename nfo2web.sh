@@ -490,7 +490,7 @@ processMovie(){
 		################################################################################
 		{
 			echo "<a class='indexSeries' href='/movies/$movieWebPath'>"
-			echo "	<img loading='lazy' src='/movies/$movieWebPath/poster-web.png'>"
+			echo "	<img title='$movieWebPath' loading='lazy' src='/movies/$movieWebPath/poster-web.png'>"
 			echo "	<div class='title'>"
 			echo "		$movieTitle"
 			echo "		<br>"
@@ -1042,16 +1042,17 @@ processEpisode(){
 		################################################################################
 		# build the episode link to be included by index pages
 		################################################################################
-		tempEpisodeSeasonThumb="<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<h2 class='title'>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n  	$episodeShowTitle"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</h2>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<img loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<div class='title'>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n		$episodeTitle"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n	</div>"
-		tempEpisodeSeasonThumb="$tempEpisodeSeasonThumb\n</a>"
+		tempEpisodeSeasonThumb=""
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}<a class='showPageEpisode' href='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php'>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<h2 class='title'>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}		${episodeShowTitle}\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	</h2>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<img title='$episodeShowTitle - $episodeTitle' loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<div class='title'>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}		${episodeTitle}\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	</div>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}</a>\n"
 
 		# add the episode to the season index
 		addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
@@ -1368,12 +1369,10 @@ processShow(){
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
-		echo "	<img loading='lazy' src='/shows/$showTitle/poster-web.png'>"
-		#echo "  <marquee direction='up' scrolldelay='100'>"
+		echo "	<img title='$showTitle' loading='lazy' src='/shows/$showTitle/poster-web.png'>"
 		echo "	<div class='indexSeriesTitle'>"
 		echo "		$showTitle"
 		echo "	</div>"
-		#echo "  </marquee>"
 		echo "</a>"
 	} > "$webDirectory/shows/$showTitle/shows.index"
 
