@@ -202,7 +202,90 @@ $totalThemes=count($sourceFiles);
 		<button class='button' type='submit'>🖌️ Change Theme</button>
 	</form>
 </div>
+<?php
+	# build a theme
+	#
+	# get the list of theme construction files
+	#
+	# build a set of drop down boxes for each group of theme components
+	#
+	#
+	$themeParts=scandir("/usr/share/2web/theme-templates/");
+	$themeParts=array_diff($themeParts ,Array("..","."));
+	$baseNames=Array();
+	$colorNames=Array();
+	$fontNames=Array();
+	$modNames=Array();
+	foreach($themeParts as $sourceFile){
+		# read the theme components and filter out elements into thier sections
+		if (stripos($sourceFile,"base-") !== false){
+			$baseNames=array_merge($baseNames,Array(str_replace(".css","",str_replace("base-","",basename($sourceFile)))));
+		}else if (stripos($sourceFile,"color-") !== false){
+			$colorNames=array_merge($colorNames,Array(str_replace(".css","",str_replace("color-","",basename($sourceFile)))));
+		}else if (stripos($sourceFile,"font-") !== false){
+			$fontNames=array_merge($fontNames,Array(str_replace(".css","",str_replace("font-","",basename($sourceFile)))));
+		}else if (stripos($sourceFile,"mod-") !== false){
+			$modNames=array_merge($modNames,Array(str_replace(".css","",str_replace("mod-","",basename($sourceFile)))));
+		}
+	}
 
+	echo "<div class='titleCard'>";
+	echo "	<h1>Select Theme By Parts</h1>";
+	echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+	echo "<table>";
+	echo "<tr>";
+	echo "	<th>Base</th>";
+	echo "	<th>Color</th>";
+	echo "	<th>Font</th>";
+	echo "	<th>Mod</th>";
+	echo "</tr>";
+	echo "<td>";
+	# read the theme components
+	echo "<select name='themePartBase'>";
+	#shuffle($baseNames);
+	foreach($baseNames as $name){
+		# add theme base compentents
+		echo "<option value='".$name."' >".$name."</option>\n";
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "<td>";
+	#
+	echo "<select name='themePartColor'>";
+	#shuffle($colorNames);
+	foreach($colorNames as $name){
+		# add theme color compentents
+		echo "<option value='".$name."' >".$name."</option>\n";
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "<td>";
+	#
+	echo "<select name='themePartFont'>";
+	#shuffle($fontNames);
+	foreach($fontNames as $name){
+		# add theme mod compentents
+		echo "<option value='".$name."' >".$name."</option>\n";
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "<td>";
+	#
+	echo "<select name='themePartMod'>";
+	#shuffle($modNames);
+	foreach($modNames as $name){
+		# add theme mod compentents
+		echo "<option value='".$name."' >".$name."</option>\n";
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "</tr>";
+	echo "</table>";
+	#
+	echo "		<button class='button' type='submit' >Apply Theme</button>\n";
+	echo "	</form>\n";
+	echo "</div>";
+?>
 <?php
 if (array_key_exists("theme",$_GET)){
 	echo "<div class='titleCard'>";
@@ -216,6 +299,7 @@ if (array_key_exists("theme",$_GET)){
 	echo "</div>";
 }
 ?>
+
 <form class='searchBoxForm' method='get'>
 	<?PHP
 	if (array_key_exists("search",$_GET)){

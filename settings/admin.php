@@ -1289,6 +1289,33 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomConfig("blockGroup","/etc/2web/iptv/blockedGroups.d/","iptv_blocked.php");
 }else if(array_key_exists("unblockGroup",$_POST)){
 	removeCustomConfig("unblockGroup","/etc/2web/iptv/blockedGroups.d/","iptv_blocked.php");
+}else if(array_key_exists("themePartBase",$_POST)){
+	# gather the parts
+	$themeBase=$_POST["themePartBase"];
+	$themeColor=$_POST["themePartColor"];
+	$themeFont=$_POST["themePartFont"];
+	$themeMod=$_POST["themePartMod"];
+	# combine the parts
+	$themeName=$themeBase."-".$themeColor."-".$themeFont."-".$themeMod;
+	$themePath="/usr/share/2web/themes/".$themeName.".css";
+	# check if the theme exists
+	if (file_exists($themePath)){
+		# remove existing symlinks
+		if (file_exists("/var/cache/2web/web/style.css")){
+			unlink("/var/cache/2web/web/style.css");
+		}
+		file_put_contents("/etc/2web/theme.cfg",$themeName.".css");
+		# recreate the symlink to update the website
+		symlink($themePath,"/var/cache/2web/web/style.css");
+		outputLog("The theme '$themeName' was applied successfully.","goodLog");
+		outputLog("You may need to clear the cache to see the new theme in your browser.","outputLog",true);
+	}else{
+		#
+		outputLog("The theme '$themeName' could not be found.","badLog");
+	}
+	backButton("/settings/themes.php#webTheme","🛠️ Return To Settings", false);
+	#
+	clear();
 }else if(array_key_exists("theme",$_POST)){
 	$theme=$_POST["theme"];
 	outputLog("Changing theme to ".$theme);
