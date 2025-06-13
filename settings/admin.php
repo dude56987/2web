@@ -1336,7 +1336,126 @@ if (array_key_exists("newUserName",$_POST)){
 	# remove the cached fortune and make a new one
 	addToQueue("multi","2web --fortune");
 	outputLog("Fortune added to queue");
-	echo "<hr><a class='button' href='/fortune.php'>🛠️ Return To Fortune</a><hr>";
+	#
+	backButton("/fortune.php","🛠️ Return To Fortune");
+	clear();
+}else if (array_key_exists("cleanResolverCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanResolverCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/RESOLVER-CACHE/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/cacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/RESOLVER-CACHE/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanResolverCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanTranscodeCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanTranscodeCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/TRANSCODE-CACHE/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/transcodeCacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/TRANSCODE-CACHE/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanTranscodeCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanPlaylistCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanPlaylistCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/m3u_cache/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/m3uCacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/m3u_cache/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanPlaylistCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanSearchCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanSearchCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/search/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/searchCacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/search/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanSearchCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanZipCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanZipCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/zip_cache/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/zipCacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/zip_cache/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanZipCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanWebCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanWebCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/web_cache/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/webCacheSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/web_cache/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanWebCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanLogCache",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanLogCache")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -v /var/cache/2web/web/log/log.db;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/log/log.db", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanLogCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
+}else if (array_key_exists("cleanViewCounts",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanViewCounts")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -v /var/cache/2web/web/views.db;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/views.db", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanViewCounts"),"🛠️ Return To Cache Settings");
+	}
 	clear();
 }else if (array_key_exists("removeCachedVideo",$_POST)){
 	outputLog("Remove cached file in '/var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/'");

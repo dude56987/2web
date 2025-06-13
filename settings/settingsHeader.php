@@ -1,7 +1,7 @@
 <?PHP
 ########################################################################
 # 2web settings header
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=A
 	<div class='listCard'>
 		<?PHP
 		# draw the module buttons if the module is enabled
-drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php"));
+drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php"));
 		$drawVideoOnDemandButton=drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
 		if(! $drawVideoOnDemandButton ){
 			# draw the header button even if only ytdl2nfo is active
@@ -179,8 +179,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="php2web";
 }else if ($pageURL == "/settings/wiki.php"){
 	$moduleName="wiki2web";
-}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php") || ($pageURL == "/settings/fortune.php")){
-	$moduleName="none";
+}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/settings/clean.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php") || ($pageURL == "/settings/fortune.php")){
+	$moduleName="system";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
 	echo "		<div class='listCard'>";
@@ -190,6 +190,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🎨","Themes","/settings/themes.php");
 	drawHeaderButton("🔮","Fortunes","/settings/fortune.php");
 	drawHeaderButton("📥","Cache","/settings/cache.php");
+	drawHeaderButton("🧹","Clean","/settings/clean.php");
 	drawHeaderButton("📋","Log","/log/");
 	drawHeaderButton("👁️","Views","/views/");
 	drawHeaderButton("📔","Manuals","/settings/manuals.php");
