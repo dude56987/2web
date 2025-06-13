@@ -1192,10 +1192,14 @@ function ALERT(){
 	#
 	# RETURN STDOUT
 	#
+
+	#colorCode=$(yellowText)
 	colorCode="\033[33m"
+	#resetCode=$(resetColor)
 	resetCode="\033[0m"
 	#
 	width=$(tput cols)
+	height=$(tput lines)
 	buffer=" "
 	# get the header text
 	headerText="$2"
@@ -1211,8 +1215,19 @@ function ALERT(){
 		buffer="$buffer "
 	done
 
+	#
 	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
-		output="$1"
+		#
+		yellowText
+			drawSmallHeader "$headerText"
+		resetColor
+		whiteBackground
+		blackText
+			echo -e "$1";
+		resetColor
+		yellowText
+			drawLine
+		resetColor
 	else
 		# - cut the line to make it fit on one line using ncurses tput command
 		# - add the buffer to the end of the line and cut to terminal width
@@ -1220,28 +1235,13 @@ function ALERT(){
 		#   - cut one off the width in order to make space for the \r
 		# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
 		#output="$(echo -ne "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
-		output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
+		output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width ) + 7 + 11 ))" )"
+		# move to the start of the bottom line
+		tput cup "$height" "0"
+		echo -en "$output";
 	fi
-	# printf uses percentage signs for formatting so you must use two in a row to print
-	# a single regular one
-	#output="$(echo -n "$output" | sed "s/%/%%/g")"
-
-	#
-	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
-		#
-		yellowText
-		drawSmallHeader "$headerText"
-		resetColor
-		echo -e "$output";
-		yellowText
-		drawLine
-		resetColor
-	else
-		#
-		#echo "$output";
-		echo -e "$output";
-		#printf "$output";
-	fi
+	# reset the cursor position
+	tput cup "$height" "0"
 }
 ################################################################################
 function startDebug(){
@@ -1343,10 +1343,6 @@ function highlightCell(){
 	# - The number of colums determines the width of the cells
 	text="$1"
 	colums=$2
-	# highlight color is bold white text on black background
-	highlightColor="\e[40m\e[1;37m"
-	# reset all color codes
-	resetColor="\033[0m"
 	# divide the total width by the number of collums in this table
 	totalWidth=$(( $(tput cols) - 0 ))
 	width=$(( ( $totalWidth / $colums ) - 1 ))
@@ -1359,11 +1355,11 @@ function highlightCell(){
 	# cut the output to cell size
 	output="$(echo -n "$text$buffer" | cut -b1-$width)"
 	echo -en "$highlightColor"
+	whiteBackground
+	blackText
 	echo -n "$output"
-	echo -en "$resetColor"
+	resetColor
 	echo -n "┃"
-	#echo -n "█"
-	#echo -n " | "
 	return 0
 }
 ################################################################################
@@ -1385,19 +1381,24 @@ function INFO(){
 		buffer="$buffer "
 	done
 	# store the color codes for coloring
+	#resetCode="$(resetColor)"
+	#blueCode="$(blueText)"
+	blueCode="\033[34m"
 	resetCode="\033[0m"
-	blueCode="\033[0;34m"
 	# - cut the line to make it fit on one line using ncurses tput command
 	# - add the buffer to the end of the line and cut to terminal width
 	#   - this will overwrite any previous text wrote to the line
 	#   - cut one off the width in order to make space for the \r
-	# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
-	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  3 ) + 7 + 11 ))" )"
+	# - The ((width-3)+7+11)  equation refers to the characters in the color codes used and the three creates room for the next opcode and the spinner
+	output="$(echo -n "[${blueCode}INFO${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width - 3 ) + 7 + 11 ))" )"
 	# place the cursor at the start of the bottom line
 	tput cup "$height" "0"
 	# write the output text without a newline
 	# - add 2 blank spaces to the end of the line for the spinner
-	echo -ne "$output  \r"
+	#echo -ne "$output   "
+	#echo -ne "$output  \r"
+	#echo -ne "$output\r"
+	echo -ne "$output\r"
 }
 ################################################################################
 function ERROR(){
@@ -1405,25 +1406,22 @@ function ERROR(){
 	#
 	# RETURN STDOUT
 	width=$(tput cols)
-	# cut the line to make it fit on one line using ncurses tput command
-	buffer="                                                                                "
-	# store the color codes for coloring
-	resetCode="\033[0m"
-	redCode="\033[0;31m"
-	# - add the buffer to the end of the line and cut to terminal width
-	#   - this will overwrite any previous text wrote to the line
-	#   - cut one off the width in order to make space for the \r
-	#output="$(echo -n "$1$buffer" | tail -n 1 | cut -b"1-$(( $width - 1 ))" )"
 	output="$1"
-	# print the line
 	echo
-	echo -ne "$redCode"
-	drawLine
-	drawHeader "!!! ERROR !!!"
-	drawLine
-	echo "$output"
-	drawLine
-	echo -ne "$resetCode"
+	# draw the error header
+	redText
+		drawLine
+		drawHeader "!!! ERROR !!!"
+		drawLine
+	resetColor
+	# draw the error output text
+	yellowBackground
+	blackText
+		echo -e "$output"
+	resetColor
+	redText
+		drawLine
+	resetColor
 }
 ################################################################################
 function upgrade-pip(){
@@ -1553,7 +1551,6 @@ function lockProc(){
 	webDirectory=$(webRoot)
 	# store the color codes for coloring
 	resetCode="\033[0m"
-	greenCode="\033[0;32m"
 	#
 	INFO "$webDirectory/${procName}.active"
 	if test -f "$webDirectory/${procName}.active";then
@@ -1598,11 +1595,11 @@ function lockProc(){
 		# create ramdisk for the module to use
 		mount -t tmpfs -o size=1M tmpfs /var/cache/2web/ram/${procName}/ || ERROR "MOUNTING RAMDISK FAILED"
 	fi
-	echo -ne "${greenCode}"
-	drawLine
-	drawHeader "$procName"
-	drawLine
-	echo -ne "${resetCode}"
+	greenText
+		drawLine
+		drawSmallHeader "$procName"
+		drawLine
+	resetColor
 }
 ################################################################################
 function exitModuleTrap(){
@@ -1610,11 +1607,9 @@ function exitModuleTrap(){
 	# lock control-c
 	trap "ALERT 'Please wait for module to close...'" INT
 	# store the color codes for coloring
-	resetCode="\033[0m"
-	redCode="\033[0;31m"
 	yellowText
 		drawLine
-		drawHeader "Closing $procName Please Wait..."
+		drawSmallHeader "Closing $procName Please Wait..."
 		drawLine
 	resetColor
 	#ALERT "Please wait for module to close..."
@@ -1636,11 +1631,11 @@ function exitModuleTrap(){
 	rm /var/cache/2web/web/${procName}.active
 	#
 	INFO "'$procName' Has successfully exited."
-	echo -ne "${redCode}"
-	drawLine
-	drawHeader "$procName"
-	drawLine
-	echo -ne "${resetCode}"
+	redText
+		drawLine
+		drawSmallHeader "$procName"
+		drawLine
+	resetColor
 	# unlock control-c
 	trap INT
 }
@@ -2110,7 +2105,7 @@ function drawLine(){
 	buffer=""
 	# make the buffer the width of the terminal
 	#█🮮◙⭗🟕🟗═
-	for index in $(seq $width);do
+	for index in $(seq 0 $(( $width - 1 )) );do
 		# draw random dice for each line
 		buffer="$buffer$(loadLineTheme "$index" )"
 	done
@@ -2482,7 +2477,7 @@ function drawSmallHeader(){
 	headerTextLength=${#headerText}
 	# get the size of the first half of the line
 	bufferSize=$(( ( $width - ( $headerTextLength + 2 ) ) / 2 ))
-	for index in $(seq $bufferSize);do
+	for index in $(seq 0 $(( $bufferSize - 1 )) );do
 		#
 		buffer="$buffer$(loadLineTheme "$index" )"
 	done
@@ -2493,7 +2488,7 @@ function drawSmallHeader(){
 	currentBufferSize=${#buffer}
 	bufferSize=$(( $width - $currentBufferSize ))
 	# fill out the remaining width of the terminal
-	for index in $(seq $(( $bufferSize )) );do
+	for index in $(seq 0 $(( $bufferSize - 1 )) );do
 		#
 		buffer="$buffer$(loadLineTheme "$index" )"
 	done
@@ -2508,11 +2503,11 @@ function showServerLinks(){
 	drawLine
 	drawHeader "Server Links"
 	drawLine
-	echo "To access the webserver go to the below link."
+	drawSmallHeader "To access the webserver go to the below link."
 	drawLine
 	echo "http://$(hostname).local:80/"
 	drawLine
-	echo "To access the administrative interface go to the below link."
+	drawSmallHeader "To access the administrative interface go to the below link."
 	drawLine
 	echo "http://$(hostname).local:80/settings/"
 	drawLine
@@ -3663,8 +3658,10 @@ function sleepSpinner(){
 
 	# store the color codes for coloring
 	resetCode="\033[0m"
+	#resetCode=$(resetColor)
 	# green
 	colorCode="\033[0;32m"
+	#colorCode=$(greenText)
 	#
 	spinnerPositionX=$(tput cols)
 	spinnerPositionY=$(tput lines)
@@ -3798,6 +3795,7 @@ function rotateSpinner(){
 				# draw the spinner at the current animation step
 				#echo -ne "${animation:$index:1}\b"
 				# delete the existing character and draw the spinner
+				#echo -ne "\b\b\b ${animation:$index:1} "
 				echo -ne "\b${animation:$index:1}"
 				# move the cursor back to the start of the line
 				tput cup "$spinnerPositionY" "0"
