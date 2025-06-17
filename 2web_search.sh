@@ -20,14 +20,6 @@
 #set -x
 source /var/lib/2web/common
 ################################################################################
-function searchPortal(){
-	webDirectory=$1
-	searchQuery=$2
-	searchSum=$3
-	outputPath="$webDirectory/search/${searchSum}_portal.index"
-	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$outputPath"
-}
-################################################################################
 function searchSQL(){
 	# searchSQL $webDirectory $searchQuery $searchSum $outputPath $tableName
 	#
@@ -229,26 +221,60 @@ function searchWordIndex(){
 	#		cat "$indexFilePath" >> "$outputPath"
 	#done
 	#IFS=$IFSBACKUP
+	outputPath="$webDirectory/search/${searchSum}__fuzzy_all_match.index"
+	#
+	filterCount=0
+	#
+	IFSBACKUP=$IFS
+	IFS=$'\n'
+	# output the unfiltered top search results
+	for indexEntry in $searchIndexResults;do
+		if [ $filterCount -ge 40 ];then
+			# break the loop if the output has found more than 40 entries
+			break
+		fi
+		# test the entry still exists on the server
+		if test -f "$indexEntry";then
+			# read the index entry
+			cat "$indexEntry" >> "$outputPath"
+		else
+			ERROR "Could not open data in '$indexEntry'"
+		fi
+		#
+		filterCount=$(( $filterCount + 1 ))
+	done
+	IFS=$IFSBACKUP
+	#
+	incrementProgressFile "$webDirectory" "$searchSum"
 
 	# split up the search results into categories
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_movies_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "movies" "$searchIndexResults" "$outputPath"
+	incrementProgressFile "$webDirectory" "$searchSum"
+
 	#
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_shows_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "shows" "$searchIndexResults" "$outputPath"
+	incrementProgressFile "$webDirectory" "$searchSum"
+
 	#
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_music_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "music" "$searchIndexResults" "$outputPath"
+	incrementProgressFile "$webDirectory" "$searchSum"
+
 	#
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_comics_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "comics" "$searchIndexResults" "$outputPath"
+	incrementProgressFile "$webDirectory" "$searchSum"
+
 	#
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_repos_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "repos" "$searchIndexResults" "$outputPath"
+	incrementProgressFile "$webDirectory" "$searchSum"
+
 	#
 	outputPath="$webDirectory/search/${searchSum}__fuzzy_portal_match.index"
 	filterWordIndex "$webDirectory" "$searchSum" "portal" "$searchIndexResults" "$outputPath"
-	#
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
 ################################################################################
@@ -383,7 +409,8 @@ function search(){
 	else
 		totalWikis=0
 	fi
-	echo "$(( 24 + $totalWikis ))" > "$webDirectory/search/${searchSum}_total.index"
+	#
+	echo "$(( 30 + $totalWikis ))" > "$webDirectory/search/${searchSum}_total.index"
 
 	# search the dictionary server
 	searchDict "$webDirectory" "$searchQuery" "$searchSum" &
@@ -396,6 +423,9 @@ function search(){
 	waitQueue 0.2 "$totalCPUS"
 	# search the portal
 	searchIndex "$webDirectory" "$webDirectory/portal/portal.index" "$searchQuery" "$webDirectory/search/${searchSum}_portal_links.index" &
+	waitQueue 0.2 "$totalCPUS"
+	# search for installed applications
+	searchIndex "$webDirectory" "$webDirectory/applications/applications.index" "$searchQuery" "$webDirectory/search/${searchSum}_applications.index" &
 	waitQueue 0.2 "$totalCPUS"
 	# search the wiki pages
 	wikiSearch "$webDirectory" "$searchQuery" "$searchSum" "$totalCPUS" &
@@ -453,8 +483,12 @@ function search(){
 	################################################################################
 	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_channels.index" &
 	waitQueue 0.2 "$totalCPUS"
+	################################################################################
 	# search all episodes this will be a huge database
 	searchSQL "$webDirectory" "$searchQuery" "$searchSum" "$webDirectory/search/${searchSum}_old_episodes.index" "_episodes" &
+	waitQueue 0.2 "$totalCPUS"
+	################################################################################
+	searchIndex "$webDirectory" "$webDirectory/new/channels.index" "$searchQuery" "$webDirectory/search/${searchSum}_new_channels.index" &
 	waitQueue 0.2 "$totalCPUS"
 
 	# block the queue

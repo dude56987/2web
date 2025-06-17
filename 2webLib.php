@@ -1522,7 +1522,20 @@ if( ! function_exists("checkFilePathPermissions")){
 		# check for permissions to read the file
 		$drawResult=false;
 		# check for permissions for specific results
-		if (stripos($filePath,"_wiki") !== false){
+		if (stripos($filePath,"_all") !== false){
+			# check for all module permissions
+			$modules=listModules();
+			# check user has all permissions for groups
+			foreach($modules as $module){
+				if(! requireGroup($module, false)){
+					$drawResult=false;
+					break;
+				}else{
+					# mark output to be shown
+					$drawResult=true;
+				}
+			}
+		}else if (stripos($filePath,"_wiki") !== false){
 			# check group permissions
 			if (requireGroup("wiki2web",false)){
 				$drawResult=true;
