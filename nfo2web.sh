@@ -50,30 +50,18 @@ function debugCheck(){
 }
 ########################################################################
 function validString(){
+	# validString $string
+	#
 	stringToCheck="$1"
-	if ! echo "$@" | grep -q "\-q";then
-		INFO "Checking string '$stringToCheck'"
-	fi
-	# convert string letters to all uppercase and look for returned NULL string
-	# jq returns these strings instead of failing outright
-	if echo "${stringToCheck^^}" | grep "NULL";then
-		# this means the function is a null string returned by jq
-		if ! echo "$@" | grep -q "\-q";then
-			INFO "[WARNING]:string is a NULL value"
-		fi
-		return 2
-	elif [ 1 -ge "$(expr length "$stringToCheck")" ];then
-		# this means the string is only one character
-		if ! echo "$@" | grep -q "\-q";then
-			INFO "[WARNING]:String length is less than one"
-		fi
+	if test -n "$stringToCheck";then
+		# a valid string was given
+		return 0
+	elif test -z "$stringToCheck";then
+		# a string of zero was given
 		return 1
 	else
-		# all checks have been passed the string is correct
-		if ! echo "$@" | grep -q "\-q";then
-			INFO "String passed all checks and is correct"
-		fi
-		return 0
+		# a unknown error occured
+		return 2
 	fi
 }
 ########################################################################
@@ -116,7 +104,10 @@ ripXmlTagMultiLine(){
 	# convert to html data after cleaning of tags is finished
 	#data=$(echo "$data" | txt2html --extract | sed 's/____NEWLINE____/ <br> /g')
 	#data=$(echo "$data" | sed 's/____NEWLINE____/ <br> /g')
-	data=$(echo "$data" | txt2html --linkonly | sed 's/____NEWLINE____/ <br> /g')
+	#data=$(echo "$data" | txt2html --linkonly | sed 's/____NEWLINE____/ <br> /g')
+	data=$(echo "$data" | sed 's/____NEWLINE____/ <br> /g')
+	#
+	#data=$(cleanText "$data")
 	# if multuple lines of tag info are given format them for html
 	if validString "$tag" -q;then
 		echo "$data"
@@ -135,14 +126,18 @@ cleanXml(){
 	cleanText "$(ripXmlTag "$data" "$tag")"
 }
 ########################################################################
-########################################################################
 checkMovieThumbPaths(){
+	# checkMovieThumbPaths $movieDir $thumbnail $thumbnailShort $thumbnailPath $thumbnailPathKodi
+	#
+	# Check paths for thumbnails
+	# - link thumbnails in /movies/ and /kodi/movies/
+	# - returns 0 when a thumbnail is found
+	# - returns 1 if no thumbnails could be found
 	movieDir=$1
 	thumbnail=$2
 	thumbnailShort=$3
-	logPagePath=$4
-	thumbnailPath=$5
-	thumbnailPathKodi=$6
+	thumbnailPath=$4
+	thumbnailPathKodi=$5
 
 	# check for movie thumb paths and output the correct found path
 	possibleThumbPaths=""
@@ -157,7 +152,7 @@ checkMovieThumbPaths(){
 		possibleThumbExts=".jpg .png .tbn"
 		for thumbExtToCheck in $possibleThumbExts;do
 			if test -f "$thumbPathToCheck$thumbExtToCheck";then
-				addToLog "NEW" "Found thumbnail Path" "'$thumbPathToCheck$thumbExtToCheck'" "$logPagePath"
+				addToLog "NEW" "Found thumbnail Path" "'$thumbPathToCheck$thumbExtToCheck'"
 				thumbnailExt="$thumbExtToCheck"
 				# link thumbnail into output directory
 				linkFile "$thumbPathToCheck$thumbExtToCheck" "$thumbnailPath$thumbExtToCheck"
@@ -231,7 +226,7 @@ processMovie(){
 			#		return
 			#fi
 		#else
-		#	addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
+		#	addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'"
 		#fi
 		if test -f "$webDirectory/movies/$movieWebPath/state_$pathSum.cfg";then
 			# a existing state was found
@@ -255,17 +250,17 @@ processMovie(){
 					fi
 				fi
 				# this means they are the same so no update needs run
-				#addToLog "INFO" "Movie unchanged" "$unchangedInfo" "$logPagePath"
+				#addToLog "INFO" "Movie unchanged" "$unchangedInfo"
 				return
 			else
 				# enable kodi client updates if the state has changed
 				if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
 					rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
 				fi
-				addToLog "UPDATE" "Updating Movie" "$updateInfo" "$logPagePath"
+				addToLog "UPDATE" "Updating Movie" "$updateInfo"
 			fi
 		else
-			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'" "$logPagePath"
+			addToLog "NEW" "Adding new movie " "Adding '$movieTitle' from '$movieDir'"
 		fi
 		################################################################################
 		# After checking state build the movie page path, and build directories/links
@@ -275,7 +270,7 @@ processMovie(){
 		createDir "$webDirectory/movies/$movieWebPath/"
 		createDir "$webDirectory/kodi/movies/$movieWebPath/"
 		################################################################################
-		################################################################################
+
 		# find the videofile refrenced by the nfo file
 		if [ -f "${moviePath//.nfo/.mkv}" ];then
 			videoPath="${moviePath//.nfo/.mkv}"
@@ -313,7 +308,7 @@ processMovie(){
 			sufix=".strm"
 		else
 			#INFO "[ERROR]: could not find video file"
-			addToLog "ERROR" "No video file in directory" "$movieDir\n\nTo remove empty movie use the below command\n\nrm -rvi '$movieDir'" "$logPagePath"
+			addToLog "ERROR" "No video file in directory" "$movieDir\n\nTo remove empty movie use the below command\n\nrm -rvi '$movieDir'"
 			return
 		fi
 		# link the movie nfo file
@@ -368,7 +363,7 @@ processMovie(){
 		fi
 
 		# no thumbnail has been linked or downloaded search for one
-		fullThumbPath=$(checkMovieThumbPaths "$movieDir" "$thumbnail" "$thumbnailShort" "$logPagePath" "$thumbnailPath" "$thumbnailPathKodi")
+		fullThumbPath=$(checkMovieThumbPaths "$movieDir" "$thumbnail" "$thumbnailShort" "$thumbnailPath" "$thumbnailPathKodi")
 
 		# this is a simple check if the above search failed
 		if test -f "$movieDir/$movieTitle-poster.png";then
@@ -556,7 +551,7 @@ getThumbnailExt(){
 	return 0
 }
 ########################################################################
-checkForThumbnail(){
+checkForEpisodeThumbnail(){
 	thumbnail=$1
 	thumbnailPath=$2
 	thumbnailPathKodi=$3
@@ -623,7 +618,7 @@ checkForThumbnail(){
 			# then download that thumbnail
 			if echo "$nfoInfo" | grep -q "thumb";then
 				thumbnailLink=$(ripXmlTag "$nfoInfo" "thumb")
-				addToLog "DOWNLOAD" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'" "$logPagePath"
+				addToLog "DOWNLOAD" "Downloading Thumbnail" "Creating thumbnail from link '$thumbnailLink'"
 				thumbnailExt=".png"
 				# download the thumbnail
 				downloadThumbnail "$thumbnailLink" "$thumbnailPath" "$thumbnailExt"
@@ -696,31 +691,21 @@ checkForThumbnail(){
 			fi
 		fi
 	fi
-}
-########################################################################
-function drawKodiPlayerButton(){
-	# drawKodiPlayerButton $link
+	# at the end run a failsafe check to see if the thumbnail was created or linked correctly
+	# test the file has a non zero value
+	if ! test -s "$thumbnailPath.png";then
+		addToLog "DEBUG" "Generate Failsafe Image" "Creating a image at '$thumbnailPath.png'"
+		demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600"
+	fi
 	#
-	# write php code to draw the kodi playback buttons for pages
-	#
-	# RETURN STDOUT
-	link=$1
-	# cleanup any quotations from the link because they will break the entire generated webpage
-	link=$(echo "$link" | sed 's/\"/\\"/g')
-	# new versions of kodi no longer can encode spaces in urls
-	link=$(echo "$link" | sed 's/ /%20/g')
-	echo "<?PHP"
-	# if the kodi2web mod is enabled
-	echo "if(detectEnabledStatus('kodi2web')){"
-	# if the count of players is greater than zero
-	echo "if(count(scanDir('/etc/2web/kodi/players.d/')) > 2){"
-	# draw the play on kodi button using the resolver
-	echo "echo \"<a class='button hardLink' href='/kodi-player.php?url=http://$(hostname).local$link'>\";"
-	echo "echo \"	🇰Play on KODI\";"
-	echo "echo \"</a>\";"
-	echo "}"
-	echo "}"
-	echo "?>"
+	if test -s "$thumbnailPath.png";then
+		if ! test -s "$thumbnailPathKodi.png";then
+			linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
+		fi
+	else
+		addToLog "ERROR" "Thumbnail Broken" "No Thumbnail Could be created even with the failsafes. This will result in broken image links on the website. Thumb possibly at '$thumbnailPath'"
+		ERROR "No Thumbnail Could be created even with the failsafes. This will result in broken image links on the website."
+	fi
 }
 ########################################################################
 processEpisode(){
@@ -757,40 +742,16 @@ processEpisode(){
 				episodeGrade="UNRATED"
 			fi
 		fi
-		if [ "$episodeSeason" -le 0 ];then
-			episodeSeason="0000"
-		elif [ "$episodeSeason" -lt 10 ];then
-			# add a zero to make it format correctly
-			episodeSeason="000$episodeSeason"
-		elif [ "$episodeSeason" -lt 100 ];then
-			# add a zero to make it format correctly
-			episodeSeason="00$episodeSeason"
-		elif [ "$episodeSeason" -lt 1000 ];then
-			episodeSeason="0$episodeSeason"
-		elif [ "$episodeSeason" -ge 1000 ];then
-			episodeSeason="$episodeSeason"
-		else
-			episodeSeason="0000"
-		fi
+		#
+		episodeSeason="$(prefixZeros "$episodeSeason")"
+		#
 		episodeSeasonPath="Season $episodeSeason"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
 		# remove leading zeros
 		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,3\}//g")
-		if [ "$episodeNumber" -le 0 ];then
-			episodeNumber="0000"
-		elif [ "$episodeNumber" -lt 10 ];then
-			# add a zero to make it format correctly
-			episodeNumber="000$episodeNumber"
-		elif [ "$episodeNumber" -lt 100 ];then
-			# add a zero to make it format correctly
-			episodeNumber="00$episodeNumber"
-		elif [ "$episodeNumber" -lt 1000 ];then
-			episodeNumber="0$episodeNumber"
-		elif [ "$episodeNumber" -ge 1000 ];then
-			episodeNumber="$episodeNumber"
-		else
-			episodeNumber="0000"
-		fi
+		#
+		episodeNumber="$(prefixZeros "$episodeNumber")"
+		#
 		#INFO "Episode number = '$episodeNumber'"
 
 		INFO "Updating $episodeShowTitle s${episodeSeason}e${episodeNumber} aired $episodeAired"
@@ -859,7 +820,7 @@ processEpisode(){
 		else
 			# no video file could be found this should be logged
 			ALERT "[ERROR]: could not find video file"
-			addToLog "ERROR" "No video file" "$episode" "$logPagePath"
+			addToLog "ERROR" "No video file" "$episode"
 			# exit the function  cancel building the episode
 			return
 		fi
@@ -889,7 +850,7 @@ processEpisode(){
 		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 
 		# check for the thumbnail and link it
-		checkForThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath" "$nfoInfo"
+		checkForEpisodeThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath" "$nfoInfo"
 
 		resolverUrl=""
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
@@ -908,24 +869,25 @@ processEpisode(){
 			strmUrl="http://$(hostname).local/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			echo -n "$strmUrl" > "$episodePagePath.strmLink"
 
-			# split up airdate data to check if caching should be done
+			# read date in british date format year/month/day
+			# - split up airdate data to check if caching should be done
 			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
 			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
 			# if the config option is set to cache new episodes
 			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
 				yt_download_command=""
-				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath" "$logPagePath"
+				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath"
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
 					# if the airdate was this month
 					if [ $((10#$airedMonth)) -eq "$((10#$(date +"%m")))" ];then
-						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath" "$logPagePath"
+						addToLog "DOWNLOAD" "Caching new episode" "$showTitle - $episodePath"
 						# cache the video if it is from this month
 						# - only newly created videos get this far into the process to be cached
 						tempSum=$(echo -n "$ytLink" | sha512sum | cut -d' ' -f1)
 						# create the directory to store the cached data
-						mkdir "$webDirectory/RESOLVER-CACHE/$tempSum/"
+						createDir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# create the command for caching
 						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' -f best --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
@@ -960,11 +922,11 @@ processEpisode(){
 		thumbnailExt=$(getThumbnailExt "$thumbnailPath")
 		# convert the found episode thumbnail into a web thumb
 		thumbSum=$(echo -n "$thumbnailPath" | sha512sum | cut -d' ' -f1)
-		if ! test -f "$webDirectory/thumbnails/$thumbSum-web.png";then
+		if ! test -s "$webDirectory/thumbnails/$thumbSum-web.png";then
 			# store the thumbnail inside the thumbnails directory
 			convert -quiet "$thumbnailPath$thumbnailExt" -resize "300x200" "$webDirectory/thumbnails/$thumbSum-web.png"
 		fi
-		if ! test -f "$thumbnailPath-web.png";then
+		if ! test -s "$thumbnailPath-web.png";then
 			# link the thumbnail into the web directory
 			linkFile "$webDirectory/thumbnails/$thumbSum-web.png" "$thumbnailPath-web.png"
 		fi
@@ -994,11 +956,8 @@ processEpisode(){
 			echo -n "$episodeShowTitle" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title"
 			# add the show studio
 			echo -n "$episodeStudio" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/studio.title"
-
-
 			# get the mpaa rating
 			echo -n "$episodeGrade" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/grade.title"
-
 		fi
 		# build the episode number
 		echo -n "$epNum" > "$episodePagePath.numTitle"
@@ -1012,11 +971,13 @@ processEpisode(){
 		# link the player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$episodePagePath"
 
+		#
 		episodeSubSearch="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath/"
+		#
 		episodeSubSearchPath=$(echo "$episode" | rev | cut -d'/' -f2- | rev)
-
+		#
 		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
-
+		#
 		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
 
 		# check for existing subtitles
@@ -1146,20 +1107,20 @@ processShow(){
 			#INFO "States are diffrent, updating $showTitle..."
 			#INFO "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
-			echo "" > "$showLogPath"
-			addToLog "UPDATE" "Updating Show" "$updateInfo" "$logPagePath"
+			#echo "" > "$showLogPath"
+			addToLog "UPDATE" "Updating Show" "$updateInfo"
 			# update the show directory modification date when the state has been changed
 			touch "$webDirectory/shows/$showTitle/"
 		fi
 	else
 		#INFO "No show state exists for $showTitle, updating..."
-		addToLog "NEW" "Creating new show" "$showTitle" "$logPagePath"
+		addToLog "NEW" "Creating new show" "$showTitle"
 		# update the show directory modification date when the state has been changed
 		touch "$webDirectory/shows/$showTitle/"
 	fi
 	if grep "<episodedetails>" "$show"/*.nfo;then
 		# search all nfo files in the show directory if any are episodes
-		addToLog "ERROR" "Episodes outside of season directories" "$showTitle has episode NFO files outside of a season folder" "$logPagePath"
+		addToLog "ERROR" "Episodes outside of season directories" "$showTitle has episode NFO files outside of a season folder"
 	fi
 	# check and remove duplicate thubnails for this show, failed thumbnails on the
 	# same show generally fail in the same way
@@ -1269,7 +1230,7 @@ processShow(){
 			#
 			libarySeasonSum=$(getDirSum "$season")
 			#if echo "$libarySeasonSum" | grep -q "$currentSeasonSum";then
-			#addToLog "INFO" "Season" "$libarySeasonSum ?= $currentSeasonSum" "$logPagePath"
+			#addToLog "INFO" "Season" "$libarySeasonSum ?= $currentSeasonSum"
 			if [ "$libarySeasonSum" == "$currentSeasonSum" ];then
 				# this season folder is unchanged ignore it
 				################################################################################
@@ -1297,7 +1258,7 @@ processShow(){
 				fi
 				################################################################################
 				#INFO "Season Unchanged $season"
-				addToLog "INFO" "Season Unchanged" "$showTitle $seasonName\n$season" "$logPagePath"
+				addToLog "INFO" "Season Unchanged" "$showTitle $seasonName\n$season"
 			else
 				# update the altered season files
 				################################################################################
@@ -1306,7 +1267,7 @@ processShow(){
 					rm -v "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
 				fi
 				################################################################################
-				addToLog "UPDATE" "Season is Updating" "$showTitle $seasonName\n$season" "$logPagePath"
+				addToLog "UPDATE" "Season is Updating" "$showTitle $seasonName\n$season"
 
 				# if the folder is a directory that means a season has been found
 				# read each episode in the series
@@ -1332,8 +1293,11 @@ processShow(){
 		# get the list of image files
 		# create the failsafe background by combining all the thumbnails of episodes into a image
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 24 | shuf |sed "s/ /\ /g"| sed -z "s/\n/ /g" )
-		thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
+		#startDebug
+		#thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
+		thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
 		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
+		#stopDebug
 		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
@@ -1344,11 +1308,12 @@ processShow(){
 		echo "Creating the fanart image from webpage..."
 		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
 		# error log
-		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg], Generating one at <a href='/$show/fanart.png'>$show/fanart.png</a>" "$logPagePath"
+		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg], Generating one at <a href='/$show/fanart.png'>$show/fanart.png</a>"
 	fi
 	if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 8 | shuf |sed "s/ / /g"| sed -z "s/\n/ /g" )
-		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
+		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
+		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
 		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
@@ -1364,8 +1329,9 @@ processShow(){
 		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		linkFile "$webDirectory/shows/$showTitle/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
 		# add log entry
-		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]" "$logPagePath"
+		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]"
 	fi
+
 	# add show page to the show index
 	{
 		echo "<a class='indexSeries' href='/shows/$showTitle/'>"
@@ -1387,6 +1353,7 @@ processShow(){
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "all"
+
 	# update the last updated times
 	date "+%s" > /var/cache/2web/web/new/all.cfg
 	date "+%s" > /var/cache/2web/web/new/shows.cfg
@@ -1690,31 +1657,32 @@ function nuke(){
 	# Remove this module from the website and remove all related metadata
 	#
 	echo "[INFO]: Reseting web cache to blank..."
-	rm -rv $(webRoot)/movies/*
-	rm -rv $(webRoot)/kodi/movies/
-	rm -rv $(webRoot)/random/movies.index
-	rm -rv $(webRoot)/new/movies.index
-	rm -rv $(webRoot)/shows/*
-	rm -rv $(webRoot)/kodi/shows/
-	rm -rv $(webRoot)/random/shows.index
-	rm -rv $(webRoot)/random/episodes.index
-	rm -rv $(webRoot)/new/shows.index
-	rm -rv $(webRoot)/new/episodes.index
-	rm -rv $(webRoot)/tags/*.index
-	rm -rv $(webRoot)/sums/nfo2web_*.cfg || echo "No file sums found..."
+	webDirectory="$(webRoot)"
+	delete "$webDirectory/movies/"
+	delete "$webDirectory/kodi/movies/"
+	delete "$webDirectory/random/movies.index"
+	delete "$webDirectory/new/movies.index"
+	delete "$webDirectory/shows/"
+	delete "$webDirectory/kodi/shows/"
+	delete "$webDirectory/random/shows.index"
+	delete "$webDirectory/random/episodes.index"
+	delete "$webDirectory/new/shows.index"
+	delete "$webDirectory/new/episodes.index"
+	rm -v $webDirectory/tags/*.index
+	rm -v  $webDirectory/sums/nfo2web_*.cfg || echo "No file sums found..."
 
 	# remove sql data
-	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table shows;"
-	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table movies;"
-	sqlite3 --cmd ".timeout 60000" $(webRoot)/data.db "drop table episodes;"
+	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table shows;"
+	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table movies;"
+	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table episodes;"
 
 	# remove widgets cached
-	rm -v $(webRoot)/web_cache/widget_random_movies.index
-	rm -v $(webRoot)/web_cache/widget_random_shows.index
-	rm -v $(webRoot)/web_cache/widget_random_episodes.index
-	rm -v $(webRoot)/web_cache/widget_new_movies.index
-	rm -v $(webRoot)/web_cache/widget_new_shows.index
-	rm -v $(webRoot)/web_cache/widget_new_episodes.index
+	delete "$webDirectory/web_cache/widget_random_movies.index"
+	delete "$webDirectory/web_cache/widget_random_shows.index"
+	delete "$webDirectory/web_cache/widget_random_episodes.index"
+	delete "$webDirectory/web_cache/widget_new_movies.index"
+	delete "$webDirectory/web_cache/widget_new_shows.index"
+	delete "$webDirectory/web_cache/widget_new_episodes.index"
 
 	# remove the entries from the search index
 	#removeSectionFromSearchIndex "movies"
@@ -1835,7 +1803,7 @@ function nfo2web_watch_service(){
 				ALERT "Check if directory exists at '$libary'"
 				if test -d "$libary";then
 					ALERT "library exists at '$libary'"
-					addToLog "INFO" "Starting Watch Service" "$libary" "$logPagePath"
+					addToLog "INFO" "Starting Watch Service" "$libary"
 					#
 					echo "library exists at '$libary'"
 					# read each tvshow directory from the libary
@@ -1843,7 +1811,7 @@ function nfo2web_watch_service(){
 					watch_library "$libary" "$webDirectory" "$timeout" &
 				else
 					ALERT "library does not exist at '$libary'"
-					addToLog "ERROR" "Path Broken" "Path does not exist '$libary'" "$logPagePath"
+					addToLog "ERROR" "Path Broken" "Path does not exist '$libary'"
 				fi
 			fi
 		done
@@ -2058,6 +2026,8 @@ function update(){
 	# - Should convert youtube links from kodi to embeded player links
 	# - Should create its own web directory
 	################################################################################
+	rotateSpinner &
+	SPINNER_PID="$!"
 	# load the libary directory
 	libaries=$(loadConfigs "/etc/2web/nfo/libaries.cfg" "/etc/2web/nfo/libaries.d/" "/etc/2web/config_default/nfo2web_libaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# load the disabled list
@@ -2073,7 +2043,7 @@ function update(){
 	buildMovieIndex "$webDirectory"
 	# build the show index
 	buildShowIndex "$webDirectory"
-	touch "$logPagePath"
+	#touch "$logPagePath"
 	addToLog "INFO" "STARTED Update" "$(date)"
 	# sleep one second to seprate the logs
 	sleep 1
@@ -2088,12 +2058,13 @@ function update(){
 	# read each libary from the libary config, single path per line
 	ALERT "LIBARIES: $libaries"
 
+	kill "$SPINNER_PID"
+
 	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
 		# clean the database of broken entries
 		# - this should allow you to delete data from source drives and it automatically remove it from the website.
 		cleanDatabase
 	fi
-
 	IFS=$'\n'
 	for libary in $libaries;do
 		if echo "$disabledLibaries" | grep "$libary";then
@@ -2132,6 +2103,8 @@ function update(){
 	done
 	# block for parallel threads here
 	blockQueue 1
+	rotateSpinner &
+	SPINNER_PID="$!"
 
 	# add the end to the log, add the jump to top button and finish out the html
 	logPagePath="$webDirectory/log/$(date "+%s").log"
@@ -2235,13 +2208,18 @@ function update(){
 	# read show title and remove tags with sed
 	# feed nfo files into generator to extract seasons and episode .nfo data
 	################################################################################
+	kill "$SPINNER_PID"
 }
 ########################################################################
 showHelp(){
 	cat /usr/share/2web/help/nfo2web.txt
 }
 ########################################################################
+# set the theme of the lines in CLI output
+LINE_THEME="brick"
+#
 debugCheck
+#
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 	showHelp
 elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
@@ -2365,6 +2343,9 @@ elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 	enableMod "nfo2web"
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 	disableMod "nfo2web"
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ;then
+	rm -v "/var/cache/2web/web/nfo2web.active"
+	killall "nfo2web"
 elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 	# verbose removal of found files allows files to be visible as they are removed
 	# remove found .index files as they store web generated data
@@ -2407,6 +2388,7 @@ elif [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
 		rm /tmp/nfo2web.active
 	fi
 elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "nfo2web"
 	nuke
 elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
 	clean
@@ -2429,9 +2411,7 @@ elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
 	lockProc "nfo2web"
 	checkModStatus "nfo2web"
-	startSpinner
 	update "$@" --parallel
-	stopSpinner
 	# remove active state file
 	if test -f /tmp/nfo2web.active;then
 		rm /tmp/nfo2web.active
@@ -2447,7 +2427,11 @@ elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 else
 	lockProc "nfo2web"
 	checkModStatus "nfo2web"
+	#startSpinner
+	#startDebug
 	update "$@"
+	#stopDebug
+	#stopSpinner
 	# remove active state file
 	if test -f /tmp/nfo2web.active;then
 		rm /tmp/nfo2web.active
@@ -2456,12 +2440,11 @@ else
 	# show the server link at the bottom of the interface
 	showServerLinks
 	# show the module links
-	echo "Module Links"
+	drawLine
+	drawSmallHeader "Module Links"
 	drawLine
 	echo "http://$(hostname).local:80/movies/"
-	drawLine
 	echo "http://$(hostname).local:80/shows/"
-	drawLine
 	echo "http://$(hostname).local:80/settings/nfo.php"
 	drawLine
 fi
