@@ -32,24 +32,10 @@ function generatedDir(){
 }
 ################################################################################
 function libaryPaths(){
-	# check for server libary config
-	if [ ! -f /etc/2web/comics/libaries.cfg ];then
-		# if no config exists create the default config
-		{
-			# write the new config from the default config
-			cat /etc/2web/config_default/comic2web_libraries.cfg
-		} > "/etc/2web/comics/libaries.cfg"
-	fi
-	# write path to console
-	grep -v "^#" "/etc/2web/comics/libaries.cfg"
-	# create a space just in case none exists
-	printf "\n"
-	# read the additional configs
-	find "/etc/2web/comics/libaries.d/" -mindepth 1 -maxdepth 1 -type f -name "*.cfg" | shuf | while read libaryConfigPath;do
-		grep -v "^#" "$libaryConfigPath"
-		# create a space just in case none exists
-		printf "\n"
-	done
+	# load the configs
+	configPaths=$(loadConfigs "/etc/2web/comics/libaries.cfg" "/etc/2web/comics/libaries.d/" "/etc/2web/config_default/comic2web_libraries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | tr -s '/' | shuf  )
+	# output the paths
+	echo "$configPaths"
 }
 ################################################################################
 function processPdfPageToImage(){
@@ -90,37 +76,36 @@ function comicDL(){
 		# could not find streamlink installed on the server
 		ERROR "For the URL to resolve you must install gallery-dl on this server."
 		ERROR "You may need to contact your local system administrator."
-		ERROR "As a administrator use 'gallery-dl --upgrade' to install the latest version."
+		ERROR "As a administrator use 'comic2web upgrade' to install the latest version."
+		exit
+	fi
+}
+################################################################################
+function webcomicDL(){
+	# set the path to be able to use python
+	export PYTHONPATH="/var/cache/2web/generated/pip/dosage/"
+	# pass streamlink arguments to correct streamlink path
+	if test -f "/var/cache/2web/generated/pip/dosage/bin/dosage";then
+		/var/cache/2web/generated/pip/dosage/bin/dosage "$@"
+	else
+		# could not find streamlink installed on the server
+		ERROR "For the URL to resolve you must install dosage on this server."
+		ERROR "You may need to contact your local system administrator."
+		ERROR "As a administrator use 'comic2web --upgrade' to install the latest version."
 		exit
 	fi
 }
 ################################################################################
 function update(){
+	#rotateSpinner &
+	#SPINNER_PID="$!"
 	addToLog "INFO" "STARTED Update" "$(date)"
 	# this will launch a processing queue that downloads updates to comics
 	INFO "Loading up sources..."
 	# check for defined sources
-	if ! test -f /etc/2web/comics/sources.cfg;then
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/comic2web_sources.cfg
-		} > /etc/2web/comics/sources.cfg
-	fi
-	# load sources
-	comicSources=$(grep -v "^#" /etc/2web/comics/sources.cfg)
-	comicSources=$(echo -e "$comicSources\n$(grep -v --no-filename "^#" /etc/2web/comics/sources.d/*.cfg)")
-
+	comicSources=$(loadConfigs "/etc/2web/comics/sources.cfg" "/etc/2web/comics/sources.d/" "/etc/2web/config_default/comic2web_sources.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# check for defined webcomic sources
-	if ! test -f /etc/2web/comics/webSources.cfg;then
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/comic2web_webSources.cfg
-		} > /etc/2web/comics/webSources.cfg
-	fi
-	# load sources
-	webComicSources=$(grep -v "^#" /etc/2web/comics/webSources.cfg)
-	webComicSources=$(echo -e "$webComicSources\n$(grep -v --no-filename "^#" /etc/2web/comics/webSources.d/*.cfg)")
-
+	webComicSources=$(loadConfigs "/etc/2web/comics/webSources.cfg" "/etc/2web/comics/webSources.d/" "/etc/2web/config_default/comic2web_webSources.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 
 	################################################################################
 	webDirectory=$(webRoot)
@@ -177,8 +162,9 @@ function update(){
 					totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
 					# set the number of strips to download to be the current number + 50
 					numStrips=$(( $totalPages + 50 ))
-
-					/var/cache/2web/generated/pip/dosage/bin/dosage --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
+					# set the python path for dosage based on pip install location
+					webcomicDL --help
+					webcomicDL --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
 					# cleanup downloaded .txt files
 					rm -v "${downloadDirectory}$comicSource"/*.txt
 					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
@@ -196,7 +182,7 @@ function update(){
 					# set the number of strips to download to be the current number + 50
 					numStrips=$(( $totalPages + 50 ))
 
-					/var/cache/2web/generated/pip/dosage/bin/dosage --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
+					webcomicDL --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
 					# cleanup downloaded .txt files
 					rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
 					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
@@ -217,7 +203,8 @@ function update(){
 	# CONVERSION SECTION
 	################################################################################
 	# check for txt files and convert them into comics
-	comicLibaries="$(libaryPaths | tr -s '\n' | shuf )"
+	comicLibaries="$(libaryPaths)"
+	ALERT "$comicLibaries"
 	# first convert epub files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each cbz file found in the cbz libary locations
@@ -321,6 +308,8 @@ function update(){
 			done
 		done
 	fi
+	# stop the spinner
+	#kill "$SPINNER_PID"
 
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each pdf file found in the pdf libary locations
@@ -382,8 +371,10 @@ function update(){
 	done
 	# stop the queue outside of the loop to wait for rendering to finish
 	blockQueue 1
-	# scan the new comics into the index
-	#rebuildComicIndex "$webDirectory"
+
+	#
+	#rotateSpinner &
+	#SPINNER_PID="$!"
 
 	# cleanup the comics index
 	if test -f "$webDirectory/comics/comics.index";then
@@ -398,9 +389,11 @@ function update(){
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
 	addToLog "INFO" "FINISHED Update" "$(date)"
+	# stop the spinner
+	#kill "$SPINNER_PID"
 }
 ################################################################################
-convertImage(){
+function convertImage(){
 	fileName=$1
 
 	# convert the image files
@@ -418,7 +411,7 @@ convertImage(){
 	return 0
 }
 ################################################################################
-getTitle(){
+function getTitle(){
 	# load the json string directly into the function
 	tempJson=$1
 	# check for various comic name values
@@ -437,7 +430,7 @@ getTitle(){
 	cleanText "$comicName"
 }
 ################################################################################
-getPageNumber(){
+function getPageNumber(){
 	# load the json string directly into the function
 	tempJson=$1
 	# check for various page json values that can exist
@@ -453,7 +446,7 @@ getPageNumber(){
 	echo "$comicName"
 }
 ################################################################################
-getChapter(){
+function getChapter(){
 	# load the json string directly into the function
 	tempJson=$1
 	# check for various page json values that can exist
@@ -469,18 +462,7 @@ getChapter(){
 	echo "$data"
 }
 ################################################################################
-popPath(){
-	# pop the path name from the end of a absolute path
-	# e.g. popPath "/path/to/your/file/test.jpg"
-	echo "$1" | rev | cut -d'/' -f1 | rev
-}
-################################################################################
-pickPath(){
-	# pop a element from the end of the path, $2 is how far back in the path is pulled
-	echo "$1" | rev | cut -d'/' -f$2 | rev
-}
-################################################################################
-prefixNumber(){
+function prefixNumber(){
 	#set -x
 	pageNumber=$(( 10#$1 ))
 	# set the page number prefix to make file sorting work
@@ -498,17 +480,7 @@ prefixNumber(){
 	#set +x
 }
 ################################################################################
-createDir(){
-	if ! test -d "$1";then
-		mkdir -p "$1"
-		# set ownership of directory and subdirectories as www-data
-		chown -R www-data:www-data "$1"
-	fi
-	# set ownership of directory and subdirectories as www-data
-	chown www-data:www-data "$1"
-}
-################################################################################
-scanPages(){
+function scanPages(){
 	# - TODO: build a function that reads all image files in a directory, makes webpages for them
 	#         index in directory links to first page, last page should link to .. index above
 	pagesDirectory=$1
@@ -592,6 +564,8 @@ scanPages(){
 				createDir "$webDirectory/comics/$tempComicName/"
 				# link the image file to the web directory
 				#echo "[INFO]: Linking single chapter comic $tempComicName"
+				# add the path to the list of paths for duplicate checking and rescans
+				addSourcePath "$pagesDirectory" "$webDirectory/comics/$tempComicName/sources.cfg"
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/totalPages.cfg";then
 					# find the total number of pages in the chapter
@@ -616,7 +590,7 @@ scanPages(){
 	done
 }
 ################################################################################
-renderPage(){
+function renderPage(){
 	page=$1
 	webDirectory=$2
 	pageNumber=$3
@@ -655,7 +629,7 @@ renderPage(){
 
 		# create the thumbnail for the image, otherwise it will nuke the server reading the HQ image files on loading index pages
 		if ! test -f "$webDirectory/thumbnails/comics/$thumbSum-thumb.png";then
-			convert -strip -quiet "$imagePath[0]" -filter triangle -resize 150x200 "$webDirectory/thumbnails/comics/$thumbSum-thumb.png"
+			convert -strip -quiet "${imagePath[0]}" -filter triangle -resize 150x200 "$webDirectory/thumbnails/comics/$thumbSum-thumb.png"
 		fi
 		if ! test -f "$webDirectory/thumbnails/comics/$thumbSum-thumb.png";then
 			ffmpegthumbnailer -i "$imagePath" -s 150 -o "$webDirectory/thumbnails/comics/$thumbSum-thumb.png"
@@ -688,10 +662,10 @@ renderPage(){
 		# image files on loading index pages
 		# - [0] selects the first frame of the image in animated images
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png";then
-			convert -strip -quiet "$imagePath[0]" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
+			convert -strip -quiet "${imagePath[0]}" -filter triangle -resize 150x200 "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
 		fi
 		if ! test -f "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png";then
-			ffmpegThumbnailer -i "$imagePath" -s 150 -o "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
+			ffmpegthumbnailer -i "$imagePath" -s 150 -o "$webDirectory/comics/$pageComicName/$pageNumber-thumb.png"
 		fi
 		# link the image
 		linkFile "$imagePath" "$webDirectory/comics/$pageComicName/$pageNumber.jpg"
@@ -834,8 +808,20 @@ renderPage(){
 	if [ $buildPagesIndex = true ];then
 		{
 			echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-			echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-			echo "<div>$tempComicName</div>"
+			echo "<img title='$tempComicName' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+			if [ $totalPages -gt 1 ];then
+				echo "<div class='title'>"
+				echo "<div class='showIndexNumbers'>"
+				echo "$tempComicName"
+				echo "</div>"
+				# 📄 🗄️ 🗐
+				echo "$totalPages 🗐"
+				echo "</div>"
+			else
+				echo "<div class='title'>"
+				echo "$tempComicName"
+				echo "</div>"
+			fi
 			echo "</a>"
 		} > "$webDirectory/comics/$tempComicName/comics.index"
 
@@ -857,6 +843,9 @@ renderPage(){
 		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/all.index"
 		# random indexes
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
+
+		# add this comic to the search index
+		addToSearchIndex "$webDirectory/comics/$tempComicName/comics.index" "$tempComicName"
 
 		# update last updated times
 		date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -910,38 +899,47 @@ renderPage(){
 	fi
 }
 ################################################################################
-rebuildComicIndex(){
-	webDirectory=$1
-	# search for new comics
-	find "$webDirectory/comics/" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
-		# create the comic index files here in order to allow dynamic index view during updates
-		tempComicName="$(popPath "$comicNamePath")"
-		tempComicName="$(cleanText "$tempComicName")"
-		tempComicName="$(alterArticles "$tempComicName")"
+function processComicPath(){
+	# processComicPath $comicNamePath $webDirectory
+	#
+	comicNamePath=$1
+	webDirectory=$2
 
-		if ! test -f "$comicNamePath/comics.index";then
-			{
-				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-				echo "<div>$tempComicName</div>"
-				echo "</a>"
-			} > "$comicNamePath/comics.index"
-		fi
+	if [ "$2" == "" ];then
+		webDirectory="$(webRoot)"
+	fi
+	addToLog "UPDATE" "Adding single comic" "$comicNamePath"
 
-		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "comics"
-		SQLaddToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/data.db" "all"
+	INFO "link the comics to the kodi directory"
+	# link this comic to the kodi directory
+	#createDir "$comicNamePath" "$webDirectory/kodi/comics/"
 
-		# add the comic to the main comic index since it has been updated
-		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/comics/comics.index"
-		# add the updated show to the new shows index
-		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/comics.index"
-		addToIndex "$webDirectory/comics/$tempComicName/comics.index" "$webDirectory/new/all.index"
-		# random indexes
-		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
-		# update last updated times
-		date "+%s" > /var/cache/2web/web/new/all.cfg
-		date "+%s" > /var/cache/2web/web/new/comics.cfg
-	done
+	INFO "scanning comic path '$comicNamePath'"
+	# add one to the total comics
+	totalComics=$(( $totalComics + 1 ))
+	# build the comic index page
+	if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" -o -name "*.webm" -o -name "*.mp4" | wc -l) -gt 0 ];then
+		INFO "scanning single chapter comic '$comicNamePath'"
+		# if this directory contains .jpg or .png files then this is a single chapter comic
+		# - build the individual pages for the comic
+		# pause execution while no cpus are open
+		scanPages "$comicNamePath" "$webDirectory" single
+	else
+		# if this is not a single chapter comic then read the subdirectories containing
+		#   each of the individual chapters
+		INFO "scanning multi chapter comic '$comicNamePath'"
+		# reset chapter number for count
+		chapterNumber=0
+		find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
+			chapterNumber=$(( 10#$chapterNumber + 1 ))
+			# add zeros to the chapter as a prefix for correct ordering
+			chapterNumber=$(prefixNumber $chapterNumber)
+			# check if the chapter should be updated before running through all pages
+			# for each chapter build the individual pages
+			# pause execution while no cpus are open
+			scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber
+		done
+	fi
 }
 ################################################################################
 function processDosageExtractor(){
@@ -964,8 +962,8 @@ function processDosageExtractor(){
 	extractorName=$(echo "$extractorName" | cut -d' ' -f1)
 	if [ $addComic == "True" ];then
 		# for each extractor get the website address
-		moduleUrl=$(/var/cache/2web/generated/pip/dosage/bin/dosage --modulehelp "$extractorName" | grep 'URL:' | cut -d' ' -f3)
-		moduleLang=$(/var/cache/2web/generated/pip/dosage/bin/dosage --modulehelp "$extractorName" | grep 'Language:' | cut -d' ' -f3)
+		moduleUrl=$(webcomicDL --modulehelp "$extractorName" | grep 'URL:' | cut -d' ' -f3)
+		moduleLang=$(webcomicDL --modulehelp "$extractorName" | grep 'Language:' | cut -d' ' -f3)
 		linkRow=$(
 			echo "<tr>";\
 			echo "<td>";\
@@ -991,7 +989,7 @@ function buildDosageList(){
 	cacheFilePath="/var/cache/2web/web/web_cache/comic2web_dosageList.index";
 	lockFile="/var/cache/2web/web/web_cache/comic2web_dosageList_COMPLETE.index";
 	if ! test -f "$lockFile";then
-		extractors=$(/var/cache/2web/generated/pip/dosage/bin/dosage --singlelist)
+		extractors=$(webcomicDL --singlelist)
 		IFS=$'\n'
 		for extractorName in $extractors;do
 			# if ran in parallel run the extractor process in the background for this list
@@ -1002,7 +1000,7 @@ function buildDosageList(){
 	fi
 }
 ################################################################################
-webUpdate(){
+function webUpdate(){
 	addToLog "INFO" "STARTED Web Update" "$(date)"
 	# read the download directory and convert comics into webpages
 	# - There are 2 types of directory structures for comics in the download directory
@@ -1010,7 +1008,7 @@ webUpdate(){
 	#   + comicWebsite/comicName/image.png
 
 	webDirectory=$(webRoot)
-	downloadDirectory="$(libaryPaths | tr -s '\n' | shuf )"
+	downloadDirectory="$(libaryPaths)"
 
 	ALERT "$downloadDirectory"
 
@@ -1064,6 +1062,9 @@ webUpdate(){
 					INFO "scanning comic path '$comicNamePath'"
 					# add one to the total comics
 					totalComics=$(( $totalComics + 1 ))
+
+					# processComicPath "$comicNamePath" "$webDirectory" &
+
 					# build the comic index page
 					if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" -o -name "*.webm" -o -name "*.mp4" | wc -l) -gt 0 ];then
 						INFO "scanning single chapter comic '$comicNamePath'"
@@ -1092,7 +1093,7 @@ webUpdate(){
 					setDirSum "$webDirectory" "$comicNamePath"
 				else
 					#addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
-					INFO "Already processed '$comicNamePath'"
+					INFO "Already processed '$(basename "$comicNamePath")'"
 				fi
 			done
 			# finish website tag index page
@@ -1113,8 +1114,20 @@ webUpdate(){
 		if ! test -f "$comicNamePath/comics.index";then
 			{
 				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-				echo "<img loading='lazy' src='/comics/$tempComicName/thumb.png' />"
-				echo "<div>$tempComicName</div>"
+				echo "<img title='$tempComicName' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+				if test -f "$webDirectory/comics/$tempComicName/totalPages.cfg";then
+					echo "<div class='title'>"
+					echo "<div class='showIndexNumbers'>"
+					echo "$tempComicName"
+					echo "</div>"
+					# 📄 🗄️ 🗐
+					echo "$( cat "$webDirectory/comics/$tempComicName/totalPages.cfg" ) 🗐"
+					echo "</div>"
+				else
+					echo "<div class='title'>"
+					echo "$tempComicName"
+					echo "</div>"
+				fi
 				echo "</a>"
 			} > "$comicNamePath/comics.index"
 		fi
@@ -1126,23 +1139,19 @@ webUpdate(){
 ################################################################################
 function resetCache(){
 	# reset all generated/downloaded content
-	webDirectory=$(webRoot)
-	downloadDirectory="$(downloadDir)"
 	# remove all the index files generated by the website
-	find "$webDirectory/comics/" -name "*.index" -delete
+	find "/var/cache/2web/web/comics/" -name "*.index" -delete
 	# remove web cache
-	rm -rv "$webDirectory/comics/" || INFO "No comic web directory at '$webDirectory/comics/'"
-	rm -rv "$webDirectory/thumbnails/comics/" || INFO "No comic web directory at '$webDirectory/thumbnails/comics/'"
+	delete "/var/cache/2web/web/comics/"
+	delete "/var/cache/2web/web/thumbnails/comics/"
 	#
-	rm -rv "/var/cache/2web/generated/comicCache/" || INFO "No path to remove at '/var/cache/2web/generated/comicCache/'"
+	delete "/var/cache/2web/generated/comicCache/"
 	#
-	rm -rv "$downloadDirectory/pdf2comic/" || INFO "No path to remove at '$downloadDirectory/pdf2comic/'"
-	rm -rv "$downloadDirectory/txt2comic/" || INFO "No path to remove at '$downloadDirectory/txt2comic/'"
-	rm -rv "$downloadDirectory/epub2comic/" || INFO "No path to remove at '$downloadDirectory/epub2comic/'"
-	rm -rv "$downloadDirectory/cbz2comic/" || INFO "No path to remove at '$downloadDirectory/cbz2comic/'"
-	rm -rv "$downloadDirectory/markdown2comic/" || INFO "No path to remove at '$downloadDirectory/markdown2comic/'"
-	rm -rv "$downloadDirectory/html2comic/" || INFO "No path to remove at '$downloadDirectory/html2comic/'"
-	#
+	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
+	# delete intermediate conversion directories
+	for location in $locations;do
+		delete "/var/cache/2web/generated/comics/$location/"
+	done
 }
 ################################################################################
 function nuke(){
@@ -1153,33 +1162,41 @@ function nuke(){
 	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
 	# delete intermediate conversion directories
 	for location in $locations;do
-		rm -rv "$generatedDirectory/comics/$location/" || INFO "No path to remove at '$generatedDirectory/comics/$location/'"
+		delete "$generatedDirectory/comics/$location/"
 	done
 	# remove new and random indexes
-	rm -rv "$webDirectory/new/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
-	rm -rv "$webDirectory/random/comic_*.index" || INFO "No path to remove at '$webDirectory/kodi/new/comic_*.index'"
+	rm -v $webDirectory/new/comic_*.index
+	rm -v $webDirectory/random/comic_*.index
 	# kodi directories
-	rm -rv "$webDirectory/kodi/comics/" || INFO "No path to remove at '$webDirectory/kodi/comics/'"
-	rm -rv "$webDirectory/kodi/comics_tank/" || INFO "No path to remove at '$webDirectory/kodi/comics_tank/'"
+	delete "$webDirectory/kodi/comics/"
+	delete "$webDirectory/kodi/comics_tank/"
 	# remove comic directory and indexes
-	rm -rv $webDirectory/comics/*
-	rm -rv $webDirectory/new/comics.index
-	rm -rv "/var/cache/2web/generated/comicCache/"
-	rm -rv $webDirectory/random/comics.index
-	rm -rv $webDirectory/sums/comic2web_*.cfg || echo "No file sums found..."
+	delete $webDirectory/comics/
+	delete $webDirectory/new/comics.index
+	delete "/var/cache/2web/generated/comicCache/"
+	delete $webDirectory/random/comics.index
+	rm -v $webDirectory/sums/comic2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 $webDirectory/data.db "drop table comics;"
 	# remove widgets cached
-	rm -v $webDirectory/web_cache/widget_random_comics.index
-	rm -v $webDirectory/web_cache/widget_new_comics.index
+	delete $webDirectory/web_cache/widget_random_comics.index
+	delete $webDirectory/web_cache/widget_new_comics.index
 	drawLine
-	ALERT "You MUST remove downloaded comics, generated thumbnails, and converted comic files with the 'comic2web reset' command"
+	drawHeader "NUKE Complete"
+	drawLine
+	echo "All file for the comic2web module have been removed. comic2web will rebuild all site info on the next automatic scan but can be done manually with 'comic2web --parallel'. If you have comics that were converted from other formats you may also want to run 'comic2web --reset' in order to remove any intermedary file formats created."
+	drawLine
+	echo "You MUST remove downloaded comics, generated thumbnails, and converted comic files with the 'comic2web reset' command"
 	drawLine
 }
 ################################################################################
 ################################################################################
 main(){
 	################################################################################
+
+	# set the theme of the lines in CLI output
+	LINE_THEME="book"
+
 	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 		lockProc "comic2web"
 		checkModStatus "comic2web"
@@ -1188,6 +1205,20 @@ main(){
 		lockProc "comic2web"
 		checkModStatus "comic2web"
 		update "$@"
+	elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
+		# process a single directory or rescan a single directory
+		webDirectory=$(webRoot)
+		# remove the sum blocking scanning for rescans
+		rmDirSum "$webDirectory" "$2"
+		# there is only one comic this will prevent breaking the progress line
+		totalComics=1
+		# scan the media
+		if checkDirSum "$webDirectory" "$2";then
+			processComicPath "$2" "$webDirectory"
+			setDirSum "$webDirectory" "$2"
+		else
+			INFO "Already processed '$(basename "$2")'"
+		fi
 	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 		# generate demo data for use in screenshots, make it random as can be
 
@@ -1227,12 +1258,14 @@ main(){
 	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 		disableMod "comic2web"
 	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+		lockProc "comic2web"
 		nuke
 	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 		resetCache
 	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 		# upgrade the pip packages if the module is enabled
 		checkModStatus "comic2web"
+		lockProc "comic2web"
 		upgrade-pip "comic2web" "gallery-dl dosage"
 	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
 		# comic2web --convert filePath
