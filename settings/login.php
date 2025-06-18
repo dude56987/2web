@@ -62,6 +62,17 @@ if (array_key_exists("userLogout",$_POST)){
 			$_SESSION["admin_locked"] = true;
 			# set the login timestamp
 			$_SESSION["loginTime"]=time();
+			# load user settings
+			#
+			# load the user selected remote if the user has selected on already
+			if(file_exists("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg")){
+				addToLog("DEBUG","select-remote.php","Creating remote config");
+				# load the user selected remote config
+				$tempRemoteData=file_get_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg");
+				$tempRemoteData=str_replace("\n","",$tempRemoteData);
+				# set the setting in the session
+				$_SESSION["selectedRemote"]=$tempRemoteData;
+			}
 			# post the login into the system log
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
 			sleep(2);
@@ -145,7 +156,7 @@ if ($loggedIn){
 	echo "<hr>";
 	if ($noLogins){
 		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/settings/users.php'>🔒 Add Administrator Login</a>";
+		echo "	<a class='button' href='/settings/users.php#addNewUser'>🔒 Add Administrator Login</a>";
 		echo "</div>";
 		echo "<div class='listCard'>";
 		echo "	<a class='button' href='/settings/modules.php'>🧩 Enable Modules</a>";

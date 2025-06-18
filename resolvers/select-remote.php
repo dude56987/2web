@@ -24,33 +24,119 @@ error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 startSession();
 ################################################################################
+# generate any mime data to be sent in the string
+if (array_key_exists("mime",$_GET)){
+	$mimeData="?mime=".$_GET["mime"]."&";
+}else{
+	$mimeData="?";
+}
 # if the user has NOT clicked to reselect the remote
 if (! array_key_exists("select",$_GET)){
-	# check API and session for selected remote
+	# load the user remote data
 	if (array_key_exists("selectedRemote",$_GET)){
 		# load the selected remote
 		$selectedRemote=$_GET["selectedRemote"];
+		addToLog("DEBUG","select-remote.php","setting the remote to $selectedRemote");
 		# store the value in the session
 		$_SESSION["selectedRemote"]=$selectedRemote;
 		# set the remote title
 		$_SESSION["remoteTitle"]=explode("@",$_SESSION["selectedRemote"])[1];
-		# load the selected remote
-		if($selectedRemote == "CLIENT"){
-			redirect("/client/?remote");
+		if (array_key_exists("user",$_SESSION)){
+			# create the user directory if it does not exist
+			if(! file_exists("/etc/2web/user_data/".$_SESSION["user"]."/")){
+				mkdir("/etc/2web/user_data/".$_SESSION["user"]."/");
+			}
+			addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' set remote to '$selectedRemote'");
+			file_put_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg",$_SESSION["selectedRemote"]);
+			file_put_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg",$_SESSION["remoteTitle"]);
 		}else{
-			# if the selected remote is kodi
-			redirect("/kodi-player.php");
+			addToLog("DEBUG","select-remote.php","user at '".$_SERVER["REMOTE_ADDR"]."' set remote to '$selectedRemote'");
 		}
-	}else if (array_key_exists("selectedRemote",$_SESSION)){
-		# check if the remote is already selected
+	}else{
+		# if the user is logged in
+		if (array_key_exists("user",$_SESSION)){
+			addToLog("DEBUG","select-remote.php","user has logged in");
+			# load the user selected remote
+			if(file_exists("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg")){
+				addToLog("DEBUG","select-remote.php","Creating remote config");
+				# load the user selected remote config
+				$tempRemoteData=file_get_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg");
+				$tempRemoteData=str_replace("\n","",$tempRemoteData);
+				#
+				$_SESSION["selectedRemote"]=$tempRemoteData;
+				$selectedRemote=$tempRemoteData;
+			}else{
+				addToLog("DEBUG","select-remote.php","redirecting to remote selection 1");
+				# The user has logged in but not selected remote
+				# redirect to the selection menu
+				if (array_key_exists("play",$_GET)){
+					redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
+				}else{
+					redirect("/remote.php?select");
+				}
+			}
+			if(file_exists("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg")){
+				addToLog("DEBUG","select-remote.php","Creating remote title config");
+				# load the user selected remote config
+				$tempRemoteData=file_get_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg");
+				$tempRemoteData=str_replace("\n","",$tempRemoteData);
+				#
+				$_SESSION["remoteTitle"]=$tempRemoteData;
+			}else{
+				addToLog("DEBUG","select-remote.php","redirecting to remote selection 2");
+				# redirect to the selection menu
+				if (array_key_exists("play",$_GET)){
+					redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
+				}else{
+					redirect("/remote.php?select");
+				}
+			}
+		}else{
+			addToLog("DEBUG","select-remote.php","redirecting to remote selection 3");
+			## redirect to the selection menu
+			#if (array_key_exists("play",$_GET)){
+			#	redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
+			#}else{
+			#	redirect("/remote.php?select");
+			#}
 
-		# load the user selected remote from the session
-		$selectedRemote=$_SESSION["selectedRemote"];
-		if($selectedRemote == "CLIENT"){
-			redirect("/client/?remote");
+			# the user was not logged in and a remote has not been selected
+			# redirect to the remote selection menu
+			## The session is not a logged in user but a anon
+			## redirect to the selection menu
+			#if (array_key_exists("play",$_GET)){
+			#	redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
+			#}else{
+			#	redirect("/remote.php?select");
+			#}
+		}
+	}
+	if (array_key_exists("selectedRemote",$_SESSION)){
+		# redirect to the correct location
+		if( $_SESSION["selectedRemote"] == "CLIENT" ){
+			# if the remote is the server client
+			if (array_key_exists("play",$_GET)){
+				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' to forward plaback url '".$_GET["play"]."'");
+				# redirect to playback url if given
+				redirect("/client/".$mimeData."play=".($_GET["play"]));
+			}else{
+				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' interface'");
+				redirect("/client/?remote");
+			}
 		}else{
 			# if the selected remote is kodi
-			redirect("/kodi-player.php");
+			if (array_key_exists("play",$_GET)){
+				# convert https to http requests for kodi
+				if (substr($_GET["play"],0,7) == "https://"){
+					$_GET["play"] = "http://".substr($_GET["play"],7);
+				}
+				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' to forward plaback url '".urldecode($_GET["play"]."'"));
+				# redirect to playback url if given
+				redirect("/kodi-player.php?url=".urldecode($_GET["play"]));
+			}else{
+				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' interface'");
+				redirect("/kodi-player.php");
+			}
 		}
 	}
 }
@@ -103,7 +189,7 @@ if (! array_key_exists("select",$_GET)){
 			echo "	page on this server this server.\n";
 			echo "</p>\n";
 			echo "<div class='listCard'>\n";
-			echo "	<a class='button' href='?selectedRemote=CLIENT'>🎛️ ".gethostname()." Client Remote</a>";
+			echo "	<a class='button' href='".$mimeData."selectedRemote=CLIENT'>🎛️ ".gethostname()." Client Remote</a>";
 			echo "</div>\n";
 		}
 	}

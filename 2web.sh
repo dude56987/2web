@@ -426,6 +426,9 @@ function update2web(){
 	createDir "$kodiDirectory"
 
 	createDir "/etc/2web/mod_status/"
+	#
+	createDir "/etc/2web/user_data/"
+	#
 	createDir "/var/cache/2web/sessions/"
 
 	totalCPUS=$(cpuCount)
@@ -821,6 +824,9 @@ function update2web(){
 			rm -vr "$webDirectory/client/"
 		fi
 	fi
+
+	# enable the resolver group to control access
+	createDir "/etc/2web/groups/resolver/"
 
 	# install the php streaming script
 	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"
