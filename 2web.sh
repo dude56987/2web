@@ -413,7 +413,10 @@ function buildActivityGraph(){
 ########################################################################
 function update2web(){
 	lockProc "2web"
-	echo "Updating 2web..."
+	rotateSpinner &
+	SPINNER_PID="$!"
+
+	INFO "Updating 2web..."
 	# build 2web common web interface this should be ran after each install to update main web components on which modules depend
 	webDirectory="$(realWebRoot)"
 	downloadDirectory="$(downloadRoot)"
@@ -458,7 +461,7 @@ function update2web(){
 	fi
 
 	# update the search plugin once per x days, this should only change if the hostname changes
-	if cacheCheck "$webDirectory/opensearch.xml" 10;then
+	if checkFileDataSum "$webDirectory" "/etc/hostname";then
 		# build the search plugin for the local server instance
 		# - only works with mdns .local based resolution
 		{
@@ -490,6 +493,7 @@ function update2web(){
 			fi
 		fi
 	fi
+	kill "$SPINNER_PID"
 	function buildSingleTheme(){
 		local tempPathBase="$1"
 		local tempPathColor="$2"
@@ -551,6 +555,8 @@ function update2web(){
 		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
 		setDirSum "$webDirectory" "/usr/share/2web/theme-templates/"
 	fi
+	rotateSpinner &
+	SPINNER_PID="$!"
 	# make sure the directories exist and have correct permissions, also link stylesheets
 	createDir "$webDirectory"
 	createDir "$webDirectory/new/"
@@ -622,6 +628,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/graphs.php" "$webDirectory/settings/graphs.php"
 	linkFile "/usr/share/2web/settings/comicsDL.php" "$webDirectory/settings/comicsDL.php"
 	linkFile "/usr/share/2web/settings/cache.php" "$webDirectory/settings/cache.php"
+	linkFile "/usr/share/2web/settings/clean.php" "$webDirectory/settings/clean.php"
 	linkFile "/usr/share/2web/settings/system.php" "$webDirectory/settings/system.php"
 	linkFile "/usr/share/2web/settings/fortune.php" "$webDirectory/settings/fortune.php"
 	linkFile "/usr/share/2web/settings/themes.php" "$webDirectory/settings/themes.php"
@@ -863,7 +870,12 @@ function update2web(){
 	fi
 	# create font directory
 	createDir "$webDirectory/fonts/"
-	# link the fonts, only two are enabled by default, these fonts are for accessibility
+	# link the fonts, these fonts are for accessibility and cross platform unicode support
+	# /usr/share/fonts/truetype/noto/NotoMono-Regular.ttf
+	linkFile "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf" "$webDirectory/fonts/noto.ttf"
+	linkFile "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf" "$webDirectory/fonts/notomono.ttf"
+	linkFile "/usr/share/fonts/truetype/emojione/emojione-android.ttf" "$webDirectory/fonts/emojione.ttf"
+	linkFile "/usr/share/fonts/truetype/ancient-scripts/Symbola_hint.ttf" "$webDirectory/fonts/symbola.ttf"
 	linkFile "/usr/share/fonts/truetype/hermit/Hermit-medium.otf" "$webDirectory/fonts/"
 	linkFile "/usr/share/fonts/opentype/opendyslexic/OpenDyslexic-Regular.otf" "$webDirectory/fonts/"
 
@@ -897,6 +909,8 @@ function update2web(){
 
 	# build the homepage stats and link the homepage
 	buildHomePage "$webDirectory"
+	# stop the spinner
+	kill "$SPINNER_PID"
 	# check if the system needs rebooted
 	rebootCheck
 }
@@ -1114,13 +1128,14 @@ function verifyDatabasePaths(){
 	totalTableCount=$(echo "$tables" | wc -w)
 	tableCount=1
 	for tableName in $tables;do
-		ALERT "Searching $databasePath table:$tableName"
+		#ALERT "Searching $databasePath table:$tableName"
 		rows=$(sqlite3 --cmd ".timeout $timeout" "$databasePath" "select * from \"$tableName\";")
 		totalRowCount=$(echo -n "$rows" | wc -l)
 		rowCount=1
 		# read though each table for the title column
 		for path in $rows;do
 			rowCount=$(( rowCount + 1 ))
+			INFO "Scanning $tableCount/$totalTableCount tables. Reading $tableName row $rowCount/$totalRowCount ."
 			# check the path stored in the table exists on the disk
 			if test -f "${path}";then
 				# directly test the path
@@ -1135,7 +1150,7 @@ function verifyDatabasePaths(){
 			# if the path could  not be validated
 			if [ "$validPath" == "no" ];then
 				# draw the invalid path to the CLI and log the invalid path and removal into the 2web system log
-				ALERT "Scanning $tableCount/$totalTableCount tables. Reading $tableName row $rowCount/$totalRowCount ."
+				#ALERT "Scanning $tableCount/$totalTableCount tables. Reading $tableName row $rowCount/$totalRowCount ."
 				ALERT "Discovered invalid path in $databasePath table:$tableName:$path"
 				addToLog "ERROR" "Invalid SQL Entry" "Discovered invalid path in $databasePath table:$tableName:$path"
 				# the path does not exist so it needs removed from the database
@@ -1145,7 +1160,7 @@ function verifyDatabasePaths(){
 		# increment the table count
 		tableCount=$(( tableCount + 1 ))
 		# draw the progress for the current database
-		INFO "Scanning $tableCount/$totalTableCount tables. Reading $tableName row $rowCount/$totalRowCount ."
+		#INFO "Scanning $tableCount/$totalTableCount tables. Reading $tableName row $rowCount/$totalRowCount ."
 	done
 	# cleanup and rebuild the database
 	sqlite3 -cmd ".timeout $timeout" "$indexPath" "vacuum;"
@@ -1381,14 +1396,36 @@ function buildPulseGif(){
 }
 ################################################################################
 function screenshot(){
+	# screenshot $webPath $localPath
+	#
+	# Take a screenshot of a 2web local url
+	#
+	# Generate screenshots for
+	#
+	# - Desktop
+	# - Phone
+	#
+	# Generate screenshots using
+	#
+	# - Firefox
+	# - wkhtml2pdf ( Kinda like webkit but renders some strange css errors )
+	#
 	webPath=$1
 	localPath=$2
+
 	#
 	desktopPath="/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_$localPath"
 	phonePath="/var/cache/2web/generated/comics/2web/2web Screenshots/phone_$localPath"
 	#
 	desktopSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/desktop_${localPath}_%03d.png"
 	phoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/phone_${localPath}_%03d.png"
+
+	#
+	firefoxDesktopPath="/var/cache/2web/generated/comics/2web/2web Screenshots/firefox_desktop_$localPath"
+	firefoxPhonePath="/var/cache/2web/generated/comics/2web/2web Screenshots/firefox_phone_$localPath"
+	#
+	firefoxDesktopSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/firefox_desktop_${localPath}_%03d.png"
+	firefoxPhoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/firefox_phone_${localPath}_%03d.png"
 
 	#
 	addToLog "DEBUG" "Screenshots" "Creating screenshot from '$webPath' at '$localPath'"
@@ -1401,7 +1438,8 @@ function screenshot(){
 		"$webPath" "$desktopPath"
 	#	--height 1080 \
 
-	#xvfb-run firefox -screenshot "$desktopPath" "$webPath" --window-size=1920,1080
+	#
+	xvfb-run firefox --screenshot "$firefoxDesktopPath" "$webPath" --window-size=1920,1080
 
 	# resize the image
 	#convert "$desktopPath" --resize 720x480 "$desktopPath"
@@ -1418,7 +1456,12 @@ function screenshot(){
 	convert "$desktopPath" -crop x1080 +repage "$desktopSplitPath"
 	convert "$phonePath" -crop x900 +repage "$phoneSplitPath"
 
-	#xvfb-run firefox -screenshot "$phonePath" "$webPath" --window-size=700,900
+	#
+	convert "$firefoxDesktopPath" -crop x1080 +repage "$firefoxDesktopSplitPath"
+	convert "$firefoxPhonePath" -crop x900 +repage "$firefoxPhoneSplitPath"
+
+	#
+	xvfb-run firefox -screenshot "$firefoxPhonePath" "$webPath" --window-size=700,900
 
 	# resize the image
 	#convert "$phonePath" --resize 720x480 "$phonePath"
@@ -1461,7 +1504,7 @@ main(){
 		# update the metadata and build webpages for all generators
 		moduleNames=$(loadModules)
 		for module in $moduleNames;do
-			/usr/bin/$module
+			/usr/bin/$(echo -n "$module" | cut -d'=' -f1 )
 		done
 		rebootCheck
 	elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ];then
@@ -1513,6 +1556,9 @@ main(){
 			drawCellLine 3
 		done
 	elif [ "$1" == "-V" ] || [ "$1" == "--verify" ] || [ "$1" == "verify" ];then
+		drawLine
+		drawHeader "Verifying Databases"
+		drawLine
 		webDirectory=$(webRoot)
 		# wait for all background services to stop
 		if echo "$@" | grep -q -e "--force";then
@@ -1540,7 +1586,22 @@ main(){
 			verifyDatabasePaths "$webDirectory/backgrounds.db"
 			verifyDatabasePaths "$webDirectory/live/groups.db"
 		fi
-		echo "Finished Verifying database."
+		# verify the search index
+		#verifySearchIndex
+		#
+		ALERT "Finished Verifying database."
+		drawLine
+		drawHeader "Verification Finished"
+		drawLine
+	elif [ "$1" == "--verify-search" ] || [ "$1" == "verify-search" ];then
+		drawLine
+		drawHeader "Verify Search"
+		drawLine
+		# verify the search index
+		verifySearchIndex
+		drawLine
+		drawHeader "Verification Finished"
+		drawLine
 	elif [ "$1" == "-L" ] || [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
 		webDirectory=$(webRoot)
 		# read all the modules from loadModules
@@ -1965,7 +2026,7 @@ main(){
 		chown -R www-data:www-data "/var/cache/2web/downloads/comics/generated/2web Screenshots/"
 		# blank out the index
 		echo "" > "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index"
-		echo "" > "/var/cache/2web/generated/comics/2web/2web Screenshots/index.html"
+		echo "" > "/var/cache/2web/generated/comics/2web/2web Screenshots/widget.html"
 		# build a list of all the screenshots
 		find "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots/" -type f | while read -r screenshotPath;do
 			screenshotPath=$(basename "$screenshotPath")
@@ -1977,7 +2038,8 @@ main(){
 				#echo "</a>"
 			} >> "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index"
 		done
-		cat "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index" | sort -u > "/var/cache/2web/generated/comics/2web/2web Screenshots/index.html"
+		#
+		cat "/var/cache/2web/generated/comics/2web/2web Screenshots/screenshots.index" | sort -u > "/var/cache/2web/generated/comics/2web/2web Screenshots/widget.html"
 		#
 		ALERT "Finished building the 2web screenshots"
 		ALERT "Screenshots are stored in /var/cache/2web/downloads/comics/generated/2web Screenshots/"
@@ -2042,6 +2104,9 @@ main(){
 				find "/var/cache/2web/queue/log/" -type f -mtime +"$cacheDelay" -exec rm -v {} \;
 			fi
 		fi
+	elif [ "$1" == "-f" ] || [ "$1" == "--fix-permissions" ] || [ "$1" == "fix-permissions" ];then
+		chown www-data:www-data -R /var/cache/2web/web/
+		chown www-data:www-data -R /var/cache/2web/downloads/
 	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 		cat /usr/share/2web/help/2web.txt
 	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
@@ -2188,7 +2253,7 @@ main(){
 			# create the autologin lightdm config path
 			mkdir -p "/etc/lightdm/lightdm.conf.d/"
 		fi
-		if ! test -f "/etc/lightdm/lightdm.conf.d/12-autologin-kiosk.conf";then
+		if ! test -f "/etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf";then
 			# create the autologin lightdm config file
 			{
 				echo "[SeatDefaults]"
@@ -2241,7 +2306,7 @@ main(){
 			# create the autologin lightdm config directory
 			mkdir -p "/etc/lightdm/lightdm.conf.d/"
 		fi
-		if ! test -f "/etc/lightdm/lightdm.conf.d/12-autologin-kiosk.conf";then
+		if ! test -f "/etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf";then
 			# create the autologin lightdm config file
 			{
 				echo "[SeatDefaults]"
@@ -2446,13 +2511,14 @@ main(){
 	elif [ "$1" == "-R" ] || [ "$1" == "--rescan" ] || [ "$1" == "rescan" ] ;then
 		# set the flag to force the re processing of ALL media found on ALL modules.
 		date "+%s" > /etc/2web/forceRescan.cfg
+		chown www-data:www-data /etc/2web/forceRescan.cfg
 		ALERT "A RESCAN of content has been scheduled during the next update of each module."
 	else
-		startSpinner
 		# update main components
 		# - this builds the base site without anything enabled
+		#startSpinner
 		update2web
-		stopSpinner
+		#stopSpinner "$SPINNER_PID"
 		# this is the default option to be ran without arguments
 		#main --help
 		showServerLinks
