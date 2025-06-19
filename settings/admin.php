@@ -899,6 +899,22 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Set the reboot hour to ".$time." hour on a 24 hour clock.", "goodLog");
 	backButton("/settings/system.php#autoRebootTime","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("forceRescan",$_POST)){
+	if (verifyChoice($cancelLink="/settings/system.php#forceRescan")){
+		$rescanValue=$_POST['forceRescan'];
+		if ($rescanValue == "yes"){
+			file_put_contents("/etc/2web/forceRescan.cfg", time());
+			# set a job in the queue to force a rescan
+			addToQueue("multi","2web --rescan");
+			outputLog("Force Rescan Has been set, All media items in all modules will be rescanned", "goodLog");
+			backButton("/settings/system.php#forceRescan","🛠️ Return To Settings");
+			clear();
+		}else{
+			outputLog(("Force rescan was called with a strange value '".$rescanValue)."'", "badLog");
+			backButton("/settings/system.php#forceRescan","🛠️ Return To Settings");
+			clear();
+		}
+	}
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);

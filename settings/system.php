@@ -79,7 +79,7 @@ if(file_exists("/usr/games/steam")){
 ?>
 
 <div id='webPlayerStatus' class='inputCard'>
-	<h2>Web Player</h2>
+	<h2>📥 Web Player</h2>
 		<ul>
 			<li>
 				Enable or disable the <a href='/web-player.php'>Web Player Page</a>.
@@ -94,7 +94,7 @@ if(file_exists("/usr/games/steam")){
 </div>
 
 <div id='webClientStatus' class='inputCard'>
-	<h2>Web Client</h2>
+	<h2>🛰️ Web Client</h2>
 		<ul>
 			<li>
 				Enable or disable the <a href='/client/'>Web Client Page</a>.
@@ -190,6 +190,22 @@ if(file_exists("/usr/games/steam")){
 			dict-elements
 		</li>
 	</ul>
+</div>
+
+<div id='forceRescan' class='inputCard'>
+	<h2>Force Rescan</h2>
+	<form action='admin.php' method='post' class='buttonForm'>
+		<div class='warningBanner'>
+			This may take a long time since it will rescan all media items into the library.
+		</div>
+		<ul>
+			<li>
+				Force all modules to rescan all media items.
+			</li>
+		</ul>
+		<input name='forceRescan' value='yes' hidden readonly>
+		<button type='submit' class='button'>⚠️ Force Rescan</button>
+	</form>
 </div>
 
 <div id='websiteCachePath' class='inputCard'>
