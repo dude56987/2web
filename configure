@@ -1,4 +1,68 @@
 #! /bin/bash
+
+if echo "$@" | grep -q -e "--test-output";then
+	source 2webLib.sh
+
+	themes="dice flower flower2 flower3 flower4 flower5 flower6 flowers flowerRand flowerRand2 wood quilt suit card solid double stitch diamond smallDotted dotted boxes note hollowBlock bowtie block bottomBlock fadeDown fadeUp book castle floppy computer computers term lines sine grass vines altdice weather sid chem papersRand papersRand2 cross cross2 crossAlt graph"
+
+	LINE_THEME="$(randomLineTheme)"
+	drawLine
+	drawSmallHeader "Checking themes"
+	drawLine
+	for themeName in $themes;do
+		LINE_THEME="$themeName"
+		drawLine
+	done
+	#
+	LINE_THEME="$(randomLineTheme)"
+	drawLine
+	drawSmallHeader "Single Line Alerts"
+	drawLine
+	for index in $(seq 20);do
+		ALERT "$index $RANDOM$RANDOM$RANDOM$RANDOM" "$index $RANDOM"
+	done
+	#
+	LINE_THEME="$(randomLineTheme)"
+	drawLine
+	drawSmallHeader "Multi Line Alerts"
+	drawLine
+	for index in $(seq 20);do
+		LINE_THEME="$(randomLineTheme)"
+		ALERT "$index ${RANDOM}\n${RANDOM}\n${RANDOM}\n" "$index $RANDOM"
+	done
+	#
+	LINE_THEME="$(randomLineTheme)"
+	drawLine
+	ALERT "START RANDOM INFO"
+	drawLine
+	#
+	for index in $(seq 20);do
+		INFO "$index $RANDOM"
+		sleep 0.1
+	done
+	#
+	ALERT "STOP RANDOM INFO"
+	drawLine
+	# draw the line themes
+	for themeName in $themes;do
+		LINE_THEME="$themeName"
+		randomColorText
+		drawLine
+		drawSmallHeader "$LINE_THEME"
+		drawLine
+	done
+	#
+	LINE_THEME="$(randomLineTheme)"
+	drawLine
+	drawSmallHeader "Testing Spinner"
+	drawLine
+	rotateSpinner &
+	SPINNER_PID="$!"
+	sleep 10
+	kill "$SPINNER_PID"
+	# exit after the test is complete
+	exit
+fi
 if test -f /etc/os-release;then
 	if grep -q "ubuntu" /etc/os-release;then
 		keepBuilding="true"

@@ -1193,10 +1193,14 @@ function ALERT(){
 	# RETURN STDOUT
 	#
 
-	#colorCode=$(yellowText)
-	colorCode="\033[33m"
-	#resetCode=$(resetColor)
-	resetCode="\033[0m"
+	#colorCodeLength="${#colorCode}"
+
+	#colorCode="\033[33m"
+	#resetCode="\033[0m"
+
+	resetCode="$(resetColor)"
+	colorCode="$(yellowText)"
+
 	#
 	width=$(tput cols)
 	height=$(tput lines)
@@ -1214,31 +1218,39 @@ function ALERT(){
 	for index in $(seq $width);do
 		buffer="$buffer "
 	done
-
 	#
-	if [ $( echo -n "$1" | wc -l ) -gt 0 ];then
+	if [ $( echo -ne "$1" | wc -l ) -gt 0 ];then
 		#
 		yellowText
 			drawSmallHeader "$headerText"
 		resetColor
 		whiteBackground
 		blackText
-			echo -e "$1";
+			echo -e "$1" | tr -s '\n'
 		resetColor
 		yellowText
 			drawLine
 		resetColor
 	else
+		# get the length of the color codes
+		resetCodeLength="${#resetCode}"
+		colorCodeLength="${#colorCode}"
+		#resetCodeLength="$(echo -ne "${resetCode} | wc -c)"
+		#colorCodeLength="$(echo -ne "${colorCode} | wc -c)"
 		# - cut the line to make it fit on one line using ncurses tput command
 		# - add the buffer to the end of the line and cut to terminal width
 		#   - this will overwrite any previous text wrote to the line
 		#   - cut one off the width in order to make space for the \r
 		# - The ((width-1)+7+11)  equation refers to the characters in the color codes used and the one creates room for the next opcode
 		#output="$(echo -ne "[${yellowCode}ALERT${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width -  1 ) + 7 + 11 ))" )"
-		output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width ) + 7 + 11 ))" )"
+		#output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width ) + 7 + 11 ))" )"
+		#output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-$(( ( $width ) + $colorCodeLength + $resetCodeLength ))" )"
+		fullTermWidth="$(( ( ( $width ) + $colorCodeLength + $resetCodeLength ) ))"
+		#fullTermWidth="$(( ( ( $width ) + 7 + 11 ) ))"
+		output="$(echo -n "[${colorCode}$headerText${resetCode}]: $1$buffer" | tail -n 1 | cut -b"1-${fullTermWidth}" )"
 		# move to the start of the bottom line
 		tput cup "$height" "0"
-		echo -en "$output";
+		echo -e "$output"
 	fi
 	# reset the cursor position
 	tput cup "$height" "0"
@@ -1813,7 +1825,7 @@ function drawAltPattern(){
 	#	  🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗🟕🟗
 	# --quilt
 	#   🙪 🙨 🙪 🙨 🙪 🙨
-	# --flower
+	# --flowers
 	#   ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
 	# --bowtie
 	#   ⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗⬖⬗
@@ -1838,7 +1850,7 @@ function drawAltPattern(){
 		echo -n "$(drawRandomizedPattern "✿✾❀❁𑽇⚘")"
 	elif echo "$@" | grep -q -e "--flowerRand";then
 		echo -n "$(drawRandomizedPattern "✿✾❀❁")"
-	elif echo "$@" | grep -q -e "--flower";then
+	elif echo "$@" | grep -q -e "--flowers";then
 		# ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
 		echo -n "$(drawPattern "⚘𑽇" "$tempValue")"
 	elif echo "$@" | grep -q -e "--bowtie";then
@@ -1904,6 +1916,13 @@ function drawAltPattern(){
 ################################################################################
 lineThemeDemo(){
 	drawLineTheme
+}
+################################################################################
+randomLineTheme(){
+	# Load a random line theme from the list
+	themes="dice flower flower2 flower3 flower4 flower5 flower6 flowers flowerRand flowerRand2 wood quilt suit card solid double stitch diamond smallDotted dotted boxes note hollowBlock bowtie block bottomBlock fadeDown fadeUp book castle floppy computer computers term lines sine grass vines altdice weather sid chem papersRand papersRand2 cross cross2 crossAlt graph"
+	#
+	echo -ne "$themes" | sed "s/ /\n/g" | shuf | head -1
 }
 ################################################################################
 loadLineTheme(){
@@ -2095,7 +2114,7 @@ loadLineTheme(){
 		echo -n "𑽇"
 	elif [ "$lineTheme" == "flowers" ];then
 		# - flowers      ⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇⚘𑽇
-		echo -n "$(drawPattern "⚘𑽇" "$tempValue")"
+		echo -n "$(drawAltPattern "$index" --flowers)"
 	elif [ "$lineTheme" == "flowerRand" ];then
 		# - flowerRand   ⚘❁❀⚘⚘✾✿⚘❁✾✿❀⚘✾✿⚘❀
 		echo -n "$(drawRandomizedPattern "⚘𑽇❁❀✾✿" "$tempValue")"
