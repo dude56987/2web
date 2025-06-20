@@ -98,60 +98,34 @@ include($_SERVER['DOCUMENT_ROOT']."/settings/settingsHeader.php");
 
 <div class='inputCard' id='muninEnabled'>
 	<h2>Enabled Munin Plugins</h2>
-	<ul>
-		<?PHP
-		# list available plugins and thier status
-		foreach( $enabledPlugins as $plugin){
-			# build the buttons to control the status of the plugin
-			echo "<li><a href='#pluginStatus_$plugin'>$plugin</a></li>";
-		}
-		?>
-	</ul>
-</div>
-
-<div class='inputCard' id='muninEnabled'>
-	<h2>Disabled Munin Plugins</h2>
-	<ul>
-		<?PHP
-		# list available plugins and thier status
-		foreach( $disabledPlugins as $plugin){
-			# build the buttons to control the status of the plugin
-			echo "<li><a href='#pluginStatus_$plugin'>$plugin</a></li>";
-		}
-		?>
-	</ul>
-</div>
-
-<div class='settingListCard' id='muninEnabled'>
-	<h2>Enabled Munin Plugins</h2>
 <?PHP
 	# list available plugins and thier status
 	foreach( $enabledPlugins as $plugin){
-		echo "<div class='inputCard'>";
-		echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
+		#echo "<div class='inputCard'>";
+		#echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
 		# build the buttons to control the status of the plugin
-		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<form action='admin.php' class='singleButtonForm' method='post'>\n";
 		echo "	<input type='text' name='disableGraphPlugin' value='$plugin' hidden>";
-		echo "	<button class='button' type='submit' name='' value=''>🟢 Disable Plugin</button>\n";
+		echo "	<button class='smallButton' type='submit' name='' value=''>🟢 Disable <span class='singleStatValue'>$plugin</span></button>\n";
 		echo "	</form>\n";
-		echo "</div>";
+		#echo "</div>";
 	}
 ?>
 </div>
 
-<div class='settingListCard' id='muninDisabled'>
+<div class='inputCard' id='muninDisabled'>
 	<h2>Disabled Munin Plugins</h2>
 <?PHP
 	# list available plugins and thier status
 	foreach( $disabledPlugins as $plugin){
-		echo "<div class='inputCard'>";
-		echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
+		#echo "<div class='inputCard'>";
+		#echo "<h2 id='pluginStatus_$plugin'>$plugin</h2>";
 		# build the buttons to control the status of the plugin
-		echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+		echo "	<form action='admin.php' class='singleButtonForm' method='post'>\n";
 		echo "	<input type='text' name='enableGraphPlugin' value='$plugin' hidden>";
-		echo "	<button class='button' type='submit' name='' value=''>◯ Enable Plugin</button>\n";
+		echo "	<button class='smallButton' type='submit' name='' value=''>◯ Enable <span class='singleStatValue'>$plugin</span></button>\n";
 		echo "	</form>\n";
-		echo "</div>";
+		#echo "</div>";
 	}
 ?>
 </div>
