@@ -20,6 +20,9 @@
 .button{
 	border-radius: 5px;
 }
+.activeButton{
+	border-radius: 5px;
+}
 .searchButton{
 	border-radius: 5px;
 }
@@ -64,11 +67,6 @@ video{
 	border-top-left-radius: 5px;
 	border-top-right-radius: 5px;
 }
-/*
-h1, h2, h3{
-	border-radius: 5px 5px 0px 0px;
-}
-*/
 @media only screen and (max-width: 800px), (orientation: portrait){
 	#topButton{
 		/* Disable the border radius on the top button*/

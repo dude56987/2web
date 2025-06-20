@@ -47,6 +47,7 @@ input{
 .inputCard{
 	overflow: hidden;
 	border-radius: 5rem;
+	padding-bottom: 3rem;
 }
 .seasonContainer{
 	border-radius: 5rem;

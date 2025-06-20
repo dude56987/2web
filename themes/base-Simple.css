@@ -21,6 +21,44 @@ html{
 	height: 100dvh;
 	font-variant-emoji: unicode;
 }
+@font-face{
+	font-family: fallbackFont;
+	src: url("/fonts/noto.ttf");
+}
+@font-face{
+	font-family: fallbackFont2;
+	src: url("/fonts/notomono.ttf");
+}
+@font-face{
+	font-family: fallbackFont3;
+	src: url("/fonts/symbola.ttf");
+}
+@font-face{
+	font-family: fallbackFont4;
+	src: url("/fonts/emojione.ttf");
+}
+button{
+	font-family: font2web,fallbackFont,fallbackFont2,fallbackFont3,fallbackFont4,monospace;
+	@supports (-moz-appearance:none){
+		font-family: monospace;
+		font-family: fallbackFont4;
+		font-family: fallbackFont3;
+		font-family: fallbackFont2;
+		font-family: fallbackFont;
+		font-family: font2web;
+	}
+}
+html{
+	font-family: font2web,fallbackFont,fallbackFont2,fallbackFont3,fallbackFont4,monospace;
+	@supports (-moz-appearance:none){
+		font-family: monospace;
+		font-family: fallbackFont4;
+		font-family: fallbackFont3;
+		font-family: fallbackFont2;
+		font-family: fallbackFont;
+		font-family: font2web;
+	}
+}
 ::selection{
 	color: var(--highlightText);
 	background: var(--highlightBackground);
@@ -303,7 +341,7 @@ h1 {
 	/*
 	-webkit-text-stroke: 0.05rem var(--highlightText);
 	*/
-	text-shadow: 0px 0px 8px var(--highlightText);
+	text-shadow: 0px 0px 1rem var(--highlightText);
 	text-align: center;
 	padding: 0.5rem;
 }
@@ -312,7 +350,7 @@ h2 {
 	/*
 	-webkit-text-stroke: 0.05rem var(--highlightText);
 	*/
-	text-shadow: 0px 0px 8px var(--highlightText);
+	text-shadow: 0px 0px 1rem var(--highlightText);
 	text-align: center;
 	padding: 0.3rem;
 }
@@ -321,7 +359,7 @@ h3 {
 	/*
 	-webkit-text-stroke: 0.05rem var(--highlightText);
 	*/
-	text-shadow: 0px 0px 8px var(--highlightText);
+	text-shadow: 0px 0px 1rem var(--highlightText);
 	text-align: center;
 }
 ol li{
@@ -342,6 +380,7 @@ ol li{
   right: 0px; /* Place the button 30px from the right */
   z-index: 99; /* Make sure it does not overlap */
 	padding: 0px;
+	width: 2rem;
 }
 #vlcIcon{
 	color: orange;
@@ -472,10 +511,10 @@ ol li{
 	width: 3rem;
 	margin: 0px;
 	padding: 0px;
-	margin-bottom: 1rem;
 	cursor: pointer;
 	position: relative;
 	z-index: 1;
+	margin-bottom: 0.3rem;
 }
 .menuButtonBox:hover{
 	.menuButton{
@@ -531,6 +570,7 @@ ol li{
 .headerButtons{
 	width: 90dvw;
 	text-align: left;
+	line-height: 0rem;
 }
 /* Media check for touchscreens */
 @media (pointer: coarse){
@@ -840,6 +880,9 @@ ol{
 	height: 400px;
 	min-width: 800px;
 	background: black;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 .progressIndicator{
 	width: 100dvw;
@@ -861,6 +904,15 @@ ol{
 }
 #homeButton{
 	float: left;
+}
+.videoPosterContainer{
+	background: black;
+	width: 800px;
+	margin: auto;
+}
+.videoPoster{
+	height: 30rem;
+	max-width: 100%;
 }
 .videoPlayerControls{
 	font-size: 100% !important;
@@ -938,7 +990,6 @@ ol{
 .button{
 	font-size: 1rem;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
-	margin: 1rem;
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
 	padding: 0.4rem;
@@ -948,6 +999,9 @@ ol{
 	text-decoration: none;
 	text-align: center;
 	cursor: pointer;
+	overflow: hidden;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
 }
 .smallButton{
 	border: solid var(--borderColor) 0.2rem;
@@ -962,18 +1016,25 @@ ol{
 	text-decoration: none;
 	text-align: center;
 	cursor: pointer;
+	overflow: hidden;
 }
 .smallButton:hover{
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	box-shadow: none;
+	border-color: var(--highlightBorder);
+	.singleStatValue{
+		color: var(--highlightText);
+		background: var(--highlightBackground);
+		border-color: var(--highlightBorder);
+	}
 }
-a .inputCard:hover{
+a.inputCard:hover{
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	text-decoration: none;
 }
-a .inputCard h3{
+a.inputCard h3{
 	color: var(--textColor) !important;
 }
 .titlecard .button{
@@ -1013,21 +1074,26 @@ a .inputCard h3{
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
 	border-style: inset !important;
+	/*
 	text-shadow: 0px 0px 0.5rem var(--textColor);
-	margin: 1rem;
+	*/
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
 	border-width: 0.2rem;
 	padding: 0.4rem;
+	text-decoration: none !important;
+	border-style: inset !important;
+	overflow: hidden;
 }
 .activeButton:hover{
-	box-shadow: 0px 0px 1rem var(--shadowColor);
-	border-style: solid;
+	box-shadow: 0px 0px 1rem var(--shadowColor) !important;
 	border-color: var(--borderColor);
 	background: var(--glassBackground);
-	color: var(--textColor);
-	text-decoration: none;
+	color: var(--textColor) !important;
 	text-align: center;
+	border-style: solid !important;
 }
 .button:hover{
 	box-shadow: 0px 0px 0px var(--shadowColor);
@@ -1169,6 +1235,12 @@ a .inputCard h3{
 @media screen (max-width: 800px), (orientation: portrait), (hover: none){
 */
 @media only screen and (orientation: portrait){
+	.videoPoster{
+		width: 100%;
+	}
+	.videoPosterContainer{
+		width: 100%;
+	}
 	.globalPulse{
 		bottom: 4rem !important;
 	}
@@ -1348,8 +1420,13 @@ a .inputCard h3{
 .listCard{
 	white-space: nowrap;
 	overflow-x: auto;
-	padding: 0.5rem;
+	overflow-y: hidden;
+	min-height: 1rem;
+	line-height: 1rem;
+	/*
 	min-height: 3rem;
+	padding: 0.5rem;
+	*/
 }
 .selectPathOpenForm{
 	text-align:	left;
@@ -1363,6 +1440,7 @@ form{
 }
 .listCard .button{
 	display: inline-block;
+	vertical-align: top;
 	line-height: 3rem;
 }
 .listCard .activeButton{
@@ -1453,8 +1531,10 @@ form{
 	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: solid var(--borderColor) 0.2rem;
-	margin: 1rem;
+	margin: 0.5rem;
+	/*
 	padding-bottom: 0.5rem;
+	*/
 }
 .artistTitleCard{
 	min-height: 14rem;
@@ -1485,9 +1565,10 @@ form{
 	vertical-align: top;
 	text-decoration: none;
 	text-align: center;
-	margin: 1rem;
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
 	display: inline-block;
 	color: var(--textColor);
 	background: var(--glassBackground);
@@ -1606,6 +1687,8 @@ ol{
 	margin: 1rem;
 	margin-left: 0.2rem;
 	margin-right: 0.2rem;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
 	display: inline-block;
 	background: var(--glassBackground);
 	width: 8rem;
@@ -1701,14 +1784,15 @@ table, th, td{
 	text-align: center;
 	word-wrap: break-word;
 }
-.settingListCard table{
+.settingListCard > table{
 	table-layout: fixed !important;
 }
-.descriptionCard table{
+.descriptionCard > table{
 	table-layout: fixed !important;
 }
 .controlTable{
 	border: none !important;
+	table-layout: auto !important;
 }
 .controlTable td{
 	border: none !important;
@@ -1761,6 +1845,9 @@ table{
 	border-bottom: solid var(--borderColor) 0.2rem;
 	border-top: solid var(--borderColor) 0.2rem;
 }
+.plot{
+	font-family: monospace;
+}
 /*
 .descriptionCard h2{
 	background: var(--glassBackground);
@@ -1776,6 +1863,7 @@ table{
 	margin-bottom: 1rem;
 	border-bottom: solid var(--borderColor) 0.2rem;
 	border-top: solid var(--borderColor) 0.2rem;
+	overflow: hidden;
 }
 .remoteCard{
 	color: var(--textColor);
@@ -1916,13 +2004,14 @@ table{
 	vertical-align: top;
 }
 .inputCard{
+	text-decoration: none;
 	text-align: center;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background: var(--glassBackground);
 	border: solid var(--borderColor) 0.2rem;
-	width: 44dvw;
+	width: 46dvw;
 	display: inline-block;
-	margin: 1rem;
+	margin: 0.5rem;
 	float: none;
 	min-height: 3rem;
 	/*
@@ -1939,6 +2028,7 @@ table{
 pre{
 	text-align: left;
 	overflow: auto;
+	font-family: monospace;
 }
 td table tr td{
 	/*
@@ -1975,6 +2065,7 @@ th{
 }
 .weatherIcon{
 	font-size: 4rem;
+	line-height: 6rem;
 	text-shadow: 0px 0px 1rem var(--textColor);
 }
 .weatherHomepageIcon{
@@ -2007,6 +2098,7 @@ th{
 	*/
 	font-size: 1rem;
 	vertical-align: center;
+	border-top: none;
 }
 .weatherStationInfo{
 	font-size: 0.6rem;
@@ -2018,7 +2110,7 @@ th{
 .loginLogoutBox{
 	display: block;
 	text-align: right;
-	line-height: 3rem;
+	line-height: 2.5rem;
 	position: absolute;
 	right: 0px;
 	top: 0px;
@@ -2325,16 +2417,17 @@ pre{
 	bottom: 0px;
 	border-top: solid var(--borderColor) 0.1rem;
 	background: var(--glassBackground);
-	z-index: 0;
+	z-index: 20;
 }
 .globalPulse:hover{
 	z-index: 0 !important;
 }
 .globalSpinner{
 	position: fixed;
-	height: 6dvw;
-	left: 49dvw;
-	top: 80dvh;
+	height: 10dvw;
+	width: 10dvw;
+	left: 45dvw;
+	top: 70dvh;
 	/*
 	height: 6dvh;
 	border: solid var(--borderColor) 0.1rem;
@@ -2350,6 +2443,7 @@ pre{
 	top: 0px;
 	border-bottom: solid var(--borderColor) 0.1rem;
 	background: var(--glassBackground);
+	z-index: 20;
 }
 .gitRepoGraph{
 	border: solid var(--borderColor) 0.1rem;
@@ -2483,17 +2577,38 @@ details{
 	white-space: nowrap;
 }
 .singleStat{
+	color: var(--textColor);
 	display: inline-block;
 	border: 0.2rem var(--borderColor) solid;
 	background: var(--glassBackground);
 	white-space: nowrap;
 	margin: 0.1rem;
-	padding: 0.2rem;
+	overflow: hidden;
+}
+.singleStatValue{
+	border-left: 0.2rem var(--borderColor) solid;
+	background: var(--solidBackground);
+	padding: 0.5rem;
+	text-shadow: 0px 0px 0.2rem var(--highlightText);
+}
+.singleStatLabel{
+	padding: 0.5rem;
+	text-shadow: 0px 0px 0.2rem var(--highlightText);
+}
+.singleStatLabel>img{
+	height: 1rem;
 }
 .errorBanner{
 	width: 100%;
-	background: red;
+	background: red !important;
 	color: white !important;
+	font-weight: bold;
+}
+.warningBanner{
+	width: 100%;
+	background: yellow !important;
+	color: black !important;
+	font-weight: bold;
 }
 .imageUploadPreview{
 	vertical-align: top;
@@ -2536,12 +2651,25 @@ details{
 	border: 0.2rem var(--borderColor) solid;
 	width: 90%;
 	background: var(--glassBackground);
+	height: 2rem;
+}
+.progressBar > img{
+	height: 2rem;
+	float: right;
+}
+.pulse{
+	background-image: url("/pulse.gif");
+	background-size: contain;
+}
+.pulse .progressBarBar{
+	margin-bottom: 0.5rem;
 }
 .progressBarBar{
 	background: var(--highlightBackground);
 	color: var(--solidBackground);
 	min-width: 10%;
 	word-wrap: normal;
+	height: 2rem;
 }
 .searchCacheFileDateSize{
 	margin: 0px;
@@ -2691,6 +2819,11 @@ details > summary::-webkit-details-marker {
 summary {
 	list-style: none
 }
+summary h2:hover{
+	color: var(--highlightText) !important;
+	background: var(--highlightBackground) !important;
+	border-color: var(--highlightBorder) !important;
+}
 summary::-webkit-details-marker {
 	display: none;
 }
@@ -2698,10 +2831,21 @@ details summary {
 	cursor: pointer;
 }
 details summary h2::before {
-	content:"📕";
+	content:"⬇️ ";
+}
+details summary h2::after{
+	content:" ⬇️";
 }
 details[open] summary h2::before {
-	content:"📖";
+	content:"⬆️ ";
+}
+details[open] summary h2::after{
+	content:" ⬆️";
+}
+details{
+	h2{
+		border-top: none !important;
+	}
 }
 .clientVideoPlayer{
 	width: 100dvw;
@@ -2808,6 +2952,9 @@ details[open] summary h2::before {
 	position: relative;
 	z-index: 1;
 }
+/******************************************************************************/
+/* PRINT THEME */
+/******************************************************************************/
 @media print{
 	.header{
 		display: none !important;
