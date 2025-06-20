@@ -173,6 +173,21 @@ include("settingsHeader.php");
 	?>
 </div>
 
+<div id='videoResolverStableVersion' class='titleCard'>
+	<h2>Video Resolver Version</h2>
+	<ul>
+		<li>
+			Use the stable version of the video resolver software.
+		</li>
+		<li>
+			If you disable the STABLE version the UNSTABLE / NIGHTLY version will be used.
+		</li>
+	</ul>
+	<?php
+	buildYesNoCfgButton("/etc/2web/download-yt-dlp-stable-version.cfg","Stable Version","videoResolverStableVersion");
+	?>
+</div>
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/ytdl-resolver.php");
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

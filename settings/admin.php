@@ -1509,7 +1509,12 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("setFortuneFileStatus",$_POST)){
 	outputLog("Set fortune file ".$_POST["fortuneFileName"]." status to ".$_POST['setFortuneFileStatus']);
 	yesNoCfgSet( ("/etc/2web/fortune/".$_POST["fortuneFileName"].".cfg"), $_POST['setFortuneFileStatus'] );
-	echo "<hr><a class='button' href='/settings/fortune.php#fortuneFiles'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/fortune.php#fortuneFiles","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("videoResolverStableVersion",$_POST)){
+	outputLog("Use stable version of video resolver setting is being set to '".$_POST["videoResolverStableVersion"]."'");
+	yesNoCfgSet("/etc/2web/download-yt-dlp-stable-version.cfg", $_POST['videoResolverStableVersion'] );
+	backButton("/settings/cache.php#videoResolverStableVersion","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("enableGraphPlugin",$_POST)){
 	$graphName=$_POST['enableGraphPlugin'];
