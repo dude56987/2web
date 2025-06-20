@@ -362,7 +362,7 @@ if( ! function_exists("addToQueue")){
 			return false;
 		}
 		# build the path for the job file
-		$jobPath=( "/var/cache/2web/queue/$type/".str_replace(".","",microtime())."-".md5($command));
+		$jobPath=( "/var/cache/2web/queue/$type/".time().str_replace(".","",microtime())."-".md5($command));
 		# place command in the idle queue
 		file_put_contents($jobPath.".cmd", $command );
 		# return the path to the job file
