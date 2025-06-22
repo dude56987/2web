@@ -151,7 +151,7 @@ function usablePath($path){
 				$tempOutputData.="mkdir -p \"$pathCollector\"\n";
 				$tempOutputData.="chmod +X \"$pathCollector\"\n";
 				$tempOutputData.="</pre>";
-			 	$tempOutputData.="on the server to create the directory and fix the permissions. Then try to add the path again.";
+				$tempOutputData.="on the server to create the directory and fix the permissions. Then try to add the path again.";
 				outputLog($tempOutputData, "badLog");
 				$errorMessage="Use <pre>chmod +X $pathCollector</pre> on the server to fix the permissions. Then try to add the path again.";
 				addToLog("ERROR","Incorrect Permissions", $errorMessage);
@@ -303,12 +303,14 @@ function verifyChoice($cancelLink="/settings/"){
 		echo "		This is a potentially dangerous action. Only confirm this choice if you are positive that you know what you are doing.";
 		echo "	</div>\n";
 		echo "	<div>\n";
-		echo "		Would you like to confirm this change?";
+		echo "		Would you like to confirm this change?\n";
 		echo "	</div>\n";
 		echo "	<input type='text' name='confirmedChoice' value='yes' readonly hidden>\n";
-		echo "	<input class='button' type='submit' value='Yes' />\n";
+		echo "	<div class='listCard'>\n";
+		echo "		<button class='button' type='submit' value='Yes' >✔️ Yes</button>\n";
+		echo "		<a class='button' href='".$cancelLink."'>❌ No, Return to Settings</a>\n";
+		echo "	</div>\n";
 		echo "</form>\n";
-		echo "<a class='button' href='".$cancelLink."'>No, Return to Settings</a>\n";
 		echo "</div>\n";
 		return false;
 	}else{
@@ -888,7 +890,7 @@ if (array_key_exists("newUserName",$_POST)){
 		}
 	}
 }else if (array_key_exists("autoReboot",$_POST)){
-	outputLog("Setting randomize theme status to ".$_POST['autoReboot']);
+	outputLog("Setting auto reboot status to ".$_POST['autoReboot']);
 	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);
 	backButton('/settings/system.php#autoReboot',"🛠️ Return To Settings");
 	clear();
@@ -1343,6 +1345,7 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	# recreate the symlink to update the website
 	symlink(("/usr/share/2web/themes/".$theme),"/var/cache/2web/web/style.css");
+	outputLog("You may need to clear the cache to see the new theme in your browser.");
 	# draw the back button
 	backButton("/settings/themes.php#webTheme","🛠️ Return To Settings");
 	clear();
@@ -1370,14 +1373,14 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("repoRenderVideo",$_POST)){
 	outputLog("Render gource videos for repos ".$_POST['repoRenderVideo']);
 	yesNoCfgSet("/etc/2web/repos/renderVideo.cfg", $_POST['repoRenderVideo']);
-	echo "<hr><a class='button' href='/settings/repos.php#repoRenderVideo'>🛠️ Return To Settings</a><hr>";
+	backButton("/settings/repos.php#repoRenderVideo","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("reloadFortune",$_POST)){
-	outputLog("Remove cached file in '/var/cache/2web/web/fortune.index'");
-	unlink("/var/cache/2web/web/fortune.index");
-	outputLog("Building a new fortune");
 	# remove the cached fortune and make a new one
 	addToQueue("multi","2web --fortune");
+	#
+	outputLog("Remove cached file in '/var/cache/2web/web/fortune.index'");
+	outputLog("Building a new fortune");
 	outputLog("Fortune added to queue");
 	#
 	backButton("/fortune.php","🛠️ Return To Fortune");
@@ -1502,9 +1505,17 @@ if (array_key_exists("newUserName",$_POST)){
 	clear();
 }else if (array_key_exists("removeCachedVideo",$_POST)){
 	outputLog("Remove cached file in '/var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/'");
-	# remove the cached file
-	addToQueue("multi",("rm -rv /var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/"));
-	echo "<hr><a class='button' href='/web_player/".$_POST["removeCachedVideo"]."/".$_POST["removeCachedVideo"].".php'>🛠️ Return To Web Player</a><hr>";
+	#
+	if(file_exists("/var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/")){
+		# remove the cached file
+		addToQueue("multi",("rm -rv /var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/"));
+		outputLog("rm -rv /var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/", "goodLog");
+		outputLog("Video is scheduled to be removed", "goodLog");
+	}else{
+		# the cached video does not exist to be removed
+		outputLog("The Cached video could not be removed, nothing exists at '/var/cache/2web/web/RESOLVER-CACHE/".$_POST["removeCachedVideo"]."/'", "badLog");
+	}
+	backButton(("/settings/cache.php"),"🛠️ Return To Cache Settings");
 	clear();
 }else if (array_key_exists("setFortuneFileStatus",$_POST)){
 	outputLog("Set fortune file ".$_POST["fortuneFileName"]." status to ".$_POST['setFortuneFileStatus']);
