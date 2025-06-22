@@ -135,7 +135,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="ai2web";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>AI Settings</h2>\n";
-	echo "		<div class='errorBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
+	echo "		<div class='warningBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
 	echo "		<div class='listCard'>\n";
 	drawHeaderButton("🧠","Main","/settings/ai.php");
 	drawHeaderButton("🪄","Intergrations","/settings/ai_embeds.php");
