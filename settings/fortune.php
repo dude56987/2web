@@ -86,12 +86,12 @@ include("settingsHeader.php");
 			if(yesNoCfgCheck("/etc/2web/fortune/".$fortuneFile.".cfg")){
 				echo "	<form class='singleButtonForm' action='admin.php' method='post'>";
 				echo "		<input type='text' name='fortuneFileName' value='$fortuneFile' hidden>\n";
-				echo "		<button class='button' type='submit' name='setFortuneFileStatus' value='no'>🟢 Disable $fortuneFile</button>";
+				echo "		<button title='$fortuneFile fortunes are enabled click to DISABLE it'	class='smallButton' type='submit' name='setFortuneFileStatus' value='no'>🟢 Disable <span class='singleStatValue'>$fortuneFile</span></button>";
 				echo "	</form>";
 			}else{
 				echo "	<form class='singleButtonForm' action='admin.php' method='post'>";
 				echo "		<input type='text' name='fortuneFileName' value='$fortuneFile' hidden>\n";
-				echo "		<button class='button' type='submit' name='setFortuneFileStatus' value='yes'>◯ Enable $fortuneFile</button>";
+				echo "		<button title='$fortuneFile fortunes are disabled click to ENABLE it'	 class='smallButton' type='submit' name='setFortuneFileStatus' value='yes'>◯ Enable <span class='singleStatValue'>$fortuneFile</span></button>";
 				echo "	</form>";
 			}
 		}
