@@ -23,9 +23,14 @@ $moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","w
 # check for active processes
 foreach($moduleNames as $moduleName){
 	if ( file_exists("$moduleName.active")){
-		echo "<span class='activeProcess'>";
-		echo " ⚙️: $moduleName : ";
+		echo "<span class='singleStat'>";
+		echo "	<span class='singleStatLabel'>";
+		echo "		<img src='/spinner.gif' />";
+		echo "		$moduleName ";
+		echo "	</span>\n";
+		echo "	<span class='singleStatValue'>";
 		timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
+		echo "	</span>\n";
 		echo "</span>\n";
 	}
 }
@@ -138,6 +143,7 @@ if (is_readable("drives.index")){
 echo "	</div>";
 
 echo "		<div>";
+
 # draw session login time
 if (isset($_SESSION["user"])){
 	if (isset($_SESSION["loginTime"])){
@@ -152,12 +158,25 @@ if (isset($_SESSION["user"])){
 	}
 }
 
-$activeJobs=count(array_diff(scanDir("/var/cache/2web/queue/active/"),Array(".","..")));
-echo "			<span class='singleStat'>";
-echo "				<span class='singleStatLabel'>Active Jobs</span>\n";
-echo "				<span class='singleStatValue'>".$activeJobs."</span>\n";
-echo "			</span>";
+#
+$totalJobs=count(array_diff(scanDir("/var/cache/2web/queue/multi/"),Array(".","..")));
+$totalJobs+=count(array_diff(scanDir("/var/cache/2web/queue/single/"),Array(".","..")));
+$totalJobs+=count(array_diff(scanDir("/var/cache/2web/queue/idle/"),Array(".","..")));
 
+#
+$activeJobs=count(array_diff(scanDir("/var/cache/2web/queue/active/"),Array(".","..")));
+#
+if ($activeJobs > 0){
+	echo "			<span class='singleStat'>";
+	echo "				<span class='singleStatLabel'>";
+	echo "					<img src='/spinner.gif' />";
+	echo "					Running Jobs";
+	echo "				</span>\n";
+	echo "				<span class='singleStatValue'>".$activeJobs."/".$totalJobs."</span>\n";
+	echo "			</span>";
+}
+
+#
 echo "		</div>";
 
 # check the status of the fortunes for drawing large or small widgets
