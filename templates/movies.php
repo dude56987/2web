@@ -52,8 +52,8 @@ ob_flush();
 $indexFilePath="/var/cache/2web/web/movies/movies.index";
 # store the empty message
 $emptyMessage = "<ul>";
-$emptyMessage .= "<li>No Movies have been scanned into the libary!</li>";
-$emptyMessage .= "<li>Add libary paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
+$emptyMessage .= "<li>No Movies have been scanned into the library!</li>";
+$emptyMessage .= "<li>Add library paths in the <a href='/settings/nfo.php'>video on demand admin interface</a> to populate this page.</li>";
 $emptyMessage .= "<li>Add download links in <a href='/settings/ytdl2nfo.php'>video on demand admin interface</a></li>";
 $emptyMessage .= "</ul>";
 

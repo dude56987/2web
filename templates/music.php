@@ -42,7 +42,6 @@ drawPosterWidget("music");
 <div class='settingListCard'>
 <h1>
 	Music
-	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <?php
 

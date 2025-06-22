@@ -71,7 +71,6 @@ drawPosterWidget("repos",False,True);
 <div class='settingListCard'>
 <h1>
 	All Repos
-	<img class='globalPulse' src='/pulse.gif' />
 </h1>
 <?php
 flush();
