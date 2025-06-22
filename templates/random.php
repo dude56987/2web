@@ -151,7 +151,6 @@ SQLdrawPlaylistButton($filterType,"applications","🖥️ Applications");
 </div>
 
 <div class='settingListCard'>
-<img class='globalPulse' src='/pulse.gif'>
 <?php
 flush();
 ob_flush();
