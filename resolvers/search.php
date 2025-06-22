@@ -223,6 +223,9 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!startpage","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
+	# piped.video search
+	$bangCommands->append(array("!piped","https://piped.video/results?search_query="));
+	$bangCommands->append(array("!video","https://piped.video/results?search_query="));
 	# youtube search
 	$bangCommands->append(array("!youtube","https://piped.video/results?search_query="));
 	$bangCommands->append(array("!yt","https://piped.video/results?search_query="));
@@ -240,7 +243,11 @@ function checkForBangs($searchQuery){
 	# odysee video search
 	$bangCommands->append(array("!odysee","https://odysee.com/$/search?q="));
 	$bangCommands->append(array("!od","https://odysee.com/$/search?q="));
+	# rumble
+	$bangCommands->append(array("!rumble","https://rumble.com/search/video?q="));
+	$bangCommands->append(array("!r","https://rumble.com/search/video?q="));
 	# brave search
+	$bangCommands->append(array("!search","https://search.brave.com/search?q="));
 	$bangCommands->append(array("!brave","https://search.brave.com/search?q="));
 	$bangCommands->append(array("!b","https://search.brave.com/search?q="));
 	# mojeek search
@@ -263,6 +270,19 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!c","https://camelcamelcamel.com/search?sq="));
 	$bangCommands->append(array("!amazon","https://camelcamelcamel.com/search?sq="));
 	$bangCommands->append(array("!a","https://camelcamelcamel.com/search?sq="));
+	# amazon
+	$bangCommands->append(array("!AMAZON","https://www.amazon.com/s?k="));
+	$bangCommands->append(array("!A","https://www.amazon.com/s?k="));
+	# open street map
+	$bangCommands->append(array("!osm","https://www.openstreetmap.org/search?query="));
+	$bangCommands->append(array("!openstreetmap","https://www.openstreetmap.org/search?query="));
+	# other bangs to call OSM
+	$bangCommands->append(array("!map","https://www.openstreetmap.org/search?query="));
+	$bangCommands->append(array("!locate","https://www.openstreetmap.org/search?query="));
+	$bangCommands->append(array("!find","https://www.openstreetmap.org/search?query="));
+	# open weather map
+	$bangCommands->append(array("!owm","https://openweathermap.org/find?q="));
+	$bangCommands->append(array("!openweathermap","https://openweathermap.org/find?q="));
 	################################################################################
 	# check for !bang help command in search query
 	$bangHelp = "";
@@ -277,21 +297,27 @@ function checkForBangs($searchQuery){
 		$bangHelp .= "</table>";
 	}
 	################################################################################
+	if ($_SERVER["HTTPS"]){
+		$bangPrefix="https://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
+	}else{
+		$bangPrefix="http://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
+	}
+	################################################################################
 	# before anything else is done check for bang commands
 	foreach($bangCommands as $bang){
 		if (strpos($searchQuery,$bang[0])){
 			$cleanSearch=str_replace($bang[0],"",$searchQuery);
-			redirect($bang[1].$cleanSearch);
+			redirect($bangPrefix.$bang[1].$cleanSearch);
 		}
 	}
 	return $bangHelp;
 }
 ################################################################################
-function drawHead(){
+function drawHead($searchQuery=""){
 	# start building the webpage
 	echo "<html class='randomFanart'>\n";
 	echo "<head>\n";
-	echo " <title>2web Search</title>\n";
+	echo " <title>2web Search$searchQuery</title>\n";
 	echo " <script src='/2webLib.js'></script>\n";
 	echo " <link rel='stylesheet' type='text/css' href='/style.css'>\n";
 	echo " <link rel='icon' type='image/png' href='/favicon.png'>\n";
@@ -300,6 +326,57 @@ function drawHead(){
 	echo "<body>\n";
 }
 ################################################################################
+function readSearchCacheFile($filePath,$searchQuery){
+	$webDirectory="/var/cache/2web/web";
+	#addToLog("DEBUG","searchQuery words split","Running readSearchCacheFile() on '".var_export($filePath,true)."' for '".$searchQuery."'");
+	# if highlight is enabled
+	if (array_key_exists("highlight",$_GET)){
+		#
+		$tempFileData=file($webDirectory."/search/".$filePath);
+		#
+		addToLog("DEBUG","searchQuery words split","searchQuery data'".var_export($searchQuery,true)."'");
+		$searchQueryArray=explode(" ",$searchQuery);
+		addToLog("DEBUG","searchQuery words split","searchQuery array '".var_export($searchQueryArray,true)."'");
+
+		#addToLog("DEBUG","searchQuery words split","Loaded file data '".var_export($tempFileData,true)."'");
+		foreach($tempFileData as $line){
+			#addToLog("DEBUG","searchQuery words split","line data <pre>".var_export($line,true)."</pre>");
+			$ogLine=$line;
+			#
+			$tempLineData=$line;
+			#addToLog("DEBUG","searchQuery words split","searchQuery before explode ".var_export($searchQuery,true));
+			#addToLog("DEBUG","searchQuery words split","searchQuery after explode ".var_export(explode(" ",$searchQuery),true));
+			# highlight each word found in the search query
+			foreach($searchQueryArray as $word){
+				#addToLog("DEBUG","searchQuery words split","word being search for in the searchQuery '".var_export($word,true)."'");
+				#addToLog("DEBUG","searchQuery words split","word being search for in the searchQuery '".var_export($word,true)."'");
+				# only highlight lines with no pathing on them
+				if (! (stripos($line,"='") !== false) ){
+					#addToLog("DEBUG","searchQuery words split","Found Editable Line");
+					# replace all varations of the word
+					$tempLineData=str_ireplace($word,("<span class='enabledSetting'>".$word."</span>"),$tempLineData);
+
+					if (stripos($line,$word) !== false){
+						addToLog("DEBUG","searchQuery words split","Replacing word <pre>".var_export($word,true)."</pre> in line <pre>".var_export($ogLine,true)."</pre> with <pre>".var_export($tempLineData,true)."</pre>");
+					}
+					#$line=str_ireplace($word,("<span class='enabledSetting'>".$word."</span>"),$line);
+					#addToLog("DEBUG","searchQuery words split","Replacing word <pre>".var_export($word,true)."</pre> in line <pre>".var_export($ogLine,true)."</pre> with <pre>".var_export($line,true)."</pre>");
+				}
+				#addToLog("DEBUG","searchQuery words split","line = '".var_export($line,true)."'");
+			}
+			#
+			echo $tempLineData;
+			#addToLog("DEBUG","searchQuery words split","Line Processing Complete");
+			# send each processed line to the user
+			clear();
+		}
+	}else{
+		# if highlight is not enabled read the cached file without processing
+		echo file_get_contents($webDirectory."/search/".$filePath);
+		# send file output to user
+		clear();
+	}
+}
 ################################################################################
 function checkSpelling($searchQuery){
 	# check the spelling and draw links to other sections
@@ -386,7 +463,10 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# convert the search to lowercase
 	$searchQuery = strtolower($searchQuery);
 	#
-	drawHead();
+	$cleanQuery= cleanText($searchQuery);
+	$cleanQuery= spaceCleanedText($cleanQuery);
+	#
+	drawHead(" - ".$searchQuery);
 	# add the header document after building the document start
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# create md5sum for the query to store output
@@ -432,6 +512,17 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			timeToHuman($processingTime);
 			echo "	</span>\n";
 			echo "</span>\n";
+			if (array_key_exists("highlight",$_GET)){
+				# draw the button to disable highlighting
+				echo "<a class='button right' href='?q=".$_GET["q"]."'>\n";
+				echo "🌃 Disable Highlight\n";
+				echo "</a>\n";
+			}else{
+				# draw the highlight button
+				echo "<a class='button right' href='?highlight&q=".$_GET["q"]."'>\n";
+				echo "💡 Highlight\n";
+				echo "</a>\n";
+			}
 			echo "<hr>\n";
 			checkSpelling($_GET["q"]);
 			$noFoundCategories=true;
@@ -455,6 +546,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				}
 			}
 			if ($noFoundCategories == false){
+				echo "<a class='button' href='#external'>External Links</a>\n";
 				echo "</div>\n";
 			}
 			# load the page as is with the auto refresh buttons
@@ -471,7 +563,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 						echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
 						echo "<div>\n";
 						echo "<hr>\n";
-						echo file_get_contents($webDirectory."/search/".$filePath);
+						readSearchCacheFile($filePath,$searchQuery);
 						echo "<hr>\n";
 						echo "</div>\n";
 					}
@@ -480,14 +572,27 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		}else{
 			logPrint("the search has not finished");
 			checkSpelling($_GET["q"]);
+			$autoRefreshValue="";
 			# build the refresh
 			if (array_key_exists("autoRefresh",$_GET)){
-				echo "<img class='localPulse' src='/pulse.gif'>\n";
 				echo "<div class='listCard'>";
 				echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
+				$autoRefreshValue="autoRefresh&";
 			}else{
 				echo "<div class='listCard'>";
 				echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
+				$autoRefreshValue="";
+			}
+			if (array_key_exists("highlight",$_GET)){
+				# draw the button to disable highlighting
+				echo "<a class='button right' href='?".$autoRefreshValue."q=".$_GET["q"]."'>\n";
+				echo "🌃 Disable Highlight\n";
+				echo "</a>\n";
+			}else{
+				# draw the highlight button
+				echo "<a class='button right' href='?".$autoRefreshValue."highlight&q=".$_GET["q"]."'>\n";
+				echo "💡 Highlight\n";
+				echo "</a>\n";
 			}
 			echo "</div>";
 
@@ -512,6 +617,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				}
 				# draw the progress bar for the search
 				echo "<div class='progressBar'>\n";
+				echo "\t<img class='right' loading='lazy' src='/spinner.gif' />";
 				if($finishedVersions > 0){
 					echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
 					echo ($finishedVersions."/".$totalVersions." %".$progress);
@@ -529,7 +635,6 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			}else{
 				echo "<div class='elapsedTime'>Request has not yet started processing, Please wait for server to catch up...</div>\n";
 			}
-
 			$noFoundCategories=true;
 			# draw the jump buttons
 			foreach($discoveredFiles as $filePath ){
@@ -551,6 +656,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 				}
 			}
 			if ($noFoundCategories == false){
+				echo "<a class='button' href='#external'>External Links</a>\n";
 				echo "</div>\n";
 			}
 			# load the page as is with the auto refresh buttons
@@ -567,7 +673,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 						echo "<h2 id='$jumpLink'>$headerTitle</h2>\n";
 						echo "<div>";
 						echo "<hr>\n";
-						echo file_get_contents($webDirectory."/search/".$filePath);
+						readSearchCacheFile($filePath,$searchQuery);
 						echo "<hr>\n";
 						echo "</div>";
 					}
@@ -584,12 +690,22 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	}else{
 		# build the refresh
 		if (array_key_exists("autoRefresh",$_GET)){
-			echo "<img class='localPulse' src='/pulse.gif'>\n";
 			echo "<div class='listCard'>";
 			echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
 		}else{
 			echo "<div class='listCard'>";
 			echo "<a class='button' href='search.php?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
+		}
+		if (array_key_exists("highlight",$_GET)){
+			# draw the button to disable highlighting
+			echo "<a class='button right' href='?q=".$_GET["q"]."'>\n";
+			echo "🌃 Disable Highlight\n";
+			echo "</a>\n";
+		}else{
+			# draw the highlight button
+			echo "<a class='button right' href='?highlight&q=".$_GET["q"]."'>\n";
+			echo "💡 Highlight\n";
+			echo "</a>\n";
 		}
 		echo "</div>";
 
@@ -640,6 +756,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "</div>\n";
 		echo "</div>\n";
 	}
+
+	echo "<h2 id='external'>External Search Links</h2>";
 
 	moreSearchLinks($searchQuery);
 	moreDataLinks($searchQuery);
