@@ -327,6 +327,10 @@ if ($noFileFound){
 ?>
 </div>
 <?php
+#
+loadSearchIndexResults($albumTitle,"music");
+#
+drawPosterWidget("music", True);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

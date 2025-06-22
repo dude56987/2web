@@ -171,6 +171,10 @@ if (file_exists("albums.index")){
 ?>
 </div>
 <?php
+#
+loadSearchIndexResults($artist,"music");
+#
+drawPosterWidget("music", True);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
