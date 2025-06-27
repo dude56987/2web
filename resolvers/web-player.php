@@ -1,7 +1,7 @@
 <!--
 ########################################################################
 # 2web player to launch playback on a webpage
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -276,11 +276,11 @@ if (array_key_exists("url",$_GET)){
 // file upload progress function
 function postFile() {
 	//
-  var formdata = new FormData();
+	var formdata = new FormData();
 	// get the first file in the upload form
-  formdata.append('uploadMediaFile', document.getElementById('fileUploadInput').files[0]);
+	formdata.append('uploadMediaFile', document.getElementById('fileUploadInput').files[0]);
 	// create a request
-  var request = new XMLHttpRequest();
+	var request = new XMLHttpRequest();
 	// add a event trigger
 	request.upload.addEventListener('progress', function (event) {
 		// get the size for the file uploaded
@@ -292,26 +292,26 @@ function postFile() {
 			// set the progress bar width
 			document.getElementById('progressBarBar').style.width = percent + '%';
 			// the progress bar text
-      document.getElementById('progressBarBar').innerHTML = String(percent) + '% ' + String(Math.floor(event.loaded / 1000000)) + "mb/" + String(Math.floor(fileSize / 1000000)) + "mb";
+			document.getElementById('progressBarBar').innerHTML = String(percent) + '% ' + String(Math.floor(event.loaded / 1000000)) + "mb/" + String(Math.floor(fileSize / 1000000)) + "mb";
 			// hide the upload input and show the progress bar
 			document.getElementById('stopButton').style.display = "block";
 			document.getElementById('uploadButton').style.display = "none";
 			// swap file picker and progress bar elements
 			document.getElementById('fileUploadInput').style.display = "none";
 			document.getElementById('progressBar').style.display = "block";
-    }
+		}
 		// if the file upload has finished draw the full progress bar
 		if(event.loaded == event.total){
 			//
-      document.getElementById('progressBarBar').style.width = '100%';
-      document.getElementById('progressBarBar').innerHTML = '100% ' + String(event.loaded) + "/" + String(fileSize);
+			document.getElementById('progressBarBar').style.width = '100%';
+			document.getElementById('progressBarBar').innerHTML = '100% ' + String(event.loaded) + "/" + String(fileSize);
 			// hide the progress bar and show the file input
 			document.getElementById('stopButton').style.display = "none";
 			document.getElementById('uploadButton').style.display = "block";
 			// swap file picker and progress bar elements
 			document.getElementById('fileUploadInput').style.display = "block";
 			document.getElementById('progressBar').style.display = "none";
-    }
+		}
 	});
 	// try and capture the redirect when it is loaded
 	request.onload = () => {
@@ -438,6 +438,7 @@ foreach($sourceFiles as $sourceFile){
 	$directLinkSum=str_replace(".php","",basename($sourceFile));
 	#
 	$cachePathTemplate="/RESOLVER-CACHE/".$directLinkSum."/video";
+	$pathPrefix=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$directLinkSum."/";
 	#
 	$thumbTemplate=$_SERVER["DOCUMENT_ROOT"].$cachePathTemplate;
 	#echo "THUMB TEMPLATE = '$thumbTemplate'<br>\n";
@@ -457,7 +458,11 @@ foreach($sourceFiles as $sourceFile){
 			$videoTitle=str_replace(".php","",basename($sourceFile));
 		}
 	}
-	echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
+	if(file_exists($pathPrefix."verified.cfg")){
+		echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
+	}else{
+		echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
+	}
 
 	if(file_exists($thumbTemplate.".png")){
 		echo "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
@@ -469,11 +474,18 @@ foreach($sourceFiles as $sourceFile){
 	#
 	$localCachePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum;
 	#
-	if(file_exists($thumbTemplate.".mp4") or file_exists($thumbTemplate.".mp3") or file_exists($localCachePath.".mp4")){
+	if(file_exists($pathPrefix."verified.cfg") or file_exists($pathPrefix."video.mp4")){
 		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+	}else if(file_exists($pathPrefix."video.m3u")){
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟡</div></div>\n";
 	}else{
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>◯</div></div>\n";
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
 	}
+	#if(file_exists($thumbTemplate.".mp4") or file_exists($thumbTemplate.".mp3") or file_exists($localCachePath.".mp4")){
+	# echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+	#}else{
+	# echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>◯</div></div>\n";
+	#}
 	echo "</a>\n";
 	# increment the processed titles
 	$processedTitles+=1;
