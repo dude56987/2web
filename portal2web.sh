@@ -32,18 +32,32 @@ function avahi2csv(){
 	hostArray=$(echo "$rawData" | grep "hostname = ")
 	# only include remote hosts, this will remove localhost services
 	hostArray=$(echo "$hostArray" | grep ".local")
+	# cleanup the host array data
+	# - remove duplicates
+	# - randomize the ordering
+	hostArray=$(echo "$hostArray" | sort -u)
+	hostArray=$(echo "$hostArray" | sort --random-sort )
 	# for each entry parse the data and combine it into links
 	dataLength=$(echo "$hostArray" | wc -l)
-	numbers=$(seq 1 "$dataLength")
+	#
+	#numbers=$(seq 1 "$dataLength")
 	outputData=""
-	for lineNumber in $numbers;do
-		# pull the line number from the array
-		lineHostName=$(echo "$hostArray" | head -n "$lineNumber"| tail -n 1)
-		# cleanup the data to show only the domain itself
-		lineHostName=$(echo "$lineHostName" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+	#startDebug
+	#IFSBACKUP=$IFS
+	#IFS=!'\n'
+	#for lineNumber in $numbers;do
+	#for lineNumber in $( seq 1 "$dataLength" );do
+	echo -n "$hostArray" | while read -r hostLine;do
+		## pull the line number from the array
+		#lineHostName=$(echo "$hostArray" | head -n "$lineNumber" | tail -n 1)
+		## cleanup the data to show only the domain itself
+		#lineHostName=$(echo "$lineHostName" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
+		lineHostName=$(echo "$hostLine" | sed "s/hostname = \[//g"| sed "s/\]$//g" | tr -s ' ' | tr -d ' ' )
 		# print the line if it is not blank
 		echo "$lineHostName"
 	done
+	#IFS=$IFSBACKUP
+	#stopDebug
 }
 ########################################################################
 function avahi2csvOld(){
@@ -60,10 +74,13 @@ function avahi2csvOld(){
 	#echo "Found $dataLength services with avahi..."
 	# for each entry parse the data and combine it into links
 	#IFS=!'\n'
+	#IFSBACKUP=$IFS
+	#IFS=!'\n'
 	numbers=$(seq 1 "$dataLength")
-	for lineNumber in $numbers;do
+	#for lineNumber in $numbers;do
+	for lineNumber in $( seq 1 "$dataLength" );do
 		#echo "line = $lineNumber"
-		lineHostName=$(echo "$hostArray" | head -n "$lineNumber"| tail -n 1)
+		lineHostName=$(echo "$hostArray" | head -n "$lineNumber" | tail -n 1)
 		lineIp=$(echo "$ipArray" | head -n "$lineNumber"| tail -n 1)
 		linePort=$(echo "$portArray" | head -n "$lineNumber"| tail -n 1)
 		#
@@ -84,6 +101,7 @@ function avahi2csvOld(){
 		echo "$proto,$lineHostName:$linePort,$lineIp:$linePort"
 		#echo "---- end entry ----"
 	done
+	#IFS=$IFSBACKUP
 }
 
 ################################################################################
@@ -98,6 +116,10 @@ function scanLink(){
 	scanPorts="$2"
 	scanPaths="$3"
 	webDirectory="$4"
+	# skip blank links
+	if [ "$scanLink" == "" ];then
+		return
+	fi
 	# scan ports
 	echo "$scanPorts" | shuf | while read -r scanPort;do
 		name=$(echo "$scanPort" | cut -d',' -f1)
@@ -107,11 +129,13 @@ function scanLink(){
 		INFO "Scanning $scanLink:$port"
 		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink:$port"
 		if [ $? -eq 0 ];then
-			ALERT "Found link at $scanLink:$port, generating link..."
+			#ALERT "Found link at $scanLink:$port, generating link..."
+			INFO "Found link at $scanLink:$port, generating link..."
 			# for working links generate index files
 			generateLink "$scanLink:$port" "$name" "$description" "$webDirectory"
 		else
-			ALERT "No link found for $scanLink:$port..."
+			#ALERT "No link found for $scanLink:$port..."
+			INFO "No link found for $scanLink:$port..."
 		fi
 		# reset port
 		port=""
@@ -125,20 +149,28 @@ function scanLink(){
 		INFO "Scanning $scanLink$path"
 		wget --tries=1 -q -S --timeout=15 -O /dev/null -o /dev/null "$scanLink$path"
 		if [ $? -eq 0 ];then
-			ALERT "Found link at $scanLink$path, generating link..."
+			#ALERT "Found link at $scanLink$path, generating link..."
+			INFO "Found link at $scanLink$path, generating link..."
 			# for working links generate index files
 			generateLink "$scanLink$path" "$name" "$description" "$webDirectory"
 		else
-			ALERT "No link found for $scanLink$path..."
+			#ALERT "No link found for $scanLink$path..."
+			INFO "No link found for $scanLink$path..."
 		fi
 	done
 }
 ################################################################################
 function generateLink(){
+	# generate a link
+	#
 	link="$1"
 	name="$2"
 	description="$3"
 	webDirectory="$4"
+	# skip blank links
+	if [ "$link" == "" ];then
+		return
+	fi
 	# create sum
 	linkSum=$(echo "$link" | md5sum | cut -d' ' -f1)
 	# figure out the domain from the link
@@ -149,9 +181,11 @@ function generateLink(){
 	# create the domain directory
 	createDir "$webDirectory/kodi/portal/${domain}/"
 	createDir "$webDirectory/portal/${domain}/"
+
 	#if echo "$domain" | grep -q ".local";then
 	#	domain=$(echo "$domain" | sed "s/\.local//g" )
 	#fi
+
 	# generate qr codes for each link
 	# update the link once every 14 days
 	if cacheCheck "$webDirectory/portal/${domain}/$linkSum-web.png" "14";then
@@ -160,6 +194,9 @@ function generateLink(){
 		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}/$linkSum-qr.png" "$link"
 		# create a screenshot of the webpage link
 		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 30000 "$link" "$webDirectory/portal/${domain}/$linkSum-web.png"
+		# create the thumbnail
+		convert -quiet  "$webDirectory/portal/${domain}/$linkSum-web.png" -resize "300x200" "$webDirectory/portal/${domain}/$linkSum-thumb.png"
+
 		# resize the qr code in order to use it in composite
 		convert "$webDirectory/portal/${domain}/$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}/$linkSum-qr.png"
 		# save the combined file as the image to use in the web interface
@@ -170,7 +207,7 @@ function generateLink(){
 		fi
 		# create .index files for direct links
 		{
-			echo "	<a class='showPageEpisode' target='_BLANK' href='$link'>"
+			echo "	<a class='showPageEpisode' href='/exit.php?to=$link'>"
 			echo "		<h2>$domain</h2>"
 			echo "		<img src='/portal/${domain}/$linkSum.png'>"
 			echo "		<div class='showIndexNumbers'>$name</div>"
@@ -204,6 +241,11 @@ function generateLink(){
 			echo "[InternetShortcut]"
 			echo "URL=$link"
 		} > "$webDirectory/kodi/portal/${domain}/${name}.url"
+
+		# add the raw link to the raw link index
+		touch "/var/cache/2web/web/portal/raw.index"
+		addToIndex "${link}" "/var/cache/2web/web/portal/raw.index"
+
 		chmod +x "$webDirectory/kodi/portal/${domain}/${name}.url"
 		# link the portal info button to the portal page
 		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain/index.php"
@@ -219,7 +261,21 @@ function generateLink(){
 
 		# add to sql
 		SQLaddToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/data.db" "portal"
+
+		# add this comic to the search index
+		addToSearchIndex "$webDirectory/portal/${domain}/$linkSum.index" "${domain} ${name}" "/portal/$domain/"
 	fi
+}
+################################################################################
+function loadBookmarks(){
+	# load a bookmarks.html file as a list of links
+	bookmarkData="$(cat "$1" | sed "s/ /\n/g" | grep -i "href=" | sed 's/"/\n/g')"
+	#
+	httpData=$(echo "$bookmarkData" | grep -i "^http:")
+	httpsData=$(echo "$bookmarkData" | grep -i "^https:")
+	#
+	echo "$httpData"
+	echo "$httpsData"
 }
 ################################################################################
 function update(){
@@ -227,6 +283,10 @@ function update(){
 	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/kodi/sources.d/" "/etc/2web/config_default/portal2web_sources.cfg")
 	# remove empty lines and other problems in sources
 	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
+
+	drawSmallHeader "Sources"
+	echo "$portalSources"
+	drawLine
 
 	# this will launch a processing queue that downloads updates to portal
 	echo "Loading up sources..."
@@ -244,6 +304,10 @@ function update(){
 	portalScanSources=$(grep -v "^#" /etc/2web/portal/scanSources.cfg)
 	portalScanSources=$(echo -en "$portalScanSources\n$(grep --invert-match --no-filename "^#" /etc/2web/portal/scanSources.d/*.cfg)")
 	portalScanSources=$(echo "$portalScanSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+
+	drawSmallHeader "Scan Sources"
+	echo "$portalSources"
+	drawLine
 
 	# load ports to scan on portal scan sources
 	echo "Loading up sources..."
@@ -288,8 +352,11 @@ function update(){
 	# copy over config page
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/portal.php"
 	# scan the sources
-	ALERT "Scanning portal Sources: $portalSources"
-
+	ALERT "Scanning portal Sources"
+	drawLine
+	echo "$portalSources"
+	drawLine
+	#
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(cpuCount)
 	else
@@ -331,14 +398,18 @@ function update(){
 	# if at least one source exists
 	if echo "$portalSources" | grep -q "http";then
 		# read the portal sources and generate links
-		echo "$portalSources" | shuf | while read -r portalSource;do
+		#echo "$portalSources" | shuf | while read -r portalSource;do
+		IFSBACKUP=$IFS
+		IFS=!'\n'
+		#for portalSource in $(echo "$portalSources" | shuf);do
+		echo "$portalSources" | sort -u | shuf | while read -r portalSource;do
 			# split portal info up based on commas
 			portalSourceName=$(echo "$portalSource" | cut -d',' -f1)
 			portalSourceLink=$(echo "$portalSource" | cut -d',' -f2)
 			portalSourceDesc=$(echo "$portalSource" | cut -d',' -f3)
 			# add to tally
 			processedSources=$(( $processedSources + 1 ))
-			ALERT "Processing '$portalSource'"
+			#ALERT "Processing '$portalSource'"
 			# generate the source sum
 			portalSourceSum=$(echo "$portalSource" | md5sum | cut -d' ' -f1)
 			if cacheCheck "$webDirectory/portal/portal2web_$portalSourceSum.cfg" "1";then
@@ -348,12 +419,18 @@ function update(){
 				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
+		IFS=$IFSBACKUP
 	fi
 	# check that at least one source exists
 	if echo "$portalScanSources" | grep -q "http";then
 		# scan portal sources
-		echo "$portalScanSources" | shuf | while read -r portalSource;do
-			ALERT "Processing '$portalSource'"
+		#echo "$portalScanSources" | shuf | while read -r portalSource;do
+		IFSBACKUP=$IFS
+		IFS=!'\n'
+		#for portalSource in $(echo "$portalScanSources" | shuf);do
+		#echo "$portalScanSources" | shuf | while read -r portalSource;do
+		echo "$portalScanSources" | sort -u | shuf | while read -r portalSource;do
+			#ALERT "Processing '$portalSource'"
 			# add to tally
 			processedSources=$(( $processedSources + 1 ))
 			# generate the source sum
@@ -365,13 +442,20 @@ function update(){
 				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
+		IFS=$IFSBACKUP
 	fi
 	# check if zeroconf should be scanned and added to the portal
 	if yesNoCfgCheck "/etc/2web/portal/scanAvahi.cfg";then
 		# look for bonjour/zeroconf/avahi connections
 		# - sort and keep only unique entries
+		#avahi2csv | sort -u | shuf | while read -r portalSource;do
+		IFSBACKUP=$IFS
+		IFS=!'\n'
+		#for portalSource in $(avahi2csv | sort -u | shuf);do
+		#avahi2csv | sort -u | tr -s '\n' | shuf | while read -r portalSource;do
+		#avahi2csv | sort -u | shuf | while read -r portalSource;do
 		avahi2csv | sort -u | shuf | while read -r portalSource;do
-			ALERT "Processing '$portalSource'"
+			#ALERT "Processing '$portalSource'"
 			# add to tally
 			processedSources=$(( $processedSources + 1 ))
 			# split up the portal data
@@ -386,19 +470,44 @@ function update(){
 				waitQueue 0.2 "$totalCPUS"
 			fi
 		done
+		IFS=$IFSBACKUP
 	fi
-
 	# block for parallel threads here
 	blockQueue 1
 
-	if test -f "$webDirectory/new/portal.index";then
-		tempList=$(cat "$webDirectory/new/portal.index" | uniq | tail -n 800 )
-		echo "$tempList" > "$webDirectory/new/portal.index"
+	if test -f "/var/cache/2web/web/new/portal.index";then
+		tempList=$(cat "/var/cache/2web/web/new/portal.index" | uniq | tail -n 800 )
+		echo "$tempList" > "/var/cache/2web/web/new/portal.index"
 	fi
-	if test -f "$webDirectory/random/portal.index";then
-		tempList=$(cat "$webDirectory/random/portal.index" | uniq | tail -n 800 )
-		echo "$tempList" > "$webDirectory/random/portal.index"
+	if test -f "/var/cache/2web/web/random/portal.index";then
+		tempList=$(cat "/var/cache/2web/web/random/portal.index" | uniq | tail -n 800 )
+		echo "$tempList" > "/var/cache/2web/web/random/portal.index"
 	fi
+	if checkFileDataSum "/var/cache/2web/web/portal/raw.index";then
+		# remove duplicates
+		#rawData="$(cat "/var/cache/2web/web/portal/raw.index" | sort -u)"
+		#echo "$rawData" > "/var/cache/2web/web/portal/raw.index"
+		{
+			# rebuild the html bookmark import file
+			echo "<!DOCTYPE NETSCAPE-Bookmark-file-1>"
+			echo "	<!--This is an automatically generated file."
+			echo "	It will be read and overwritten.";
+			echo "	Do Not Edit! -->"
+			echo "	<Title>Bookmarks</Title>"
+			echo "	<H1>Bookmarks</H1>"
+			echo "	<DL><P>"
+			IFSBACKUP=$IFS
+			IFS=!'\n'
+			for link in $(cat "/var/cache/2web/web/portal/raw.index" | sort -u | shuf );do
+				linkDate="$(date "+%s")"
+				echo "			<DT><A HREF=\"${link}\" ADD_DATE=\"${linkDate}\" LAST_VISIT=\"${linkDate}\" LAST_MODIFIED=\"${linkDate}\">${link}</A>"
+			done
+			IFS=$IFSBACKUP
+			echo "	</DL><P>"
+		} > "$webDirectory/kodi/portal/bookmarks.html"
+		setFileDataSum "/var/cache/2web/web/portal/raw.index"
+	fi
+
 	addToLog "INFO" "Update FINISHED" "$(date)"
 }
 ################################################################################
@@ -423,41 +532,41 @@ function nuke(){
 	rm -rv "$webDirectory/random/portal.index" || echo "No portal index..."
 }
 ################################################################################
-function main(){
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "portal2web"
-		lockProc "portal2web"
-		update $@
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		lockProc "portal2web"
-		resetCache
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockProc "portal2web"
-		nuke
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "portal2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "portal2web"
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "portal2web Version: "
-		cat /usr/share/2web/version_portal2web.cfg
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/portal2web.txt"
-	else
-		checkModStatus "portal2web"
-		lockProc "portal2web"
-		update $@
-		showServerLinks
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/portal/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/portal.php"
-		drawLine
-	fi
-}
+# set the theme of the lines in CLI output
+LINE_THEME="computers"
+#
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	checkModStatus "portal2web"
+	lockProc "portal2web"
+	update "$@"
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	lockProc "portal2web"
+	resetCache
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "portal2web"
+	nuke
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "portal2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "portal2web"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "portal2web Version: "
+	cat /usr/share/2web/version_portal2web.cfg
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/portal2web.txt"
+else
+	checkModStatus "portal2web"
+	lockProc "portal2web"
+	#startSpinner
+	update "$@"
+	#stopSpinner
+	showServerLinks
+	drawSmallHeader "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/portal/"
+	echo "http://$(hostname).local:80/settings/portal.php"
+	drawLine
+fi
 ################################################################################
-main "$@"
-exit
