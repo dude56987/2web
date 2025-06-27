@@ -1,7 +1,10 @@
-<?PHP
+<?php
+ini_set('display_errors', 1);
+include("/usr/share/2web/2webLib.php");
+requireGroup("resolver");
 ########################################################################
 # 2web resolver for caching and playback of video links using yt-dlp
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -257,6 +260,13 @@ function cacheResolve($sum,$webDirectory){
 ################################################################################
 if (array_key_exists("url",$_GET)){
 	$videoLink = $_GET['url'];
+	# check the url is not a path
+	if (file_exists($_SERVER["DOCUMENT_ROOT"].$_GET["url"])){
+		#addToLog("DEBUG","ytdl-resolver.php reading link",($_SERVER["DOCUMENT_ROOT"].$_GET["url"]));
+		#addToLog("DEBUG","ytdl-resolver.php","Discovered direct link path, redirecting to path '".$_GET["url"]."'");
+		# redirect to the direct path
+		redirect($_GET["url"]);
+	}
 	debug("URL is ".$videoLink."<br>");
 	# make sure the url is a webpage
 	$videoMimeType=get_headers($videoLink, true);
@@ -276,12 +286,16 @@ if (array_key_exists("url",$_GET)){
 	}else{
 		logPrint("No Header was returned.<br>");
 	}
+	#addToLog("DEBUG","resolver.php","hash input pre clean = '$videoLink'");
 	# remove parenthesis from video link if they exist
 	$videoLink = str_replace('"','',$videoLink);
 	$videoLink = str_replace("'","",$videoLink);
 
 	# create the sum of the file
 	$sum = hash("sha512",$videoLink,false);
+
+	#addToLog("DEBUG","resolver.php","hash input = '$videoLink'");
+	#addToLog("DEBUG","resolver.php","hash sum = '$sum'");
 
 	debug("[DEBUG]: SUM is ".$sum."<br>");
 	// check for the cache flag
@@ -427,9 +441,10 @@ if (array_key_exists("url",$_GET)){
 	echo "<th>Verified</th>";
 	echo "<th>Thumbnail</th>";
 	echo "<th>HLS</th>";
-	echo "<th>MP4</th>";
+	echo "<th>MP4/MP3</th>";
 	echo "<th>JSON</th>";
 	echo "<th>Title</th>";
+	echo "<th>Remove</th>";
 	echo "<th>Web Player</th>";
 	echo "<th>Link</th>";
 	echo "</tr>";
@@ -460,10 +475,32 @@ if (array_key_exists("url",$_GET)){
 			echo "<td class='disabledSetting'>No M3U</td>";
 		}
 		# check for mp4 file
-		if (is_readable($sourcePath."video.mp4")){
-			echo "<td class='enabledSetting'>MP4 Found</td>";
+		if (is_readable($sourcePath."video.mp3")){
+			echo "<td class='enabledSetting'>";
+			echo "MP3 Found";
+			echo "<span class='singleStat'>";
+			echo "<span class='singleStatLabel'>";
+			echo "Size";
+			echo "</span>";
+			echo "<span class='singleStatValue'>";
+			echo bytesToHuman(filesize($sourcePath."video.mp3"));
+			echo "</span>";
+			echo "</span>";
+			echo "</td>";
+		}else if (is_readable($sourcePath."video.mp4")){
+			echo "<td class='enabledSetting'>";
+			echo "MP4 Found";
+			echo "<span class='singleStat'>";
+			echo "<span class='singleStatLabel'>";
+			echo "Size";
+			echo "</span>";
+			echo "<span class='singleStatValue'>";
+			echo bytesToHuman(filesize($sourcePath."video.mp4"));
+			echo "</span>";
+			echo "</span>";
+			echo "</td>";
 		}else{
-			echo "<td class='disabledSetting'>No MP4</td>";
+			echo "<td class='disabledSetting'>No MP4 or MP3</td>";
 		}
 
 		$sourceHash=basename($sourcePath);
@@ -489,6 +526,13 @@ if (array_key_exists("url",$_GET)){
 			$videoTitle=$sourcePath;
 		}
 		echo "<td>$videoTitle</td>";
+
+		echo "<td>\n";
+
+		echo "	<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
+		echo "		<button class='button' type='submit' name='removeCachedVideo' value='$sourceHash'>Remove Cached Video</button>\n";
+		echo "	</form>\n";
+		echo "</td>\n";
 
 		# use the web player if it is available
 		if (is_readable("/var/cache/2web/web/web_player/".$sourceHash."/".$sourceHash.".php")){

@@ -68,28 +68,43 @@ function drawRemoteHeader(){
 	echo "			</table>\n";
 }
 ################################################################################
+startSession();
 # check for the selected remote
 if (array_key_exists("selectedRemote",$_SESSION)){
 	# get the user selected remote
 	$selectedRemote = $_SESSION['selectedRemote'];
+	addToLog("DEBUG","kodi-player.php","The using remote control at '$selectedRemote'");
 }else{
+	addToLog("DEBUG","kodi-player.php","The user has not selected a remote control");
+	addToLog("DEBUG","kodi-player.php",var_export($_SESSION,true));
 	redirect("/remote.php");
 }
 ################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
-	# check if the link was passed with the web remote
-	$videoLink = $_GET['url'];
-	# clean up the quotes
-	$videoLink = cleanQuotes($videoLink);
-	#	generate the sum from the cleaned link
-	$videoLinkSum = md5($videoLink);
-	# build the command to play on all the players
-	$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
-	# fork the process
-	forkCommand($command);
-	# go back to the remote control page
-	redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
+	if( "$selectedRemote" == "CLIENT" ){
+		addToLog("DEBUG","kodi-player.php","Redirect the control to the client interface");
+		redirect("/client/?play=".$_GET["url"]);
+	}else{
+		# check if the link was passed with the web remote
+		$videoLink = $_GET['url'];
+		# convert https to http requests for kodi
+		if (substr($_GET["url"],0,7) == "https://"){
+			$_GET["url"] = "http://".substr($_GET["url"],7);
+		}
+		# clean up the quotes
+		$videoLink = cleanQuotes($videoLink);
+		#
+		addToLog("DEBUG","kodi-player.php","Playing video link '$videoLink'");
+		#	generate the sum from the cleaned link
+		$videoLinkSum = md5($videoLink);
+		# build the command to play on all the players
+		$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
+		# fork the process
+		forkCommand($command);
+		# go back to the remote control page
+		redirect("/kodi-player.php?ref=".$_SERVER["HTTP_REFERER"]);
+	}
 }else if (array_key_exists("shareStreamURL",$_GET)){
 	# check if the link was passed with the web remote
 	$OGvideoLink = $_GET['shareStreamURL'];
@@ -123,23 +138,27 @@ if (array_key_exists("url",$_GET)){
 	$videoLink = cleanQuotes($videoLink);
 	# add the local resolver to the video link
 	$videoLink = "http://".gethostname().'.local/ytdl-resolver.php?url="'.$videoLink.'"';
-	# generate the hash
-	$videoLinkSum=md5($videoLink);
-	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
-		# get the title of the video
-		$videoTitle=shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --get-title '".$OGvideoLink."' ");
-		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle );
-		# write the temp file
-		file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
+	if( "$selectedRemote" == "CLIENT" ){
+		redirect("/client/?play=".$videoLink);
+	}else{
+		# generate the hash
+		$videoLinkSum=md5($videoLink);
+		if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
+			# get the title of the video
+			$videoTitle=shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --get-title '".$OGvideoLink."' ");
+			file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".title", $videoTitle );
+			# write the temp file
+			file_put_contents("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm", $videoLink);
+		}
+		# build the link for the generated .strm file
+		$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
+		# build the command to play on all the players
+		$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
+		# fork the process
+		forkCommand($command);
+		# go back to the remote control page
+		redirect("/kodi-player.php");
 	}
-	# build the link for the generated .strm file
-	$videoLink = "http://".gethostname().".local/kodi-player/".$videoLinkSum.".strm";
-	# build the command to play on all the players
-	$command = "kodi2web_player open-at '".$selectedRemote."' '".$videoLink."'";
-	# fork the process
-	forkCommand($command);
-	# go back to the remote control page
-	redirect("/kodi-player.php");
 }else if (array_key_exists("share",$_GET)){
 	echo "<html class='randomFanart'>";
 	echo "<head>";
