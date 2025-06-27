@@ -513,7 +513,7 @@ ol li{
 	padding: 0px;
 	cursor: pointer;
 	position: relative;
-	z-index: 1;
+	z-index: 2;
 	margin-bottom: 0.3rem;
 }
 .menuButtonBox:hover{
@@ -571,6 +571,8 @@ ol li{
 	width: 90dvw;
 	text-align: left;
 	line-height: 0rem;
+	position: relative;
+	z-index: 2;
 }
 /* Media check for touchscreens */
 @media (pointer: coarse){
@@ -1848,6 +1850,20 @@ table{
 .plot{
 	font-family: monospace;
 }
+#notification{
+	background-color: var(--glassBackground);
+	color: var(--textColor);
+	position: fixed;
+	opacity: 0.9 !important;
+	z-index: 1;
+	height: 100dvh;
+	width: 100dvw;
+	font-size: 20dvh;
+	transition: opacity 0.5s ease-in-out;
+	line-height: 100dvh;
+	top: 0px;
+	left: 0px;
+}
 /*
 .descriptionCard h2{
 	background: var(--glassBackground);
@@ -1944,11 +1960,10 @@ table{
 .searchSpacer{
 	min-height: 50dvh;
 }
-/*
 .searchBoxForm{
-	margin: 1rem;
+	position: relative;
+	z-index: 2;
 }
-*/
 .searchBox{
 	width: 80dvw;
 	font-size: 2rem;

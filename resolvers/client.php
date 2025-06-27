@@ -858,18 +858,6 @@ if (! file_exists("qr_ip_".$hostSum.".png")){
 	.clientRemoteButton{
 		z-index: 3;
 	}
-	#notification{
-		background-color: var(--glassBackground);
-		color: var(--textColor);
-		position: absolute;
-		opacity: 0.9;
-		z-index: 1;
-		height: 100dvh;
-		width: 100dvw;
-		font-size: 20dvh;
-		transition: opacity 0.5s ease-in-out;
-		line-height: 100dvh;
-	}
 </style>
 <script src='/2webLib.js'></script>
 <script src='/hls.js'></script>
