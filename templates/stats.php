@@ -186,42 +186,32 @@ if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 }
 $weatherEnabled = False;
 if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-	if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
-		$weatherEnabled = True;
-	}
+	$weatherEnabled = True;
 }
-if (file_exists("fortune.index")){
-	$todaysFortune = file_get_contents("fortune.index");
-	if ( file_exists("/etc/2web/fortuneStatus.cfg")){
-		echo "<a class='homeWeather' href='/fortune.php'>";
-		if ($weatherEnabled){
-			echo "<div class='inputCard'>";
-		}else{
-			echo "<div class='listCard'>";
-		}
-		echo "<h3>🔮 Fortune</h3>";
-		echo "<div class='fortuneText'>";
+if ($fortuneEnabled){
+	echo "<a class='homeWeather inputCard' href='/fortune.php'>";
+	echo "<h3>🔮 Fortune</h3>";
+	echo "<div class='fortuneText'>";
+	# load the fortune data
+	if (file_exists("/var/cache/2web/web/fortune.index")){
+		$todaysFortune = file_get_contents("fortune.index");
 		echo "$todaysFortune";
-		echo "</div>";
-		echo "</div>";
-		echo "</a>";
+	}else{
+		echo "No Fortune has been loaded yet, please wait for the server to catch up.";
 	}
+	echo "</div>";
+	echo "</a>";
 }
-
-if (file_exists("weather.index")){
-	$todaysWeather= file_get_contents("weather.index");
-	if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-		if ( file_exists($_SERVER['DOCUMENT_ROOT']."/weather.index")){
-			echo "<a class='homeFortune' href='/weather/?station=".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
-			if ($fortuneEnabled){
-				echo "<div class='inputCard'>";
-			}else{
-				echo "<div class='listCard'>";
-			}
-			echo "$todaysWeather";
-			echo "</div>";
-			echo "</a>";
-		}
+if ($weatherEnabled){
+	echo "<a class='homeFortune inputCard' href='/weather/?station=".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>";
+	# load the weather data
+	if (file_exists("/var/cache/2web/web/weather.index")){
+		$todaysWeather= file_get_contents("weather.index");
+		echo "$todaysWeather";
+	}else{
+		echo "No weather data has been loaded yet, please wait for the server to catch up.";
 	}
+	echo "</div>";
+	echo "</a>";
 }
 ?>
