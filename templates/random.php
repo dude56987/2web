@@ -85,10 +85,10 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 			echo "<a class='button' href='/new/'>";
 		}
 		?>
-			📜 NEW
+			📜 New
 		</a>
 		<a class='activeButton' href='/random/'>
-			🔀 RANDOM
+			🔀 Random
 		</a>
 		<?PHP
 		if(checkModStatus("nfo2web")){

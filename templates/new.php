@@ -79,7 +79,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	</h2>
 	<div class='listCard'>
 			<a class='activeButton' href='/new/'>
-			📜 NEW
+			📜 New
 		</a>
 		<?PHP
 		if (array_key_exists("filter",$_GET)){
@@ -88,7 +88,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 			echo "<a class='button' href='/random/'>";
 		}
 		?>
-			🔀 RANDOM
+			🔀 Random
 		</a>
 		<?PHP
 		if(checkModStatus("nfo2web")){
