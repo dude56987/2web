@@ -137,7 +137,7 @@ $databaseObj->close();
 unset($databaseObj);
 
 # display the page view
-echo "<div class='viewCounterBox'>";
+echo "<div class='viewCounterBox'>\n";
 echo "<a class='viewCounterHeader' href='/views/'>";
 echo "👁️";
 echo "</a>";
@@ -149,9 +149,9 @@ echo "⏱️";
 echo "</span>";
 echo "<span class='executionTime'>";
 echo round((microtime(True) - $startTime), 4);
-echo "</span>";
-echo "</div>";
-echo "<hr>";
+echo "</span>\n";
+echo "</div>\n";
+echo "<hr>\n";
 # figure out the header data template
 $cacheFile=$webDirectory."/web_cache/footerData.index";
 # if file is older than 1 hours
@@ -168,7 +168,7 @@ if (file_exists($cacheFile)){
 	$writeFile=true;
 }
 # start writing the footer
-echo "<div id='footer' class=''>";
+echo "<div id='footer' class=''>\n";
 if ($writeFile){
 	ignore_user_abort(true);
 	# if any of the variables exist then the checks do not need to be re-run
@@ -224,13 +224,13 @@ if ($writeFile){
 	$fileData .= "<div class='bottomButtonSpacer'></div>";
 
 	# build the header
-	$fileData .= "<a class='footerButton' href='/index.php'>";
+	$fileData .= "<a class='footerButton' href='/index.php'>\n";
 	$fileData .= "🏠";
-	$fileData .= "<span class='footerText'>";
+	$fileData .= "<span class='footerText'>\n";
 	#$fileData .= " HOME";
 	$fileData .= formatText(strtoupper(gethostname()),1);
-	$fileData .= "</span>";
-	$fileData .= "</a> ";
+	$fileData .= "</span>\n";
+	$fileData .= "</a> \n";
 
 	if ($moviesFound || $musicFound || $comicsFound || $showsFound || $graphsFound){
 		$fileData .= "<a class='footerButton' href='/new/'>";
@@ -238,7 +238,7 @@ if ($writeFile){
 		$fileData .= "<span class='footerText'>";
 		$fileData .= " PLAYLISTS";
 		$fileData .= "</span>";
-		$fileData .= "</a> ";
+		$fileData .= "</a> \n";
 	}
 	fwrite($fileObj,"$fileData");
 	// close the file
@@ -250,62 +250,62 @@ echo file_get_contents($cacheFile);
 
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		echo "<a class='footerButton' href='/movies'>";
-		echo "🎥";
-		echo "<span class='footerText'>";
-		echo " MOVIES";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/movies'>\n",2);
+		formatText("🎥",3);
+		formatText("<span class='footerText'>\n",3);
+		formatText(" MOVIES",4);
+		formatText("</span>\n",3);
+		formatText("</a> \n",2);
 	}
 }
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		echo "<a class='footerButton' href='/shows'>";
-		echo "📺";
-		echo "<span class='footerText'>";
-		echo " SHOWS";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/shows'>\n",2);
+		formatText("📺",3);
+		formatText("<span class='footerText'>\n",3);
+		formatText(" SHOWS\n",4);
+		formatText("</span>\n",3);
+		formatText("</a> \n",2);
 	}
 }
 if (detectEnabledStatus("music2web")){
 	if (requireGroup("music2web",false)){
-		echo "<a class='footerButton' href='/music'>";
-		echo "🎧";
-		echo "<span class='footerText'>";
-		echo " MUSIC";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/music'>\n",2);
+		formatText("🎧",3);
+		formatText("<span class='footerText'>\n",3);
+		formatText(" MUSIC",4);
+		formatText("</span>\n",3);
+		formatText("</a> \n",2);
 	}
 }
 if (detectEnabledStatus("comic2web")){
 	if (requireGroup("comic2web",false)){
-		echo "<a class='footerButton' href='/comics'>";
-		echo "📚";
-		echo "<span class='footerText'>";
-		echo " COMICS";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/comics'>\n",2);
+		formatText("📚",3);
+		formatText("<span class='footerText'>\n",3);
+		formatText(" COMICS",4);
+		formatText("</span>\n",3);
+		formatText("</a> \n",2);
 	}
 }
 if (detectEnabledStatus("iptv2web")){
 	if (requireGroup("iptv2web",false)){
-		echo "<a class='footerButton' href='/live'>";
-		echo "📡";
-		echo "<span class='footerText'>";
-		echo " LIVE";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/live'>\n",2);
+		formatText("📡",3);
+		formatText("<span class='footerText'>\n",3);
+		formatText(" LIVE",4);
+		formatText("</span>\n",3);
+		formatText("</a> \n",2);
 	}
 }
 if (detectEnabledStatus("wiki2web")){
 	if (requireGroup("wiki2web",false)){
-		echo "<a class='footerButton' href='/wiki/'>";
-		echo "⛵";
-		echo "<span class='footerText'>";
-		echo " WIKI";
-		echo "</span>";
-		echo "</a> ";
+		formatText("<a class='footerButton' href='/wiki/'>",2);
+		formatText("⛵",3);
+		formatText("<span class='footerText'>",3);
+		formatText(" WIKI",4);
+		formatText("</span>",3);
+		formatText("</a> ",2);
 	}
 }
 if (detectEnabledStatus("weather2web")){
@@ -314,12 +314,12 @@ if (detectEnabledStatus("weather2web")){
 		if (file_exists("$webDirectory/weather/index.php")){
 			if (file_exists("$webDirectory/totalWeatherStations.index")){
 				if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-					echo "<a class='footerButton' href='/weather/'>";
-					echo "🌤️";
-					echo "<span class='footerText'>";
-					echo " WEATHER";
-					echo "</span>";
-					echo "</a> ";
+					formatText("<a class='footerButton' href='/weather/'>",2);
+					formatText("🌤️",3);
+					formatText("<span class='footerText'>",3);
+					formatText(" WEATHER",4);
+					formatText("</span>",3);
+					formatText("</a> ",2);
 				}
 			}
 		}
@@ -420,7 +420,7 @@ if ($drawRemote){
 	echo formatText("<a class='footerButton' href='/client/?remote'>",2);
 	echo formatText("🎛️",3);
 	echo formatText("<span class='footerText'>",3);
-	echo formatText("CLIENT REMOTE",4);
+	echo formatText("REMOTE",4);
 	echo formatText("</span>",3);
 	echo formatText("</a>",2);
 }
@@ -429,43 +429,52 @@ if (detectEnabledStatus("php2web")){
 		echo formatText("<a class='footerButton' href='/applications/'>",2);
 		echo formatText("🖥️",3);
 		echo formatText("<span class='footerText'>",3);
-		echo formatText("Applications",4);
+		echo formatText("APPLICATIONS",4);
 		echo formatText("</span>",3);
 		echo formatText("</a>",2);
 	}
 }
-echo "<a class='footerButton' href='/help.php'>";
+echo "<a class='footerButton' href='/help.php'>\n";
 echo "<span class='helpQuestionMark'>";
 echo "?";
-echo "</span>";
-echo "<span class='footerText'>";
-echo " HELP";
-echo "</span>";
-echo "</a> ";
+echo "</span>\n";
+echo "<span class='footerText'>\n";
+echo " HELP\n";
+echo "</span>\n";
+echo "</a> \n";
 
-echo "<a class='footerButton' href='/support.php'>";
-echo "🫀";
-echo "<span class='footerText'>";
-echo " SUPPORT";
-echo "</span>";
-echo "</a> ";
+echo "<a class='footerButton' href='/support.php'>\n";
+echo "🫀\n";
+echo "<span class='footerText'>\n";
+echo " SUPPORT\n";
+echo "</span>\n";
+echo "</a>\n";
 
-echo "</div>";
+echo "</div>\n";
 
-echo "<div class='topButtonSpace'>";
-echo "<hr>";
-echo "</div>";
+echo "<div class='topButtonSpace'>\n";
+# stop the spinners with javascript
+echo "<hr>\n";
+echo "</div>\n";
 
 // remove the spinners after the footer is loaded
-echo "<style>";
-echo "	#spinner {";
-echo "		visibility: hidden;";
-echo "	}";
-echo "	.globalPulse{";
-echo "		visibility: hidden;";
-echo "	}";
-echo "	.globalSpinner{";
-echo "		visibility: hidden;";
-echo "	}";
-echo "</style>";
+// - This should remain for compatibility of browsers without javascript even
+//   though the event below removes the spinner
+echo "<style>\n";
+echo "	#spinner {\n";
+echo "		visibility: hidden ;\n";
+echo "	}\n";
+echo "	.globalPulse{\n";
+echo "		visibility: hidden ;\n";
+echo "	}\n";
+echo "	.globalSpinner{\n";
+echo "		visibility: hidden ;\n";
+echo "	}\n";
+echo "</style>\n";
+# if the page is loaded from the back button hide the spinner with javascript
 ?>
+<script>
+addEventListener("pageshow", (event) => {
+	hideSpinner();
+})
+</script>

@@ -53,8 +53,6 @@ $startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/web_cache/headerData.index";
 
-
-
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
@@ -146,7 +144,7 @@ if ($writeFile){
 		$fileData .= formatText("🏠",3);
 	}
 	$fileData .= formatText("<span class='headerText'>",3);
-	$fileData .= formatText(strtoupper(gethostname()),4);
+	$fileData .= formatText(ucfirst(gethostname()),4);
 	$fileData .= formatText("</span>",3);
 	$fileData .= formatText("</a>",2);
 
@@ -161,146 +159,152 @@ if ($writeFile){
 echo file_get_contents($cacheFile);
 
 #
-echo formatText("<a class='button' href='/new/'>",2);
-echo formatText("📃",3);
-echo formatText("<span class='headerText'>",3);
-echo formatText("PLAYLISTS",4);
-echo formatText("</span>",3);
-echo formatText("</a>",2);
+formatEcho("<a class='button' href='/new/'>",2);
+formatEcho("📃",3);
+formatEcho("<span class='headerText'>",3);
+formatEcho("Playlists",4);
+formatEcho("</span>",3);
+formatEcho("</a>",2);
 #
+if (requireGroup("webPlayer",false)){
+	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+		formatEcho("<a class='button' href='/web-player.php'>",2);
+		formatEcho("📥",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Web Player",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
+	}
+}
+// read the weather info for weather2web
+if (requireGroup("weather2web",false)){
+	formatEcho("<a class='button' href='/weather/'>",2);
+	formatEcho("🌤️",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Weather",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+}
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		echo formatText("<a class='button' href='/movies'>",2);
-		echo formatText("🎥",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("MOVIES",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/movies'>",2);
+		formatEcho("🎥",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Movies",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		echo formatText("<a class='button' href='/shows'>",2);
-		echo formatText("📺",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("SHOWS",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/shows'>",2);
+		formatEcho("📺",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Shows",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("music2web")){
 	if (requireGroup("music2web",false)){
-		echo formatText("<a class='button' href='/music'>",2);
-		echo formatText("🎧",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("MUSIC",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/music'>",2);
+		formatEcho("🎧",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Music",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("comic2web")){
 	if (requireGroup("comic2web",false)){
-		echo formatText("<a class='button' href='/comics'>",2);
-		echo formatText("📚",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("COMICS",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/comics'>",2);
+		formatEcho("📚",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Comics",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("iptv2web")){
 	if (requireGroup("iptv2web",false)){
-		echo formatText("<a class='button' href='/live'>",2);
-		echo formatText("📡",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("LIVE",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/live'>",2);
+		formatEcho("📡",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Live",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("wiki2web")){
 	if (requireGroup("wiki2web",false)){
-		echo formatText("<a class='button' href='/wiki/'>",2);
-		echo formatText("⛵",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("WIKI",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
-	}
-}
-if (detectEnabledStatus("git2web")){
-	if (requireGroup("git2web",false)){
-		echo formatText("<a class='button' href='/repos/'>",2);
-		echo formatText("💾",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("REPOS",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/wiki/'>",2);
+		formatEcho("⛵",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Wiki",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("ai2web")){
 	if (requireGroup("ai2web",false)){
-		echo formatText("<a class='button' href='/ai/'>",2);
-		echo formatText("🧠",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("AI",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/ai/'>",2);
+		formatEcho("🧠",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("AI",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
-if (detectEnabledStatus("portal2web")){
-	if (requireGroup("portal2web",false)){
-		echo formatText("<a class='button' href='/portal/'>",2);
-		echo formatText("🚪",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("PORTAL",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+if (detectEnabledStatus("git2web")){
+	if (requireGroup("git2web",false)){
+		formatEcho("<a class='button' href='/repos/'>",2);
+		formatEcho("💾",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Repos",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 if (detectEnabledStatus("graph2web")){
 	if (requireGroup("graph2web",false)){
-		echo formatText("<a class='button' href='/graphs/'>",2);
-		echo formatText("📊",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("GRAPHS",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/graphs/'>",2);
+		formatEcho("📊",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Graphs",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
-// read the weather info for weather2web
-if (file_exists("$webDirectory/weather/index.php")){
-	if (file_exists("$webDirectory/totalWeatherStations.index")){
-		if ((file_get_contents("$webDirectory/totalWeatherStations.index")) > 0){
-			if (requireGroup("weather2web",false)){
-				echo formatText("<a class='button' href='/weather/'>",2);
-				echo formatText("🌤️",3);
-				echo formatText("<span class='headerText'>",3);
-				echo formatText("WEATHER",4);
-				echo formatText("</span>",3);
-				echo formatText("</a>",2);
-			}
-		}
+if (detectEnabledStatus("portal2web")){
+	if (requireGroup("portal2web",false)){
+		formatEcho("<a class='button' href='/portal/'>",2);
+		formatEcho("🚪",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Portal",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
-if (requireGroup("webPlayer",false)){
-	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
-		echo formatText("<a class='button' href='/web-player.php'>",2);
-		echo formatText("📥",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("WEB PLAYER",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+#
+if (detectEnabledStatus("php2web")){
+	if (requireGroup("php2web",false)){
+		formatEcho("<a class='button' href='/applications/'>",2);
+		formatEcho("🖥️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Applications",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
+# client and remote
 if (requireGroup("client",false)){
 	if (yesNoCfgCheck("/etc/2web/client.cfg")){
-		echo formatText("<a class='button' href='/client/'>",2);
-		echo formatText("🛰️",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("CLIENT",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
+		formatEcho("<a class='button' href='/client/'>",2);
+		formatEcho("🛰️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Client",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 $drawRemote=false;
@@ -312,6 +316,19 @@ if (yesNoCfgCheck("/etc/2web/client.cfg")){
 	}
 }
 if (detectEnabledStatus("kodi2web")){
+	# check if the http share link is enabled
+	if (yesNoCfgCheck("/etc/2web/kodi/enableHttpShare.cfg")){
+		if (yesNoCfgCheck("/etc/2web/kodi/enableHttpShareLink.cfg")){
+			#
+			formatEcho("<a class='button' href='/kodi/'>");
+			formatEcho("🇰");
+			formatEcho("<span class='headerText'>");
+			formatEcho("Kodi");
+			formatEcho("</span>");
+			formatEcho("</a>");
+		}
+	}
+	#
 	if (count(scanDir("/etc/2web/kodi/players.d/")) > 2){
 		if (requireGroup("kodi2web",false)){
 			$drawRemote=true;
@@ -319,24 +336,13 @@ if (detectEnabledStatus("kodi2web")){
 	}
 }
 if ($drawRemote){
-	echo formatText("<a class='button' href='/remote.php'>",2);
-	echo formatText("🎛️",3);
-	echo formatText("<span class='headerText'>",3);
-	echo formatText("REMOTE",4);
-	echo formatText("</span>",3);
-	echo formatText("</a>",2);
+	formatEcho("<a class='button' href='/remote.php'>");
+	formatEcho("🎛️");
+	formatEcho("<span class='headerText'>");
+	formatEcho("Remote");
+	formatEcho("</span>");
+	formatEcho("</a>");
 }
-if (detectEnabledStatus("php2web")){
-	if (requireGroup("php2web",false)){
-		echo formatText("<a class='button' href='/applications/'>",2);
-		echo formatText("🖥️",3);
-		echo formatText("<span class='headerText'>",3);
-		echo formatText("Applications",4);
-		echo formatText("</span>",3);
-		echo formatText("</a>",2);
-	}
-}
-
 # try to load a session in the current window if one does not exist
 startSession();
 # check the user has logged in successfully
@@ -346,40 +352,41 @@ if (isset($_SESSION["user"])){
 		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
 		formatEcho("🛠️",3);
 		formatEcho("<span class='headerText'>",3);
-		formatEcho("SETTINGS",4);
+		formatEcho("Settings",4);
 		formatEcho("</span>",3);
 		formatEcho("</a>",2);
 	}
+
 	# logout
 	formatEcho("<a class='button headerLoginButton' href='/logout.php'>",2);
 	formatEcho("🔒",3);
 	formatEcho("<span class='headerText'>",3);
-	formatEcho("LOGOUT",4);
+	formatEcho("Logout",4);
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }else if ($_SERVER['SERVER_PORT'] != 443){
 	formatEcho("<a class='button headerLoginButton' href='https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
 	formatEcho("🔑",3);
 	formatEcho("<span class='headerText'>",3);
-	formatEcho("ENCRYPT",4);
+	formatEcho("Encrypt",4);
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }else{
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
-		echo "<a class='button headerLoginButton' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>";
-		echo "🔓";
-		echo "<span class='headerText'>";
-		echo " LOGIN";
-		echo "</span>";
-		echo "</a>";
+		formatEcho("<a class='button headerLoginButton' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
+		formatEcho("🔓",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho(" Login",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 
 formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
-formatEcho("<span class='helpQuestionMark'>");
-formatEcho("?");
-formatEcho("</span>");
+formatEcho("<span class='helpQuestionMark'>",3);
+formatEcho("?",3);
+formatEcho("</span>",3);
 formatEcho("<span class='headerText'>",3);
 formatEcho("Help",4);
 formatEcho("</span>",3);
@@ -398,39 +405,39 @@ formatEcho('</script>',1);
 
 # if the path is in the settings draw the logout button
 
-echo "<div class='loginLogoutBox'>";
+formatEcho("<div class='loginLogoutBox'>");
 if (isset($_SESSION["user"])){
 	if (requireGroup("admin",false)){
-		echo "		<a class='button' href='/settings/'>";
-		echo "			🛠️";
-		echo "			<span class='headerText'>";
-		echo "				SETTINGS";
-		echo "			</span>";
-		echo "		</a>";
-		echo "	<hr>";
+		formatEcho("<a class='button' href='/settings/'>");
+		formatEcho("🛠️");
+		formatEcho("<span class='headerText'>");
+		formatEcho("Settings");
+		formatEcho("</span>");
+		formatEcho("</a>");
+		formatEcho("<hr>");
 	}
-	echo "		<a class='button' href='/logout.php'>";
-	echo "			🔒";
-	echo "			<span class='headerText'>";
-	echo "				LOGOUT";
-	echo "			</span>";
-	echo "		</a>";
+	formatEcho("<a class='button' href='/logout.php'>");
+	formatEcho("🔒");
+	formatEcho("<span class='headerText'>");
+	formatEcho("Logout");
+	formatEcho("</span>");
+	formatEcho("</a>");
 }else if ($_SERVER['SERVER_PORT'] != 443){
-	echo "<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>";
-	echo "🔑";
-	echo "<span class='headerText'>";
-	echo " ENCRYPT";
-	echo "</span>";
-	echo "</a>";
+	formatEcho("<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>");
+	formatEcho("🔑");
+	formatEcho("<span class='headerText'>");
+	formatEcho("Encrypt");
+	formatEcho("</span>");
+	formatEcho("</a>");
 }else{
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
-		echo "<a class='button' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>";
-		echo "🔓";
-		echo "<span class='headerText'>";
-		echo " LOGIN";
-		echo "</span>";
-		echo "</a>";
+		formatEcho("<a class='button' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>");
+		formatEcho("🔓");
+		formatEcho("<span class='headerText'>\n");
+		formatEcho("Login");
+		formatEcho("</span>");
+		formatEcho("</a>");
 	}
 }
 echo "	<hr>";
@@ -453,19 +460,19 @@ if (array_key_exists("q",$_GET)){
 	}else{
 		echo "<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >";
 	}
-	?>
-	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+# do not leave a space between the search box and the button
+	?><button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <?PHP
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
-	echo "<div class='errorBanner'>\n";
-	echo "<h1>";
-	echo "<img class='localSpinner left' src='/spinner.gif'>\n";
-	echo "<img class='localSpinner right' src='/spinner.gif'>\n";
-	echo "Server Reboot Impending\n";
-	echo "</h1>";
-	echo "The server is preparing to reboot. Services may become momentarily unavailable.\n";
-	echo "</div>\n";
+	formatEcho("<div class='errorBanner'>\n");
+	formatEcho("<h1>");
+	formatEcho("<img class='localSpinner left' src='/spinner.gif'>\n");
+	formatEcho("<img class='localSpinner right' src='/spinner.gif'>\n");
+	formatEcho("Server Reboot Impending\n");
+	formatEcho("</h1>");
+	formatEcho("The server is preparing to reboot. Services may become momentarily unavailable.\n");
+	formatEcho("</div>\n");
 }
 # release the lock on the session for this script to allow pages to load in parallel
 session_write_close();
