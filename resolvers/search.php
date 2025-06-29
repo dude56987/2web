@@ -757,7 +757,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		echo "</div>\n";
 	}
 
-	echo "<h2 id='external'>External Search Links</h2>";
+	echo "<h2 id='external'>External Search Links</h2>\n";
 
 	moreSearchLinks($searchQuery);
 	moreDataLinks($searchQuery);
@@ -777,26 +777,26 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	moreBookLinks($searchQuery);
 	moreBookMetaLinks($searchQuery);
 
-	echo "</div>";
+	echo "</div>\n";
 }else{
 	drawHead();
 	# add the header document after building the document start
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# no search made, the search has been loaded, steal focus for the search bar
-	echo "<script>";
-	echo "	window.onload = function(){";
-	echo "		document.getElementById('searchBox').focus();";
-	echo "	}";
-	echo "</script>";
-	echo "<div class='searchSpacer settingListCard'>";
-	echo "<h3>2web Database Stats</h3>";
+	echo "<script>\n";
+	echo "	window.onload = function(){\n";
+	echo "		document.getElementById('searchBox').focus();\n";
+	echo "	}\n";
+	echo "</script>\n";
+	echo "<div class='searchSpacer settingListCard'>\n";
+	echo "<h3>2web Database Stats</h3>\n";
 	# build the search spacer and fill with meta content if any
 	include("/usr/share/2web/templates/stats.php");
-	echo "<h3>Search Help</h3>";
-	echo "<p>To search the 2web server type a query into the search bar and hit enter! If no data is found in the server, external links to services are given using the same search term.</p>";
-	echo "<p>You can use !bang commands to redirect the search bar to other services. For a list of available !bang commands type !help into the search or click <a href='/search.php?q=!help'>here</a>.</p>";
+	echo "<h3>Search Help</h3>\n";
+	echo "<p>To search the 2web server type a query into the search bar and hit enter! If no data is found in the server, external links to services are given using the same search term.</p>\n";
+	echo "<p>You can use !bang commands to redirect the search bar to other services. For a list of available !bang commands type !help into the search or click <a href='/search.php?q=!help'>here</a>.</p>\n";
 
-	echo "</div>";
+	echo "</div>\n";
 	drawPosterWidget("portal", True);
 }
 // add the footer
