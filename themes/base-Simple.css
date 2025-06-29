@@ -59,6 +59,16 @@ html{
 		font-family: font2web;
 	}
 }
+::spelling-error{
+	text-decoration: wavy var(--highlightBackground) underline;
+	background-color: yellow;
+	color: black;
+}
+::grammar-error{
+	text-decoration: wavy var(--highlightBackground) underline;
+	background-color: yellow;
+	color: black;
+}
 ::selection{
 	color: var(--highlightText);
 	background: var(--highlightBackground);
