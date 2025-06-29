@@ -129,7 +129,22 @@ if ($writeFile){
 	$fileData .= formatText('<div class="headerButtons">',1);
 
 	$fileData .= formatText("<a class='button' href='/'>",2);
-	$fileData .= formatText("&#127968;",3);
+	# show holiday icons
+	if( date("m") == 3 ){
+		$fileData .= formatText("🍀",3);
+	}else if( date("m") == 6 ){
+		$fileData .= formatText("<span class='rainbow'>🪲</span>",3);
+	}else if( date("m") == 7 ){
+		$fileData .= formatText("🇺🇸",3);
+	}else if( date("m") == 10 ){
+		$fileData .= formatText("🎃",3);
+	}else if( date("m") == 11 ){
+		$fileData .= formatText("🦃",3);
+	}else if( date("m") == 12 ){
+		$fileData .= formatText("🎄",3);
+	}else{
+		$fileData .= formatText("🏠",3);
+	}
 	$fileData .= formatText("<span class='headerText'>",3);
 	$fileData .= formatText(strtoupper(gethostname()),4);
 	$fileData .= formatText("</span>",3);

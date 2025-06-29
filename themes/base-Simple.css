@@ -3017,6 +3017,12 @@ details{
 	animation-fill-mode: forwards;
 	/* animation delay is set on the element */
 }
+.rainbow{
+	animation-name: rainbow;
+	animation-duration: 10s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+}
 @keyframes dropBounce{
 	0% {
 		opacity: 0;
@@ -3091,6 +3097,16 @@ details{
 	}
 	100% {
 		transform: scaleY(1) scaleX(1);
+	}
+}
+@keyframes rainbow{
+	0% {
+		filter: hue-rotate(0deg);
+		-webkit-filter:hue-rotate(0deg);
+	}
+	100% {
+		filter: hue-rotate(360deg);
+		-webkit-filter:hue-rotate(360deg);
 	}
 }
 video{
