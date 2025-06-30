@@ -474,18 +474,15 @@ foreach($sourceFiles as $sourceFile){
 	#
 	$localCachePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum;
 	#
-	if(file_exists($pathPrefix."verified.cfg") or file_exists($pathPrefix."video.mp4")){
+	if(file_exists($pathPrefix."verified.cfg")){
 		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
-	}else if(file_exists($pathPrefix."video.m3u")){
+	}else if(file_exists($pathPrefix."video.mp4")){
 		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟡</div></div>\n";
+	}else if(file_exists($pathPrefix."video.m3u")){
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟠</div></div>\n";
 	}else{
 		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
 	}
-	#if(file_exists($thumbTemplate.".mp4") or file_exists($thumbTemplate.".mp3") or file_exists($localCachePath.".mp4")){
-	# echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
-	#}else{
-	# echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>◯</div></div>\n";
-	#}
 	echo "</a>\n";
 	# increment the processed titles
 	$processedTitles+=1;
