@@ -109,6 +109,7 @@
 		echo "html{\n";
 		echo "	background-image: url('".$page."-thumb.png');\n";
 		echo "	background-blend-mode: color-burn;\n";
+		echo "	background-size: cover;\n";
 		echo "}\n";
 	?>
 	</style>
@@ -257,7 +258,6 @@
 		}
 	</script>
 </head>
-<img class='globalPulse' src='/pulse.gif'>
 <img class='globalSpinner' src='/spinner.gif'>
 <?PHP
 	# send the loading bar code while the page loads the rest of the content
@@ -347,7 +347,7 @@
 	echo "		Page $page / ".prefixNumbers($totalPages)."\n";
 	# draw the fullscreen button
 	echo "	<a target='_parent' class='comicFullscreenButton' href='fullscreen.php?page=".$page."'>";
-	echo "		📐";
+	echo "		⛶";
 	echo "	</a>\n";
 	# convert to intergers for use with the scroll view API
 	# and for calculating the reading progress

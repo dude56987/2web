@@ -46,13 +46,14 @@
 		#echo"}";
 		#$totalPages=file_get_contents("totalPages.cfg");
 		#
-		echo "html{";
+		echo "html{\n";
 		if (array_key_exists("chapter",$_GET)){
-			echo "	background-image: url('/comics/$comic/$chapterNumber/thumb.png')";
+			echo "	background-image: url('/comics/$comic/$chapterNumber/thumb.png');\n";
 		}else{
-			echo "	background-image: url('/comics/$comic/thumb.png')";
+			echo "	background-image: url('/comics/$comic/thumb.png');\n";
 		}
-		echo "}";
+		echo "	background-size: cover;\n";
+		echo "}\n";
 	?>
 	</style>
 </head>
@@ -111,6 +112,8 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		echo "<a class='button' href='?real'>🖼️ Real Size View</a>\n";
 	}
 
+	echo "<a class='button' onclick='toggleFullscreen(\"\",true);'>⛶ Toggle Fullscreen</a>\n";
+
 	echo "<div>";
 	echo "Pages: $totalPages";
 	echo "</div>";
@@ -151,7 +154,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		if($realSize){
 			echo "<img id='$tempPageNumber' class='comicScrollViewImgReal' loading='lazy' src='$tempFileName' />";
 		}else{
-			echo "<img id='$tempPageNumber' style='background-image: url(\"$tempFileThumb\")' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
+			echo "<img id='$tempPageNumber' style='background-image: url(\"$tempFileThumb\");' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
 		}
 
 		echo "<div class='settingListCard'>";

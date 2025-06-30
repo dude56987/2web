@@ -173,7 +173,7 @@ if($topLevel){
 	$comicTitle=array_pop($comicTitleData);
 }
 ?>
-<html>
+<html style='background-image: url("thumb.png");background-size: cover;'>
 <head>
 <?PHP
 if($topLevel){
@@ -185,9 +185,6 @@ if($topLevel){
 ?>
 </title>
 <style>
-	html{
-		background-image: url("thumb.png")
-	}
 </style>
 <link rel='stylesheet' href='../../style.css'>
 <script src='/2webLib.js'></script>
@@ -245,82 +242,96 @@ setupKeys();
 
 <div class='titleCard'>
 <?PHP
-# draw the buttons
-# next button
-echo "$nextDirButton";
-# and last button
-echo "$previousDirButton";
+	# draw the buttons
+	# next button
+	echo "$nextDirButton";
+	# and last button
+	echo "$previousDirButton";
 ?>
 <div>
 	<?PHP
-	echo "<a class='button comicTitleButton' href='..'>";
-	#echo "<h2 class='moreEpisodesLinkIcon'>";
-	echo "⬆️";
-	#echo "</h2>";
-	echo "</a>";
-	if($topLevel){
-		echo "	<h2>".$comicTitle."</h2>";
-	}else{
-		echo "	<h2>".$comicTitle." - Chapter ".$chapterTitle."/".prefixNumbers($totalChapters)."</h2>";
-		if (file_exists("chapterTitle.cfg")){
-			echo "<h2>".file_get_contents("chapterTitle.cfg")."</h2>";
+		echo "<a class='button comicTitleButton' href='..'>";
+		echo "⬆️";
+		echo "</a>";
+		if($topLevel){
+			echo "	<h2>".$comicTitle."</h2>";
+		}else{
+			echo "	<h2>".$comicTitle." - Chapter ".$chapterTitle."/".prefixNumbers($totalChapters)."</h2>";
+			if (file_exists("chapterTitle.cfg")){
+				echo "<h2>".file_get_contents("chapterTitle.cfg")."</h2>";
+			}
 		}
-	}
-	echo "<hr>";
-	if(is_dir("0001/")){
-		echo "<a target='_parent' class='button indexSeries' href='0001/'>";
-	}else{
-		echo "<a target='_parent' class='button indexSeries' href='0001.php'>";
-	}
-	echo "<img loading='lazy' src='thumb.png' />";
-	echo "</a>";
-	echo "<hr>";
 	?>
-	<div class='listCard'>
-		<?PHP
-		if($topLevel){
-			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle'>";
-		}else{
-			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle'>";
-		}
-		?>
-			<span class='downloadIcon'>▼</span>
-			Download ZIP
-		</a>
-		<?PHP
-		if($topLevel){
-			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&cbz'>";
-		}else{
-			echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle&cbz'>";
-		}
-		?>
-			<span class='downloadIcon'>▼</span>
-			Download CBZ
-		</a>
-	</div>
-	<div class='listCard'>
-		<?PHP
-		if($topLevel){
-			echo "<a class='button' href='/comics/$comicTitle/scroll.php'>";
-		}else{
-			echo "<a class='button' href='/comics/$comicTitle/scroll.php?chapter=$chapterTitle'>";
-		}
-		?>
-			📜 Scroll View
-		</a>
+</div>
 
-		<?PHP
-		if($topLevel){
-			echo "<a class='button' href='/comics/$comicTitle/scroll.php?&real'>";
-		}else{
-			echo "<a class='button' href='/comics/$comicTitle/scroll.php?chapter=$chapterTitle&real'>";
-		}
-		?>
-			🖼️ Real Size View
-		</a>
-	</div>
+<table class='controlTable'>
+	<tr>
+		<td>
+			<?PHP
+				if(is_dir("0001/")){
+					echo "<a target='_parent' class='button indexSeries' href='0001/'>";
+				}else{
+					echo "<a target='_parent' class='button indexSeries' href='0001.php'>";
+				}
+				echo "<img loading='lazy' src='thumb.png' />";
+				echo "</a>";
+			?>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<div class='listCard'>
+				<?PHP
+					if($topLevel){
+						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle'>";
+					}else{
+						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle'>";
+					}
+				?>
+					<span class='downloadIcon'>🡇</span>
+					Download ZIP
+				</a>
+				<?PHP
+					if($topLevel){
+						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&cbz'>";
+					}else{
+						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle&cbz'>";
+					}
+				?>
+					<span class='downloadIcon'>🡇</span>
+					Download CBZ
+				</a>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<div class='listCard'>
+				<?PHP
+				if($topLevel){
+					echo "<a class='button' href='/comics/$comicTitle/scroll.php'>";
+				}else{
+					echo "<a class='button' href='/comics/$comicTitle/scroll.php?chapter=$chapterTitle'>";
+				}
+				?>
+					📜 Scroll View
+				</a>
+
+				<?PHP
+				if($topLevel){
+					echo "<a class='button' href='/comics/$comicTitle/scroll.php?&real'>";
+				}else{
+					echo "<a class='button' href='/comics/$comicTitle/scroll.php?chapter=$chapterTitle&real'>";
+				}
+				?>
+					🖼️ Real Size View
+				</a>
+			</div>
+		</td>
+	</tr>
+</table>
 <div class='chapterTitleBox'>
-<?PHP
+	<?PHP
 	if(file_exists("totalPages.cfg")){
 		echo "Total Pages : ".file_get_contents("totalPages.cfg");
 	}
@@ -328,6 +339,28 @@ echo "$previousDirButton";
 </div>
 </div>
 </div>
+<?PHP
+# check for sources
+if (requireGroup("admin",false)){
+	if(file_exists("sources.cfg")){
+		echo "<div class='titleCard'>\n";
+		echo "<h2>Media Sources</h2>\n";
+		echo "<pre>\n";
+		echo file_get_contents("sources.cfg");
+		echo "</pre>\n";
+		#
+		$comicScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
+		echo "<h2>Admin Actions</h2>\n";
+		echo "	<div class='listCard'>\n";
+		echo "		<form action='/settings/admin.php' method='post'>";
+		echo "			<input type='text' name='rescanComic' value='$comicTitle' hidden>";
+		echo "			<button class='button' type='submit'>🗘 Force Media Rescan</button>";
+		echo "		</form>";
+		echo "	</div>\n";
+		echo "</div>\n";
+	}
+}
+?>
 <div class='settingListCard'>
 <?PHP
 $indexPaths = scanDir(".");
@@ -386,6 +419,9 @@ foreach($indexPaths as $currentPath){
 ?>
 </div>
 <?PHP
+#
+loadSearchIndexResults($comicTitle,"comics");
+#
 drawPosterWidget("comics", True);
 ?>
 <hr>
