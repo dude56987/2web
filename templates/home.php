@@ -36,24 +36,23 @@
 		include("progress.index");
 	}
 
-	if (file_exists("stats.php")){
-		echo "<div class='date titleCard'>";
-		echo "<h1>";
-		echo ucfirst(shell_exec("hostname"));
-		echo "</h1>";
+	echo "<div class='titleCard'>";
+	echo "<h1>";
+	echo ucfirst(gethostname());
+	echo "</h1>";
 
-		if ( file_exists("activityGraph.png")){
+	# include stats for admins
+	if(requireGroup("admin",false)){
+		if ( file_exists("activityGraph.png") ){
 			echo "<div>";
 			echo "<a href='/graphs/2web_activity/'>";
 			echo "<img class='homeActivityGraph' src='activityGraph.png' />";
 			echo "</a>";
 			echo "</div>";
 		}
-
-		include("stats.php");
-
-		echo "</div>";
 	}
+	include("stats.php");
+	echo "</div>";
 	# draw the combined widget
 	drawPosterWidget("all");
 	# draw the random combined widget
