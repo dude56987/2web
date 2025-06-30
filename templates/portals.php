@@ -38,43 +38,48 @@ include("/var/cache/2web/web/header.php");
 <?php
 drawPosterWidget("portal");
 ################################################################################
-$portalLinks=file("portal.index");
-$domainLinks=file("domain.index");
-?>
-<div class='settingListCard'>
-	<h1>
-		Domains
-	</h1>
-	<div class='listCard'>
-<?php
-# scan for links
-foreach($domainLinks as $portalLink){
-	//if (is_readable($portalLink)){
-		# load each portal link
-		//echo file_get_contents($portalLink);
-		echo file_get_contents(str_replace("\n","",$portalLink));
-	//}
+if (file_exists("portal.index")){
+	$portalLinks=file("portal.index");
+	$domainLinks=file("domain.index");
+	echo "<div class='settingListCard'>";
+	echo "	<h1>";
+	echo "		Domains";
+	echo "	</h1>";
+	echo "	<div class='listCard'>";
+	# scan for links
+	foreach($domainLinks as $portalLink){
+		//if (is_readable($portalLink)){
+			# load each portal link
+			//echo file_get_contents($portalLink);
+			echo file_get_contents(str_replace("\n","",$portalLink));
+		//}
+	}
+	echo "	</div>";
+	echo "</div>";
+	echo "<div class='settingListCard'>";
+	echo "<h1>";
+	echo "	Portal";
+	echo "</h1>";
+	# scan for links
+	foreach($portalLinks as $portalLink){
+		//if (is_readable($portalLink)){
+			//echo file_get_contents($portalLink);
+			# load each portal link
+			echo file_get_contents(str_replace("\n","",$portalLink));
+		//}
+	}
+	echo "</div>";
+}else{
+	echo "<div class='settingListCard'>";
+	echo "<h1>";
+	echo "	Portal";
+	echo "</h1>";
+	echo "<ul>";
+	echo "<li>No Portal links have been scanned into the library!</li>";
+	echo "<li>Add links in the <a href='/settings/portal.php'>portal admin interface</a> to populate this page.</li>";
+	echo "</ul>";
+	echo "</div>";
 }
-?>
-	</div>
-</div>
-<div class='settingListCard'>
-<h1>
-	Portal
-	<img class='globalPulse' src='/pulse.gif' />
-</h1>
-<?php
-# scan for links
-foreach($portalLinks as $portalLink){
-	//if (is_readable($portalLink)){
-		//echo file_get_contents($portalLink);
-		# load each portal link
-		echo file_get_contents(str_replace("\n","",$portalLink));
-	//}
-}
-?>
-</div>
-<?php
 // add random music above the footer
 drawPosterWidget("portal", True);
 // add the footer

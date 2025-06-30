@@ -56,7 +56,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 #drawPosterWidget("portal");
 ################################################################################
-echo "	<img class='globalPulse' src='/pulse.gif'>";
 ?>
 <div class='settingListCard'>
 <?php
@@ -121,7 +120,7 @@ foreach($portalLinks as $portalLink){
 			echo "	<div class='portalPreviewContainer'>";
 			echo "		<a href='".str_replace(".index","-web.png",$portalLink)."'>";
 			echo "			<h3>Preview</h3>";
-			echo "			<img class='portalPreview' loading='lazy' src='".str_replace(".index","-web.png",$portalLink)."'>";
+			echo "			<img class='portalPreview' loading='lazy' src='".str_replace(".index","-thumb.png",$portalLink)."'>";
 			echo "		</a>";
 			echo "	</div>";
 			# draw the qr code based on the access method
