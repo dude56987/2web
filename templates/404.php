@@ -1,3 +1,18 @@
+<?PHP
+include("/usr/share/2web/2webLib.php");
+requireGroup("2web");
+$unknownUrl=$_SERVER['REQUEST_URI'];
+if (stripos($unknownUrl,".png") !== false){
+	# this is a broken image link
+	if (stripos($unknownUrl,"poster.png") !== false){
+		redirect("/plasmaPoster.png");
+	}else if (stripos($unknownUrl,"fanart.png") !== false){
+		redirect("/plasmaFanart.png");
+	}else{
+		redirect("/404.png");
+	}
+}
+?>
 <!--
 ########################################################################
 # 2web 404 error page

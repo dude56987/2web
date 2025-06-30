@@ -715,21 +715,36 @@ function update2web(){
 			\( -clone 0 -resize 128x128 \) \
 			-delete 0 -channel Alpha "$webDirectory/favicon.ico"
 	fi
+	# stop the spinner
+	kill "$SPINNER_PID"
+
 	# build the pulse graphic
 	if ! test -f /var/cache/2web/pulse.gif;then
-		buildPulseGif
+		buildPulseGif &
+		waitQueue 0.5 "$totalCPUS"
 	fi
 	# build the spinner GIF
 	if ! test -f /var/cache/2web/spinner.gif;then
-		buildSpinnerGif
+		buildSpinnerGif &
+		waitQueue 0.5 "$totalCPUS"
 	fi
 	# build the plasma failstate backgrounds
 	if ! test -f /var/cache/2web/plasmaFanart.gif;then
-		timeout 600 convert -size 800x600 plasma: -colorspace Gray "/var/cache/2web/web/plasmaFanart.png"
+		timeout 600 convert -size 800x600 plasma: -colorspace Gray "/var/cache/2web/web/plasmaFanart.png" &
+		waitQueue 0.5 "$totalCPUS"
 	fi
 	if ! test -f /var/cache/2web/plasmaPoster.gif;then
-		timeout 600 convert -size 200x500 plasma: -colorspace Gray "/var/cache/2web/web/plasmaPoster.png"
+		timeout 600 convert -size 200x500 plasma: -colorspace Gray "/var/cache/2web/web/plasmaPoster.png" &
+		waitQueue 0.5 "$totalCPUS"
 	fi
+	if ! test -f /var/cache/2web/web/404.png;then
+		demoImage "/var/cache/2web/web/404.png" "404" "200" "200" &
+		waitQueue 0.5 "$totalCPUS"
+	fi
+	blockQueue 1
+
+	rotateSpinner &
+	SPINNER_PID="$!"
 
 	# build the bump video
 	if test -f /var/cache/2web/spinner.gif;then
