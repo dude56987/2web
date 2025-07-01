@@ -136,7 +136,7 @@ function drawHeader(){
 	#echo "			<a class='button' href='/zip-gen.php?repo=".file_get_contents("title.index")."'>\n";
 	echo "			<a class='button' href='".file_get_contents("title.index").".zip'>\n";
 	#echo "			<a class='button' href='source.zip'>\n";
-	echo "				<span class='downloadIcon'>▼</span>\n";
+	echo "				<span class='downloadIcon'>🡇</span>\n";
 	echo "				Download Source\n";
 	echo "			</a>\n";
 	echo "		</div>\n";
@@ -459,7 +459,7 @@ if (array_key_exists("inspector",$_GET)){
 	if (in_array($graphName,$graphTitles)){
 		echo "<div class='titleCard'>\n";
 		echo "	<h2>".ucwords(str_replace("_"," ",$graphName))."</h2>\n";
-		echo "	<a href='graph_$graphName.png' class=''>";
+		echo "	<a href='graph_$graphName.png' class='' download >";
 		echo "		<div class='gitCommitListMonthGraph'>";
 		#include("graph_$graphName.svg");
 		echo "		</div>\n";
