@@ -2,6 +2,8 @@
 	#ini_set('display_errors', 1);
 	include("/usr/share/2web/2webLib.php");
 	########################################################################
+	startSession();
+	########################################################################
 	# get the title data
 	$titlePath=$_SERVER["SCRIPT_FILENAME"].".title";
 	# get the sum from the filename
@@ -68,12 +70,14 @@ function cachedMimeType($videoLink){
 	$sum = hash("sha512",$videoLink,false);
 	#
 	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
+	$maxSleep=10;
+	$sleepCounter=20;
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
 		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
-			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
+			if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3"))){
 				return ("audio/mpeg");
-			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
+			}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4"))){
 				return ("video/mp4");
 			}else{
 				return ("application/mpegurl");
@@ -83,8 +87,14 @@ function cachedMimeType($videoLink){
 		}else if( file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
 			return ("application/mpegurl");
 		}
-		# if no media can be resolved return loading as the metadata type
-		return ("loading");
+		$maxSleep+=1;
+		if ($maxSleep > $sleepCounter){
+			$sleepCounter+=1;
+		}else{
+			# if no media can be resolved return loading as the metadata type
+			return ("loading");
+		}
+		sleep(1);
 	}
 }
 ########################################################################
@@ -198,10 +208,9 @@ function isTranscodeEnabled(){
 function noscriptRefresh($seconds=10){
 	echo "<noscript>";
 	echo "<div class='titleCard'>";
-	echo "<img class='localPulse' src='/pulse.gif'>";
 	echo "<p>The video is still loading...</p>";
 	echo "<p>The page will refresh when the player loads...</p>";
-	echo "<noscript><meta http-equiv='refresh' content='$seconds'></noscript>";
+	echo "<meta http-equiv='refresh' content='$seconds'>";
 	echo "</div>";
 	echo "</noscript>";
 }
@@ -296,6 +305,12 @@ document.body.addEventListener('keydown', function(event){
 		# remove parenthesis from video link if they exist
 		$directLinkData=str_replace('"','',$directLinkData);
 		$directLinkData=str_replace("'","",$directLinkData);
+		# remove hash data if found
+		if ( strpos($directLinkData,"#") !== false) {
+			# split the string based on the hash
+			$tempData=explode("#",$directLinkData);
+			$directLinkData=$tempData[0];
+		}
 		# create the sum of the file
 		$sum = hash("sha512",$directLinkData,false);
 	}else{
@@ -514,7 +529,6 @@ document.body.addEventListener('keydown', function(event){
 	}
 ?>
 </h1>
-<img class='globalPulse' src='/pulse.gif'>
 <div class='listCard'>
 <?PHP
 	if (! file_exists("show.title")){
@@ -561,6 +575,14 @@ document.body.addEventListener('keydown', function(event){
 			$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url="'.$directLinkData.'"';
 			# attempt to verify the cached file
 			verifyCacheFile("/var/cache/2web/web/RESOLVER-CACHE/$sum/",$directLinkData);
+			#
+			if( file_exists("/var/cache/2web/web/RESOLVER-CACHE/$sum/verified.cfg") ){
+				# check if the cache file was just verified
+				if( ( time() - filemtime("/var/cache/2web/web/RESOLVER-CACHE/$sum/verified.cfg") ) < 5){
+					# if the file was verified less than 5 seconds ago reload the page to load the high res version
+					reloadPage(5);
+				}
+			}
 		}else{
 			# if the trancode is enabled run the transcode job
 			# - the transcoder will transcode all local videos for playback on webpages.
@@ -593,6 +615,9 @@ document.body.addEventListener('keydown', function(event){
 			echo "<div class='titleCard'>";
 			echo "Video is loading, page will automatically refresh...";
 			echo "</div>";
+			echo "<script>\n";
+			echo "	notify(\"Loading Video...\",10000);\n";
+			echo "</script>\n";
 			echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 			echo "</video>\n";
@@ -601,19 +626,35 @@ document.body.addEventListener('keydown', function(event){
 		}else{
 			# draw the player based on the video link mime type
 			if (is_in_array("video/mp4", $videoMimeType)){
-				echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
+				if (array_key_exists("loop",$_GET)){
+					echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' autoplay loop controls>\n";
+				}else{
+					echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
+				}
 				echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 				echo "</video>\n";
 			}else if (is_in_array("audio/mpeg", $videoMimeType)){
-				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				if (array_key_exists("loop",$_GET)){
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls>\n";
+				}else{
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				}
 				echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
 				echo "</audio>\n";
 			}else if (is_in_array("video/webm", $videoMimeType)){
-				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				if (array_key_exists("loop",$_GET)){
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls>\n";
+				}else{
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				}
 				echo "	<source src='$fullPathVideoLink' type='video/webm'>\n";
 				echo "</audio>\n";
 			}else if (is_in_array("video/ogg", $videoMimeType)){
-				echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				if (array_key_exists("loop",$_GET)){
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls>\n";
+				}else{
+					echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls>\n";
+				}
 				echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
 				echo "</audio>\n";
 			}else if (is_in_array("application/mpegurl", $videoMimeType)){
@@ -652,12 +693,17 @@ document.body.addEventListener('keydown', function(event){
 				# This is a unsupported media file that can not be played with the web player
 				# - This is the message displayed when a local media type is given but transcoding is disabled
 				echo "<div class='titleCard'>\n";
-				echo "The server administrator has disabled video transcoding.<br> Video player can not currently play this file type '$videoMimeType'.<br> Use the direct links or external links below to download or access media with a external application.\n";
+				echo "	<div class='videoPosterContainer'>";
+				echo "		<img class='videoPoster' src='$posterPath' />";
+				echo "	</div>";
+				echo "	<div class='titleCard'>\n";
+				echo "		The server administrator has disabled video transcoding.<br> Video player can not currently play this file type '$videoMimeType'.<br> Use the direct links or external links below to download or access media with a external application.\n";
+				echo "	</div>\n";
 				echo "</div>\n";
 			}
 		}
 	?>
-<div class='descriptionCard'>
+<div id='pageContent' class='descriptionCard'>
 <h2>
 <?PHP
 	echo $titleData;
@@ -678,6 +724,12 @@ document.body.addEventListener('keydown', function(event){
 	echo "🔗Direct Link\n";
 	echo "</a>\n";
 	echo "</div>\n";
+	#
+	echo "<div>\n";
+	echo "<a class='button hardLink' rel='noreferer' href='".$directLinkData."' download>\n";
+	echo "<span class='downloadIcon'>🡇</span> Direct Download\n";
+	echo "</a>\n";
+	echo "</div>\n";
 
 	# build the cache links
 	if ( $httpLink ){
@@ -687,6 +739,12 @@ document.body.addEventListener('keydown', function(event){
 		echo "📥Cache Link\n";
 		echo "</a>\n";
 		echo "</div>\n";
+		#
+		echo "<div>\n";
+		echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."' download>\n";
+		echo "<span class='downloadIcon'>🡇</span> Cache Download Link\n";
+		echo "</a>\n";
+		echo "</div>\n";
 	}else{
 		# only draw a cache link for local links if the transcoder is enabled
 		if (isTranscodeEnabled()){
@@ -694,6 +752,12 @@ document.body.addEventListener('keydown', function(event){
 			echo "<div>\n";
 			echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/transcode.php?path=".$directLinkData."'>\n";
 			echo "📥Cache Link\n";
+			echo "</a>\n";
+			echo "</div>\n";
+			#
+			echo "<div>\n";
+			echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/transcode.php?path=".$directLinkData."' download>\n";
+			echo "<span class='downloadIcon'>🡇</span> Cache Download Link\n";
 			echo "</a>\n";
 			echo "</div>\n";
 		}
@@ -706,69 +770,119 @@ document.body.addEventListener('keydown', function(event){
 		echo "</a>\n";
 		echo "</div>\n";
 	}
-	# check if the play on kodi button is enabled in the settings
-	if (yesNoCfgCheck("/etc/2web/kodi/playOnKodiButton.cfg")){
-		# check if the user has permissisons to access these buttons
-		if (requireGroup("kodi2web", false)){
-			echo "<div>";
-			# build the play on kodi links
-			if (file_exists("show.title")){
-				# if this is a .strm link it should always be passed though the resolver
-				# - The resolver will cache direct links to media files
-				# - The resolver will resolve webpages that contain media links
-				# - using a self signed cert will cause this to fail unless you setup all
-				#   kodi clients with the public cert so this is currently disabled by default
-				if($httpLink){
-					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
+	$userClientName="";
+	if (array_key_exists("selectedRemote",$_SESSION)){
+		if ($_SESSION["selectedRemote"] == "CLIENT"){
+			$userClientName="client";
+		}else{
+			$userClientName="kodi";
+		}
+	}else{
+		$userClientName="select";
+	}
+	addToLog("DEBUG","videoPlayer.php","userClientName = '$userClientName'");
+	if ($userClientName == "client"){
+		addToLog("DEBUG","videoPlayer.php","loading client'");
+		# if the client is enabled
+		if (yesNoCfgCheck("/etc/2web/client.cfg")){
+			# if the group permissions are available for the current user
+			if (requireGroup("clientRemote", false)){
+				if ($videoMimeType == "application/mpegurl"){
+					$playbackType="stream";
+				}else if ($videoMimeType == "video/mp4"){
+					$playbackType="play";
+				}else if ($videoMimeType == "video/webm"){
+					$playbackType="play";
+				}else if ($videoMimeType == "audio/mpeg"){
+					$playbackType="audio";
 				}else{
-					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+					$playbackType="unsupported=$videoMimeType&";
 				}
-			}else{
-				# this is a movie
-				# - using a self signed cert will cause this to fail unless you setup all
-				#   kodi clients with the public cert so this is currently disabled by default
-				if($httpLink){
-					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
+				$mimeData="?mime=".$playbackType."&";
+				# draw the button for playing videos across all the clients
+				echo "<div>";
+				# build the play on client link
+				$tempPathPrefix=$proto.$_SERVER["HTTP_HOST"];
+				#echo "<a class='button hardLink' target='_new' href='/client/?play=".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."'>\n";
+				if( (stripos( $directLinkData , "http://" ) !== false) or (stripos( $directLinkData , "https://" ) !== false) ){
+					echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$directLinkData)."'>\n";
 				}else{
-					echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+					#echo "<a class='button hardLink' target='_new' href='/client/?play=/ytdl-resolver.php?url=http://".$directLinkData."'>\n";
+					#echo "<a class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$proto.$_SERVER["HTTP_HOST"]."/".$directLinkData)."'>\n";
+					echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$directLinkData)."'>\n";
 				}
+				echo "🎟️ Play on Client\n";
+				echo "</a>\n";
+				echo "</div>\n";
 			}
-			echo "🇰Play on KODI\n";
-			echo "</a>\n";
-			echo "</div>\n";
 		}
-	}
-
-	# if the client is enabled
-	if (yesNoCfgCheck("/etc/2web/client.cfg")){
-		# if the group permissions are available for the current user
-		if (requireGroup("clientRemote", false)){
-			# draw the button for playing videos across all the clients
-			echo "<div>";
-			# build the play on client link
-			echo "<a class='button hardLink' target='_new' href='/client/?play=".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."'>\n";
-			echo "🎟️ Play on Client\n";
-			echo "</a>\n";
-			echo "</div>\n";
+	}else if ( $userClientName == "kodi" ){
+		# check if the play on kodi button is enabled in the settings
+		if (yesNoCfgCheck("/etc/2web/kodi/playOnKodiButton.cfg")){
+			# check if the user has permissisons to access these buttons
+			if (requireGroup("kodi2web", false)){
+				echo "<div>";
+				# build the play on kodi links
+				if (file_exists("show.title")){
+					# if this is a .strm link it should always be passed though the resolver
+					# - The resolver will cache direct links to media files
+					# - The resolver will resolve webpages that contain media links
+					# - using a self signed cert will cause this to fail unless you setup all
+					#   kodi clients with the public cert so this is currently disabled by default
+					if($httpLink){
+						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
+					}else{
+						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+					}
+				}else{
+					# this is a movie
+					# - using a self signed cert will cause this to fail unless you setup all
+					#   kodi clients with the public cert so this is currently disabled by default
+					if($httpLink){
+						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
+					}else{
+						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+					}
+				}
+				echo "🇰Play on KODI\n";
+				echo "</a>\n";
+				echo "</div>\n";
+			}
 		}
+	}else if ( $userClientName == "select" ){
+		if ($videoMimeType == "application/mpegurl"){
+			$playbackType="stream";
+		}else if ($videoMimeType == "video/mp4"){
+			$playbackType="play";
+		}else if ($videoMimeType == "video/webm"){
+			$playbackType="play";
+		}else if ($videoMimeType == "audio/mpeg"){
+			$playbackType="audio";
+		}else{
+			$playbackType="unsupported=$videoMimeType&";
+		}
+		echo "<div>\n";
+		echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/remote.php?mime=$playbackType&play=".urlencode($directLinkData)."'>\n";
+		echo "🎛️ Select Your Remote\n";
+		echo "</a>\n";
+		echo "</div>\n";
 	}
-
 	echo "<div>";
 	# build the vlc links
 	if (file_exists("show.title")){
 		if ( $httpLink ){
 			# if this is a external link
-			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
+			echo "<a onclick='pauseVideo();' class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
 		}else{
-			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
+			echo "<a onclick='pauseVideo();' class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 		}
 	}else{
 		if ( $httpLink ){
 			# if this is a external link
-			echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
+			echo "<a onclick='pauseVideo();' class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",$fullPathVideoLink)."'>\n";
 		}else{
 			# this is a movie
-			echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
+			echo "<a onclick='pauseVideo();' class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20",$directLinkData)."'>\n";
 		}
 	}
 	echo "▶️ Direct Play\n";
@@ -778,13 +892,22 @@ document.body.addEventListener('keydown', function(event){
 
 	if (file_exists("show.title")){
 		echo "<div>\n";
-		echo "<a class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>\n";
+		echo "<a onclick='pauseVideo();' class='button hardLink vlcButton' href='vlc://"."http://".$_SERVER["HTTP_HOST"]."/m3u-gen.php?playAt=".$numericTitleData."&showTitle=".str_replace(" ","%20",$showTitle)."'>\n";
 		echo "🔁 Continue\n";
 		echo "<sup><span id='vlcIcon'>▲</span>VLC</sup>\n";
 		echo "</a>\n";
 		echo "</div>\n";
 	}
-
+	# add code to turn looping the video on or off
+	if (array_key_exists("loop",$_GET)){
+		echo "		<a class='hardLink button' href='?'>";
+		echo "			① Play Once";
+		echo "		</a>";
+	}else{
+		echo "		<a class='hardLink button' href='?loop'>";
+		echo "			∞ Loop Playback";
+		echo "		</a>";
+	}
 	echo "</div>\n";
 ?>
 <?PHP
@@ -795,9 +918,16 @@ document.body.addEventListener('keydown', function(event){
 ?>
 </div>
 <?PHP
-	# write the admin data if it exists
-	echo $adminData;
+# write the admin data if it exists
+echo $adminData;
+
+#
+
+loadSearchIndexResults($titleData,"shows");
+loadSearchIndexResults($titleData,"movies");
+
 ?>
+
 <div class='titleCard'>
 	<h1>External Links</h1>
 	<div class='listCard'>
