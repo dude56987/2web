@@ -888,6 +888,40 @@ if (array_key_exists("newUserName",$_POST)){
 			addToLog("ERROR","seasons.php","Could not find any sources.cfg file for show");
 		}
 	}
+}else if (array_key_exists("rescanComic",$_POST)){
+	$comicName=$_POST["rescanComic"];
+	if(verifyChoice()){
+		if(file_exists("/var/cache/2web/web/comics/$comicName/sources.cfg")){
+			#
+			outputLog("Preparing to rescan '$comicName'");
+			# delete existing meta data
+			# - remove kodi path
+			# - remove web path
+			# - rescan the source  paths stored int the current metadata
+			$command="set -x\n";
+			$command.="rm -rv \"/var/cache/2web/web/comics/".$comicName."/\"\n";
+			$command.="rm -rv \"/var/cache/2web/web/kodi/comics/".$comicName."/\"\n";
+			#
+			$metaPaths=file("/var/cache/2web/web/comics/$comicName/sources.cfg");
+			foreach($metaPaths as $metaPath){
+				$metaPath=str_replace("\n","",$metaPath);
+				# - launch a process to rescan the data
+				$command.="comic2web --process \"$metaPath\"\n";
+			}
+			#
+			outputLog("Running Script <pre>$command</pre>");
+			# add rescan script to the queue
+			addToQueue("single",$command);
+			outputLog("If the comic is still being scanned into the server the below link will have a 404 error. This is temporary. Refresh that 404 page after a minute and the comic should be available again.","goodLog");
+			# Link back to the comic
+			addToLog("WARNING","comic_overview.php processing command","<pre>".$command."</pre>");
+			echo "<hr><a class='button' href='/comics/$comicName/'>🛠️ Return To Comic</a><hr>";
+		}else{
+			addToLog("ERROR","comic_overview.php","Could not find any sources.cfg file for comic");
+			outputLog("Could not find any '/var/cache/2web/web/comics/$comicName/sources.cfg' file for comic","ERROR");
+			echo "<hr><a class='button' href='/comics/$comicName/'>🛠️ Return To Comic</a><hr>";
+		}
+	}
 }else if (array_key_exists("autoReboot",$_POST)){
 	outputLog("Setting auto reboot status to ".$_POST['autoReboot']);
 	yesNoCfgSet("/etc/2web/autoReboot.cfg", $_POST['autoReboot']);
