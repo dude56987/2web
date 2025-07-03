@@ -141,10 +141,7 @@ function generateFortune(){
 			#
 			addToLog "INFO" "Generate New Fortune" "<pre>/usr/games/fortune -e ${fortuneFiles}</pre><pre>${todaysFortune}</pre>"
 			#
-			drawLine
-			drawHeader "New Fortune"
-			drawLine
-			ALERT "$todaysFortune"
+			ALERT "$todaysFortune" "New Fortune"
 			#
 			echo "$todaysFortune" > "$webDirectory/fortune.index"
 		else

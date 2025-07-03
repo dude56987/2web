@@ -350,10 +350,9 @@ main(){
 		update "$@"
 		# on default execution show the server links at the bottom of output
 		showServerLinks
-		echo "Module Links"
+		drawSmallHeader "Module Links"
 		drawLine
 		echo "http://$(hostname).local:80/applications/"
-		drawLine
 		echo "http://$(hostname).local:80/settings/apps.php"
 		drawLine
 	fi
