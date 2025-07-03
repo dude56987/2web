@@ -164,6 +164,58 @@ foreach($modules as $module){
 		echo "		</li>\n";
 	}
 	echo "			</ul>\n";
+	#
+	if ($module == "nfo2web"){
+		$settingsTempPath="/settings/nfo.php";
+		$settingsTempIcon="📺";
+	}else if ($module == "php2web"){
+		$settingsTempPath="/settings/apps.php";
+		$settingsTempIcon="🖥️";
+	}else if ($module == "music2web"){
+		$settingsTempPath="/settings/music.php";
+		$settingsTempIcon="🎧";
+	}else if ($module == "portal2web"){
+		$settingsTempPath="/settings/portal.php";
+		$settingsTempIcon="🚪";
+	}else if ($module == "ytdl2nfo"){
+		$settingsTempPath="/settings/ytdl2nfo.php";
+		$settingsTempIcon="<span class='downloadIcon'>🡇</span>";
+	}else if ($module == "rss2nfo"){
+		$settingsTempPath="/settings/rss.php";
+		$settingsTempIcon="📶";
+	}else if ($module == "2web"){
+		$settingsTempPath="/settings/system.php";
+		$settingsTempIcon="🎛️";
+	}else if ($module == "ai2web"){
+		$settingsTempPath="/settings/ai.php";
+		$settingsTempIcon="🧠";
+	}else if ($module == "git2web"){
+		$settingsTempPath="/settings/repos.php";
+		$settingsTempIcon="💾";
+	}else if ($module == "comic2web"){
+		$settingsTempPath="/settings/comics.php";
+		$settingsTempIcon="📚";
+	}else if ($module == "kodi2web"){
+		$settingsTempPath="/settings/kodi.php";
+		$settingsTempIcon="🇰";
+	}else if ($module == "weather2web"){
+		$settingsTempPath="/settings/weather.php";
+		$settingsTempIcon="🌤️";
+	}else if ($module == "iptv2web"){
+		$settingsTempPath="/settings/tv.php";
+		$settingsTempIcon="📡";
+	}else if ($module == "graph2web"){
+		$settingsTempPath="/settings/graphs.php";
+		$settingsTempIcon="📊";
+	}else if ($module == "wiki2web"){
+		$settingsTempPath="/settings/wiki.php";
+		$settingsTempIcon="⛵";
+	}else{
+		echo "<div class='errorBanner'>Unknown Module Settings Page. Trying to guess?</div>";
+		$settingsTempPath="/settings/$module.php";
+		$settingsTempIcon="🎛️";
+	}
+	#
 	echo "	<div class='listCard'>\n";
 	// check the status of the module for the dropdown
 	if (checkModStatus($module)){
@@ -175,14 +227,7 @@ foreach($modules as $module){
 		echo "		<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable Module</button>\n";
 		echo "		</form>\n";
 	}
-	// add force update button
-	echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
-	echo "			<button class='button' type='submit' name='".$module."_update' value='yes'>🗘 Force Update</button>\n";
-	echo "		</form>\n";
-
-	echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
-	echo "			<button class='button' type='submit' name='".$module."_nuke' value='yes'>☢️ Nuke</button>\n";
-	echo "		</form>\n";
+	echo "<a class='button' href='$settingsTempPath'>$settingsTempIcon $module Settings</a>";
 
 	echo "	</div>\n";
 	echo "</div>\n";

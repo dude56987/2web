@@ -48,6 +48,34 @@ include("settingsHeader.php");
 </div>
 </div>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <?PHP
 
 if(file_exists("/usr/games/steam")){
