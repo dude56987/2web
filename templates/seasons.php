@@ -51,7 +51,6 @@ include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 <?PHP
 echo "<h1>";
 echo "$showTitle";
-echo "<img id='spinner' src='/spinner.gif' />";
 echo "</h1>";
 ?>
 <hr>
