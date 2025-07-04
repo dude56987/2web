@@ -1618,7 +1618,7 @@ main(){
 		webDirectory=$(webRoot)
 		# read all the modules from loadModules
 		# - reverse list so main 2web process is killed last
-		moduleNames=$(loadModules | tac)
+		moduleNames=$(loadModules | sort -r)
 		# figure out enabled modules and build header text
 		for module in $moduleNames;do
 			module="$(echo "$module" | cut -d'=' -f1)"
