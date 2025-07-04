@@ -382,6 +382,22 @@ function showSpinner(){
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
+function hideSpinner(){
+	console.log("Spinner being hidden")
+	var spinnerElements=document.getElementsByClassName("globalSpinner");
+	// loop though the found spinners
+	for(let index = 0; index < spinnerElements.length; index++){
+		// show the spinner
+		spinnerElements[index].style.visibility= "hidden";
+	}
+	// get the pulse elements
+	var pulseElements=document.getElementsByClassName("globalPulse");
+	for(let index = 0; index < pulseElements.length; index++){
+		pulseElements[index].style.visibility = "hidden";
+	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
 function openFullscreen() {
 	// View in fullscreen
 
@@ -482,7 +498,7 @@ function CreateCopyButtons(){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function notify(message){
+function notify(message,displayTime=500){
 	console.log("notify="+message);
 	// if a notification is being displayed, remove it
 	if(document.getElementById("notification") != null){
@@ -493,11 +509,12 @@ function notify(message){
 		// build the notification
 		var notifyObj = document.createElement("div");
 		notifyObj.setAttribute("id", "notification");
-		document.getElementById("pageContent").appendChild(notifyObj);
+		//document.getElementById("pageContent").appendChild(notifyObj);
+		document.body.appendChild(notifyObj);
 		//
 		document.getElementById("notification").style.opacity=0.9;
 		document.getElementById("notification").innerHTML=message;
-		// hide the message after 1 second
+		// hide the message after .5 seconds
 		notificationTimer = setTimeout(() =>{
 			//
 			if(document.getElementById("notification") != null){
@@ -506,7 +523,7 @@ function notify(message){
 				// allow animation time to run then remove the object
 				notificationTimeoutTimer = setTimeout(() =>{
 					document.getElementById("notification").remove();
-				}, 500);
+				}, displayTime);
 			}
 		}, 355);
 	}
