@@ -4009,3 +4009,24 @@ function stopSpinner(){
 	kill "$SPINNER_PID" || INFO "No Spinner could be stopped..."
 }
 ########################################################################
+function loadOption(){
+	# loadOption "$optionName" "$input"
+	#
+	# Load a option from the input usually done at the top level of a script
+	#
+	# - Normally you would use $@ as the input
+	# - This will detect --optionName and can be used to store the true or
+	#   false value
+	#
+	option="$1"
+	input="$2"
+	# load a option
+	if echo "$input" | grep -q -e "--${option}";then
+		# load the option
+		echo "yes"
+	else
+		# load the default of no
+		echo "no"
+	fi
+}
+########################################################################
