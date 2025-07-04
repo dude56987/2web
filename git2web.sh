@@ -520,7 +520,7 @@ function update(){
 	# make repos directory
 	createDir "$webDirectory/repos/"
 	# scan the sources
-	ALERT "git Download Sources: $repoSources"
+	ALERT "$repoSources" "GIT Download Sources"
 	echo "$repoSources" | while read repoSource;do
 		# generate a sum for the source
 		repoSum=$(echo "$repoSource" | sha512sum | cut -d' ' -f1)
@@ -542,7 +542,7 @@ function update(){
 				ALERT "Found Repo at $repoSource"
 				addToLog "DOWNLOAD" "Pull updates to repo" "$repoSource"
 				# launch as www-data so git will not throw security errors
-				su www-data git -C "$repoSource/source/" pull
+				su www-data --command="git -C \"$repoSource/source/\" pull"
 			fi
 			touch "$webDirectory/sums/git2web_pull_$repoSum.cfg"
 		fi
@@ -602,7 +602,7 @@ function processRepo(){
 		ALERT "This is a valid repo '$repoSource'"
 		addToLog "INFO" "Valid Repo" "'$repoSource' contains a valid .git repo"
 	else
-		ALERT "Invalid repo '$repoSource'"
+		ERROR "Invalid repo '$repoSource'"
 		addToLog "ERROR" "Invalid Repo" "$repoSource"
 		return
 	fi
@@ -633,7 +633,7 @@ function processRepo(){
 	INFO "$repoName : Checking git repo source data sum: $repoName"
 
 	# configure how multithreading will be handled
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
@@ -768,17 +768,17 @@ function processRepo(){
 			commitCount=$(( commitCount + 1 ))
 			INFO "$repoName : Building commit page $commitCount/$totalCommits for $commitAddress "
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
-			timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+			cleanText "$(timeout 120 git show "$commitAddress" --stat | txt2html --extract --escape_HTML_chars)" > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+			cleanText "$(timeout 120 git diff "$commitAddress"~ "$commitAddress" | txt2html --extract --escape_HTML_chars)" > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct' > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct')" > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an' > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an')" > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae')" > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s' > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s')" > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
 			waitQueue 0.5 "$totalCPUS"
 		done
 		INFO "$repoName : Building README.md"
@@ -1018,7 +1018,7 @@ function processRepo(){
 		addToIndex "$webDirectory/repos/$repoName/repos.index" "$webDirectory/new/all.index"
 
 		# add this comic to the search index
-		addToSearchIndex "$webDirectory/repos/$repoName/repos.index" "$repoName"
+		addToSearchIndex "$webDirectory/repos/$repoName/repos.index" "$repoName" "/repos/$repoName/"
 
 		# update update times
 		date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -1175,227 +1175,222 @@ function nuke(){
 	delete $webDirectory/web_cache/widget_new_repos.index
 }
 ################################################################################
-main(){
-	################################################################################
-	# set the theme of the lines in CLI output
-	LINE_THEME="floppy"
-	#
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		lockProc "git2web"
-		checkModStatus "git2web"
-		webUpdate "$@"
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		lockProc "git2web"
-		checkModStatus "git2web"
-		update "$@"
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "git2web"
-		upgrade-pip "git2web" "jslint"
-	elif [ "$1" == "--force-upgrade" ];then
-		# force upgrade or install of all the pip packages
-		upgrade-pip
-	elif [ "$1" == "--demo-push" ] || [ "$1" == "demo-push" ] ;then
-		# create a list of file extensions
-		fileExtensions=".txt .py .sh"
-		# create new commits for existing repos in the demo data repos
-		find "/var/cache/2web/generated/demo/repos/" -maxdepth 1 -mindepth 1 -type d | while read repoSource;do
-			# for each of the found repos generate new randomized commits
-			projectPath="$repoSource"
-			# get the name of the repo
-			randomTitle="$(basename "$repoSource")"
-			# random start date between 10 and 300 days ago
-			projectStartDate="$(date)"
-			# create a random list of commiter names
-			userNames="$(randomWord)\n"
-			for index1 in $(seq -w $(( 1 + ( $RANDOM % 20 ) )) );do
-				userNames="$userNames$(randomWord)\n"
-			done
-			ALERT "USER NAMES = '$userNames'"
-			# generate a random number of commits for each repo
-			for index1 in $(seq -w $(( 2 + ( $RANDOM % 5 ) )) );do
-				# for each commit pick a random username
-				userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
-				ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
-				# set the user name for the user commiting this commit
-				git -C "$projectPath" config --add user.email "${userName}@demoData.local"
-				git -C "$projectPath" config --add user.name "${userName} DemoData"
-				# add a random number of files
-				for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-					# choose a random file type
-					extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
-					randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
-					# create diffrent files based on extension
-					if [ $extension == ".py" ];then
-						commentPrefix="# "
-					elif [ $extension == ".sh" ];then
-						commentPrefix="# "
-					elif [ $extension == ".js" ];then
-						commentPrefix="// "
-					else
-						commentPrefix=""
-					fi
-					# create a random number of comments
-					for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-						# add the comment prefix to the line
-						echo -n "${commentPrefix}" >> "$randomFile"
-						# set a random number of words in the comment line
-						for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
-							echo -n "$(randomWord) " >> "$randomFile"
-						done
-						# write the end of the line
-						echo -ne "\n" >> "$randomFile"
-					done
-					# add the generated file to the git repo
-					git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
-				done
-				# convert the date format to what git requires
-				tempCommitTime="$(date)"
-				# set the dates for the commit to be the same
-				export GIT_COMMITTER_DATE="$tempCommitTime"
-				export GIT_AUTHOR_DATE="$tempCommitTime"
-				# commit the generated files
-				# - create a randomized commit message
-				commitMessage=""
-				for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-					commitMessage="$commitMessage$(randomWord) "
-				done
-				# add the commit
-				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
-				# unset values so the users shell is unaffected
-				unset GIT_COMMITTER_DATE
-				unset GIT_AUTHOR_DATE
-			done
+# set the theme of the lines in CLI output
+LINE_THEME="floppy"
+#
+PARALLEL_OPTION="$(loadOption "parallel" "$@")"
+#
+if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+	lockProc "git2web"
+	checkModStatus "git2web"
+	webUpdate "$@"
+elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	lockProc "git2web"
+	checkModStatus "git2web"
+	update "$@"
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "git2web"
+	upgrade-pip "git2web" "jslint"
+elif [ "$1" == "--force-upgrade" ];then
+	# force upgrade or install of all the pip packages
+	upgrade-pip
+elif [ "$1" == "--demo-push" ] || [ "$1" == "demo-push" ] ;then
+	# create a list of file extensions
+	fileExtensions=".txt .py .sh"
+	# create new commits for existing repos in the demo data repos
+	find "/var/cache/2web/generated/demo/repos/" -maxdepth 1 -mindepth 1 -type d | while read repoSource;do
+		# for each of the found repos generate new randomized commits
+		projectPath="$repoSource"
+		# get the name of the repo
+		randomTitle="$(basename "$repoSource")"
+		# random start date between 10 and 300 days ago
+		projectStartDate="$(date)"
+		# create a random list of commiter names
+		userNames="$(randomWord)\n"
+		for index1 in $(seq -w $(( 1 + ( $RANDOM % 20 ) )) );do
+			userNames="$userNames$(randomWord)\n"
 		done
-	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
-		# generate demo data git repos
+		ALERT "$userNames" "User Names"
+		# generate a random number of commits for each repo
+		for index1 in $(seq -w $(( 2 + ( $RANDOM % 5 ) )) );do
+			# for each commit pick a random username
+			userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
+			ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
+			# set the user name for the user commiting this commit
+			git -C "$projectPath" config --add user.email "${userName}@demoData.local"
+			git -C "$projectPath" config --add user.name "${userName} DemoData"
+			# add a random number of files
+			for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+				# choose a random file type
+				extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
+				randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
+				# create diffrent files based on extension
+				if [ $extension == ".py" ];then
+					commentPrefix="# "
+				elif [ $extension == ".sh" ];then
+					commentPrefix="# "
+				elif [ $extension == ".js" ];then
+					commentPrefix="// "
+				else
+					commentPrefix=""
+				fi
+				# create a random number of comments
+				for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					# add the comment prefix to the line
+					echo -n "${commentPrefix}" >> "$randomFile"
+					# set a random number of words in the comment line
+					for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+						echo -n "$(randomWord) " >> "$randomFile"
+					done
+					# write the end of the line
+					echo -ne "\n" >> "$randomFile"
+				done
+				# add the generated file to the git repo
+				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
+			done
+			# convert the date format to what git requires
+			tempCommitTime="$(date)"
+			# set the dates for the commit to be the same
+			export GIT_COMMITTER_DATE="$tempCommitTime"
+			export GIT_AUTHOR_DATE="$tempCommitTime"
+			# commit the generated files
+			# - create a randomized commit message
+			commitMessage=""
+			for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+				commitMessage="$commitMessage$(randomWord) "
+			done
+			# add the commit
+			git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
+			# unset values so the users shell is unaffected
+			unset GIT_COMMITTER_DATE
+			unset GIT_AUTHOR_DATE
+		done
+	done
+elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+	# generate demo data git repos
 
-		# check for parallel processing and count the cpus
-		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(cpuCount)
-		else
-			totalCPUS=1
-		fi
-		# create a list of file extensions
-		fileExtensions=".txt .py .sh"
-		#########################################################################################
-		# comic2web demo comics
-		#########################################################################################
-		createDir "/var/cache/2web/generated/demo/repos/"
-		# build random git repos
-		for index0 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-			# generate the random git repo name
-			randomTitle="$RANDOM $(randomWord) $(randomWord)"
-			projectPath="/var/cache/2web/generated/demo/repos/$randomTitle/"
-			# random start date between 10 and 300 days ago
-			projectStartDate=$(( 1000 + ( $RANDOM % 300000 ) ))
-			#
-			commitTime=$(( $projectStartDate - ( $RANDOM % 5 ) ))
-			# create the repo
-			createDir "$projectPath"
-			# initlize the repo
-			git -C "$projectPath" init
-			# disable the safe directory system
-			git -C "$projectPath" config --add safe.directory '*'
-			# create a random list of commiter names
-			userNames="$(randomWord)\n"
-			for index1 in $(seq -w $(( 2 + ( $RANDOM % 20 ) )) );do
-				userNames="$userNames$(randomWord)\n"
-			done
-			ALERT "USER NAMES = '$userNames'"
-			# generate a random number of commits for each repo
-			for index1 in $(seq -w $(( 2 + ( $RANDOM % 150 ) )) );do
-				# for each commit pick a random username
-				userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
-				ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
-				# set the user name for the user commiting this commit
-				git -C "$projectPath" config --add user.email "${userName}@demoData.local"
-				git -C "$projectPath" config --add user.name "${userName} DemoData"
-				# add a random number of files
-				for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-					# choose a random file type
-					extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
-					randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
-					# create diffrent files based on extension
-					if [ $extension == ".py" ];then
-						commentPrefix="# "
-					elif [ $extension == ".sh" ];then
-						commentPrefix="# "
-					elif [ $extension == ".js" ];then
-						commentPrefix="// "
-					else
-						commentPrefix=""
-					fi
-					# create a random number of comments
-					for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-						# add the comment prefix to the line
-						echo -n "${commentPrefix}" >> "$randomFile"
-						# set a random number of words in the comment line
-						for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
-							echo -n "$(randomWord) " >> "$randomFile"
-						done
-						# write the end of the line
-						echo -ne "\n" >> "$randomFile"
-					done
-					# add the generated file to the git repo
-					git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
-				done
-				# update the commit time
-				# - time in minutes
-				commitTime=$(( $commitTime - ( $RANDOM % 7200 ) ))
-				#commitTime=$(( $commitTime - 1 ))
-				# convert the date format to what git requires
-				tempCommitTime="$(date --date="$commitTime hours ago")"
-				# set the dates for the commit to be the same
-				export GIT_COMMITTER_DATE="$tempCommitTime"
-				export GIT_AUTHOR_DATE="$tempCommitTime"
-				# commit the generated files
-				# - create a randomized commit message
-				commitMessage=""
-				for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
-					commitMessage="$commitMessage$(randomWord) "
-				done
-				# add the commit
-				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
-				# unset values so the users shell is unaffected
-				unset GIT_COMMITTER_DATE
-				unset GIT_AUTHOR_DATE
-			done
-		done
-		# get the size of the demo data generated
-		du -sh /var/cache/2web/generated/demo/repos/
-		#########################################################################################
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "git2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "git2web"
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		nuke
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		resetCache
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/git2web.txt"
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "git2web Version: "
-		cat /usr/share/2web/version_git2web.cfg
+	# check for parallel processing and count the cpus
+	if [ "$PARALLEL_OPTION" == "yes" ];then
+		totalCPUS=$(cpuCount)
 	else
-		lockProc "git2web"
-		checkModStatus "git2web"
-		update "$@"
-		webUpdate "$@"
-		#main --help $@
-		# on default execution show the server links at the bottom of output
-		showServerLinks
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/repos/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/repos.php"
-		drawLine
+		totalCPUS=1
 	fi
-}
-################################################################################
-main "$@"
-exit
+	# create a list of file extensions
+	fileExtensions=".txt .py .sh"
+	#########################################################################################
+	# comic2web demo comics
+	#########################################################################################
+	createDir "/var/cache/2web/generated/demo/repos/"
+	# build random git repos
+	for index0 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+		# generate the random git repo name
+		randomTitle="$RANDOM $(randomWord) $(randomWord)"
+		projectPath="/var/cache/2web/generated/demo/repos/$randomTitle/"
+		# random start date between 10 and 300 days ago
+		projectStartDate=$(( 1000 + ( $RANDOM % 300000 ) ))
+		#
+		commitTime=$(( $projectStartDate - ( $RANDOM % 5 ) ))
+		# create the repo
+		createDir "$projectPath"
+		# initlize the repo
+		git -C "$projectPath" init
+		# disable the safe directory system
+		git -C "$projectPath" config --add safe.directory '*'
+		# create a random list of commiter names
+		userNames="$(randomWord)\n"
+		for index1 in $(seq -w $(( 2 + ( $RANDOM % 20 ) )) );do
+			userNames="$userNames$(randomWord)\n"
+		done
+		ALERT "$userNames" "User Names"
+		# generate a random number of commits for each repo
+		for index1 in $(seq -w $(( 2 + ( $RANDOM % 150 ) )) );do
+			# for each commit pick a random username
+			userName="$( echo -e "$userNames" | tr -s '\n' | shuf | head -1 )"
+			ALERT "CHOSEN USER NAME FOR COMMIT = '$userName'"
+			# set the user name for the user commiting this commit
+			git -C "$projectPath" config --add user.email "${userName}@demoData.local"
+			git -C "$projectPath" config --add user.name "${userName} DemoData"
+			# add a random number of files
+			for index2 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+				# choose a random file type
+				extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
+				randomFile="/var/cache/2web/generated/demo/repos/$randomTitle/$(randomWord)$extension"
+				# create diffrent files based on extension
+				if [ $extension == ".py" ];then
+					commentPrefix="# "
+				elif [ $extension == ".sh" ];then
+					commentPrefix="# "
+				elif [ $extension == ".js" ];then
+					commentPrefix="// "
+				else
+					commentPrefix=""
+				fi
+				# create a random number of comments
+				for index3 in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+					# add the comment prefix to the line
+					echo -n "${commentPrefix}" >> "$randomFile"
+					# set a random number of words in the comment line
+					for index4 in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+						echo -n "$(randomWord) " >> "$randomFile"
+					done
+					# write the end of the line
+					echo -ne "\n" >> "$randomFile"
+				done
+				# add the generated file to the git repo
+				git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" add "$randomFile"
+			done
+			# update the commit time
+			# - time in minutes
+			commitTime=$(( $commitTime - ( $RANDOM % 7200 ) ))
+			#commitTime=$(( $commitTime - 1 ))
+			# convert the date format to what git requires
+			tempCommitTime="$(date --date="$commitTime hours ago")"
+			# set the dates for the commit to be the same
+			export GIT_COMMITTER_DATE="$tempCommitTime"
+			export GIT_AUTHOR_DATE="$tempCommitTime"
+			# commit the generated files
+			# - create a randomized commit message
+			commitMessage=""
+			for index in $(seq -w $(( 1 + ( $RANDOM % 5 ) )) );do
+				commitMessage="$commitMessage$(randomWord) "
+			done
+			# add the commit
+			git -C "/var/cache/2web/generated/demo/repos/$randomTitle/" commit -m "$commitMessage"
+			# unset values so the users shell is unaffected
+			unset GIT_COMMITTER_DATE
+			unset GIT_AUTHOR_DATE
+		done
+	done
+	# get the size of the demo data generated
+	du -sh /var/cache/2web/generated/demo/repos/
+	#########################################################################################
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "git2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "git2web"
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	nuke
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	resetCache
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/git2web.txt"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "git2web Version: "
+	cat /usr/share/2web/version_git2web.cfg
+else
+	lockProc "git2web"
+	checkModStatus "git2web"
+	update "$@"
+	webUpdate "$@"
+	#main --help $@
+	# on default execution show the server links at the bottom of output
+	showServerLinks
+	drawSmallHeader "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/repos/"
+	echo "http://$(hostname).local:80/settings/repos.php"
+	drawLine
+fi
