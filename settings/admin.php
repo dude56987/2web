@@ -950,6 +950,22 @@ if (array_key_exists("newUserName",$_POST)){
 			clear();
 		}
 	}
+}else if (array_key_exists("rescanSearchIndex",$_POST)){
+	if (verifyChoice($cancelLink="/settings/system.php#rescanSearchIndex")){
+		$rescanValue=$_POST['rescanSearchIndex'];
+		if ($rescanValue == "yes"){
+			file_put_contents("/var/cache/2web/generated/searchIndexSum.cfg", time());
+			# set a job in the queue to force a rescan
+			addToQueue("multi","2web --rescan-search-index");
+			outputLog("A rebuild of the search index has been scheduled.\n The process should be started in the next 30 minutes. To force the process to start run '2web' without any options.", "goodLog");
+			backButton("/settings/system.php#rescanSearchIndex","🛠️ Return To Settings");
+			clear();
+		}else{
+			outputLog(("Force rescan search index was called with a strange value '".$rescanValue)."'", "badLog");
+			backButton("/settings/system.php#rescanSearchIndex","🛠️ Return To Settings");
+			clear();
+		}
+	}
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);

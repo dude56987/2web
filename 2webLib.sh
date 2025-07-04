@@ -3266,17 +3266,118 @@ function addPlaylist(){
 	addToIndex "$indexFile" "$webDirectory/tags/all_${tagName}_all.index"
 }
 ########################################################################
+function compileSearchIndex(){
+	# compile together all the search data
+
+	# would like to add that file to a language model
+	drawLine
+	drawSmallHeader "Looking for New Search Index Data"
+	drawLine
+	#
+	dataDirectories=""
+	#
+	newData="NO"
+	if checkFileDataSum "/var/cache/2web/web" "/var/cache/2web/generated/searchIndexSum.cfg";then
+		newData="YES"
+		ALERT "The Search Index Sum has changed!\nIt is required that the search data be compiled again in order to use the search index without errors."
+	fi
+	# if the data has changed rebuild the search index
+	if [ "$newData" == "YES" ];then
+		# check for search index data for each module section
+		if test -d "/var/cache/2web/generated/searchIndexData/shows/";then
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/shows/" -mindepth 1 -maxdepth 1 -type d )"
+			ALERT "Found Shows For Search Index"
+		fi
+		if test -d "/var/cache/2web/generated/searchIndexData/movies/";then
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/movies/" -mindepth 1 -maxdepth 1 -type d )"
+			ALERT "Found Movies For Search Index"
+		fi
+		if test -d "/var/cache/2web/generated/searchIndexData/comics/";then
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/comics/" -mindepth 1 -maxdepth 1 -type d )"
+			ALERT "Found Comics For Search Index"
+		fi
+		if test -d "/var/cache/2web/generated/searchIndexData/music/";then
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/music/" -mindepth 1 -maxdepth 1 -type d )"
+			ALERT "Found Music For Search Index"
+		fi
+		ALERT "$dataDirectories" "Discovered Search Data Paths"
+		# remove any existing search index
+		delete "/var/cache/2web/generated/searchIndex/"
+		# recreate the search index
+		createDir "/var/cache/2web/generated/searchIndex/"
+		#
+		drawLine
+		drawSmallHeader "Compile All Search Indexes"
+		drawLine
+		# count the total
+		totalDataDirectories=$( echo -n "$dataDirectories" | wc -l )
+		dataDirectoryCount=0
+		# read each data directory
+		echo -n "$dataDirectories" | while read -r dataDirectory;do
+			ALERT "Reading Data from '$dataDirectory'"
+			baseDirectoryName=$( basename "$dataDirectory" )
+			dataDirectoryCount=$(( $dataDirectoryCount + 1 ))
+			addThisFile="NO"
+			#
+			dataDirectoryFiles=$(find "$dataDirectory/" -type f)
+			totalDataDirectoryFiles=$(echo -n "$dataDirectoryFiles" | wc -l )
+			dataDirectoryFileCount=0
+			# move files in existing data directory into the new model
+			echo -n "$dataDirectoryFiles" | while read -r dataFileName;do
+				dataDirectoryFileCount=$(( $dataDirectoryFileCount + 1 ))
+				baseDataFileName="$(basename "$dataFileName")"
+				INFO "Adding file $dataDirectoryCount/$totalDataDirectories and token $dataDirectoryFileCount/$totalDataDirectoryFiles in '$baseDirectoryName' token title is '$baseDataFileName'"
+				# add the values from this file to the compiling model
+				cat "$dataFileName" >> "/var/cache/2web/generated/searchIndex/$baseDataFileName"
+			done
+		done
+		drawLine
+		drawSmallHeader "Search Index Compile Complete"
+		drawLine
+		#
+		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/web/new/shows.cfg"
+		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/web/new/movies.cfg"
+		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/web/new/music.cfg"
+		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/web/new/comics.cfg"
+
+		# update the sum
+		date "+%s" > "/var/cache/2web/generated/searchIndexSum.cfg"
+
+		# set the new data sum to prevent this from running again
+		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/generated/searchIndexSum.cfg"
+	fi
+}
+########################################################################
 function addToSearchIndex(){
-	#	addPlaylist "/path/to/index/file.index" "searchTag" "tagName" "filterName"
+	#	addToSearchIndex "$indexFilePath" "$searchData" "$outputPath"
 	#
-	# Add a playlist to the web playlist interface
+	# Add a index file to the search index. The search data will be tokenized
+	# and used. The output path is a prefix used inside the search index data
+	# directory.
 	#
-	# - This will generate all the variations of the playlist filters
+	# - This will add items to
+	#   - /var/cache/2web/generated/searchIndexData/
+	#     + This is where the outputPath will be based.
+	#     + data in this path will be used to recompile the model after data
+	#       is removed.
+	#   - /var/cache/2web/generated/searchIndex/
+	#     + This is the database used by the search engine
+	#     + This is also used for related content widgets
+	#
 	local indexFile="$1"
 	# the data to be searched for indexing
 	local searchData="$2"
-	createDir "/var/cache/2web/generated/searchIndex/"
-	createDir "/var/cache/2web/generated/wordIndex/"
+	outputPath="$3"
+	# set default value for blank value
+	if [ "$outputPath" == "" ];then
+		outputPath="/unknown/unknown/"
+	fi
+	ALERT "Reading search index path '$outputPath'"
+	#
+	outputPath="/var/cache/2web/generated/searchIndexData${outputPath}"
+	#
+	ALERT "Adding to search index at '$outputPath'"
+	createDir "$outputPath"
 	#
 	searchData="$(echo "$searchData" | sed "s/\n/ /g")"
 	searchData="$(echo "$searchData" | sed "s/\r/ /g")"
@@ -3291,39 +3392,60 @@ function addToSearchIndex(){
 	# scan the search data for words to build into the index
 	IFSBACKUP=$IFS
 	IFS=" "
+	#
 	for word in $searchData;do
+		#
 		local cleanWord="$word"
 		# do not add groups of ONLY numbers into the search index
 		if echo "$cleanWord" | grep -q "[[:digit:]]";then
 			if echo "$cleanWord" | grep -q "[[:alpha:]]";then
 				# contains digits and characters add it to the word index
+				addToIndex "$indexFile" "${outputPath}${cleanWord}.index"
 				addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
 			elif echo "$cleanWord" | grep -q "[[:punct:]]";then
 				# contains punctuation and digits so add it to the word index
+				addToIndex "$indexFile" "${outputPath}${cleanWord}.index"
 				addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
 			else
 				# if the word is only digits include it in the word index only if it is below 1000
 				if [ "$cleanWord" -lt 1000 ];then
 					# for each word build a index
+					addToIndex "$indexFile" "${outputPath}${cleanWord}.index"
 					addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
 				fi
 			fi
 		else
 			# add a normal word
+			addToIndex "$indexFile" "${outputPath}${cleanWord}.index"
 			addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${cleanWord}.index"
 		fi
 	done
-
 	# create the relational LLM, also used for search results
 	for word1 in $searchData;do
 		for word2 in $searchData;do
 			# if the word pair is in the data add it to the index
 			if echo "$searchData" | grep -q "${word1} ${word2}";then
-				addToIndex "$indexFile" "/var/cache/2web/generated/wordIndex/${word1} ${word2}.index"
+				#
+				if echo "${word1} ${word2}" | grep -q "[[:digit:]]";then
+					if echo "${word1} ${word2}" | grep -q "[[:alpha:]]";then
+						addToIndex "$indexFile" "${outputPath}${word1} ${word2}.index"
+						addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${word1} ${word2}.index"
+					elif echo "${word1} ${word2}" | grep -q "[[:punct:]]";then
+						addToIndex "$indexFile" "${outputPath}${word1} ${word2}.index"
+						addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${word1} ${word2}.index"
+					else
+						if [ "${word1}" -lt 1000 ];then
+							addToIndex "$indexFile" "${outputPath}${word1} ${word2}.index"
+							addToIndex "$indexFile" "/var/cache/2web/generated/searchIndex/${word1} ${word2}.index"
+						fi
+					fi
+				fi
+				#
+				#addToIndex "$indexFile" "${outputPath}${word1} ${word2}.index"
 			fi
 		done
 	done
-
+	#
 	IFS=$IFSBACKUP
 }
 ########################################################################
@@ -3470,8 +3592,8 @@ function loadSearchIndexResults(){
 		for secondWord in $searchQuery;do
 			secondCleanWord=$(echo -n "$secondWord" | tr "[:upper:]" "[:lower:]")
 			if echo -n "$searchQuery" | grep -q "${cleanWord} ${secondCleanWord}";then
-				if test -f "/var/cache/2web/generated/wordIndex/${cleanWord} ${secondCleanWord}.index";then
-					allIndex="${allIndex}\n$(cat "/var/cache/2web/generated/wordIndex/${cleanWord} ${secondCleanWord}.index")"
+				if test -f "/var/cache/2web/generated/searchIndex/${cleanWord} ${secondCleanWord}.index";then
+					allIndex="${allIndex}\n$(cat "/var/cache/2web/generated/searchIndex/${cleanWord} ${secondCleanWord}.index")"
 				fi
 			fi
 		done

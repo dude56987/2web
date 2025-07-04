@@ -236,6 +236,32 @@ if(file_exists("/usr/games/steam")){
 	</form>
 </div>
 
+<div id='forceSearchRescan' class='inputCard'>
+	<h2>Force Search Rescan</h2>
+	<form action='admin.php' method='post' class='buttonForm'>
+		<div class='warningBanner'>
+			This will take a long time to complete. Do not do this unless you need to.
+		</div>
+		<ul>
+			<li>
+				Rebuild the combined search index from the tokenized data for each media item in the search index data.
+			</li>
+			<li>
+				This happens when a media item is removed and its weights are stuck in the search index.
+			</li>
+			<li>
+				The search index is still accessable when the index is being built, but all data will not be available in the results until the data compile has been completed.
+			</li>
+			<li>
+				If modules are adding new content during this process, that content may be weighted more heavily in the search index.
+			</li>
+		</ul>
+		<input name='forceSearchRescan' value='yes' hidden readonly>
+		<button type='submit' class='button'>⚠️ Force Search Rescan</button>
+	</form>
+</div>
+
+
 <div id='websiteCachePath' class='inputCard'>
 <h2>2web Website Cache Path</h2>
 <ul>

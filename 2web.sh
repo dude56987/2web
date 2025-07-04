@@ -810,6 +810,15 @@ function update2web(){
 	updateCerts
 	# generate fortunes
 	generateFortune "$webDirectory"
+
+	# stop the spinner
+	kill "$SPINNER_PID"
+	# if the search index sum has changed recompile the index
+	compileSearchIndex
+	# start the spinner back
+	rotateSpinner &
+	SPINNER_PID="$!"
+
 	# check for the web player config
 	if yesNoCfgCheck "/etc/2web/webPlayer.cfg";then
 		# create the group
@@ -2525,6 +2534,12 @@ main(){
 		date "+%s" > /etc/2web/forceRescan.cfg
 		chown www-data:www-data /etc/2web/forceRescan.cfg
 		ALERT "A RESCAN of content has been scheduled during the next update of each module."
+	elif [ "$1" == "--rescan-search-index" ] || [ "$1" == "rescan-search-index" ] ;then
+		# force a rescan
+		date "+%s" > "/var/cache/2web/generated/searchIndexSum.cfg"
+		#
+		chown www-data:www-data "/var/cache/2web/generated/searchIndexSum.cfg"
+		ALERT "A rebuild of the search index has been scheduled.\n The process should be started in the next 30 minutes. To force the process to start run '2web' without any options." "Rescan Scheduled"
 	else
 		# update main components
 		# - this builds the base site without anything enabled
