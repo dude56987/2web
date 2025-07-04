@@ -1665,6 +1665,20 @@ if( ! function_exists("requireGroup")){
 	}
 }
 ########################################################################
+if( ! function_exists("findWordGroups")){
+	function findWordGroups($searchQuery){
+		# create an array from a string of the word groups
+		$foundWords=explode(" ",$searchQuery);
+		$outputData=Array();
+		for($index=0;$index<count($foundWords);$index++){
+			if ($index+1 < count($foundWords)){
+				$outputData=array_merge( $outputData,Array($foundWords[$index]." ".$foundWords[$index+1]) );
+			}
+		}
+		return $outputData;
+	}
+}
+########################################################################
 if( ! function_exists("loadSearchIndexResults")){
 	function loadSearchIndexResults($searchQuery,$filter="all"){
 		# loadSearchIndexResults($searchQuery,$filter="all")
@@ -1681,18 +1695,15 @@ if( ! function_exists("loadSearchIndexResults")){
 		$ogQuery=$searchQuery;
 		$searchQuery=cleanText($searchQuery);
 		$searchQuery=spaceCleanedText($searchQuery);
-		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
-
-		# use the cleantext function
-		#$searchQuery=cleanText("$searchQuery");
-		#
-		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
-		#
+		# split the query into word groups
+		$wordGroups=findWordGroups($searchQuery);
+		# explode the search query into an array
 		$searchQuery=explode(" ",$searchQuery);
-		#echo ("<pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		# add the word groups
+		$searchQuery=array_merge($searchQuery,$wordGroups);
 		#
 		$allIndex="";
-		#echo ("<h2>index</h2><pre>".var_export($searchQuery,true)."</pre>");ob_flush();flush();#DEBUG
+		#
 		foreach ($searchQuery as $word){
 			$cleanWord=strtolower("$word");
 			if (is_readable("/var/cache/2web/generated/searchIndex/$cleanWord.index")){
@@ -1718,24 +1729,15 @@ if( ! function_exists("loadSearchIndexResults")){
 				}
 			}
 		}
-		#
-		#echo ("<pre>".var_export($allIndex,true)."</pre>");ob_flush();flush();#DEBUG
 		# split the index into a array
 		$allIndex=explode("\n",$allIndex);
 		# sort the all index
 		sort($allIndex);
-		#echo ("<pre>".var_export($allIndex,true)."</pre>");ob_flush();flush();#DEBUG
 		# count the unique items
 		$countValues=array_count_values($allIndex);
-		#echo ("<h2>Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
 		arsort($countValues);
-		#echo ("<h2>Sorted Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
-		#$countValues=array_reverse($countValues);
-		#echo ("<h2>Sorted Reversed Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
 		# limit output to 40 results
 		$countValues=array_slice($countValues,0,40);
-		#echo ("<h2>Sliced Count Values</h2><pre>".var_export($countValues,true)."</pre>");ob_flush();flush();#DEBUG
-		#echo ("<h2>Key Names</h2><pre>".var_export(array_keys($countValues),true)."</pre>");ob_flush();flush();#DEBUG
 		#	output the index
 		$outputFound=false;
 		$outputText="";
