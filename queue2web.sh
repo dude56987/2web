@@ -107,8 +107,12 @@ function processThreadedJob(){
 			fi
 		fi
 		addToLog "INFO" "Queue Starting Job " "Command started processing '$queueFileData'."
-		# run the command
-		bash "$queueFile" | captureOutput "$logFilePath"
+
+		if [ "$useLogs" == "yes"];then
+			bash "$queueFile" | captureOutput "$logFilePath"
+		else
+			bash "$queueFile"
+		fi
 		exitStatus=$?
 		if [ 0 -eq $exitStatus ];then
 			# remove the job from the queue
@@ -231,6 +235,13 @@ function overviewQueueService(){
 	rm -v "/var/cache/2web/queue/idle.active"
 	# remove all the active process locks
 	rm -v /var/cache/2web/queue/active/*.active
+	# check if the logs are enabled
+	if yesNoCfgCheck "/etc/2web/useQueueLogs.cfg" "no";then
+		# set the global value for logs used passed to all functions
+		useLogs="yes"
+	else
+		useLogs="no"
+	fi
 	# launch the multi and the single queues in parallel
 	while true;do
 		if ! test -f "/var/cache/2web/queue/multi.active";then
@@ -500,6 +511,9 @@ function idleQueueService(){
 	done
 }
 ########################################################################
+# set the CLI theme
+LINE_THEME="flowersRand"
+########################################################################
 # Process CLI options
 ########################################################################
 if [ "$1" == "-s" ] || [ "$1" == "--service" ] || [ "$1" == "service" ] ;then
@@ -640,59 +654,6 @@ elif [ "$1" == "-s" ] || [ "$1" == "--status" ] || [ "$1" == "status" ] ;then
 	drawCell "$logJobCount" 6
 	endCellRow
 	drawCellLine 6
-	## draw each of the unfinished jobs
-	#if [ $singleJobCount -gt 0 ];then
-	#	drawLine
-	#	echo "Single Job Queue"
-	#	drawLine
-	#	echo "$singleJobs" | while read -r jobPath;do
-	#		if test -f "$jobPath";then
-	#			echo "Job From: $jobPath"
-	#			cat "$jobPath"
-	#			echo
-	#			echo
-	#		fi
-	#	done
-	#fi
-	#if [ $multiJobCount -gt 0 ];then
-	#	drawLine
-	#	echo "Multi Job Queue"
-	#	drawLine
-	#	echo "$multiJobs" | while read -r jobPath;do
-	#		if test -f "$jobPath";then
-	#			echo "Job From: $jobPath"
-	#			cat "$jobPath"
-	#			echo
-	#			echo
-	#		fi
-	#	done
-	#fi
-	#if [ $idleJobCount -gt 0 ];then
-	#	drawLine
-	#	echo "Idle Queue"
-	#	drawLine
-	#	echo "$idleJobs" | while read -r jobPath;do
-	#		if test -f "$jobPath";then
-	#			echo "Job From: $jobPath"
-	#			cat "$jobPath"
-	#			echo
-	#			echo
-	#		fi
-	#	done
-	#fi
-	#if [ $failedJobCount -gt 0 ];then
-	#	drawLine
-	#	echo "Failed Jobs"
-	#	drawLine
-	#	echo "$failedJobs" | while read -r jobPath;do
-	#		if test -f "$jobPath";then
-	#			echo "Job From: $jobPath"
-	#			cat "$jobPath"
-	#			echo
-	#			echo
-	#		fi
-	#	done
-	#fi
 elif [ "$1" == "-a" ] || [ "$1" == "--add" ] || [ "$1" == "add" ];then
 	# add a job to the queue
 	addJob "$2" "$3"
@@ -700,12 +661,18 @@ elif [ "$1" == "-u" ] || [ "$1" == "--unique" ] || [ "$1" == "unique" ];then
 	# add a unique job to the queue
 	addJob "$2" "$3" "yes"
 elif [ "$1" == "--stop" ] || [ "$1" == "stop" ] || [ "$1" == "--cancel" ] || [ "$1" == "cancel" ];then
-	# empty the queue of all jobs
-	rm -v /var/cache/2web/queue/multi/*
-	rm -v /var/cache/2web/queue/unique/*
-	rm -v /var/cache/2web/queue/single/*
-	rm -v /var/cache/2web/queue/idle/*
-	rm -v /var/cache/2web/queue/active/*
+	# empty the queues of all jobs
+	delete "/var/cache/2web/queue/multi/"
+	createDir "/var/cache/2web/queue/multi/"
+	delete "/var/cache/2web/queue/unique/"
+	createDir "/var/cache/2web/queue/unique/"
+	delete "/var/cache/2web/queue/single/"
+	createDir "/var/cache/2web/queue/single/"
+	delete "/var/cache/2web/queue/idle/"
+	createDir "/var/cache/2web/queue/idle/"
+	delete "/var/cache/2web/queue/active/"
+	createDir "/var/cache/2web/queue/active/"
+	#
 	drawLine
 	echo "All Jobs have been canceled in the queue."
 	drawLine
@@ -722,9 +689,9 @@ elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ];then
 	# kill all remaining queues running on the server
 	killall queue2web
 else
-	echo "+---------------------------------------------------------------------------------+"
-	echo "| queue2web queue processing system for 2web                                      |"
-	echo "+---------------------------------------------------------------------------------+"
+	drawLine
+	drawSmallHeader "queue2web queue processing system for 2web"
+	drawLine
 	echo "- Use --service to launch the queue processing service."
 	echo "- Add multithreaded jobs with 'queue2web --add multi \"testCommand\"'"
 	echo "- Add one at a time jobs with 'queue2web --add single \"testCommand\"'"
@@ -734,4 +701,16 @@ else
 	echo "- To run one at a time jobs add files to /var/cache/2web/queue/single/"
 	echo "- Unfinished jobs will survive reboots of the server"
 	echo "- The service will be started automatically by cron"
+	drawLine
+	echo "--cancel"
+	echo "   Stop all queued jobs"
+	echo "--jobs"
+	echo "   Will list all queued jobs"
+	echo "--retry"
+	echo "   Will move all failed jobs into the multi queue to be attempted again"
+	echo "--log"
+	echo "   Show all logs from finished jobs"
+	echo "--clean"
+	echo "   Cleanup the failed jobs and the job logs in the queue system"
+	drawLine
 fi
