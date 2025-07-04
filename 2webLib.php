@@ -2129,6 +2129,12 @@ if( ! function_exists("cleanText")){
 		$cleanedText=str_replace("$","＄",$cleanedText);
 		#
 		$cleanedText=str_replace("*","＊",$cleanedText);
+		# brackets
+		$cleanedText=str_replace("[","［",$cleanedText);
+		$cleanedText=str_replace("]","］",$cleanedText);
+		# curly brackets
+		$cleanedText=str_replace("{","｛",$cleanedText);
+		$cleanedText=str_replace("}","｝",$cleanedText);
 		# squeeze double spaces into single spaces
 		$cleanedText=str_replace("  "," ",$cleanedText);
 		# print the cleaned up text
