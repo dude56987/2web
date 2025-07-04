@@ -2241,10 +2241,15 @@ if( ! function_exists("verifyCacheFile")){
 									# remove the blank file
 									unlink($storagePath."video$foundExt");
 								}else{
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-									debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
-									# mark the file as verified
-									touch($storagePath."verified.cfg");
+									if ( ( time() - filemtime($storagePath."video$fileExt" ) ) > 90 ){
+										addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+										debug("The audio is completely downloaded and has been verified to have downloaded correctly...");
+										# mark the file as verified
+										touch($storagePath."verified.cfg");
+									}else{
+										# verification is in progress
+										addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the video is still being written to disk.<br>\nLink = '$videoLink'<br>\n");
+									}
 								}
 							}else if (($tempMimeType == "video/mp4") and ($foundExt == ".mp4")){
 								addToLog("DEBUG","Attempt to Verify Track","filesize='".filesize($storagePath."video".$foundExt)."'");
@@ -2253,10 +2258,16 @@ if( ! function_exists("verifyCacheFile")){
 									# remove the blank file
 									unlink($storagePath."video$foundExt");
 								}else{
-									addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
-									debug("The video is completely downloaded and has been verified to have downloaded correctly...");
-									# mark the file as verified
-									touch($storagePath."verified.cfg");
+									# only verify the file if is has not been modified for more than 90 seconds
+									if ( ( time() - filemtime($storagePath."video$fileExt" ) ) > 90 ){
+										addToLog("DOWNLOAD","Attempt to Verify Track","Track was verified for link '$videoLink'");
+										debug("The video is completely downloaded and has been verified to have downloaded correctly...");
+										# mark the file as verified
+										touch($storagePath."verified.cfg");
+									}else{
+										# verification is in progress
+										addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the video is still being written to disk.<br>\nLink = '$videoLink'<br>\n");
+									}
 								}
 							}else{
 								addToLog("DOWNLOAD","Attempt to Verify Track","Track was NOT verified because the mime type was incorrect<br>\nLink = '$videoLink'<br>\n LOCAL='$tempMimeType' != 'video/mp4' <br>\n");
