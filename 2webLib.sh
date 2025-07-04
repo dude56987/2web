@@ -313,6 +313,16 @@ function cleanText(){
 	cleanedText=$(echo -n "$cleanedText" | sed "s/\./．/g" )
 	# repace astrisks
 	cleanedText=$(echo -n "$cleanedText" | sed "s/\*/＊/g" )
+	# brackets
+	cleanedText="${cleanedText/\[/［}"
+	cleanedText="${cleanedText/\]/］}"
+	#cleanedText=$(echo -n "$cleanedText" | sed "s/\[/［/g" )
+	#cleanedText=$(echo -n "$cleanedText" | sed "s/\]/］/g" )
+	# curly brackets
+	cleanedText="${cleanedText/\{/｛}"
+	cleanedText="${cleanedText/\}/｝}"
+	#cleanedText=$(echo -n "$cleanedText" | sed "s/\{//g" )
+	#cleanedText=$(echo -n "$cleanedText" | sed "s/\}//g" )
 	# replace any broken replacement characters
 	cleanedText=$(echo -n "$cleanedText" | sed "s/�/ /g" )
 	# squeeze double spaces into single spaces
