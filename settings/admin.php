@@ -855,8 +855,8 @@ if (array_key_exists("newUserName",$_POST)){
 	clear();
 }else if (array_key_exists("nfo_generateAudioWaveforms",$_POST)){
 	outputLog("Setting audio waveform generator to ".$_POST['nfo_generateAudioWaveforms']);
-	yesNoCfgSet("/etc/2web/generateAudioWaveforms.cfg", $_POST['nfo_generateAudioWaveforms']);
-	echo "<hr><a class='button' href='/settings/system.php#nfo_generateAudioWaveforms'>🛠️ Return To Settings</a><hr>";
+	yesNoCfgSet("/etc/2web/nfo/generateAudioWaveforms.cfg", $_POST['nfo_generateAudioWaveforms']);
+	backButton("/settings/nfo.php#nfo_generateAudioWaveforms","🛠️ Return To Settings");
 	clear();
 }else if (array_key_exists("rescanShow",$_POST)){
 	if(verifyChoice()){
