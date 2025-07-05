@@ -1202,7 +1202,10 @@ function ALERT(){
 	#
 	# RETURN STDOUT
 	#
-
+	if [ "$TERM" == "" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
 	#colorCodeLength="${#colorCode}"
 
 	#colorCode="\033[33m"
@@ -1392,7 +1395,10 @@ function INFO(){
 	# - Line length will be cut to the size of the active terminal
 	#
 	# RETURN STDOUT
-
+	if [ "$TERM" == "" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
 	#
 	height=$(tput lines)
 	width=$(tput cols)
@@ -2146,6 +2152,10 @@ loadLineTheme(){
 ################################################################################
 function drawLine(){
 	# Draw a line across the terminal using curses to determine the length
+	if [ "$TERM" == "" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
 	width=$(tput cols)
 	buffer=""
 	# make the buffer the width of the terminal
@@ -2513,6 +2523,11 @@ function randomChem(){
 ################################################################################
 function drawSmallHeader(){
 	# Draw a line across the terminal using curses to determine the length
+	if [ "$TERM" == "" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
+	#
 	width=$(tput cols)
 	buffer=""
 	# make the buffer the width of the terminal
@@ -3887,6 +3902,11 @@ function rotateSpinner(){
 	#	The animation delay is measured in seconds. Decimals can be used. ex) 0.1, 1, 2.4, 0.02
 	#
 	#	The default animation delay is 0.1 seconds.
+	#
+	if [ "$TERM" == "" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
 	#
 	spinnerName="$1"
 	animationName="$2"
