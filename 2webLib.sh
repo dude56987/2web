@@ -355,59 +355,111 @@ function delete(){
 		#
 		theTotal=$(( $tempDirFileCount + $tempDirDirCount ))
 		#
+		if [ "$theTotal" == "0" ];then
+			ALERT "All Files have already been removed."
+			# remove the empty directory
+			rmdir -v "$1"
+			#
+			return
+		fi
+		#
 		tempTotalProgress=0
 		#
 		progressCount=0
 		#
 		totalCPUS=$(cpuCount)
+		#
+		if [ $tempDirDirCount -eq 0 ];then
+			sleepDirTime=0
+		else
+			# figure out the sleep time
+			sleepDirTime="$(echo -n "$( bc -l <<< "( 100/$tempDirDirCount)" )" )"
+			# limit the decimal places
+			sleepDirTime="$(echo -n "$sleepDirTime" | cut -c1-6)"
+			# add leading zero
+			if echo "$sleepDirTime" | grep -q "^\.";then
+				sleepDirTime="0$sleepDirTime"
+			fi
+		fi
+		if [ $tempDirFileCount -eq 0 ];then
+			sleepFileTime=0
+		else
+			# figure out the sleep time
+			sleepFileTime="$(echo "$( bc -l <<< "( 100/$tempDirFileCount)" )" )"
+			# limit the decimal places
+			sleepFileTime="$(echo -n "$sleepFileTime" | cut -c1-6)"
+			# add leading zero
+			if echo "$sleepFileTime" | grep -q "^\.";then
+				sleepFileTime="0$sleepFileTime"
+			fi
+		fi
+
+		ALERT "$sleepFileTime" "Sleep File Time"
+		ALERT "$sleepDirTime" "Sleep Dir Time"
+
 		ALERT "Preparing to remove '$theTotal' files in '$1'"
 		# check if fast mode is enabled
-		if ! [ $theTotal -gt 10000 ];then
-			# read all subdirectory files and remove them
-			echo "$tempDirFiles" | while read -r tempDirFilePath;do
-				if test -e "$tempDirFilePath";then
-					# fremove files
-					rm "$tempDirFilePath" &
-					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
-					INFO "[$progressCount/$theTotal] ${progressPercent}% Removing file '$tempDirFilePath'"
-					waitFastQueue 0.001 "$totalCPUS"
-					progressCount=$(( $progressCount + 1 ))
-				elif test -h "$tempDirFilePath";then
-					# remove symlinks
-					rm "$tempDirFilePath" &
-					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
-					INFO "[$progressCount/$theTotal] ${progressPercent}% Removing file '$tempDirFilePath'"
-					waitFastQueue 0.001 "$totalCPUS"
+		if ! [ $theTotal -gt 1000 ];then
+			if [ $tempDirFileCount -gt 0 ];then
+				# read all subdirectory files and remove them
+				echo "$tempDirFiles" | while read -r tempDirFilePath;do
+					if test -e "$tempDirFilePath";then
+						# remove files
+						rm "$tempDirFilePath" &
+						progressPercent="$(echo "$( bc -l <<< "( $progressCount / $tempDirFileCount ) * 100" )" | cut -d'.' -f1 )"
+						INFO "[$progressCount/$tempDirFileCount] ${progressPercent}% Removing file '$tempDirFilePath'"
+						waitFastQueue "$sleepFileTime" "$totalCPUS"
+						progressCount=$(( $progressCount + 1 ))
+					elif test -h "$tempDirFilePath";then
+						# remove symlinks
+						rm "$tempDirFilePath" &
+						progressPercent="$(echo "$( bc -l <<< "( $progressCount / $tempDirFileCount ) * 100" )" | cut -d'.' -f1 )"
+						INFO "[$progressCount/$tempDirFileCount] ${progressPercent}% Removing file '$tempDirFilePath'"
+						waitFastQueue "$sleepFileTime" "$totalCPUS"
+						progressCount=$(( $progressCount + 1 ))
+					else
+						if [ "$tempDirFilePath" == "" ];then
+							ALERT "Empty Path Given"
+						else
+							ERROR "File could not be removed at '$tempDirFilePath'"
+						fi
+					fi
+				done
+				blockQueue 1
+			fi
+		fi
+		progressCount=0
+		#ALERT "DOING THE DIRECTORIES"
+		#progressCount=$tempDirFileCount
+		if [ $tempDirDirCount -gt 0 ];then
+			# remove any skeleton directory structure
+			echo "$tempDirDirs" | while read -r tempDirDirPath;do
+				# fix the trailing / in the directory path
+				tempDirDirPath="$( echo "$tempDirDirPath/" | tr -s '/' )"
+				if test -d "$tempDirDirPath";then
+					# check if fast mode is enabled
+					if [ $theTotal -gt 1000 ];then
+						rm -r "$tempDirDirPath" &
+						#ALERT "$sleepDirTime" "Sleep Time"
+						sleep "$sleepDirTime"
+					else
+						rmdir "$tempDirDirPath" &
+					fi
+					# calculate the percent and remove decimals
+					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $tempDirDirCount ) * 100" )" | cut -d'.' -f1 )"
+					INFO "[$progressCount/$tempDirDirCount] ${progressPercent}% Removing directory '$tempDirDirPath'"
+					waitFastQueue "$sleepDirTime" "$totalCPUS"
 					progressCount=$(( $progressCount + 1 ))
 				else
-					ERROR "File could not be removed at '$tempDirFilePath'"
+					if [ "$tempDirDirPath" == "" ];then
+						ALERT "Empty Path Given"
+					else
+						ERROR "Path could not be removed at $( echo -e "${tempDirDirPath}\n" )$( tree "$tempDirDirPath" )"
+					fi
 				fi
 			done
 			blockQueue 1
 		fi
-		#ALERT "DOING THE DIRECTORIES"
-		progressCount=$tempDirFileCount
-		# remove any skeleton directory structure
-		echo "$tempDirDirs" | while read -r tempDirDirPath;do
-			# fix the trailing / in the directory path
-			tempDirDirPath="$( echo "$tempDirDirPath/" | tr -s '/' )"
-			if test -d "$tempDirDirPath";then
-				# check if fast mode is enabled
-				if [ $theTotal -gt 10000 ];then
-					rm -r "$tempDirDirPath" &
-				else
-					rmdir "$tempDirDirPath" &
-				fi
-				# calculate the percent and remove decimals
-				progressPercent="$(echo "$( bc -l <<< "( $progressCount / $theTotal ) * 100" )" | cut -d'.' -f1 )"
-				INFO "[$progressCount/$theTotal] ${progressPercent}% Removing directory '$tempDirDirPath'"
-				waitFastQueue 0.001 "$totalCPUS"
-				progressCount=$(( $progressCount + 1 ))
-			else
-				ERROR "Path could not be removed at $( echo -e "${tempDirDirPath}\n" )$( tree "$tempDirDirPath" )"
-			fi
-		done
-		blockQueue 1
 		# return codes
 		if test -d "$1";then
 			ERROR "Removal of directory '$1' Failed!"
