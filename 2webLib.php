@@ -2057,6 +2057,17 @@ if( ! function_exists("uncleanText")){
 		$uncleanedText=str_replace("；",";",$uncleanedText);
 		# remove dollar signs
 		$uncleanedText=str_replace("＄","$",$uncleanedText);
+		# greater/less than
+		$uncleanedText=str_replace("＜","<",$uncleanedText);
+		$uncleanedText=str_replace("＞",">",$uncleanedText);
+		# brackets
+		$uncleanedText=str_replace("［","[",$uncleanedText);
+		$uncleanedText=str_replace("］","]",$uncleanedText);
+		# curly brackets
+		$uncleanedText=str_replace("｛","{",$uncleanedText);
+		$uncleanedText=str_replace("｝","}",$uncleanedText);
+		#
+		$uncleanedText=str_replace("＊","*",$uncleanedText);
 		# print the cleaned up text
 		return "$uncleanedText";
 	}
@@ -2066,7 +2077,7 @@ if( ! function_exists("spaceCleanedText")){
 	function spaceCleanedText($cleanedText){
 		# clean up the text for use in web urls and directory paths
 		# - uses fullwidth versions of caracters that interfere with URLs
-		$characters=Array("．",",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","：","＄","＂","＇","{","}","(",")","[","]","＊");
+		$characters=Array("．",",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","：","＄","＂","＇","｛","｝","(",")","［","］","＊","＜","＞");
 		$spacedText="";
 		foreach($characters as $specialCharacter){
 			$cleanedText=str_replace("$specialCharacter"," $specialCharacter ","$cleanedText");
@@ -2135,6 +2146,9 @@ if( ! function_exists("cleanText")){
 		# curly brackets
 		$cleanedText=str_replace("{","｛",$cleanedText);
 		$cleanedText=str_replace("}","｝",$cleanedText);
+		# greater/less than
+		$cleanedText=str_replace("<","＜",$cleanedText);
+		$cleanedText=str_replace(">","＞",$cleanedText);
 		# squeeze double spaces into single spaces
 		$cleanedText=str_replace("  "," ",$cleanedText);
 		# print the cleaned up text
