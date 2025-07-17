@@ -95,6 +95,15 @@ function processTrack(){
 		album=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "album :" | head -n 1 | cut -d':' -f2  | tr --delete "'" | xargs )
 		title=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "track name :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
 		disc=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "part/position :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+
+		#
+		artist=$(cleanText "$artist" )
+		album=$(cleanText "$album" )
+
+		#
+		title=$(cleanText "$title" )
+		#disc="$(cleanText "$disc" )"
+
 		# if the disk value is not found mark the disk as disk number 1
 		if echo "$disc" | grep -qE "[[:alpha:]]";then
 			disc=""
@@ -106,6 +115,11 @@ function processTrack(){
 		date=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "recorded date :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
 		length=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "duration :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
 		genre=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "genre :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
+
+		#track="$(cleanText "$track" )"
+		#date="$(cleanText "$date" )"
+		#length="$(cleanText "$length" )"
+		#genre="$(cleanText "$genre" )"
 
 		#if [ $( echo "$artist" | wc -c ) -le 0 ];then
 		#	# get the music metadata
@@ -183,8 +197,8 @@ function processTrack(){
 			album=$(echo -n "$album" | tr '[:upper:]' '[:lower:]' | tr --delete '`' )
 
 			#
-			artist="$( cleanText "$artist" )"
-			album="$( cleanText "$album" )"
+			#artist="$( cleanText "$artist" )"
+			#album="$( cleanText "$album" )"
 
 			# add the disk number preceding the track, this should fix strange formatting issues with multi disk albums
 			#if [ "$disc" != "" ];then
@@ -192,11 +206,7 @@ function processTrack(){
 			#	#track=$(echo "$track" | sed "s/^0*//")
 			#fi
 			# if the track is less than 10 add a preceding zero for sorting
-			if [ "$track" -lt 10 ];then
-				track="00$track"
-			elif [ "$track" -lt 100 ];then
-				track="0$track"
-			fi
+			track="$(prefixZeros "$track")"
 
 			# list the track info
 			processingInfo="🎤:$artistOG | 💿:$albumOG | 🔢:$track | 🗓️:$date | ⚙️:$totalProgressString | "
@@ -274,6 +284,11 @@ function processTrack(){
 				# create a artist thumbnail from combining all the album covers
 				if albumCheckDirSum "$webDirectory" "$webDirectory/music/$artist/";then
 					albumCount=$( find "$webDirectory/music/$artist/" -type f -name "album.png" | wc -l )
+					# verify the count
+					if ! echo "$albumCount" | grep -q "[[:digit:]]";then
+						# set the albumCount to the default
+						albumCount=1
+					fi
 					if [ $albumCount -ge 36 ];then
 						tileType="9x4"
 					elif [ $albumCount -ge 32 ];then
@@ -438,7 +453,7 @@ function processTrack(){
 				addToIndex "$webDirectory/music/$artist/artist.index" "$webDirectory/new/all.index"
 
 				# add music to the search index
-				addToSearchIndex "$webDirectory/music/$artist/artist.index" "$artist"
+				addToSearchIndex "$webDirectory/music/$artist/artist.index" "$artist" "/music/$artist/"
 
 				# update last updated times
 				date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -494,7 +509,7 @@ function processTrack(){
 				addToIndex "$webDirectory/music/$artist/$album/album.index" "$webDirectory/random/all.index"
 
 				# add music to the search index
-				addToSearchIndex "$webDirectory/music/$artist/$album/album.index" "$album"
+				addToSearchIndex "$webDirectory/music/$artist/$album/album.index" "$album" "/music/$artist/"
 
 				# update content found times
 				date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -565,7 +580,7 @@ function processTrack(){
 			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/new/all.index"
 
 			# add music to the search index
-			addToSearchIndex "$webDirectory/music/$artist/$album/${track}.index" "$track"
+			addToSearchIndex "$webDirectory/music/$artist/$album/${track}.index" "$track" "/music/$artist/"
 
 			# cleanup the track list for the album
 			if test -f "$webDirectory/music/$artist/$album/tracks.index";then
@@ -599,23 +614,11 @@ function buildVisual(){
 ################################################################################
 function update(){
 	# this will launch a processing queue that downloads updates to music
-	echo "Loading up sources..."
-	# check for defined sources
-	if ! test -f /etc/2web/music/libaries.cfg;then
-		# if no config exists create the default config
-		{
-			cat /etc/2web/config_default/music2web_libaries.cfg
-		} > /etc/2web/music/libaries.cfg
-	fi
+	INFO "Loading up sources..."
 	# load sources
-	musicSources=$(grep -v "^#" /etc/2web/music/libaries.cfg)
-	musicSources=$(echo -en "$musicSources\n$(grep --invert-match --no-filename "^#" /etc/2web/music/libaries.d/*.cfg)")
-	musicSources=$(echo "$musicSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
-
+	musicSources=$(loadConfigs "/etc/2web/music/libaries.cfg" "/etc/2web/music/libaries.d/" "/etc/2web/config_default/music2web_libraries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | tr -s '/' | shuf  )
 	################################################################################
 	webDirectory=$(webRoot)
-	################################################################################
-	#downloadDirectory="$(downloadDir)"
 	################################################################################
 	# make musics directory
 	createDir "$webDirectory/music/"
@@ -665,13 +668,12 @@ function update(){
 	# musicSources need to be shuffled since some music files crash the processing
 	echo "$musicSources" | shuf | while read -r musicSource;do
 		processedSources=$(( $processedSources + 1 ))
-		INFO "Processing '$musicSource'"
+		ALERT "Processing '$musicSource'"
 		if checkDirSum "$webDirectory" "$musicSource";then
 			#ALERT "MUSIC SOURCE: $musicSource"
 			# scan inside the music source directories for mp3 files
 			#musicFiles=$totalTrackList
-			musicFiles=$(find "$musicSource" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$")
-			musicFiles=$(echo "$musicFiles" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
+			musicFiles=$(find "${musicSource}" -type f | grep -E ".mp3$|.wma$|.flac$|.ogg$")
 			#
 			tempFoundTrackCount=$(echo "$musicFiles" | wc -l )
 			totalTracks=$(( $totalTracks + $tempFoundTrackCount ))
@@ -778,14 +780,6 @@ function getJson(){
 	return 0
 }
 ################################################################################
-function webUpdate(){
-	webDirectory=$(webRoot)
-	#downloadDirectory="$(downloadDir)"
-
-	# run the regular update
-	update $@
-}
-################################################################################
 function resetCache(){
 	webDirectory=$(webRoot)
 	# remove web cache
@@ -797,15 +791,20 @@ function nuke(){
 	# remove the kodi and web music files
 	delete "$webDirectory/music/" || ALERT "No files found in music web directory..."
 	delete "$webDirectory/kodi/music/" || ALERT "No files found in kodi directory..."
-	rm -v $webDirectory/sums/music2web_*.cfg || ALERT "No file sums found..."
+	# remove the generated search index data
+	delete "/var/cache/2web/generated/searchIndexData/music/"
+	# remove sums generated by music2web
+	find "$webDirectory/sums/" -type f -name "music2web_*.cfg" | while read -r hashFile;do
+		delete "$hashFile" || ALERT "No hash file found..."
+	done
 	#
-	delete $webDirectory/web_cache/widget_random_music.index || ALERT "No file sums found..."
-	delete $webDirectory/web_cache/widget_random_artists.index || ALERT "No file sums found..."
-	delete $webDirectory/web_cache/widget_random_albums.index || ALERT "No file sums found..."
+	delete "$webDirectory/web_cache/widget_random_music.index"
+	delete "$webDirectory/web_cache/widget_random_artists.index"
+	delete "$webDirectory/web_cache/widget_random_albums.index"
 	#
-	delete $webDirectory/web_cache/widget_updated_music.index || ALERT "No file sums found..."
-	delete $webDirectory/web_cache/widget_updated_artists.index || ALERT "No file sums found..."
-	delete $webDirectory/web_cache/widget_updated_albums.index || ALERT "No file sums found..."
+	delete "$webDirectory/web_cache/widget_updated_music.index"
+	delete "$webDirectory/web_cache/widget_updated_artists.index"
+	delete "$webDirectory/web_cache/widget_updated_albums.index"
 	# create the database path
 	databasePath="$webDirectory/data.db"
 	# remove sql data
@@ -813,15 +812,15 @@ function nuke(){
 	SQLremoveTable "$databasePath" "_albums"
 	SQLremoveTable "$databasePath" "_artists"
 	# new indexes
-	delete "$webDirectory/new/music.index" || ALERT "No music index..."
-	delete "$webDirectory/new/albums.index" || ALERT "No album index..."
-	delete "$webDirectory/new/artists.index" || ALERT "No artist index..."
-	delete "$webDirectory/new/tracks.index" || ALERT "No track index..."
+	delete "$webDirectory/new/music.index"
+	delete "$webDirectory/new/albums.index"
+	delete "$webDirectory/new/artists.index"
+	delete "$webDirectory/new/tracks.index"
 	# random indexes
-	delete "$webDirectory/random/music.index" || ALERT "No music index..."
-	delete "$webDirectory/random/albums.index" || ALERT "No album index..."
-	delete "$webDirectory/random/artists.index" || ALERT "No artist index..."
-	delete "$webDirectory/random/tracks.index" || ALERT "No track index..."
+	delete "$webDirectory/random/music.index"
+	delete "$webDirectory/random/albums.index"
+	delete "$webDirectory/random/artists.index"
+	delete "$webDirectory/random/tracks.index"
 }
 ################################################################################
 # set the theme of the lines in CLI output
@@ -834,7 +833,7 @@ MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	checkModStatus "music2web"
 	lockProc "music2web"
-	update $@
+	update
 elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 	lockProc "music2web"
 	resetCache
@@ -855,8 +854,7 @@ elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 else
 	checkModStatus "music2web"
 	lockProc "music2web"
-	update $@
-	#webUpdate $@
+	update
 	#main --help $@
 	showServerLinks
 	echo "Module Links"
