@@ -42,7 +42,7 @@
 	echo "</h1>";
 
 	# include stats for admins
-	if(requireGroup("admin",false)){
+	if(requireGroup("graph2web",false)){
 		if ( file_exists("activityGraph.png") ){
 			echo "<div>";
 			echo "<a href='/graphs/2web_activity/'>";
