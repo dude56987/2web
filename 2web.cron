@@ -27,7 +27,7 @@
 # - Checks if cache directories need cleaned
 # - Updates 2web generated graphs
 @reboot root /usr/bin/2web &> /dev/null
-*/30 * * * * root /usr/bin/2web &> /dev/null
+*/30 * * * * root /usr/bin/2web --mute &> /dev/null
 ################################################################################
 # lauch the queue service at boot
 @reboot root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
@@ -35,46 +35,46 @@
 */20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
 ################################################################################
 # make sure nfo2web is updated once every 2 hours
-0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel &> /dev/null
+0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel --mute &> /dev/null
 ################################################################################
 # check if the iptv lists need updated
-@weekly root /usr/bin/nice -n 10 /usr/bin/iptv2web &> /dev/null
+@weekly root /usr/bin/nice -n 10 /usr/bin/iptv2web --mute &> /dev/null
 # Check if the epg guide info needs updated
-*/30 * * * * root /usr/bin/iptv2web --epg &> /dev/null
+*/30 * * * * root /usr/bin/iptv2web --epg --mute &> /dev/null
 ################################################################################
 # update the comic books
-0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel &> /dev/null
+0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/comic2web --parallel --mute &> /dev/null
 ################################################################################
 # update the AI data
-0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/ai2web --parallel &> /dev/null
+0 */6 * * * root /usr/bin/nice -n 10 /usr/bin/ai2web --parallel --mute &> /dev/null
 ################################################################################
 # update the music
 # - You can remove --parallel and processing will use only one thread
-0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel &> /dev/null
+0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/music2web --parallel --mute &> /dev/null
 ################################################################################
 # update graph2web
-@weekly root /usr/bin/nice -n 10 /usr/bin/wiki2web &> /dev/null
+@weekly root /usr/bin/nice -n 10 /usr/bin/wiki2web --mute &> /dev/null
 ################################################################################
 # update graph2web
-0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web &> /dev/null
+0 */5 * * * root /usr/bin/nice -n 10 /usr/bin/graph2web --mute &> /dev/null
 ################################################################################
 # Update weather info at noon, weather updates on page access
-0 12 * * *	root /usr/bin/weather2web &> /dev/null
+0 12 * * *	root /usr/bin/weather2web --mute &> /dev/null
 ################################################################################
 # Update ytdl2nfo, Individual channels have individual delays
-0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo &> /dev/null
+0 */2 * * * root	/usr/bin/nice -n 10 /usr/bin/ytdl2nfo --mute &> /dev/null
 ################################################################################
 # Update rss2nfo
-0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/rss2nfo &> /dev/null
+0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/rss2nfo --mute &> /dev/null
 ################################################################################
 # Check for changes to git repos
-0 */5 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel &> /dev/null
+0 */5 * * * root	/usr/bin/nice -n 10 /usr/bin/git2web --parallel --mute &> /dev/null
 ################################################################################
 # check the links in the portal, this also scans ports for services
-0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel &> /dev/null
+0 */4 * * * root	/usr/bin/nice -n 10 /usr/bin/portal2web --parallel --mute &> /dev/null
 ################################################################################
 # check for new applications and updates in php2web
-0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/php2web &> /dev/null
+0 */6 * * * root	/usr/bin/nice -n 10 /usr/bin/php2web --mute &> /dev/null
 ################################################################################
 # Once a month verify all entries in the database
 # - This removes deleted entries
@@ -84,7 +84,7 @@
 # - This runs every time new content is detected
 # - Cron job is weekly for clients who have been powered off when updates were
 #   found
-@weekly root /usr/bin/nice -n 10 /usr/bin/kodi2web &> /dev/null
+@weekly root /usr/bin/nice -n 10 /usr/bin/kodi2web --mute &> /dev/null
 ################################################################################
 # once a day check for updates to fast moving metadata extraction packages
 @daily root /usr/bin/nice -n 20 /usr/bin/2web upgrade &> /dev/null
