@@ -29,10 +29,10 @@ function ERROR(){
 	printf "[ERROR]: $output\n"
 }
 ################################################################################
-cleanText(){
+cleanLeadingSpaces(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	#echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g"
-	echo -n "$1" | sed "s/[[:punct:]]//g" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
+	echo -n "$1" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
 }
 ################################################################################
 function killFakeImage(){
@@ -267,6 +267,7 @@ function process_M3U(){
 		if [ "$caughtLength" -gt 7 ];then
 			# pull the link on this line and store it
 			title=$(echo -n "$lineCaught" | rev | cut -d',' -f1 | rev)
+			title=$(cleanLeadingSpaces "$title")
 			title=$(cleanText "$title")
 			# remove any newlines found in the title
 			title=$(echo -n "$title" | sed "s/\n//g")
@@ -1309,6 +1310,11 @@ fi
 ################################################################################
 # set the theme of the lines in CLI output
 LINE_THEME="stitch"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+#
 if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 	lockProc "iptv2web"
 	# check if the module is enabled
