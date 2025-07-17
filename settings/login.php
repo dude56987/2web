@@ -72,6 +72,8 @@ if (array_key_exists("userLogout",$_POST)){
 				$tempRemoteData=str_replace("\n","",$tempRemoteData);
 				# set the setting in the session
 				$_SESSION["selectedRemote"]=$tempRemoteData;
+				# set the remote title
+				$_SESSION["remoteTitle"]=explode("@",$_SESSION["selectedRemote"])[1];
 			}
 			# post the login into the system log
 			addToLog("ADMIN", "LOGIN SUCCESSFUL", "User has logged in without issue. Username='".$username."'<br>\n".getIdentity());
