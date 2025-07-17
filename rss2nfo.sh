@@ -214,6 +214,10 @@ function nuke(){
 ################################################################################
 # set the theme of the lines in CLI output
 LINE_THEME="boxes"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 ################################################################################
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	lockProc "rss2nfo"
