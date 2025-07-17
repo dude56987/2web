@@ -101,8 +101,19 @@ drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modu
 </div>
 
 <?PHP
+function drawModuleHeaderWarning($moduleName){
+	if (! checkModStatus($moduleName)){
+		echo "	<div class='errorBanner titleCard'>\n";
+		echo "		<hr>\n";
+		echo "		This module '$moduleName' is disabled. Enable it <a class='button' href='/settings/modules.php#$moduleName'>HERE</a>\n";
+		echo "		<hr>\n";
+		echo "	</div>\n";
+	}
+}
+#
 if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
 	$moduleName="iptv2web";
+	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Live Settings</h2>\n";
 	echo "		<div class='listCard'>";
@@ -119,6 +130,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	}else if ($pageURL == "/settings/rss.php"){
 		$moduleName="rss2nfo";
 	}
+	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Video On Demand Settings</h2>\n";
 	echo "		<div class='listCard'>";
@@ -129,10 +141,13 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/rss.php")){
 	$moduleName="rss2nfo";
+	drawModuleHeaderWarning($moduleName);
 }else if (($pageURL == "/settings/kodi.php")){
 	$moduleName="kodi2web";
+	drawModuleHeaderWarning($moduleName);
 }else if (($pageURL == "/settings/ai.php") || ($pageURL == "/settings/ai_embeds.php") || ($pageURL == "/settings/ai_prompt.php") || ($pageURL == "/settings/ai_txt2img.php") || ($pageURL == "/settings/ai_subtitles.php") || ($pageURL == "/settings/ai_audio.php") ){
 	$moduleName="ai2web";
+	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>AI Settings</h2>\n";
 	echo "		<div class='warningBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
@@ -147,6 +162,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";
+	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Portal Settings</h2>\n";
 	echo "		<div class='listCard'>";
@@ -156,10 +172,13 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
+	drawModuleHeaderWarning($moduleName);
 }else if (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
+	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>Comics Settings</h2>\n";
 	echo "		<div class='listCard'>";
@@ -169,16 +188,22 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	</div>\n";
 }else if ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/repos.php"){
 	$moduleName="git2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/weather.php"){
 	$moduleName="weather2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/apps.php"){
 	$moduleName="php2web";
+	drawModuleHeaderWarning($moduleName);
 }else if ($pageURL == "/settings/wiki.php"){
 	$moduleName="wiki2web";
+	drawModuleHeaderWarning($moduleName);
 }else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/settings/clean.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php") || ($pageURL == "/settings/fortune.php")){
 	$moduleName="system";
 	echo "	<div class='titleCard'>\n";
