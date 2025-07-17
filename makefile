@@ -55,6 +55,11 @@ lint:
 	lintian 2web_UNSTABLE.deb
 	# check the package in detail
 	lintian -a 2web_UNSTABLE.deb
+lintian:
+	# check the package
+	lintian 2web_UNSTABLE.deb
+	# check the package in detail
+	lintian -a 2web_UNSTABLE.deb
 install: build
 	sudo gdebi -n 2web_UNSTABLE.deb
 uninstall:
@@ -145,7 +150,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/apache2/sites-enabled/;
 	mkdir -p debian/etc/apache2/conf-available/;
 	mkdir -p debian/etc/apache2/conf-enabled/;
-	mkdir -p debian/etc/bash_completion.d/;
+	mkdir -p debian/usr/share/bash-completion/completions/;
+	mkdir -p debian/usr/share/doc/2web/;
 	mkdir -p debian/etc/avahi/;
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/etc/2web/portal/;
@@ -156,6 +162,8 @@ build-deb: upgrade-hls
 	cp -v LICENSE debian/usr/share/2web/
 	# copy templates over
 	cp -rv templates/. debian/usr/share/2web/templates/
+	# fix template permissions
+	chmod -x templates/*.php
 	# copy over default config templates
 	cp -rv config_default/. debian/etc/2web/config_default/
 	# add icon
@@ -237,6 +245,10 @@ build-deb: upgrade-hls
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_prompt
 	cat build/py_head.txt > debian/usr/bin/ai2web_prompt
 	grep --invert-match "^[[:blank:]]*#" ai2web_prompt.py | tr -s '\n' >> debian/usr/bin/ai2web_prompt
+	# build the audio prompt
+	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_audio
+	cat build/py_head.txt > debian/usr/bin/ai2web_audio
+	grep --invert-match "^[[:blank:]]*#" ai2web_audio.py | tr -s '\n' >> debian/usr/bin/ai2web_audio
 	# txt2img
 	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2img
 	cat build/py_head.txt > debian/usr/bin/ai2web_txt2img
@@ -309,7 +321,10 @@ build-deb: upgrade-hls
 	cat build/sh_head.txt > debian/usr/bin/php2web
 	grep --invert-match "^[[:blank:]]*#" php2web.sh | tr -s '\n' >> debian/usr/bin/php2web
 	# build the man pages for the command line tools
-	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1.gz
+	pandoc --standalone help/man_2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web.1
+	# compress the docs
+	gzip --best -c debian/usr/share/man/man1/2web.1 > debian/usr/share/man/man1/2web.1.gz
+	rm -v debian/usr/share/man/man1/2web.1
 	# build the web versions of the man page
 	pandoc help/man_2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/2web.html
 	# build the text only render of the manual
@@ -317,49 +332,65 @@ build-deb: upgrade-hls
 	################################################################################
 	# build the nfo2web manual pages
 	################################################################################
-	pandoc --standalone help/man_nfo2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/nfo2web.1.gz
+	pandoc --standalone help/man_nfo2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/nfo2web.1
+	gzip --best -c debian/usr/share/man/man1/nfo2web.1 > debian/usr/share/man/man1/nfo2web.1.gz
+	rm -v debian/usr/share/man/man1/nfo2web.1
 	pandoc help/man_nfo2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/nfo2web.html
 	w3m debian/usr/share/2web/help/nfo2web.html > debian/usr/share/2web/help/nfo2web.txt
 	################################################################################
 	# build the iptv2web manual pages
 	################################################################################
-	pandoc --standalone help/man_iptv2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/iptv2web.1.gz
+	pandoc --standalone help/man_iptv2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/iptv2web.1
+	gzip --best -c debian/usr/share/man/man1/iptv2web.1 > debian/usr/share/man/man1/iptv2web.1.gz
+	rm -v debian/usr/share/man/man1/iptv2web.1
 	pandoc help/man_iptv2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/iptv2web.html
 	w3m debian/usr/share/2web/help/iptv2web.html > debian/usr/share/2web/help/iptv2web.txt
 	################################################################################
 	# build the comic2web manual pages
 	################################################################################
-	pandoc --standalone help/man_comic2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/comic2web.1.gz
+	pandoc --standalone help/man_comic2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/comic2web.1
+	gzip --best -c debian/usr/share/man/man1/comic2web.1 > debian/usr/share/man/man1/comic2web.1.gz
+	rm -v debian/usr/share/man/man1/comic2web.1
 	pandoc help/man_comic2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/comic2web.html
 	w3m debian/usr/share/2web/help/comic2web.html > debian/usr/share/2web/help/comic2web.txt
 	################################################################################
 	# build the ytdl2nfo manual pages
 	################################################################################
-	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1.gz
+	pandoc --standalone help/man_ytdl2nfo.md help/man_footer.md -t man -o debian/usr/share/man/man1/ytdl2nfo.1
+	gzip --best -c debian/usr/share/man/man1/ytdl2nfo.1 > debian/usr/share/man/man1/ytdl2nfo.1.gz
+	rm -v debian/usr/share/man/man1/ytdl2nfo.1
 	pandoc help/man_ytdl2nfo.md help/man_footer.md -t html -o debian/usr/share/2web/help/ytdl2nfo.html
 	w3m debian/usr/share/2web/help/ytdl2nfo.html > debian/usr/share/2web/help/ytdl2nfo.txt
 	################################################################################
 	# build the weather2web manual pages
 	################################################################################
-	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1.gz
+	pandoc --standalone help/man_weather2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/weather2web.1
+	gzip --best -c debian/usr/share/man/man1/weather2web.1 > debian/usr/share/man/man1/weather2web.1.gz
+	rm -v debian/usr/share/man/man1/weather2web.1
 	pandoc help/man_weather2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/weather2web.html
 	w3m debian/usr/share/2web/help/weather2web.html > debian/usr/share/2web/help/weather2web.txt
 	################################################################################
 	# build the music2web manual pages
 	################################################################################
-	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1.gz
+	pandoc --standalone help/man_music2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/music2web.1
+	gzip --best -c debian/usr/share/man/man1/music2web.1 > debian/usr/share/man/man1/music2web.1.gz
+	rm -v debian/usr/share/man/man1/music2web.1
 	pandoc help/man_music2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/music2web.html
 	w3m debian/usr/share/2web/help/music2web.html > debian/usr/share/2web/help/music2web.txt
 	################################################################################
 	# build the graph2web manual pages
 	################################################################################
-	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1.gz
+	pandoc --standalone help/man_graph2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/graph2web.1
+	gzip --best -c debian/usr/share/man/man1/graph2web.1 > debian/usr/share/man/man1/graph2web.1.gz
+	rm -v debian/usr/share/man/man1/graph2web.1
 	pandoc help/man_graph2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/graph2web.html
 	w3m debian/usr/share/2web/help/graph2web.html > debian/usr/share/2web/help/graph2web.txt
 	################################################################################
 	# build the git2web manual pages
 	################################################################################
-	pandoc --standalone help/man_git2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/git2web.1.gz
+	pandoc --standalone help/man_git2web.md help/man_footer.md -t man -o debian/usr/share/man/man1/git2web.1
+	gzip --best -c debian/usr/share/man/man1/git2web.1 > debian/usr/share/man/man1/git2web.1.gz
+	rm -v debian/usr/share/man/man1/git2web.1
 	pandoc help/man_git2web.md help/man_footer.md -t html -o debian/usr/share/2web/help/git2web.html
 	w3m debian/usr/share/2web/help/git2web.html > debian/usr/share/2web/help/git2web.txt
 	################################################################################
@@ -395,7 +426,11 @@ build-deb: upgrade-hls
 	################################################################################
 	# build the readme manual page
 	################################################################################
-	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1.gz
+	pandoc --standalone README.md help/man_footer.md -t man -o debian/usr/share/man/man1/2web_help.1
+	#
+	gzip --best -c debian/usr/share/man/man1/2web_help.1 > debian/usr/share/man/man1/2web_help.1.gz
+	rm -v debian/usr/share/man/man1/2web_help.1
+	#
 	pandoc README.md help/man_footer.md -t html -o debian/usr/share/2web/help/README.html
 	w3m debian/usr/share/2web/help/README.html > debian/usr/share/2web/help/README.txt
 	# copy over the theme templates
@@ -411,8 +446,12 @@ build-deb: upgrade-hls
 	cp 2webLib.php debian/usr/share/2web/
 	# copy over the settings pages
 	cp settings/*.php debian/usr/share/2web/settings/
+	# fix permissions
+	chmod -x debian/usr/share/2web/settings/*.php
 	# copy the resolvers over
 	cp resolvers/*.php debian/usr/share/2web/resolvers/
+	# fix permissions
+	chmod -x debian/usr/share/2web/resolvers/*.php
 	# copy over the .desktop launcher file to place link in system menus
 	cp 2web.desktop debian/usr/share/applications/
 	# make the script executable only by root
@@ -433,7 +472,7 @@ build-deb: upgrade-hls
 	# copy over the 2web ufw firewall app profile settings
 	cp -v systemConf/ufw_app_profile.ini debian/etc/ufw/applications.d/2web_server
 	# copy over bash tab completion scripts
-	cp -v tab_complete/* debian/etc/bash_completion.d/
+	cp -v tab_complete/* debian/usr/share/bash-completion/completions/
 	# write version info last thing before the build process of the package
 	# this also makes the build date time more correct since the package is
 	# built but is now being compressed and converted into a debian package
@@ -486,7 +525,15 @@ build-deb: upgrade-hls
 	# version date of creation
 	/usr/bin/git log -1 | grep "Date:" | tr -s ' ' | cut -d' ' -f2- > debian/usr/share/2web/versionDate.cfg
 	date > debian/usr/share/2web/buildDate.cfg
-	# Create the md5sums file
+	# compress the changelog
+	/usr/bin/git log --date short | gzip --best -c > ./debian/usr/share/doc/2web/changelog.gz
+	# copy the copyright to the docs
+	cp -v debdata/copyright ./debian/usr/share/doc/2web/copyright
+	# copy readme to docs
+	cp -v README.md ./debian/usr/share/doc/2web/README
+	###########################
+	# Create the md5sums file #
+	###########################
 	find ./debian/ -type f -print0 | xargs -0 md5sum > ./debian/DEBIAN/md5sums
 	# cut filenames of extra junk
 	sed -i.bak 's/\.\/debian\///g' ./debian/DEBIAN/md5sums
@@ -503,10 +550,14 @@ build-deb: upgrade-hls
 	sed -i "s/<VERSION_NUMBER>/$(shell cat simple_version.txt)/g" debian/DEBIAN/control
 	# write the changelog
 	/usr/bin/git log --date short > ./debian/DEBIAN/changelog
+	# create the conffiles data
+	find ./debian/etc/ -type f | sed "s/.\/debian//g" > ./debian/DEBIAN/conffiles
 	# remove build directory from safe directory list in git configuration
 	git config --global --unset-all safe.directory "$$PWD"
 	# fix permissions in package
-	chmod -Rv 775 debian/DEBIAN/
+	chmod -Rv 755 debian/DEBIAN/
+	chmod -Rv 644 debian/DEBIAN/conffiles
+	chmod -Rv 644 debian/DEBIAN/md5sums
 	chmod -Rv ugo+r debian/
 	chmod -Rv go-w debian/
 	chmod -Rv u+w debian/
