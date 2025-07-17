@@ -2050,7 +2050,7 @@ function update(){
 	# create new log after start so start log message is at start of log
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# figure out the total number of CPUS for parallel processing
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
@@ -2218,6 +2218,10 @@ showHelp(){
 # set the theme of the lines in CLI output
 LINE_THEME="brick"
 #
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+#
 debugCheck
 #
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
@@ -2226,7 +2230,7 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 	# generate demo data for 2web modules for use in screenshots, make it random as can be
 
 	# check for parallel processing and count the cpus
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1

@@ -626,14 +626,14 @@ function update(){
 	# make the download directory if is does not exist
 	#createDir "$downloadDirectory"
 	# scan the sources
-	ALERT "Scanning Music Sources: $musicSources"
-
-	if echo "$@" | grep -q -e "--parallel";then
+	ALERT "$musicSources" "Scanning Music Sources"
+	#
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
 	fi
-
+	#
 	totalTracks=0
 	processedTracks=0
 	totalTrackList=""
@@ -827,11 +827,11 @@ function nuke(){
 # set the theme of the lines in CLI output
 LINE_THEME="note"
 #
-if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-	checkModStatus "music2web"
-	lockProc "music2web"
-	webUpdate $@
-elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+#
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	checkModStatus "music2web"
 	lockProc "music2web"
 	update $@

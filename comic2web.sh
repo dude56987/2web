@@ -122,7 +122,7 @@ function update(){
 	# create web and cache directories
 	createDir "/var/cache/2web/generated/comicCache/"
 	# check for parallel processing and count the cpus
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
@@ -1026,13 +1026,13 @@ function webUpdate(){
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/comics/randomFanart.php"
 
 	# check for parallel processing and count the cpus
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		totalCPUS=$(cpuCount)
 	else
 		totalCPUS=1
 	fi
 
-	if echo "$@" | grep -q -e "--parallel";then
+	if [ "$PARALLEL_OPTION" == "yes" ];then
 		buildDosageList "$webDirectory" &
 	else
 		buildDosageList "$webDirectory"
@@ -1191,107 +1191,105 @@ function nuke(){
 }
 ################################################################################
 ################################################################################
-main(){
-	################################################################################
-
-	# set the theme of the lines in CLI output
-	LINE_THEME="book"
-
-	if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
-		lockProc "comic2web"
-		checkModStatus "comic2web"
-		webUpdate "$@"
-	elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		lockProc "comic2web"
-		checkModStatus "comic2web"
-		update "$@"
-	elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
-		# process a single directory or rescan a single directory
-		webDirectory=$(webRoot)
-		# remove the sum blocking scanning for rescans
-		rmDirSum "$webDirectory" "$2"
-		# there is only one comic this will prevent breaking the progress line
-		totalComics=1
-		# scan the media
-		if checkDirSum "$webDirectory" "$2";then
-			processComicPath "$2" "$webDirectory"
-			setDirSum "$webDirectory" "$2"
-		else
-			INFO "Already processed '$(basename "$2")'"
-		fi
-	elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
-		# generate demo data for use in screenshots, make it random as can be
-
-		# check for parallel processing and count the cpus
-		if echo "$@" | grep -q -e "--parallel";then
-			totalCPUS=$(cpuCount)
-		else
-			totalCPUS=1
-		fi
-		# create a list of file extensions
-		fileExtensions=".png .jpg .gif .webp"
-		#########################################################################################
-		# comic2web demo comics
-		#########################################################################################
-		createDir "/var/cache/2web/generated/demo/comics/"
-		# build random comics
-		for index in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
-			# generate the random comic name
-			randomTitle="$RANDOM $(randomWord) $(randomWord)"
-			#
-			createDir "/var/cache/2web/generated/demo/comics/generated/$randomTitle/"
-			# write the comic pages
-			for index2 in $(seq -w $(( 4 + ( $RANDOM % 25 ) )) );do
-				# pick a random file extension for each demo image in the comic
-				extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
-				# write the pages
-				demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" "${randomTitle} Page:$index2" "400" "700" &
-				# wait for queue to be free
-				waitQueue 0.2 "$totalCPUS"
-			done
-		done
-		#
-		blockQueue 1
-		#########################################################################################
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "comic2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "comic2web"
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		lockProc "comic2web"
-		nuke
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		resetCache
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		# upgrade the pip packages if the module is enabled
-		checkModStatus "comic2web"
-		lockProc "comic2web"
-		upgrade-pip "comic2web" "gallery-dl dosage"
-	elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
-		# comic2web --convert filePath
-		convertImage "$3"
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/comic2web.txt"
-	elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-		echo -n "Build Date: "
-		cat /usr/share/2web/buildDate.cfg
-		echo -n "comic2web Version: "
-		cat /usr/share/2web/version_comic2web.cfg
+# set the theme of the lines in CLI output
+LINE_THEME="book"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+#
+if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
+	lockProc "comic2web"
+	checkModStatus "comic2web"
+	webUpdate "$@"
+elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	lockProc "comic2web"
+	checkModStatus "comic2web"
+	update "$@"
+elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
+	# process a single directory or rescan a single directory
+	webDirectory=$(webRoot)
+	# remove the sum blocking scanning for rescans
+	rmDirSum "$webDirectory" "$2"
+	# there is only one comic this will prevent breaking the progress line
+	totalComics=1
+	# scan the media
+	if checkDirSum "$webDirectory" "$2";then
+		processComicPath "$2" "$webDirectory"
+		setDirSum "$webDirectory" "$2"
 	else
-		lockProc "comic2web"
-		checkModStatus "comic2web"
-		update "$@"
-		webUpdate "$@"
-		# on default execution show the server links at the bottom of output
-		showServerLinks
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local:80/comics/"
-		drawLine
-		echo "http://$(hostname).local:80/settings/comics.php"
-		drawLine
+		INFO "Already processed '$(basename "$2")'"
 	fi
-}
-################################################################################
-main "$@"
-exit
+elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
+	# generate demo data for use in screenshots, make it random as can be
+
+	# check for parallel processing and count the cpus
+	if [ "$PARALLEL_OPTION" == "yes" ];then
+		totalCPUS=$(cpuCount)
+	else
+		totalCPUS=1
+	fi
+	# create a list of file extensions
+	fileExtensions=".png .jpg .gif .webp"
+	#########################################################################################
+	# comic2web demo comics
+	#########################################################################################
+	createDir "/var/cache/2web/generated/demo/comics/"
+	# build random comics
+	for index in $(seq -w $(( 1 + ( $RANDOM % 10 ) )) );do
+		# generate the random comic name
+		randomTitle="$RANDOM $(randomWord) $(randomWord)"
+		#
+		createDir "/var/cache/2web/generated/demo/comics/generated/$randomTitle/"
+		# write the comic pages
+		for index2 in $(seq -w $(( 4 + ( $RANDOM % 25 ) )) );do
+			# pick a random file extension for each demo image in the comic
+			extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
+			# write the pages
+			demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" "${randomTitle} Page:$index2" "400" "700" &
+			# wait for queue to be free
+			waitQueue 0.2 "$totalCPUS"
+		done
+	done
+	#
+	blockQueue 1
+	#########################################################################################
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "comic2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "comic2web"
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	lockProc "comic2web"
+	nuke
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	lockProc "comic2web"
+	resetCache
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	# upgrade the pip packages if the module is enabled
+	checkModStatus "comic2web"
+	lockProc "comic2web"
+	upgrade-pip "comic2web" "gallery-dl dosage"
+elif [ "$1" == "-c" ] || [ "$1" == "--convert" ] || [ "$1" == "convert" ] ;then
+	# comic2web --convert filePath
+	convertImage "$3"
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/comic2web.txt"
+elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
+	echo -n "Build Date: "
+	cat /usr/share/2web/buildDate.cfg
+	echo -n "comic2web Version: "
+	cat /usr/share/2web/version_comic2web.cfg
+else
+	lockProc "comic2web"
+	checkModStatus "comic2web"
+	update "$@"
+	webUpdate "$@"
+	# on default execution show the server links at the bottom of output
+	showServerLinks
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local:80/comics/"
+	drawLine
+	echo "http://$(hostname).local:80/settings/comics.php"
+	drawLine
+fi

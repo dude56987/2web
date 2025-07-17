@@ -339,9 +339,9 @@ function ytdl2kodi_channel_meta_extractor(){
 	################################################################################
 	# import and run the debug check
 	################################################################################
-	echo "################################################################################"
-	echo "# Now extracting metadata for channel from '$2' #"
-	echo "################################################################################"
+	drawLine
+	drawSmallHeader "Now extracting metadata for channel from '$2'"
+	drawLine
 	################################################################################
 	# create the show title based on the arguments
 	showTitle="$1"
@@ -384,9 +384,9 @@ function ytdl2kodi_channel_meta_extractor(){
 			echo "</tvshow>"
 		} > "$seriesFileName"
 	fi
-	echo "################################################################################"
-	echo "# Metadata extraction finished #"
-	echo "################################################################################"
+	drawLine
+	drawSmallHeader "Metadata extraction finished"
+	drawLine
 	return
 }
 ################################################################################
@@ -946,6 +946,10 @@ function nuke(){
 ################################################################################
 # set the theme of the lines in CLI output
 LINE_THEME="chem"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 ################################################################################
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	lockProc "ytdl2nfo"
