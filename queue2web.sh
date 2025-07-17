@@ -108,19 +108,25 @@ function processThreadedJob(){
 		fi
 		addToLog "INFO" "Queue Starting Job " "Command started processing '$queueFileData'."
 
-		if [ "$useLogs" == "yes"];then
+		if [ "$useLogs" == "yes" ];then
 			bash "$queueFile" | captureOutput "$logFilePath"
+			exitStatus=$?
 		else
 			bash "$queueFile"
+			exitStatus=$?
 		fi
-		exitStatus=$?
+		# get the log data
+		if [ "$useLogs" == "yes" ];then
+			jobOutput="$(cleanText "$(cat "$logFilePath")")"
+		else
+			jobOutput="Job Output Log Disabled"
+		fi
 		if [ 0 -eq $exitStatus ];then
 			# remove the job from the queue
 			rm -v "$queueFile"
+			addToLog "INFO" "Queue Job Log" "Command '$queueFileData' has succeeded.<br><h2>Job Output</h2><pre>$jobOutput</pre>"
 			addToLog "INFO" "Queue Job Success" "Command in queue '$queueFileData' has succeeded."
 		else
-			# get the log data
-			jobOutput="$(cat "$logFilePath")"
 			addToLog "ERROR" "Queue Job Failed" "Command in queue '$queueFileData' has failed.<br><h2>Job Output</h2><pre>$jobOutput</pre>"
 			# failed jobs should be moved into the failed job directory and ignored from then on
 			cp -v "$queueFile" "/var/cache/2web/queue/failed/"
