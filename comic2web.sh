@@ -137,7 +137,7 @@ function update(){
 		find "/var/cache/2web/generated/comicCache/" -type f -name "webDownload_*.index" -mtime +7 -delete
 		# clean the cache of old files
 		# scan the sources
-		ALERT "Comic Download Sources: $comicSources"
+		ALERT "$comicSources" "Comic Download Sources"
 		#for comicSource in $comicSources;do
 		echo "$comicSources" | while read comicSource;do
 			# generate a sum for the source
@@ -530,7 +530,6 @@ function scanPages(){
 					totalChapters=$(cat "$webDirectory/comics/$tempComicName/totalChapters.cfg")
 				fi
 				# link the image file to the web directory
-				#echo "[DEBUG]: Linking a comic chapter from $tempComicName"
 				# if the total pages has not yet been stored
 				if ! test -f "$webDirectory/comics/$tempComicName/$tempComicChapter/totalPages.cfg";then
 					# find the total number of pages in the chapter
@@ -646,7 +645,6 @@ function renderPage(){
 		fi
 		# get page width and height
 		tempImageData=$(identify -verbose "$webDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg" | grep "Geometry" |  cut -d':' -f2 | sed "s/+0//g")
-		#echo "[DEBUG]: image size = '$tempImageData'"
 		# get the total pages
 		totalPages=$(cat "$webDirectory/comics/$pageComicName/$pageChapterName/totalPages.cfg")
 		totalChapters=$(cat "$webDirectory/comics/$pageComicName/totalChapters.cfg")
@@ -845,7 +843,7 @@ function renderPage(){
 		linkFile "$webDirectory/comics/comics.index"  "$webDirectory/random/comics.index"
 
 		# add this comic to the search index
-		addToSearchIndex "$webDirectory/comics/$tempComicName/comics.index" "$tempComicName"
+		addToSearchIndex "$webDirectory/comics/$tempComicName/comics.index" "$tempComicName" "/comics/$tempComicName/"
 
 		# update last updated times
 		date "+%s" > /var/cache/2web/web/new/all.cfg
@@ -1158,12 +1156,6 @@ function nuke(){
 	webDirectory="$(webRoot)"
 	downloadDirectory="$(downloadDir)"
 	generatedDirectory="$(generatedRoot)"
-	# remove generated documents to prevent adding cached generated versions of removed files after nuke
-	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
-	# delete intermediate conversion directories
-	for location in $locations;do
-		delete "$generatedDirectory/comics/$location/"
-	done
 	# remove new and random indexes
 	rm -v $webDirectory/new/comic_*.index
 	rm -v $webDirectory/random/comic_*.index
@@ -1184,7 +1176,7 @@ function nuke(){
 	drawLine
 	drawHeader "NUKE Complete"
 	drawLine
-	echo "All file for the comic2web module have been removed. comic2web will rebuild all site info on the next automatic scan but can be done manually with 'comic2web --parallel'. If you have comics that were converted from other formats you may also want to run 'comic2web --reset' in order to remove any intermedary file formats created."
+	ALERT "All file for the comic2web module have been removed. comic2web will rebuild all site info on the next automatic scan but can be done manually with 'comic2web --parallel'. If you have comics that were converted from other formats you may also want to run 'comic2web --reset' in order to remove any intermedary file formats created. Existing intermedary files will be added back on the next rescan even if the source files have been deleted." "WARNING"
 	drawLine
 	echo "You MUST remove downloaded comics, generated thumbnails, and converted comic files with the 'comic2web reset' command"
 	drawLine
