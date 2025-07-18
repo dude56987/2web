@@ -130,7 +130,7 @@
 	}else{
 		# if weather2web is not running queue a update job
 		if (! file_exists("/var/cache/2web/web/weather2web.active")){
-			addToQueue("multi","weather2web");
+			addToQueue("multi","weather2web --mute");
 			addToLog("DEBUG","weather check", "weather updated");
 		}
 		echo "<div class='inputCard'>";
