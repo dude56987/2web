@@ -116,31 +116,50 @@
 		<img id='spinner' src='/spinner.gif' />
 	</h1>
 <div class='listCard'>
-	<?PHP
-	echo "<a class='button' href='$decodedChannelLink'>"
-	?>
-		🔗 Direct Link
-	</a>
-	<?PHP
-	echo "<a class='button' target='_new' href='/client/?play=$channelLink'>";
-	?>
-		🎟️ Play on Client
-	</a>
-	<?PHP
-	echo "<a class='button' target='_new' href='/kodi-player.php?url=$channelLink'>";
-	?>
-		🇰Play on KODI
-	</a>
-	<?PHP
+<?PHP
+	# get the user selected remote
+	$userClientName="";
+	if (array_key_exists("selectedRemote",$_SESSION)){
+		if ($_SESSION["selectedRemote"] == "CLIENT"){
+			$userClientName="client";
+		}else{
+			$userClientName="kodi";
+		}
+	}else{
+		$userClientName="select";
+	}
+	#
+	echo "<a class='button' href='$decodedChannelLink'>";
+	echo "🔗 Direct Link";
+	echo "</a>";
+	if ($userClientName == "client"){
+		echo "<a class='button' target='_new' href='/client/?play=$channelLink'>";
+		echo "🎟️ Play on Client";
+		echo "</a>";
+	}else if ($userClientName == "kodi"){
+		echo "<a class='button' target='_new' href='/kodi-player.php?url=$channelLink'>";
+		echo "🇰Play on KODI";
+		echo "</a>";
+	}else{
+		echo "<a onclick='pauseVideo();' class='button' target='_new' href='/remote.php?mime=stream&play=".$channelLink."'>\n";
+		echo "🎛️ Select Your Remote\n";
+		echo "</a>\n";
+	}
 	echo "<a class='button vlcButton' href='vlc://".str_replace(" ","%20",urldecode($decodedChannelLink))."'>";
-	?>
-		<span id='vlcIcon'>&#9650;</span> VLC
-	</a>
+	echo "<span id='vlcIcon'>&#9650;</span> VLC";
+	echo "</a>";
+?>
 </div>
 </div>
 <?PHP
 	if ((stripos($decodedChannelLink,"youtube.com") !== false) and (stripos($decodedChannelLink,"watch?v=") !== false)){
 		echo "<div class='errorBanner'>Using Embeded Player! This means the source website can track your viewing of this stream and run javascript on this page. The embeded player is only used on websites that do not support <a href='https://en.wikipedia.org/wiki/HTTP_Live_Streaming'>HLS</a>.</div>";
+		#
+		if (isset($_SERVER["HTTPS"])){
+			echo "<div class='warningBanner'>";
+			echo "Embeded player can not be embeded here ,but can be viewed on HTTP when logged out.";
+			echo "</div>";
+		}
 	}
 ?>
 <div class='listCard'>
@@ -162,13 +181,18 @@
 			$embed_id=preg_replace("/.*watch\?v=/","",$decodedChannelLink);
 			# remove trailing parenthesis
 			$embed_id=preg_replace("/\"$/","",$embed_id);
-			# embed the video player from the source website
-			echo "<iframe class='livePlayer'";
-			echo " src='https://www.youtube-nocookie.com/embed/$embed_id'";
-			echo " frameborder='0'";
-			echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'";
-			echo " allowfullscreen>";
-			echo "</iframe>";
+			if (isset($_SERVER["HTTPS"])){
+				echo "<div class='livePlayer'>";
+				echo "</div>";
+			}else{
+				# embed the video player from the source website
+				echo "<iframe class='livePlayer'";
+				echo " src='https://www.youtube-nocookie.com/embed/$embed_id'";
+				echo " frameborder='0'";
+				echo " allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'";
+				echo " allowfullscreen crossorigin>";
+				echo "</iframe>";
+			}
 		}else{
 			# build the page but dont write it, this function is intended to be
 			# piped into a file
@@ -233,32 +257,32 @@
 <div>
 <br>
 <div class='descriptionCard'>
-
 	<?PHP
-		echo "<a class='channelLink' href='/live/channels/channel_".$channelNumber.".php#".$channelNumber."'>";
-		echo "$channelTitle";
-		?>
-	</a>
-	<?PHP
-	echo "<a class='button hardLink' href='$decodedChannelLink'>"
-	?>
-		🔗 Direct Link
-	</a>
-	<?PHP
-	echo "<a class='button hardLink' target='_new' href='/client/?play=$channelLink'>";
-	?>
-		🎟️ Play on Client
-	</a>
-	<?PHP
-	echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=$channelLink'>";
-	?>
-		🇰Play on KODI
-	</a>
-	<?PHP
+	#
+	echo "<a class='channelLink' href='/live/channels/channel_".$channelNumber.".php#".$channelNumber."'>";
+	echo "$channelTitle";
+	echo "</a>";
+	#
+	echo "<a class='button hardLink' href='$decodedChannelLink'>";
+	echo "🔗 Direct Link";
+	echo "</a>";
+	if ($userClientName == "client"){
+		echo "<a class='button hardLink' target='_new' href='/client/?play=$channelLink'>";
+		echo "🎟️ Play on Client";
+		echo "</a>";
+	}else if ($userClientName == "kodi"){
+		echo "<a class='button hardLink' target='_new' href='/kodi-player.php?url=$channelLink'>";
+		echo "🇰Play on KODI";
+		echo "</a>";
+	}else{
+		echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/remote.php?mime=stream&play=".$channelLink."'>\n";
+		echo "🎛️ Select Your Remote\n";
+		echo "</a>\n";
+	}
 	echo "<a class='button hardLink vlcButton' href='vlc://".str_replace(" ","%20",urldecode($decodedChannelLink))."'>";
+	echo "<span id='vlcIcon'>&#9650;</span> VLC";
+	echo "</a>";
 	?>
-		<span id='vlcIcon'>&#9650;</span> VLC
-	</a>
 	<div class='listCard'>
 		<?PHP
 		echo "$channelGroups";
