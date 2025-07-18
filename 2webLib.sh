@@ -1253,7 +1253,7 @@ function ALERT(){
 	#
 	# RETURN STDOUT
 	#
-	if [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
 	fi
@@ -1446,7 +1446,7 @@ function INFO(){
 	# - Line length will be cut to the size of the active terminal
 	#
 	# RETURN STDOUT
-	if [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
 	fi
@@ -1484,6 +1484,11 @@ function ERROR(){
 	# Print text as error output. This will have a ERROR header.
 	#
 	# RETURN STDOUT
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
+	#
 	width=$(tput cols)
 	output="$1"
 	echo
@@ -1846,6 +1851,12 @@ function loadWithoutComments(){
 ################################################################################
 function drawHeader(){
 	# draw a header with figlet
+	#
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip running output if script is ran in the background
+		return
+	fi
+	#
 	termWidth=$(tput cols)
 	#
 	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
@@ -2203,7 +2214,7 @@ loadLineTheme(){
 ################################################################################
 function drawLine(){
 	# Draw a line across the terminal using curses to determine the length
-	if [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
 	fi
@@ -2574,7 +2585,7 @@ function randomChem(){
 ################################################################################
 function drawSmallHeader(){
 	# Draw a line across the terminal using curses to determine the length
-	if [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
 	fi
@@ -3954,7 +3965,7 @@ function rotateSpinner(){
 	#
 	#	The default animation delay is 0.1 seconds.
 	#
-	if [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
 	fi
