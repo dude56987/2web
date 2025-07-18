@@ -1,3 +1,4 @@
+#!/bin/bash
 # enable ssl module in apache
 a2enmod ssl
 # enable apache headers module
