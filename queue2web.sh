@@ -519,6 +519,10 @@ function idleQueueService(){
 ########################################################################
 # set the CLI theme
 LINE_THEME="flowersRand"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 ########################################################################
 # Process CLI options
 ########################################################################
