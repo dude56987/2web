@@ -781,7 +781,7 @@ ol{
 	}
 	.inputCard{
 		text-decoration: none;
-		width: 80dvw !important;
+		width: 95dvw !important;
 		float: none !important;
 	}
 	.liveBackground{
@@ -1549,7 +1549,30 @@ form{
 	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: solid var(--borderColor) 0.2rem;
+	width:98dvw;
 	margin: 0.5rem;
+	margin-left: auto;
+	margin-right: auto;
+	/*
+	padding-bottom: 0.5rem;
+	*/
+}
+.titleCard .inputCard{
+	width:44%;
+	margin-left: 0.5rem;
+	margin-right: 0.5rem;
+}
+.titleCard .titleCard{
+	/*
+	background: rgba(100,100,100,0.85);
+	*/
+	background: var(--glassBackground);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	border: solid var(--borderColor) 0.2rem;
+	width:98%;
+	margin: 0.5rem;
+	margin-left: auto;
+	margin-right: auto;
 	/*
 	padding-bottom: 0.5rem;
 	*/
@@ -2040,9 +2063,11 @@ table{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	background: var(--glassBackground);
 	border: solid var(--borderColor) 0.2rem;
-	width: 46dvw;
+	width: 44dvw;
 	display: inline-block;
 	margin: 0.5rem;
+	margin-left: auto;
+	margin-right: auto;
 	float: none;
 	min-height: 3rem;
 	/*
@@ -2868,19 +2893,19 @@ details summary {
 	cursor: pointer;
 }
 details summary h2::before {
-	content:"⬇️ ";
+	content:"↓ ";
 }
 details summary h2::after{
-	content:" ⬇️";
+	content:" ↓";
 }
 details[open] summary h2::before {
-	content:"⬆️ ";
+	content:"↑ ";
 }
 details[open] summary h2::after{
-	content:" ⬆️";
+	content:" ↑";
 }
 details{
-	h2{
+	h2,h1,h3{
 		border-top: none !important;
 	}
 }
