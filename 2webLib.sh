@@ -3111,7 +3111,6 @@ function generateThumbnailFromMedia(){
 				cp -v "$tempThumbnailCachePath" "$thumbnailCachePath"
 				# remove the temp thumbnail
 				rm -v "$tempThumbnailCachePath"
-			else
 			fi
 			# - increment the timecode to get from the video to find a thumbnail that is not
 			#   a blank screen
