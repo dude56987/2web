@@ -925,9 +925,6 @@ function cacheCheck(){
 		# check the file date
 		fileMtime=$(stat -c "%Y" "$filePath")
 
-		#addToLog "DEBUG" "CACHE CHECK" "filePath = '$filePath'"
-		#addToLog "DEBUG" "CACHE CHECK" "fileMtime = '$fileMtime'"
-		#addToLog "DEBUG" "CACHE CHECK" "$(timeToHuman "$(($(date "+%s") - $fileMtime))") -gt $(timeToHuman "$(( ( (60 * 60) * 24 ) * $cacheDays ))")"
 		if [ $(($(date "+%s") - $fileMtime)) -gt $(( ( (60 * 60) * 24 ) * $cacheDays )) ];then
 			# the file is more than "$cacheDays" days old, it needs updated
 			#INFO "File is to old, update the file $1"
@@ -1284,14 +1281,17 @@ function ALERT(){
 	done
 	#
 	if [ $( echo -ne "$1" | wc -l ) -gt 0 ];then
+		tempColorData="$(resetColor)$(whiteBackground)$(blackText)"
 		#
 		yellowText
-			drawSmallHeader "$headerText"
-		resetColor
-		whiteBackground
-		blackText
+			drawSmallHeader "${headerText}" "${tempColorData}"
+		#resetColor
+		#
+		#whiteBackground
+		#blackText
 			echo -e "$1" | tr -s '\n'
 		resetColor
+		#
 		yellowText
 			drawLine
 		resetColor
@@ -1326,9 +1326,14 @@ function startDebug(){
 	# - All commands executed will be displayed after this command is ran
 	#
 	# RETURN NULL
+	set +x
+	# stop any active spinner processes in the background
+	stopSpinner
+	# draw the debug block
 	drawLine
 	drawHeader "START DEBUG BLOCK"
 	drawLine
+	# start debug
 	set -x
 }
 ################################################################################
@@ -1341,6 +1346,7 @@ function stopDebug(){
 	drawLine
 	drawHeader "STOP DEBUG BLOCK"
 	drawLine
+	set +x
 }
 ########################################################################
 function drawCellLine(){
@@ -1628,11 +1634,14 @@ function lockProc(){
 	# - Creates a activeGraph file to mark the activity graph
 	#
 	# RETURN FILES
-
-	# get the module name for use as the proc name
-	procName=$(echo "${0##*/}" | cut -d'.' -f1)
+	if [ "$1" == "" ];then
+		# get the module name for use as the proc name
+		procName=$(echo "${0##*/}" | cut -d'.' -f1)
+	else
+		procName="$1"
+	fi
 	# get the set web root
-	webDirectory=$(webRoot)
+	webDirectory="$(webRoot)"
 	# store the color codes for coloring
 	resetCode="\033[0m"
 	#
@@ -1684,10 +1693,16 @@ function lockProc(){
 		drawSmallHeader "$procName"
 		drawLine
 	resetColor
+	addToLog "INFO" "Launching Module" "Launching Module ${procName}."
 }
 ################################################################################
 function exitModuleTrap(){
 	procName="$1"
+	#drawSmallHeader "Remaining Jobs"
+	#jobs -r
+	#drawLine
+	# draw a newline after ctrl-c
+	echo
 	# lock control-c
 	trap "ALERT 'Please wait for module to close...'" INT
 	# store the color codes for coloring
@@ -1720,8 +1735,12 @@ function exitModuleTrap(){
 		drawSmallHeader "$procName"
 		drawLine
 	resetColor
+	# log the exit
+	addToLog "INFO" "Closing Module" "Closing Module ${procName}."
 	# unlock control-c
 	trap INT
+	# close the program
+	#exit
 }
 ################################################################################
 function returnModStatus(){
@@ -1749,6 +1768,7 @@ function returnModStatus(){
 	if test -f "/etc/2web/mod_status/${moduleName}.cfg";then
 		if grep -q "yes" "/etc/2web/mod_status/${moduleName}.cfg";then
 			#echo -e "MOD $moduleName IS ${greenFG}ENABLED${resetTerm}!"
+			#addToLog "INFO" "Title" "Description"
 			return 0
 		else
 			#echo -e "MOD $moduleName IS ${redFG}DISABLED${resetTerm}!"
@@ -1784,7 +1804,9 @@ function checkModStatus(){
 			# the module is enabled
 			echo "Preparing to process ${moduleName}..."
 		else
-			ALERT "MOD IS DISABLED!"
+			redText
+				drawSmallHeader "${moduleName} IS DISABLED!"
+			resetColor
 			ALERT "Edit /etc/2web/mod_status/${moduleName}.cfg to contain only the text 'enabled' in order to enable the 2web module."
 			# the module is not enabled
 			# - remove the files and directory if they exist
@@ -1792,6 +1814,9 @@ function checkModStatus(){
 			exit
 		fi
 	else
+		greenText
+			drawSmallHeader "${moduleName} IS ENABLED!"
+		resetColor
 		createDir "/etc/2web/mod_status/"
 		# the config does not exist at all create the default one
 		# - the default status for module should be disabled
@@ -1992,18 +2017,18 @@ function drawAltPattern(){
 	fi
 }
 ################################################################################
-lineThemeDemo(){
+function lineThemeDemo(){
 	drawLineTheme
 }
 ################################################################################
-randomLineTheme(){
+function randomLineTheme(){
 	# Load a random line theme from the list
 	themes="dice flower flower2 flower3 flower4 flower5 flower6 flowers flowerRand flowerRand2 wood quilt suit card solid double stitch diamond smallDotted dotted boxes note hollowBlock bowtie block bottomBlock fadeDown fadeUp book castle floppy computer computers term lines sine grass vines altdice weather sid chem papersRand papersRand2 cross cross2 crossAlt graph"
 	#
 	echo -ne "$themes" | sed "s/ /\n/g" | shuf | head -1
 }
 ################################################################################
-loadLineTheme(){
+function loadLineTheme(){
 	# loadLineTheme "$index" "$themeName"
 	#
 	# Draw a single character in a line using the given line theme
@@ -2218,6 +2243,11 @@ function drawLine(){
 		# skip running output if script is ran in the background
 		return
 	fi
+	if [ "" == "$1" ];then
+		tailText=""
+	else
+		tailText="$1"
+	fi
 	width=$(tput cols)
 	buffer=""
 	# make the buffer the width of the terminal
@@ -2227,7 +2257,7 @@ function drawLine(){
 		buffer="$buffer$(loadLineTheme "$index" )"
 	done
 	# draw the buffer
-	echo "$buffer";
+	echo "$buffer$tailText";
 }
 ################################################################################
 function drawCardSuite(){
@@ -2595,6 +2625,11 @@ function drawSmallHeader(){
 	# make the buffer the width of the terminal
 	#█🮮◙⭗🟕🟗═
 	headerText="$1"
+	if [ "" == "$2" ];then
+		tailText=""
+	else
+		tailText="$2"
+	fi
 	# count the bytes
 	headerTextLength=${#headerText}
 	# get the size of the first half of the line
@@ -2615,7 +2650,7 @@ function drawSmallHeader(){
 		buffer="$buffer$(loadLineTheme "$index" )"
 	done
 	# draw the output to the terminal
-	echo "$buffer";
+	echo -e "$buffer$tailText";
 }
 ################################################################################
 function showServerLinks(){
@@ -3062,7 +3097,6 @@ function generateThumbnailFromMedia(){
 		#
 		while [ $tempFileSize -lt $largestFileSize ];do
 			#
-			addToLog "DEBUG" "Thumbnail Gen" "Building a thumbnail at '$tempThumbnailCachePath'"
 			# use the ffmpeg thumbnailer to build a thumbnail
 			ffmpegthumbnailer -t "${tempTimeCode}%" -i "$videoPath" -s 400 -c png -o "$tempThumbnailCachePath"
 			# get the size of the file, after it has been created
@@ -3073,13 +3107,11 @@ function generateThumbnailFromMedia(){
 			fi
 			# check if this image is larger than the other generated thumbnails
 			if [ $tempFileSize -gt $largestImageSize ];then
-				addToLog "DEBUG" "Thumbnail Gen" "Larger thumbnail discovered <br>( '$tempFileSize' < 15000 )"
 				# copy over the temp thumbnail into the cached thumbnail path
 				cp -v "$tempThumbnailCachePath" "$thumbnailCachePath"
 				# remove the temp thumbnail
 				rm -v "$tempThumbnailCachePath"
 			else
-				addToLog "DEBUG" "Thumbnail Gen" "Thumbnail is not larger than the minimum size <br>( '$tempFileSize' < 15000 )"
 			fi
 			# - increment the timecode to get from the video to find a thumbnail that is not
 			#   a blank screen
@@ -3089,7 +3121,6 @@ function generateThumbnailFromMedia(){
 			# after checking x seconds for a thumbnail of the thumbs created use the one with
 			# the largest file size
 			if [ $tempTimeCode -gt 30 ];then
-				addToLog "DEBUG" "Thumbnail Gen" "Exceeded length no more thumbnails will attempt to be made"
 				# break the loop by breaking the comparison
 				tempFileSize=$largestFileSize
 				# write the thubmnail data
@@ -3097,10 +3128,8 @@ function generateThumbnailFromMedia(){
 		done
 	fi
 	# link the cached thumbnail to the web path
-	addToLog "DEBUG" "Thumbnail Gen" "Generation completed, saving thumbnail '$thumbnailPath.png'"
 	linkFile "$thumbnailCachePath" "$thumbnailPath.png"
 	# link the thumbnail created to the kodi path
-	addToLog "DEBUG" "Thumbnail Gen" "Linking thumbnail to kodi directory '$thumbnailPathKodi.png'"
 	linkFile "$thumbnailPath.png" "$thumbnailPathKodi.png"
 	#
 	#if ! test -f "/var/cache/2web/web/thumbnails/$thumbSum-web.png";then
@@ -3128,7 +3157,6 @@ function mediaJson(){
 		echo -n "$mediaData" > "/var/cache/2web/downloads/mediaInfo/$sum.json"
 	fi
 	#
-	addToLog "DEBUG" "Media Json" "mediaData = '$mediaData'"
 	# store the media info
 	echo -n "$mediaData"
 }
@@ -3290,13 +3318,15 @@ function loadConfigs(){
 			cat "$defaultConfigPath"
 		} > "$configPath"
 	fi
-	# write path to console
-	grep -v "^#" "$configPath"
+	# remove comments and load the config
+	# - remove duplicated lines
+	grep -v "^#" "$configPath" | tr -s "\n"
 	# create a space just in case none exists
 	printf "\n"
 	# read the additional configs
 	find "$configDirectory" -mindepth 1 -maxdepth 1 -type f -name '*.cfg' | while read libraryConfigPath;do
 		# load up config without comments
+		# - remove duplicated lines
 		grep -v "^#" "$libraryConfigPath" | tr -s "\n"
 		# create a space just in case none exists
 		printf "\n"
@@ -3432,6 +3462,10 @@ function compileSearchIndex(){
 
 		# set the new data sum to prevent this from running again
 		setFileDataSum "/var/cache/2web/web" "/var/cache/2web/generated/searchIndexSum.cfg"
+	else
+		drawLine
+		drawSmallHeader "No New Search Data Was Found"
+		drawLine
 	fi
 }
 ########################################################################
@@ -3656,15 +3690,12 @@ function loadSearchIndexResults(){
 	# Output the results of a search query to the search index
 	#
 	local searchQuery="$1"
-	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query</p><pre>${searchQuery}</pre>"
 	# cleanup the query
 	searchQuery="$(echo -n "$searchQuery" | sed "s/'s//g")"
 	searchQuery="$(echo -n "$searchQuery" | sed "s/＇s//g")"
 	searchQuery="$(cleanText "$searchQuery")"
-	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query Post Cleanup</p><pre>${searchQuery}</pre>"
 	# add spaces around special characters to make the search index not care about "query" vs "query?"
 	searchQuery="$(spaceCleanedText "$searchQuery")"
-	addToLog "DEBUG" "Fuzzy Search" "<p>Search Query Post Spacing</p><pre>${searchQuery}</pre>"
 	#
 	allIndex=""
 	IFSBACKUP=$IFS
@@ -3686,7 +3717,6 @@ function loadSearchIndexResults(){
 		done
 	done
 	IFS=$IFSBACKUP
-	addToLog "DEBUG" "Fuzzy Search" "<p>Index Pre Sort</p><pre>${allIndex}</pre>"
 	# sort the all index
 	allIndex="$(echo -e "$allIndex" | sort )"
 	# count the unique items
@@ -3696,7 +3726,6 @@ function loadSearchIndexResults(){
 	# remove leading whitespace
 	allIndex="$(echo "$allIndex" | sed "s/^[ \t]*//g" )"
 	#
-	addToLog "DEBUG" "Fuzzy Search" "<p>Index Post Sort</p><pre>${allIndex}</pre>"
 	#
 	allIndex="$(echo "$allIndex" | cut -d' ' -f2- )"
 	#	output the index
@@ -4088,17 +4117,24 @@ function startSpinner(){
 function stopSpinner(){
 	# stopSpinner $SPINNER_PID
 	#
-	# pass the spinner PID from the return value of startSpinner()
+	# - kill the spinner process if one has been set
 	#
-	SPINNER_PID="$1"
-	# stop a already running spinner animation
-	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# - Pass the spinner PID from the global $SPINNER_PID
+	# - Then enable the cursor blinking again
 
-	# enable cursor blinking on stop
-	tput cnorm
-
-	# stop the animated spinner
-	kill "$SPINNER_PID" || INFO "No Spinner could be stopped..."
+	# check for a active spinner
+	if [ "$SPINNER_PID" == "" ];then
+		# no active spinner could be found
+		INFO "No Active Spinner"
+	else
+		# if the process of the spinner is active
+		if test -d "/proc/$SPINNER_PID/";then
+			# enable cursor blinking on stop
+			tput cnorm
+			# stop the animated spinner
+			kill "$SPINNER_PID" || INFO "No Spinner could be stopped..."
+		fi
+	fi
 }
 ########################################################################
 function loadOption(){
@@ -4110,15 +4146,19 @@ function loadOption(){
 	# - This will detect --optionName and can be used to store the true or
 	#   false value
 	#
-	option="$1"
+	optionString="$1"
 	input="$2"
+	#
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	# load a option
-	if echo "$input" | grep -q -e "--${option}";then
+	if echo -n "$input" | grep -q -e "--${optionString}";then
+		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to yes"
 		# load the option
-		echo "yes"
+		echo -n "yes"
 	else
+		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to no"
 		# load the default of no
-		echo "no"
+		echo -n "no"
 	fi
 }
 ########################################################################
@@ -4173,30 +4213,22 @@ function screenshotWebpage(){
 	sleep 1
 	# check for working wkhtmltoimage
 	if test -f '/usr/bin/wkhtmltoimage';then
-		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using wkhtmltoimage."
 		wkhtmltoimage --width ${screenshotWidth} --height ${screenshotHeight} --javascript-delay 30000 "$screenshotUrl" "$screenshotOutputPath"
 	elif test -f '/usr/bin/weasyprint';then
 		screenshotWebpage_weasyprint "$screenshotUrl" "$screenshotOutputPath"
-		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using weasyprint."
 	elif test -f '/usr/bin/chromium';then
 		# web browser CLI interfaces seem to break a lot
-		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using chromium."
-		startDebug
 		# local install of chromium
 		/usr/bin/chromium --headless --timeout 60000 --incognito --virtual-time-budget=60000 --run-all-compositor-stages-before-draw --hide-scrollbars --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
-		stopDebug
 	elif test -f '/snap/bin/chromium';then
 		# web browser CLI interfaces seem to break a lot
-		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using chromium."
 		# snap install of chromium
-		startDebug
 		/snap/bin/chromium --headless --no-sandbox --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
 		#/snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
 		#/snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --hide-scrollbars --screenshot "$screenshotUrl" --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight}
 		#xvfb-run /snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --hide-scrollbars --screenshot "$screenshotUrl" --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight}
 		#su www-data -c "xvfb-run /snap/bin/chromium --headless --incognito --hide-scrollbars --screenshot=\"$screenshotOutputPath\" --window-size=${screenshotWidth},${screenshotHeight} \"$screenshotUrl\""
 		#/snap/bin/chromium --headless --timeout 60000 --incognito --virtual-time-budget=60000 --run-all-compositor-stages-before-draw --hide-scrollbars --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
-		stopDebug
 	elif test -f '/usr/bin/firefox';then
 		# web browser CLI interfaces seem to break a lot
 		# firefox screenshot tool is currently broken but will still be tried as a failsafe
@@ -4206,8 +4238,4 @@ function screenshotWebpage(){
 	else
 		addToLog "ERROR" "Screenshot Failure" "Failed to create a screenshot from link '$screenshotUrl' please install the cromium-browser package or wkhtmltopdf."
 	fi
-	#xvfb-run cutycapt --url="$link" --out="$webDirectory/portal/${domain}/$linkSum-web.png"
-	#xvfb-run cutycapt --min-width=1920 --min-height=1080 --url="$link" --out="$webDirectory/portal/${domain}/$linkSum-web.png"
-	#xvfb-run firefox --screenshot "$webDirectory/portal/${domain}/$linkSum-web.png" "$link" --window-size=1920,1080
-	#/usr/bin/firefox --headless --screenshot "$webDirectory/portal/${domain}/$linkSum-web.png" "$link" --window-size=1920,1080
 }
