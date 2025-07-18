@@ -187,44 +187,51 @@ function generateLink(){
 	#fi
 
 	# generate qr codes for each link
+
+	# check the link type
+	if echo "$bookmarks" | grep -q "$link";then
+		# this is a bookmark only update the link data once every 365 days
+		linkCacheTime=365
+		isBookmark="yes"
+	else
+		# update local links once every 24 hours
+		linkCacheTime=1
+		isBookmark="no"
+	fi
 	# update the link once every 14 days
-	if cacheCheck "$webDirectory/portal/${domain}/$linkSum-web.png" "14";then
+	if cacheCheck "$webDirectory/portal/${domain}/$linkSum.index" "$linkCacheTime";then
 		addToLog "DOWNLOAD" "Building portal link" "$link"
 		# build the qr code image with a transparent background
 		qrencode --background="00000000" -m 1 -l H -o "$webDirectory/portal/${domain}/$linkSum-qr.png" "$link"
-		# create a screenshot of the webpage link
-		wkhtmltoimage --width 1920 --height 1080 --javascript-delay 30000 "$link" "$webDirectory/portal/${domain}/$linkSum-web.png"
+		domainPrefix=$(echo -n "${link}" | cut -d'/' -f1-3 )
+		addToLog "INFO" "Downloading Favicon" "Favicon path '${domainPrefix}/favicon.ico'"
+		# try to get the favicon
+		#faviconData="$(curl "${domainPrefix}/favicon.ico")"
+		wget "${domainPrefix}/favicon.ico" -O "$webDirectory/portal/${domain}/${linkSum}-icon.ico"
+		#if [ "$?" -ne 0 ];then
+		#if test -s "$webDirectory/portal/${domain}/${linkSum}-icon.ico";then
+		if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-icon.ico" | wc -c )" -gt 0 ];then
+			# convert the icon into a usable image
+			#convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -resize "200x200" -transparent -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
+			convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -resize "200x200" -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
+		else
+			# create a screenshot of the webpage link if the favicon fails to download
+			screenshotWebpage "$link" "$webDirectory/portal/${domain}/${linkSum}-web.png"
+		fi
+		# create the failsafe demo image
+		if ! test -f  "$webDirectory/portal/${domain}/$linkSum-web.png";then
+			demoImage "${domain}${linkSum}" "$webDirectory/portal/${domain}/$linkSum-web.png" "1920x1080"
+		fi
 		# create the thumbnail
 		convert -quiet  "$webDirectory/portal/${domain}/$linkSum-web.png" -resize "300x200" "$webDirectory/portal/${domain}/$linkSum-thumb.png"
-
+		# if the image creation failed create a image using the hash image function
 		# resize the qr code in order to use it in composite
 		convert "$webDirectory/portal/${domain}/$linkSum-qr.png" -resize "1920x1080" "$webDirectory/portal/${domain}/$linkSum-qr.png"
 		# save the combined file as the image to use in the web interface
-		composite -gravity "center" "$webDirectory/portal/${domain}/$linkSum-qr.png" "$webDirectory/portal/${domain}/$linkSum-web.png" "$webDirectory/portal/${domain}/$linkSum.png"
-		# if the image creation failed create a image using the hash image function
-		if ! test -f  "$webDirectory/portal/${domain}/$linkSum.png";then
-			hashImage "${domain}${linkSum}" "$webDirectory/portal/${domain}/$linkSum.png" "1920x1080"
-		fi
-		# create .index files for direct links
-		{
-			echo "	<a class='showPageEpisode' href='/exit.php?to=$link'>"
-			echo "		<h2>$domain</h2>"
-			echo "		<img src='/portal/${domain}/$linkSum.png'>"
-			echo "		<div class='showIndexNumbers'>$name</div>"
-			echo "		$description"
-			echo "	</a>"
-		} > "$webDirectory/portal/${domain}/$linkSum.index"
-		if ! test -f "$webDirectory/portal/${domain}.index";then
-			# create .index files for domain
-			{
-				echo "	<a class='button' href='/portal/$domain/'>"
-				echo "		$domain"
-				echo "	</a>"
-			} > "$webDirectory/portal/${domain}.index"
-			# add the domain to the domain index
-			addToIndex "$webDirectory/portal/${domain}.index" "$webDirectory/portal/domain.index"
-		fi
-
+		#composite -gravity "center" "$webDirectory/portal/${domain}/$linkSum-qr.png" "$webDirectory/portal/${domain}/$linkSum-web.png" "$webDirectory/portal/${domain}/$linkSum.png"
+		#convert "$webDirectory/portal/${domain}/$linkSum-web.png" "$webDirectory/portal/${domain}/$linkSum.png"
+		#
+		convert -quiet  "$webDirectory/portal/${domain}/$linkSum-web.png" -resize "300x200" "$webDirectory/portal/${domain}/$linkSum.png"
 
 		# build the .desktop file link for all linux/bsd systems
 		{
@@ -264,6 +271,26 @@ function generateLink(){
 
 		# add this comic to the search index
 		addToSearchIndex "$webDirectory/portal/${domain}/$linkSum.index" "${domain} ${name}" "/portal/$domain/"
+
+		# create .index files for direct links
+		{
+			echo "	<a class='showPageEpisode' href='/exit.php?to=$link'>"
+			echo "		<h2>$domain</h2>"
+			echo "		<img src='/portal/${domain}/$linkSum.png'>"
+			echo "		<div class='showIndexNumbers'>$name</div>"
+			echo "		$description"
+			echo "	</a>"
+		} > "$webDirectory/portal/${domain}/$linkSum.index"
+		if ! test -f "$webDirectory/portal/${domain}.index";then
+			# create .index files for domain
+			{
+				echo "	<a class='button' href='/portal/$domain/'>"
+				echo "		$domain"
+				echo "	</a>"
+			} > "$webDirectory/portal/${domain}.index"
+			# add the domain to the domain index
+			addToIndex "$webDirectory/portal/${domain}.index" "$webDirectory/portal/domain.index"
+		fi
 	fi
 }
 ################################################################################
@@ -280,16 +307,21 @@ function loadBookmarks(){
 ################################################################################
 function update(){
 	addToLog "INFO" "STARTED Update" "$(date)"
-	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/kodi/sources.d/" "/etc/2web/config_default/portal2web_sources.cfg")
-	# remove empty lines and other problems in sources
-	portalSources=$(echo "$portalSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
+	INFO "Loading Portal sources..."
+	# load local portal links to LAN and local network resources
+	portalSources=$(loadConfigs "/etc/2web/portal/sources.cfg" "/etc/2web/portal/sources.d/" "/etc/2web/config_default/portal2web_sources.cfg")
+	INFO "Loading Bookmarks..."
+	createDir "/etc/2web/portal/bookmarks.d/"
+	# load remote links that do not change need updated more than once a year
+	bookmarks=$(loadConfigs "/etc/2web/portal/bookmarks.cfg" "/etc/2web/portal/bookmarks.d/" "/etc/2web/config_default/portal2web_bookmarks.cfg")
 
-	drawSmallHeader "Sources"
-	echo "$portalSources"
-	drawLine
+	# remove empty lines and other problems in sources
+	portalSources=$(echo -e "${portalSources}\n${bookmarks}" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g" | sed "s/\n\n//g")
+
+	ALERT "$portalSources" "Sources"
 
 	# this will launch a processing queue that downloads updates to portal
-	echo "Loading up sources..."
+	INFO "Loading up scan sources..."
 	# check for defined sources
 	if ! test -f /etc/2web/portal/scanSources.cfg;then
 		createDir "/etc/2web/portal/scanSources.d/"
@@ -305,12 +337,10 @@ function update(){
 	portalScanSources=$(echo -en "$portalScanSources\n$(grep --invert-match --no-filename "^#" /etc/2web/portal/scanSources.d/*.cfg)")
 	portalScanSources=$(echo "$portalScanSources" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
 
-	drawSmallHeader "Scan Sources"
-	echo "$portalSources"
-	drawLine
+	ALERT "$portalSources" "Scan Sources"
 
 	# load ports to scan on portal scan sources
-	echo "Loading up sources..."
+	INFO "Loading up known ports..."
 	# check for defined sources
 	if ! test -f /etc/2web/portal/scanPorts.cfg;then
 		createDir "/etc/2web/portal/scanPorts.d/"
@@ -325,7 +355,7 @@ function update(){
 	scanPorts=$(echo "$scanPorts" | tr -s ' ' | tr -s '\n' | sed "s/\t//g" | sed "s/^ //g")
 
 	# load up path scan sources
-	echo "Loading up sources..."
+	INFO "Loading up known paths..."
 	# check for defined sources
 	if ! test -f /etc/2web/portal/scanPaths.cfg;then
 		createDir "/etc/2web/portal/scanPaths.d/"
@@ -341,6 +371,7 @@ function update(){
 
 	################################################################################
 	webDirectory=$(webRoot)
+	generatedDirectory="$(generatedRoot)"
 	################################################################################
 	#downloadDirectory="$(downloadDir)"
 	################################################################################
@@ -352,10 +383,7 @@ function update(){
 	# copy over config page
 	linkFile "/usr/share/2web/settings/portal.php" "$webDirectory/portal.php"
 	# scan the sources
-	ALERT "Scanning portal Sources"
-	drawLine
-	echo "$portalSources"
-	drawLine
+	ALERT "$portalSources" "Scanning Portal Sources"
 	#
 	if echo "$@" | grep -q -e "--parallel";then
 		totalCPUS=$(cpuCount)
@@ -378,22 +406,22 @@ function update(){
 	processedSources=0
 
 	# remove existing portal links older than 10 days before generating new ones
-	find "$webDirectory/portal/" -mtime 10 -type f | while read -r portalPath;do
-		# remove .cfg .png and .index files
-		if echo "$portalPath" | grep -q ".index";then
-			#	remove discovered file
-			#rm -v "$portalPath"
-			echo "rm -v '$portalPath'"
-		elif echo "$portalPath" | grep -q ".png";then
-			#	remove discovered file
-			#rm -v "$portalPath"
-			echo "rm -v '$portalPath'"
-		elif echo "$portalPath" | grep -q ".cfg";then
-			#	remove discovered file
-			#rm -v "$portalPath"
-			echo "rm -v '$portalPath'"
-		fi
-	done
+	#find "$webDirectory/portal/" -mtime 10 -type f | while read -r portalPath;do
+	#	# remove .cfg .png and .index files
+	#	if echo "$portalPath" | grep -q ".index";then
+	#		#	remove discovered file
+	#		#rm -v "$portalPath"
+	#		echo "rm -v '$portalPath'"
+	#	elif echo "$portalPath" | grep -q ".png";then
+	#		#	remove discovered file
+	#		#rm -v "$portalPath"
+	#		echo "rm -v '$portalPath'"
+	#	elif echo "$portalPath" | grep -q ".cfg";then
+	#		#	remove discovered file
+	#		#rm -v "$portalPath"
+	#		echo "rm -v '$portalPath'"
+	#	fi
+	#done
 
 	# if at least one source exists
 	if echo "$portalSources" | grep -q "http";then
@@ -404,9 +432,9 @@ function update(){
 		#for portalSource in $(echo "$portalSources" | shuf);do
 		echo "$portalSources" | sort -u | shuf | while read -r portalSource;do
 			# split portal info up based on commas
-			portalSourceName=$(echo "$portalSource" | cut -d',' -f1)
-			portalSourceLink=$(echo "$portalSource" | cut -d',' -f2)
-			portalSourceDesc=$(echo "$portalSource" | cut -d',' -f3)
+			portalSourceName=$(echo "$portalSource" | cut -d';' -f1)
+			portalSourceLink=$(echo "$portalSource" | cut -d';' -f2)
+			portalSourceDesc=$(echo "$portalSource" | cut -d';' -f3)
 			# add to tally
 			processedSources=$(( $processedSources + 1 ))
 			#ALERT "Processing '$portalSource'"
@@ -513,27 +541,37 @@ function update(){
 ################################################################################
 function resetCache(){
 	webDirectory=$(webRoot)
-	echo "There is no cache to remove from this module."
+	yellowBackground
+	blackText
+		drawLine
+		drawSmallHeader "There is no cache to remove from this module."
+		drawLine
+	resetColor
 }
 ################################################################################
 function nuke(){
 	webDirectory=$(webRoot)
+	kodiDirectory=$(kodiRoot)
 	# remove the kodi and web portal files
-	rm -rv "$webDirectory/portal/" || echo "No files found in portal web directory..."
-	rm -rv "$webDirectory/kodi/portal/" || echo "No files found in kodi directory..."
-	rm -rv $webDirectory/sums/portal2web_*.cfg || echo "No file sums found..."
+	delete "$webDirectory/portal/"
+	delete "$webDirectory/kodi/portal/"
+	rm -v $webDirectory/sums/portal2web_*.cfg
 	# remove random generated widget
-	rm -rv $webDirectory/web_cache/widget_random_portal.index || echo "No file sums found..."
+	delete "$webDirectory/web_cache/widget_random_portal.index"
 	# remove updated generated widget
-	rm -rv $webDirectory/web_cache/widget_updated_portal.index || echo "No file sums found..."
+	delete "$webDirectory/web_cache/widget_updated_portal.index"
 	# new indexes
-	rm -rv "$webDirectory/new/portal.index" || echo "No portal index..."
+	delete "$webDirectory/new/portal.index"
 	# random indexes
-	rm -rv "$webDirectory/random/portal.index" || echo "No portal index..."
+	delete "$webDirectory/random/portal.index"
 }
 ################################################################################
 # set the theme of the lines in CLI output
 LINE_THEME="computers"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	checkModStatus "portal2web"
@@ -550,10 +588,8 @@ elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 	disableMod "portal2web"
 elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-	echo -n "Build Date: "
-	cat /usr/share/2web/buildDate.cfg
-	echo -n "portal2web Version: "
-	cat /usr/share/2web/version_portal2web.cfg
+	ALERT "$(cat /usr/share/2web/buildDate.cfg)\n" "Build Date"
+	ALERT "$(cat /usr/share/2web/version_portal2web.cfg)\n" "portal2web Version"
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 	cat "/usr/share/2web/help/portal2web.txt"
 else

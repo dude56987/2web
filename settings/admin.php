@@ -1284,6 +1284,36 @@ if (array_key_exists("newUserName",$_POST)){
 	setModStatus("portal2web",$status);
 	backButton("/settings/modules.php#portal2webStatus","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("php2webStatus",$_POST)){
+	$status=$_POST['php2webStatus'];
+	setModStatus("php2web",$status);
+	backButton("/settings/modules.php#php2webStatus","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("addPortalBookmark",$_POST)){
+	#
+	$bookmarkUrl=($_POST['addPortalBookmark']);
+	$bookmarkTitle=($_POST['addPortalBookmark_title']);
+	$bookmarkDescription=($_POST['addPortalBookmark_description']);
+	$bookmarkSum=md5($bookmarkUrl.$bookmarkTitle.$bookmarkDescription);
+	outputLog("Adding bookmark '$bookmarkTitle;$bookmarkUrl;$bookmarkDescription'");
+	$filePath="/etc/2web/portal/bookmarks.d/".$bookmarkSum.".cfg";
+	outputLog("Creating bookmark file '$filePath' with bookmark data '$bookmarkTitle;$bookmarkUrl;$bookmarkDescription'");
+	# create the data file
+	file_put_contents($filePath, ($bookmarkTitle.";".$bookmarkUrl.";".$bookmarkDescription) );
+	outputLog("Bookmark file '$filePath' was successfully created.","goodLog");
+	#
+	backButton("/settings/portal.php#addPortalBookmark","🛠️ Return To Settings");
+}else if (array_key_exists("removePortalBookmark",$_POST)){
+	#
+	$bookmarkSum=$_POST['removePortalBookmark'];
+	outputLog("Remove bookmark '$bookmarkSum'");
+	$filePath="/etc/2web/portal/bookmarks.d/".$bookmarkSum.".cfg";
+	outputLog("Removing bookmark file '$filePath'");
+	# remove the data
+	unlink($filePath);
+	outputLog("Bookmark file '$filePath' was successfully removed.","goodLog");
+	#
+	backButton("/settings/portal.php#removePortalBookmark","🛠️ Return To Settings");
 }else if (array_key_exists("changeLogLimit",$_POST)){
 	outputLog("Changing the max log entries to '".$_POST["changeLogLimit"]."'");
 	# set the log limit

@@ -41,6 +41,22 @@ drawPosterWidget("portal");
 if (file_exists("portal.index")){
 	$portalLinks=file("portal.index");
 	$domainLinks=file("domain.index");
+	# find the bookmarks
+	$bookmarkLinks=Array();
+	$bookmarkDomainLinks=Array();
+	foreach($portalLinks as $portalLink){
+		if (stripos($portalLink,"www.") !== false){
+			$bookmarkLinks=array_merge($bookmarkLinks,Array($portalLink));
+		}
+	}
+	$portalLinks=array_diff($portalLinks,$bookmarkLinks);
+	foreach($domainLinks as $domainLink){
+		if (stripos($domainLink,"www.") !== false){
+			$bookmarkDomainLinks=array_merge($bookmarkDomainLinks,Array($domainLink));
+		}
+	}
+	$domainLinks=array_diff($domainLinks,$bookmarkDomainLinks);
+
 	echo "<div class='settingListCard'>";
 	echo "	<h1>";
 	echo "		Domains";
@@ -48,25 +64,41 @@ if (file_exists("portal.index")){
 	echo "	<div class='listCard'>";
 	# scan for links
 	foreach($domainLinks as $portalLink){
-		//if (is_readable($portalLink)){
-			# load each portal link
-			//echo file_get_contents($portalLink);
-			echo file_get_contents(str_replace("\n","",$portalLink));
-		//}
+		echo file_get_contents(str_replace("\n","",$portalLink));
+	}
+	echo "	</div>";
+	echo "</div>";
+
+	echo "<div class='settingListCard'>";
+	echo "<h1>";
+	echo "	Local Portal";
+	echo "</h1>";
+	# scan for links
+	foreach($portalLinks as $portalLink){
+		# load each portal link
+		echo file_get_contents(str_replace("\n","",$portalLink));
+	}
+	echo "</div>";
+
+	echo "<div class='settingListCard'>";
+	echo "	<h1>";
+	echo "		Bookmark Domains";
+	echo "	</h1>";
+	echo "	<div class='listCard'>";
+	# scan for links
+	foreach($bookmarkDomainLinks as $bookmarkDomainLink){
+		echo file_get_contents(str_replace("\n","",$bookmarkDomainLink));
 	}
 	echo "	</div>";
 	echo "</div>";
 	echo "<div class='settingListCard'>";
 	echo "<h1>";
-	echo "	Portal";
+	echo "	External Bookmarks";
 	echo "</h1>";
 	# scan for links
-	foreach($portalLinks as $portalLink){
-		//if (is_readable($portalLink)){
-			//echo file_get_contents($portalLink);
-			# load each portal link
-			echo file_get_contents(str_replace("\n","",$portalLink));
-		//}
+	foreach($bookmarkLinks as $bookmarkLink){
+		# load each portal link
+		echo file_get_contents(str_replace("\n","",$bookmarkLink));
 	}
 	echo "</div>";
 }else{

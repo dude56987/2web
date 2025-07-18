@@ -128,6 +128,7 @@ foreach($sourceFiles as $sourceFile){
 	<form action='admin.php' method='post'>
 		<ul>
 			<li>Use the base url of a server to scan for services</li>
+			<li>Local Scan Sources are checked every 24 hours</li>
 		</ul>
 		<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
 		<button class='button' type='submit'>➕ Add Path</button>
@@ -168,14 +169,58 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addPortalScanSources' class='inputCard'>
-	<h2>Add portal Source Path</h2>
+	<h2>Manually Add portal Source Path</h2>
 	<form action='admin.php' method='post'>
 		<ul>
 			<li>You can manually add portal links with a comma seperated list. One entry per line.</li>
+			<li>Local Scan Sources are checked every 24 hours</li>
 			<li>Title,URL,Description</li>
 		</ul>
 		<input width='60%' type='text' name='addPortalSource' placeholder=''>
 		<button class='button' type='submit'>➕ Add Path</button>
+	</form>
+	</div>
+</div>
+
+
+<?PHP
+echo "<div id='portalBookmarks' class='settingListCard'>";
+echo "<h2>Portal Bookmarks</h2>\n";
+$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/portal/bookmarks.d/*.cfg"));
+sort($sourceFiles);
+# write each config file as a editable entry
+foreach($sourceFiles as $sourceFile){
+	$sourceFileName = $sourceFile;
+	if (file_exists($sourceFile)){
+		if (is_file($sourceFile)){
+			if (strpos($sourceFile,".cfg") !== false){
+				echo "<div class='settingsEntry'>";
+				$link=str_replace(".cfg","",baseName($sourceFile));
+				$linkData=file_get_contents($sourceFile);
+				echo "	<h2>".$linkData."</h2>";
+				echo "<div class='buttonContainer'>\n";
+				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<button class='button' type='submit' name='removePortalBookmark' value='".$link."'>❌ Remove Source</button>\n";
+				echo "	</form>\n";
+				echo "</div>\n";
+				echo "</div>\n";
+			}
+		}
+	}
+}
+?>
+	<div id='addPortalBookmark' class='inputCard'>
+	<h2>Add portal Bookmark</h2>
+	<form action='admin.php' method='post'>
+		<ul>
+			<li>Create A Portal Bookmark</li>
+			<li>Add the title and description you want to be displayed on the portal link</li>
+			<li>Bookmarks are only checked and updated once every year</li>
+		</ul>
+		<input width='60%' type='text' name='addPortalBookmark' placeholder='http://example.com/test/bookmark'>
+		<input width='60%' type='text' name='addPortalBookmark_title' placeholder='Bookmark Title'>
+		<input width='60%' type='text' name='addPortalBookmark_description' placeholder='Short Bookmark Description'>
+		<button class='button' type='submit'>➕ Add Bookmark</button>
 	</form>
 	</div>
 </div>

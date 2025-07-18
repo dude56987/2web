@@ -4111,3 +4111,92 @@ function loadOption(){
 	fi
 }
 ########################################################################
+function screenshotWebpage_weasyprint(){
+	# processPdfPageToImage $pdfFilePath $pdfName
+	webLink="$1"
+	outputFile="$2"
+	#
+	pdfName=$(echo "$pdfFilePath" | md5sum | cut -d' ' -f1 )
+	#
+	createDir "${generatedDirectory}/portal/screenshots/$pdfName/"
+	#
+	pdfFilePath="${generatedDirectory}/portal/screenshots/$pdfName.pdf"
+	#
+	#pdfName="$(basename "$1")"
+	#
+	weasyprint "$webLink" "$pdfFilePath"
+	# the start page
+	pageNumber="1"
+	# pdf file path
+	# generate the page path
+	pdfImageFilePath="${generatedDirectory}/portal/screenshots/$pdfName/$pdfName-$pageNumber.jpg"
+	# render the page as a image file
+	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/portal/screenshots/$pdfName/$pdfName"
+	# trim the whitespace from the file
+	convert -strip -quiet "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
+	# convert to the output format based on extension
+	convert "$pdfImageFilePath" "$outputFile"
+	# remove the generated files
+	delete "$pdfImageFilePath"
+	delete "$pdfFilePath"
+	delete "${generatedDirectory}/portal/screenshots/$pdfName/"
+}
+########################################################################
+function screenshotWebpage(){
+	# create a screenshot of the webpage link
+	#
+	screenshotUrl="$1"
+	screenshotOutputPath="$2"
+	#
+	if [ "$3" == "" ];then
+		screenshotWidth=1920
+	else
+		screenshotWidth=$3
+	fi
+	#
+	if [ "$4" == "" ];then
+		screenshotHeight=1080
+	else
+		screenshotHeight=$4
+	fi
+	sleep 1
+	# check for working wkhtmltoimage
+	if test -f '/usr/bin/wkhtmltoimage';then
+		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using wkhtmltoimage."
+		wkhtmltoimage --width ${screenshotWidth} --height ${screenshotHeight} --javascript-delay 30000 "$screenshotUrl" "$screenshotOutputPath"
+	elif test -f '/usr/bin/weasyprint';then
+		screenshotWebpage_weasyprint "$screenshotUrl" "$screenshotOutputPath"
+		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using weasyprint."
+	elif test -f '/usr/bin/chromium';then
+		# web browser CLI interfaces seem to break a lot
+		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using chromium."
+		startDebug
+		# local install of chromium
+		/usr/bin/chromium --headless --timeout 60000 --incognito --virtual-time-budget=60000 --run-all-compositor-stages-before-draw --hide-scrollbars --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
+		stopDebug
+	elif test -f '/snap/bin/chromium';then
+		# web browser CLI interfaces seem to break a lot
+		addToLog "DEBUG" "Screenshot TEST" "Creating a screenshot from link '$screenshotUrl' using chromium."
+		# snap install of chromium
+		startDebug
+		/snap/bin/chromium --headless --no-sandbox --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
+		#/snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
+		#/snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --hide-scrollbars --screenshot "$screenshotUrl" --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight}
+		#xvfb-run /snap/bin/chromium --headless --disable-gpu --no-sandbox --incognito --hide-scrollbars --screenshot "$screenshotUrl" --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight}
+		#su www-data -c "xvfb-run /snap/bin/chromium --headless --incognito --hide-scrollbars --screenshot=\"$screenshotOutputPath\" --window-size=${screenshotWidth},${screenshotHeight} \"$screenshotUrl\""
+		#/snap/bin/chromium --headless --timeout 60000 --incognito --virtual-time-budget=60000 --run-all-compositor-stages-before-draw --hide-scrollbars --screenshot="$screenshotOutputPath" --window-size=${screenshotWidth},${screenshotHeight} "$screenshotUrl"
+		stopDebug
+	elif test -f '/usr/bin/firefox';then
+		# web browser CLI interfaces seem to break a lot
+		# firefox screenshot tool is currently broken but will still be tried as a failsafe
+		/usr/bin/firefox --headless --screenshot "$webDirectory/portal/${domain}/$linkSum-web.png" "$link" --window-size=${screenshotWidth},${screenshotHeight}
+		#
+		addToLog "WARNING" "Screenshot Warning" "Attempting to create a screenshot from link '$screenshotUrl' using firefox. Firefox may fail to create the screenshot as the screenshot system in firefox is unstable."
+	else
+		addToLog "ERROR" "Screenshot Failure" "Failed to create a screenshot from link '$screenshotUrl' please install the cromium-browser package or wkhtmltopdf."
+	fi
+	#xvfb-run cutycapt --url="$link" --out="$webDirectory/portal/${domain}/$linkSum-web.png"
+	#xvfb-run cutycapt --min-width=1920 --min-height=1080 --url="$link" --out="$webDirectory/portal/${domain}/$linkSum-web.png"
+	#xvfb-run firefox --screenshot "$webDirectory/portal/${domain}/$linkSum-web.png" "$link" --window-size=1920,1080
+	#/usr/bin/firefox --headless --screenshot "$webDirectory/portal/${domain}/$linkSum-web.png" "$link" --window-size=1920,1080
+}
