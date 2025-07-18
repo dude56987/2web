@@ -113,8 +113,7 @@ ripXmlTagMultiLine(){
 		echo "$data"
 		return 0
 	else
-		ALERT "[DEBUG]: Tag must be at least one character in length!"
-		ALERT "[ERROR]: Program FAILURE has occured!"
+		ERROR "Tag must be at least one character in length! Program FAILURE has occured!"
 		return 1
 	fi
 }
@@ -240,13 +239,13 @@ processMovie(){
 			if [ "$libarySum" == "$currentSum" ];then
 				# check if nomedia files are enabled
 				if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
-					if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
-						rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+					if test -f "$kodiDirectory/movies/$movieWebPath/.nomedia";then
+						rm -v "$kodiDirectory/movies/$movieWebPath/.nomedia"
 					fi
 				else
 					if cacheCheck "$webDirectory/movies/$movieWebPath/movies.index" 7;then
 						# create the block to lockout updates from kodi clients after 1 weeks
-						echo "No new media since: $(date)" > "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+						echo "No new media since: $(date)" > "$kodiDirectory/movies/$movieWebPath/.nomedia"
 					fi
 				fi
 				# this means they are the same so no update needs run
@@ -254,8 +253,8 @@ processMovie(){
 				return
 			else
 				# enable kodi client updates if the state has changed
-				if test -f "$webDirectory/kodi/movies/$movieWebPath/.nomedia";then
-					rm -v "$webDirectory/kodi/movies/$movieWebPath/.nomedia"
+				if test -f "$kodiDirectory/movies/$movieWebPath/.nomedia";then
+					rm -v "$kodiDirectory/movies/$movieWebPath/.nomedia"
 				fi
 				addToLog "UPDATE" "Updating Movie" "$updateInfo"
 			fi
@@ -268,7 +267,7 @@ processMovie(){
 		moviePagePath="$webDirectory/movies/$movieWebPath/index.php"
 		#INFO "movie page path = '$moviePagePath'"
 		createDir "$webDirectory/movies/$movieWebPath/"
-		createDir "$webDirectory/kodi/movies/$movieWebPath/"
+		createDir "$kodiDirectory/movies/$movieWebPath/"
 		################################################################################
 
 		# find the videofile refrenced by the nfo file
@@ -313,29 +312,29 @@ processMovie(){
 		fi
 		# link the movie nfo file
 		linkFile "$moviePath" "$webDirectory/movies/$movieWebPath/$movieWebPath.nfo"
-		linkFile "$moviePath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath.nfo"
+		linkFile "$moviePath" "$kodiDirectory/movies/$movieWebPath/$movieWebPath.nfo"
 		# show gathered info
 		movieVideoPath="${moviePath//.nfo/$sufix}"
 
 		# link the video from the libary to the generated website
 		linkFile "$movieVideoPath" "$webDirectory/movies/$movieWebPath/$movieWebPath$sufix"
 
-		linkFile "$movieVideoPath" "$webDirectory/kodi/movies/$movieWebPath/$movieWebPath$sufix"
+		linkFile "$movieVideoPath" "$kodiDirectory/movies/$movieWebPath/$movieWebPath$sufix"
 
 		# remove .nfo extension and create thumbnail path template
 		thumbnail="${moviePath//.nfo}-poster"
 		# creating alternate thumbnail paths
 		thumbnailShort="${moviePath//.nfo}"
 		thumbnailPath="$webDirectory/movies/$movieWebPath/poster"
-		thumbnailPathKodi="$webDirectory/kodi/movies/$movieWebPath/poster"
+		thumbnailPathKodi="$kodiDirectory/movies/$movieWebPath/poster"
 
 		# copy over subtitles
 		if [ $(find "$movieDir" -type f -name '*.srt' | wc -l) -gt 0 ] ;then
-			linkFile "$movieDir"/*.srt "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.srt "$kodiDirectory/movies/$movieWebPath/"
 		elif [ $(find "$movieDir" -type f -name '*.sub' | wc -l) -gt 0 ] ;then
-			linkFile "$movieDir"/*.sub "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.sub "$kodiDirectory/movies/$movieWebPath/"
 		elif [ $(find "$movieDir" -type f -name '*.idx' | wc -l) -gt 0 ] ;then
-			linkFile "$movieDir"/*.idx "$webDirectory/kodi/movies/$movieWebPath/"
+			linkFile "$movieDir"/*.idx "$kodiDirectory/movies/$movieWebPath/"
 		fi
 		# link the fanart
 		if test -f "$movieDir/$movieTitle-fanart.png";then
@@ -394,11 +393,11 @@ processMovie(){
 		fi
 
 		# link poster and fanart in the kodi section
-		if ! test -f "$webDirectory/kodi/movies/$movieWebPath/poster.png";then
-			linkFile "$webDirectory/movies/$movieWebPath/poster.png" "$webDirectory/kodi/movies/$movieWebPath/poster.png"
+		if ! test -f "$kodiDirectory/movies/$movieWebPath/poster.png";then
+			linkFile "$webDirectory/movies/$movieWebPath/poster.png" "$kodiDirectory/movies/$movieWebPath/poster.png"
 		fi
-		if ! test -f "$webDirectory/kodi/movies/$movieWebPath/fanart.png";then
-			linkFile "$webDirectory/movies/$movieWebPath/fanart.png" "$webDirectory/kodi/movies/$movieWebPath/fanart.png"
+		if ! test -f "$kodiDirectory/movies/$movieWebPath/fanart.png";then
+			linkFile "$webDirectory/movies/$movieWebPath/fanart.png" "$kodiDirectory/movies/$movieWebPath/fanart.png"
 		fi
 
 		thumbnailExt=".png"
@@ -419,7 +418,7 @@ processMovie(){
 					# link the downloaded thumbnail
 					linkFile "$thumbnailPath$thumbnailExt" "$thumbnailPathKodi$thumbnailExt"
 				else
-					ALERT "[DEBUG]: Thumbnail download link is invalid '$thumbnailLink'"
+					ALERT "Thumbnail download link is invalid '$thumbnailLink'"
 				fi
 			fi
 
@@ -459,7 +458,7 @@ processMovie(){
 		# store the movie plot
 		echo -n "$moviePlot" > "$moviePagePath.plot"
 		# store the direct link path
-		echo -n "/kodi/movies/$movieWebPath/$movieWebPath$sufix" > "$moviePagePath.directLink"
+		echo -n "/movies/$movieWebPath/$movieWebPath$sufix" > "$moviePagePath.directLink"
 		# build the cache link
 		#echo -n "$movieWebPath$sufix" > "$moviePagePath.cacheLink"
 		# store the title
@@ -476,7 +475,7 @@ processMovie(){
 		addPlaylist "$webDirectory/movies/$movieWebPath/movies.index" "grade" "$movieGrade" "movies"
 
 		# add this to the search index
-		addToSearchIndex "$webDirectory/movies/$movieWebPath/movies.index" "${movieWebPath} ${movieStudio} ${movieGrade} ${movieYear}"
+		addToSearchIndex "$webDirectory/movies/$movieWebPath/movies.index" "${movieWebPath} ${movieStudio} ${movieGrade} ${movieYear}" "/movies/$movieWebPath/"
 
 		# link the video player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$moviePagePath"
@@ -632,7 +631,6 @@ checkForEpisodeThumbnail(){
 			#touch "$thumbnailPath$thumbnailExt"
 			# check if the thumb download failed
 		fi
-		#addToLog "DEBUG" "THUMBNAIL TESTING" "Thumbnail extension found to be '$thumbnailExt' for video path '$videoPath'"
 		#
 		if test -s "$thumbnailPath$thumbnailExt";then
 			INFO "Existing thumbnail file found '$thumbnailPath$thumbnailExt'!"
@@ -653,10 +651,8 @@ checkForEpisodeThumbnail(){
 				generateThumbnailFromMedia "$videoPath" "$thumbnailPath" "$thumbnailPathKodi"
 				# verify the thumbnail was generated correctly by testing the file size
 				if test -e "$thumbnailPath.png";then
-					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path found at '$thumbnailPath.png' for video link '$videoPath'"
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
 				else
-					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path does not exist at '$thumbnailPath.png' for video link '$videoPath'"
 					tempFileSize=0
 				fi
 				if [ "$tempFileSize" -le 15000 ];then
@@ -674,10 +670,8 @@ checkForEpisodeThumbnail(){
 				fi
 				# check the file was created correctly
 				if test -e "$thumbnailPath.png";then
-					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path found at '$thumbnailPath.png' for video link '$videoPath'"
 					tempFileSize=$(wc --bytes < "$thumbnailPath.png")
 				else
-					addToLog "DEBUG" "Generating Thumbnail" "Thumbnail path does not exist at '$thumbnailPath.png' for audio link '$videoPath'"
 					tempFileSize=0
 				fi
 				# as a failsafe generate a image using the name and a hash based color
@@ -694,7 +688,6 @@ checkForEpisodeThumbnail(){
 	# at the end run a failsafe check to see if the thumbnail was created or linked correctly
 	# test the file has a non zero value
 	if ! test -s "$thumbnailPath.png";then
-		addToLog "DEBUG" "Generate Failsafe Image" "Creating a image at '$thumbnailPath.png'"
 		demoImage "$thumbnailPath.png" "$(basename "$thumbnailPath" | sed "s/-thumb$//g")" "800" "600"
 	fi
 	#
@@ -782,7 +775,7 @@ processEpisode(){
 		#INFO "Episode page path = '$episodePagePath'"
 		#INFO "Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
 		createDir "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
-		createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
+		createDir "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
 		# link stylesheet
 		#linkFile "$webDirectory/style.css" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/style.css"
 		# find the videofile refrenced by the nfo file
@@ -827,7 +820,7 @@ processEpisode(){
 
 		# link the episode nfo file
 		linkFile "$episode" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
-		linkFile "$episode" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
+		linkFile "$episode" "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.nfo"
 		# show info gathered
 		episodeVideoPath="${episode//.nfo/$sufix}"
 
@@ -847,7 +840,7 @@ processEpisode(){
 		# remove .nfo extension and create thumbnail path
 		thumbnail="${episode//.nfo}-thumb"
 		thumbnailPath="$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
-		thumbnailPathKodi="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
+		thumbnailPathKodi="$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb"
 
 		# check for the thumbnail and link it
 		checkForEpisodeThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath" "$nfoInfo"
@@ -855,8 +848,8 @@ processEpisode(){
 		resolverUrl=""
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
 		if echo "$sufix" | grep -q --ignore-case "strm";then
-			createDir "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
-			tempPath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			createDir "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
+			tempPath="$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			# change the video path into a video id to make it embedable
 			# get the contents of the stream file as the link
 			ytLink="$videoPath"
@@ -877,7 +870,6 @@ processEpisode(){
 			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
 				yt_download_command=""
-				#addToLog "DEBUG" "Checking episode for caching" "$showTitle - $episodePath"
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
 					# if the airdate was this month
@@ -913,9 +905,9 @@ processEpisode(){
 		else
 			# link the video from the libary to the generated website
 			linkFile "$episodeVideoPath" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
-			linkFile "$episodeVideoPath" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
+			linkFile "$episodeVideoPath" "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix"
 			# build the direct link
-			echo -n "/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix" > "$episodePagePath.directLink"
+			echo -n "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath$sufix" > "$episodePagePath.directLink"
 		fi
 
 		# get the extension
@@ -976,28 +968,28 @@ processEpisode(){
 		#
 		episodeSubSearchPath=$(echo "$episode" | rev | cut -d'/' -f2- | rev)
 		#
-		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
+		subSavePath="$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
 		#
-		subSavePath="$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/"
+		subSavePath="$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/"
 
 		# check for existing subtitles
 		existingSubs="no"
-		if test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt";then
+		if test -f "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt";then
 			existingSubs="yes"
-		elif test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub";then
+		elif test -f "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub";then
 			existingSubs="yes"
-		elif test -f "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx";then
+		elif test -f "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx";then
 			existingSubs="yes"
 		fi
 		# if existing subs is no then  skip this
 		if [ "$existingSubs" == "no" ];then
 			# copy over subtitles for episodes
 			if test -f "$episodeSubSearchPath/$episodePath.srt";then
-				linkFile "$episodeSubSearchPath/$episodePath.srt" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
+				linkFile "$episodeSubSearchPath/$episodePath.srt" "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.srt"
 			elif test -f "$episodeSubSearchPath/$episodePath.sub";then
-				linkFile "$episodeSubSearchPath/$episodePath.sub" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub"
+				linkFile "$episodeSubSearchPath/$episodePath.sub" "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.sub"
 			elif test -f "$episodeSubSearchPath/$episodePath.idx";then
-				linkFile "$episodeSubSearchPath/$episodePath.idx" "$webDirectory/kodi/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx"
+				linkFile "$episodeSubSearchPath/$episodePath.idx" "$kodiDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.idx"
 			fi
 		fi
 		################################################################################
@@ -1047,7 +1039,7 @@ processEpisode(){
 		addPlaylist "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "grade" "$episodeGrade" "episodes"
 
 		# add this to the search index
-		addToSearchIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "${episodePath} ${episodeShowTitle} ${episodeGrade} ${episodeStudio} ${airedYear}"
+		addToSearchIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "${episodePath} ${episodeShowTitle} ${episodeGrade} ${episodeStudio} ${airedYear}" "/shows/$episodeShowTitle/"
 
 	else
 		ALERT "[WARNING]: The file '$episode' could not be found!"
@@ -1085,27 +1077,25 @@ processShow(){
 				if cacheCheck "$webDirectory/shows/$showTitle/shows.index" 7;then
 					# create the block to lockout updates from kodi clients after 1 weeks
 					# - this should reset when the software is updated and all content will be rescanned by clients
-					if ! test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
-						echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/.nomedia"
+					if ! test -f  "$kodiDirectory/shows/$showTitle/.nomedia";then
+						echo "No new media since $(date)" > "$kodiDirectory/shows/$showTitle/.nomedia"
 					fi
 				fi
 			else
 				# if nomedia files are disabled remove any existing nomedia files
-				if test -f  "$webDirectory/kodi/shows/$showTitle/.nomedia";then
-					rm -v "$webDirectory/kodi/shows/$showTitle/.nomedia"
+				if test -f  "$kodiDirectory/shows/$showTitle/.nomedia";then
+					rm -v "$kodiDirectory/shows/$showTitle/.nomedia"
 				fi
 			fi
 			#INFO "State is unchanged for $showTitle, no update is needed."
-			#INFO "[DEBUG]: $currentSum == $libarySum"
 			#addToLog "INFO" "Show unchanged" "$showTitle" "$logPagePath"
 			return
 		else
 			# enable kodi client updates
-			if test -f "$webDirectory/kodi/shows/$showTitle/.nomedia";then
-				rm -v "$webDirectory/kodi/shows/$showTitle/.nomedia"
+			if test -f "$kodiDirectory/shows/$showTitle/.nomedia";then
+				rm -v "$kodiDirectory/shows/$showTitle/.nomedia"
 			fi
 			#INFO "States are diffrent, updating $showTitle..."
-			#INFO "[DEBUG]: $currentSum != $libarySum"
 			# clear the show log for the newly changed show state
 			#echo "" > "$showLogPath"
 			addToLog "UPDATE" "Updating Show" "$updateInfo"
@@ -1126,10 +1116,10 @@ processShow(){
 	# same show generally fail in the same way
 	#fdupes --recurse --delete --immediate "$webDirectory/shows/$showTitle/"
 	# create the kodi directory for the show
-	createDir "$webDirectory/kodi/shows/$showTitle/"
+	createDir "$kodiDirectory/shows/$showTitle/"
 	# linking tvshow.nfo data
 	linkFile "$show/tvshow.nfo" "$webDirectory/shows/$showTitle/tvshow.nfo"
-	linkFile "$show/tvshow.nfo" "$webDirectory/kodi/shows/$showTitle/tvshow.nfo"
+	linkFile "$show/tvshow.nfo" "$kodiDirectory/shows/$showTitle/tvshow.nfo"
 	if ! test -f "$webDirectory/shows/$showTitle/plot.cfg";then
 		# rip the plot from the show metadata so it can be added to the webpage
 		{
@@ -1167,14 +1157,14 @@ processShow(){
 	# link the poster
 	if test -f "$show/poster.png";then
 		linkFile "$show/poster.png" "$webDirectory/shows/$showTitle/poster.png"
-		linkFile "$show/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
+		linkFile "$show/poster.png" "$kodiDirectory/shows/$showTitle/poster.png"
 		# create the web thumbnails
 		if ! test -f "$webDirectory/shows/$showTitle/poster-web.png";then
 			convert -quiet "$show/$posterPath" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
 		fi
 	elif test -f "$show/poster.jpg";then
 		linkFile "$show/poster.jpg" "$webDirectory/shows/$showTitle/poster.jpg"
-		linkFile "$show/poster.jpg" "$webDirectory/kodi/shows/$showTitle/poster.jpg"
+		linkFile "$show/poster.jpg" "$kodiDirectory/shows/$showTitle/poster.jpg"
 		# link the jpg to a png for the web browser
 		if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
 			convert -quiet "$webDirectory/shows/$showTitle/poster.jpg" "$webDirectory/shows/$showTitle/poster.png"
@@ -1188,11 +1178,11 @@ processShow(){
 	if test -f "$show/fanart.png";then
 		fanartPath="fanart.png"
 		linkFile "$show/fanart.png" "$webDirectory/shows/$showTitle/fanart.png"
-		linkFile "$show/fanart.png" "$webDirectory/kodi/shows/$showTitle/fanart.png"
+		linkFile "$show/fanart.png" "$kodiDirectory/shows/$showTitle/fanart.png"
 	elif test -f "$show/fanart.jpg";then
 		fanartPath="fanart.jpg"
 		linkFile "$show/fanart.jpg" "$webDirectory/shows/$showTitle/fanart.jpg"
-		linkFile "$show/fanart.jpg" "$webDirectory/kodi/shows/$showTitle/fanart.jpg"
+		linkFile "$show/fanart.jpg" "$kodiDirectory/shows/$showTitle/fanart.jpg"
 		# convert the fanart to png for web
 		if ! test -f "$webDirectory/shows/$showTitle/fanart.png";then
 			convert -quiet "$webDirectory/shows/$showTitle/fanart.jpg" "$webDirectory/shows/$showTitle/fanart.png"
@@ -1242,8 +1232,8 @@ processShow(){
 				# check if nomedia files are disabled
 				if ! yesNoCfgCheck "/etc/2web/kodi/nomediaFiles.cfg";then
 					# if nomedia files are disabled remove any existing nomedia files
-					if test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
-						rm -v "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+					if test -f "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia";then
+						rm -v "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia"
 					fi
 				else
 					# this means they are the same so no update needs run
@@ -1251,8 +1241,8 @@ processShow(){
 					if cacheCheck "$webDirectory/shows/$showTitle/$seasonName.index" 7;then
 						# create the block to lockout updates from kodi clients after 1 weeks
 						# - this should reset when the software is updated and all content will be rescanned by clients
-						if ! test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
-							echo "No new media since $(date)" > "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+						if ! test -f "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia";then
+							echo "No new media since $(date)" > "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia"
 						fi
 					fi
 				fi
@@ -1263,8 +1253,8 @@ processShow(){
 				# update the altered season files
 				################################################################################
 				# enable kodi client updates
-				if test -f "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia";then
-					rm -v "$webDirectory/kodi/shows/$showTitle/$seasonName/.nomedia"
+				if test -f "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia";then
+					rm -v "$kodiDirectory/shows/$showTitle/$seasonName/.nomedia"
 				fi
 				################################################################################
 				addToLog "UPDATE" "Season is Updating" "$showTitle $seasonName\n$season"
@@ -1293,11 +1283,9 @@ processShow(){
 		# get the list of image files
 		# create the failsafe background by combining all the thumbnails of episodes into a image
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 24 | shuf |sed "s/ /\ /g"| sed -z "s/\n/ /g" )
-		#startDebug
 		#thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
 		thumbnailList=$( find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tail -n 24 | shuf | sed "s/\n/ /g" )
 		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
-		#stopDebug
 		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 6x4 "$webDirectory/shows/$showTitle/fanart.png"
 		if test -f "$webDirectory/shows/$showTitle/fanart-0.png";then
@@ -1327,7 +1315,7 @@ processShow(){
 		echo "Creating the poster image from webpage..."
 		convert "$webDirectory/shows/$showTitle/poster.png" -adaptive-resize 600x900\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 600x900 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/poster.png"
 		convert -quiet "$webDirectory/shows/$showTitle/poster.png" -resize "300x200" "$webDirectory/shows/$showTitle/poster-web.png"
-		linkFile "$webDirectory/shows/$showTitle/poster.png" "$webDirectory/kodi/shows/$showTitle/poster.png"
+		linkFile "$webDirectory/shows/$showTitle/poster.png" "$kodiDirectory/shows/$showTitle/poster.png"
 		# add log entry
 		addToLog "WARNING" "Could not find poster.[png/jpg]" "$showTitle has no $show/poster.[png/jpg]"
 	fi
@@ -1348,7 +1336,7 @@ processShow(){
 	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "grade" "$episodeGrade" "shows"
 
 	# add this to the search index
-	addToSearchIndex "$webDirectory/shows/$showTitle/shows.index" "${showTitle} ${episodeGrade} ${episodeStudio}"
+	addToSearchIndex "$webDirectory/shows/$showTitle/shows.index" "${showTitle} ${episodeGrade} ${episodeStudio}" "/shows/$showTitle/"
 
 	# add the show to the main show index since it has been updated
 	SQLaddToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/data.db" "shows"
@@ -1658,24 +1646,31 @@ function nuke(){
 	#
 	echo "[INFO]: Reseting web cache to blank..."
 	webDirectory="$(webRoot)"
+	kodiDirectory="$(kodiRoot)"
+	#
+	delete "/var/cache/2web/generated/searchIndexData/movies/"
+	delete "/var/cache/2web/generated/searchIndexData/shows/"
+	#
 	delete "$webDirectory/movies/"
-	delete "$webDirectory/kodi/movies/"
-	delete "$webDirectory/random/movies.index"
-	delete "$webDirectory/new/movies.index"
+	delete "$kodiDirectory/movies/"
+	#
 	delete "$webDirectory/shows/"
-	delete "$webDirectory/kodi/shows/"
+	delete "$kodiDirectory/shows/"
+	#
+	delete "$webDirectory/random/movies.index"
 	delete "$webDirectory/random/shows.index"
 	delete "$webDirectory/random/episodes.index"
+	#
+	delete "$webDirectory/new/movies.index"
 	delete "$webDirectory/new/shows.index"
 	delete "$webDirectory/new/episodes.index"
+	# remove found tags
 	rm -v $webDirectory/tags/*.index
 	rm -v  $webDirectory/sums/nfo2web_*.cfg || echo "No file sums found..."
-
 	# remove sql data
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table shows;"
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table movies;"
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table episodes;"
-
 	# remove widgets cached
 	delete "$webDirectory/web_cache/widget_random_movies.index"
 	delete "$webDirectory/web_cache/widget_random_shows.index"
@@ -1683,10 +1678,6 @@ function nuke(){
 	delete "$webDirectory/web_cache/widget_new_movies.index"
 	delete "$webDirectory/web_cache/widget_new_shows.index"
 	delete "$webDirectory/web_cache/widget_new_episodes.index"
-
-	# remove the entries from the search index
-	#removeSectionFromSearchIndex "movies"
-	#removeSectionFromSearchIndex "shows"
 
 	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 	echo "[SUCCESS]: Site will remain the same until updated."
@@ -1707,11 +1698,11 @@ function cleanMediaSection(){
 		if symlinks -r "$mediaPath" | grep -q "^dangling:";then
 			# delete entire directory for show/movie if the show/movie contains broken links
 			# a regular update will re add any shows/movies that were removed because of corrupt data
-			echo "rm -rv $mediaPath" #DEBUG
+			ALERT "rm -rv $mediaPath"
 			rm -rv "$mediaPath"
 		else
 			# diff lists are identical so no broken links exist
-			echo "NO BROKEN LINKS IN $mediaPath" #DEBUG
+			ALERT "NO BROKEN LINKS IN $mediaPath"
 		fi
 	done
 }
@@ -2034,6 +2025,8 @@ function update(){
 	disabledLibaries=$(loadConfigs "/etc/2web/nfo/disabledLibaries.cfg" "/etc/2web/nfo/disabledLibaries.d/" "/etc/2web/config_default/nfo2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	# the webdirectory is a cache where the generated website is stored
 	webDirectory="$(webRoot)"
+	generatedDirectory="$(generatedRoot)"
+	kodiDirectory="$(kodiRoot)"
 	# create the log path
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	# create the homepage path
@@ -2060,6 +2053,7 @@ function update(){
 
 	kill "$SPINNER_PID"
 
+
 	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
 		# clean the database of broken entries
 		# - this should allow you to delete data from source drives and it automatically remove it from the website.
@@ -2067,7 +2061,7 @@ function update(){
 	fi
 	IFS=$'\n'
 	for libary in $libaries;do
-		if echo "$disabledLibaries" | grep "$libary";then
+		if echo "$disabledLibaries" | grep -q "$libary";then
 			ALERT "Path is disabled '$libary'"
 			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$libary'"
 		else
@@ -2183,7 +2177,7 @@ function update(){
 	##############################################################################
 	# create the final index pages, these should not have the progress indicator
 	# build the final version of the homepage without the progress indicator
-	buildHomePage "$webDirectory"
+	#buildHomePage "$webDirectory"
 	# build the movie index
 	buildMovieIndex "$webDirectory"
 	# build the show index
@@ -2415,13 +2409,10 @@ elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 elif [ "$1" == "-p" ] || [ "$1" == "--parallel" ] || [ "$1" == "parallel" ] ;then
 	lockProc "nfo2web"
 	checkModStatus "nfo2web"
-	update "$@" --parallel
-	# remove active state file
-	if test -f /tmp/nfo2web.active;then
-		rm /tmp/nfo2web.active
-	fi
+	update --parallel
 elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	processPath "$2" "$webDirectory"
 elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 	echo -n "Build Date: "
@@ -2431,16 +2422,7 @@ elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
 else
 	lockProc "nfo2web"
 	checkModStatus "nfo2web"
-	#startSpinner
-	#startDebug
-	update "$@"
-	#stopDebug
-	#stopSpinner
-	# remove active state file
-	if test -f /tmp/nfo2web.active;then
-		rm /tmp/nfo2web.active
-	fi
-	#main update "$@"
+	update
 	# show the server link at the bottom of the interface
 	showServerLinks
 	# show the module links
