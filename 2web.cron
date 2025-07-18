@@ -30,9 +30,9 @@
 */30 * * * * root /usr/bin/2web --mute &> /dev/null
 ################################################################################
 # lauch the queue service at boot
-@reboot root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
+@reboot root /usr/bin/nice -n 10 /usr/bin/queue2web --service --mute &> /dev/null
 # make sure the queue2web service is enabled once every 20 minutes
-*/20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service &> /dev/null
+*/20 * * * * root /usr/bin/nice -n 10 /usr/bin/queue2web --service --mute &> /dev/null
 ################################################################################
 # make sure nfo2web is updated once every 2 hours
 0 */2 * * * root /usr/bin/nice -n 10 /usr/bin/nfo2web --parallel --mute &> /dev/null
