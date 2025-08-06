@@ -571,8 +571,78 @@ if( ! function_exists("readFileInPackets")){
 	}
 }
 ################################################################################
+if( ! function_exists("loadAlphabet")){
+	function loadAlphabet(){
+		# load the alphabet as an array
+		return str_split("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	}
+}
+################################################################################
+if( ! function_exists("is_alphaNum")){
+	function is_alphaNum($string){
+		# returns true if all characters in a string are in the alphabet
+		$stringData=str_split($string);
+		#
+		$letterList=loadAlphabet();
+		$letterList=array_merge($alphaList,str_split("0123456789"));
+		#
+		$allAlpha=true;
+		#
+		foreach($stringData as $letter){
+			# verify the letters are letters in the english alphabet
+			if (! in_array($letter,$letterList)){
+				# break the loop and return false on first incorrect value
+				return false;
+			}
+		}
+		return true;
+	}
+}
+################################################################################
+if( ! function_exists("is_alpha")){
+	function is_alpha($string){
+		# returns true if all characters in a string are in the alphabet
+		$stringData=str_split($string);
+		#
+		$alphaList=loadAlphabet();
+		#
+		$allAlpha=true;
+		#
+		foreach($stringData as $letter){
+			# verify the letters are letters in the english alphabet
+			if (! in_array($letter,$alphaList)){
+				# break the loop and return false on first incorrect value
+				return false;
+			}
+		}
+		return true;
+	}
+}
+################################################################################
+if( ! function_exists("findFirstLetter")){
+	function findFirstLetter($string){
+		#
+		$string=strtoupper($string);
+		#
+		$stringData=str_split($string);
+		#
+		$letterList=loadAlphabet();
+		$letterList=array_merge($letterList,str_split("0123456789"));
+		#
+		foreach($stringData as $letter){
+			# return the first character
+			#return $letter;
+			# verify the letter is a letter in the english alphabet
+			if (in_array($letter,$letterList)){
+				return $letter;
+			}
+		}
+		return false;
+	}
+}
+################################################################################
 if( ! function_exists("displayIndexWithPages")){
-	function displayIndexWithPages($indexFilePath,$emptyMessage="",$maxItemsPerPage=45,$sortMethod="forward"){
+	function displayIndexWithPages($indexFilePath,$emptyMessage="This list is empty. Please come back latter. :D",$maxItemsPerPage=45,$sortMethod="forward"){
 		#
 		if (! file_exists($indexFilePath)){
 			echo "$emptyMessage";
@@ -585,26 +655,55 @@ if( ! function_exists("displayIndexWithPages")){
 			if (strtolower($_GET['page']) == "all"){
 				if( ! listAllIndex($indexFilePath,$sortMethod)){
 					// no shows have been loaded yet
-					//echo $emptyMessage;
+					echo $emptyMessage;
 				}
 			}else{
+				# check if the page given is a letter
+				# jump to the first page containing that letter
+				if (is_alpha($_GET['page'])){
+					# find the page where entries first begin with letter
+					$indexFileData=file($indexFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+					# clamp the data and scan per page to find the page the letter starts on
+					$chunkedIndex=array_chunk($indexFileData,$maxItemsPerPage);
+					$breakSearch=false;
+					$foundPageNumber=1;
+					# search for the chunk where the letter first occurs in the sorted list
+					foreach($chunkedIndex as $singleChunk){
+						foreach($singleChunk as $individualEntry){
+							#logPrint("---------------------------");
+							#logPrint($_GET['page']."=GET[page]");
+							#logPrint(cleanText(($individualEntry))."=individualEntry" );
+							#logPrint(cleanText(dirname($individualEntry))."=dirname(individualEntry)");
+							#logPrint(cleanText(basename(dirname($individualEntry)))."=basename(dirname(individualEntry)");
+							#logPrint(findFirstLetter(basename(dirname($individualEntry)))."=findFirstLetter(basename(dirname(individualEntry)");
+							# break the loop when the letter is first found
+							if ( findFirstLetter(basename(dirname($individualEntry))) == $_GET['page'] ){
+								# found it set the page and list the index
+								$breakSearch=true;
+							}
+							if ($breakSearch){
+								break;
+							}
+						}
+						if ($breakSearch){
+							break;
+						}
+						$foundPageNumber+=1;
+					}
+					$_GET["page"]=$foundPageNumber;
+				}
+				# if the page is a number load that page on the index
 				listIndexPage($indexFilePath,$_GET['page'],$maxItemsPerPage,$sortMethod);
 			}
 		}else{
 			// no shows have been loaded yet
 			$_GET['page'] = 1;
-			if( ! listIndexPage($indexFilePath,1,$maxItemsPerPage,$sortMethod)){
-				//echo $emptyMessage;
-			}
+			listIndexPage($indexFilePath,1,$maxItemsPerPage,$sortMethod);
 		}
 		# build the page buttons
 		# get the index size by reading the index file and counting
-		$fileCountHandle=fopen($indexFilePath,'r');
-		$fileItemCount=0;
-		while(! feof($fileCountHandle)){
-			$fileItemCount += 1;
-			fgets($fileCountHandle);
-		}
+
+		$fileItemCount=count(file($indexFilePath));
 
 		$pageCount = $fileItemCount / $maxItemsPerPage;
 
@@ -631,13 +730,6 @@ if( ! function_exists("displayIndexWithPages")){
 			echo "<table class='controlTable'>\n";
 			echo "	<tr>\n";
 
-			## check status for the special all page
-			#echo "		<td>\n";
-			#echo "			<a class='button' href='?page=all$otherVars'>";
-			#echo "∞";
-			#echo "</a>\n";
-			#echo "		</td>\n";
-
 			if (is_numeric($_GET["page"]) and ( $_GET["page"] > 1 )){
 				# build the left button for pages
 				echo "		<td>\n";
@@ -646,14 +738,7 @@ if( ! function_exists("displayIndexWithPages")){
 				echo "</a>\n";
 				echo "		</td>\n";
 			}
-			#echo "</tr>";
-			#echo "<tr>";
-
-			#echo "		<td>\n";
-
-			#echo "<div class='listCard'>\n";
-			#echo "<div class=''>\n";
-
+			#
 			if (array_key_exists("page",$_GET)){
 				#
 				if ($_GET["page"] == 1){
@@ -670,7 +755,6 @@ if( ! function_exists("displayIndexWithPages")){
 						$pageMargin=$pageMargin + $_GET["page"];
 					}else if($_GET["page"] > ( $pageCount - $pageMargin ) ){
 						$pageMargin=( $pageMargin + ($pageCount - $_GET["page"] ) ) - 1;
-					#	#$pageMargin=$_GET["page"] - ( $pageCount - $pageMargin );
 					}else{
 						$pageMargin=4;
 					}
@@ -748,8 +832,32 @@ if( ! function_exists("displayIndexWithPages")){
 			echo "	</tr>\n";
 			echo "</table>\n";
 
+			echo "</div>\n";
 			echo "</div>";
-			echo "</div>";
+			# only draw the letter jumping buttons if there are more than 8 pages
+			if ( $pageCount >= 8 ){
+				echo "<div class='titleCard'>\n";
+				echo "<div class='listCard'>";
+				# draw the secondary jump bar
+				echo "<table class='controlTable'>\n";
+				echo "	<tr>\n";
+				# Draw The All Page
+				echo "		<td>\n";
+				echo "			<a class='button' href='?page=all$otherVars'>∞</a>\n";
+				echo "		</td>\n";
+				# create an array for the links
+				$alphaList=loadAlphabet();
+				# build all the links
+				foreach($alphaList as $alphaLink){
+					echo "		<td>\n";
+					echo "			<a class='button' href='?page=$alphaLink$otherVars'>$alphaLink</a>\n";
+					echo "		</td>\n";
+				}
+				echo "	</tr>\n";
+				echo "</table>\n";
+				echo "</div>\n";
+				echo "</div>";
+			}
 		}
 	}
 }
@@ -1249,6 +1357,8 @@ if( ! function_exists("popPath")){
 ################################################################################
 if( ! function_exists("debug")){
 	function debug($message){
+		# debug($message)
+		#
 		# Write debug info if debug key is in the GET data
 		if (array_key_exists("debug",$_GET)){
 			echo "[DEBUG]: ".$message."<br>";
@@ -1263,11 +1373,35 @@ if( ! function_exists("debug")){
 ########################################################################
 if( ! function_exists("redirect")){
 	function redirect($url){
+		# redirect($url)
+		#
 		# Send the user to a temporary redirect at a given URL
 		// temporary redirect
 		header('Location: '.$url,true,302);
 		exit();
 		die();
+	}
+}
+########################################################################
+if( ! function_exists("noscriptRefresh")){
+	function noscriptRefresh($seconds=10){
+		# reload a page only if javascript is disabled
+		echo "<noscript>\n";
+		# add the noscript page refresh
+		echo "	<meta http-equiv='refresh' content='$seconds'>\n";
+		# draw the notitication spinner
+		echo "	<div id='notification'>";
+		echo "		<div id='spinRight'>";
+		echo "			🗘";
+		echo "		</div>";
+		echo "	</div>";
+		#echo "	<style>\n";
+		# also display the global spinners
+		#echo "		.globalPulse,.globalSpinner{\n";
+		#echo "			visibility: visible !important;\n";
+		#echo "		}\n";
+		#echo "	</style>\n";
+		echo "</noscript>\n";
 	}
 }
 ########################################################################
@@ -1277,12 +1411,16 @@ if( ! function_exists("reloadPage")){
 		#
 		# Reload a webpage after a delay with javascript or meta refresh if scripts are disabled
 		echo "<script>\n";
-		# show the spinner to indicate activity to the user
-		echo "showSpinner()\n";
+		# pause any video playback
+		echo "	pauseVideo();\n";
 		# start the delayed page reload
-		echo "delayedRefresh($delaySeconds);\n";
+		echo "	delayedRefresh($delaySeconds);\n";
+		# show the spinner to indicate activity to the user
+		echo "	showSpinner();\n";
+		# 🗘 ⁝ ⸫ 🟃 🟂 ⚙️ 🟕 🟗
+		echo "	notify(\"🗘\",".(1000 * $delaySeconds).",\"spinRight\");\n";
 		echo "</script>\n";
-		echo "<noscript><meta http-equiv='refresh' content='$delaySeconds'></noscript>";
+		noscriptRefresh($delaySeconds);
 	}
 }
 ########################################################################
@@ -1418,7 +1556,7 @@ if( ! function_exists("sessionSetValue")){
 		# the session does not yet exist so start the session
 		# - this is only for users that are not logged in
 		startSession();
-		addToLog("DEBUG","Session Set Value",$indexKey."_value = ".var_export($storedValue,true));
+		#addToLog("DEBUG","Session Set Value",$indexKey."_value = ".var_export($storedValue,true));
 		# set the timestamp
 		$_SESSION[$indexKey."_timeStamp"]=time();
 		# store the value itself
@@ -1483,33 +1621,44 @@ if( ! function_exists("yesNoCfgCheck")){
 		#
 		# RETURN BOOL
 		# check if the config is cached in ram
-		$configPathSum=md5($configPath);
+
+		$configPathSum = $configPath;
+
 		#check session data
 		$storedValue=sessionGetValue($configPathSum);
 		# if a value is returned
 		if($storedValue !== null){
+			#addToLog("DEBUG","SessionValue","Loading stored session value for '".$configPathSum."' as ".var_export($storedValue,true));
 			# load the stored value found
 			# - exit the function here so the value will not be loaded from disk
 			return $storedValue;
 		}
+		#addToLog("DEBUG","SessionValue","Could not find stored value, loading file'".$configPath."'");
 		# check if the config file exists
 		if (file_exists($configPath)){
 			$selected=file_get_contents($configPath);
 			$selected=strtolower($selected);
+			#addToLog("DEBUG","SessionValue","File contents found '".$selected."'");
 			if ($selected == "yes"){
 				# cache the calculated value
+				#addToLog("DEBUG","SessionValue","set value '".$configPathSum."' to 'true'");
 				sessionSetValue($configPathSum,true);
+				#addToLog("DEBUG","SessionValue","Verify value '".$configPathSum."' is now set to '".sessionGetValue($configPathSum)."'");
 				# the config file is set to yes
 				return true;
 			}else{
 				# cache the calculated value
+				#addToLog("DEBUG","SessionValue","set value '".$configPathSum."' to 'true'");
 				sessionSetValue($configPathSum,false);
+				#addToLog("DEBUG","SessionValue","Verify value '".$configPathSum."' is now set to '".sessionGetValue($configPathSum)."'");
 				# the config is set to anything other than yes it is false
 				return false;
 			}
 		}else{
 			# cache the calculated value
+			#addToLog("DEBUG","SessionValue","set value '".$configPathSum."' to 'true'");
 			sessionSetValue($configPathSum,false);
+			#addToLog("DEBUG","SessionValue","Verify value '".$configPathSum."' is now set to '".sessionGetValue($configPathSum)."'");
 			# no file exists return false and create default no config
 			file_put_contents($configPath , "no");
 			return false;
@@ -1586,6 +1735,10 @@ if( ! function_exists("checkFilePathPermissions")){
 			}
 		}else if (stripos($filePath,"_weather") !== false){
 			if (requireGroup("weather2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_applications") !== false){
+			if (requireGroup("php2web",false)){
 				$drawResult=true;
 			}
 		}else{
@@ -1845,20 +1998,23 @@ if( ! function_exists("buildYesNoCfgButton")){
 		# Check if a yes/no config file is enabled and draw a button to set it to the opposite value
 		#
 		# RETURN FILES
+		$enabledIcon="🟢";
+		$disabledIcon="◯";
+		#
 		if (file_exists($configPath)){
 			$selected=file_get_contents($configPath);
 			if ($selected == "yes"){
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='$buttonName' value='no'>🟢 Disable $buttonText</button>\n";
+				echo "	<button class='button' type='submit' name='$buttonName' value='no'>$enabledIcon Disable $buttonText</button>\n";
 				echo "	</form>\n";
 			}else{
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-				echo "	<button class='button' type='submit' name='$buttonName' value='yes'>◯ Enable $buttonText</button>\n";
+				echo "	<button class='button' type='submit' name='$buttonName' value='yes'>$disabledIcon Enable $buttonText</button>\n";
 				echo "	</form>\n";
 			}
 		}else{
 			echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
-			echo "	<button class='button' type='submit' name='$buttonName' value='yes'>◯ Enable $buttonText</button>\n";
+			echo "	<button class='button' type='submit' name='$buttonName' value='yes'>$disabledIcon Enable $buttonText</button>\n";
 			echo "	</form>\n";
 		}
 	}
