@@ -323,10 +323,12 @@ function cleanText(){
 	cleanedText="${cleanedText//</＜}"
 	cleanedText="${cleanedText//>/＞}"
 	# replace any broken replacement characters
-	cleanedText=$(echo -n "$cleanedText" | sed "s/�/ /g" )
+	cleanedText="$(echo -n "$cleanedText" | sed "s/�/ /g" )"
 	# squeeze double spaces into single spaces
-	#cleanedText=$(echo -n "$cleanedText" | sed "s/  / /g" )
-	cleanedText=$(echo -n "$cleanedText" | tr -s ' ')
+	#cleanedText="$(echo -n "$cleanedText" | sed "s/  / /g" )"
+	cleanedText="$(echo -n "$cleanedText" | tr -s ' ')"
+	# remove leading whitespace
+	cleanedText="$(echo -n "$cleanedText" | sed -e "s/^[ \t]*//g")"
 	# print the cleaned up text
 	echo -n "$cleanedText"
 }
