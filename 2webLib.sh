@@ -1088,6 +1088,10 @@ function waitQueue(){
 	# RETURN NULL
 	sleepTime=$1
 	totalCPUS=$2
+	if [ "$FORCE_OPTION" == "yes" ];then
+		# skip waiting for queues when --force is enabled
+		return 0
+	fi
 	#
 	if [ $totalCPUS == "" ];then
 		# failsafe to one CPU if a total is not given
@@ -1149,6 +1153,10 @@ function waitSlowQueue(){
 	sleepTime=$1
 	totalCPUS=$2
 	firstRun="yes"
+	if [ "$FORCE_OPTION" == "yes" ];then
+		# skip waiting for queues when --force is enabled
+		return 0
+	fi
 	while true;do
 		if [ $(cat /proc/loadavg | cut -d' ' -f1 | cut -d'.' -f1) -gt $(( totalCPUS )) ];then
 			INFO "System is overloaded, Waiting for system resources..."
@@ -1177,6 +1185,10 @@ function waitFastQueue(){
 	sleepTime=$1
 	totalCPUS=$2
 	firstRun="yes"
+	if [ "$FORCE_OPTION" == "yes" ];then
+		# skip waiting for queues when --force is enabled
+		return 0
+	fi
 	while true;do
 		# check if the cpu has any available cores that are unused in this process
 		# jobs -r only shows running jobs
