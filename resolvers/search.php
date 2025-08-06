@@ -712,7 +712,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		# launch the process with a background scheduler
 		$command = "";
 		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
-		$command .= "";
+		# mute the output
+		$command .= " --mute";
 
 		# launch the command
 		addToQueue("multi",$command);

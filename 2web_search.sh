@@ -339,18 +339,21 @@ function singleWikiSearch(){
 	searchQuery=$5
 
 	# search each wiki for articles containing the search query
-	kiwix-search "$wikiPath" "$searchQuery" | while read -r wikiArticle;do
+	kiwix-search "$wikiPath" "$searchQuery" | sort -u --random-sort | while read -r wikiArticle;do
+		#
 		baseArticleName=$(basename "$wikiArticle")
 		wikiSum=$(basename "$wikiPath" | md5sum | cut -d' ' -f1)
+		#
 		baseWikiName=$(basename "$wikiPath" | sed "s/\.zim//g" )
 		linkText=$(echo -n "$baseArticleName" | sed "s/ /_/g")
-
 		# for each found article generate a result
 		{
 			echo "<a class='indexSeries' href='/wiki/$wikiSum/?article=$linkText'>"
+			#echo "<h2>$baseWikiName</h2>"
+			echo "<img src='/wiki/$wikiSum/thumb.png'>"
 			echo "<div class='indexTitle'>$baseArticleName</div>"
 			echo "</a>"
-		} >> "$webDirectory/search/${searchSum}_wiki:_$baseWikiName.index"
+		} >> "$webDirectory/search/${searchSum}_wiki_:_$baseWikiName.index"
 	done
 	incrementProgressFile "$webDirectory" "$searchSum"
 }
@@ -500,6 +503,11 @@ function search(){
 	addToLog "INFO" "Search Query" "Finished Search : <a href='/search.php?q=$searchQuery'>$searchQuery</a>"
 
 }
+# set the theme of the lines in CLI output
+LINE_THEME="stickDance"
+#
+INPUT_OPTIONS="$@"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
 ################################################################################
 # launch the search
 search "$1" "$2"
