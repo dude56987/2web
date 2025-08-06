@@ -93,6 +93,7 @@ include("settingsHeader.php");
 		echo "<tr>";
 		echo "</table>";
 	?>
+	<hr>
 	<button type='submit' class='button'>⏱️ Change Session Timeout</button>
 </form>
 </div>
@@ -106,9 +107,7 @@ include("settingsHeader.php");
 		$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
 		foreach( $foundUsers as $foundUser){
 			$foundUser = str_replace(".cfg","",$foundUser);
-			echo "<li>";
-			echo "<a href='#user_$foundUser'>$foundUser</a>";
-			echo "</li>";
+			echo "<a class='showPageEpisode' href='#user_$foundUser'>🯆 $foundUser</a>";
 		}
 		?>
 		</ul>
@@ -117,24 +116,20 @@ include("settingsHeader.php");
 
 <div class='inputCard' id='groupIndex'>
 	<h2>Group  Index</h2>
-		<ul>
 		<?PHP
 		# get a list of the groups
 		$groups=scanDir("/etc/2web/groups/");
 		$groups=array_diff($groups,Array('..','.','.placeholder'));
 		foreach( $groups as $group ){
 			$group = str_replace(".cfg","",$group);
-			echo "<li>";
-			echo "<a href='#groupLock_$group'>$group</a>";
-			echo "</li>";
+			echo "<a class='showPageEpisode' href='#groupLock_$group'>👪 ".$group."</a>";
 		}
 		?>
-		</ul>
 	</div>
 </div>
 
 <div class='settingListCard' id='manageUsers'>
-<h2>Active Users</h2>
+<h2>Manage Users</h2>
 <?PHP
 	# get a list of the groups
 	$groups=scanDir("/etc/2web/groups/");
@@ -196,18 +191,11 @@ include("settingsHeader.php");
 	<form action='admin.php' method='post'>
 		<ul>
 			<li>Add at least one administrator to lock the settings in this web interface.</li>
-			<ul>
-				<li>
-					<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
-				</li>
-				<li>
-					<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
-				</li>
-				<li>
-					<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
-				</li>
-			</ul>
 		</ul>
+		<input width='60%' type='text' name='newUserName' placeholder='NEW USERNAME' required>
+		<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
+		<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
+		<hr>
 		<button class='button' type='submit'>🧑‍💻 Add New Administrator</button>
 	</form>
 	</div>
@@ -218,18 +206,11 @@ include("settingsHeader.php");
 		<ul>
 			<li>Add a basic user for logging in to use locked sections of the website</li>
 			<li>If no groups are locked this type of user has no special privliges.</li>
-			<ul>
-				<li>
-					<input width='60%' type='text' name='newBasicUserName' placeholder='NEW USERNAME' required>
-				</li>
-				<li>
-					<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
-				</li>
-				<li>
-					<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
-				</li>
-			</ul>
 		</ul>
+		<input width='60%' type='text' name='newBasicUserName' placeholder='NEW USERNAME' required>
+		<input width='60%' type='password' name='newUserPass' placeholder='NEW USER PASSWORD' required>
+		<input width='60%' type='password' name='newUserPassVerify' placeholder='VERIFY PASSWORD' required>
+		<hr>
 		<button class='button' type='submit'>🧑 Add New User</button>
 	</form>
 	</div>
@@ -237,7 +218,7 @@ include("settingsHeader.php");
 
 
 <div class='settingListCard' id='lockUnlockGroups'>
-	<h2>Locked Groups</h2>
+	<h2>Manage Groups</h2>
 <?PHP
 	# list the lock status of each group permisssions
 	foreach( $groups as $group){
