@@ -124,6 +124,7 @@ include("settingsHeader.php");
 			<option value='blue.css' >Blue</option>
 			-->
 		</select>
+		<hr>
 		<button class='button' type='submit'>📍 Set Location</button>
 	</form>
 </div>

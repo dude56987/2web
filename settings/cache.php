@@ -51,9 +51,11 @@ include("settingsHeader.php");
 <div id='cacheQuality' class='inputCard'>
 	<h2>Cache Stream Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<p>
-			Change the quality of video cached videos.
-		</p>
+		<ul>
+			<li>
+				Change the quality of the HLS stream created for playback during download.
+			</li>
+		</ul>
 		<select name='cacheQuality'>
 			<?php
 				// add the cache quality as a option
@@ -87,6 +89,9 @@ include("settingsHeader.php");
 			</li>
 			<li>
 				Any chosen upgrade quality other than "No Upgrade" will also add chapters to most videos.
+			</li>
+			<li>
+				If you choose 'best' for the stream and 'best' for the upgrade quality the upgraded version will still be higher quality.
 			</li>
 		</ul>
 		</p>

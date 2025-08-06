@@ -183,6 +183,7 @@ if(file_exists("/usr/games/steam")){
 			}
 			echo "<input type='number' name='autoRebootTime' placeholder='Reboot Hour...' min='0' max='23' value='".$automaticRebootTime."' />";
 		?>
+		<hr>
 		<button type='submit' class='button'>⏰ Change Reboot Time</button>
 	</form>
 </div>
