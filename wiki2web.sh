@@ -21,6 +21,114 @@ source /var/lib/2web/common
 # enable debug log
 #set -x
 ################################################################################
+function processZimWiki(){
+	# process a zim wiki
+	zimFilePath=$1
+	webDirectory=$2
+	# if the md5sum of the wiki file has changed update it
+	#if checkFileDataSum "$zimFilePath";then
+	if test -f "$zimFilePath";then
+		# link the zim file into the kodi directory
+		linkFile "$zimFilePath" "$webDirectory/kodi/wiki/"
+		# get the filename for the wiki name
+		#wikiName="$(basename "$wikiLocation" | cut -d "." -f1)"
+		# generate a md5sum for the location
+		wikiSum=$(basename "$zimFilePath" | md5sum | cut -d' ' -f1)
+		# create a directory for extracting the wiki into
+		createDir "$webDirectory/wiki/$wikiSum/"
+		createDir "$webDirectory/wiki/$wikiSum/M/"
+
+		# extract the zim file to html
+		#zimdump dump --redirect --dir="$webDirectory/wiki/$wikiSum/" "$zimFilePath"
+		#zimdump -s -D "$webDirectory/wiki/$wikiSum/" "$zimFilePath"
+		#zimdump dump --dir="$webDirectory/wiki/$wikiSum/" -s "$zimFilePath"
+
+		zimdump dump "$zimFilePath" --dir="$webDirectory/wiki/$wikiSum/"
+
+		# add a .htaccess file to allow the sub web directory the wiki is loaded into to work as a sub website to the main apache site
+		#{
+		#	echo ""
+		#	echo ""
+		#	echo ""
+		#	echo ""
+		#} > "$webDirectory/wiki/$wikiSum/.htaccess"
+
+		# get the main page path
+		mainPageName=$(zimdump info "$zimFilePath" | grep "main page:" | cut -d':' -f2 | tr -s ' ' | sed "s/^ //g")
+		#
+		if ! test -f "$webDirectory/wiki/$wikiSum/wiki.index";then
+			echo "$mainPageName" > "$webDirectory/wiki/$wikiSum/M/MainPage"
+			#
+			if test -f "$webDirectory/wiki/$wikiSum/M/Title";then
+				# look for the title
+				wikiTitle="$(cat "$webDirectory/wiki/$wikiSum/M/Title")"
+			else
+				# use the source file name if the title is not set
+				wikiTitle="$(basename "$zimFilePath" | rev | cut -d'.' -f2- | rev)"
+			fi
+			# cleanup the wiki title
+			wikiTitle="$(echo -n "$wikiTitle" | sed "s/\.com/ /g")"
+			wikiTitle="$(echo -n "$wikiTitle" | sed "s/\.net/ /g")"
+			wikiTitle="$(echo -n "$wikiTitle" | sed "s/\.org/ /g")"
+			wikiTitle="$(echo -n "$wikiTitle" | sed "s/\./ /g")"
+			wikiTitle="$(echo -n "$wikiTitle" | sed "s/_/ /g")"
+			wikiTitle="$(echo -n "$wikiTitle" | tr -s " ")"
+			# cleanup the wiki title
+			wikiTitle="$(cleanText "$wikiTitle" )"
+			#
+			if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
+				convert "$webDirectory/wiki/$wikiSum/-/favicon" -adaptive-resize 128x128 "$webDirectory/wiki/$wikiSum/thumb.png"
+			fi
+			#
+			if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
+				# create the fallback thumbnail
+				demoImage "$webDirectory/wiki/$wikiSum/thumb.png" "$wikiTitle" "400" "400"
+			fi
+			#
+			mainPage="$(cat "$webDirectory/wiki/$wikiSum/M/MainPage")"
+			iconPath="/wiki/$wikiSum/thumb.png"
+			# if the icon path does not exist in the extracted wiki
+			if ! test -f "$webDirectory$iconPath";then
+				# if the main page works
+				if test -f "$webDirectory/wiki/$wikiSum/$mainPage";then
+					screenshotWebpage "$webDirectory/wiki/$wikiSum/$mainPage" "$webDirectory/wiki/$wikiSum/thumb.png"
+				fi
+			fi
+
+			description="$(cat "$webDirectory/wiki/$wikiSum/M/Description")"
+
+			if test -f "$webDirectory/wiki/$wikiSum/M/Date";then
+				wikiDate="$(cat "$webDirectory/wiki/$wikiSum/M/Date")"
+			else
+				# set the date based on the file creation time
+				wikiDate=$(stat -c "%w" "$zimFilePath")
+			fi
+			counter="$(cat "$webDirectory/wiki/$wikiSum/M/Counter"| sed "s/;/\n/g")"
+			creator="$(cat "$webDirectory/wiki/$wikiSum/M/Creator")"
+			publisher="$(cat "$webDirectory/wiki/$wikiSum/M/Publisher")"
+			language="$(cat "$webDirectory/wiki/$wikiSum/M/Language")"
+			#
+			{
+				echo "<a href='/wiki/$wikiSum/' class='inputCard' >"
+				# write the wiki title
+				echo "	<h2>$wikiTitle</h2>"
+				if test -f "${webDirectory}${iconPath}";then
+					echo "	<img loading='lazy' class='wikiIcon' src='$iconPath' />"
+				fi
+				echo "	<p>$description</p>"
+				echo "	<p>$wikiDate</p>"
+				echo "	<p>$counter</p>"
+				echo "</a>"
+			} > "$webDirectory/wiki/$wikiSum/wiki.index"
+		fi
+		#
+		linkFile "/usr/share/2web/templates/wiki.php" "$webDirectory/wiki/$wikiSum/index.php"
+		# add to indexes
+		addToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/wiki/wikis.index"
+		SQLaddToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/data.db" "wiki"
+	fi
+}
+################################################################################
 function update(){
 	if ! test -f /usr/bin/zimdump;then
 		ALERT "No zimdump package was found the program can not continue!"
@@ -102,62 +210,20 @@ function update(){
 			break
 		done
 
+		# check for parallel processing and count the cpus
+		if echo "$@" | grep -q -e "--parallel";then
+			totalCPUS=$(cpuCount)
+		else
+			totalCPUS=1
+		fi
 		# extract all found zim files
 		find "$wikiLocation" -type f -name '*.zim' | sort | while read zimFilePath;do
-			# if the md5sum of the wiki file has changed update it
-			#if checkFileDataSum "$zimFilePath";then
-			if test -f "$zimFilePath";then
-				# link the zim file into the kodi directory
-				linkFile "$zimFilePath" "$webDirectory/kodi/wiki/"
-				# get the filename for the wiki name
-				#wikiName=$(popPath $wikiLocation)
-				# generate a md5sum for the location
-				wikiSum=$(basename "$zimFilePath" | md5sum | cut -d' ' -f1)
-				# create a directory for extracting the wiki into
-				createDir "$webDirectory/wiki/$wikiSum/"
-				createDir "$webDirectory/wiki/$wikiSum/M/"
-
-				set -x
-				# extract the zim file to html
-				#zimdump dump --redirect --dir="$webDirectory/wiki/$wikiSum/" "$zimFilePath"
-				zimdump dump --dir="$webDirectory/wiki/$wikiSum/" "$zimFilePath"
-
-				mainPageName=$(zimdump info "$zimFilePath" | grep "main page:" | cut -d':' -f2 | tr -s ' ' | sed "s/^ //g")
-				echo "$mainPageName" > "$webDirectory/wiki/$wikiSum/M/MainPage"
-
-				# add to indexes
-				addToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/wiki/wikis.index"
-				SQLaddToIndex "$webDirectory/wiki/$wikiSum/wiki.index" "$webDirectory/data.db" "wiki"
-
-				if ! test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
-					convert "$webDirectory/wiki/$wikiSum/-/favicon" -adaptive-resize 128x128 "$webDirectory/wiki/$wikiSum/thumb.png"
-					#wkhtmltoimage --width 1920 "http://localhost/wiki/$wikiSum/index.php" "$webDirectory/wiki/$wikiSum/thumb.png"
-				fi
-
-				if ! test -f "$webDirectory/wiki/$wikiSum/wiki.index";then
-					{
-						echo "<a href='/wiki/$wikiSum/' class='inputCard' >"
-						# write the wiki title
-						echo "<h2>$(cat "$webDirectory/wiki/$wikiSum/M/Title")</h2>"
-						if test -f "$webDirectory/wiki/$wikiSum/thumb.png";then
-							echo "<img loading='lazy' src='/wiki/$wikiSum/thumb.png' />"
-						fi
-						echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Description")</p>"
-						echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Date")</p>"
-						echo "<p>$(cat "$webDirectory/wiki/$wikiSum/M/Counter"| sed "s/;/\n/g")</p>"
-						#echo "<div>$wikiName</div>"
-						echo "</a>"
-					} > "$webDirectory/wiki/$wikiSum/wiki.index"
-				fi
-
-				linkFile "/usr/share/2web/templates/wiki.php" "$webDirectory/wiki/$wikiSum/index.php"
-
-				# copy the wiki.php template into the extracted wiki directory
-				#linkFile "/usr/share/2web/templates/wiki.php" "$webDirectory/wiki/$wikiSum/index.php"
-			fi
+			processZimWiki "$zimFilePath" "$webDirectory" &
+			waitQueue 0.5 "$totalCPUS"
 		done
-		#fi
 	done
+	# block for parallel threads here
+	blockQueue 1
 }
 ################################################################################
 function resetCache(){
@@ -168,66 +234,67 @@ function resetCache(){
 }
 ################################################################################
 function nuke(){
-	rm -rv $(webRoot)/wiki/
-	rm -rv $(webRoot)/kodi/wiki/
+	drawLine
+	drawSmallHeader "DELETING ALL WIKI2WEB DATA"
+	drawLine
+	delete "$(webRoot)/wiki/"
+	delete "$(webRoot)/kodi/wiki/"
 }
 ################################################################################
-main(){
-	################################################################################
-	webRoot
-	################################################################################
-	if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
-		checkModStatus "wiki2web"
-		# lock the process
-		lockProc "wiki2web"
-		update
-	elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
-		checkModStatus "wiki2web"
-		drawLine
-		echo "There are no modules to upgrade in wiki2web"
-		drawLine
-		showServerLinks
-		# show the server link at the bottom of the interface
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local/wiki/"
-		drawLine
-		echo "http://$(hostname).local/settings/wiki.php"
-		drawLine
-	elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
-		# lock the process
-		lockProc "wiki2web"
-		nuke
-	elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
-		# lock the process
-		lockProc "wiki2web"
-		# remove the whole wiki directory
-		rm -rv $(webRoot)/wiki/ || INFO "No wiki web directory at '$webDirectory/wiki/'"
-	elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
-		cat "/usr/share/2web/help/wiki2web.txt"
-	elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
-		enableMod "wiki2web"
-	elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
-		disableMod "wiki2web"
-	else
-		checkModStatus "wiki2web"
-		# lock the process
-		lockProc "wiki2web"
-		# update sources
-		update
-		# display the help
-		main --help
-		showServerLinks
-		# show the server link at the bottom of the interface
-		echo "Module Links"
-		drawLine
-		echo "http://$(hostname).local/wiki/"
-		drawLine
-		echo "http://$(hostname).local/settings/wiki.php"
-		drawLine
-	fi
-
-}
+# set the theme of the lines in CLI output
+LINE_THEME="flowerRand"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 ################################################################################
-main "$@"
-exit
+if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
+	checkModStatus "wiki2web"
+	# lock the process
+	lockProc "wiki2web"
+	update
+elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
+	checkModStatus "wiki2web"
+	drawLine
+	echo "There are no modules to upgrade in wiki2web"
+	drawLine
+	showServerLinks
+	# show the server link at the bottom of the interface
+	echo "Module Links"
+	drawLine
+	echo "http://$(hostname).local/wiki/"
+	drawLine
+	echo "http://$(hostname).local/settings/wiki.php"
+	drawLine
+elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
+	# lock the process
+	lockProc "wiki2web"
+	nuke
+elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
+	# lock the process
+	lockProc "wiki2web"
+	# remove the whole wiki directory
+	rm -rv $(webRoot)/wiki/ || INFO "No wiki web directory at '$webDirectory/wiki/'"
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
+	cat "/usr/share/2web/help/wiki2web.txt"
+elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
+	enableMod "wiki2web"
+elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
+	disableMod "wiki2web"
+else
+	checkModStatus "wiki2web"
+	# lock the process
+	lockProc "wiki2web"
+	# update sources
+	update
+	# display the help
+	main --help
+	showServerLinks
+	# show the server link at the bottom of the interface
+	drawSmallHeader "Module Links"
+	drawLine
+	echo "http://$(hostname).local/wiki/"
+	echo "http://$(hostname).local/settings/wiki.php"
+	drawLine
+fi
