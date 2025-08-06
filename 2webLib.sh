@@ -2048,7 +2048,7 @@ function lineThemeDemo(){
 ################################################################################
 function randomLineTheme(){
 	# Load a random line theme from the list
-	themes="dice flower flower2 flower3 flower4 flower5 flower6 flowers flowerRand flowerRand2 wood quilt suit card solid double stitch diamond smallDotted dotted boxes note hollowBlock bowtie block bottomBlock fadeDown fadeUp book castle floppy computer computers term lines sine grass vines altdice weather sid chem papersRand papersRand2 cross cross2 crossAlt graph"
+	themes="dice flower flower2 flower3 flower4 flower5 flower6 flowers flowerRand flowerRand2 wood quilt suit card solid double stitch diamond smallDotted dotted boxes littleBoxes stickman stickwoman stickDance note hollowBlock bowtie block bottomBlock fadeDown fadeUp book castle floppy computer computers term lines sine grass vines altdice weather sid chem papersRand papersRand2 cross cross2 crossAlt graph kodi"
 	#
 	echo -ne "$themes" | sed "s/ /\n/g" | shuf | head -1
 }
@@ -2115,6 +2115,8 @@ function loadLineTheme(){
 	if [ "$lineTheme" == "dice" ];then
 		# draw random dice for each line
 		echo -n "$(rollDie)"
+	elif [ "$lineTheme" == "kodi" ];then
+		echo -n "❖"
 	elif [ "$lineTheme" == "wood" ];then
 		echo -n "$(drawAltPattern "$index" --wood)"
 	elif [ "$lineTheme" == "quilt" ];then
@@ -2206,7 +2208,7 @@ function loadLineTheme(){
 		# - altdice      ⚁☐⚂☐⚄☐⚄☐⚁☐⚁☐⚄☐⚄☐
 		echo -n "$(drawAltPattern "$index" --altdice)"
 	elif [ "$lineTheme" == "weather" ];then
-		# - cloud
+		# - ﹅🌣🗲🌢🌢🌢
 		echo -n "$(drawRandomizedPattern "🌣🗲🌢🌢🌢🌢🌢🌢")"
 	elif [ "$lineTheme" == "cross" ];then
 		echo -n "🕇"
@@ -2249,8 +2251,14 @@ function loadLineTheme(){
 	elif [ "$lineTheme" == "flowerRand2" ];then
 		# - flowerRand2   ❁❀✾✿❁✾✿❀✾✿❀✾✿❁✾❀
 		echo -n "$(drawRandomizedPattern "❁❀✾✿" "$tempValue")"
-	elif [ "$lineTheme" == "papersRand" ];then
-		echo -n "$(drawRandomizedPattern "🗉🗏🗟🖻🖺🗈🗎")"
+	elif [ "$lineTheme" == "littleBoxes" ];then
+		echo -n "⊞"
+	elif [ "$lineTheme" == "stickDance" ];then
+		echo -n "$(drawRandomizedPattern "🯉🯅🯆🯇🯈")"
+	elif [ "$lineTheme" == "stickman" ];then
+		echo -n "$(drawRandomizedPattern "🯅🯆🯇🯈")"
+	elif [ "$lineTheme" == "stickwoman" ];then
+		echo -n "🯉"
 	elif [ "$lineTheme" == "papersRand2" ];then
 		echo -n "$(drawRandomizedPattern "🗉🗌🗆🗏🗟🖻🖺🗈🗎")"
 	elif [ "$lineTheme" == "graph" ];then
@@ -2349,34 +2357,14 @@ function drawCard(){
 	#
 	# draw a random card and print the ascii character code for that card
 	#
-	tempValue=$(( $RANDOM % 13 ))
-	if [ $tempValue -eq 0 ];then
-		echo -n "🂡"
-	elif [ $tempValue -eq 1 ];then
-		echo -n "🂢"
-	elif [ $tempValue -eq 2 ];then
-		echo -n "🂣"
-	elif [ $tempValue -eq 3 ];then
-		echo -n "🂤"
-	elif [ $tempValue -eq 4 ];then
-		echo -n "🂥"
-	elif [ $tempValue -eq 5 ];then
-		echo -n "🂦"
-	elif [ $tempValue -eq 6 ];then
-		echo -n "🂧"
-	elif [ $tempValue -eq 7 ];then
-		echo -n "🂨"
-	elif [ $tempValue -eq 8 ];then
-		echo -n "🂩"
-	elif [ $tempValue -eq 9 ];then
-		echo -n "🂪"
-	elif [ $tempValue -eq 10 ];then
-		echo -n "🂫"
-	elif [ $tempValue -eq 11 ];then
-		echo -n "🂭"
-	elif [ $tempValue -eq 12 ];then
-		echo -n "🂮"
-	fi
+	# jokers
+	pattern="🃟🃟"
+	# store all the suits
+	pattern="${pattern}🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮"
+	pattern="${pattern}🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃍🃋🃎"
+	pattern="${pattern}🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂽🂻🂾"
+	pattern="${pattern}🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃝🃛🃞"
+	echo -n "$(drawRandomizedPattern "$pattern")"
 }
 ################################################################################
 function rollDie(){
