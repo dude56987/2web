@@ -73,17 +73,13 @@ startSession();
 if (array_key_exists("selectedRemote",$_SESSION)){
 	# get the user selected remote
 	$selectedRemote = $_SESSION['selectedRemote'];
-	addToLog("DEBUG","kodi-player.php","The using remote control at '$selectedRemote'");
 }else{
-	addToLog("DEBUG","kodi-player.php","The user has not selected a remote control");
-	addToLog("DEBUG","kodi-player.php",var_export($_SESSION,true));
 	redirect("/remote.php");
 }
 ################################################################################
 # Parse inputs
 if (array_key_exists("url",$_GET)){
 	if( "$selectedRemote" == "CLIENT" ){
-		addToLog("DEBUG","kodi-player.php","Redirect the control to the client interface");
 		redirect("/client/?play=".$_GET["url"]);
 	}else{
 		# check if the link was passed with the web remote
@@ -95,7 +91,6 @@ if (array_key_exists("url",$_GET)){
 		# clean up the quotes
 		$videoLink = cleanQuotes($videoLink);
 		#
-		addToLog("DEBUG","kodi-player.php","Playing video link '$videoLink'");
 		#	generate the sum from the cleaned link
 		$videoLinkSum = md5($videoLink);
 		# build the command to play on all the players
@@ -299,13 +294,10 @@ if (array_key_exists("url",$_GET)){
 	# play
 	$videoLink = $_GET['playlist'];
 	# remove parenthesis from video link if they exist
-	debug("Cleaning link ".$videoLink."<br>");
 	while(strpos($videoLink,'"')){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
 		$videoLink = preg_replace('"','',$videoLink);
 	}
 	while(strpos($videoLink,"'")){
-		debug("[DEBUG]: Cleaning link ".$videoLink."<br>");
 		$videoLink = preg_replace("'","",$videoLink);
 	}
 	# build the command to play on all the players
