@@ -346,6 +346,18 @@ function delete(){
 	# RETURN FILES
 	if test -d "$1";then
 		ALERT "Preparing to remove files in '$1'"
+		if [ "$FAST_OPTION" == "yes" ];then
+			ALERT "Removing Files in '$1'"
+			rm -r "$1" &
+			# use blockQueue to activate the spinner while waiting for process to end
+			blockQueue 1
+			# verify the removal was successfull
+			if test -d "$1";then
+				return 1
+			else
+				return 0
+			fi
+		fi
 		# get files and symlinks
 		tempDirFiles=$(find "$1" -type l -o -type f)
 		# sort the dirs and reverse them so they are removed longest path to shortest
@@ -441,7 +453,6 @@ function delete(){
 					# check if fast mode is enabled
 					if [ $theTotal -gt 1000 ];then
 						rm -r "$tempDirDirPath" &
-						#ALERT "$sleepDirTime" "Sleep Time"
 						sleep "$sleepDirTime"
 					else
 						rmdir "$tempDirDirPath" &
