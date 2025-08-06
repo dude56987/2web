@@ -141,12 +141,13 @@ function pauseVideo(){
 	// Attempt to pause the video element with the ID 'video'
 	//
 	var video = document.getElementById("video");
-	if(video.paused){
-		console.log("Video is already paused.");
-	}else{
-		video.pause().catch(error => {
-			console.log("Playback failed because user has not interacted with the page yet.");
-		});
+	if(video !== null){
+		if(video.paused){
+			console.log("Video is already paused.");
+		}else{
+			console.log("Pausing the video.");
+			video.pause();
+		}
 	}
 	return false;
 }
@@ -157,12 +158,14 @@ function playVideo(){
 	// Attempt to play the video element with the ID 'video'
 	//
 	var video = document.getElementById("video");
-	if(video.paused){
-		video.play().catch(error => {
-			console.log("Playback failed because user has not interacted with the page yet.");
-		});
-	}else{
-		console.log("Video is already playing.");
+	// if the video element exists
+	if(video !== null){
+		if(video.paused){
+			console.log("Playing the video.");
+			video.play();
+		}else{
+			console.log("Video is already playing.");
+		}
 	}
 	return false;
 }
@@ -173,20 +176,14 @@ function playPause(){
 	// Toggle play/pause state of the video element with the ID 'video'
 	//
 	var video = document.getElementById("video");
-	//var playButton = document.getElementById("playButton");
-	//var pauseButton = document.getElementById("pauseButton");
-	if(video.paused){
-		video.play().catch(error => {
-			console.log("Playback failed because user has not interacted with the page yet.");
-		});
-		//playButton.style.display = 'none';
-		//pauseButton.style.display = 'inline-block';
-	}else{
-		video.pause().catch(error => {
-			console.log("Playback failed because user has not interacted with the page yet.");
-		});
-		//playButton.style.display = 'inline-block';
-		//pauseButton.style.display = 'none';
+	if(video !== null){
+		if(video.paused){
+			console.log("Playing the video.");
+			video.play();
+		}else{
+			console.log("Pausing the video.");
+			video.pause();
+		}
 	}
 	return false;
 }
@@ -498,31 +495,46 @@ function CreateCopyButtons(){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function notify(message,displayTime=500){
+function hideId(idToHide="notification"){
+	if(document.getElementById(idToHide) != null){
+		document.getElementById(idToHide).remove();
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+function notify(message,displayTime=500,textId="notificationText",notificationId="notification"){
 	console.log("notify="+message);
 	// if a notification is being displayed, remove it
-	if(document.getElementById("notification") != null){
-		document.getElementById("notification").remove();
+	if(document.getElementById(notificationId) != null){
+		document.getElementById(notificationId).remove();
 	}
-	if(document.getElementById("notification") == null){
-		console.log("notify passed="+message);
+	if(document.getElementById(notificationId) == null){
+		console.log("Notification Sent ='"+message+"'");
 		// build the notification
 		var notifyObj = document.createElement("div");
-		notifyObj.setAttribute("id", "notification");
+		var notifyTextObj = document.createElement("div");
+		notifyObj.setAttribute("id", notificationId);
+		// hide the notification on click
+		notifyObj.setAttribute("onClick", "hideId(\""+notificationId+"\")");
+		notifyTextObj.setAttribute("id", textId);
+		// set the message and css
+		notifyObj.style.opacity=0.9;
+		notifyTextObj.innerHTML=message;
+		// add the text inside the notification
+		notifyObj.appendChild(notifyTextObj);
 		//document.getElementById("pageContent").appendChild(notifyObj);
 		document.body.appendChild(notifyObj);
 		//
-		document.getElementById("notification").style.opacity=0.9;
-		document.getElementById("notification").innerHTML=message;
+		//document.getElementById("notification").style.opacity=0.9;
+		//document.getElementById("notificationText").innerHTML=message;
 		// hide the message after .5 seconds
 		notificationTimer = setTimeout(() =>{
 			//
-			if(document.getElementById("notification") != null){
+			if(document.getElementById(notificationId) != null){
 				//
-				document.getElementById("notification").style.opacity=0;
+				document.getElementById(notificationId).style.opacity=0;
 				// allow animation time to run then remove the object
 				notificationTimeoutTimer = setTimeout(() =>{
-					document.getElementById("notification").remove();
+					document.getElementById(notificationId).remove();
 				}, displayTime);
 			}
 		}, 355);
@@ -543,6 +555,7 @@ function typeText(textInput,elementID="default",typingSpeed=50,index=0){
 		setTimeout(typeText, typingSpeed, textInput, elementID, typingSpeed, index );
 	}
 }
+////////////////////////////////////////////////////////////////////////////////
 /*
 //-----------------------------------------------------------------------------
 function startVideoUpdateLoop(){

@@ -69,7 +69,6 @@ function cachedMimeType($videoLink){
 	# get the sum
 	$sum = hash("sha512",$videoLink,false);
 	#
-	addToLog("DEBUG","videoPlayer.php","Creating sum '$sum' from link '$videoLink'\n");
 	$maxSleep=10;
 	$sleepCounter=20;
 	# wait for either the bump or the file to be downloaded and redirect
@@ -96,6 +95,15 @@ function cachedMimeType($videoLink){
 		}
 		sleep(1);
 	}
+}
+########################################################################
+function getCacheSum($videoLink){
+	# cleanup the video link
+	$videoLink = str_replace('"','',$videoLink);
+	$videoLink = str_replace("'","",$videoLink);
+	# get the sum
+	$sum = hash("sha512",$videoLink,false);
+	return $sum;
 }
 ########################################################################
 function getCacheLink($videoLink,$mimeType){
@@ -203,16 +211,6 @@ function isTranscodeEnabled(){
 		}
 	}
 	return $doTranscode;
-}
-#################################################################################
-function noscriptRefresh($seconds=10){
-	echo "<noscript>";
-	echo "<div class='titleCard'>";
-	echo "<p>The video is still loading...</p>";
-	echo "<p>The page will refresh when the player loads...</p>";
-	echo "<meta http-equiv='refresh' content='$seconds'>";
-	echo "</div>";
-	echo "</noscript>";
 }
 #################################################################################
 ?>
@@ -558,7 +556,20 @@ document.body.addEventListener('keydown', function(event){
 	}
 	# draw the rating button
 	echo $ratingText;
-
+	# draw cache state for cached videos
+	if ( $httpLink ){
+		$pathPrefix=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".getCacheSum($directLinkData)."/";
+		#
+		if(file_exists($pathPrefix."verified.cfg")){
+			echo "	<div class='button'>Cache State <div class='radioIcon'>🟢</div></div>\n";
+		}else if(file_exists($pathPrefix."video.mp4")){
+			echo "	<div class='button'>Cache State <div class='radioIcon'>🟡</div></div>\n";
+		}else if(file_exists($pathPrefix."video.m3u")){
+			echo "	<div class='button'>Cache State <div class='radioIcon'>🟠</div></div>\n";
+		}else{
+			echo "	<div class='button'>Cache State <div class='radioIcon'>🔴</div></div>\n";
+		}
+	}
 	?>
 </div>
 </div>
@@ -612,12 +623,9 @@ document.body.addEventListener('keydown', function(event){
 			# reload the page if no mime type could be found for playback
 			# - some videos will not generate a hls stream but will generate another playable
 			#   stream eventually so the page will reload until it finds a playable one
-			echo "<div class='titleCard'>";
-			echo "Video is loading, page will automatically refresh...";
-			echo "</div>";
-			echo "<script>\n";
-			echo "	notify(\"Loading Video...\",10000);\n";
-			echo "</script>\n";
+			#echo "<div class='titleCard'>";
+			#echo "Video is loading, page will automatically refresh...";
+			#echo "</div>";
 			echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' controls>\n";
 			echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 			echo "</video>\n";
@@ -661,7 +669,8 @@ document.body.addEventListener('keydown', function(event){
 				# hls stream
 				# draw the hls stream player webpage player
 				echo "<script>\n";
-				echo "document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
+				# remove existing video and replace it with a hls stream
+				echo "	document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
 				echo "	if(Hls.isSupported()) {\n";
 				echo "		var video = document.getElementById('video');\n";
 				echo "		var hls = new Hls({\n";
@@ -670,7 +679,8 @@ document.body.addEventListener('keydown', function(event){
 				echo "			enableWorker: true,\n";
 				echo "			enableSoftwareAES: true,\n";
 				echo "			autoStartLoad: true,\n";
-				echo "			debug: true\n";
+				echo "			maxBufferLength: 20,\n";
+				echo "			debug: false\n";
 				echo "		});\n";
 				echo "		hls.loadSource('$tempVideoLink');\n";
 				echo "		hls.attachMedia(video);\n";
@@ -678,16 +688,75 @@ document.body.addEventListener('keydown', function(event){
 				#echo"	echo \"			video.muted = false;\";"
 				echo "			video.play();\n";
 				echo "		});\n";
-				echo "	}\n";
-				echo "	else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
+				echo "	}else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
 				echo "		video.src = '$tempVideoLink';\n";
 				echo "		video.addEventListener('canplay',function() {\n";
 				echo "			video.play();\n";
 				echo "		});\n";
 				echo "	}\n";
+				# the reload video function
+				echo "	function reloadVideo(sleepTime=1){\n";
+				# delay the reload by 10 seconds
+				echo "		var currentPlaybackTime=0;\n";
+				echo "		var video = document.getElementById('video');\n";
+				echo "		video.poster=\"/spinner.gif\";\n";
+				echo "		currentPlaybackTime=video.currentTime;\n";
+				echo "		pauseVideo();\n";
+				echo "		notify(\"🗘\",".(1000 * 1).",\"spinRight\");\n";
+				# reset the playback time to zero in order to display the poster
+				#echo "		currentPlaybackTime=0;\n";
+				# set the poster to the loading spinner
+				# get the current playback time
+				echo "		setTimeout(function() {\n";
+				echo "			hls.loadSource('$tempVideoLink');\n";
+				echo "			hls.attachMedia(video);\n";
+				# seek back to the same playback time and resume the video
+				echo "			video.currentTime=currentPlaybackTime;\n";
+				# remove the spinner
+				# set the poster back to the poster
+				echo "			video.poster=\"$posterPath\";\n";
+				echo "			playVideo();\n";
+				#echo "		document.getElementById(\"notification\").remove();\n";
+				echo "		},(1000*1));\n";
+				echo "	}\n";
+				# get the current time
+				#echo "	function getCurrentTime(){\n";
+				#echo "		var resetTime;\n";
+				#echo "		resetTime=new Date();\n";
+				#echo "		resetTime=resetTime.getSeconds();\n";
+				#echo "		return resetTime;\n";
+				#echo "	}\n";
+				#echo "	var resetTime = getCurrentTime();\n";
+				# create the global failure count
+				echo "	var failed_video_playback_count=0;\n";
+				echo "	var sleepTime=1;\n";
+				# add error catching code and reload the page if the HLS stream stops working
+				echo "	hls.on(Hls.Events.ERROR, function (event, data){\n";
+				# prevent the video from reloading more than once every 30 seconds
+				#echo "		if( ( getCurrentTime() - resetTime ) > 30 ){\n";
+				#echo "			resetTime=new Date();\n";
+				#echo "			resetTime=resetTime.getSeconds();\n";
+				# reload the video
+				echo "		reloadVideo(sleepTime);\n";
+				# reload the page if the playback fails 100 times
+				#echo "		}\n";
+				echo "		sleepTime+=1;\n";
+				#
+				echo "		failed_video_playback_count+=1;\n";
+				echo "		console.log('failed_video_playback_count:'+failed_video_playback_count);\n";
+				#echo "		}\n";
+				echo "	});\n";
 				# start playback on page load
-				echo "hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
+				echo "	hls.on(Hls.Events.MANIFEST_PARSED,playVideo);\n";
+				#echo "	}\n";
 				echo "</script>\n";
+				# draw the fake video player
+				echo "<noscript>\n";
+				echo "	<div class='videoPosterContainer'>\n";
+				echo "		<img class='videoPoster' src='$posterPath' />\n";
+				echo "	</div>\n";
+				echo "</noscript>\n";
+				# refresh if javascript is disabled
 				noscriptRefresh(10);
 			}else{
 				# This is a unsupported media file that can not be played with the web player
@@ -780,9 +849,7 @@ document.body.addEventListener('keydown', function(event){
 	}else{
 		$userClientName="select";
 	}
-	addToLog("DEBUG","videoPlayer.php","userClientName = '$userClientName'");
 	if ($userClientName == "client"){
-		addToLog("DEBUG","videoPlayer.php","loading client'");
 		# if the client is enabled
 		if (yesNoCfgCheck("/etc/2web/client.cfg")){
 			# if the group permissions are available for the current user

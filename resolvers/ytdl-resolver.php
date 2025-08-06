@@ -153,7 +153,10 @@ function cacheUrl($sum,$videoLink){
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
 	$command = $command." --continue";
 	#
-	$command = $command." --write-info-json";
+	#if (file_exists("/etc/2web/cache/cacheUpgradeQuality.cfg")){
+	#	# only write the json info to the upgrade version
+	#	$command = $command." --write-info-json";
+	#}
 	#
 	$dlCommand = $command." --all-subs --sub-format srt --embed-subs";
 	#
@@ -174,12 +177,14 @@ function cacheUrl($sum,$videoLink){
 		}else{
 			$dlCommand = $dlCommand." -S '".$upgradeQuality."'";
 		}
-		# store the video as the .part file
-		$dlCommand = $dlCommand." --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
+		# create the updgrade download command
+		$dlCommand = $dlCommand." --write-info-json --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 	}else{
-		# if no upgrade is set then simply convert the hls stream into a mp4
-		$dlCommand = "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
-		$dlCommand .= " && cp -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
+		# download the json data into a file
+		$dlCommand = "yt-dlp --no-download --dump-single-json '$videoLink' > '$webDirectory/RESOLVER-CACHE/$sum/video.info.json';\n";
+		# if no upgrade is set then simply convert the hls stream into a mp4 and grab the json data last
+		$dlCommand .= "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
+		$dlCommand .= " && mv -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}
 	# use the correct format for the quality value chosen
 	if (($quality == "best") or ($quality == "worst")){
@@ -194,7 +199,7 @@ function cacheUrl($sum,$videoLink){
 	}
 	# create the stream command that will be ran to get the chosen quality and convert it into a hls stream
 	# force the most compatible version of the stream codecs
-	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts - | ffmpeg -i - -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
+	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts -c:v libx264 -c:a aac -crf 0 - | ffmpeg -i - -c:v copy -c:a copy -crf 0 -hls_playlist_type event -hls_segment_type mpegts -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -220,38 +225,76 @@ function cacheUrl($sum,$videoLink){
 function cacheResolve($sum,$webDirectory){
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
+		#
+		$goToRedirect=false;
+		#
+		if(array_key_exists("activePlaybackSum",$_SESSION)){
+			if( $_SESSION["activePlaybackSum"] == $sum ){
+				if(array_key_exists("activePlaybackTime",$_SESSION)){
+					# if the resovler has not been accessed for more than 90 seconds
+					if( ( time() - $_SESSION["activePlaybackTime"] ) < 90 ){
+						$_SESSION["activePlaybackTime"]=time();
+						if(array_key_exists("activePlaybackMime",$_SESSION)){
+							header($_SESSION["activePlaybackMime"]);
+						}
+						if(array_key_exists("activePlaybackUrl",$_SESSION)){
+							redirect($_SESSION["activePlaybackUrl"]);
+						}
+					}
+				}
+			}
+		}
 		# if 90 seconds of the video has been downloaded then launch the video
 		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/verified.cfg")){
 			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
-				header("Content-type: audio/mpeg;");
+				$mime="Content-type: audio/mpeg;";
+				$path="/RESOLVER-CACHE/$sum/video.mp3";
 				# redirect to discovered mp3
-				redirect("/RESOLVER-CACHE/$sum/video.mp3");
+				$goToRedirect=true;
 			}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
-				header("Content-type: video/mp4;");
+				$mime="Content-type: video/mp4;";
+				$path="/RESOLVER-CACHE/$sum/video.mp4";
 				# file is fully downloaded and converted play instantly
-				redirect("/RESOLVER-CACHE/$sum/video.mp4");
+				$goToRedirect=true;
 			}else{
+				$mime="Content-type: application/mpegurl;";
+				$path="/RESOLVER-CACHE/$sum/video.m3u";
 				# load the HLS stream as a last resort fallback
 				# - nothing verified should get here so this is a fallback for crazy exceptions
-				header("Content-type: application/mpegurl;");
-				redirect("/RESOLVER-CACHE/$sum/video.m3u");
+				$goToRedirect=true;
 			}
 		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mkv")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.mkv") ) > 90) ){
-			header("Content-type: video/x-matroska;");
-			redirect("/RESOLVER-CACHE/$sum/video.mkv");
+			$mime="Content-type: video/x-matroska;";
+			$path="/RESOLVER-CACHE/$sum/video.mkv";
+			$goToRedirect=true;
 		}else if((file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.webm")) and (substr($_SERVER["HTTP_USER_AGENT"],0,4) == "Kodi") and ( ( time() - filemtime($webDirectory."/RESOLVER-CACHE/".$sum."/video.webm") ) > 90) ){
 			# only load webm files that are not being written
 			# - only redirect to KODI clients
 			# redirect to intermediary webm files
-			header("Content-type: video/webm;");
-			redirect("/RESOLVER-CACHE/$sum/video.webm");
+			$mime="Content-type: video/webm;";
+			$path="/RESOLVER-CACHE/$sum/video.webm";
+			$goToRedirect=true;
 		}else if( file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			header("Content-type: application/mpegurl;");
+			$mime="Content-type: application/mpegurl;";
 			# redirect to the stream
-			redirect("/RESOLVER-CACHE/$sum/video.m3u");
+			$path="/RESOLVER-CACHE/$sum/video.m3u";
+			$goToRedirect=true;
+		}
+		if($goToRedirect){
+			# Set the active playback values and then redirect
+			# - sessions store the active playback variables to prevent broken
+			#   playback because of the resolver upgrading the quality of the
+			#   stream and changing the resolver value
+			$_SESSION["activePlaybackSum"]=$sum;
+			$_SESSION["activePlaybackMime"]=$mime;
+			$_SESSION["activePlaybackUrl"]=$path;
+			$_SESSION["activePlaybackTime"]=time();
+			#
+			header($mime);
+			redirect($path);
 		}
 		# Sleep at end of the loop then try to find a redirect again
 		sleep(1);
