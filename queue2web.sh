@@ -670,7 +670,16 @@ elif [ "$1" == "-a" ] || [ "$1" == "--add" ] || [ "$1" == "add" ];then
 elif [ "$1" == "-u" ] || [ "$1" == "--unique" ] || [ "$1" == "unique" ];then
 	# add a unique job to the queue
 	addJob "$2" "$3" "yes"
-elif [ "$1" == "--stop" ] || [ "$1" == "stop" ] || [ "$1" == "--cancel" ] || [ "$1" == "cancel" ];then
+elif [ "$1" == "--stop" ] || [ "$1" == "stop" ];then
+	drawLine
+	drawSmallHeader "All Jobs will be stopped but will be reactivated within the next 15 minutes."
+	drawLine
+	# close active jobs
+	delete "/var/cache/2web/queue/active/"
+	createDir "/var/cache/2web/queue/active/"
+	# kill running processes
+	killall queue2web &
+elif [ "$1" == "--cancel" ] || [ "$1" == "cancel" ];then
 	# empty the queues of all jobs
 	delete "/var/cache/2web/queue/multi/"
 	createDir "/var/cache/2web/queue/multi/"
@@ -712,8 +721,10 @@ else
 	echo "- Unfinished jobs will survive reboots of the server"
 	echo "- The service will be started automatically by cron"
 	drawLine
+	echo "--stop"
+	echo "   Stop all queued jobs but leave them in the queue. Jobs will restart within the next 15 minutes"
 	echo "--cancel"
-	echo "   Stop all queued jobs"
+	echo "   Stop all queued jobs, and remove them from the queue."
 	echo "--jobs"
 	echo "   Will list all queued jobs"
 	echo "--retry"
