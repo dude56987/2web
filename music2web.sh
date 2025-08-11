@@ -96,12 +96,12 @@ function processTrack(){
 		title=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "track name :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
 		disc=$(echo "$musicData" | tr -s ' ' | grep --ignore-case "part/position :" | head -n 1 | cut -d':' -f2 | tr --delete "'" | xargs )
 
-		#
-		artist=$(cleanText "$artist" )
-		album=$(cleanText "$album" )
+		# clean text and remove leading spaces
+		artist=$(cleanText "$artist" | sed "s/^\ *//g" )
+		album=$(cleanText "$album" | sed "s/^\ *//g" )
 
-		#
-		title=$(cleanText "$title" )
+		# clean text and remove leading spaces
+		title=$(cleanText "$title" | sed "s/^\ *//g" )
 		#disc="$(cleanText "$disc" )"
 
 		# if the disk value is not found mark the disk as disk number 1
@@ -585,7 +585,7 @@ function processTrack(){
 			# cleanup the track list for the album
 			if test -f "$webDirectory/music/$artist/$album/tracks.index";then
 				tempList=$(cat "$webDirectory/music/$artist/$album/tracks.index" )
-				echo "$tempList" | sort -u > "$webDirectory/music/$artist/$album/tracks.index"
+				echo "$tempList" | sort -ud > "$webDirectory/music/$artist/$album/tracks.index"
 			fi
 		fi
 		setFileDataSum "$webDirectory" "$musicPath"
@@ -720,15 +720,15 @@ function update(){
 	blockQueue 1
 	# cleanup the music index
 	if test -f "$webDirectory/music/music.index";then
-		tempList=$(cat "$webDirectory/music/music.index" | sort -u )
+		tempList=$(cat "$webDirectory/music/music.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/music/music.index"
 	fi
 	if test -f "$webDirectory/music/artists.index";then
-		tempList=$(cat "$webDirectory/music/artists.index" | sort -u )
+		tempList=$(cat "$webDirectory/music/artists.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/music/artists.index"
 	fi
 	if test -f "$webDirectory/music/tracks.index";then
-		tempList=$(cat "$webDirectory/music/tracks.index" | sort -u )
+		tempList=$(cat "$webDirectory/music/tracks.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/music/tracks.index"
 	fi
 
@@ -748,21 +748,21 @@ function update(){
 
 	# cleanup random music index
 	if test -f "$webDirectory/random/music.index";then
-		tempList=$(cat "$webDirectory/random/music.index" | sort -u )
+		tempList=$(cat "$webDirectory/random/music.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/new/music.index"
 	fi
 	if test -f "$webDirectory/random/artists.index";then
-		tempList=$(cat "$webDirectory/random/artists.index" | sort -u )
+		tempList=$(cat "$webDirectory/random/artists.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/new/artists.index"
 	fi
 	if test -f "$webDirectory/random/tracks.index";then
-		tempList=$(cat "$webDirectory/random/tracks.index" | sort -u )
+		tempList=$(cat "$webDirectory/random/tracks.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/new/tracks.index"
 	fi
 	# update kodi clients
 	if test -f /usr/bin/kodi2web;then
 		# update video libaries on all kodi clients, if no video playback is detected
-		/usr/bin/kodi2web audio
+		/usr/bin/kodi2web audio --mute
 	fi
 }
 ################################################################################
@@ -829,6 +829,7 @@ LINE_THEME="note"
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	checkModStatus "music2web"
@@ -844,23 +845,24 @@ elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 	enableMod "music2web"
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 	disableMod "music2web"
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ||  [ "$1" == "--stop" ] || [ "$1" == "stop" ];then
+	# stop the running module
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	rm -v "/var/cache/2web/web/${moduleName}.active"
+	killall "$moduleName"
 elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
-	echo -n "Build Date: "
-	cat /usr/share/2web/buildDate.cfg
-	echo -n "music2web Version: "
-	cat /usr/share/2web/version_music2web.cfg
+	ALERT "$(cat /usr/share/2web/buildDate.cfg)\n" "Build Date"
+	ALERT "$(cat /usr/share/2web/version_music2web.cfg)\n" "music2web Version"
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 	cat "/usr/share/2web/help/music2web.txt"
 else
 	checkModStatus "music2web"
 	lockProc "music2web"
 	update
-	#main --help $@
 	showServerLinks
-	echo "Module Links"
+	drawSmallHeader "Module Links"
 	drawLine
 	echo "http://$(hostname).local:80/music/"
-	drawLine
 	echo "http://$(hostname).local:80/settings/music.php"
 	drawLine
 fi
