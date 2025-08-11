@@ -204,7 +204,7 @@ function update(){
 	################################################################################
 	# check for txt files and convert them into comics
 	comicLibaries="$(libaryPaths)"
-	ALERT "$comicLibaries"
+	ALERT "$comicLibaries" "Comic Libraries"
 	# first convert epub files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		# for each cbz file found in the cbz libary locations
@@ -378,7 +378,7 @@ function update(){
 
 	# cleanup the comics index
 	if test -f "$webDirectory/comics/comics.index";then
-		tempList=$(cat "$webDirectory/comics/comics.index" | sort -u )
+		tempList=$(cat "$webDirectory/comics/comics.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/comics/comics.index"
 	fi
 	# cleanup new comic index
@@ -1008,7 +1008,7 @@ function webUpdate(){
 	webDirectory=$(webRoot)
 	downloadDirectory="$(libaryPaths)"
 
-	ALERT "$downloadDirectory"
+	ALERT "$downloadDirectory" "Download Directory"
 
 	# create the kodi directory
 	createDir "$webDirectory/kodi/comics/"
@@ -1038,7 +1038,8 @@ function webUpdate(){
 
 	totalComics=0
 
-	ALERT "Scanning libary config '$downloadDirectory'"
+	ALERT "$downloadDirectory" "Scanning Library Config"
+
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
 		ALERT "Scanning Libary Path... '$comicLibaryPath'"
 		addToLog "INFO" "Scanning Library..." "$comicLibaryPath"
@@ -1198,6 +1199,11 @@ elif [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	lockProc "comic2web"
 	checkModStatus "comic2web"
 	update "$@"
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ||  [ "$1" == "--stop" ] || [ "$1" == "stop" ];then
+	# stop the running module
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	rm -v "/var/cache/2web/web/${moduleName}.active"
+	killall "$moduleName"
 elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
 	# process a single directory or rescan a single directory
 	webDirectory=$(webRoot)
