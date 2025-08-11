@@ -74,6 +74,7 @@ include("settingsHeader.php");
 			<option value='res:240' >240p</option>
 			<option value='worst'>worst</option>
 		</select>
+		<hr>
 		<button class='button' type='submit'>🔢 Change Quality</button>
 	</form>
 </div>
@@ -114,6 +115,7 @@ include("settingsHeader.php");
 			<option value='res:240' >240p</option>
 			<option value='worst'>worst</option>
 		</select>
+		<hr>
 		<button class='button' type='submit'>🔢 Change Quality</button>
 	</form>
 </div>
@@ -150,6 +152,7 @@ include("settingsHeader.php");
 			<option value='365'>365 Days</option>
 			<option value='forever'>forever</option>
 		</select>
+		<hr>
 		<button class='button' type='submit'>🗓️ Change Cache Time</button>
 	</form>
 </div>

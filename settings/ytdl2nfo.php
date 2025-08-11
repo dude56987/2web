@@ -143,6 +143,7 @@ foreach($sourceFiles as $sourceFile){
 		</li>
 	</ul>
 	<input width='60%' type='text' name='ytdl_add_source' placeholder='http://link.com/test'>
+	<hr>
 	<button class='button' type='submit'>➕ Add Source</button>
 	</form>
 	</div>
@@ -206,6 +207,7 @@ foreach($sourceFiles as $sourceFile){
 		</li>
 	</ul>
 	<input width='60%' type='text' name='ytdl_add_username_source' placeholder='http://link.com/test'>
+	<hr>
 	<button class='button' type='submit'>➕ Add User</button>
 	</form>
 	</div>

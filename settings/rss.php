@@ -4,7 +4,7 @@ requireAdmin();
 ?>
 <!--
 ########################################################################
-# 2web rss settings
+# 2web RSS settings
 # Copyright (C) 2024  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -40,8 +40,8 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
-		<li><a href='#rssscanSourcesPaths'>rss scanSources Paths</a></li>
-		<li><a href='#addRssSource'>Add rss Source</a></li>
+		<li><a href='#rssscanSourcesPaths'>RSS scanSources Paths</a></li>
+		<li><a href='#addRssSource'>Add RSS Source</a></li>
 	</ul>
 </div>
 
@@ -75,14 +75,14 @@ include("settingsHeader.php");
 
 <?php
 echo "<details id='rssServerSourcePaths' class='titleCard'>\n";
-echo "<summary><h2>rss Server Source Paths</h2></summary>\n";
+echo "<summary><h2>RSS Server Source Paths</h2></summary>\n";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/rss/sources.cfg");
 echo "</pre>\n";
 echo "</details>";
 
 echo "<div id='rssSourcePaths' class='settingListCard'>";
-echo "<h2>rss Source Paths</h2>\n";
+echo "<h2>RSS Source Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/rss/sources.d/*.cfg"));
 sort($sourceFiles);
 # write each config file as a editable entry
@@ -106,13 +106,14 @@ foreach($sourceFiles as $sourceFile){
 }
 ?>
 	<div id='addRssSource' class='inputCard'>
-	<h2>Add rss Source Path</h2>
+	<h2>Add RSS Source Path</h2>
 	<form action='admin.php' method='post'>
 		<ul>
-			<li>You can manually add rss links with a comma seperated list. One entry per line.</li>
+			<li>You can manually add RSS links with a comma seperated list. One entry per line.</li>
 			<li>Title,URL,Description</li>
 		</ul>
 		<input width='60%' type='text' name='addRssSource' placeholder=''>
+		<hr>
 		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
