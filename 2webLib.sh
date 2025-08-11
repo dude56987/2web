@@ -257,6 +257,7 @@ function spaceCleanedText(){
 	echo -n "$cleanedText"
 }
 ########################################################################
+########################################################################
 function cleanText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
@@ -692,6 +693,13 @@ function buildHomePage(){
 			# get the count stats from SQL database
 			totalComics=$(sqlite3 -cmd ".timeout $timeout" "$databasePath" "select COUNT(*) from \"_comics\";")
 			echo "$totalComics" > "$webDirectory/totalComics.index"
+		fi
+	fi
+	INFO "Building stats for web player"
+	if test -d "$webDirectory/web_player";then
+		if cacheCheck "$webDirectory/webPlayer.index" "1";then
+			cacheSize=$(du -shP "$webDirectory/web_player/" | cut -f1)
+			echo "$cacheSize" > "$webDirectory/webPlayer.index"
 		fi
 	fi
 	INFO "Building stats for total music count"
@@ -1722,21 +1730,29 @@ function lockProc(){
 }
 ################################################################################
 function exitModuleTrap(){
+	# exit a running module
 	procName="$1"
-	#drawSmallHeader "Remaining Jobs"
-	#jobs -r
-	#drawLine
-	# draw a newline after ctrl-c
-	echo
 	# lock control-c
 	trap "ALERT 'Please wait for module to close...'" INT
+	# draw a newline after ctrl-c
+	echo
 	# store the color codes for coloring
 	yellowText
 		drawLine
 		drawSmallHeader "Closing $procName Please Wait..."
 		drawLine
 	resetColor
-	#ALERT "Please wait for module to close..."
+	# find the remaining jobs
+	hangingJobIds="$(jobs -p)"
+	# individually stop each hanging process
+	for hangingJobId in $hangingJobIds;do
+		ALERT "Stopping hanging background job ID: $hangingJobId"
+		# Check job is still running
+		if test -d "/proc/$hangingJobId/";then
+			# kill running job
+			kill "$hangingJobId" || ALERT "Job Already Stopped Successfully"
+		fi
+	done
 	INFO "Reseting Cursor settings..."
 	# return the cursor to normal operation
 	tput cnorm
@@ -3891,6 +3907,9 @@ function sleepSpinner(){
 	spinnerName="$1"
 	#animationName="$2"
 	#delayTime="$3"
+
+
+
 	# set the default animation
 	if [ "$animationName" == "" ];then
 		animationName="spin_split_fill"
@@ -3952,7 +3971,13 @@ function sleepSpinner(){
 	spinnerPositionY=$(tput lines)
 	#
 	animationLength=${#animation}
-	#echo -ne "\b"
+	# skip animation but keep the delay when muted
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip running output if script is ran in the background
+		totalSleepTime="$(echo -n "$( bc -l <<< "( $animationLength * $delayTime)" )" )"
+		sleep "$totalSleepTime"
+		return
+	fi
 	# animate the spinner
 	# loop though the animation once and exit
 	for (( index=0;index<$animationLength;index++ ));do
