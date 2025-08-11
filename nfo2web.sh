@@ -1301,7 +1301,7 @@ processShow(){
 	if ! test -f "$webDirectory/shows/$showTitle/poster.png";then
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tac | tail -n 8 | shuf |sed "s/ / /g"| sed -z "s/\n/ /g" )
 		#thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" -printf '%p\n' | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
-		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort | tail -n 8 | shuf | sed "s/\n/ /g" )
+		thumbnailList=$(find "$webDirectory/shows/$showTitle/" -name "*-web.png" | sort -d | tail -n 8 | shuf | sed "s/\n/ /g" )
 		montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		#montage "$webDirectory"/shows/"$showTitle"/*/*-web.png -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
 		#montage $thumbnailList -background black -geometry 800x600\!+0+0 -tile 2x4 "$webDirectory/shows/$showTitle/poster.png"
@@ -1690,7 +1690,7 @@ function buildMovieIndex(){
 }
 ########################################################################
 function cleanMediaSection(){
-	mediaSectionLibaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort)
+	mediaSectionLibaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort -d)
 	IFS=$'\n'
 	# go into each show and movie directory in the website
 	for mediaPath in $mediaSectionlibaries;do
@@ -1712,8 +1712,8 @@ cleanMediaIndexFile(){
 	webIndexName=$2
 	# read and check individual links in .index files
 	IFS=$'\n'
-	generatedIndexData=$(find "$webPath" -maxdepth 2 -mindepth 2 -type 'f' -name "$webIndexName" | sort)
-	currentIndexData=$(cat "$webPath$webIndexName" | sort)
+	generatedIndexData=$(find "$webPath" -maxdepth 2 -mindepth 2 -type 'f' -name "$webIndexName" | sort -d)
+	currentIndexData=$(cat "$webPath$webIndexName" | sort -d)
 
 	#diff <(echo "$generatedIndexData") <(echo "$currentIndexData")
 
@@ -2104,7 +2104,7 @@ function update(){
 	logPagePath="$webDirectory/log/$(date "+%s").log"
 	addToLog "INFO" "FINISHED" "$(date)"
 	# update video libaries on all kodi clients, if no video playback is detected
-	/usr/bin/kodi2web video
+	/usr/bin/kodi2web video --mute
 	################################################################################
 	# - sort and clean main indexes
 	# - cleanup the new indexes by limiting the lists to 200 entries
@@ -2117,7 +2117,7 @@ function update(){
 	# SHOWS #
 	#########
 	if test -f "$webDirectory/shows/shows.index";then
-		tempList=$(cat "$webDirectory/shows/shows.index" | sort -u )
+		tempList=$(cat "$webDirectory/shows/shows.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/shows/shows.index"
 	fi
 	if test -f "$webDirectory/new/shows.index";then
@@ -2137,14 +2137,14 @@ function update(){
 
 	if test -f "$webDirectory/random/episodes.index";then
 		# new episodes
-		tempList=$(cat "$webDirectory/random/episodes.index" | sort -u | tail -n 800 )
+		tempList=$(cat "$webDirectory/random/episodes.index" | sort -ud | tail -n 800 )
 		echo "$tempList" > "$webDirectory/random/episodes.index"
 	fi
 	##########
 	# MOVIES #
 	##########
 	if test -f "$webDirectory/movies/movies.index";then
-		tempList=$(cat "$webDirectory/movies/movies.index" | sort -u )
+		tempList=$(cat "$webDirectory/movies/movies.index" | sort -ud )
 		echo "$tempList" > "$webDirectory/movies/movies.index"
 	fi
 	if test -f "$webDirectory/new/movies.index";then
@@ -2170,7 +2170,7 @@ function update(){
 		# rebuild the file path to prevent unexpected paths from being removed
 		tagFilePath="/var/cache/2web/web/tags/$(basename "$tagFile")"
 		# sort the index and remove duplicates
-		tagFileData="$(cat "$tagFilePath" | sort -u)"
+		tagFileData="$(cat "$tagFilePath" | sort -ud)"
 		# overwrite the unsorted tag file
 		echo "$tagFileData" > "$tagFilePath"
 	done
@@ -2210,7 +2210,7 @@ showHelp(){
 }
 ########################################################################
 # set the theme of the lines in CLI output
-LINE_THEME="brick"
+LINE_THEME="stickDance"
 #
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
@@ -2341,9 +2341,10 @@ elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 	enableMod "nfo2web"
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
 	disableMod "nfo2web"
-elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ;then
-	rm -v "/var/cache/2web/web/nfo2web.active"
-	killall "nfo2web"
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ||  [ "$1" == "--stop" ] || [ "$1" == "stop" ];then
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	rm -v "/var/cache/2web/web/${moduleName}.active"
+	killall "$moduleName"
 elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 	# verbose removal of found files allows files to be visible as they are removed
 	# remove found .index files as they store web generated data
