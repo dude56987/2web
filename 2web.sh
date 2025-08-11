@@ -408,6 +408,90 @@ function buildActivityGraph(){
 	IFS=$IFSBACKUP
 }
 ########################################################################
+function buildSingleTheme(){
+	local tempPathBase="$1"
+	local tempPathColor="$2"
+	local tempPathFont="$3"
+	local tempPathMod="$4"
+	#
+	local themeColor="$5"
+	local themeFont="$6"
+	local themeMod="$7"
+	local themeBase="$8"
+	#
+	local tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
+	#
+	INFO "Building theme '$tempThemeName'..."
+	# build the theme
+	{
+		if test -f "$themeColor";then
+			cat "$themeColor"
+		fi
+		if test -f "$themeFont";then
+			cat "$themeFont"
+		fi
+		if test -f "$themeMod";then
+			cat "$themeMod"
+		fi
+		if test -f "$themeBase";then
+			cat "$themeBase"
+		fi
+	} > "/usr/share/2web/themes/$tempThemeName.css"
+}
+########################################################################
+function build2webThemes(){
+	webDirectory="/var/cache/2web/web"
+	updateThemes="no"
+	# if the build date of the software has changed then update the generated css themes for the site
+	# - only one needs to be true so stop checks if one is true
+	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
+		# if the build date of the software has changed, update the themes
+		updateThemes="yes"
+	else
+		if checkFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg";then
+			# if the theme gen file contains a diffrent timestamp, update the themes
+			updateThemes="yes"
+		else
+			if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/";then
+				# if any new files are added, old files removed, or file names are changed in the templates, update the themes
+				updateThemes="yes"
+			fi
+		fi
+	fi
+	kill "$SPINNER_PID"
+	if [ "$updateThemes" == "yes" ];then
+		ALERT "Rebuilding all themes..."
+		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
+		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
+		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
+		themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
+		themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
+		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
+		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
+		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
+		# build the custom stylesheets if they need to be built
+		for themeColor in $themeColors;do
+			tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
+			for themeFont in $themeFonts;do
+				tempPathFont=$(echo "$themeFont" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/font-//g" )
+				for themeMod in $themeMods;do
+					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
+					for themeBase in $themeBases;do
+						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
+						buildSingleTheme "$tempPathBase" "$tempPathColor" "$tempPathFont" "$tempPathMod" "$themeColor" "$themeFont" "$themeMod" "$themeBase" &
+						waitQueue 0.5 "$totalCPUS"
+					done
+				done
+			done
+		done
+		blockQueue 1
+		# update the checksum files for all the checks
+		setFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg"
+		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
+		setDirSum "$webDirectory" "/usr/share/2web/theme-templates/"
+	fi
+}
+########################################################################
 function update2web(){
 	lockProc "2web"
 	rotateSpinner &
@@ -472,86 +556,7 @@ function update2web(){
 			echo "</OpenSearchDescription>"
 		} > "$webDirectory/opensearch.xml"
 	fi
-
-	updateThemes="no"
-	# if the build date of the software has changed then update the generated css themes for the site
-	# - only one needs to be true so stop checks if one is true
-	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
-		# if the build date of the software has changed, update the themes
-		updateThemes="yes"
-	else
-		if checkFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg";then
-			# if the theme gen file contains a diffrent timestamp, update the themes
-			updateThemes="yes"
-		else
-			if checkDirSum "$webDirectory" "/usr/share/2web/theme-templates/";then
-				# if any new files are added, old files removed, or file names are changed in the templates, update the themes
-				updateThemes="yes"
-			fi
-		fi
-	fi
-	kill "$SPINNER_PID"
-	function buildSingleTheme(){
-		local tempPathBase="$1"
-		local tempPathColor="$2"
-		local tempPathFont="$3"
-		local tempPathMod="$4"
-		#
-		local themeColor="$5"
-		local themeFont="$6"
-		local themeMod="$7"
-		local themeBase="$8"
-		#
-		local tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
-		#
-		INFO "Building theme '$tempThemeName'..."
-		# build the theme
-		{
-			if test -f "$themeColor";then
-				cat "$themeColor"
-			fi
-			if test -f "$themeFont";then
-				cat "$themeFont"
-			fi
-			if test -f "$themeMod";then
-				cat "$themeMod"
-			fi
-			if test -f "$themeBase";then
-				cat "$themeBase"
-			fi
-		} > "/usr/share/2web/themes/$tempThemeName.css"
-	}
-	if [ "$updateThemes" == "yes" ];then
-		ALERT "Rebuilding all themes..."
-		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
-		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
-		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
-		themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
-		themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
-		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
-		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
-		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
-		# build the custom stylesheets if they need to be built
-		for themeColor in $themeColors;do
-			tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
-			for themeFont in $themeFonts;do
-				tempPathFont=$(echo "$themeFont" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/font-//g" )
-				for themeMod in $themeMods;do
-					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
-					for themeBase in $themeBases;do
-						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-						buildSingleTheme "$tempPathBase" "$tempPathColor" "$tempPathFont" "$tempPathMod" "$themeColor" "$themeFont" "$themeMod" "$themeBase" &
-						waitQueue 0.5 "$totalCPUS"
-					done
-				done
-			done
-		done
-		blockQueue 1
-		# update the checksum files for all the checks
-		setFileDataSum "$webDirectory" "/var/cache/2web/themeGen.cfg"
-		setFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg"
-		setDirSum "$webDirectory" "/usr/share/2web/theme-templates/"
-	fi
+	build2webThemes
 	rotateSpinner &
 	SPINNER_PID="$!"
 	# make sure the directories exist and have correct permissions, also link stylesheets
@@ -1449,18 +1454,19 @@ function screenshot(){
 	firefoxPhoneSplitPath="/var/cache/2web/generated/comics/2web/2web Screenshots/firefox_phone_${localPath}_%03d.png"
 
 	#
-	addToLog "DEBUG" "Screenshots" "Creating screenshot from '$webPath' at '$localPath'"
+	#addToLog "DEBUG" "Screenshots" "Creating screenshot from '$webPath' at '$localPath'"
 
 	# make desktop screenshot
-	wkhtmltoimage --ssl-crt-path "/var/cache/2web/ssl-cert.crt" \
-		--cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
-		--format jpg --enable-javascript --javascript-delay 2000 --width 1920 \
-		--disable-smart-width \
-		"$webPath" "$desktopPath"
+	#wkhtmltoimage --ssl-crt-path "/var/cache/2web/ssl-cert.crt" \
+	#	--cookie-jar "/var/cache/2web/generated/comics/2web/2web Screenshots/cookies.cfg" \
+	#	--format jpg --enable-javascript --javascript-delay 2000 --width 1920 \
+	#	--disable-smart-width \
+	#	"$webPath" "$desktopPath"
 	#	--height 1080 \
 
 	#
 	xvfb-run firefox --screenshot "$firefoxDesktopPath" "$webPath" --window-size=1920,1080
+	#xvfb-run cutycapt --url="$link" --out="$webDirectory/portal/${domain}/$linkSum-web.png"
 
 	# resize the image
 	#convert "$desktopPath" --resize 720x480 "$desktopPath"
@@ -1521,6 +1527,7 @@ function nuke(){
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FORCE_OPTION="$(loadOption "force" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-a" ] || [ "$1" == "--all" ] || [ "$1" == "all" ];then
 	# update main components
@@ -2090,11 +2097,24 @@ elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" 
 		# cleanup the resolver cache
 		ALERT "Checking for cache files in $webDirectory/RESOLVER-CACHE/"
 		if test -d "$webDirectory/RESOLVER-CACHE/";then
+			# remove cache data based on the system set delay
 			find "$webDirectory/RESOLVER-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
+			# remove HLS stream files that are older than 24 hours
+			# - leave m3u files for verifier purposes
+			# - All streams are converted into MP4 for compatibility before this delay
+			# - Resolved videos can not be more than 6 hours long so this should be fine
+			# - 1440 is the number of minutes in 24 hours
+			find "$webDirectory/RESOLVER-CACHE/" -mindepth 2 -type f -name '*.ts' -cmin +1440 -exec rm -rv {} \;
 		fi
 		# cleanup files in the transcode cache
 		ALERT "Checking for cache files in $webDirectory/TRANSCODE-CACHE/"
 		if test -d "$webDirectory/TRANSCODE-CACHE/";then
+			# remove old cached media directories
+			find "$webDirectory/TRANSCODE-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
+			# remove HLS stream files from inside directories
+			# - 1440 is the number of minutes in 24 hours
+			find "$webDirectory/TRANSCODE-CACHE/" -mindepth 2 -type f -name '*.ts' -cmin +1440 -exec rm -rv {} \;
+			# remove intermediary webm files from inside directories
 			find "$webDirectory/TRANSCODE-CACHE/" -type f -mtime +"$cacheDelay" -name '*.webm' -exec rm -v {} \;
 		fi
 		# cleanup the m3u playlist cache
@@ -2517,7 +2537,7 @@ elif [ "$1" == "--rebuild-themes" ] || [ "$1" == "rebuild-themes" ];then
 	# reset the theme gen timer
 	date "+%s" > "/var/cache/2web/themeGen.cfg"
 	# run a update to rebuild the CSS files
-	update2web
+	build2webThemes
 elif [ "$1" == "--disable-client" ] || [ "$1" == "disable-client" ];then
 	# disable auto launcher for the client
 	rm -v /etc/lightdm/lightdm.conf.d/20-autologin-kiosk.conf
