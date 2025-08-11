@@ -1484,6 +1484,21 @@ if (array_key_exists("newUserName",$_POST)){
 		backButton(("/settings/clean.php#cleanResolverCache"),"🛠️ Return To Cache Settings");
 	}
 	clear();
+}else if (array_key_exists("cleanWebPlayer",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanWebPlayer")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/web_player/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/webPlayer.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/web_player/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanResolverCache"),"🛠️ Return To Cache Settings");
+	}
+	clear();
 }else if (array_key_exists("cleanTranscodeCache",$_POST)){
 	if(verifyChoice("/settings/clean.php#cleanTranscodeCache")){
 		# remove the existing resolver cache data then run 2web to rebuild the cache folder

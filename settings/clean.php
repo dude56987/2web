@@ -228,6 +228,21 @@ include("settingsHeader.php");
 		</form>
 </div>
 
+<div id='cleanWebPlayer' class='inputCard'>
+	<h2>Clean Web Player Entries</h2>
+		<?PHP getStat("/var/cache/2web/web/webPlayer.index","Web Player Database Size",true); ?>
+		<ul>
+			<li>
+				Stored on server at '/var/cache/2web/web/web_player/'
+			</li>
+			<li>
+				Remove all entries added to the <a href='/web-player.php'>web player</a>.
+			</li>
+		</ul>
+		<form action='admin.php' class='buttonForm' method='post'>
+			<button class='button' type='submit' name='cleanWebPlayer' value='yes'>🧹 Clean Web Player Media</button>
+		</form>
+</div>
 
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
