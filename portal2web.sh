@@ -213,7 +213,10 @@ function generateLink(){
 		if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-icon.ico" | wc -c )" -gt 0 ];then
 			# convert the icon into a usable image
 			#convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -resize "200x200" -transparent -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
-			convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -resize "200x200" -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
+			convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -background transparent -resize "200x200" -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
+		fi
+		if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-web.png" | wc -c )" -gt 0 ];then
+			ALERT "The favicon downloaded correctly"
 		else
 			# create a screenshot of the webpage link if the favicon fails to download
 			screenshotWebpage "$link" "$webDirectory/portal/${domain}/${linkSum}-web.png"
@@ -263,6 +266,15 @@ function generateLink(){
 		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/new/all.index"
 		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/random/all.index"
 
+		# add the filtered lists
+		if [ "$isBookmark" == "yes" ];then
+			addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/portal/bookmarks.index"
+			addToIndex "$webDirectory/portal/${domain}.index" "$webDirectory/portal/domain_bookmarks.index"
+		else
+			addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/portal/local.index"
+			addToIndex "$webDirectory/portal/${domain}.index" "$webDirectory/portal/domain_local.index"
+		fi
+
 		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/new/portal.index"
 		addToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/random/portal.index"
 
@@ -276,7 +288,7 @@ function generateLink(){
 		{
 			echo "	<a class='showPageEpisode' href='/exit.php?to=$link'>"
 			echo "		<h2>$domain</h2>"
-			echo "		<img src='/portal/${domain}/$linkSum.png'>"
+			echo "		<img title='$name' src='/portal/${domain}/$linkSum.png'>"
 			echo "		<div class='showIndexNumbers'>$name</div>"
 			echo "		$description"
 			echo "	</a>"

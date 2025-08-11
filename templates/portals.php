@@ -38,25 +38,15 @@ include("/var/cache/2web/web/header.php");
 <?php
 drawPosterWidget("portal");
 ################################################################################
-if (file_exists("portal.index")){
-	$portalLinks=file("portal.index");
-	$domainLinks=file("domain.index");
-	# find the bookmarks
-	$bookmarkLinks=Array();
-	$bookmarkDomainLinks=Array();
-	foreach($portalLinks as $portalLink){
-		if (stripos($portalLink,"www.") !== false){
-			$bookmarkLinks=array_merge($bookmarkLinks,Array($portalLink));
-		}
-	}
-	$portalLinks=array_diff($portalLinks,$bookmarkLinks);
-	foreach($domainLinks as $domainLink){
-		if (stripos($domainLink,"www.") !== false){
-			$bookmarkDomainLinks=array_merge($bookmarkDomainLinks,Array($domainLink));
-		}
-	}
-	$domainLinks=array_diff($domainLinks,$bookmarkDomainLinks);
-
+$linksFound=false;
+#
+if (file_exists("local.index")){
+	#
+	$linksFound=true;
+	#
+	$portalLinks=file("local.index");
+	$domainLinks=file("domain_local.index");
+	#
 	echo "<div class='settingListCard'>";
 	echo "	<h1>";
 	echo "		Domains";
@@ -79,7 +69,15 @@ if (file_exists("portal.index")){
 		echo file_get_contents(str_replace("\n","",$portalLink));
 	}
 	echo "</div>";
-
+}
+#
+if (file_exists("bookmarks.index")){
+	#
+	$linksFound=true;
+	# find the bookmarks
+	$bookmarkLinks=file("bookmarks.index");
+	$bookmarkDomainLinks=file("domain_bookmarks.index");
+	#
 	echo "<div class='settingListCard'>";
 	echo "	<h1>";
 	echo "		Bookmark Domains";
@@ -101,7 +99,8 @@ if (file_exists("portal.index")){
 		echo file_get_contents(str_replace("\n","",$bookmarkLink));
 	}
 	echo "</div>";
-}else{
+}
+if ($linksFound == false){
 	echo "<div class='settingListCard'>";
 	echo "<h1>";
 	echo "	Portal";
