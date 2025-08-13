@@ -100,8 +100,12 @@ nuke(){
 }
 ################################################################################
 # set the theme of the lines in CLI output
-LINE_THEME="bowtie"
-
+LINE_THEME="kodi"
+#
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+#
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	# lock the process
 	lockProc "kodi2web"
