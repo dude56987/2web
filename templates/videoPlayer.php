@@ -667,57 +667,162 @@ document.body.addEventListener('keydown', function(event){
 				echo "</audio>\n";
 			}else if (is_in_array("application/mpegurl", $videoMimeType)){
 				# hls stream
+				echo "<div id='mediaPlayerContainer'>\n";
+				echo "</div>\n";
 				# draw the hls stream player webpage player
 				echo "<script>\n";
 				# remove existing video and replace it with a hls stream
-				echo "	document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
+				#echo "	document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
+				echo "	var activeBuffering=false;\n";
+				echo "	var videoObj = document.createElement(\"video\");\n";
+				echo "	videoObj.setAttribute(\"id\", \"video\");\n";
+				echo "	videoObj.setAttribute(\"class\", \"livePlayer\");\n";
+				echo "	videoObj.setAttribute(\"poster\", \"$posterPath\");\n";
+				echo "	videoObj.setAttribute(\"controls\", \"true\");\n";
+				echo "	window.mediaPlayerContainer.appendChild(videoObj);\n";
+				# set the global variables
+				echo "	var currentPlaybackTime;\n";
+				echo "	var videoIsPaused = false;\n";
+				echo "	var bufferSleepTime;\n";
+				# check if the hls player is supported
 				echo "	if(Hls.isSupported()) {\n";
-				echo "		var video = document.getElementById('video');\n";
 				echo "		var hls = new Hls({\n";
 				echo "			startPosition: 0,\n";
 				echo "			enableWebVTT: true,\n";
 				echo "			enableWorker: true,\n";
 				echo "			enableSoftwareAES: true,\n";
 				echo "			autoStartLoad: true,\n";
-				echo "			maxBufferLength: 20,\n";
+				#echo "			maxBufferLength: 300,\n";
+				echo "			maxBufferLength: 10,\n";
 				echo "			debug: false\n";
 				echo "		});\n";
 				echo "		hls.loadSource('$tempVideoLink');\n";
 				echo "		hls.attachMedia(video);\n";
 				echo "		hls.on(Hls.Events.MEDIA_ATTACHED, function() {\n";
-				#echo"	echo \"			video.muted = false;\";"
-				echo "			video.play();\n";
+				##echo"	echo \"			document.video.muted = false;\";"
+				#echo "			if(window.video.paused){\n";
+				#echo "				pauseVideo();\n";
+				#echo "			}else{\n";
+				#echo "				playVideo();\n";
+				#echo "			}\n";
+				echo "			playVideo();\n";
 				echo "		});\n";
-				echo "	}else if (video.canPlayType('application/vnd.apple.mpegurl')) {\n";
-				echo "		video.src = '$tempVideoLink';\n";
-				echo "		video.addEventListener('canplay',function() {\n";
-				echo "			video.play();\n";
+				echo "	}else if (window.video.canPlayType('application/vnd.apple.mpegurl')) {\n";
+				echo "		window.video.src = '$tempVideoLink';\n";
+				echo "		window.video.addEventListener('canplay',function() {\n";
+				echo "			window.video.play();\n";
 				echo "		});\n";
 				echo "	}\n";
-				# the reload video function
-				echo "	function reloadVideo(sleepTime=1){\n";
-				# delay the reload by 10 seconds
-				echo "		var currentPlaybackTime=0;\n";
-				echo "		var video = document.getElementById('video');\n";
-				echo "		video.poster=\"/spinner.gif\";\n";
-				echo "		currentPlaybackTime=video.currentTime;\n";
+				# forcefully reload the video	for when hls.recoverMediaError() does not work
+				echo "	function forceReloadVideo(){\n";
+				# only allow one reload video function to run at a single time
+				echo "		if(activeBuffering == true){\n;";
+				echo "			console.log('Could not force reload the video a active buffer was found.');\n";
+				echo "			return true;\n;";
+				echo "		}else{\n;";
+				echo "			activeBuffering=true;\n";
+				echo "			console.log('No Active buffer, forcefully reloading the video.');\n";
+				echo "		}\n;";
 				echo "		pauseVideo();\n";
-				echo "		notify(\"🗘\",".(1000 * 1).",\"spinRight\");\n";
-				# reset the playback time to zero in order to display the poster
+				echo "		window.video.controls=false;\n";
+				echo "		window.video.poster=\"/spinner.gif\";\n";
+				echo "		currentPlaybackTime=window.video.currentTime;\n";
+				echo "		hls.loadSource('$tempVideoLink');\n";
+				echo "		hls.attachMedia(window.video);\n";
+				echo "		window.video.currentTime=currentPlaybackTime;\n";
+				echo "		window.video.poster=\"$posterPath\";\n";
+				echo "		window.video.controls=true;\n";
+				echo "		playVideo();\n";
+				# reset the buffer sleep time
+				echo "		bufferSleepTime=0;\n";
+				echo "		activeBuffering=false;\n";
+				echo "	}\n";
+				# the reload video function
+				echo "	function reloadVideo(sleepTime=-1){\n";
+				# only allow one reload video function to run at a single time
+				echo "		if(activeBuffering == true){\n;";
+				echo "			console.log('Could not reload the video a active buffer was found.');\n";
+				echo "			return true;\n;";
+				echo "		}else{\n;";
+				echo "			activeBuffering=true;\n";
+				echo "			console.log('No Active buffer, reloading the video.');\n";
+				echo "		}\n;";
+				# overwrite the global value if one is given directly
+				echo "		if (sleepTime>=0){\n;";
+				echo "			bufferSleepTime=sleepTime;\n;";
+				echo "		}\n;";
+				echo "		window.video.controls=false;\n";
+				# add the loading spinner
+				echo "		var loadingObj = document.createElement(\"img\");\n";
+				echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
+				echo "		loadingObj.setAttribute(\"src\", \"/spinner.gif\");\n";
+				##echo "		var loadingObj = document.createElement(\"div\");\n";
+				##echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
+				##echo "		loadingObj.setAttribute(\"class\", \"spinRight\");\n";
+				##echo "		loadingObj.innerHTML=\"🗘\";\n";
+				##echo "		window.mediaPlayerContainer.appendChild(loadingObj);\n";
+				# insert the loading element before the video player so it acts as a overlay
+				echo "		window.mediaPlayerContainer.insertBefore(loadingObj,window.video);\n";
+				# log
+				echo "		console.log(bufferSleepTime);\n";
+				# the sleep time for the buffering of a video is a exponental curve of wait time
+				# - the user should experience none of this because the video should keep playing
+				#   until the buffer time has been activated
+				##echo "		bufferSleepTime=(bufferSleepTime * 2)\n";
+				##echo "		console.log(bufferSleepTime);\n";
+				# delay the reload by 10 seconds
 				#echo "		currentPlaybackTime=0;\n";
-				# set the poster to the loading spinner
-				# get the current playback time
+				echo "		videoIsPaused = window.video.paused;\n";
+				echo "		window.video.poster=\"/spinner.gif\";\n";
+				#
+				#echo "		currentPlaybackTime=window.video.currentTime;\n";
+				echo "		pauseVideo();\n";
+				## reload the video to reshow the poster image
+				##
+				##echo "		hls.loadSource('$tempVideoLink');\n";
+				##echo "		hls.attachMedia(video);\n";
+				##
+				#echo "		window.video.poster=\"/spinner.gif\";\n";
+				# pause the video to keep it from playing during buffer
+				#echo "		pauseVideo();\n";
+				##echo "		if(videoIsPaused){\n";
+				##echo "			pauseVideo();\n";
+				##echo "		}else{\n";
+				##echo "			playVideo();\n";
+				##echo "		}\n";
+				##echo "		notify(\"🗘\",".(1000 * 1).",\"spinRight\");\n";
+				## reset the playback time to zero in order to display the poster
+				##echo "		currentPlaybackTime=0;\n";
+				## set the poster to the loading spinner
+				## get the current playback time
 				echo "		setTimeout(function() {\n";
-				echo "			hls.loadSource('$tempVideoLink');\n";
-				echo "			hls.attachMedia(video);\n";
-				# seek back to the same playback time and resume the video
-				echo "			video.currentTime=currentPlaybackTime;\n";
-				# remove the spinner
+				##echo "			if( video.currentTime > ( currentPlaybackTime + sleepTime ) ){\n";
+				##echo "				document.video.currentTime == ( currentPlaybackTime + sleepTime );\n";
+				##echo "			}\n";
+				#echo "			hls.loadSource('$tempVideoLink');\n";
+				#echo "			hls.attachMedia(window.video);\n";
+				#echo "			hls.recoverMediaError();\n";
+				echo "			hls.startLoad();\n";
 				# set the poster back to the poster
-				echo "			video.poster=\"$posterPath\";\n";
-				echo "			playVideo();\n";
+				echo "			window.video.poster=\"$posterPath\";\n";
+				# seek back to the same playback time and resume the video
+				#echo "			window.video.currentTime=currentPlaybackTime;\n";
+				# remove the spinner
+				echo "			if(videoIsPaused){\n";
+				echo "				pauseVideo();\n";
+				echo "			}else{\n";
+				echo "				playVideo();\n";
+				echo "			}\n";
+				# remove all loading spinners generated by buffer events
+				#echo "			while(window.loadingSpinner == null){;\n";
+				echo "				window.loadingSpinner.remove();\n";
+				#echo "			}\n";
+				echo "			window.video.controls=true;\n";
+				echo "			activeBuffering=false;\n";
 				#echo "		document.getElementById(\"notification\").remove();\n";
-				echo "		},(1000*1));\n";
+				#echo "		},(1000*bufferSleepTime));\n";
+				echo "		},(1000*bufferSleepTime));\n";
+				echo "		console.log(bufferSleepTime);\n";
 				echo "	}\n";
 				# get the current time
 				#echo "	function getCurrentTime(){\n";
@@ -729,7 +834,8 @@ document.body.addEventListener('keydown', function(event){
 				#echo "	var resetTime = getCurrentTime();\n";
 				# create the global failure count
 				echo "	var failed_video_playback_count=0;\n";
-				echo "	var sleepTime=1;\n";
+				# use sleep time to increse the buffering time given on a error
+				echo "	bufferSleepTime=1;\n";
 				# add error catching code and reload the page if the HLS stream stops working
 				echo "	hls.on(Hls.Events.ERROR, function (event, data){\n";
 				# prevent the video from reloading more than once every 30 seconds
@@ -737,11 +843,47 @@ document.body.addEventListener('keydown', function(event){
 				#echo "			resetTime=new Date();\n";
 				#echo "			resetTime=resetTime.getSeconds();\n";
 				# reload the video
-				echo "		reloadVideo(sleepTime);\n";
+				##echo "		if(activeBuffering == false){\n;";
+				##echo "			console.log('No Active buffer, reloading the video.');\n";
+				##echo "			activeBuffering=true;\n;";
+				#echo "			console.log(event)\n";
+				#echo "			console.log(data)\n";
+				#echo "			reloadVideo();\n";
+				# look for buffer errors that are recoverable from
+				##echo "			if(event.error.details==\"bufferStalledError\"){\n";
+				##echo "					console.log(event)\n";
+				##echo "					reloadVideo(1);\n";
+				##echo "			}else if(event.error.details==\"bufferAppendError\"){\n";
+				##echo "					console.log(event)\n";
+				##echo "					reloadVideo(1);\n";
+				##echo "			}else{\n";
+				## only reload on fatal unknown errors
+				###echo "				if(data.fatal){\n";
+				##echo "					reloadVideo(3);\n";
+				##echo "					bufferSleepTime+=1;\n";
+				###echo "				}\n";
+				##echo "			}\n";
+				##echo "		}\n";
+				##echo "		}\n";
 				# reload the page if the playback fails 100 times
-				#echo "		}\n";
-				echo "		sleepTime+=1;\n";
-				#
+				# limit buffer sleeping time to 15 seconds
+				##echo "		console.log(event.error.name);\n";
+				##echo "		if(event.error.name == \"QuotaExceededError\"){\n";
+				##echo "			console.log(\"Browser does not want to load a larger buffer.\");\n";
+				##echo "		}else{\n";#
+				##echo "			if(bufferSleepTime < 5){\n";
+				##echo "				bufferSleepTime+=1;\n";
+				##echo "				console.log(event);\n";
+				##echo "				console.log(data);\n";
+				##echo "				forceReloadVideo();\n";
+				###echo "				reloadVideo();\n";
+				##echo "			}else{\n";#
+				### force reload of the video completely
+				##echo "				forceReloadVideo();\n";
+				##echo "			}\n";
+				##echo "		}\n";
+				#echo "		forceReloadVideo();\n";
+				echo "		reloadVideo(0);\n";
 				echo "		failed_video_playback_count+=1;\n";
 				echo "		console.log('failed_video_playback_count:'+failed_video_playback_count);\n";
 				#echo "		}\n";
