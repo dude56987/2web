@@ -45,13 +45,44 @@ include("settingsHeader.php");
 		<li><a href='#wikiPaths'>Wiki Paths</a></li>
 	</ul>
 </div>
+
+<div id='moduleStatus' class='inputCard'>
+	<h2>Module Actions</h2>
+	<table class='controlTable'>
+		<tr>
+			<td>
+				Build or Refresh all generated web components.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='wiki2web_update' value='yes'>🗘 Force Update</button>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Remove the generated module content. To disable the module go to the
+				<a href='/settings/modules.php#wiki2web'>modules</a>
+				page.
+			</td>
+			<td>
+				<form action='admin.php' class='buttonForm' method='post'>
+					<button class='button' type='submit' name='wiki2web_nuke' value='yes'>☢️ Nuke</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <?php
-echo "<div id='wikiServerPaths' class='settingListCard'>\n";
+echo "<details id='wikiServerPaths' class='settingListCard'>\n";
+echo "<summary>";
 echo "<h2>wiki Server scanSources Paths</h2>\n";
+echo "</summary>";
 echo "<pre>\n";
 echo file_get_contents("/etc/2web/wiki/libraries.cfg");
 echo "</pre>\n";
-echo "</div>";
+echo "</details>";
 
 echo "<div id='wikiPaths' class='settingListCard'>";
 echo "<h2>Wiki Paths</h2>\n";
