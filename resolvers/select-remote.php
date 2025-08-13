@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 # force debugging
-#$_GET['debug']='true';
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
@@ -36,7 +35,6 @@ if (! array_key_exists("select",$_GET)){
 	if (array_key_exists("selectedRemote",$_GET)){
 		# load the selected remote
 		$selectedRemote=$_GET["selectedRemote"];
-		addToLog("DEBUG","select-remote.php","setting the remote to $selectedRemote");
 		# store the value in the session
 		$_SESSION["selectedRemote"]=$selectedRemote;
 		# set the remote title
@@ -46,19 +44,18 @@ if (! array_key_exists("select",$_GET)){
 			if(! file_exists("/etc/2web/user_data/".$_SESSION["user"]."/")){
 				mkdir("/etc/2web/user_data/".$_SESSION["user"]."/");
 			}
-			addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' set remote to '$selectedRemote'");
+			addToLog("ADMIN","select-remote.php","user '".$_SESSION["user"]."' set remote to '$selectedRemote'");
 			file_put_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg",$_SESSION["selectedRemote"]);
 			file_put_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg",$_SESSION["remoteTitle"]);
 		}else{
-			addToLog("DEBUG","select-remote.php","user at '".$_SERVER["REMOTE_ADDR"]."' set remote to '$selectedRemote'");
+			addToLog("ADMIN","select-remote.php","user at '".$_SERVER["REMOTE_ADDR"]."' set remote to '$selectedRemote'");
 		}
 	}else{
 		# if the user is logged in
 		if (array_key_exists("user",$_SESSION)){
-			addToLog("DEBUG","select-remote.php","user has logged in");
 			# load the user selected remote
 			if(file_exists("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg")){
-				addToLog("DEBUG","select-remote.php","Creating remote config");
+				addToLog("ADMIN","select-remote.php","Creating remote config");
 				# load the user selected remote config
 				$tempRemoteData=file_get_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemote.cfg");
 				$tempRemoteData=str_replace("\n","",$tempRemoteData);
@@ -66,7 +63,6 @@ if (! array_key_exists("select",$_GET)){
 				$_SESSION["selectedRemote"]=$tempRemoteData;
 				$selectedRemote=$tempRemoteData;
 			}else{
-				addToLog("DEBUG","select-remote.php","redirecting to remote selection 1");
 				# The user has logged in but not selected remote
 				# redirect to the selection menu
 				if (array_key_exists("play",$_GET)){
@@ -76,14 +72,13 @@ if (! array_key_exists("select",$_GET)){
 				}
 			}
 			if(file_exists("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg")){
-				addToLog("DEBUG","select-remote.php","Creating remote title config");
+				addToLog("ADMIN","select-remote.php","Creating remote title config");
 				# load the user selected remote config
 				$tempRemoteData=file_get_contents("/etc/2web/user_data/".$_SESSION["user"]."/selectedRemoteTitle.cfg");
 				$tempRemoteData=str_replace("\n","",$tempRemoteData);
 				#
 				$_SESSION["remoteTitle"]=$tempRemoteData;
 			}else{
-				addToLog("DEBUG","select-remote.php","redirecting to remote selection 2");
 				# redirect to the selection menu
 				if (array_key_exists("play",$_GET)){
 					redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
@@ -92,23 +87,7 @@ if (! array_key_exists("select",$_GET)){
 				}
 			}
 		}else{
-			addToLog("DEBUG","select-remote.php","redirecting to remote selection 3");
-			## redirect to the selection menu
-			#if (array_key_exists("play",$_GET)){
-			#	redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
-			#}else{
-			#	redirect("/remote.php?select");
-			#}
-
-			# the user was not logged in and a remote has not been selected
-			# redirect to the remote selection menu
-			## The session is not a logged in user but a anon
-			## redirect to the selection menu
-			#if (array_key_exists("play",$_GET)){
-			#	redirect("/remote.php".$mimeData."select&play=".$_GET["play"]);
-			#}else{
-			#	redirect("/remote.php?select");
-			#}
+			addToLog("ERROR","select-remote.php","Must Be logged in to load remote configuration");
 		}
 	}
 	if (array_key_exists("selectedRemote",$_SESSION)){
@@ -116,11 +95,9 @@ if (! array_key_exists("select",$_GET)){
 		if( $_SESSION["selectedRemote"] == "CLIENT" ){
 			# if the remote is the server client
 			if (array_key_exists("play",$_GET)){
-				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' to forward plaback url '".$_GET["play"]."'");
 				# redirect to playback url if given
 				redirect("/client/".$mimeData."play=".($_GET["play"]));
 			}else{
-				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' interface'");
 				redirect("/client/?remote");
 			}
 		}else{
@@ -130,11 +107,9 @@ if (! array_key_exists("select",$_GET)){
 				if (substr($_GET["play"],0,7) == "https://"){
 					$_GET["play"] = "http://".substr($_GET["play"],7);
 				}
-				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' to forward plaback url '".urldecode($_GET["play"]."'"));
 				# redirect to playback url if given
 				redirect("/kodi-player.php?url=".urldecode($_GET["play"]));
 			}else{
-				addToLog("DEBUG","select-remote.php","user '".$_SESSION["user"]."' is opening remote '".$_SESSION["selectedRemote"]."' interface'");
 				redirect("/kodi-player.php");
 			}
 		}
