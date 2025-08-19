@@ -13,9 +13,9 @@ mkdir -p "/var/log/apache2/" || echo "Existing Apache Logs found..."
 # enable the 2web queue system
 /usr/bin/queue2web --enable
 # launch 2web to build basic webserver, and themes
-/usr/bin/2web --no-reboot
+/usr/bin/2web --no-reboot --force
 # launch again to enable it, this is a bug
-/usr/bin/2web --no-reboot
+/usr/bin/2web --no-reboot --force
 # install the pip package dependencies for all modules, even disabled modules
 # - try to only run the forced pip install once, this is mostly for testing purposes
 if ! test -f /tmp/2web_pip_install_flag;then
