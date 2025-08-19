@@ -1,7 +1,7 @@
 <?PHP
 ########################################################################
 # 2web random poster
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 ########################################################################
 ?>
 <?php
-	ini_set('display_errors', 1);
+	#ini_set('display_errors', 1);
+	# add the library for logging functions
+	include("/usr/share/2web/2webLib.php");
 	# check the section filter
 	if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "")){
 		$filterType=$_GET['filter']."_poster";
@@ -31,30 +33,46 @@
 	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/backgrounds.db");
 	# set the timeout to 1 minute since most webbrowsers timeout loading before this
 	$databaseObj->busyTimeout(60000);
-
-	# run query to get the random entry
-	$result = $databaseObj->query('select * from "'.$filterType.'" order by random() limit 1;');
-
-	# fetch the row data
-	$fileContent=($result->fetchArray())['title'];
-
-	# close the database to process the data
-	$databaseObj->close();
-	unset($databaseObj);
-
-	if (is_readable($_SERVER['DOCUMENT_ROOT'].$fileContent)){
-		// redirect to location of random background
-		header('Content-type: image/png');
-		header('Cache-Control: max-age=90');
-		header('Location: '.$fileContent);
-	}else{
-		# log the failed loading of the background
-		include("/usr/share/2web/2webLib.php");
+	#
+	$lookingForBackground=true;
+	$backgroundPath="";
+	# look for a background until one is found
+	$timesSearched=0;
+	while($lookingForBackground){
+		if($timesSearched>50){
+			# close the database to process the data
+			$databaseObj->close();
+			unset($databaseObj);
+			# redirect to the failsafe image
+			header('Content-type: image/png');
+			header('Cache-Control: max-age=90');
+			header('Location: /plasmaPoster.png');
+			#
+			$lookingForBackground=false;
+		}
+		# run query to get the random entry
+		$result = $databaseObj->query('select * from "'.$filterType.'" order by random() limit 1;');
+		# fetch the row data
+		$fileContent=($result->fetchArray())['title'];
+		#
 		$backgroundPath=$_SERVER['DOCUMENT_ROOT'].$fileContent;
-		addToLog("ERROR","Invalid Background","Failed to load random background at path '".$backgroundPath."'");
-		# redirect to the failsafe image
-		header('Content-type: image/png');
-		header('Cache-Control: max-age=90');
-		header('Location: /plasmaPoster.png');
+		#
+		if(is_readable($backgroundPath)){
+			# close the database to process the data
+			$databaseObj->close();
+			unset($databaseObj);
+			#
+			$lookingForBackground=false;
+		}else{
+			#
+			addToLog("ERROR","Invalid Background","Failed to load random background at path '".$backgroundPath."'. Invalid path will be removed from backgrounds.db");
+			# run query to remove the broken link
+			$databaseObj->query('delete from "'.$filterType.'" where title='.$backgroundPath."';");
+		}
+		$timesSearched+=1;
 	}
+	# redirect to location of random background
+	header('Content-type: image/png');
+	header('Cache-Control: max-age=90');
+	header('Location: '.$fileContent);
 ?>
