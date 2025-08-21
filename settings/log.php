@@ -160,7 +160,7 @@ requireAdmin();
 		# run query to get the 100 most recent log entries
 		$result = $databaseObj->query('select * from "log" order by logIdentifier DESC limit 500;');
 	}
-
+	$logDataNumber=0;
 	# fetch each row data individually and display results
 	while($row = $result->fetchArray()){
 		$data  = "<tr class='logEntry ".$row['type']."'>\n";
@@ -170,10 +170,14 @@ requireAdmin();
 		$data .= "<td>\n";
 		$data .= $row['type'];
 		$data .= "</td>\n";
-		$data .= "<td class='logDetails'>\n";
+		$data .= "<td class=''>\n";
 		$data .= $row['description'];
 		$data .= "</td>\n";
-		$data .= "<td class='logDetails'>\n";
+		if(strlen($row['details']) > 100){
+			$data .= "<td id='log_details_$logDataNumber' onclick='toggleFullscreen(\"log_details_$logDataNumber\",true)' class='logDetails'>\n";
+		}else{
+			$data .= "<td id='log_details_$logDataNumber' onclick='toggleFullscreen(\"log_details_$logDataNumber\",true)' class=''>\n";
+		}
 		$data .= $row['details'];
 		$data .= "</td>\n";
 		$data .= "<td>\n";
@@ -183,6 +187,7 @@ requireAdmin();
 		$data .= $row['time'];
 		$data .= "</td>\n";
 		$data .= "</tr>\n";
+		$logDataNumber+=1;
 		# if a search has been set search loaded data for the search string
 		if (array_key_exists("search",$_GET)){
 			# remove tags and search for search terms in data row
