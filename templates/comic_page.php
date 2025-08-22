@@ -456,5 +456,10 @@
 			visibility: hidden;
 		}
 	</style>
+	<script>
+		addEventListener("pageshow", (event) => {
+			hideSpinner();
+		})
+	</script>
 </body>
 </html>
