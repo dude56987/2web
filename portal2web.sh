@@ -179,7 +179,7 @@ function generateLink(){
 		domain=$(echo "$domain" | cut -d':' -f1 )
 	fi
 	# create the domain directory
-	createDir "$webDirectory/kodi/portal/${domain}/"
+	createDir "$kodiDirectory/portal/${domain}/"
 	createDir "$webDirectory/portal/${domain}/"
 
 	#if echo "$domain" | grep -q ".local";then
@@ -244,19 +244,19 @@ function generateLink(){
 			echo "Type=Link"
 			echo "URL=$link"
 			echo "Icon=text-html"
-		} > "$webDirectory/kodi/portal/${domain}/${name}.desktop"
-		chmod +x "$webDirectory/kodi/portal/${domain}/${name}.desktop"
+		} > "$kodiDirectory/portal/${domain}/${name}.desktop"
+		chmod +x "$kodiDirectory/portal/${domain}/${name}.desktop"
 		# build the windows url file link
 		{
 			echo "[InternetShortcut]"
 			echo "URL=$link"
-		} > "$webDirectory/kodi/portal/${domain}/${name}.url"
+		} > "$kodiDirectory/portal/${domain}/${name}.url"
 
 		# add the raw link to the raw link index
 		touch "/var/cache/2web/web/portal/raw.index"
 		addToIndex "${link}" "/var/cache/2web/web/portal/raw.index"
 
-		chmod +x "$webDirectory/kodi/portal/${domain}/${name}.url"
+		chmod +x "$kodiDirectory/portal/${domain}/${name}.url"
 		# link the portal info button to the portal page
 		linkFile "/usr/share/2web/templates/portal.php" "$webDirectory/portal/$domain/index.php"
 
@@ -288,7 +288,8 @@ function generateLink(){
 		{
 			echo "	<a class='showPageEpisode' href='/exit.php?to=$link'>"
 			echo "		<h2>$domain</h2>"
-			echo "		<img title='$name' src='/portal/${domain}/$linkSum.png'>"
+			# title newline code is &#13;
+			echo "		<img title='${domain}&#13;&#13;${name}&#13;${description}' src='/portal/${domain}/$linkSum.png'>"
 			echo "		<div class='showIndexNumbers'>$name</div>"
 			echo "		$description"
 			echo "	</a>"
@@ -383,13 +384,14 @@ function update(){
 
 	################################################################################
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	generatedDirectory="$(generatedRoot)"
 	################################################################################
 	#downloadDirectory="$(downloadDir)"
 	################################################################################
 	# make portals directory
 	createDir "$webDirectory/portal/"
-	createDir "$webDirectory/kodi/portal/"
+	createDir "$kodiDirectory/portal/"
 	# setup the main index page
 	linkFile "/usr/share/2web/templates/portals.php" "$webDirectory/portal/index.php"
 	# copy over config page
@@ -544,7 +546,7 @@ function update(){
 			done
 			IFS=$IFSBACKUP
 			echo "	</DL><P>"
-		} > "$webDirectory/kodi/portal/bookmarks.html"
+		} > "$kodiDirectory/portal/bookmarks.html"
 		setFileDataSum "/var/cache/2web/web/portal/raw.index"
 	fi
 
@@ -552,7 +554,6 @@ function update(){
 }
 ################################################################################
 function resetCache(){
-	webDirectory=$(webRoot)
 	yellowBackground
 	blackText
 		drawLine
@@ -566,15 +567,14 @@ function nuke(){
 	kodiDirectory=$(kodiRoot)
 	# remove the kodi and web portal files
 	delete "$webDirectory/portal/"
-	delete "$webDirectory/kodi/portal/"
+	delete "$kodiDirectory/portal/"
 	rm -v $webDirectory/sums/portal2web_*.cfg
 	# remove random generated widget
 	delete "$webDirectory/web_cache/widget_random_portal.index"
 	# remove updated generated widget
 	delete "$webDirectory/web_cache/widget_updated_portal.index"
-	# new indexes
+	# new and random indexes
 	delete "$webDirectory/new/portal.index"
-	# random indexes
 	delete "$webDirectory/random/portal.index"
 }
 ################################################################################
@@ -584,6 +584,7 @@ LINE_THEME="computers"
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-u" ] || [ "$1" == "--update" ] || [ "$1" == "update" ] ;then
 	checkModStatus "portal2web"
