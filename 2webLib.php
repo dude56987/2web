@@ -2544,4 +2544,18 @@ if( ! function_exists("cacheCheckMin")){
 	}
 }
 ################################################################################
+if( ! function_exists("isTranscodeEnabled")){
+	function isTranscodeEnabled(){
+		$doTranscode = False;
+		# check if the transcode is enabled
+		if (file_exists("/etc/2web/transcodeForWebpages.cfg")){
+			$selected=file_get_contents("/etc/2web/transcodeForWebpages.cfg");
+			if ($selected == "yes"){
+				$doTranscode = True;
+			}
+		}
+		return $doTranscode;
+	}
+}
+#################################################################################
 ?>
