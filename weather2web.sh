@@ -1,7 +1,7 @@
 #! /bin/bash
 ########################################################################
 # weather2web generates weather website content in 2web server
-# Copyright (C) 2022  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,9 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
 source "/var/lib/2web/common"
-################################################################################
-# enable debug log
-#set -x
 ################################################################################
 function update(){
 	# only update the cache once every x minutes
@@ -61,10 +58,9 @@ function update(){
 	weatherLocations=$(echo -e "$weatherLocations\n$(grep -v --no-filename "^#" /etc/2web/weather/location.d/*.cfg)")
 	################################################################################
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	################################################################################
-	# make the download directory if is does not exist
-	createDir "$downloadDirectory"
-	# make comics directory
+	# make web directory
 	createDir "$webDirectory/weather/"
 	createDir "$webDirectory/weather/data/"
 	createDir "$webDirectory/weather/data/current/"
@@ -87,7 +83,6 @@ function update(){
 			# fetch the weather info
 			# look for the weather command
 			# check for weather config
-			#if ! test -f "$webDirectory/weather/data/location_$locationSum.cfg";then
 			# update the weather
 			weatherData="$(/usr/bin/weather -f "$weatherLocation" )"
 
@@ -176,11 +171,6 @@ function update(){
 					# check for emergency signals
 					{
 						echo "<div class='weatherForcast"
-						#if echo "$tempForcast" | grep -q "Lows";then
-						#	echo " COLD'>"
-						#elif echo "$tempForcast" | grep -q "Highs";then
-						#	echo " HOT'>"
-						#fi
 						tempTemp="?"
 						goodWeather="false"
 						echo "' style='background: linear-gradient(to bottom, "
@@ -415,10 +405,6 @@ function update(){
 				fi
 			done
 			{
-				#echo "<div class='titleCard'>";
-				# write the current weather forecast data
-				#cat "$webDirectory/weather/data/current/$locationSum.index"
-				#echo "</div>";
 				# write the bottom bar of the weather location data
 				echo -n "</div>"
 				echo -n "<h3>"
@@ -471,55 +457,34 @@ function getWeatherIcon(){
 	# check for icon  based on the weather data
 	if echo "$todaysWeather" | grep -q --ignore-case "snow";then
 		iconCode="🌨️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Snow</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "thunderstorm";then
 		iconCode="<blink>⛈️</blink>"
-		#iconCode="<div class='weatherIcon blink'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Thunderstorm</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "strong wind";then
 		iconCode="🌬️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Strong Wind</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "tornado";then
 		iconCode="🌪️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Tornado</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "fog";then
 		iconCode="🌫️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Fog</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "lightning";then
 		iconCode="🌩️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Lightning</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "showers";then
 		iconCode="🌦️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Light Rain</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "rain";then
 		iconCode="🌧️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Rain</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "sunny";then
 		iconCode="☀️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Sunny</div>"
 	elif echo "$todaysWeather" | grep -q --ignore-case "cloudy";then
 		iconCode="☁️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>cloudy</div>"
 	else
 		# sunny weather code
 		iconCode="☀️"
-		#iconCode="<div class='weatherIcon'>$iconCode</div>"
-		#iconCode="$iconCode<div class='forcastSub'>Sunny!</div>"
 	fi
 	echo "$iconCode"
 }
 ################################################################################
 webUpdate(){
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 
 	# create the kodi directory
 	createDir "$webDirectory/kodi/weather/"
@@ -533,28 +498,32 @@ webUpdate(){
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/weather/randomPoster.php"
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/weather/randomFanart.php"
-
 }
 ################################################################################
 function resetCache(){
 	webDirectory=$(webRoot)
-	downloadDirectory="$(downloadDir)"
+	kodiDirectory="$(kodiRoot)"
 	# remove web cache
-	rm -rv "$webDirectory/weather/" || INFO "No comic web directory at '$webDirectory/weather/'"
+	delete "$webDirectory/weather/"
 }
 ################################################################################
 function nuke(){
-	rm -rv $(webRoot)/weather/*
-	rm -rv $(webRoot)/weather/data/forcast/*.index
-	rm -rv $(webRoot)/weather/data/current/*.cfg
-	rm -rv $(webRoot)/weather.index
+	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
+	#
+	delete "$kodiDirectory/weather/"
+	#
+	delete "$webDirectory/weather.index"
+	delete "$webDirectory/weather/"
 }
 ################################################################################
 # set the theme of the lines in CLI output
 LINE_THEME="weather"
 #
-PARALLEL_OPTION="$(loadOption "parallel" "$@")"
-MUTE_OPTION="$(loadOption "mute" "$@")"
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 	checkModStatus "weather2web"
@@ -600,10 +569,9 @@ else
 	main --help
 	showServerLinks
 	# show the server link at the bottom of the interface
-	echo "Module Links"
+	drawSmallHeader "Module Links"
 	drawLine
 	echo "http://$(hostname).local:80/weather/"
-	drawLine
 	echo "http://$(hostname).local:80/settings/weather.php"
 	drawLine
 fi
