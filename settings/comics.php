@@ -99,7 +99,14 @@ echo "<pre>\n";
 echo file_get_contents("/etc/2web/comics/libaries.cfg");
 echo "</pre>\n";
 echo "</details>";
-
+#
+echo "<details id='serverDisabledLibraryPaths' class='titleCard'>\n";
+echo "<summary><h2>Server Disabled Comic Library Paths</h2></summary>\n";
+echo "<pre>\n";
+echo file_get_contents("/etc/2web/comics/disabledLibaries.cfg");
+echo "</pre>\n";
+echo "</details>";
+#
 echo "<div id='comicLibraryPaths' class='settingListCard'>";
 echo "<h2>Comic Library Paths</h2>\n";
 $sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/comics/libaries.d/*.cfg"));
@@ -116,6 +123,15 @@ foreach($sourceFiles as $sourceFile){
 				$link=file_get_contents($sourceFile);
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
+				if (file_exists("/etc/2web/comics/disabledLibaries.d/".md5($link).".cfg")){
+					echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+					echo "	<button class='button' type='submit' name='enableComicLibrary' value='".$link."'>◯ Enable Updates</button>\n";
+					echo "	</form>\n";
+				}else{
+					echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+					echo "	<button class='button' type='submit' name='disableComicLibrary' value='".$link."'>🟢 Disable Updates</button>\n";
+					echo "	</form>\n";
+				}
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='removeComicLibrary' value='".$link."'>❌ Remove Library</button>\n";
 				echo "	</form>\n";

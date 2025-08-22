@@ -109,6 +109,7 @@ function update(){
 
 	################################################################################
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	################################################################################
 	downloadDirectory="$(downloadDir)"
 	generatedDirectory="$(generatedRoot)"
@@ -204,177 +205,240 @@ function update(){
 	################################################################################
 	# check for txt files and convert them into comics
 	comicLibaries="$(libaryPaths)"
+	# load the disabled list
+	disabledLibaries=$(loadConfigs "/etc/2web/comics/disabledLibaries.cfg" "/etc/2web/comics/disabledLibaries.d/" "/etc/2web/config_default/comic2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )
 	ALERT "$comicLibaries" "Comic Libraries"
+	ALERT "$disabledLibaries" "Disabled Comic Libraries"
 	# first convert epub files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each cbz file found in the cbz libary locations
-		find "$comicLibaryPath" -type f -name '*.txt' | sort | while read txtFilePath;do
-			txtComicName=$(popPath "$txtFilePath" | sed "s/.txt//g")
-			# only extract the cbz once
-			if ! test -d "${generatedDirectory}/comics/txt2comic/$txtComicName/$txtComicName.pdf";then
-				mkdir -p "${generatedDirectory}/comics/txt2comic/$txtComicName/"
-				# extract the cbz file to the download directory
-				INFO "Found txt '$txtComicName', converting to comic book..."
-				addToLog "UPDATE" "Generating Comic" "Converting text documents to PDF format from '$txtFilePath'"
-				# convert epub files into pdf files to be converted below
-				cat "$txtFilePath" | txt2html --style_url "http://localhost/style.css" > "${generatedDirectory}/comics/txt2comic/$txtComicName/$txtComicName.html"
-				chown -R www-data:www-data "${generatedDirectory}/comics/txt2comic/$txtComicName/"
-			fi
-		done
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.txt' | sort | while read txtFilePath;do
+				txtComicName=$(popPath "$txtFilePath" | sed "s/.txt//g")
+				# only extract the cbz once
+				if ! test -f "${generatedDirectory}/comics/txt2comic/$txtComicName.html";then
+					mkdir -p "${generatedDirectory}/comics/txt2comic/"
+					# extract the cbz file to the download directory
+					INFO "Found txt '$txtComicName', converting to comic book..."
+					addToLog "UPDATE" "Generating Comic" "Converting text documents to PDF format from '$txtFilePath'"
+					# convert epub files into pdf files to be converted below
+					txt2tags -i "$txtFilePath" -t html -o "${generatedDirectory}/comics/txt2comic/$txtComicName.html"
+					chown -R www-data:www-data "${generatedDirectory}/comics/txt2comic/$txtComicName.html"
+				fi
+			done
+		fi
 	done
 	# first convert .ps postscript files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each .ps file found in the .ps libary locations
-		find "$comicLibaryPath" -type f -name '*.ps' | sort | while read psFilePath;do
-			psComicName=$(popPath "$psFilePath" | sed "s/.ps//g")
-			# only extract the .ps once
-			if ! test -d "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf";then
-				mkdir -p "${generatedDirectory}/comics/ps2comic/$psComicName/"
-				# extract the .ps file to the download directory
-				INFO "Found ps '$psComicName', converting to comic book..."
-				addToLog "UPDATE" "Generating Comic" "Converting postscript documents to PDF format from '$psComicName'"
-				# convert postscript files into pdf files
-				ps2pdf "$psFilePath" "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf"
-				chown -R www-data:www-data "${generatedDirectory}/comics/ps2comic/$psComicName/"
-			fi
-		done
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each .ps file found in the .ps libary locations
+			find "$comicLibaryPath" -type f -name '*.ps' | sort | while read psFilePath;do
+				psComicName=$(popPath "$psFilePath" | sed "s/.ps//g")
+				# only extract the .ps once
+				if ! test -d "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf";then
+					mkdir -p "${generatedDirectory}/comics/ps2comic/$psComicName/"
+					# extract the .ps file to the download directory
+					INFO "Found ps '$psComicName', converting to comic book..."
+					addToLog "UPDATE" "Generating Comic" "Converting postscript documents to PDF format from '$psComicName'"
+					# convert postscript files into pdf files
+					ps2pdf "$psFilePath" "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf"
+					chown -R www-data:www-data "${generatedDirectory}/comics/ps2comic/$psComicName/"
+				fi
+			done
+		fi
 	done
 	# convert markdown files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each cbz file found in the cbz libary locations
-		find "$comicLibaryPath" -type f -name '*.md' | sort | while read markdownFilePath;do
-			markdownComicName=$(popPath "$markdownFilePath" | sed "s/.md//g")
-			# only extract the cbz once
-			if ! test -d "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.pdf";then
-				addToLog "UPDATE" "Generating Comic" "Converting markdown documents to PDF format from '$markdownComicName'"
-				mkdir -p "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
-				# extract the cbz file to the download directory
-				INFO "Found markdown '$markdownComicName', converting to comic book..."
-				# convert markdown into html
-				{
-					echo "<html>"
-					echo "<head>"
-					# use the currently active theme for the website
-					echo "	<link rel='stylesheet' type='text/css' href='http://localhost/style.css'>"
-					echo "	<script src='/2webLib.js'></script>"
-					echo "	<link rel='icon' type='image/png' href='/favicon.png'>"
-					echo "</head>"
-					echo "<body>"
-					cat "$markdownFilePath" | markdown
-					echo "</body>"
-					echo "</html>"
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.md' | sort | while read markdownFilePath;do
+				markdownComicName=$(popPath "$markdownFilePath" | sed "s/.md//g")
+				# only extract the cbz once
+				if ! test -d "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.pdf";then
+					addToLog "UPDATE" "Generating Comic" "Converting markdown documents to PDF format from '$markdownComicName'"
+					mkdir -p "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
+					# extract the cbz file to the download directory
+					INFO "Found markdown '$markdownComicName', converting to comic book..."
+					# convert markdown into html
+					{
+						echo "<html>"
+						echo "<head>"
+						# use the currently active theme for the website
+						echo "	<link rel='stylesheet' type='text/css' href='http://localhost/style.css'>"
+						echo "	<script src='/2webLib.js'></script>"
+						echo "	<link rel='icon' type='image/png' href='/favicon.png'>"
+						echo "</head>"
+						echo "<body>"
+						cat "$markdownFilePath" | markdown
+						echo "</body>"
+						echo "</html>"
 
-				} > "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.html"
-				chown -R www-data:www-data "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
-			fi
-		done
+					} > "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.html"
+					chown -R www-data:www-data "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
+				fi
+			done
+		fi
 	done
-
 	# convert html files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each cbz file found in the cbz libary locations
-		find "$comicLibaryPath" -type f -name '*.html' | sort | while read htmlFilePath;do
-			htmlComicName=$(popPath "$htmlFilePath" | sed "s/.html//g")
-			# only extract the cbz once
-			if ! test -d "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf";then
-				addToLog "UPDATE" "Generating Comic" "Converting HTML documents to PDF format from '$htmlComicName'"
-				mkdir -p "${generatedDirectory}/comics/html2comic/$htmlComicName/"
-				# extract the cbz file to the download directory
-				INFO "Found html'$htmlComicName', converting to comic book..."
-				# convert epub files into pdf files to be converted below
-				cat "$htmlFilePath" | wkhtmltopdf - "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf"
-				chown -R www-data:www-data "${generatedDirectory}/comics/html2comic/$htmlComicName/"
-			fi
-		done
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.html' | sort | while read htmlFilePath;do
+				htmlComicName=$(popPath "$htmlFilePath" | sed "s/.html//g")
+				# only extract the cbz once
+				if ! test -f "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf";then
+					addToLog "UPDATE" "Generating Comic" "Converting HTML documents to PDF format from '$htmlComicName'"
+					mkdir -p "${generatedDirectory}/comics/html2comic/$htmlComicName/"
+					# extract the cbz file to the download directory
+					INFO "Found html'$htmlComicName', converting to comic book..."
+					# convert html files into pdf files to be converted below
+					# - Use the selected 2web theme for themeing the PDF
+					weasyprint --full-fonts --hinting -s "/var/cache/2web/web/style.css" "$htmlFilePath" "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf"
+					chown -R www-data:www-data "${generatedDirectory}/comics/html2comic/$htmlComicName/"
+				fi
+			done
+		fi
 	done
-
-	if test -f /usr/bin/ebook-convert;then
-		# first convert epub files to pdf files
-		echo "$comicLibaries" | sort | while read comicLibaryPath;do
+	# convert mobi files to epub
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.mobi' | sort | while read mobiFilePath;do
+				mobiComicName=$(popPath "$mobiFilePath" | sed "s/.mobi//g")
+				# only extract the cbz once
+				if ! test -f "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf";then
+					createDir "${generatedDirectory}/comics/mobi2comic/"
+					addToLog "UPDATE" "Generating Comic" "Converting MOBI documents to PDF format from '$mobiComicName'"
+					mkdir -p "${generatedDirectory}/comics/mobi2comic/"
+					# extract the cbz file to the download directory
+					INFO "Found mobi '$mobiComicName', converting to comic book..."
+					# convert MOBI files into pdf files to be converted below
+					#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
+					ebook-convert "$mobiFilePath" "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
+					#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
+					chown -R www-data:www-data "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
+				fi
+			done
+		fi
+	done
+	# first convert epub files to pdf files
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
 			# for each cbz file found in the cbz libary locations
 			find "$comicLibaryPath" -type f -name '*.epub' | sort | while read epubFilePath;do
 				epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
 				# only extract the cbz once
-				if ! test -d "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf";then
+				if ! test -f "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf";then
+					createDir "${generatedDirectory}/comics/epub2comic/"
 					addToLog "UPDATE" "Generating Comic" "Converting EPUB documents to PDF format from '$epubComicName'"
 					mkdir -p "${generatedDirectory}/comics/epub2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found epub '$epubComicName', converting to comic book..."
-					# allow ebook convert to run as root
 					# convert epub files into pdf files to be converted below
-					export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox" && ebook-convert "$epubFilePath" "${generatedDirectory}/comics/epub2comic/$epubComicName/$epubComicName.pdf"
-					chown -R www-data:www-data "${generatedDirectory}/comics/epub2comic/$epubComicName/"
+					# allow ebook convert to run as root
+					#export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox" && ebook-convert "$epubFilePath" "${generatedDirectory}/comics/epub2comic/$epubComicName/$epubComicName.pdf" --enable-heuristics
+					#
+					# convert epub files into pdf files to be converted below
+					/usr/bin/pandoc "$epubFilePath" --to=pdf -o "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf" --toc
+					chown -R www-data:www-data "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf"
 				fi
 			done
-		done
-	fi
-	# stop the spinner
-	#kill "$SPINNER_PID"
-
+		fi
+	done
+	blockQueue 1
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each pdf file found in the pdf libary locations
-		find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
-			pdfComicName=$(popPath "$pdfFilePath" | sed "s/.pdf//g")
-			# only extract the pdf once
-			if ! test -d "${generatedDirectory}/comics/pdf2comic/$pdfComicName/";then
-				createDir "${generatedDirectory}/comics/pdf2comic/$pdfComicName/"
-				# extract the pdf file to the download directory
-				ALERT "Found pdf '$pdfComicName', converting to comic book..."
-				addToLog "UPDATE" "Generating Comic" "Converting PDF document to PNG images from '$epubComicName'"
-				# create the page counter
-				pageCounter=1
-				# get the page count from the pdf file using pdfInfo
-				pageCount=$(pdfinfo "$pdfFilePath" | tr -d ' ' | grep "Pages:" | cut -d':' -f2)
-				# launch a thread for each process
-				for pageCounter in $(seq --equal-width -s " " 1 "$pageCount");do
-					INFO "Rendering page $pageCounter/$pageCount from $pdfComicName"
-					# render the page, use multithreading
-					# - pdftoppm is not a multithreaded application so we render each page in a seprate instance to make it render all pages in parallel
-					processPdfPageToImage "$pdfFilePath" "$pdfComicName" "$pageCounter" &
-					# the fast queue is more appropriate to use here
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each pdf file found in the pdf libary locations
+			find "$comicLibaryPath" -type f -name '*.pdf' | sort | while read pdfFilePath;do
+				pdfComicName=$(popPath "$pdfFilePath" | sed "s/.pdf//g")
+				# only extract the pdf once
+				if ! test -d "${generatedDirectory}/comics/pdf2comic/$pdfComicName/";then
+					createDir "${generatedDirectory}/comics/pdf2comic/$pdfComicName/"
+					# extract the pdf file to the download directory
+					ALERT "Found pdf '$pdfComicName', converting to comic book..."
+					addToLog "UPDATE" "Generating Comic" "Converting PDF document to PNG images from '$pdfComicName'"
+					# create the page counter
+					pageCounter=1
+					# get the page count from the pdf file using pdfInfo
+					pageCount=$(pdfinfo "$pdfFilePath" | tr -d ' ' | grep "Pages:" | cut -d':' -f2)
+					# launch a thread for each process
+					for pageCounter in $(seq --equal-width -s " " 1 "$pageCount");do
+						INFO "Rendering page $pageCounter/$pageCount from $pdfComicName"
+						# render the page, use multithreading
+						# - pdftoppm is not a multithreaded application so we render each page in a seprate instance to make it render all pages in parallel
+						processPdfPageToImage "$pdfFilePath" "$pdfComicName" "$pageCounter" &
+						# the fast queue is more appropriate to use here
+						waitQueue 0.2 "$totalCPUS"
+					done
+				fi
+			done
+		fi
+	done
+	echo "$comicLibaries" | sort | while read comicLibaryPath;do
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each cbz file found in the cbz libary locations
+			find "$comicLibaryPath" -type f -name '*.cbz' | sort | while read cbzFilePath;do
+				cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
+				# only extract the cbz once
+				if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+					addToLog "UPDATE" "Extracting Comic" "Converting CBZ file to image directory from '$cbzComicName'"
+					createDir "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
+					# extract the cbz file to the download directory
+					INFO "Found cbz '$cbzComicName', converting to comic book..."
+					# - load the cbz file with its filename as the comic name into the comic download directory
+					extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
 					waitQueue 0.2 "$totalCPUS"
-				done
-			fi
-		done
+				fi
+			done
+		fi
 	done
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each cbz file found in the cbz libary locations
-		find "$comicLibaryPath" -type f -name '*.cbz' | sort | while read cbzFilePath;do
-			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
-			# only extract the cbz once
-			if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
-				addToLog "UPDATE" "Extracting Comic" "Converting CBZ file to image directory from '$cbzComicName'"
-				createDir "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
-				# extract the cbz file to the download directory
-				INFO "Found cbz '$cbzComicName', converting to comic book..."
-				# - load the cbz file with its filename as the comic name into the comic download directory
-				extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
-				waitQueue 0.2 "$totalCPUS"
-			fi
-		done
-	done
-	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		# for each zip file found in the zip libary locations
-		find "$comicLibaryPath" -type f -name '*.zip' | sort | while read cbzFilePath;do
-			cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
-			# only extract the cbz once
-			if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
-				addToLog "UPDATE" "Extracting Comic" "Converting ZIP file to image directory from '$cbzComicName'"
-				mkdir -p "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
-				# extract the zip file to the download directory
-				INFO "Found zip '$cbzComicName', converting to comic book..."
-				# - load the cbz file with its filename as the comic name into the comic download directory
-				extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
-				waitQueue 0.2 "$totalCPUS"
-			fi
-		done
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			# for each zip file found in the zip libary locations
+			find "$comicLibaryPath" -type f -name '*.zip' | sort | while read cbzFilePath;do
+				cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
+				# only extract the cbz once
+				if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+					addToLog "UPDATE" "Extracting Comic" "Converting ZIP file to image directory from '$cbzComicName'"
+					mkdir -p "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
+					# extract the zip file to the download directory
+					INFO "Found zip '$cbzComicName', converting to comic book..."
+					# - load the cbz file with its filename as the comic name into the comic download directory
+					extractCBZ "$generatedDirectory" "$cbzFilePath" "$cbzComicName" &
+					waitQueue 0.2 "$totalCPUS"
+				fi
+			done
+		fi
 	done
 	# stop the queue outside of the loop to wait for rendering to finish
 	blockQueue 1
-
-	#
-	#rotateSpinner &
-	#SPINNER_PID="$!"
 
 	# cleanup the comics index
 	if test -f "$webDirectory/comics/comics.index";then
@@ -384,13 +448,10 @@ function update(){
 	# cleanup new comic index
 	if test -f "$webDirectory/new/comics.index";then
 		# new comics but preform a fancy sort that does not change the order of the items
-		#tempList=$(cat -n "$webDirectory/new/comics.index" | sort -uk2 | sort -nk1 | cut -f1 | tail -n 200 )
 		tempList=$(cat "$webDirectory/new/comics.index" | tail -n 800 )
 		echo "$tempList" > "$webDirectory/new/comics.index"
 	fi
 	addToLog "INFO" "FINISHED Update" "$(date)"
-	# stop the spinner
-	#kill "$SPINNER_PID"
 }
 ################################################################################
 function convertImage(){
@@ -744,16 +805,16 @@ function renderPage(){
 		linkFile "/usr/share/2web/templates/comic_page.php" "$webDirectory/comics/$pageComicName/$pageNumber.php"
 	fi
 	# if no zip directory exists then create the zip directory
-	createDir "$webDirectory/kodi/comics_tank/$pageComicName/"
+	createDir "$kodiDirectory/comics_tank/$pageComicName/"
 	# write the downloadable .zip file
 	# - zip requires the current working directory be changed
 	if [ $isChapter = true ];then
-		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
+		cd "$kodiDirectory/comics_tank/$pageComicName/"
 		# link to kodi comic tanks directory
 		linkFile "$imagePath" "$pageComicName-$pageChapterName-$pageNumber.jpg"
 		# link to kodi directory comics directory
-		createDir "$webDirectory/kodi/comics/$pageComicName/$pageChapterName/"
-		linkFile "$imagePath" "$webDirectory/kodi/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
+		createDir "$kodiDirectory/comics/$pageComicName/$pageChapterName/"
+		linkFile "$imagePath" "$kodiDirectory/comics/$pageComicName/$pageChapterName/$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			if [[  "10#$pageChapterName" -ge "10#$totalChapters" ]];then
 				# if this is the last page create the zip file
@@ -762,12 +823,12 @@ function renderPage(){
 			fi
 		fi
 	else
-		cd "$webDirectory/kodi/comics_tank/$pageComicName/"
+		cd "$kodiDirectory/comics_tank/$pageComicName/"
 		# link to kodi comic tanks directory
 		linkFile "$imagePath" "$pageComicName-$pageNumber.jpg"
-		createDir "$webDirectory/kodi/comics/$pageComicName/"
+		createDir "$kodiDirectory/comics/$pageComicName/"
 		# link to kodi directory comics directory
-		linkFile "$imagePath" "$webDirectory/kodi/comics/$pageComicName/$pageNumber.jpg"
+		linkFile "$imagePath" "$kodiDirectory/comics/$pageComicName/$pageNumber.jpg"
 		if [  $((10#$nextPage)) -gt $totalPages ];then
 			# if this is the last page create the zip file
 			echo -n
@@ -806,7 +867,9 @@ function renderPage(){
 	if [ $buildPagesIndex = true ];then
 		{
 			echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-			echo "<img title='$tempComicName' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
+			tempTotalComicPages=""
+			tempTotalComicPages="$( cat "$webDirectory/comics/$tempComicName/totalPages.cfg" )"
+			echo "<img title='$tempComicName&#13;&#13;${tempTotalComicPages} Pages' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 			if [ $totalPages -gt 1 ];then
 				echo "<div class='title'>"
 				echo "<div class='showIndexNumbers'>"
@@ -906,6 +969,7 @@ function processComicPath(){
 	if [ "$2" == "" ];then
 		webDirectory="$(webRoot)"
 	fi
+	kodiDirectory="$(kodiRoot)"
 	addToLog "UPDATE" "Adding single comic" "$comicNamePath"
 
 	INFO "link the comics to the kodi directory"
@@ -1006,12 +1070,16 @@ function webUpdate(){
 	#   + comicWebsite/comicName/image.png
 
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	downloadDirectory="$(libaryPaths)"
+	disabledLibaries="$(loadConfigs "/etc/2web/comics/disabledLibaries.cfg" "/etc/2web/comics/disabledLibaries.d/" "/etc/2web/config_default/comic2web_disabledLibaries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | shuf )"
 
 	ALERT "$downloadDirectory" "Download Directory"
 
+	ALERT "$disabledLibaries" "Disabled Comic Libraries"
+
 	# create the kodi directory
-	createDir "$webDirectory/kodi/comics/"
+	createDir "$kodiDirectory/comics/"
 
 	# create the web directory
 	createDir "$webDirectory/comics/"
@@ -1039,67 +1107,73 @@ function webUpdate(){
 	totalComics=0
 
 	ALERT "$downloadDirectory" "Scanning Library Config"
-
 	echo "$downloadDirectory" | sort | while read comicLibaryPath;do
-		ALERT "Scanning Libary Path... '$comicLibaryPath'"
-		addToLog "INFO" "Scanning Library..." "$comicLibaryPath"
-		# read each comicWebsite directory from the download directory
-		find "$comicLibaryPath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
-			INFO "scanning comic website path '$comicWebsitePath'"
-			# build the website directory for the comic path
-			#mkdir -p "$webDirectory/comics/$(popPath $comicWebsitePath)"
-			# build the website tag index page
-			find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
-				# check the sum for this directory to see if the data has changed
-				if checkDirSum "$webDirectory" "$comicNamePath";then
-					addToLog "UPDATE" "Adding comic" "$comicNamePath"
+		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+			ALERT "Library path is disabled '$comicLibaryPath'"
+			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+		else
+			ALERT "Scanning Libary Path... '$comicLibaryPath'"
+			addToLog "INFO" "Scanning Library..." "$comicLibaryPath"
+			# read each comicWebsite directory from the download directory
+			find "$comicLibaryPath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicWebsitePath;do
 
-					INFO "link the comics to the kodi directory"
-					# link this comic to the kodi directory
-					#createDir "$comicNamePath" "$webDirectory/kodi/comics/"
+				INFO "scanning comic website path '$comicWebsitePath'"
+				# build the website directory for the comic path
+				#mkdir -p "$webDirectory/comics/$(popPath $comicWebsitePath)"
+				# build the website tag index page
+				find "$comicWebsitePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicNamePath;do
+					# check the sum for this directory to see if the data has changed
+					if checkDirSum "$webDirectory" "$comicNamePath";then
+						addToLog "UPDATE" "Adding comic" "$comicNamePath"
 
-					INFO "scanning comic path '$comicNamePath'"
-					# add one to the total comics
-					totalComics=$(( $totalComics + 1 ))
+						INFO "link the comics to the kodi directory"
+						# link this comic to the kodi directory
+						#createDir "$comicNamePath" "$kodiDirectory/comics/"
 
-					# processComicPath "$comicNamePath" "$webDirectory" &
+						INFO "scanning comic path '$comicNamePath'"
+						# add one to the total comics
+						totalComics=$(( $totalComics + 1 ))
 
-					# build the comic index page
-					if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" -o -name "*.webm" -o -name "*.mp4" | wc -l) -gt 0 ];then
-						INFO "scanning single chapter comic '$comicNamePath'"
-						# if this directory contains .jpg or .png files then this is a single chapter comic
-						# - build the individual pages for the comic
-						# pause execution while no cpus are open
-						scanPages "$comicNamePath" "$webDirectory" single &
-						waitQueue 0.5 "$totalCPUS"
-					else
-						# if this is not a single chapter comic then read the subdirectories containing
-						#   each of the individual chapters
-						INFO "scanning multi chapter comic '$comicNamePath'"
-						# reset chapter number for count
-						chapterNumber=0
-						find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
-							chapterNumber=$(( 10#$chapterNumber + 1 ))
-							# add zeros to the chapter as a prefix for correct ordering
-							chapterNumber=$(prefixNumber $chapterNumber)
-							# check if the chapter should be updated before running through all pages
-							# for each chapter build the individual pages
+						# processComicPath "$comicNamePath" "$webDirectory" &
+
+						# build the comic index page
+						if [ $(find -L "$comicNamePath" -mindepth 1 -maxdepth 1 -type f -name "*.jpg" -o -name "*.png" -o -name "*.webp" -o -name "*.gif" -o -name "*.webm" -o -name "*.mp4" | wc -l) -gt 0 ];then
+							INFO "scanning single chapter comic '$comicNamePath'"
+							# if this directory contains .jpg or .png files then this is a single chapter comic
+							# - build the individual pages for the comic
 							# pause execution while no cpus are open
-							scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+							scanPages "$comicNamePath" "$webDirectory" single &
 							waitQueue 0.5 "$totalCPUS"
-						done
+						else
+							# if this is not a single chapter comic then read the subdirectories containing
+							#   each of the individual chapters
+							INFO "scanning multi chapter comic '$comicNamePath'"
+							# reset chapter number for count
+							chapterNumber=0
+							find "$comicNamePath" -mindepth 1 -maxdepth 1 -type d | sort | while read comicChapterPath;do
+								chapterNumber=$(( 10#$chapterNumber + 1 ))
+								# add zeros to the chapter as a prefix for correct ordering
+								chapterNumber=$(prefixNumber $chapterNumber)
+								# check if the chapter should be updated before running through all pages
+								# for each chapter build the individual pages
+								# pause execution while no cpus are open
+								scanPages "$comicChapterPath" "$webDirectory" chapter $chapterNumber &
+								waitQueue 0.5 "$totalCPUS"
+							done
+						fi
+						setDirSum "$webDirectory" "$comicNamePath"
+					else
+						#addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
+						INFO "Already processed '$(basename "$comicNamePath")'"
 					fi
-					setDirSum "$webDirectory" "$comicNamePath"
-				else
-					#addToLog "INFO" "Skipping Already processed comic" "$comicNamePath"
-					INFO "Already processed '$(basename "$comicNamePath")'"
-				fi
+				done
+				# finish website tag index page
 			done
-			# finish website tag index page
-		done
+		fi
 	done
 	# block for parallel threads here
 	blockQueue 1
+
 	INFO "Writing total Comics "
 	echo "$totalComics" > "$webDirectory/comics/totalComics.cfg"
 	INFO "Checking for comic index page..."
@@ -1113,16 +1187,19 @@ function webUpdate(){
 		if ! test -f "$comicNamePath/comics.index";then
 			{
 				echo "<a href='/comics/$tempComicName/' class='indexSeries' >"
-				echo "<img title='$tempComicName' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 				if test -f "$webDirectory/comics/$tempComicName/totalPages.cfg";then
+					tempTotalComicPages=""
+					tempTotalComicPages="$( cat "$webDirectory/comics/$tempComicName/totalPages.cfg" )"
+					echo "<img title='$tempComicName&#13;&#13;${tempTotalComicPages} Pages' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 					echo "<div class='title'>"
 					echo "<div class='showIndexNumbers'>"
 					echo "$tempComicName"
 					echo "</div>"
 					# 📄 🗄️ 🗐
-					echo "$( cat "$webDirectory/comics/$tempComicName/totalPages.cfg" ) 🗐"
+					echo "${tempTotalComicPages} 🗐"
 					echo "</div>"
 				else
+					echo "<img title='$tempComicName' loading='lazy' src='/comics/$tempComicName/thumb.png' />"
 					echo "<div class='title'>"
 					echo "$tempComicName"
 					echo "</div>"
@@ -1145,24 +1222,19 @@ function resetCache(){
 	delete "/var/cache/2web/web/thumbnails/comics/"
 	#
 	delete "/var/cache/2web/generated/comicCache/"
-	#
-	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
-	# delete intermediate conversion directories
-	for location in $locations;do
-		delete "/var/cache/2web/generated/comics/$location/"
-	done
 }
 ################################################################################
 function nuke(){
 	webDirectory="$(webRoot)"
 	downloadDirectory="$(downloadDir)"
 	generatedDirectory="$(generatedRoot)"
+	kodiDirectory="$(kodiRoot)"
 	# remove new and random indexes
 	rm -v $webDirectory/new/comic_*.index
 	rm -v $webDirectory/random/comic_*.index
 	# kodi directories
-	delete "$webDirectory/kodi/comics/"
-	delete "$webDirectory/kodi/comics_tank/"
+	delete "$kodiDirectory/comics/"
+	delete "$kodiDirectory/comics_tank/"
 	# remove comic directory and indexes
 	delete $webDirectory/comics/
 	delete $webDirectory/new/comics.index
@@ -1174,6 +1246,12 @@ function nuke(){
 	# remove widgets cached
 	delete $webDirectory/web_cache/widget_random_comics.index
 	delete $webDirectory/web_cache/widget_new_comics.index
+	# delete intermediate conversion directories
+	locations="cbz2comic pdf2comic txt2comic epub2comic markdown2comic html2comic epub2comic ps2comic"
+	for location in $locations;do
+		delete "/var/cache/2web/generated/comics/$location/"
+	done
+	#
 	drawLine
 	drawHeader "NUKE Complete"
 	drawLine
@@ -1190,6 +1268,7 @@ LINE_THEME="book"
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 	lockProc "comic2web"
@@ -1207,6 +1286,7 @@ elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ] ||  [ "$1" == "--stop" ] || 
 elif [ "$1" == "--process" ] || [ "$1" == "process" ] ;then
 	# process a single directory or rescan a single directory
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	# remove the sum blocking scanning for rescans
 	rmDirSum "$webDirectory" "$2"
 	# there is only one comic this will prevent breaking the progress line
@@ -1227,8 +1307,6 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 	else
 		totalCPUS=1
 	fi
-	# create a list of file extensions
-	fileExtensions=".png .jpg .gif .webp"
 	#########################################################################################
 	# comic2web demo comics
 	#########################################################################################
@@ -1239,12 +1317,19 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 		randomTitle="$RANDOM $(randomWord) $(randomWord)"
 		#
 		createDir "/var/cache/2web/generated/demo/comics/generated/$randomTitle/"
+		# create a list of file extensions
+		fileExtensions=".png .jpg .gif .webp .webm .mp4"
 		# write the comic pages
 		for index2 in $(seq -w $(( 4 + ( $RANDOM % 25 ) )) );do
 			# pick a random file extension for each demo image in the comic
 			extension=$( echo "$fileExtensions" | cut -d' ' -f$(( ( $RANDOM % $(echo "$fileExtensions" | wc --words) ) + 1 )) )
-			# write the pages
-			demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" "${randomTitle} Page:$index2" "400" "700" &
+			if [ "$extension" == ".mp4" ] || [ "$extension" == ".webm" ] || [ "$extension" == ".gif" ];then
+				# draw a animated image
+				ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" &
+			else
+				# draw a demo image
+				demoImage "/var/cache/2web/generated/demo/comics/generated/$randomTitle/$index2${extension}" "${randomTitle} Page:$index2" "400" "700" &
+			fi
 			# wait for queue to be free
 			waitQueue 0.2 "$totalCPUS"
 		done

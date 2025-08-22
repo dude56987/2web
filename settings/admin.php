@@ -1070,6 +1070,10 @@ if (array_key_exists("newUserName",$_POST)){
 	removeCustomConfig("enableLibrary","/etc/2web/nfo/disabledLibaries.d/","nfo.php");
 }else if (array_key_exists("disableLibrary",$_POST)){
 	addCustomPathConfig("disableLibrary","/etc/2web/nfo/disabledLibaries.d/","nfo.php");
+}else if (array_key_exists("disableComicLibrary",$_POST)){
+	addCustomPathConfig("disableComicLibrary","/etc/2web/comics/disabledLibaries.d/","comics.php");
+}else if (array_key_exists("enableComicLibrary",$_POST)){
+	removeCustomConfig("enableComicLibrary","/etc/2web/comics/disabledLibaries.d/","comics.php");
 }else if (array_key_exists("addWeatherLocation",$_POST)){
 	$weatherLocation=$_POST["addWeatherLocation"];
 	#
