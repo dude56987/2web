@@ -67,6 +67,7 @@ function processTrack(){
 	musicPath="$1"
 	totalProgressString="$2"
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	if ! test -f "$musicPath";then
 		ALERT "FILE PATH DOES NOT EXIST '$musicPath'"
 		# the file path given does not exist so exit the loop
@@ -74,9 +75,6 @@ function processTrack(){
 	fi
 	# check the md5sum of the music file
 	if checkFileDataSum "$webDirectory" "$musicPath";then
-		# get the web root
-		webDirectory=$(webRoot)
-
 		# build the blank data in case of bash wierdness with clearing variables
 		artist=""
 		album=""
@@ -232,7 +230,7 @@ function processTrack(){
 
 			# create the directories
 			createDir "$webDirectory/music/$artist/$album/"
-			createDir "$webDirectory/kodi/music/$artist/$album/"
+			createDir "$kodiDirectory/music/$artist/$album/"
 			# link the file in the web path
 			if echo "$musicPath" | grep -q ".mp3$";then
 				INFO "${processingInfo}Linking mp3 to web directory..."
@@ -242,12 +240,12 @@ function processTrack(){
 				INFO "${processingInfo}Converting file to MP3..."
 				ffmpeg -loglevel quiet -y -i "$musicPath" "$webDirectory/music/$artist/$album/${track}.mp3"
 			fi
-			linkFile "$webDirectory/music/$artist/$album/${track}.mp3" "$webDirectory/kodi/music/$artist/$album/${track}.mp3"
+			linkFile "$webDirectory/music/$artist/$album/${track}.mp3" "$kodiDirectory/music/$artist/$album/${track}.mp3"
 
 			################################################################################
 			# get the music path and look for a thumbnail
 			################################################################################
-			if ! test -f "$webDirectory/kodi/music/$artist/$album/album.png";then
+			if ! test -f "$kodiDirectory/music/$artist/$album/album.png";then
 				lookingPath=$(echo "$musicPath" | rev | cut -d'/' -f2- | rev )
 
 				if test -f "$lookingPath/album.png";then
@@ -327,8 +325,8 @@ function processTrack(){
 						# trim and blur the fanart
 						convert -quiet "$webDirectory/music/$artist/fanart.png" -trim -blur 5x5 "$webDirectory/music/$artist/fanart.png"
 						# copy the artist fanart to the kodi folder
-						convert -quiet "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/fanart.jpg"
-						linkFile "$webDirectory/music/$artist/fanart.png" "$webDirectory/kodi/music/$artist/landscape.jpg"
+						convert -quiet "$webDirectory/music/$artist/fanart.png" "$kodiDirectory/music/$artist/fanart.jpg"
+						linkFile "$webDirectory/music/$artist/fanart.png" "$kodiDirectory/music/$artist/landscape.jpg"
 					fi
 					################################################################################
 					# build a new poster if the discovred albums have changed
@@ -381,15 +379,15 @@ function processTrack(){
 						# create the smaller thumbnail
 						convert -quiet "$webDirectory/music/$artist/poster.png" -adaptive-resize 128x128\! "$webDirectory/music/$artist/poster-web.png"
 						# create the kodi jpg artist poster thumb
-						convert -quiet "$webDirectory/music/$artist/poster.png" "$webDirectory/kodi/music/$artist/folder.jpg"
+						convert -quiet "$webDirectory/music/$artist/poster.png" "$kodiDirectory/music/$artist/folder.jpg"
 					fi
 					if test -f "$webDirectory/music/$artist/folder.png";then
-						linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearart.jpg"
-						linkFile "$webDirectory/kodi/music/$artist/folder.jpg" "$webDirectory/kodi/music/$artist/clearlogo.jpg"
+						linkFile "$kodiDirectory/music/$artist/folder.jpg" "$kodiDirectory/music/$artist/clearart.jpg"
+						linkFile "$kodiDirectory/music/$artist/folder.jpg" "$kodiDirectory/music/$artist/clearlogo.jpg"
 					fi
 				fi
-				if ! test -f "$webDirectory/kodi/music/$artist/$album/cover.jpg";then
-					convert -quiet "$webDirectory/music/$artist/$album/album.png" "$webDirectory/kodi/music/$artist/$album/cover.jpg"
+				if ! test -f "$kodiDirectory/music/$artist/$album/cover.jpg";then
+					convert -quiet "$webDirectory/music/$artist/$album/album.png" "$kodiDirectory/music/$artist/$album/cover.jpg"
 				fi
 				# build the web thumbnail
 				if test -f "$webDirectory/music/$artist/$album/album.png";then
@@ -400,13 +398,13 @@ function processTrack(){
 			# create the nfo data
 			################################################################################
 			# artist
-			if ! test -f "$webDirectory/kodi/music/$artist/artist.nfo";then
+			if ! test -f "$kodiDirectory/music/$artist/artist.nfo";then
 				{
 					echo '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'
 					echo "<artist>"
 					echo "	<name>$artistOG</name>"
 					echo "</artist>"
-				} > "$webDirectory/kodi/music/$artist/artist.nfo"
+				} > "$kodiDirectory/music/$artist/artist.nfo"
 				# Create the artist index link
 				{
 					echo "<a class='indexSeries' href='/music/$artist'>"
@@ -461,7 +459,7 @@ function processTrack(){
 				date "+%s" > /var/cache/2web/web/new/artists.cfg
 			fi
 			# album data
-			if ! test -f "$webDirectory/kodi/music/$artist/$album/album.nfo";then
+			if ! test -f "$kodiDirectory/music/$artist/$album/album.nfo";then
 				{
 					echo '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'
 					echo "<album>"
@@ -469,7 +467,7 @@ function processTrack(){
 					echo "	<genre>$genre</genre>"
 					echo "	<artist>$artistOG</artist>"
 					echo "</album>"
-				} > "$webDirectory/kodi/music/$artist/$album/album.nfo"
+				} > "$kodiDirectory/music/$artist/$album/album.nfo"
 				# add the album to the artist index
 				{
 					echo "<a class='indexSeries' href='/music/$artist/$album'>"
@@ -518,11 +516,11 @@ function processTrack(){
 			fi
 			# build the track thumbnail
 			# create a waveform with ffmpeg for the track
-			generateWaveform "$webDirectory/music/$artist/$album/$track.mp3" "$webDirectory/music/$artist/$album/$track" "$webDirectory/kodi/music/$artist/$album/$track"
+			generateWaveform "$webDirectory/music/$artist/$album/$track.mp3" "$webDirectory/music/$artist/$album/$track" "$kodiDirectory/music/$artist/$album/$track"
 			# generate the thumbnail
 			convert -quiet "$webDirectory/music/$artist/$album/$track.png" -adaptive-resize 200x50\! "$webDirectory/music/$artist/$album/web-$track.png"
 			# track data
-			if ! test -f "$webDirectory/kodi/music/$artist/$album/$track.index";then
+			if ! test -f "$kodiDirectory/music/$artist/$album/$track.index";then
 				# create the track link
 				{
 					echo "<a class='showPageEpisode track' href='/music/$artist/$album/?play=$track'>"
@@ -619,6 +617,7 @@ function update(){
 	musicSources=$(loadConfigs "/etc/2web/music/libaries.cfg" "/etc/2web/music/libaries.d/" "/etc/2web/config_default/music2web_libraries.cfg" | tr -s "\n" | tr -d "\t" | tr -d "\r" | sed "s/^[[:blank:]]*//g" | tr -s '/' | shuf  )
 	################################################################################
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	################################################################################
 	# make musics directory
 	createDir "$webDirectory/music/"
@@ -788,9 +787,10 @@ function resetCache(){
 ################################################################################
 function nuke(){
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	# remove the kodi and web music files
 	delete "$webDirectory/music/" || ALERT "No files found in music web directory..."
-	delete "$webDirectory/kodi/music/" || ALERT "No files found in kodi directory..."
+	delete "$kodiDirectory/music/" || ALERT "No files found in kodi directory..."
 	# remove the generated search index data
 	delete "/var/cache/2web/generated/searchIndexData/music/"
 	# remove sums generated by music2web
