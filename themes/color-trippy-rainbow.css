@@ -1,0 +1,214 @@
+/*
+########################################################################
+# 2web rainbow theme
+# Copyright (C) 2024 Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	/*  */
+	/* red orange yellow green blue indigo violet */
+	--solidBackground: repeating-linear-gradient(176deg,
+		/* red */
+		rgba(255,0,0,0.85),
+		rgba(255,0,0,0.85) 14%,
+		/* orange */
+		rgba(255,165,0,0.85) 14%,
+		rgba(255,165,0,0.85) 28%,
+		/* yellow */
+		rgba(255,255,0,0.85) 28%,
+		rgba(255,255,0,0.85) 42%,
+		/* green */
+		rgba(0,255,0,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		/* blue */
+		rgba(0,0,255,0.85) 56%,
+		rgba(0,0,255,0.85) 70%,
+		/* indigo */
+		rgba(75,0,130,0.85) 70%,
+		rgba(75,0,130,0.85) 84%,
+		/* violet */
+		rgba(238,130,238,0.85) 84%,
+		rgba(238,130,238,0.85) 100%
+	);
+
+
+	/* red orange yellow green blue indigo violet */
+	--glassBackground: repeating-linear-gradient(34deg,
+		/* red */
+		rgba(255,0,0,0.85),
+		rgba(255,0,0,0.85) 14%,
+		/* orange */
+		rgba(255,165,0,0.85) 14%,
+		rgba(255,165,0,0.85) 28%,
+		/* yellow */
+		rgba(255,255,0,0.85) 28%,
+		rgba(255,255,0,0.85) 42%,
+		/* green */
+		rgba(0,255,0,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		/* blue */
+		rgba(0,0,255,0.85) 56%,
+		rgba(0,0,255,0.85) 70%,
+		/* indigo */
+		rgba(75,0,130,0.85) 70%,
+		rgba(75,0,130,0.85) 84%,
+		/* violet */
+		rgba(238,130,238,0.85) 84%,
+		rgba(238,130,238,0.85) 100%
+	);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: white;
+	--highlightBorder: lightgray;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+html{
+	/* outline all text in black so it is readable on the rainbow gradient.*/
+	/* -webkit-text-stroke: 0.04em black; */
+	/* text-shadow: 0.1em 0.1em black; */
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+	background-image: var(--solidBackground);
+	/* Make the font thicker for readability */
+	font-weight: bolder;
+}
+h1,h2,h3{
+	background-image: var(--solidBackground) !important;
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText) !important;
+}
+td{
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+}
+th{
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+	background-image: var(--solidBackground);
+}
+table{
+	background-image: var(--glassBackground);
+}
+.singleStat{
+	background-image: var(--solidBackground);
+}
+.comicPageButton{
+	background-image: var(--solidBackground);
+}
+.comicPagePopup{
+	background-image: var(--solidBackground);
+}
+.searchButton{
+	background-image: var(--solidBackground);
+}
+.titleCard{
+	background-image: var(--glassBackground);
+}
+.button{
+	background-image: var(--solidBackground) !important;
+	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+}
+.menuButton{
+	background-image: var(--glassBackground);
+}
+.searchBox{
+	background-image: var(--glassBackground);
+}
+.showPageEpisode{
+	background-image: var(--solidBackground);
+}
+.descriptionCard{
+	background-image: var(--glassBackground);
+}
+.settingListCard{
+	background-image: var(--glassBackground);
+}
+.inputCard{
+	background-image: var(--glassBackground);
+}
+.indexSeries{
+	background-image: var(--glassBackground);
+}
+.seasonContainer{
+	background-image: var(--glassBackground);
+}
+
+.listCard::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+	border-width: 2px !important;
+}
+.channelList::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.channelList::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.listCard::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+	border-width: 2px !important;
+}
+.channelList::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.channelList::-webkit-scrollbar-thumb:vertical{
+	background: var(--soildBackground);
+}
+.titleCard,.indexSeries,.button,.settingListCard,.showPageEpisode,.singleButtonForm,.singleStat,.inputCard,input,button,body,h1,h2,h3,h4,h5{
+	animation-name: rainbow;
+	animation-duration: 20s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+*:hover{
+	animation-name: rainbow;
+	animation-duration: 10s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+/* rotate the element animation starting positions */
+*:nth-of-type(1n){
+	animation-delay: -1s;
+}
+*:nth-of-type(2n){
+	animation-delay: -2s;
+}
+*:nth-of-type(3n){
+	animation-delay: -3s;
+}
+*:nth-of-type(4n){
+	animation-delay: -4s;
+}
+*:nth-of-type(5n){
+	animation-delay: -5s;
+}
