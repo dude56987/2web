@@ -143,7 +143,11 @@ include("settingsHeader.php");
 				}
 			?>
 			<option value='1'>1 Days</option>
+			<option value='2'>2 Days</option>
 			<option value='3'>3 Days</option>
+			<option value='4'>4 Days</option>
+			<option value='5'>5 Days</option>
+			<option value='6'>6 Days</option>
 			<option value='7'>7 Days</option>
 			<option value='14'>14 Days</option>
 			<option value='30'>30 Days</option>
