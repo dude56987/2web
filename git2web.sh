@@ -1,7 +1,7 @@
 #! /bin/bash
 ################################################################################
 # git2web generates websites from git repos
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -512,6 +512,7 @@ function update(){
 	repoSources=$(loadConfigs "/etc/2web/repos/sources.cfg" "/etc/2web/repos/sources.d/" "/etc/2web/config_default/git2web_sources.cfg" | tr -s '\n' | shuf)
 	################################################################################
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	################################################################################
 	downloadDirectory="$(downloadDir)"
 	################################################################################
@@ -566,13 +567,14 @@ function generateZip(){
 	webDirectory=$1
 	repoName=$2
 	zipFilePath="$webDirectory/repos/$repoName/$repoName.zip"
+	kodiDirectory="$(kodiRoot)"
 	# generate a zip of the source
 	cd "$webDirectory/repos/$repoName/source/"
 	# compress into a zip file
 	zip -rqT -9 "$zipFilePath" "."
-	createDir "$webDirectory/kodi/repos/"
+	createDir "$kodiDirectory/repos/"
 	# link the zip file created into the web directory
-	linkFile "$zipFilePath" "$webDirectory/kodi/repos/$repoName.zip"
+	linkFile "$zipFilePath" "$kodiDirectory/repos/$repoName.zip"
 }
 ################################################################################
 function processRepo(){
@@ -712,7 +714,7 @@ function processRepo(){
 		createDir "$webDirectory/repos/$repoName/email/"
 		createDir "$webDirectory/repos/$repoName/msg/"
 		# link to /kodi/
-		linkFile "$webDirectory/repos/$repoName/source/" "$webDirectory/kodi/$repoName/"
+		linkFile "$webDirectory/repos/$repoName/source/" "$kodiDirectory/$repoName/"
 		echo "$repoSource" > "$webDirectory/repos/$repoName/source.index"
 		echo "$repoName" > "$webDirectory/repos/$repoName/title.index"
 		# link the repo page
@@ -1042,11 +1044,12 @@ webUpdate(){
 	#   + gitWebsite/gitName/image.png
 
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 
 	downloadDirectory="$(loadConfigs "/etc/2web/repos/libaries.cfg" "/etc/2web/repos/libaries.d/" "/etc/2web/config_default/git2web_libraries.cfg" | tr -s '\n' | shuf)"
 
 	# create the kodi directory
-	createDir "$webDirectory/kodi/repos/"
+	createDir "$kodiDirectory/repos/"
 
 	# create the web directory
 	createDir "$webDirectory/repos/"
@@ -1057,9 +1060,6 @@ webUpdate(){
 	# link the random poster script
 	linkFile "/usr/share/2web/templates/randomPoster.php" "$webDirectory/repos/randomPoster.php"
 	linkFile "/usr/share/2web/templates/randomFanart.php" "$webDirectory/repos/randomFanart.php"
-
-	# link the kodi directory to the download directory
-	#ln -s "$downloadDirectory" "$webDirectory/kodi/repos"
 
 	totalrepos=0
 
@@ -1140,6 +1140,7 @@ webUpdate(){
 function resetCache(){
 	# reset all generated/downloaded content
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 	downloadDirectory="$(downloadDir)"
 	# remove web cache
 	delete "$webDirectory/repos/"
@@ -1150,14 +1151,14 @@ function resetCache(){
 ################################################################################
 function nuke(){
 	webDirectory="$(webRoot)"
-	downloadDirectory="$(downloadDir)"
+	kodiDirectory="$(kodiRoot)"
 	# delete intermediate conversion directories
 	# remove new and random indexes
 	delete "$webDirectory/new/git_*.index"
 	delete "$webDirectory/random/git_*.index"
 	# remove git directory and indexes
 	delete "$webDirectory/repos/"
-	delete "$webDirectory/kodi/repos/"
+	delete "$kodiDirectory/repos/"
 	delete "$webDirectory/new/repos.index"
 	delete "$webDirectory/random/repos.index"
 	rm -v $webDirectory/sums/git2web_*.cfg || echo "No file sums found..."
@@ -1175,6 +1176,7 @@ LINE_THEME="floppy"
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 if [ "$1" == "-w" ] || [ "$1" == "--webgen" ] || [ "$1" == "webgen" ] ;then
 	lockProc "git2web"
