@@ -881,7 +881,7 @@ if (array_key_exists("newUserName",$_POST)){
 			foreach($metaPaths as $metaPath){
 				$metaPath=str_replace("\n","",$metaPath);
 				# - launch a process to rescan the data
-				$command.="nfo2web --process \"$metaPath\"\n";
+				$command.="nfo2web --process \"$metaPath\" --mute\n";
 			}
 			outputLog("Running Script <pre>$command</pre>");
 			# add rescan script to the queue
@@ -911,7 +911,7 @@ if (array_key_exists("newUserName",$_POST)){
 			foreach($metaPaths as $metaPath){
 				$metaPath=str_replace("\n","",$metaPath);
 				# - launch a process to rescan the data
-				$command.="comic2web --process \"$metaPath\"\n";
+				$command.="comic2web --process \"$metaPath\" --mute\n";
 			}
 			#
 			outputLog("Running Script <pre>$command</pre>");
