@@ -702,6 +702,13 @@ function buildHomePage(){
 			echo "$cacheSize" > "$webDirectory/webPlayer.index"
 		fi
 	fi
+	INFO "Building stats for kodi player history"
+	if test -d "$webDirectory/kodi-player";then
+		if cacheCheck "$webDirectory/kodiPlayerSize.index" "1";then
+			cacheSize=$(du -shP "$webDirectory/kodi-player/" | cut -f1)
+			echo "$cacheSize" > "$webDirectory/kodiPlayerSize.index"
+		fi
+	fi
 	INFO "Building stats for total music count"
 	if test -d "$webDirectory/music";then
 		INFO "Building stats for total track count"
@@ -1927,6 +1934,7 @@ function drawHeader(){
 	#
 	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
 	#
+	#figlet -w "$termWidth" -c -f "smblock" "$1"
 	figlet -w "$termWidth" -c -f "smblock" "$1"
 	#figlet -w "$termWidth" -c -f "smblock" "$1" | lolcat -a
 	#figlet -w "$termWidth" -c -f "pagga" "$1"
@@ -4204,22 +4212,22 @@ function screenshotWebpage_weasyprint(){
 	webLink="$1"
 	outputFile="$2"
 	#
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	#
 	pdfName=$(echo "$pdfFilePath" | md5sum | cut -d' ' -f1 )
 	#
-	createDir "${generatedDirectory}/portal/screenshots/$pdfName/"
+	createDir "${generatedDirectory}/screenshots/$moduleName/$pdfName/"
 	#
-	pdfFilePath="${generatedDirectory}/portal/screenshots/$pdfName.pdf"
-	#
-	#pdfName="$(basename "$1")"
+	pdfFilePath="${generatedDirectory}/screenshots/$moduleName/$pdfName.pdf"
 	#
 	weasyprint "$webLink" "$pdfFilePath"
 	# the start page
 	pageNumber="1"
 	# pdf file path
 	# generate the page path
-	pdfImageFilePath="${generatedDirectory}/portal/screenshots/$pdfName/$pdfName-$pageNumber.jpg"
+	pdfImageFilePath="${generatedDirectory}/screenshots/$moduleName/$pdfName/$pdfName-$pageNumber.jpg"
 	# render the page as a image file
-	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/portal/screenshots/$pdfName/$pdfName"
+	pdftoppm "$pdfFilePath" -jpeg -f "$pageNumber" -l "$pageNumber" -cropbox "${generatedDirectory}/$moduleName/screenshots/$pdfName/$pdfName"
 	# trim the whitespace from the file
 	convert -strip -quiet "$pdfImageFilePath" -fuzz '10%' -trim "$pdfImageFilePath"
 	# convert to the output format based on extension
@@ -4227,7 +4235,7 @@ function screenshotWebpage_weasyprint(){
 	# remove the generated files
 	delete "$pdfImageFilePath"
 	delete "$pdfFilePath"
-	delete "${generatedDirectory}/portal/screenshots/$pdfName/"
+	delete "${generatedDirectory}/screenshots/$moduleName/$pdfName/"
 }
 ########################################################################
 function screenshotWebpage(){
@@ -4248,6 +4256,10 @@ function screenshotWebpage(){
 		screenshotHeight=$4
 	fi
 	sleep 1
+	# test if this is a local path to a html file
+	if test -f "$screenshotUrl";then
+		ALERT "This is a file not a web link"
+	fi
 	# check for working wkhtmltoimage
 	if test -f '/usr/bin/wkhtmltoimage';then
 		wkhtmltoimage --width ${screenshotWidth} --height ${screenshotHeight} --javascript-delay 30000 "$screenshotUrl" "$screenshotOutputPath"
@@ -4275,4 +4287,75 @@ function screenshotWebpage(){
 	else
 		addToLog "ERROR" "Screenshot Failure" "Failed to create a screenshot from link '$screenshotUrl' please install the cromium-browser package or wkhtmltopdf."
 	fi
+}
+################################################################################
+function countDown(){
+	# launch a visual countdown timer
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	#
+	countDownTime=$3
+	#
+	shortMessage=$1
+	longMessage=$2
+	# check for global control options
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip countdowns in mute mode
+		return
+	fi
+	if [ "$FAST_OPTION" == "yes" ];then
+		# skip countdowns in fast mode
+		return
+	fi
+	# fix empty options
+	if [ "$countDownTime" == "" ];then
+		countDownTime=10
+	fi
+	if [ "$longMessage" == "" ];then
+		longMessage="Countdown Initated"
+	fi
+	#
+	clear
+	# place the cursor in the top left corner
+	tput cup "0" "0"
+	# draw the warning banner
+	greenText
+	drawLine
+	drawSmallHeader "$longMessage"
+	drawLine
+	resetColor
+	# count down
+	for countDownTime in $(seq 1 $countDownTime | tac);do
+		tput cup "3" "0"
+		if [ $(( $countDownTime % 2 )) -eq 1 ];then
+			yellowText
+		else
+			resetColor
+		fi
+		drawLine
+		drawSmallHeader "Press [CTRL] + [C] to cancel this countdown."
+		drawLine
+		resetColor
+		# prefix the countdown time
+		countDownTime="$(prefixZeros "$countDownTime")"
+		tput cup "6" "0"
+		redText
+		drawLine
+		drawHeader "$countDownTime $shortMessage"
+		drawLine
+		resetColor
+		sleep 1
+	done
+	# give the user 2 extra seconds to cancel the countdown after it has expired
+	tput cup "6" "0"
+	redText
+	drawLine
+	drawHeader "0000 $shortMessage"
+	drawLine
+	resetColor
+	sleep 1
+	tput cup "6" "0"
+	drawLine
+	drawHeader "0000 $shortMessage"
+	drawLine
+	sleep 1
 }
