@@ -38,18 +38,6 @@ function debugCheck(){
 		fi
 	fi
 }
-################################################################################
-function getDirSum(){
-	line=$1
-	# check the libary sum against the existing one
-	totalList=$(find "$line" | sort)
-	# add the version to the sum to update old versions
-	totalList="$totalList$(cat /usr/share/2web/version.cfg)"
-	# convert lists into md5sum
-	tempLibList="$(echo -n "$totalList" | md5sum | cut -d' ' -f1)"
-	# write the md5sum to stdout
-	echo "$tempLibList"
-}
 ########################################################################
 function enableApacheServer(){
 	delete "/etc/apache2/conf-enabled/0000-default.conf"
@@ -531,9 +519,8 @@ function update2web(){
 		ln -sfn "$kodiDirectory" "/var/cache/2web/web/kodi"
 	else
 		# remove the kodi directory link
-		unlink "/var/cache/2web/web/kodi/"
+		unlink "/var/cache/2web/web/kodi"
 	fi
-
 	if returnModStatus "graph2web";then
 		# this function runs once every 30 minutes, and record activity graph is locked to once every 30 minutes
 		recordActivityGraph
@@ -567,7 +554,6 @@ function update2web(){
 	createDir "$webDirectory/web_cache/"
 	createDir "$webDirectory/shows/"
 	createDir "$webDirectory/movies/"
-	createDir "$webDirectory/kodi/"
 	createDir "$webDirectory/settings/"
 	createDir "$webDirectory/sums/"
 	createDir "$webDirectory/views/"
@@ -608,7 +594,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
 	linkFile "/usr/share/2web/templates/footer.php" "$webDirectory/footer.php"
 	# copy the indexHeader template
-	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/kodi/indexHeader.html"
+	linkFile "/usr/share/2web/templates/indexHeader.html" "$kodiDirectory/indexHeader.html"
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/indexHeader.html"
 	# settings interface files
 	linkFile "/usr/share/2web/settings/selectPath.php" "$webDirectory/settings/selectPath.php"
@@ -941,14 +927,14 @@ function update2web(){
 	rebootCheck
 }
 ########################################################################
-backupSettings(){
+function backupSettings(){
 	# create a compressed backup of the server settings
 	createDir "/var/cache/2web/backups/"
 	tempTime=$1
 	zip -9 -r "/var/cache/2web/backups/settings_$tempTime.zip" "/etc/2web/"
 }
 ########################################################################
-backupMetadata(){
+function backupMetadata(){
 	tempTime=$1
 	# backup thumbnail cache
 	# backup show and movie metadata from content
@@ -977,7 +963,7 @@ backupMetadata(){
 	# use find command to search and get paths to all relevent metadata from the /kodi/ directory
 	########################################################################
 	# need relative directory for kodi backup to create proper pathnames
-	cd "/var/cache/2web/web/kodi/"
+	cd "$kodiDirectory/"
 	# search for shows
 	files=$(find "shows" -maxdepth 2 -name '*.nfo' -o -name '*.png' -o -name '*.jpg' )
 	for filePath in $files;do
@@ -1006,7 +992,7 @@ backupMetadata(){
 	IFS=$IFSBACKUP
 }
 ########################################################################
-restoreSettings(){
+function restoreSettings(){
 	# unzip the stored settings file given
 	settingsFile=$1
 	#createDir "$(webRoot)/backups/$(date)/"
@@ -1022,7 +1008,7 @@ restoreSettings(){
 	fi
 }
 ########################################################################
-rebootCheck(){
+function rebootCheck(){
 	# stop the reboot if it is disabled
 	if ! yesNoCfgCheck /etc/2web/autoReboot.cfg;then
 		ALERT "Auto Reboot Disabled in CLI"
@@ -2104,7 +2090,7 @@ elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" 
 			# - All streams are converted into MP4 for compatibility before this delay
 			# - Resolved videos can not be more than 6 hours long so this should be fine
 			# - 1440 is the number of minutes in 24 hours
-			find "$webDirectory/RESOLVER-CACHE/" -mindepth 2 -type f -name '*.ts' -cmin +1440 -exec rm -rv {} \;
+			find "$webDirectory/RESOLVER-CACHE/" -mindepth 1 -type f -name '*.ts' -mmin +1440 -exec rm -rv {} \;
 		fi
 		# cleanup files in the transcode cache
 		ALERT "Checking for cache files in $webDirectory/TRANSCODE-CACHE/"
@@ -2113,7 +2099,7 @@ elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" 
 			find "$webDirectory/TRANSCODE-CACHE/" -type d -mtime +"$cacheDelay" -exec rm -rv {} \;
 			# remove HLS stream files from inside directories
 			# - 1440 is the number of minutes in 24 hours
-			find "$webDirectory/TRANSCODE-CACHE/" -mindepth 2 -type f -name '*.ts' -cmin +1440 -exec rm -rv {} \;
+			find "$webDirectory/TRANSCODE-CACHE/" -mindepth 1 -type f -name '*.ts' -mmin +1440 -exec rm -rv {} \;
 			# remove intermediary webm files from inside directories
 			find "$webDirectory/TRANSCODE-CACHE/" -type f -mtime +"$cacheDelay" -name '*.webm' -exec rm -v {} \;
 		fi
