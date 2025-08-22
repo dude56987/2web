@@ -190,7 +190,7 @@ function updateApplication(){
 			else
 				echo "<a href='/applications/$appTitle/' class='indexSeries' >"
 			fi
-			echo "<img loading='lazy' src='/applications/$appTitle/icon.png' />"
+			echo "<img title='$appTitle' loading='lazy' src='/applications/$appTitle/icon.png' />"
 			echo "<div>$appTitle</div>"
 			echo "</a>"
 		} > "$webDirectory/applications/$appTitle/applications.index"
