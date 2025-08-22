@@ -6,7 +6,7 @@ requireAdmin();
 <!--
 ########################################################################
 # 2web module settings
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ foreach($modules as $module){
 		<li>Enabled modules will be updated automatically by the CRON scheduler</li>
 		<li>Disabled modules will have cached data removed and no updates will be done</li>
 		<li>When a module is disabled the web settings section will be hidden.</li>
+		<li>Settings for indiviual modules can be accesed without enabling the modules in the below list. This can be used for configuring a module before enabling it.</li>
 	</ul>
 </div>
 
@@ -73,20 +74,43 @@ foreach($modules as $module){
 	echo "			Enable or disable the $module module.\n";
 	echo "		</li>\n";
 	# check the current module and show proper description
-	if ($module == "nfo2web"){
+	if ($module == "2web"){
+		echo "		<li>\n";
+		echo "			This is the base 2web module. Disable this to disable 2web completely.\n";
+		echo "		</li>\n";
+	}elseif ($module == "nfo2web"){
 		echo "		<li>\n";
 		echo "			Will enable On Demand Video Processing.\n";
 		echo "		</li>\n";
 		echo "		<li>\n";
 		echo "			Enable adding local nfo libaries to the website.\n";
 		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Will enable the 'Movies' and 'Shows'.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Will enable the video on demand section of the site.\n";
+		echo "		</li>\n";
 	}elseif ($module == "ytdl2nfo"){
 		echo "		<li>\n";
 		echo "			Enable or disable downloading metadata from websites hosting video.\n";
 		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Must enable <a href='#nfo2web'>nfo2web</a> in order to add generated nfo data to the web interface.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			This can be used to add playlists and user channels from sites that do not support RSS.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Will enable the video on demand downloads. This will only store metadata,";
+		echo "			media content will be cached using the <a href='/settings/cache.php'>system cache settings</a>.\n";
+		echo "		</li>\n";
 	}elseif ($module == "iptv2web"){
 		echo "		<li>\n";
 		echo "			Will enable IPTV live channel and IPTV live radio Processing.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Enables the LIVE section of the site that can link to HLS live streams.\n";
 		echo "		</li>\n";
 	}elseif ($module == "comic2web"){
 		echo "		<li>\n";
@@ -111,18 +135,35 @@ foreach($modules as $module){
 		echo "		</li>\n";
 	}elseif ($module == "graph2web"){
 		echo "		<li>\n";
-		echo "			Will enable graph Processing.\n";
+		echo "			Use system graphs with <a href='/exit.php?to=https://en.wikipedia.org/wiki/Munin_(software)'>Munin</a>.\n";
 		echo "		</li>\n";
 		echo "		<li>\n";
-		echo "			Enable or disable the graphs on the website.\n";
+		echo "			Enable or disable the system graphs web interface.\n";
+		echo "		</li>\n";
+	}elseif ($module == "git2web"){
+		echo "		<li>\n";
+		echo "			Add local and remote git repositories to generate reports and host the source.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Generates gource video reports, basic stats, diffs, graphs, blame inspector data, docstring based documentation, lintian data, and downloadable compressed source files.\n";
+		echo "		</li>\n";
+	}elseif ($module == "php2web"){
+		echo "		<li>\n";
+		echo "			Add HTML/PHP/JAVASCRIPT/HTML5 applications into 2web.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Any standalone website or web applications can be added by placing the website in a zip file and naming it the title you want.";
 		echo "		</li>\n";
 	}elseif ($module == "kodi2web"){
 		echo "		<li>\n";
 		echo "			Enable or disable sync of linked kodi instances.\n";
 		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add remote kodi clients to use with web remote control interface.\n";
+		echo "		</li>\n";
 	}elseif ($module == "wiki2web"){
 		echo "		<div class='warningBanner'>\n";
-		echo "			 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.\n";
+		echo "			 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not work completely or correctly.\n";
 		echo "		</div>\n";
 		# if zimdump does not exist zim files can not be extracted correctly
 		if (! is_file("/usr/bin/zimdump")){
@@ -141,7 +182,7 @@ foreach($modules as $module){
 		echo "		</li>\n";
 	}elseif ($module == "ai2web"){
 		echo "		<div class='warningBanner'>\n";
-		echo "			 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not function completely or correctly.\n";
+		echo "			 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not work completely or correctly.\n";
 		echo "		</div>\n";
 		echo "		<li>\n";
 		echo "			Will enable machine learning for recommending videos.\n";
@@ -151,6 +192,26 @@ foreach($modules as $module){
 		echo "		</li>\n";
 		echo "		<li>\n";
 		echo "			Will enable gpt4all web interface for prompting.\n";
+		echo "		</li>\n";
+	}elseif ($module == "rss2nfo"){
+		echo "		<li>\n";
+		echo "			Add video or audio RSS feeds.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			This will generate a NFO structure that can be read by <a href='#nfo2web'>nfo2web</a>\n";
+		echo "		</li>\n";
+	}elseif ($module == "portal2web"){
+		echo "		<li>\n";
+		echo "			Allows you to add bookmarks to external websites in a web portal section.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add zeroconf(bonjour) services as links in the portal.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add local servers links and scan the ports for known services.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add custom services based on ports and paths.\n";
 		echo "		</li>\n";
 	}
 	# check the module status for drawing enabled or disabled onscreen
@@ -220,11 +281,11 @@ foreach($modules as $module){
 	// check the status of the module for the dropdown
 	if (checkModStatus($module)){
 		echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "		<button class='button' type='submit' name='".$module."Status' value='no'>🟢 Disable Module</button>\n";
+		echo "			<button class='button' type='submit' name='".$module."Status' value='no'>🟢 Disable $module</button>\n";
 		echo "		</form>\n";
 	}else{
 		echo "		<form action='admin.php' class='buttonForm' method='post'>\n";
-		echo "		<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable Module</button>\n";
+		echo "			<button class='button' type='submit' name='".$module."Status' value='yes'>◯ Enable $module</button>\n";
 		echo "		</form>\n";
 	}
 	echo "<a class='button' href='$settingsTempPath'>$settingsTempIcon $module Settings</a>";
