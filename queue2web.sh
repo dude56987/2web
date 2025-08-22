@@ -707,6 +707,10 @@ elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ];then
 	disableMod "queue2web"
 	# kill all remaining queues running on the server
 	killall queue2web
+elif [ "$1" == "--unlock" ] || [ "$1" == "unlock" ];then
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	rm -v "/var/cache/2web/web/${moduleName}.active"
+	killall "$moduleName"
 else
 	drawLine
 	drawSmallHeader "queue2web queue processing system for 2web"
