@@ -190,6 +190,10 @@ html{
 	padding: 0px;
 	word-wrap: break-word;
 	color: var(--textColor);
+	color-scheme: dark light;
+}
+img{
+	background: var(--staticBackground);
 }
 .channelLink {
 	margin-bottom: 0.05rem;
@@ -405,6 +409,16 @@ ol li{
 	-webkit-text-stroke: 0.04rem black;
 	*/
 }
+.logDetails{
+	word-break: break-all;
+	font-size: 0.1rem;
+	cursor: pointer;
+}
+@media all and (display-mode: fullscreen){
+	.logDetails{
+		font-size: 1rem;
+	}
+}
 .logEntry a{
 	background: var(--solidBackground);
 	color: floralwhite !important;
@@ -568,6 +582,13 @@ ol li{
  color: white !important;
  font-weight: bolder;
 }
+#loadingSpinner{
+	position: absolute;
+	z-index: 100;
+	width: 10dvw;
+	left: 45dvw;
+	margin-top:1rem;
+}
 #videoPlayerContainer{
 	display: inline-block;
 }
@@ -667,7 +688,6 @@ ol li{
 		*/
 	}
 	.headerButtons a{
-		box-shadow: none;
 		margin-top: 0px;
 		margin-bottom: 0px;
 		font-size: 2rem;
@@ -1037,7 +1057,6 @@ ol{
 .smallButton:hover{
 	color: var(--highlightText);
 	background: var(--highlightBackground);
-	box-shadow: none;
 	border-color: var(--highlightBorder);
 	.singleStatValue{
 		color: var(--highlightText);
@@ -1085,7 +1104,6 @@ a.inputCard h3{
 	background: transparent;
 }
 .activeButton{
-	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText) !important;
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -1112,7 +1130,6 @@ a.inputCard h3{
 	border-style: solid !important;
 }
 .button:hover{
-	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -1628,7 +1645,6 @@ form{
 	overflow: hidden;
 }
 .indexSeries:hover{
-	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -1780,7 +1796,6 @@ ol{
 	background: var(--glassBackground) !important;
 }
 .showPageEpisode:hover{
-	box-shadow: 0px 0px 0px var(--shadowColor);
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -1791,7 +1806,6 @@ ol{
 	text-decoration: none;
 }
 .showPageEpisode a:hover{
-	box-shadow: none;
 	color: var(--highlightText);
 	background: var(--highlightBackground);
 	border-color: var(--highlightBorder);
@@ -2065,9 +2079,9 @@ table{
 	border: solid var(--borderColor) 0.2rem;
 	width: 44dvw;
 	display: inline-block;
-	margin: 0.5rem;
-	margin-left: auto;
-	margin-right: auto;
+	margin: 0.5dvw;
+	margin-left: 0.5dvw;
+	margin-right: 0.5dvw;
 	float: none;
 	min-height: 3rem;
 	/*
@@ -2076,6 +2090,15 @@ table{
 	vertical-align: top;
 	white-space: normal;
 	overflow: auto;
+	/* */
+	.button,input{
+		width: 95%;
+	}
+	.listCard{
+		.button{
+			width: auto;
+		}
+	}
 }
 .textList{
 	vertical-align: middle;
@@ -2322,18 +2345,17 @@ pre{
 /* Set the dark mode theme */
 @media (perfers-color-scheme: dark){
 	:root{
-		--solidBackground: #383838;
-		--glassBackground: rgba(100,100,100,0.85);
-		--borderColor: white;
-		--textColor: white;
-		--shadowColor: black;
-		--highlightText: black;
-		--highlightBackground: white;
-		--highlightBorder: lightgray;
-		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+		--solidBackground: #383838 !important;
+		--glassBackground: rgba(100,100,100,0.85) !important;
+		--borderColor: white !important;
+		--textColor: white !important;
+		--shadowColor: black !important;
+		--highlightText: black !important;
+		--highlightBackground: white !important;
+		--highlightBorder: lightgray !important;
+		--staticBackground: radial-gradient(var(--solidBackground), rgba(0,0,0,0)) !important;
 	}
 }
-
 /* WIKI styles*/
 .footer{
 	min-height: 2rem;
@@ -2421,6 +2443,7 @@ pre{
 .trackWaveform{
 	width: 100%;
 	height:4rem;
+	background: var(--staticBackground);
 }
 .trackListing .track h2{
 	display: none !important;
@@ -2557,9 +2580,6 @@ svg {
 	content: "📋";
 	*/
 }
-.logDetails{
-	word-break: break-all;
-}
 details{
 	min-height: 0px !important;
 }
@@ -2641,6 +2661,7 @@ details{
 	white-space: nowrap;
 	margin: 0.1rem;
 	overflow: hidden;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
 }
 .singleStatValue{
 	border-left: 0.2rem var(--borderColor) solid;
@@ -2763,7 +2784,6 @@ details{
 	max-width: 25rem;
 }
 .portalPreviewContainer:hover{
-	box-shadow: none;
 	background: var(--highlightBackground) !important;
 	color: var(--highlightText) !important;
 }
@@ -2787,7 +2807,7 @@ details{
 	font-size: 1rem;
 }
 .colorPicker{
-	width: 2rem;
+	width: 2rem !important;
 	display: inline-block;
 }
 .singleButtonForm{
@@ -2972,7 +2992,8 @@ details{
 	height: 100dvh;
 }
 .wikiIcon{
-	max-width: 100%;
+	max-width: 60%;
+	min-width: 40%;
 }
 .appScreenshot{
 	height: 10rem;
@@ -3040,7 +3061,9 @@ details{
 	.topButtonSpace{
 		display: none !important;
 	}
-	text-shadow: none !important;
+	*{
+		text-shadow: none !important;
+	}
 }
 /******************************************************************************/
 /* CSS ANIMATIONS */
@@ -3049,17 +3072,19 @@ details{
 	0% {margin-top: -50%;opacity: 0;}
 	100% {margin-top: 0%;opacity: 1;}
 }
+/*
 .fallIn{
-	animation-name: fallIn;
+	animation-name: fallIn !important;
 	animation-duration: 0.08s;
 	animation-fill-mode: forwards;
-	/* animation delay is set on the element */
 }
+*/
 .rainbow{
 	animation-name: rainbow;
-	animation-duration: 10s;
+	animation-duration: 20s;
 	animation-fill-mode: forwards;
 	animation-iteration-count: infinite;
+	animation-timing-function: linear;
 }
 @keyframes dropBounce{
 	0% {
@@ -3106,17 +3131,36 @@ details{
 		transform: translateY(0px) translateX(0px) scale(1);
 	}
 }
+@keyframes pushedButton{
+	0% {
+		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
+		/*
+		box-shadow: 0px 0px 1rem var(--shadowColor);
+		*/
+	}
+	20% {
+		filter: brightness(0.9);
+	}
+	100% {
+		transform: scaleY(0.98) scaleX(0.98);
+		filter: brightness(1.1);
+		box-shadow: 0px 0px 0rem;
+	}
+}
 @keyframes pulseate{
 	0% {
 		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
 	}
 	50% {
-		transform: scaleY(1.1) scaleX(1.1);
+		transform: scaleY(0.99) scaleX(0.99);
+		filter: brightness(0.8);
 	}
 	100% {
 		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
 	}
-
 }
 @keyframes tvOn{
 	0% {
@@ -3142,58 +3186,170 @@ details{
 		filter: hue-rotate(0deg);
 		-webkit-filter:hue-rotate(0deg);
 	}
+	50% {
+		filter: hue-rotate(180deg);
+		-webkit-filter:hue-rotate(180deg);
+	}
 	100% {
-		filter: hue-rotate(360deg);
-		-webkit-filter:hue-rotate(360deg);
+		filter: hue-rotate(0deg);
+		-webkit-filter:hue-rotate(0deg);
 	}
 }
+@keyframes shine{
+	0% {
+		filter: brightness(1);
+	}
+	100% {
+		filter: brightness(1.5);
+	}
+}
+@keyframes spinRight{
+	0% {
+		rotate: 0deg;
+	}
+	100% {
+		rotate: 360deg;
+	}
+}
+@keyframes fadeIn{
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+/* Page Transitions */
+/*
+@view-transition{
+	navigation: auto;
+}
+*/
+html{
+	/*
+	view-transition-name: fadeIn;
+	*/
+	animation-name: fadeIn;
+	/*
+	animation-duration: 0.3s;
+	*/
+	animation-duration: 0.01s;
+	animation-timing-function: ease-in;
+}
+/*
+::view-transition-old(root){
+	animation: tvOn 2.3s ease both;
+}
+::view-transition-new(root){
+	animation: tvOn 2.3s ease both;
+}
+*/
+
+/* Element Animations */
 video{
 	animation-name: tvOn;
 	animation-duration: 0.8s;
 	animation-fill-mode: both;
 	animation-delay: 0.2s;
+	animation-timing-function: ease-in;
 }
+/*
 .singleStat{
 	animation-name: dropBounce;
 	animation-duration: 0.3s;
 	animation-fill-mode: both;
 	animation-delay: 0.2s;
 }
+*/
+button:hover{
+	animation-name: pushedButton;
+	animation-duration: 1s;
+	animation-fill-mode: forwards;
+	animation-timing-function: ease-in;
+}
+a:hover{
+	animation-name: pushedButton;
+	animation-duration: 1s;
+	animation-fill-mode: forwards;
+	animation-timing-function: ease-in;
+	/*
+	animation-duration: 1.16s;
+	animation-iteration-count: infinite;
+	*/
+}
+#spinRight,.spinRight{
+	animation-name: spinRight;
+	animation-duration: 1.16s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+/*
+.button:hover{
+	animation-name: pulseate;
+	animation-duration: 2.6s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+.indexSeries:hover{
+	animation-name: pulseate;
+	animation-duration: 2.6s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+.showPageEpisode:hover{
+	animation-name: pulseate;
+	animation-duration: 2.6s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
 .indexSeries{
 	animation-name: dropBounce;
 	animation-duration: 0.3s;
 	animation-fill-mode: both;
 	animation-delay: 0.2s;
+	animation-timing-function: linear;
 }
 .showPageEpisode{
 	animation-name: dropBounce;
 	animation-duration: 0.3s;
 	animation-fill-mode: both;
 	animation-delay: 0.2s;
+	animation-iteration-count: 1;
+	animation-timing-function: linear;
 }
 .searchBoxForm{
 	animation-name: bigDropBounce;
 	animation-duration: 0.2s;
 	animation-fill-mode: both;
+	animation-timing-function: linear;
 }
 .titleCard{
 	animation-name: bigDropBounce;
 	animation-duration: 0.2s;
 	animation-fill-mode: both;
+	animation-timing-function: linear;
 }
 .inputCard{
 	animation-name: bigDropBounce;
 	animation-duration: 0.2s;
 	animation-fill-mode: both;
 	animation-delay: 0.2s;
+	animation-timing-function: linear;
 }
 .settingListCard{
 	animation-name: bigDropBounce;
 	animation-duration: 0.2s;
 	animation-fill-mode: both;
+	animation-timing-function: linear;
 }
 details[open]{
 	animation-name: bigDropBounce;
 	animation-duration: 0.2s;
 	animation-fill-mode: both;
+	animation-timing-function: linear;
 }
+*/
