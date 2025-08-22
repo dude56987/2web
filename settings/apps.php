@@ -5,7 +5,7 @@ requireAdmin();
 <!--
 ########################################################################
 # 2web app settings
-# Copyright (C) 2024  Carl J Smith
+# Copyright (C) 2025  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,10 +28,6 @@ requireAdmin();
 </head>
 <body>
 <?php
-################################################################################
-// NOTE: Do not write any text to the document, this will break the redirect
-// redirect the given file to the resoved url found with youtube-dl
-################################################################################
 ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
@@ -74,12 +70,13 @@ include("settingsHeader.php");
 	</table>
 </div>
 
-<div id='index' class='inputCard'>
+<div id='index' class='titleCard'>
 	<h2>Supported Library file types</h2>
 	<ul>
 		<li>Zip files placed in application Library paths will be loaded when php2web is updated.</li>
-		<li>Add a zip file containing the html5 app to any of the application library paths.</li>
-		<li>The zip file must contain a .html .php or .htm file at the top level of the zip file.</li>
+		<li>Example applications can be found on the server at /usr/share/2web/example_apps/</li>
+		<li>The zip file must contain a .html .php or .htm file at the top level of the zip file. The file should be named 'main' or 'index' otherwise it may not be found.</li>
+		<li>PHP applications with the line 'include("/var/cache/2web/web/header.php")' and 'include("/var/cache/2web/web/footer.php")' will be fully intergrated into the website. All other applications will be placed inside a adjustable frame with a fullscreen button.</li>
 	</ul>
 </div>
 
