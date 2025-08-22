@@ -110,6 +110,9 @@ if (array_key_exists("url",$_GET)){
 	$videoLink = "http://".gethostname().'.local/live/iptv-resolver.php?url="'.$videoLink.'"';
 	# generate the hash
 	$videoLinkSum=md5($videoLink);
+	if (! file_exists("/var/cache/2web/web/kodi-player/")){
+		mkdir("/var/cache/2web/web/kodi-player/");
+	}
 	if (! file_exists("/var/cache/2web/web/kodi-player/".$videoLinkSum.".strm")){
 		# get the title of the video
 		$videoTitle=shell_exec("/var/cache/2web/generated/yt-dlp/yt-dlp --get-title '".$OGvideoLink."' ");
