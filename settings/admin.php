@@ -1469,6 +1469,21 @@ if (array_key_exists("newUserName",$_POST)){
 	#
 	backButton("/fortune.php","🛠️ Return To Fortune");
 	clear();
+}else if (array_key_exists("cleanKodiPlayer",$_POST)){
+	if(verifyChoice("/settings/clean.php#cleanKodiPlayer")){
+		# remove the existing resolver cache data then run 2web to rebuild the cache folder
+		$command="rm -rv /var/cache/2web/web/kodi-player/;";
+		# remove the cache size stat since the resolver size is reset
+		$command.="rm -rv /var/cache/2web/web/kodiPlayerSize.index;";
+		$command.="2web;";
+		# queue the command
+		addToQueue("multi",$command);
+		# display output for the user
+		outputLog("Removing cached data in /var/cache/2web/web/kodi-player/", "goodLog");
+		outputLog("Rebuilding cache directory", "goodLog");
+		backButton(("/settings/clean.php#cleanKodiPlayer"),"🛠️ Return To Cache Settings");
+	}
+	clear();
 }else if (array_key_exists("cleanResolverCache",$_POST)){
 	if(verifyChoice("/settings/clean.php#cleanResolverCache")){
 		# remove the existing resolver cache data then run 2web to rebuild the cache folder

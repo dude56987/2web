@@ -46,6 +46,7 @@ include("settingsHeader.php");
 		<li><a href='#cleanWebCache'>Clean Web Cache</a></li>
 		<li><a href='#cleanLogs'>Clean Logs</a></li>
 		<li><a href='#cleanViewCounts'>Clean View Counts</a></li>
+		<li><a href='#cleanKodiPlayer'>Clean Kodi Player History</a></li>
 	</ul>
 </div>
 
@@ -243,6 +244,23 @@ include("settingsHeader.php");
 			<button class='button' type='submit' name='cleanWebPlayer' value='yes'>🧹 Clean Web Player Media</button>
 		</form>
 </div>
+
+<div id='cleanKodiPlayer' class='inputCard'>
+	<h2>Clean KODI Player Entries</h2>
+		<?PHP getStat("/var/cache/2web/web/kodiPlayerSize.index","KODI Player History Size",true); ?>
+		<ul>
+			<li>
+				Stored on server at '/var/cache/2web/web/kodi-player/'
+			</li>
+			<li>
+				Remove all entries added to the <a href='/kodi-player.php'>KODI Remote</a>.
+			</li>
+		</ul>
+		<form action='admin.php' class='buttonForm' method='post'>
+			<button class='button' type='submit' name='cleanKodiPlayer' value='yes'>🧹 Clean KODI Player History</button>
+		</form>
+</div>
+
 
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
