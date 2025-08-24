@@ -25,11 +25,12 @@ function processZimWiki(){
 	# process a zim wiki
 	zimFilePath=$1
 	webDirectory=$2
+	kodiDirectory="$(kodiRoot)"
 	# if the md5sum of the wiki file has changed update it
 	#if checkFileDataSum "$zimFilePath";then
 	if test -f "$zimFilePath";then
 		# link the zim file into the kodi directory
-		linkFile "$zimFilePath" "$webDirectory/kodi/wiki/"
+		linkFile "$zimFilePath" "$kodiDirectory/wiki/"
 		# get the filename for the wiki name
 		#wikiName="$(basename "$wikiLocation" | cut -d "." -f1)"
 		# generate a md5sum for the location
@@ -137,9 +138,10 @@ function update(){
 	fi
 
 	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
 
 	# create the kodi directory
-	createDir "$webDirectory/kodi/wiki/"
+	createDir "$kodiDirectory/wiki/"
 
 	# create the web directory
 	createDir "$webDirectory/wiki/"
@@ -164,8 +166,6 @@ function update(){
 	# load sources
 	wikiLocations=$(grep -v "^#" /etc/2web/wiki/libraries.cfg)
 	wikiLocations=$(echo -e "$wikiLocations\n$(grep -v --no-filename "^#" /etc/2web/wiki/libraries.d/*.cfg)")
-	################################################################################
-	webDirectory=$(webRoot)
 	################################################################################
 	# make the download directory if is does not exist
 	createDir "$downloadDirectory"
@@ -234,11 +234,11 @@ function resetCache(){
 }
 ################################################################################
 function nuke(){
-	drawLine
-	drawSmallHeader "DELETING ALL WIKI2WEB DATA"
-	drawLine
-	delete "$(webRoot)/wiki/"
-	delete "$(webRoot)/kodi/wiki/"
+	webDirectory=$(webRoot)
+	kodiDirectory="$(kodiRoot)"
+	#
+	delete "$webDirectory/wiki/"
+	delete "$kodiDirectory/wiki/"
 }
 ################################################################################
 # set the theme of the lines in CLI output
@@ -260,11 +260,9 @@ elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 	echo "There are no modules to upgrade in wiki2web"
 	drawLine
 	showServerLinks
-	# show the server link at the bottom of the interface
-	echo "Module Links"
+	drawSmallHeader "Module Links"
 	drawLine
 	echo "http://$(hostname).local/wiki/"
-	drawLine
 	echo "http://$(hostname).local/settings/wiki.php"
 	drawLine
 elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
@@ -288,8 +286,6 @@ else
 	lockProc "wiki2web"
 	# update sources
 	update
-	# display the help
-	main --help
 	showServerLinks
 	# show the server link at the bottom of the interface
 	drawSmallHeader "Module Links"
