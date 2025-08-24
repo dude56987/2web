@@ -39,6 +39,8 @@ include("settingsHeader.php");
 	<h2>Index</h2>
 	<ul>
 		<li><a href='#loginInactivityTimeout'>Login Inactivity Timeout</a></li>
+		<li><a href='#userIndex'>User Index</a></li>
+		<li><a href='#groupIndex'>Group Index</a></li>
 		<li><a href='#manageUsers'>Manage Users</a></li>
 		<li><a href='#addNewUser'>Add New Administrator</a></li>
 		<li><a href='#addNewBasicUser'>Add New Basic User</a></li>
@@ -98,35 +100,39 @@ include("settingsHeader.php");
 </form>
 </div>
 
-<div class='inputCard' id='userIndex'>
-	<h2>User Index</h2>
-		<ul>
+<details class='titleCard' id='userIndex'>
+	<summary><h2>User Index</h2></summary>
 		<?PHP
 		# for each existing user create a jump link
 		$foundUsers=scanDir("/etc/2web/users/");
 		$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
 		foreach( $foundUsers as $foundUser){
 			$foundUser = str_replace(".cfg","",$foundUser);
-			echo "<a class='showPageEpisode' href='#user_$foundUser'>🯆 $foundUser</a>";
+			echo "<a class='indexSeries' href='#user_$foundUser'>\n";
+			#echo "<h2 class='moreEpisodesLinkIcon'>🯆</h2>\n";
+			echo "<h2 class=''>🯆</h2>\n";
+			echo $foundUser."\n";
+			echo "</a>\n";
 		}
 		?>
-		</ul>
-	</div>
-</div>
+</details>
 
-<div class='inputCard' id='groupIndex'>
-	<h2>Group  Index</h2>
+<details class='titleCard' id='groupIndex'>
+	<summary><h2>Group  Index</h2></summary>
 		<?PHP
 		# get a list of the groups
 		$groups=scanDir("/etc/2web/groups/");
 		$groups=array_diff($groups,Array('..','.','.placeholder'));
 		foreach( $groups as $group ){
 			$group = str_replace(".cfg","",$group);
-			echo "<a class='showPageEpisode' href='#groupLock_$group'>👪 ".$group."</a>";
+			echo "<a class='indexSeries' href='#groupLock_$group'>\n";
+			#echo "<h2 class='moreEpisodesLinkIcon'>👪</h2>\n";
+			echo "<h2 class=''>👪</h2>\n";
+			echo $group."\n";
+			echo "</a>\n";
 		}
 		?>
-	</div>
-</div>
+</details>
 
 <div class='settingListCard' id='manageUsers'>
 <h2>Manage Users</h2>

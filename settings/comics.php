@@ -74,7 +74,7 @@ include("settingsHeader.php");
 	</table>
 </div>
 
-<div id='index' class='inputCard'>
+<div id='index' class='titleCard'>
 	<h2>Supported Library file types</h2>
 	<ul>
 		<li>.txt</li>
