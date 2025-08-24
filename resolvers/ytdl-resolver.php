@@ -75,6 +75,9 @@ function cacheUrl($sum,$videoLink){
 	$webDirectory=$_SERVER["DOCUMENT_ROOT"];
 	################################################################################
 	// create the directory to hold the video files within the resolver cache
+	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/")){
+		mkdir("$webDirectory/RESOLVER-CACHE/");
+	}
 	if ( ! file_exists("$webDirectory/RESOLVER-CACHE/$sum/")){
 		mkdir("$webDirectory/RESOLVER-CACHE/$sum/");
 	}
@@ -181,7 +184,7 @@ function cacheUrl($sum,$videoLink){
 		$dlCommand = $dlCommand." --write-info-json --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 	}else{
 		# download the json data into a file
-		$dlCommand = "yt-dlp --no-download --dump-single-json '$videoLink' > '$webDirectory/RESOLVER-CACHE/$sum/video.info.json';\n";
+		$dlCommand = "/var/cache/2web/generated/yt-dlp/yt-dlp --no-download --dump-single-json '$videoLink' > '$webDirectory/RESOLVER-CACHE/$sum/video.info.json';\n";
 		# if no upgrade is set then simply convert the hls stream into a mp4 and grab the json data last
 		$dlCommand .= "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
 		$dlCommand .= " && mv -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
@@ -302,15 +305,38 @@ function cacheResolve($sum,$webDirectory){
 }
 ################################################################################
 if (array_key_exists("url",$_GET)){
+	#
 	$videoLink = $_GET['url'];
-	# check the url is not a path
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$_GET["url"])){
-		#addToLog("DEBUG","ytdl-resolver.php reading link",($_SERVER["DOCUMENT_ROOT"].$_GET["url"]));
-		#addToLog("DEBUG","ytdl-resolver.php","Discovered direct link path, redirecting to path '".$_GET["url"]."'");
-		# redirect to the direct path
-		redirect($_GET["url"]);
-	}
 	debug("URL is ".$videoLink."<br>");
+	#
+	debug("Checking for local file path ".urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink)."<br>");
+	# check the url is a local path on the server
+	if (file_exists(urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink))){
+		debug("URL '".$videoLink."' was found to be a local path<br>");
+		# redirect to the direct path
+		#redirect($_SERVER["HTTP_HOST"].$_GET["url"]);
+		if(isTranscodeEnabled()){
+			debug("Transcoding is enabled<br>");
+			#
+			#if($_SERVER["HTTPS"]){
+			#	$protoPrefix="https";
+			#}else{
+			#	$protoPrefix="http";
+			#}
+			debug("Redirecting to ".'/ytdl-resolver.php?url=http://'.$_SERVER["HTTP_HOST"].$_GET["url"]."<br>");
+			# redirect the local url into the resolver for transcoding
+			redirect('/transcode.php?path='.$_GET["url"]);
+			#redirect('/ytdl-resolver.php?url=http://'.$_SERVER["HTTP_HOST"].$_GET["url"]);
+		}else{
+			debug("Transcoding is disabled<br>");
+			debug("Redirecting to ".$_GET["url"]."<br>");
+			redirect($_GET["url"]);
+		}
+		#redirect($_GET["url"]);
+	}else{
+		debug("This link is not a local file.<br>");
+	}
+	debug("Checking headers for link<br>");
 	# make sure the url is a webpage
 	$videoMimeType=get_headers($videoLink, true);
 	$headerData=$videoMimeType;
@@ -377,7 +403,6 @@ if (array_key_exists("url",$_GET)){
 		$url = "/RESOLVER-CACHE/$sum/video.mp4";
 		debug("Checking path ".$url."<br>");
 		################################################################################
-		#check for the first x segments of the hls playback, ~30 seconds
 		if (file_exists("$webDirectory$url")){
 			# if the json data has not yet been verified to have downloaded the entire file
 			$isVerified=verifyCacheFile($storagePath,$videoLink);
@@ -417,23 +442,29 @@ if (array_key_exists("url",$_GET)){
 	echo "<link rel='stylesheet' href='style.css'>\n";
 	echo "</head>\n";
 	echo "<body>\n";
-	echo "<div class='settingListCard'>\n";
+	echo "<div class='titleCard'>\n";
 	echo "<h2>Manual Video Cache Interface</h2>\n";
 	echo "No url was specified to the resolver!<br>\n";
 	echo "To Cache a video and play it from here you can use the below form.<br>\n";
 	echo "<form method='get'>\n";
 	echo "	<input width='60%' type='text' name='url'>\n";
-	echo "	<input class='button' type='submit' value='Cache Url'>\n";
-	echo "	<div>\n";
-	echo "		<span>Enable Debug Output<span>\n";
-	echo "		<input class='button' width='10%' type='checkbox' name='debug'>\n";
-	echo "	</div>\n";
+	echo "	<table class='controlTable'>\n";
+	echo "		<tr>\n";
+	echo "			<td>\n";
+	echo "				<span>Enable Debug Output</span>\n";
+	echo "				<input class='checkBox' width='10%' type='checkbox' name='debug'>\n";
+	echo "			</td>\n";
+	echo "			<td>\n";
+	echo "				<input class='button' type='submit' value='Cache Url'>\n";
+	echo "			</td>\n";
+	echo "		</tr>\n";
+	echo "	</table>\n";
 	echo "</form>\n";
 	echo "</a>\n";
 	echo "</div>\n";
 	echo "<hr>\n";
-	echo "<div class='settingListCard'>"."\n";
-	echo "	<h2>WEB API EXAMPLES</h2>"."\n";
+	echo "<details class='settingListCard'>"."\n";
+	echo "	<summary><h2>WEB API EXAMPLES</h2></summary>"."\n";
 	echo "	<p>"."\n";
 	echo "		Replace the url api key with your video web link to be cached by youtube-dl."."\n";
 	echo "		Debug=true will generate a webpage containing debug data and video output"."\n";
@@ -458,7 +489,7 @@ if (array_key_exists("url",$_GET)){
 	echo '		http://'.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?link=true&url="http://videoUrl/videoid/"&debug=true'."\n";
 	echo "	</li>\n";
 	echo "</ul>\n";
-	echo "</div>\n";
+	echo "</details>\n";
 
 
 	echo "<div class='settingListCard'>\n";
