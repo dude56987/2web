@@ -91,8 +91,17 @@ ripXmlTag(){
 }
 ########################################################################
 ripXmlTagMultiLine(){
+	# ripXmlTagMultiLine "$data" "$tag"
+	#
+	# Pull xml data that crosses multuple lines	in a file
+	#
 	data=$1
 	tag=$2
+	#
+	if ! validString "$tag" -q;then
+		ERROR "Tag must be at least one character in length! Program FAILURE has occured!"
+		return 1
+	fi
 	# rip the tag data converted by converting lines to a token phrase to converted into html new lines
 	data=$(echo "$data" | sed -z 's/\n/ ____NEWLINE____ /g' | grep -E --ignore-case --only-matching "<$tag>.*.?</$tag>" )
 	# remove after slash tags, they break everything
@@ -102,22 +111,24 @@ ripXmlTagMultiLine(){
 	data="${data//<$tag>}"
 	data="${data//<\/$tag>}"
 	# convert to html data after cleaning of tags is finished
-	#data=$(echo "$data" | txt2html --extract | sed 's/____NEWLINE____/ <br> /g')
 	#data=$(echo "$data" | sed 's/____NEWLINE____/ <br> /g')
-	#data=$(echo "$data" | txt2html --linkonly | sed 's/____NEWLINE____/ <br> /g')
-	data=$(echo "$data" | sed 's/____NEWLINE____/ <br> /g')
-	#
-	#data=$(cleanText "$data")
-	# if multuple lines of tag info are given format them for html
-	if validString "$tag" -q;then
+	data=$(echo "$data" | sed 's/____NEWLINE____/\n/g')
+	# look for any html tags in the output
+	if ! echo "$data" | grep -qE "<br>|<p>|<hr>|<h1>|<h2>|<\/a>";then
+		# If the data contains no obvious HTML convert the text into HTML
+		data=$(echo "$data" | pandoc -o - -f markdown - )
+		#data=$(echo "$data" | markdown)
+		#data=$(echo "$data" | txt2tags -i - -t html -o -)
+	fi
+	# check the extracted tag data is valid
+	if validString "$data" -q;then
 		echo "$data"
 		return 0
 	else
-		ERROR "Tag must be at least one character in length! Program FAILURE has occured!"
+		ERROR "Found data in tag must be at least one character in length! Program FAILURE has occured!"
 		return 1
 	fi
 }
-
 ########################################################################
 cleanXml(){
 	data=$1
@@ -191,7 +202,9 @@ processMovie(){
 		movieTitle=$(cleanXml "$nfoInfo" "title")
 		movieTitle=$(alterArticles "$movieTitle" )
 		movieYear=$(cleanXml "$nfoInfo" "year")
-		moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
+		#moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | txt2tags -i - -t html -o -)
+		#moviePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | markdown)
+		moviePlot="$(ripXmlTagMultiLine "$nfoInfo" "plot")"
 		movieTrailer=$(ripXmlTag "$nfoInfo" "trailer")
 		movieStudio=$(cleanXml "$nfoInfo" "studio")
 		if [ "$movieStudio" == "" ];then
@@ -718,7 +731,9 @@ processEpisode(){
 		episodeShowTitle=$(cleanText "$episodeShowTitle")
 		episodeShowTitle=$(alterArticles "$episodeShowTitle")
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
-		episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot")
+		#episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | txt2tags -i - -t html -o -)
+		#episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | markdown)
+		episodePlot="$(ripXmlTagMultiLine "$nfoInfo" "plot" )"
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
 		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,3\}//g")
@@ -1000,7 +1015,7 @@ processEpisode(){
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<h2 class='title'>\n"
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}		${episodeShowTitle}\n"
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	</h2>\n"
-		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<img title='$episodeShowTitle - $episodeTitle' loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>\n"
+		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<img title='${episodeShowTitle}&#13;&#13;$episodeTitle' loading='lazy' src='/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath-thumb-web.png'>\n"
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<div class='title'>\n"
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}	<div class='showIndexNumbers'>${episodeSeason}x${episodeNumber}</div>\n"
 		tempEpisodeSeasonThumb="${tempEpisodeSeasonThumb}		${episodeTitle}\n"
@@ -1123,7 +1138,9 @@ processShow(){
 	if ! test -f "$webDirectory/shows/$showTitle/plot.cfg";then
 		# rip the plot from the show metadata so it can be added to the webpage
 		{
-			showPlot=$(ripXmlTagMultiLine "$showMeta" "plot")
+			#showPlot=$(ripXmlTagMultiLine "$showMeta" "plot" | txt2tags -i - -t html -o -)
+			#showPlot=$(ripXmlTagMultiLine "$showMeta" "plot" | markdown)
+			showPlot="$(ripXmlTagMultiLine "$showMeta" "plot")"
 			echo "$showPlot"
 		} > "$webDirectory/shows/$showTitle/plot.cfg"
 	fi
@@ -2215,13 +2232,14 @@ LINE_THEME="stickDance"
 INPUT_OPTIONS="$@"
 PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
 MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
 #
 debugCheck
 #
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 	showHelp
 elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
-	# generate demo data for 2web modules for use in screenshots, make it random as can be
+	# generate demo data for 2web modules for use in screenshots, make it random as possible
 
 	# check for parallel processing and count the cpus
 	if [ "$PARALLEL_OPTION" == "yes" ];then
@@ -2258,14 +2276,20 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 		demoImage "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/fanart.png" "$randomTitle" "800" "600" &
 		waitQueue 0.2 "$totalCPUS"
 		# generate the video type
-		videoType=$(( $RANDOM % 3 ))
+		videoType=$(( $RANDOM % 6 ))
 		# generate the fake video file using the site spinner gif
 		if [ $videoType  -eq 0 ];then
-			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
 		elif [ $videoType  -eq 1 ];then
-			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
+		elif [ $videoType  -eq 2 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+		elif [ $videoType  -eq 3 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
+		elif [ $videoType  -eq 4 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mov" &
 		else
-			ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
 		fi
 		waitQueue 0.2 "$totalCPUS"
 	done
@@ -2323,14 +2347,20 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 				demoImage "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle-thumb.png" "$randomEpisodeTitle" "800" "600" &
 				waitQueue 0.2 "$totalCPUS"
 				# generate the video type
-				videoType=$(( $RANDOM % 3 ))
+				videoType=$(( $RANDOM % 6 ))
 				# generate the fake video file using the site spinner gif
 				if [ $videoType  -eq 0 ];then
-					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
 				elif [ $videoType  -eq 1 ];then
-					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
-				else
-					ffmpeg -i "/var/cache/2web/spinner.gif" "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
+				elif [ $videoType  -eq 2 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+				elif [ $videoType  -eq 3 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
+				elif [ $videoType  -eq 4 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mov" &
+				elif [ $videoType  -eq 5 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
 				fi
 				waitQueue 0.2 "$totalCPUS"
 			done
