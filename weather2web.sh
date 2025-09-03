@@ -487,7 +487,7 @@ webUpdate(){
 	kodiDirectory="$(kodiRoot)"
 
 	# create the kodi directory
-	createDir "$webDirectory/kodi/weather/"
+	createDir "$kodiDirectory/weather/"
 
 	# create the web directory
 	createDir "$webDirectory/weather/"
