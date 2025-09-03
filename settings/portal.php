@@ -130,7 +130,7 @@ foreach($sourceFiles as $sourceFile){
 			<li>Use the base url of a server to scan for services</li>
 			<li>Local Scan Sources are checked every 24 hours</li>
 		</ul>
-		<input width='60%' type='text' name='addPortalScanSource' placeholder='/absolute/path/to/the/scanSources'>
+		<input width='60%' type='text' name='addPortalScanSource' placeholder='http://example.local'>
 		<button class='button' type='submit'>➕ Add Path</button>
 	</form>
 	</div>
@@ -197,7 +197,11 @@ foreach($sourceFiles as $sourceFile){
 				echo "<div class='settingsEntry'>";
 				$link=str_replace(".cfg","",baseName($sourceFile));
 				$linkData=file_get_contents($sourceFile);
-				echo "	<h2>".$linkData."</h2>";
+				$linkData=explode(";",$linkData);
+				echo "	<h1>".$linkData[0]."</h1>\n";
+				echo "	<div>".$linkData[2]."</div>\n";
+				echo "	<hr>\n";
+				echo "	<div>".$linkData[1]."</div>\n";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='removePortalBookmark' value='".$link."'>❌ Remove Source</button>\n";

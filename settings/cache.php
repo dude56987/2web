@@ -55,6 +55,9 @@ include("settingsHeader.php");
 			<li>
 				Change the quality of the HLS stream created for playback during download.
 			</li>
+			<li>
+				'best' means the highest quality available for that video. This may not be the quality expected. ('4k' or 'best' may download '720p' if that is the highest quality available)
+			</li>
 		</ul>
 		<select name='cacheQuality'>
 			<?php
@@ -83,7 +86,6 @@ include("settingsHeader.php");
 <div id='cacheUpgradeQuality' class='inputCard'>
 	<h2>Cache Upgrade Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
-		<p>
 		<ul>
 			<li>
 				Download a higher quality after the inital stream has been created.
@@ -94,8 +96,10 @@ include("settingsHeader.php");
 			<li>
 				If you choose 'best' for the stream and 'best' for the upgrade quality the upgraded version will still be higher quality.
 			</li>
+			<li>
+				Some websites will only work with a upgrade quality set. (If a video fails to play you may need to set this to anything other than 'No Upgrade')
+			</li>
 		</ul>
-		</p>
 		<select name='cacheUpgradeQuality'>
 			<?php
 				// add the cache quality as a option
@@ -121,7 +125,7 @@ include("settingsHeader.php");
 </div>
 
 <div id='cacheDelay' class='inputCard'>
-	<h2>Cache Time</h2>
+	<h2>System Cache Time</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
 		<ul>
 			<li>
@@ -132,6 +136,12 @@ include("settingsHeader.php");
 			</li>
 			<li>
 				The forever option should only be used for archive purposes.
+			</li>
+			<li>
+				All system caches follow this time value.
+			</li>
+			<li>
+				Some system caches can be forcefully cleaned in the <a href='/settings/clean.php'>Clean</a> web settings.
 			</li>
 		</ul>
 		<select name='cacheDelay'>
@@ -167,6 +177,9 @@ include("settingsHeader.php");
 		<li>
 			Automatically cache episodes that first aired this month.
 		</li>
+		<li>
+			All episodes cached this way will be cached in the 'best' quality.
+		</li>
 	</ul>
 	<?php
 	buildYesNoCfgButton("/etc/2web/cacheNewEpisodes.cfg","Caching New Episodes","cacheNewEpisodes");
@@ -185,7 +198,7 @@ include("settingsHeader.php");
 	?>
 </div>
 
-<div id='videoResolverStableVersion' class='titleCard'>
+<div id='videoResolverStableVersion' class='inputCard'>
 	<h2>Video Resolver Version</h2>
 	<ul>
 		<li>

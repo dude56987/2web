@@ -77,11 +77,15 @@ include("settingsHeader.php");
 <div id='index' class='titleCard'>
 	<h2>Supported Library file types</h2>
 	<ul>
-		<li>.txt</li>
-		<li>.zip</li>
-		<li>.cbz</li>
-		<li>.pdf</li>
-		<li>local jpeg directories
+		<li>.html (Hypertext Markup Language)</li>
+		<li>.ps (Postscript)</li>
+		<li>.md (Markdown)</li>
+		<li>.txt (Text)</li>
+		<li>.zip (Compressed File)</li>
+		<li>.cbz (Comic Book Zip)</li>
+		<li>.pdf (Portable Document Format)</li>
+		<li>.epub (Electronic Publication)</li>
+		<li>local mixed jpeg/png/mp4/gif directories
 			<ul>
 				<li>one directory per comic</li>
 				<li>directory name will be comic name</li>

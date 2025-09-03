@@ -78,6 +78,9 @@ foreach($modules as $module){
 		echo "		<li>\n";
 		echo "			This is the base 2web module. Disable this to disable 2web completely.\n";
 		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Disabling this module will disable the webserver, and delete the entire 2web cached website.\n";
+		echo "		</li>\n";
 	}elseif ($module == "nfo2web"){
 		echo "		<li>\n";
 		echo "			Will enable On Demand Video Processing.\n";
@@ -90,6 +93,12 @@ foreach($modules as $module){
 		echo "		</li>\n";
 		echo "		<li>\n";
 		echo "			Will enable the video on demand section of the site.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			To add RSS video/audio feeds activate the <a href='#rss2nfo'>rss2nfo</a> module.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			To add users and playlists from website links using yt-dlp enable the <a href='#ytdl2nfo'>ytdl2nfo</a> module.\n";
 		echo "		</li>\n";
 	}elseif ($module == "ytdl2nfo"){
 		echo "		<li>\n";
@@ -119,9 +128,18 @@ foreach($modules as $module){
 		echo "		<li>\n";
 		echo "			Enable or disable comics section of the website.\n";
 		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add a collection of books and comics";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Can read CBZ,ZIP,EPUB,PDF,TXT,HTML,PS,MD into the libraries.";
+		echo "		</li>\n";
 	}elseif ($module == "weather2web"){
 		echo "		<li>\n";
 		echo "			Will enable Weather Station Processing.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add and remove weather station locations.\n";
 		echo "		</li>\n";
 		echo "		<li>\n";
 		echo "			Enable or disable weather on the website.\n";
@@ -198,7 +216,7 @@ foreach($modules as $module){
 		echo "			Add video or audio RSS feeds.\n";
 		echo "		</li>\n";
 		echo "		<li>\n";
-		echo "			This will generate a NFO structure that can be read by <a href='#nfo2web'>nfo2web</a>\n";
+		echo "			Must enable <a href='#nfo2web'>nfo2web</a> in order to add generated nfo data to the web interface.\n";
 		echo "		</li>\n";
 	}elseif ($module == "portal2web"){
 		echo "		<li>\n";
