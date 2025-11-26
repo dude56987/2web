@@ -193,12 +193,12 @@ function filterWordIndex(){
 	filterCount=0
 	for indexEntry in $searchIndexResults;do
 		if echo -n "$indexEntry" | grep -q "^/var/cache/2web/web/$filter/";then
-			if [ $filterCount -ge 40 ];then
+			if [ $filterCount -ge 50 ];then
 				# break the loop if the output has found more than 40 entries
 				break
 			fi
+			# read the index entry
 			cat "$indexEntry" >> "$outputPath"
-			#
 			filterCount=$(( $filterCount + 1 ))
 		fi
 	done
@@ -229,19 +229,18 @@ function searchWordIndex(){
 	IFS=$'\n'
 	# output the unfiltered top search results
 	for indexEntry in $searchIndexResults;do
-		if [ $filterCount -ge 40 ];then
+		if [ $filterCount -ge 50 ];then
 			# break the loop if the output has found more than 40 entries
 			break
 		fi
-		# test the entry still exists on the server
+		# read the index entry
+		cat "$indexEntry" >> "$outputPath"
+		# if the file was read correctly
 		if test -f "$indexEntry";then
-			# read the index entry
-			cat "$indexEntry" >> "$outputPath"
-		else
-			ERROR "Could not open data in '$indexEntry'"
+			filterCount=$(( $filterCount + 1 ))
+		elif test -s "$indexEntry";then
+			filterCount=$(( $filterCount + 1 ))
 		fi
-		#
-		filterCount=$(( $filterCount + 1 ))
 	done
 	IFS=$IFSBACKUP
 	#

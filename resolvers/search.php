@@ -88,6 +88,7 @@ function moreVideoLinks($searchQuery){
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>🎞️ External Video Search</h2>\n";
 	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' href='/exit.php?to=https://search.brave.com/videos?q=$searchQuery'>🔎 Brave</a>\n";
 	echo "		<a class='button' href='/exit.php?to=https://www.newgrounds.com/search/conduct/movies?terms=$searchQuery'>🔎 Newgrounds</a>\n";
 	echo "		<a class='button' href='/exit.php?to=https://archive.org/details/movies?query=$searchQuery'>🔎 Internet Archive</a>\n";
 	echo "		<a class='button' href='/exit.php?to=https://odysee.com/$/search?q=$searchQuery'>🔎 Odysee</a>\n";
@@ -223,9 +224,11 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!startpage","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
+	#
+	$bangCommands->append(array("!vid","https://search.brave.com/videos?q="));
+	$bangCommands->append(array("!video","https://search.brave.com/videos?q="));
 	# piped.video search
 	$bangCommands->append(array("!piped","https://piped.video/results?search_query="));
-	$bangCommands->append(array("!video","https://piped.video/results?search_query="));
 	# youtube search
 	$bangCommands->append(array("!youtube","https://piped.video/results?search_query="));
 	$bangCommands->append(array("!yt","https://piped.video/results?search_query="));
@@ -297,8 +300,12 @@ function checkForBangs($searchQuery){
 		$bangHelp .= "</table>";
 	}
 	################################################################################
-	if ($_SERVER["HTTPS"]){
-		$bangPrefix="https://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
+	if (isset($_SERVER["HTTPS"])){
+		if ($_SERVER["HTTPS"]){
+			$bangPrefix="https://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
+		}else{
+			$bangPrefix="http://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
+		}
 	}else{
 		$bangPrefix="http://".$_SERVER["HTTP_HOST"]."/exit.php?to=";
 	}
@@ -711,6 +718,8 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 		# launch the process with a background scheduler
 		$command = "";
+		# set priority below apache to keep playback from skipping
+		$command .= "nice -n -5 ";
 		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
 		# mute the output
 		$command .= " --mute";
