@@ -76,8 +76,25 @@ include("settingsHeader.php");
 	</table>
 </div>
 
-<?PHP
+<div id='buildHomepageStats' class='inputCard'>
+	<h2>Create Homepage Statistics</h2>
+	<ul>
+		<li>
+			Enable or disable the statistics displayed on the homepage for admins.
+		</li>
+		<li>
+			This scans filesystems for various size statistics of content on the server.
+		</li>
+		<li>
+			This can be disabled for a small performance improvement.
+		</li>
+	</ul>
+	<?PHP
+	buildYesNoCfgButton("/etc/2web/generateServerStats.cfg","Server Homepage Statistics","buildHomepageStats");
+	?>
+</div>
 
+<?PHP
 if(file_exists("/usr/games/steam")){
 	echo "<div id='steamLockoutStatus' class='inputCard'>\n";
 	echo "	<h2>🎮 Steam Lockout</h2>\n";

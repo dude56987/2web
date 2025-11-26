@@ -1635,6 +1635,11 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	backButton(("/settings/cache.php"),"🛠️ Return To Cache Settings");
 	clear();
+}else if (array_key_exists("buildHomepageStats",$_POST)){
+	outputLog("Build homepage statistics is being set to ".$_POST['buildHomepageStats']);
+	yesNoCfgSet( ("/etc/2web/generateServerStats.cfg"), $_POST['buildHomepageStats'] );
+	backButton("/settings/system.php#buildHomepageStats","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("setFortuneFileStatus",$_POST)){
 	outputLog("Set fortune file ".$_POST["fortuneFileName"]." status to ".$_POST['setFortuneFileStatus']);
 	yesNoCfgSet( ("/etc/2web/fortune/".$_POST["fortuneFileName"].".cfg"), $_POST['setFortuneFileStatus'] );

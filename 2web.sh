@@ -919,8 +919,52 @@ function update2web(){
 	# remove any sessions older than the timeout
 	find "/var/cache/2web/sessions/" -type f -mmin +"$totalTimeout" -exec rm -v {} \;
 
-	# build the homepage stats and link the homepage
-	buildHomePage "$webDirectory"
+	# link homepage
+	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
+
+	if yesNoCfgCheck "/etc/2web/generateServerStats.cfg" "no";then
+		# build the homepage stats
+		buildHomePageStats "$webDirectory"
+	else
+		# remove any existing homepage stats that were previously stored
+		delete "/var/cache/2web/web/totalComics.index"
+		delete "/var/cache/2web/web/webPlayer.index"
+		delete "/var/cache/2web/web/kodiPlayerSize.index"
+		delete "/var/cache/2web/web/totalTracks.index"
+		delete "/var/cache/2web/web/totalArtists.index"
+		delete "/var/cache/2web/web/totalAlbums.index"
+		delete "/var/cache/2web/web/totalEpisodes.index"
+		delete "/var/cache/2web/web/totalShows.index"
+		delete "/var/cache/2web/web/totalMovies.index"
+		delete "/var/cache/2web/web/totalWikis.index"
+		delete "/var/cache/2web/web/totalRepos.index"
+		delete "/var/cache/2web/web/totalApps.index"
+		delete "/var/cache/2web/web/totalWeather.index"
+		delete "/var/cache/2web/web/totalWiki.index"
+		delete "/var/cache/2web/web/totalChannels.index"
+		delete "/var/cache/2web/web/totalRadio.index"
+		delete "/var/cache/2web/web/webSize.index"
+		delete "/var/cache/2web/web/webThumbSize.index"
+		delete "/var/cache/2web/web/cacheSize.index"
+		delete "/var/cache/2web/web/transcodeCacheSize.index"
+		delete "/var/cache/2web/web/m3uCacheSize.index"
+		delete "/var/cache/2web/web/searchCacheSize.index"
+		delete "/var/cache/2web/web/zipCacheSize.index"
+		delete "/var/cache/2web/web/webCacheSize.index"
+		delete "/var/cache/2web/web/repoGenSize.index"
+		delete "/var/cache/2web/web/mediaSize.index"
+		delete "/var/cache/2web/web/freeSpace.index"
+		delete "/var/cache/2web/web/drives.index"
+		delete "/var/cache/2web/web/aiSize.index"
+		delete "/var/cache/2web/web/promptAi.index"
+		delete "/var/cache/2web/web/imageAi.index"
+		delete "/var/cache/2web/web/txtGenAi.index"
+		delete "/var/cache/2web/web/imageEditAi.index"
+		delete "/var/cache/2web/web/subAi.index"
+		delete "/var/cache/2web/web/ytdlShows.index"
+		delete "/var/cache/2web/web/localAi.index"
+	fi
+
 	# stop the spinner
 	kill "$SPINNER_PID"
 	# check if the system needs rebooted
