@@ -234,7 +234,7 @@ function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
 	# - uses fullwidth versions of caracters that interfere with URLs
 	cleanedText="$1"
-	characters="． , ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ： ＄ ＂ ＇ ＊"
+	characters="． ， ｀ ＃ ＇ ？ ＆ ＠ ％ － ！ ＋ ／ ＼ ｜ ； ： ＄ ＂ ＇ ＊ ［ ］ ｛ ｝ ＜ ＞"
 	spacedText=""
 	for specialCharacter in $characters;do
 		cleanedText=$(echo -n "$cleanedText" | sed "s/${specialCharacter}/ ${specialCharacter} /g" )
@@ -312,6 +312,8 @@ function cleanText(){
 	cleanedText=$(echo -n "$cleanedText" | sed 's/\$/＄/g' )
 	# replace periods
 	cleanedText=$(echo -n "$cleanedText" | sed "s/\./．/g" )
+	# replace commas
+	cleanedText=$(echo -n "$cleanedText" | sed "s/\,/，/g" )
 	# repace astrisks
 	cleanedText=$(echo -n "$cleanedText" | sed "s/\*/＊/g" )
 	# brackets
@@ -484,22 +486,22 @@ function delete(){
 	elif test -f "$1";then
 		# this is a single file path, remove the file
 		rm -v "$1"
-		if ! test -f "$1";then
-			ALERT "Removal of file '$1' complete !"
-			return 0
-		else
+		if test -f "$1";then
 			ERROR "Removal of file '$1' Failed!"
 			return 1
+		else
+			ALERT "Removal of file '$1' complete !"
+			return 0
 		fi
 	elif test -s "$1";then
 		# this is a symlink remove it
 		rm -v "$1"
-		if ! test -s "$1";then
-			ALERT "Removal of symlink '$1' complete !"
-			return 0
-		else
+		if test -s "$1";then
 			ERROR "Removal of symlink '$1' Failed!"
 			return 1
+		else
+			ALERT "Removal of symlink '$1' complete !"
+			return 0
 		fi
 		return "$?"
 	else
