@@ -174,23 +174,36 @@ if ($hideFilter){
 	# load the cached file or write a new cached fill
 	if ($writeFile){
 		ignore_user_abort(true);
+		# load the index
+		if(file_exists("/var/cache/2web/web/$filterType/$filterType.index")){
+			# load the list directly
+			$sourceFileData=file("/var/cache/2web/web/$filterType/$filterType.index",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			# shuffle the list and slice off 100 results
+			shuffle($sourceFileData);
+			$sourceFileData=array_slice($sourceFileData,0,100);
+		}else{
+			# load database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(60000);
 
-		# load database
-		$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/data.db");
-		# set the timeout to 1 minute since most webbrowsers timeout loading before this
-		$databaseObj->busyTimeout(60000);
-
-		# run query to get 800 random
-		$result = $databaseObj->query('select * from "_'.$filterType.'" order by random() limit 100;');
-
+			# run query to get 800 random
+			$result = $databaseObj->query('select * from "_'.$filterType.'" order by random() limit 100;');
+			$sourceFileData=Array();
+			# extract data from the database
+			while($row = $result->fetchArray()){
+				$sourceFile = $row['title'];
+				# store the source file data as an array
+				$sourceFileData=array_merge($sourceFileData,Array($sourceFile));
+			}
+		}
 		# open the cache file for writing
 		$fileHandle = fopen($cacheFile,'w');
 
 		# set the delay counter for CSS animations
 		$animationDelayCounter=1;
 		# fetch each row data individually and display results
-		while($row = $result->fetchArray()){
-			$sourceFile = $row['title'];
+		foreach($sourceFileData as $sourceFile){
 			if (file_exists($sourceFile)){
 				if (is_file($sourceFile)){
 					if (strpos($sourceFile,".index")){
@@ -203,7 +216,7 @@ if ($hideFilter){
 						#
 						$tempData=str_replace("class='showPageEpisode","class='fallIn showPageEpisode ",$tempData);
 						# add the custom animation delay to the element
-						$tempData=str_replace("class='fallIn","style='opacity: 0;animation-delay: ".$animationDelayCounter."s' class='fallIn",$tempData);
+						$tempData=str_replace("class='fallIn","style='animation-delay: ".$animationDelayCounter."s' class='fallIn",$tempData);
 						$tempData.="</span>";
 						// write the index entry
 						fwrite($fileHandle, "$tempFileData");
