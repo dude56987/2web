@@ -2174,141 +2174,117 @@ if( ! function_exists("addToLog")){
 		unset($databaseObj);
 	}
 }
+if( ! function_exists("loadCleanTextFilter")){
+	function loadCleanTextFilter(){
+		################################################################################
+		# Load the conversion table
+		# - the 0th value is the normal character
+		# - the 1th value is the fullwidth version of that character
+		################################################################################
+		$cleanTextFilter=Array();
+		################################################################################
+		# convert symbols that cause issues to full width versions of those characters
+		################################################################################
+		# replace periods
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(".", "．")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(",", "，")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("#", "＃")));
+		# add grave accents
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("`", "｀")));
+		#
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("'", "＇")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array('"', "＂")));
+		# convert question marks into wide question marks so they look,
+		# the same but wide question marks do not break URLS
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("?", "？")));
+		# greater/less than
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(">", "＞")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("<", "＜")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("&", "＆")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("*", "＊")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("]", "］")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("[", "［")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("(", "(")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(")", ")")));
+		# curly brackets
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("}", "｝")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("{", "｛")));
+		# remove dollar signs
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("$", "＄")));
+		# remove semicolons and colons
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(":", "：")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array(";", "；")));
+		# remove pipes
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("|", "｜")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("\\", "＼")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("/", "／")));
+		# plus signs are used in URLs so they must be changed
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("+", "＋")));
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("!", "！")));
+		# hyphens break grep searches
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("-", "－")));
+		# remove percent signs they break print functions
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("%", "％")));
+		# cleanup @ symbols, they break URLs
+		$cleanTextFilter=array_merge($cleanTextFilter,Array(Array("@", "＠")));
+		# return the fully constructed 2 dimensional array
+		return $cleanTextFilter;
+	}
+}
 ################################################################################
 if( ! function_exists("uncleanText")){
 	function uncleanText($inputText){
 		# clean up the text for use in web urls and directory paths
 		# - uses fullwidth versions of caracters that interfere with URLs
-		$uncleanedText="$inputText";
-		# add grave accents
-		$uncleanedText=str_replace("｀","`",$uncleanedText);
-		# add hash marks
-		$uncleanedText=str_replace("＃","#",$uncleanedText);
-		# add single quotes
-		$uncleanedText=str_replace("＇","'",$uncleanedText);
-		################################################################################
-		# convert symbols that cause issues to full width versions of those characters
-		################################################################################
-		# convert question marks into wide question marks so they look
-		# the same but wide question marks do not break URLS
-		$uncleanedText=str_replace("？","?",$uncleanedText);
-		# cleanup ampersands, they break URLs
-		$uncleanedText=str_replace("＆","&",$uncleanedText);
-		# cleanup @ symbols, they break URLs
-		$uncleanedText=str_replace("＠","@",$uncleanedText);
-		# remove percent signs they break print functions
-		$uncleanedText=str_replace("％","%",$uncleanedText);
-		# hyphens break grep searches
-		$uncleanedText=str_replace("－","-",$uncleanedText);
-		# exclamation marks can also cause problems
-		$uncleanedText=str_replace("！","!",$uncleanedText);
-		# plus signs are used in URLs so they must be changed
-		$uncleanedText=str_replace("＋","+",$uncleanedText);
-		# remove forward slashes, they will break all paths
-		$uncleanedText=str_replace("／","/",$uncleanedText);
-		$uncleanedText=str_replace("＼","\\",$uncleanedText);
-		# remove pipes
-		$uncleanedText=str_replace("｜","|",$uncleanedText);
-		# remove semicolons
-		$uncleanedText=str_replace("；",";",$uncleanedText);
-		# remove dollar signs
-		$uncleanedText=str_replace("＄","$",$uncleanedText);
-		# greater/less than
-		$uncleanedText=str_replace("＜","<",$uncleanedText);
-		$uncleanedText=str_replace("＞",">",$uncleanedText);
-		# brackets
-		$uncleanedText=str_replace("［","[",$uncleanedText);
-		$uncleanedText=str_replace("］","]",$uncleanedText);
-		# curly brackets
-		$uncleanedText=str_replace("｛","{",$uncleanedText);
-		$uncleanedText=str_replace("｝","}",$uncleanedText);
+		$filters=loadCleanTextFilter();
 		#
-		$uncleanedText=str_replace("＊","*",$uncleanedText);
-		# print the cleaned up text
-		return "$uncleanedText";
-	}
-}
-########################################################################
-if( ! function_exists("spaceCleanedText")){
-	function spaceCleanedText($cleanedText){
-		# clean up the text for use in web urls and directory paths
-		# - uses fullwidth versions of caracters that interfere with URLs
-		$characters=Array("．",",","｀","＃","＇","？","＆","＠","％","－","！","＋","／","＼","｜","；","：","＄","＂","＇","｛","｝","(",")","［","］","＊","＜","＞");
-		$spacedText="";
-		foreach($characters as $specialCharacter){
-			$cleanedText=str_replace("$specialCharacter"," $specialCharacter ","$cleanedText");
+		$unCleanedText=$inputText;
+		# read each filter value and run the filter on the text
+		foreach($filters as $filter){
+			# replace the characters using the filter values
+			$unCleanedText=str_replace($filter[1],$filter[0],$unCleanedText);
 		}
-		# squeeze double spaces into single spaces
-		$cleanedText=str_replace("  "," ","$cleanedText");
+		# remove whitespace and begining and end of the text
+		$unCleanedText=trim($unCleanedText);
 		# print the cleaned up text
-		return "$cleanedText";
+		return $unCleanedText;
 	}
 }
-########################################################################
+################################################################################
 if( ! function_exists("cleanText")){
 	function cleanText($inputText){
 		# clean up the text for use in web urls and directory paths
 		# - uses fullwidth versions of caracters that interfere with URLs
-		$cleanedText="$inputText";
-		# convert html entities into the characters
-		#cleanedText=$(echo -n "$cleanedText" | recode html )
-		$cleanedText=str_replace("&amp;","＆",$cleanedText);
-		$cleanedText=str_replace("&quot;","＇",$cleanedText);
-		$cleanedText=str_replace("&apos;","＇",$cleanedText);
-		$cleanedText=str_replace("&lt;","<",$cleanedText);
-		$cleanedText=str_replace("&gt;",">",$cleanedText);
-		# remove grave accents
-		$cleanedText=str_replace("`","｀",$cleanedText);
-		# remove hash marks as they break URLS
-		$cleanedText=str_replace("#","＃",$cleanedText);
-		# remove single quotes
-		$cleanedText=str_replace("'","＇",$cleanedText);
-		# convert underscores into spaces
-		$cleanedText=str_replace("_"," ",$cleanedText);
-		################################################################################
-		# convert symbols that cause issues to full width versions of those characters
-		################################################################################
-		# convert question marks into wide question marks so they look
-		# the same but wide question marks do not break URLS
-		$cleanedText=str_replace("?","？",$cleanedText);
-		# cleanup ampersands, they break URLs
-		$cleanedText=str_replace("&","＆",$cleanedText);
-		# cleanup @ symbols, they break URLs
-		$cleanedText=str_replace("@","＠",$cleanedText);
-		# remove percent signs they break print functions
-		$cleanedText=str_replace("%","％",$cleanedText);
-		# hyphens break grep searches
-		$cleanedText=str_replace("-","－",$cleanedText);
-		# exclamation marks can also cause problems
-		$cleanedText=str_replace("!","！",$cleanedText);
-		# plus signs are used in URLs so they must be changed
-		$cleanedText=str_replace("+","＋",$cleanedText);
-		# remove forward slashes, they will break all paths
-		$cleanedText=str_replace("/","／",$cleanedText);
-		$cleanedText=str_replace("\\","＼",$cleanedText);
-		# remove pipes
-		$cleanedText=str_replace("|","｜",$cleanedText);
-		# remove semicolons
-		$cleanedText=str_replace(";","；",$cleanedText);
+		$filters=loadCleanTextFilter();
+		#addToLog("DEBUG","Loading clean text filters",var_export($filters,true));
 		#
-		$cleanedText=str_replace(":","：",$cleanedText);
-		# remove dollar signs
-		$cleanedText=str_replace("$","＄",$cleanedText);
-		#
-		$cleanedText=str_replace("*","＊",$cleanedText);
-		# brackets
-		$cleanedText=str_replace("[","［",$cleanedText);
-		$cleanedText=str_replace("]","］",$cleanedText);
-		# curly brackets
-		$cleanedText=str_replace("{","｛",$cleanedText);
-		$cleanedText=str_replace("}","｝",$cleanedText);
-		# greater/less than
-		$cleanedText=str_replace("<","＜",$cleanedText);
-		$cleanedText=str_replace(">","＞",$cleanedText);
-		# squeeze double spaces into single spaces
-		$cleanedText=str_replace("  "," ",$cleanedText);
+		$cleanedText=$inputText;
+		# read each filter value and run the filter on the text
+		foreach($filters as $filter){
+			# replace the characters using the filter values
+			$cleanedText=str_replace($filter[0],$filter[1],$cleanedText);
+		}
+		# remove whitespace and begining and end of the text
+		$cleanedText=trim($cleanedText);
 		# print the cleaned up text
-		return "$cleanedText";
+		return $cleanedText;
+	}
+}
+################################################################################
+if( ! function_exists("spaceCleanedText")){
+	function spaceCleanedText($spacedText){
+		# clean up the text for use in web urls and directory paths
+		# - uses fullwidth versions of caracters that interfere with URLs
+		$filters=loadCleanTextFilter();
+		# read each filter value and run the filter on the text
+		foreach($filters as $filter){
+			# replace the characters using the filter values
+			$spacedText=str_replace($filter[1]," $filter[1] ",$spacedText);
+		}
+		# remove whitespace and begining and end of the text
+		$spacedText=trim($spacedText);
+		# print the cleaned up text
+		return $spacedText;
 	}
 }
 ################################################################################
