@@ -578,7 +578,7 @@ function processTrack(){
 			addToIndex "$webDirectory/music/$artist/$album/${track}.index" "$webDirectory/new/all.index"
 
 			# add music to the search index
-			addToSearchIndex "$webDirectory/music/$artist/$album/${track}.index" "$track" "/music/$artist/"
+			addToSearchIndex "$webDirectory/music/$artist/$album/${track}.index" "$album $title" "/music/$artist/"
 
 			# cleanup the track list for the album
 			if test -f "$webDirectory/music/$artist/$album/tracks.index";then
