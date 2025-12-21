@@ -669,7 +669,7 @@ function setFileDataSum(){
 	echo "$newSum" > "$webDirectory/sums/${moduleName}_$pathSum.cfg"
 }
 ########################################################################
-function buildHomePage(){
+function buildHomePageStats(){
 	# Update all the statistics for the 2web homepage
 	#
 	# $1 = webDirectory : the base path of the web directory returned by webRoot()
@@ -677,9 +677,8 @@ function buildHomePage(){
 	# RETURN NULL, FILES
 	webDirectory=$1
 
-	INFO "Building home page..."
-	# link homepage
-	linkFile "/usr/share/2web/templates/home.php" "$webDirectory/index.php"
+
+	INFO "Building home page stats..."
 
 	# check and update stats files
 	# - do not generate stats if website is in process of being updated
@@ -1935,14 +1934,13 @@ function drawHeader(){
 	termWidth=$(tput cols)
 	#
 	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
-	#
-	#figlet -w "$termWidth" -c -f "smblock" "$1"
-	figlet -w "$termWidth" -c -f "smblock" "$1"
-	#figlet -w "$termWidth" -c -f "smblock" "$1" | lolcat -a
-	#figlet -w "$termWidth" -c -f "pagga" "$1"
-	#figlet -w "$termWidth" -c -f "future" "$1"
-	#figlet -w "$termWidth" -c -f "smbraille" "$1"
-	#figlet -w "$termWidth" -c -f "emboss" "$1"
+	# draw the large font using figlet
+	# - Add a failsafe for if the theme fails
+	# - Add a super failsafe if figlet fails completely to draw the text without formatting
+	figlet -w "$termWidth" -c -f "smblock" "$1" || \
+	figlet -w "$termWidth" -c -f "big" "$1" || \
+	figlet -w "$termWidth" -c "$1" || \
+	echo "$1"
 }
 ################################################################################
 function drawRandomizedPattern(){
