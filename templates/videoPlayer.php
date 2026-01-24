@@ -570,13 +570,16 @@ document.body.addEventListener('keydown', function(event){
 			echo "	<div class='button'>Cache State <div class='radioIcon'>🔴</div></div>\n";
 		}
 	}
+	if (array_key_exists("play",$_GET)){
+		# draw the fullscreen button
+		echo "<button class='button' onclick='toggleFullscreen(\"video\");playVideo();'>⛶ Fullscreen</button>\n";
+	}
 	?>
 </div>
 </div>
 <?PHP
 		# flush output so far to the page
-		flush();
-		ob_flush();
+		clear();
 
 		# check if the file exists and check the metadata
 		if ($httpLink){
@@ -1124,8 +1127,33 @@ document.body.addEventListener('keydown', function(event){
 	echo $plotData;
 	# write the video channel url if the json is loaded
 	echo $videoChannelUrl;
+	# send data to the client
+	clear();
 ?>
 </div>
+<?PHP
+	# draw the video preview thumbnails if they are found
+	$previewExists=false;
+	$previewOutput="";
+	$previewOutput.="<details class='titleCard'>\n";
+	$previewOutput.= "<summary>\n";
+	$previewOutput.= "<h2>Video Previews</h2>\n";
+	$previewOutput.= "</summary>\n";
+	$previewOutput.= "<div class='listCard'>\n";
+	foreach(Array(1,2,3,4,5,6,7,8) as $previewNumber){
+		$tempPath=str_replace(".php","",$_SERVER["SCRIPT_FILENAME"]);
+		$tempPath=basename($tempPath);
+		$tempPath=$tempPath."_preview_".$previewNumber.".png";
+		if(is_readable($tempPath)){
+			$previewExists=true;
+			$previewOutput.="<img class='videoPreview' src='$tempPath'>\n";
+		}
+	}
+	$previewOutput.="</details>\n";
+	if($previewExists){
+		echo $previewOutput;
+	}
+?>
 <?PHP
 # write the admin data if it exists
 echo $adminData;

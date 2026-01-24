@@ -412,6 +412,18 @@ processMovie(){
 		if ! test -f "$kodiDirectory/movies/$movieWebPath/fanart.png";then
 			linkFile "$webDirectory/movies/$movieWebPath/fanart.png" "$kodiDirectory/movies/$movieWebPath/fanart.png"
 		fi
+		if test -s "$videoPath";then
+			# build the preview thumbnails
+			ffmpegthumbnailer -t "6%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_1.png"
+			ffmpegthumbnailer -t "12%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_2.png"
+			ffmpegthumbnailer -t "25%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_3.png"
+			ffmpegthumbnailer -t "37%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_4.png"
+			ffmpegthumbnailer -t "50%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_5.png"
+			ffmpegthumbnailer -t "62%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_6.png"
+			ffmpegthumbnailer -t "75%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_7.png"
+			ffmpegthumbnailer -t "87%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_8.png"
+		fi
+
 
 		thumbnailExt=".png"
 		# generate a thumbnail from the xml data if it can be retreved
@@ -859,6 +871,18 @@ processEpisode(){
 
 		# check for the thumbnail and link it
 		checkForEpisodeThumbnail "$thumbnail" "$thumbnailPath" "$thumbnailPathKodi" "$videoPath" "$nfoInfo"
+
+		# build the preview thumbnails for the episode
+		if test -s "$videoPath";then
+			ffmpegthumbnailer -t "6%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_1.png"
+			ffmpegthumbnailer -t "12%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_2.png"
+			ffmpegthumbnailer -t "25%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_3.png"
+			ffmpegthumbnailer -t "37%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_4.png"
+			ffmpegthumbnailer -t "50%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_5.png"
+			ffmpegthumbnailer -t "62%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_6.png"
+			ffmpegthumbnailer -t "75%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_7.png"
+			ffmpegthumbnailer -t "87%" -i "$videoPath" -s 200 -c png -o "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/${episodePath}_preview_8.png"
+		fi
 
 		resolverUrl=""
 		# check for plugin links and convert the .strm plugin links into ytdl-resolver.php links
