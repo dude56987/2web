@@ -1,0 +1,33 @@
+/*
+########################################################################
+# 2web beach theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	--solidBackground: #f0bd4a;;
+	--glassBackground: rgba(0,64,145,0.85);
+	--borderColor: rgb(230 219 0);
+	--textColor: white;
+	--shadowColor: #0020c9;
+	--highlightText: rgb(0 62 142);
+	--highlightBackground: #e6db00;
+	--highlightBorder: lightgray;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+h1,h2,h3,h4,h5,select{
+	text-shadow: 0px 0px 1rem var(--shadowColor), 0px 0px 1rem var(--shadowColor) !important;
+}

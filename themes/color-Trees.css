@@ -1,0 +1,44 @@
+/*
+########################################################################
+# 2web green theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	--solidBackground: #00653f;
+	--glassBackground: rgba(0,126,0,0.85);
+	--borderColor: #ff8e00;
+	--textColor: rgb(90 255 89);
+	--shadowColor: black;
+	--highlightText: black;
+	--highlightBackground: white;
+	--highlightBorder: lightgray;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+.downloadIcon{
+	background: yellowGreen !important;
+}
+html{
+	text-shadow: 0px 0px 0.2rem var(--highlightText), 0px 0px 0.2rem var(--highlightText), 0px 0px 0.2rem var(--highlightText);
+	font-weight: bolder;
+}
+h1,h2,h3,h4,h5,input,.button{
+	text-shadow: 0px 0px 0.8rem var(--highlightText), 0px 0px 0.8rem var(--highlightText), 0px 0px 0.8rem var(--highlightText) !important;
+	font-weight: bolder;
+}
+:hover{
+	text-shadow: none;
+}
