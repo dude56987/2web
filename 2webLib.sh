@@ -3456,20 +3456,28 @@ function compileSearchIndex(){
 	if [ "$newData" == "YES" ];then
 		# check for search index data for each module section
 		if test -d "/var/cache/2web/generated/searchIndexData/shows/";then
-			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/shows/" -mindepth 1 -maxdepth 1 -type d )"
 			ALERT "Found Shows For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/shows/" -mindepth 1 -maxdepth 1 -type d )"
 		fi
 		if test -d "/var/cache/2web/generated/searchIndexData/movies/";then
-			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/movies/" -mindepth 1 -maxdepth 1 -type d )"
 			ALERT "Found Movies For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/movies/" -mindepth 1 -maxdepth 1 -type d )"
 		fi
 		if test -d "/var/cache/2web/generated/searchIndexData/comics/";then
-			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/comics/" -mindepth 1 -maxdepth 1 -type d )"
 			ALERT "Found Comics For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/comics/" -mindepth 1 -maxdepth 1 -type d )"
 		fi
 		if test -d "/var/cache/2web/generated/searchIndexData/music/";then
-			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/music/" -mindepth 1 -maxdepth 1 -type d )"
 			ALERT "Found Music For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/music/" -mindepth 1 -maxdepth 1 -type d )"
+		fi
+		if test -d "/var/cache/2web/generated/searchIndexData/portal/";then
+			ALERT "Found Portal For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/portal/" -mindepth 1 -maxdepth 1 -type d )"
+		fi
+		if test -d "/var/cache/2web/generated/searchIndexData/repos/";then
+			ALERT "Found Repos For Search Index"
+			dataDirectories="${dataDirectories}\n$( find "/var/cache/2web/generated/searchIndexData/repos/" -mindepth 1 -maxdepth 1 -type d )"
 		fi
 		ALERT "$dataDirectories" "Discovered Search Data Paths"
 		# remove any existing search index
@@ -3615,8 +3623,6 @@ function addToSearchIndex(){
 						fi
 					fi
 				fi
-				#
-				#addToIndex "$indexFile" "${outputPath}${word1} ${word2}.index"
 			fi
 		done
 	done
