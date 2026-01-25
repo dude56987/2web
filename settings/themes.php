@@ -431,6 +431,48 @@ if ( ! array_key_exists("search",$_GET) ){
 		</ul>
 		<p>To add your own custom components write a custom CSS file and place it in "/usr/share/2web/theme-templates/". Use the prefix for the component in the above key and replace * with your name for the component. The next time 2web updates your new themes will be generated with your custom components.</p>
 	</div>
+	<div class='titleCard' id='changeEffect'>
+		<h2>Effect</h2>
+		<ul>
+			<li>
+				Effects can be applied over all themes.
+			</li>
+			<li>
+				Only one effect can be applied at a time.
+			</li>
+			<li>
+				Effects generally use javascript and can reduces webpage performance.
+			</li>
+			<li>
+				Effects can be disabled on the bottom of each page. This option is remembered as long as the user session remains active.
+			</li>
+			<li>
+				Custom effects can be installed by placing PHP files in "/usr/share/2web/effects/"
+			</li>
+		</ul>
+		<form action='admin.php' class='buttonForm' method='post'>
+			<?PHP
+				# get the current effect
+				$currentEffect=trim(file_get_contents("/etc/2web/effect.cfg"));
+				$foundEffects=scanDir("/usr/share/2web/effects/");
+				$foundEffects=array_diff($foundEffects, Array(".",".."));
+				$foundEffects=array_merge($foundEffects, Array("none"));
+				echo "<select name='changeEffect'>";
+				foreach($foundEffects as $effectName){
+					# cleanup the effect name
+					$effectName=str_replace(".php","",$effectName);
+					# add the effects
+					if($currentEffect == $effectName){
+						echo "<option value='".$effectName."' selected>".$effectName."</option>\n";
+					}else{
+						echo "<option value='".$effectName."'>".$effectName."</option>\n";
+					}
+				}
+				echo "</select>";
+			?>
+			<button class='button' type='submit'>🧨 Apply Effect</button>
+		</form>
+	</div>
 </div>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");

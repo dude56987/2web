@@ -675,7 +675,35 @@ function update2web(){
 	# - the site is for use on a internal network not online but still should not be crawled
 	# - Can be edited by the user
 	linkFile "/etc/2web/config_default/robots.txt" "$webDirectory/robots.txt"
-
+	# add the enabled effect
+	if test -f "/etc/2web/effect.cfg";then
+		# load the effect config
+		effect=$(cat -s "/etc/2web/effect.cfg" | tr -d '\n')
+	else
+		# build the default effect config
+		echo "none" > "/etc/2web/effect.cfg"
+		chown www-data:www-data "/etc/2web/effect.cfg"
+		# load default
+		effect="none"
+	fi
+	# load each of the active effect into the effects file for the webserver
+	if test -s "/usr/share/2web/effects/$effect.php";then
+		# load the enabled effect
+		drawLine
+		drawHeader "Effect $effect Enabled"
+		drawLine
+		# unlink the effect to enable the new link
+		unlink "$webDirectory/effect.php"
+		# link the the chosen effect file
+		linkFile "/usr/share/2web/effects/$effect.php" "$webDirectory/effect.php"
+	else
+		# if the effect file does not exist then disable the effects
+		drawLine
+		drawHeader "Effect DISABLED"
+		drawLine
+		# unlink the effect
+		unlink "$webDirectory/effect.php"
+	fi
 	################################################################################
 	# link lists these can be built and rebuilt during libary update
 	################################################################################

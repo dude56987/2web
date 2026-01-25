@@ -971,6 +971,14 @@ if (array_key_exists("newUserName",$_POST)){
 			clear();
 		}
 	}
+}else if (array_key_exists("changeEffect",$_POST)){
+	outputLog("Setting effect to ".$_POST['changeEffect']);
+	# change the effect config
+	file_put_contents("/etc/2web/effect.cfg", $_POST['changeEffect']);
+	addToQueue("multi","2web --mute");
+	outputLog("Scheduling config update to change effect to ".$_POST['changeEffect']);
+	backButton("/settings/themes.php#changeEffect","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("randomTheme",$_POST)){
 	outputLog("Setting randomize theme status to ".$_POST['randomTheme']);
 	yesNoCfgSet("/etc/2web/randomTheme.cfg", $_POST['randomTheme']);
