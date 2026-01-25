@@ -1833,7 +1833,7 @@ if( ! function_exists("findWordGroups")){
 }
 ########################################################################
 if( ! function_exists("loadSearchIndexResults")){
-	function loadSearchIndexResults($searchQuery,$filter="all"){
+	function loadSearchIndexResults($searchQuery,$filter="all",$depth=-1,$title=""){
 		# loadSearchIndexResults($searchQuery,$filter="all")
 		#
 		# Output the results of a search query to the search index
@@ -1843,6 +1843,57 @@ if( ! function_exists("loadSearchIndexResults")){
 		#   - movies
 		#   - shows
 		#
+
+		#
+		$filterType=$filter;
+		# check for group permissions in filter type
+		if ($filterType == "all"){
+			$groups=listModules();
+			# check user has all permissions for groups
+			foreach($groups as $groupName){
+				if(! requireGroup($groupName, false)){
+					$showOutput = false;
+					break;
+				}else{
+					# mark output to be shown
+					$showOutput = true;
+				}
+			}
+		}else if ($filterType == "graphs"){
+			$showOutput = requireGroup("graph2web", false);
+		}else if ($filterType == "comics"){
+			$showOutput = requireGroup("comic2web", false);
+		}else if ($filterType == "channels"){
+			$showOutput = requireGroup("iptv2web", false);
+		}else if ($filterType == "repos"){
+			$showOutput = requireGroup("git2web", false);
+		}else if ($filterType == "episodes"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "movies"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "shows"){
+			$showOutput = requireGroup("nfo2web", false);
+		}else if ($filterType == "music"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "artists"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "albums"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "tracks"){
+			$showOutput = requireGroup("music2web", false);
+		}else if ($filterType == "portal"){
+			$showOutput = requireGroup("portal2web", false);
+		}else if ($filterType == "channels"){
+			$showOutput = requireGroup("iptv2web", false);
+		}else if ($filterType == "applications"){
+			$showOutput = requireGroup("php2web", false);
+		}else{
+			$showOutput = true;
+		}
+		if ($showOutput == false){
+			# hide the output if group permissions are not available for this widget
+			return false;
+		}
 
 		# get the orignal query
 		$ogQuery=$searchQuery;
@@ -1874,7 +1925,22 @@ if( ! function_exists("loadSearchIndexResults")){
 					# - shows
 					foreach ($tempFileIndex as $tempIndexEntry){
 						if(stripos($tempIndexEntry,"/var/cache/2web/web/$filter/") !== false){
-							$tempIndex .= $tempIndexEntry;
+							# figure out the depth
+							if($depth > -1){
+								# only give items of a specific depth
+								if (stripos($tempIndexEntry,"/") !== false){
+									#addToLog("DEBUG","widget index entry","index entry '".$tempIndexEntry."'");
+									#addToLog("DEBUG","widget count","Widget count '".count(explode("/",$tempIndexEntry))."'");
+									#addToLog("DEBUG","widget depth","Widget depth '".$depth."'");
+									if( count(explode("/",$tempIndexEntry)) == ($depth) ){
+										#addToLog("DEBUG","Depth Matched","Adding index entry '".$tempIndexEntry."'");
+										$tempIndex .= $tempIndexEntry;
+									}
+								}
+							}else{
+								# no depth argument was given
+								$tempIndex .= $tempIndexEntry;
+							}
 						}
 					}
 					# add the filtered temp index to the all index
@@ -1890,23 +1956,33 @@ if( ! function_exists("loadSearchIndexResults")){
 		$countValues=array_count_values($allIndex);
 		arsort($countValues);
 		# limit output to 40 results
-		$countValues=array_slice($countValues,0,40);
+		#$countValues=array_slice($countValues,0,40);
 		#	output the index
 		$outputFound=false;
 		$outputText="";
+		$foundItems=0;
 		foreach (array_keys($countValues) as $word){
 			if(is_readable($word)){
 				$outputFound=true;
 				$outputText .= file_get_contents($word)."\n";
+				#
+				$foundItems+=1;
+			}
+			if($foundItems > 40){
+				# limit output to 40 working items
+				break;
 			}
 		}
 		# only draw the widget if there is output
 		if($outputFound){
 			echo "<div class='titleCard'>\n";
+			if($title == ""){
+				$title=ucfirst($filter);
+			}
 			if($filter=="all"){
 				echo "<h1>Related Media</h1>\n";
 			}else{
-				echo "<h1>Related ".ucfirst($filter)."</h1>\n";
+				echo "<h1>Related ".$title."</h1>\n";
 			}
 			echo "<div class='listCard'>\n";
 			echo $outputText;
