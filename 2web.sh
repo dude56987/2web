@@ -757,6 +757,10 @@ function update2web(){
 		demoImage "/var/cache/2web/web/404.png" "404" "200" "200" &
 		waitQueue 0.5 "$totalCPUS"
 	fi
+	if ! test -f /var/cache/2web/web/loading.png;then
+		demoImage "/var/cache/2web/web/loading.png" "Loading..." "300" "200" &
+		waitQueue 0.5 "$totalCPUS"
+	fi
 	blockQueue 1
 
 	rotateSpinner &
