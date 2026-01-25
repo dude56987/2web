@@ -1009,10 +1009,16 @@ function linkFile(){
 	#
 	# $1 = target
 	# $2 = symlinkPath
+	# $3 = force creation
 	#
-	# RETURN FILES
+	# RETURN EXIT CODE of ln command used
+	if [ "$3" == "--force" ];then
+		ln -sf "$1" "$2"
+		return $?
+	fi
 	if ! test -L "$2";then
 		ln -sf "$1" "$2"
+		return $?
 	fi
 }
 ########################################################################
