@@ -129,11 +129,11 @@ function cacheUrl($sum,$videoLink){
 	$command .= "nice -n -5 ";
 	// add the download to the cache with the processing queue
 	if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
-		$command .= "/var/cache/2web/generated/yt-dlp/yt-dlp --abort-on-error --sponsorblock-mark all ";
+		$command .= "/var/cache/2web/generated/yt-dlp/yt-dlp -4 --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
 		# add the sponsorblock video bookmarks to the video file when using yt-dlp
-		$command .= "/usr/local/bin/yt-dlp --abort-on-error --sponsorblock-mark all ";
+		$command .= "/usr/local/bin/yt-dlp -4 --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/youtube-dl")){
 		debug("PIP version of youtube-dl found<br>");
 		$command .= "/usr/local/bin/youtube-dl";
@@ -148,9 +148,21 @@ function cacheUrl($sum,$videoLink){
 	// max download file size should be 6 gigs, this is a insane file size for a youtube video
 	// if a way of detecting livestreams is found this is unnessary
 	$command .= " --max-filesize '6g'";
-	$command .= " --retries 'infinite'";
+	$command .= " --retries '1000'";
+	# back off exponentally after failures and max out at 512 second wait times
+	$command .= " --retry-sleep 'exp=2:512:2'";
+	# figure out the javscript runtime installed to use for resolver
+	# - deno is enabled by default if installed but there are no offical packages for it
+	# - nodejs is available on debian and ubuntu
+	#   - nodejs is currently required only during the build process to update hls.js (2026)
+	# - quickjs is only availble on ubuntu
+	if (file_exists("/usr/bin/nodejs")){
+		$command .= " --js-runtimes node:/usr/bin/nodejs";
+	}elseif (file_exists("/usr/bin/qjs")){
+		$command .= " --js-runtimes quickjs:/usr/bin/qjs";
+	}
 	$command .= " --no-mtime";
-	$command .= " --fragment-retries 'infinite'";
+	$command .= " --fragment-retries '100'";
 
 	# embed subtitles, continue file downloads, ignore timestamping the file(it messes with caching)
 	$command = $command." --continue";
@@ -183,7 +195,7 @@ function cacheUrl($sum,$videoLink){
 		$dlCommand = $dlCommand." --write-info-json --recode-video mp4 -o '$webDirectory/RESOLVER-CACHE/$sum/video.mp4' -c '".$videoLink."'";
 	}else{
 		# download the json data into a file
-		$dlCommand = "/var/cache/2web/generated/yt-dlp/yt-dlp --no-download --dump-single-json '$videoLink' > '$webDirectory/RESOLVER-CACHE/$sum/video.info.json';\n";
+		$dlCommand = "/var/cache/2web/generated/yt-dlp/yt-dlp -4 --no-download --dump-single-json '$videoLink' > '$webDirectory/RESOLVER-CACHE/$sum/video.info.json';\n";
 		# if no upgrade is set then simply convert the hls stream into a mp4 and grab the json data last
 		$dlCommand .= "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
 		$dlCommand .= " && mv -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
@@ -201,7 +213,7 @@ function cacheUrl($sum,$videoLink){
 	}
 	# create the stream command that will be ran to get the chosen quality and convert it into a hls stream
 	# force the most compatible version of the stream codecs
-	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts -c:v libx264 -c:a aac -crf 0 - | ffmpeg -i - -c:v copy -c:a copy -crf 0 -hls_playlist_type event -hls_segment_type mpegts -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
+	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts -c:v libx264 -c:a aac -crf 0 - | ffmpeg -i - -c:v copy -c:a copy -crf 0 -hls_playlist_type event -hls_segment_type mpegts -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 30 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
@@ -303,11 +315,101 @@ function cacheResolve($sum,$webDirectory){
 	}
 }
 ################################################################################
+# check disk requirements
+# - Because the cache may overwhelm the disk space a check is done when loading
+#   from the cache to see if at least 1 gig of disk space is available
+# - If less than one gig is available then the oldest cached video is found and
+#   deleted
+# - A option can toggle this off but it will cause disk full errors when the
+#   cache has been overfilled, this will also cause cache jobs to run until the
+#   24 hour timeout
+################################################################################
+# if the free space is less than one gig
+# - This runs every time a video is resolved to check the cache state
+$freeSpace=diskfreespace("/var/cache/2web/web/RESOLVER-CACHE/");
+# the minimum space in gigabytes(2) that the disk needs to keep free for the resolver
+$minFreeSpace=(pow(1000,3) * 2);
+$cleanedItems=0;
+addToLog("DEBUG","resolver.php","<table><tr><th>Current Free</th><th>Required</th></tr><tr><td>".bytesToHuman($freeSpace)."</td><td>".bytesToHuman($minFreeSpace)."</td></tr></table>");
+if ($freeSpace < $minFreeSpace){
+	addToLog("WARNING","resolver.php","The Disk is low on space so the oldest cached video is being removed.");
+	addToLog("WARNING","resolver.php","<table><tr><th>Current Free</th><th>Required</th></tr><tr><td>".bytesToHuman($freeSpace)."</td><td>".bytesToHuman($minFreeSpace)."</td></tr></table>");
+	# find the oldest cached directory and remove it
+	$sourceFiles = scanDir("/var/cache/2web/web/RESOLVER-CACHE/");
+	# remove navigation directory paths
+	$sourceFiles = array_diff($sourceFiles,Array(".",".."));
+	$tempSourceFiles=Array();
+	foreach($sourceFiles as $sourceFile){
+		$tempSourceFile="/var/cache/2web/web/RESOLVER-CACHE/".$sourceFile."/";
+		$tempSourceFiles=array_merge($tempSourceFiles,Array($tempSourceFile));
+	}
+	# sort the diretories by date
+	$sourceFiles = sortPathsByDate($tempSourceFiles);
+	while (true){
+		if (count($sourceFiles) > 5){
+			# get the oldest path
+			$oldestPath = array_pop($sourceFiles);
+			addToLog("WARNING","resolver.php","oldest cached media path = '$oldestPath'");
+			# check for the path prefix
+			if (stripos($oldestPath,"/var/cache/2web/web/RESOLVER-CACHE/") !== false){
+				# remove the oldest cache path from the disk
+				$shell_output=shell_exec("rm -rv '$oldestPath';");
+				#$shell_output=("rm -rv '$oldestPath';");
+				addToLog("WARNING","resolver.php","<h2>Removal Output</h2><pre>$shell_output</pre>");
+				# recalculate the free space to see if the cleanup loop can be broken
+				$freeSpace=diskfreespace("/var/cache/2web/web/RESOLVER-CACHE/");
+				# increment the cleaned item count
+				$cleanedItems+=1;
+				if ($cleanedItems > 5){
+					addToLog("WARNING","resolver.php","Clean Item Limit Reached, More cache files will be removed on next access.");
+					# break the loop if more than five items have been removed from the cache
+					break;
+				}else if (count($sourceFiles) < 5){
+					addToLog("WARNING","resolver.php","Lower Limit reached less than 5 media items in the cache.");
+					# break the loop if there are less than five items left in the cache
+					break;
+				}
+			}
+		}else{
+			# break the loop because the cache is to small to prune
+			break;
+		}
+		addToLog("WARNING","resolver.php","<table><tr><th>Current Free</th><th>Required</th></tr><tr><td>".bytesToHuman($freeSpace)."</td><td>".bytesToHuman($minFreeSpace)."</td></tr></table>");
+	}
+}
+################################################################################
+# Process API inputs
+################################################################################
+# if the path is given for a local file
+if (array_key_exists("path",$_GET)){
+	$videoLink = $_GET['path'];
+	if(isTranscodeEnabled()){
+		debug("Checking for local file path ".urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink)."<br>");
+		if (file_exists(urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink))){
+			# change the url for the local path
+			debug("Transcoding is enabled<br>");
+			debug("Setting url to ".'http://'.$_SERVER["HTTP_HOST"].$_GET["path"]."<br>");
+			# set the url and begin transcoding
+			# - use localhost since this request is accessing the local server for a transcode job, this
+			#   should prevent the request from leaving this computer and crossing the LAN
+			$_GET["url"]=('http://'."127.0.0.1".$_GET["path"]);
+			#$_GET["url"]=('http://'.$_SERVER["HTTP_HOST"].$_GET["path"]);
+		}else{
+			debug("Path Does not exist on local server. '".urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink)."'<br>");
+		}
+	}else{
+		# redirect directly to the path given since it is a local path
+		debug("Transcoding is disabled<br>");
+		debug("Redirecting to ".$_GET["path"]."<br>");
+		redirect($_GET["path"]);
+	}
+}
+# if a remote url is given
 if (array_key_exists("url",$_GET)){
 	#
 	$videoLink = $_GET['url'];
-	debug("URL is ".$videoLink."<br>");
 	#
+	debug("URL is ".$videoLink."<br>");
 	debug("Checking for local file path ".urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink)."<br>");
 	# check the url is a local path on the server
 	if (file_exists(urldecode($_SERVER["DOCUMENT_ROOT"].$videoLink))){
@@ -324,8 +426,8 @@ if (array_key_exists("url",$_GET)){
 			#}
 			debug("Redirecting to ".'/ytdl-resolver.php?url=http://'.$_SERVER["HTTP_HOST"].$_GET["url"]."<br>");
 			# redirect the local url into the resolver for transcoding
-			redirect('/transcode.php?path='.$_GET["url"]);
-			#redirect('/ytdl-resolver.php?url=http://'.$_SERVER["HTTP_HOST"].$_GET["url"]);
+			#redirect('/transcode.php?path='.$_GET["url"]);
+			redirect('/ytdl-resolver.php?url=http://'.$_SERVER["HTTP_HOST"].$_GET["url"]);
 		}else{
 			debug("Transcoding is disabled<br>");
 			debug("Redirecting to ".$_GET["url"]."<br>");
@@ -507,73 +609,97 @@ if (array_key_exists("url",$_GET)){
 	# sort the diretories by date
 	$sourceFiles = sortPathsByDate($tempSourceFiles);
 	# draw the table containing cached videos and statuses of those videos
-	echo "<table>";
+	echo "<table>\n";
 
-	echo "<tr>";
-	echo "<th>Last Watched</th>";
-	echo "<th>Verified</th>";
-	echo "<th>Thumbnail</th>";
-	echo "<th>HLS</th>";
-	echo "<th>MP4/MP3</th>";
-	echo "<th>JSON</th>";
-	echo "<th>Title</th>";
-	echo "<th>Remove</th>";
-	echo "<th>Web Player</th>";
-	echo "<th>Link</th>";
-	echo "</tr>";
+	echo "	<tr>\n";
+	echo "		<th>Last Watched</th>\n";
+	echo "		<th>Verified</th>\n";
+	echo "		<th>Thumbnail</th>\n";
+	echo "		<th>HLS</th>\n";
+	echo "		<th>MP4/MP3</th>\n";
+	echo "		<th>JSON</th>\n";
+	echo "		<th>Title</th>\n";
+	echo "		<th>Remove</th>\n";
+	echo "		<th>Web Player</th>\n";
+	echo "		<th>Link</th>\n";
+	echo "	</tr>\n";
 	foreach($sourceFiles as $sourcePath){
-		echo "<tr>";
+		echo "	<tr>\n";
 		# remove file name left from date sort
 		$sourceWebPath=str_replace($_SERVER["DOCUMENT_ROOT"],"",$sourcePath);
 		# check the last watched time
-		echo "<td>";
+		echo "		<td>\n";
 		echo timeElapsedToHuman(filemtime($sourcePath));
-		echo "</td>";
+		echo "		</td>\n";
 		# check for verified video
 		if (is_readable($sourcePath."verified.cfg")){
-			echo "<td class='enabledSetting'>Verified</td>";
+			echo "		<td class='enabledSetting'>Verified</td>\n";
 		}else{
-			echo "<td class='disabledSetting'>Not Verified</td>";
+			echo "		<td class='disabledSetting'>Not Verified</td>\n";
 		}
 		# check for thumbnail
 		if (is_readable($sourcePath."video.png")){
-			echo "<td class='enabledSetting'>PNG Found</td>";
+			echo "		<td class='enabledSetting'>PNG Found</td>\n";
 		}else{
-			echo "<td class='disabledSetting'>No PNG</td>";
+			echo "		<td class='disabledSetting'>No PNG</td>\n";
 		}
 		# check for HLS stream
 		if (is_readable($sourcePath."video.m3u")){
-			echo "<td class='enabledSetting'>M3U Found</td>";
+			echo "		<td class='enabledSetting'>\n";
+			echo "			M3U Found\n";
+			# get the size of the m3u .ts files
+			$tsFiles=scandir($sourcePath);
+			$m3uSize=0;
+			foreach($tsFiles as $tsFilePath){
+				if(substr($tsFilePath,-3,3)==".ts"){
+					if (is_readable($sourcePath.$tsFilePath)){
+						# check the file extension
+						$m3uSize+=filesize($sourcePath.$tsFilePath);
+					}
+				}
+			}
+			echo "			<span class='singleStat'>\n";
+			echo "				<span class='singleStatLabel'>\n";
+			echo "					Size\n";
+			echo "				</span>\n";
+			echo "				<span class='singleStatValue'>\n";
+			echo bytesToHuman($m3uSize);
+			echo "				</span>\n";
+			echo "			</span>\n";
+			echo "			<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
+			echo "				<button class='button' type='submit' name='removeCachedHLS' value='".basename($sourcePath)."'>Remove HLS</button>\n";
+			echo "			</form>\n";
+			echo "		</td>\n";
 		}else{
-			echo "<td class='disabledSetting'>No M3U</td>";
+			echo "		<td class='disabledSetting'>No M3U</td>\n";
 		}
 		# check for mp4 file
 		if (is_readable($sourcePath."video.mp3")){
-			echo "<td class='enabledSetting'>";
-			echo "MP3 Found";
-			echo "<span class='singleStat'>";
-			echo "<span class='singleStatLabel'>";
-			echo "Size";
-			echo "</span>";
-			echo "<span class='singleStatValue'>";
+			echo "		<td class='enabledSetting'>\n";
+			echo "			MP3 Found\n";
+			echo "			<span class='singleStat'>\n";
+			echo "			<span class='singleStatLabel'>\n";
+			echo "				Size\n";
+			echo "			</span>\n";
+			echo "			<span class='singleStatValue'>\n";
 			echo bytesToHuman(filesize($sourcePath."video.mp3"));
-			echo "</span>";
-			echo "</span>";
-			echo "</td>";
+			echo "			</span>\n";
+			echo "			</span>\n";
+			echo "		</td>\n";
 		}else if (is_readable($sourcePath."video.mp4")){
-			echo "<td class='enabledSetting'>";
-			echo "MP4 Found";
-			echo "<span class='singleStat'>";
-			echo "<span class='singleStatLabel'>";
-			echo "Size";
-			echo "</span>";
-			echo "<span class='singleStatValue'>";
+			echo "		<td class='enabledSetting'>\n";
+			echo "			MP4 Found\n";
+			echo "			<span class='singleStat'>\n";
+			echo "			<span class='singleStatLabel'>\n";
+			echo "				Size\n";
+			echo "			</span>\n";
+			echo "			<span class='singleStatValue'>\n";
 			echo bytesToHuman(filesize($sourcePath."video.mp4"));
-			echo "</span>";
-			echo "</span>";
-			echo "</td>";
+			echo "			</span>\n";
+			echo "			</span>\n";
+			echo "		</td>\n";
 		}else{
-			echo "<td class='disabledSetting'>No MP4 or MP3</td>";
+			echo "		<td class='disabledSetting'>No MP4 or MP3</td>\n";
 		}
 
 		$sourceHash=basename($sourcePath);
@@ -601,7 +727,6 @@ if (array_key_exists("url",$_GET)){
 		echo "<td>$videoTitle</td>";
 
 		echo "<td>\n";
-
 		echo "	<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
 		echo "		<button class='button' type='submit' name='removeCachedVideo' value='$sourceHash'>Remove Cached Video</button>\n";
 		echo "	</form>\n";

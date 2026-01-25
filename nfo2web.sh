@@ -920,7 +920,7 @@ processEpisode(){
 						# create the directory to store the cached data
 						createDir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# create the command for caching
-						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp --max-filesize '6g' --retries 'infinite' --no-mtime --fragment-retries 'infinite' -f best --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
+						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp --max-filesize '6g' --retries '500' --retry-sleep 'exp=2:512:2' --js-runtimes node:/usr/bin/nodejs --no-mtime --fragment-retries '100' -f best --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
 						{
 							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
