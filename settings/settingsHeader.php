@@ -70,13 +70,15 @@ function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=A
 	echo "</a>";
 }
 ########################################################################
+# build the settings search interface
 ?>
 <div class='titleCard'>
 	<h2>Settings</h2>
 	<div class='listCard'>
 		<?PHP
 		# draw the module buttons if the module is enabled
-drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/log/","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php"));
+		drawHeaderButton("🔍","All","/settings/search.php");
+		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/settings/log.php","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php"));
 		$drawVideoOnDemandButton=drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
 		if(! $drawVideoOnDemandButton ){
 			# draw the header button even if only ytdl2nfo is active
@@ -122,12 +124,12 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🚫","Blocked","/settings/iptv_blocked.php");
 	echo "		</div>";
 	echo "	</div>\n";
-}else if (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php") || ($pageURL == "/settings/rss.php")){
+}elseif (($pageURL == "/settings/nfo.php") || ($pageURL == "/settings/ytdl2nfo.php") || ($pageURL == "/settings/rss.php")){
 	if ($pageURL == "/settings/nfo.php"){
 		$moduleName="nfo2web";
-	}else if ($pageURL == "/settings/ytdl2nfo.php"){
+	}elseif ($pageURL == "/settings/ytdl2nfo.php"){
 		$moduleName="ytdl2nfo";
-	}else if ($pageURL == "/settings/rss.php"){
+	}elseif ($pageURL == "/settings/rss.php"){
 		$moduleName="rss2nfo";
 	}
 	drawModuleHeaderWarning($moduleName);
@@ -139,13 +141,13 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawModuleHeaderButton("rss2nfo","📶","RSS","/settings/rss.php");
 	echo "		</div>";
 	echo "	</div>\n";
-}else if (($pageURL == "/settings/rss.php")){
+}elseif (($pageURL == "/settings/rss.php")){
 	$moduleName="rss2nfo";
 	drawModuleHeaderWarning($moduleName);
-}else if (($pageURL == "/settings/kodi.php")){
+}elseif (($pageURL == "/settings/kodi.php")){
 	$moduleName="kodi2web";
 	drawModuleHeaderWarning($moduleName);
-}else if (($pageURL == "/settings/ai.php") || ($pageURL == "/settings/ai_embeds.php") || ($pageURL == "/settings/ai_prompt.php") || ($pageURL == "/settings/ai_txt2img.php") || ($pageURL == "/settings/ai_subtitles.php") || ($pageURL == "/settings/ai_audio.php") ){
+}elseif (($pageURL == "/settings/ai.php") || ($pageURL == "/settings/ai_embeds.php") || ($pageURL == "/settings/ai_prompt.php") || ($pageURL == "/settings/ai_txt2img.php") || ($pageURL == "/settings/ai_subtitles.php") || ($pageURL == "/settings/ai_audio.php") ){
 	$moduleName="ai2web";
 	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
@@ -160,7 +162,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("📢","Audio Gen","/settings/ai_audio.php");
 	echo "		</div>";
 	echo "	</div>\n";
-}else if (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
+}elseif (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";
 	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
@@ -170,13 +172,13 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🌐","Scanning","/settings/portal_scanning.php");
 	echo "		</div>";
 	echo "	</div>";
-}else if ($pageURL == "/settings/music.php"){
+}elseif ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/graphs.php"){
+}elseif ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
 	drawModuleHeaderWarning($moduleName);
-}else if (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
+}elseif (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
 	drawModuleHeaderWarning($moduleName);
 	echo "	<div class='titleCard'>\n";
@@ -186,25 +188,35 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("↓","Downloads","/settings/comicsDL.php");
 	echo "		</div>";
 	echo "	</div>\n";
-}else if ($pageURL == "/settings/music.php"){
+}elseif ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/graphs.php"){
+}elseif ($pageURL == "/settings/graphs.php"){
 	$moduleName="graph2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/repos.php"){
+}elseif ($pageURL == "/settings/repos.php"){
 	$moduleName="git2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/weather.php"){
+}elseif ($pageURL == "/settings/weather.php"){
 	$moduleName="weather2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/apps.php"){
+}elseif ($pageURL == "/settings/apps.php"){
 	$moduleName="php2web";
 	drawModuleHeaderWarning($moduleName);
-}else if ($pageURL == "/settings/wiki.php"){
+}elseif ($pageURL == "/settings/wiki.php"){
 	$moduleName="wiki2web";
 	drawModuleHeaderWarning($moduleName);
-}else if (($pageURL == "/settings/") || ($pageURL == "/settings/modules.php") || ($pageURL == "/settings/system.php") || ($pageURL == "/settings/cache.php") || ($pageURL == "/settings/clean.php") || (stripos($pageURL, "/log/") != -1) || (stripos($pageURL, "/views/") != -1) || ($pageURL == "/settings/themes.php") || ($pageURL == "/settings/about.php") || ($pageURL == "/settings/manuals.php") || ($pageURL == "/settings/fortune.php")){
+}elseif (($pageURL == "/settings/index.php") ||
+	($pageURL == "/settings/modules.php") ||
+	($pageURL == "/settings/system.php") ||
+	($pageURL == "/settings/cache.php") ||
+	($pageURL == "/settings/clean.php") ||
+	($pageURL == "/settings/log.php") ||
+	(stripos($pageURL, "/views/") !== false) ||
+	($pageURL == "/settings/themes.php") ||
+	($pageURL == "/settings/about.php") ||
+	($pageURL == "/settings/manuals.php") ||
+ 	($pageURL == "/settings/fortune.php")){
 	$moduleName="system";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
@@ -216,7 +228,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🔮","Fortunes","/settings/fortune.php");
 	drawHeaderButton("📥","Cache","/settings/cache.php");
 	drawHeaderButton("🧹","Clean","/settings/clean.php");
-	drawHeaderButton("📋","Log","/log/");
+	drawHeaderButton("📋","Log","/settings/log.php");
 	drawHeaderButton("👁️","Views","/views/");
 	drawHeaderButton("📔","Manuals","/settings/manuals.php");
 	drawHeaderButton("❓","About","/settings/about.php");
@@ -226,3 +238,19 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	$moduleName="none";
 }
 ?>
+<form class='searchBoxForm' action='/settings/search.php' method='get'>
+	<?PHP
+if (array_key_exists("search",$_GET)){
+		# place query into the search bar to allow editing of the query and resubmission
+		echo "<input list='settingSearchAutocompleteData' id='searchBox' class='searchBox' type='text' name='search' placeholder='Settings Search...' value='".$_GET["search"]."' >\n";
+	}else{
+		echo "<input list='settingSearchAutocompleteData' id='searchBox' class='searchBox' type='text' name='search' placeholder='Settings Search...' >\n";
+	}
+	# if the server has autocomplete data, load it
+	if (is_readable("/var/cache/2web/generated/settings_autocomplete.index")){
+		echo file_get_contents("/var/cache/2web/generated/settings_autocomplete.index");
+	}
+	# do not leave a space between the search box and the button
+	?>
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+</form>

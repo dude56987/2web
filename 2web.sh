@@ -588,7 +588,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/admin.php" "$webDirectory/settings/admin.php"
 
 	# add the log file
-	linkFile "/usr/share/2web/settings/log.php" "$webDirectory/log/index.php"
+	linkFile "/usr/share/2web/settings/log.php" "$webDirectory/settings/log.php"
 
 	# Link the header and footer of the website
 	linkFile "/usr/share/2web/templates/header.php" "$webDirectory/header.php"
@@ -598,7 +598,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/indexHeader.html"
 	# settings interface files
 	linkFile "/usr/share/2web/settings/selectPath.php" "$webDirectory/settings/selectPath.php"
-	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/index.php"
+	linkFile "/usr/share/2web/settings/search.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
 	linkFile "/usr/share/2web/settings/users.php" "$webDirectory/settings/users.php"
 	linkFile "/usr/share/2web/settings/about.php" "$webDirectory/settings/about.php"
@@ -632,6 +632,7 @@ function update2web(){
 	linkFile "/usr/share/2web/settings/kodi.php" "$webDirectory/settings/kodi.php"
 	linkFile "/usr/share/2web/settings/apps.php" "$webDirectory/settings/apps.php"
 	linkFile "/usr/share/2web/settings/settingsHeader.php" "$webDirectory/settings/settingsHeader.php"
+	linkFile "/usr/share/2web/settings/search.php" "$webDirectory/settings/search.php"
 	linkFile "/usr/share/2web/settings/logout.php" "$webDirectory/logout.php"
 	linkFile "/usr/share/2web/settings/login.php" "$webDirectory/login.php"
 	# add the manuals page
