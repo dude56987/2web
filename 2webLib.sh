@@ -1294,6 +1294,8 @@ function ALERT(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
+	elif [ "$TERM" == "" ];then
+		return
 	fi
 	#colorCodeLength="${#colorCode}"
 
@@ -1496,6 +1498,8 @@ function INFO(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
+	elif [ "$TERM" == "" ];then
+		return
 	fi
 	#
 	height=$(tput lines)
@@ -1533,6 +1537,8 @@ function ERROR(){
 	# RETURN STDOUT
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
+		return
+	elif [ "$TERM" == "" ];then
 		return
 	fi
 	#
@@ -1929,6 +1935,8 @@ function drawHeader(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
+	elif [ "$TERM" == "" ];then
+		return
 	fi
 	#
 	termWidth=$(tput cols)
@@ -2299,6 +2307,8 @@ function drawLine(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
+	elif [ "$TERM" == "" ];then
+		return
 	fi
 	if [ "" == "$1" ];then
 		tailText=""
@@ -2654,6 +2664,8 @@ function drawSmallHeader(){
 	# Draw a line across the terminal using curses to determine the length
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
+		return
+	elif [ "$TERM" == "" ];then
 		return
 	fi
 	#
@@ -3980,7 +3992,8 @@ function sleepSpinner(){
 	#
 	animationLength=${#animation}
 	# skip animation but keep the delay when muted
-	if [ "$MUTE_OPTION" == "yes" ];then
+	if [ "$MUTE_OPTION" == "yes" ] || [ "$TERM" == "" ];then
+		return
 		# skip running output if script is ran in the background
 		totalSleepTime="$(echo -n "$( bc -l <<< "( $animationLength * $delayTime)" )" )"
 		sleep "$totalSleepTime"
@@ -4041,6 +4054,8 @@ function rotateSpinner(){
 	#
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
+		return
+	elif [ "$TERM" == "" ];then
 		return
 	fi
 	#
@@ -4300,6 +4315,8 @@ function countDown(){
 	# check for global control options
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip countdowns in mute mode
+		return
+	elif [ "$TERM" == "" ];then
 		return
 	fi
 	if [ "$FAST_OPTION" == "yes" ];then
