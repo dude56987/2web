@@ -2,6 +2,14 @@
 	ini_set('display_errors', 1);
 	include("/usr/share/2web/2webLib.php");
 	requireGroup("weather2web");
+	#
+	if(requireGroup("admin",false)){
+		if (array_key_exists("refresh",$_GET)){
+			if(file_exists("/var/cache/2web/web/weather/refresh.cfg")){
+				unlink("/var/cache/2web/web/weather/refresh.cfg");
+			}
+		}
+	}
 ?>
 <!--
 ########################################################################
@@ -74,71 +82,86 @@
 	#	$updateStarted=true;
 	#}
 	# render the page if the info is fresh
-	if($updateStarted == false){
-		echo "<div class='titleCard'>";
-		echo "<h1>Stations</h1>";
-		echo "<div class='listCard'>";
-		echo "<a class='button' href='?'>🪟 Overview</a>";
-		# read each station file
-		foreach($stationFiles as $stationFile){
-			# read the index entry
-			echo file_get_contents($stationPath.$stationFile);
-			flush();
-			ob_flush();
-		}
-		echo "<a class='button' href='?all'>🌎 View All Stations</a>";
-		echo "</div>";
-		echo "</div>";
-		if (array_key_exists("station",$_GET)){
-			# draw the weather info for a single station
-			$stationFile=$_GET["station"].".index";
-			echo "<div class='titleCard'>";
-			echo		file_get_contents( ($currentPath.$stationFile) );
-			echo "</div>";
-			// write the current condititons at the bottom of the extended forecast
-			echo	file_get_contents($forcastPath.$stationFile);
-			flush();
-			ob_flush();
-		}else if (array_key_exists("all",$_GET)){
-			# draw weather info for all stations
-			foreach($stationFiles as $stationFile){
-				echo "<div class='titleCard'>";
-				// write the index entry
-				echo file_get_contents( ($currentPath.$stationFile) );
-				echo "</div>";
-				// write the current condititons at the bottom of the extended forecast
-				echo file_get_contents($forcastPath.$stationFile);
-				flush();
-				ob_flush();
-			}
-		}else{
-			echo "<div class='titleCard'>";
-			# draw the default view showing all station current info as links to individual stations
-			foreach($stationFiles as $stationFile){
-				$stationName=str_replace(".index","",$stationFile);
-				echo "<a class='inputCard' href='?station=$stationName'>\n";
-				echo "<h2>\n";
-				echo "$stationName\n";
-				echo "</h2>\n";
-				echo file_get_contents($currentPath.$stationFile)."\n";
-				echo "</a>\n";
-				flush();
-				ob_flush();
-			}
-			echo "</div>";
-		}
-	}else{
+	if($updateStarted == true){
 		# if weather2web is not running queue a update job
 		if (! file_exists("/var/cache/2web/web/weather2web.active")){
 			addToQueue("multi","weather2web --mute");
 			addToLog("DEBUG","weather check", "weather updated");
 		}
-		echo "<div class='inputCard'>";
-		echo "<h1>Updating Weather Information</h1>";
-		echo "Weather information is out of date. Updating weather information from remote server...";
-		echo "</div>";
+		echo "<div class='inputCard'>\n";
+		echo "<h1>Updating Weather Information</h1>\n";
+		echo "Weather information is out of date. Updating weather information from remote server...\n";
+		echo "</div>\n";
 		# reload the page after 10 seconds
 		reloadPage(10);
+	}
+	if(requireGroup("admin",false)){
+		echo "<div class='titleCard'>\n";
+		echo "	<h2>Admin Tools</h2>\n";
+		echo "	<div class='listCard'>\n";
+		echo "		<a class='button' href='?refresh'>Force Refresh Data</a>\n";
+		echo "	</div>\n";
+		echo "</div>\n";
+	}
+	echo "<div class='titleCard'>\n";
+	echo "<h1>Stations</h1>\n";
+	echo "<div class='listCard'>\n";
+	echo "<a class='button' href='?'>🪟 Overview</a>\n";
+	# read each station file
+	foreach($stationFiles as $stationFile){
+		if (file_exists($stationPath)){
+			$tempName=str_replace(".index","",basename($stationFile));
+			echo "<a class='button' href='?station=$tempName'>\n";
+			echo "📍 $tempName";
+			echo "</a>\n";
+			flush();
+			ob_flush();
+		}
+	}
+	echo "<a class='button' href='?all'>🌎 View All Stations</a>\n";
+	echo "</div>\n";
+	echo "</div>\n";
+	if (array_key_exists("station",$_GET)){
+		# draw the weather info for a single station
+		$stationFile=$_GET["station"].".index";
+		echo "<div class='titleCard'>";
+		echo		file_get_contents( ($currentPath.$stationFile) );
+		echo "</div>";
+		// write the current condititons at the bottom of the extended forecast
+		echo	file_get_contents($forcastPath.$stationFile);
+		flush();
+		ob_flush();
+	}else if (array_key_exists("all",$_GET)){
+		# draw weather info for all stations
+		foreach($stationFiles as $stationFile){
+			if (file_exists($currentPath.$stationFile)){
+				echo "<div class='titleCard'>\n";
+				// write the index entry
+				echo file_get_contents( ($currentPath.$stationFile) )."\n";
+				echo "</div>\n";
+				// write the current condititons at the bottom of the extended forecast
+				echo file_get_contents($forcastPath.$stationFile);
+				flush();
+				ob_flush();
+			}
+		}
+	}else{
+		echo "<div class='titleCard'>";
+		# draw the default view showing all station current info as links to individual stations
+		foreach($stationFiles as $stationFile){
+			if (file_exists($currentPath.$stationFile)){
+				$stationName=str_replace(".index","",$stationFile);
+				echo "<a class='inputCard' href='?station=$stationName'>\n";
+				echo "	<h2>\n";
+				echo "		$stationName\n";
+				echo "	</h2>\n";
+				echo file_get_contents($currentPath.$stationFile)."\n";
+				echo "</a>\n";
+				flush();
+				ob_flush();
+			}
+		}
+		echo "</div>\n";
 	}
 ?>
 <?php
