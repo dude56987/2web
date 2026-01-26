@@ -32,47 +32,63 @@ if($isAdmin){
 			echo "		$moduleName ";
 			echo "	</span>\n";
 			echo "	<span class='singleStatValue'>";
-			timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
+			echo timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
 			echo "	</span>\n";
 			echo "</span>\n";
 		}
 	}
 }
-if($isAdmin){
-	# build the stats section
-	echo "<div>\n";
+# build the stats section
+echo "<div>\n";
 
-	if (detectEnabledStatus("nfo2web")){
+if (detectEnabledStatus("nfo2web")){
+	if(requireGroup("nfo2web",false)){
 		getStat("totalEpisodes.index", "Episodes");
 		getStat("totalShows.index", "Shows");
 		getStat("totalMovies.index", "Movies");
 		getStat("ytdlShows.index", "YTDL Shows");
 	}
-	if (detectEnabledStatus("comic2web")){
+}
+if (detectEnabledStatus("comic2web")){
+	if(requireGroup("comic2web",false)){
 		getStat("totalComics.index", "Books/Comics");
 	}
-	if (detectEnabledStatus("git2web")){
+}
+if (detectEnabledStatus("git2web")){
+	if(requireGroup("git2web",false)){
 		getStat("totalRepos.index", "Repos");
 	}
-	if (detectEnabledStatus("php2web")){
+}
+if (detectEnabledStatus("php2web")){
+	if(requireGroup("php2web",false)){
 		getStat("totalApps.index", "Applications");
 	}
-	if (detectEnabledStatus("iptv2web")){
+}
+if (detectEnabledStatus("iptv2web")){
+	if(requireGroup("iptv2web",false)){
 		getStat("totalChannels.index", "TV Channels");
 		getStat("totalRadio.index", "Radio Channels");
 	}
-	if (detectEnabledStatus("weather2web")){
+}
+if (detectEnabledStatus("weather2web")){
+	if(requireGroup("weather2web",false)){
 		getStat("totalWeather.index", "Weather Stations");
 	}
-	if (detectEnabledStatus("wiki2web")){
+}
+if (detectEnabledStatus("wiki2web")){
+	if(requireGroup("wiki2web",false)){
 		getStat("totalWiki.index", "Wikis");
 	}
-	if (detectEnabledStatus("music2web")){
+}
+if (detectEnabledStatus("music2web")){
+	if(requireGroup("music2web",false)){
 		getStat("totalArtists.index", "Artists");
 		getStat("totalAlbums.index", "Albums");
 		getStat("totalTracks.index", "Tracks");
 	}
-	if (detectEnabledStatus("ai2web")){
+}
+if (detectEnabledStatus("ai2web")){
+	if(requireGroup("ai2web",false)){
 		getStat("promptAi.index", "Prompt AI");
 		getStat("txtGenAi.index", "Text Gen AI");
 		getStat("subAi.index", "Subtitle AI");
@@ -81,9 +97,14 @@ if($isAdmin){
 		getStat("localAi.index", "Total AI");
 		getStat("aiSize.index", "Total AI Size");
 	}
-	if (detectEnabledStatus("git2web")){
+}
+if (detectEnabledStatus("git2web")){
+	if(requireGroup("git2web",false)){
 		getStat("repoGenSize.index", "Repo Cache");
 	}
+}
+# only show size data to server admins
+if($isAdmin){
 	getStat("webThumbSize.index", "Thumbnail Cache");
 	getStat("cacheSize.index", "Video Cache");
 	getStat("webCacheSize.index", "Page Cache");
@@ -94,13 +115,13 @@ if($isAdmin){
 	getStat("webSize.index", "Total Web");
 	getStat("mediaSize.index", "Local Media");
 	getStat("freeSpace.index", "Total Free Space");
-
+	# show the drive space data
 	if (is_readable("drives.index")){
 		echo " ";
 		echo file_get_contents("drives.index");
 	}
-	echo "</div>\n";
 }
+echo "</div>\n";
 
 # check last update time
 if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
@@ -108,14 +129,14 @@ if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
 	echo "<span class='singleStat'>\n";
 	echo "		<span class='singleStatLabel'>Last Updated</span>\n";
 	echo "		<span class='singleStatValue'>";
-	timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
+	echo timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
 	echo "		</span>\n";
 	echo "</span>\n";
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
 		echo "<span class='singleStat'>\n";
 		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
 		echo "		<span class='singleStatValue'>";
-		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
 		echo "		</span>\n";
 		echo "</span>\n";
 	}else{
@@ -135,7 +156,7 @@ if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
 		echo "<span class='singleStat'>";
 		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
 		echo "		<span class='singleStatValue'>";
-		timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
 		echo "</span>\n";
 		echo "</span>\n";
 	}else{
@@ -156,7 +177,7 @@ if (isset($_SESSION["user"])){
 		echo "<span class='singleStat'>\n";
 		echo "	<span class='singleStatLabel'>Login Time</span>\n";
 		echo "	<span class='singleStatValue'>";
-		timeElapsedToHuman($loginTime);
+		echo timeElapsedToHuman($loginTime);
 		echo "</span>\n";
 		echo "</span>\n";
 	}
@@ -190,11 +211,19 @@ if ( file_exists("/etc/2web/fortuneStatus.cfg")){
 $weatherEnabled = False;
 if (requireGroup("weather2web",false)){
 	if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
-		$weatherEnabled = True;
+		if(requireGroup("weather2web",false)){
+			$weatherEnabled = True;
+		}else{
+			$weatherEnabled = False;
+		}
 	}
 }
 if ($fortuneEnabled){
-	echo "<a class='homeWeather inputCard' href='/fortune.php'>\n";
+	if ($weatherEnabled){
+		echo "<a class='homeWeather inputCard' href='/fortune.php'>\n";
+	}else{
+		echo "<a class='homeWeather' href='/fortune.php'>\n";
+	}
 	echo "<h3>🔮 Fortune</h3>\n";
 	echo "<div class='fortuneText'>\n";
 	# load the fortune data
@@ -208,7 +237,12 @@ if ($fortuneEnabled){
 	echo "</a>\n";
 }
 if ($weatherEnabled){
-	echo "<a class='homeFortune inputCard' href='/weather/?station=".str_replace("\n","",file_get_contents("/etc/2web/weather/homepageLocation.cfg"))."'>\n";
+	if ($fortuneEnabled){
+		$weatherClass="inputCard";
+	}else{
+		$weatherClass="";
+	}
+	echo "<a class='homeFortune $weatherClass' href='/weather/?station=".cleanText(trim(file_get_contents("/etc/2web/weather/homepageLocation.cfg")))."'>\n";
 	# load the weather data
 	if (file_exists("/var/cache/2web/web/weather.index")){
 		$todaysWeather= file_get_contents("weather.index");
