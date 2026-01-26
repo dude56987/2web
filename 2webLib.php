@@ -2098,8 +2098,29 @@ if( ! function_exists("buildYesNoCfgButton")){
 ########################################################################
 if( ! function_exists("timeToHuman")){
 	function timeToHuman($timestamp){
+		# Take a duration in seconds and print that in a human readable way.
+		#
+		# This converts a duration in seconds into a human readable format.
+		#
+		# EX) 1 Hour 2 Minutes 4 Seconds
+		# EX) 2 Minutes 4 Seconds
+		# EX) 4 years 2 days 10 hours 2 Minutes 4 Seconds
+
 		# remove newlines in timestamp
 		$timestamp=str_replace("\n","",$timestamp);
+		$timestamp=trim($timestamp);
+		# unclean any conversions done so it can be converted into a number
+		# - floats will need decimal places fixed
+		$timestamp=uncleanText($timestamp);
+
+		# verify this is a timestamp
+		if(is_numeric($timestamp) == false){
+			# return empty
+			return "∅";
+		}
+
+		# check for decimals in the input
+		$timestamp=floor($timestamp);
 
 		$yearInSeconds=(((60 * 60) * 24) * 365);
 		$dayInSeconds=((60 * 60) * 24);
@@ -2111,13 +2132,15 @@ if( ! function_exists("timeToHuman")){
 		$hoursPassed=0;
 		$minutesPassed=0;
 
+		$outputTime="";
+
 		if ($timestamp > $yearInSeconds ){
 			$yearsPassed=floor( $timestamp / $yearInSeconds );
 			$timestamp -= $yearsPassed * $yearInSeconds;
 			if ($yearsPassed == 1){
-				echo "$yearsPassed year ";
+				$outputTime .= "$yearsPassed year ";
 			}else if ($yearsPassed > 1){
-				echo "$yearsPassed years ";
+				$outputTime .= "$yearsPassed years ";
 			}
 		}
 
@@ -2125,12 +2148,12 @@ if( ! function_exists("timeToHuman")){
 			$daysPassed=floor( $timestamp / $dayInSeconds );
 			$timestamp -= $daysPassed * $dayInSeconds;
 			if ($daysPassed == 1){
-				echo "$daysPassed day ";
+				$outputTime .= "$daysPassed day ";
 			}else if ($daysPassed > 1){
-				echo "$daysPassed days ";
+				$outputTime .= "$daysPassed days ";
 			}
 			if ($yearsPassed > 0){
-				return true;
+				return $outputTime;
 			}
 		}
 
@@ -2138,12 +2161,12 @@ if( ! function_exists("timeToHuman")){
 			$hoursPassed=floor( $timestamp / $hourInSeconds );
 			$timestamp -= $hoursPassed * $hourInSeconds;
 			if ($hoursPassed == 1){
-				echo "$hoursPassed hour ";
+				$outputTime .= "$hoursPassed hour ";
 			}else if ($hoursPassed > 1){
-				echo "$hoursPassed hours ";
+				$outputTime .= "$hoursPassed hours ";
 			}
 			if ($daysPassed > 0){
-				return true;
+				return $outputTime;
 			}
 		}
 
@@ -2151,25 +2174,34 @@ if( ! function_exists("timeToHuman")){
 			$minutesPassed=floor( $timestamp / $minuteInSeconds );
 			$timestamp -= $minutesPassed * $minuteInSeconds;
 			if ($minutesPassed == 1){
-				echo "$minutesPassed minute ";
+				$outputTime .= "$minutesPassed minute ";
 			}else if ($minutesPassed > 1){
-				echo "$minutesPassed minutes ";
+				$outputTime .= "$minutesPassed minutes ";
 			}
 			if ($hoursPassed > 0){
-				return true;
+				return $outputTime;
 			}
 		}
 		# write out the remaining seconds
 		if ($timestamp == 1){
-			echo "$timestamp second ";
+			$outputTime .= "$timestamp second ";
 		}else{
-			echo "$timestamp seconds ";
+			$outputTime .= "$timestamp seconds ";
 		}
+		return $outputTime;
 	}
 }
 ########################################################################
 if( ! function_exists("timeElapsedToHuman")){
 	function timeElapsedToHuman($timestamp,$postText=" ago"){
+		# Take a timestamp in seconds and show how long ago that timestamp happend in a human readable way.
+		#
+		# - By default ago is posted after the time.
+		#
+		# - EX) 10 minutes 4 seconds ago
+		# - EX) 2 days 12 hours ago
+		#
+
 		# remove newlines in timestamp
 		# - second argument is post time text default=" ago"
 		$timestamp=str_replace("\n","",$timestamp);
@@ -2177,9 +2209,11 @@ if( ! function_exists("timeElapsedToHuman")){
 		$currentTime=time();
 		$elapsedTime=( $currentTime - $timestamp );
 
+		$outputTime="";
 		# convert the elapsed time to human
-		timeToHuman($elapsedTime);
-		echo $postText;
+		$outputTime .= timeToHuman($elapsedTime);
+		$outputTime .= $postText;
+		return $outputTime;
 	}
 }
 ########################################################################
@@ -2198,7 +2232,7 @@ if( ! function_exists("getDateStat")){
 			echo "<span class='singleStat'>";
 			echo "<span class='singleStatLabel'>$label</span>";
 			echo "<span class='singleStatValue'>";
-			timeElapsedToHuman($total);
+			echo timeElapsedToHuman($total);
 			echo "</span>";
 			echo "</span>\n";
 		}
@@ -2610,4 +2644,30 @@ if( ! function_exists("isTranscodeEnabled")){
 	}
 }
 #################################################################################
+if( ! function_exists("randomWord")){
+	function randomWord(){
+		$wordDict=file_get_contents("/usr/share/dict/words");
+		return trim(array_rand($wordDict));
+	}
+}
+#################################################################################
+if( ! function_exists("getDiskSize")){
+	function getDiskSize($path){
+		# output the disk size in a human readable format of 'currentSize/totalSpaceAvailable'
+		if (is_readable($path)){
+			$freeBytes=disk_free_space($path);
+			$totalBytes=disk_total_space($path);
+			#$freeSpace=bytesToHuman($freeBytes);
+			$totalSpace=bytesToHuman($totalBytes);
+			$usedSpace=bytesToHuman($totalBytes-$freeBytes);
+			# get the percentage
+			$percentage=floor((($totalBytes - $freeBytes) / $totalBytes) * 100);
+			# output the formatted size info
+			return "$usedSpace/$totalSpace %$percentage Used";
+		}else{
+			return "∅";
+		}
+	}
+}
+################################################################################
 ?>
