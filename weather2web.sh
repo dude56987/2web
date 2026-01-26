@@ -429,6 +429,8 @@ function update(){
 			ALERT "Weather has been updated recently and is stored in the cache."
 			ALERT "Check back in 15-20 minutes when the weather station has new info..."
 		fi
+		# add the weather location to the search index
+		addToSearchIndex "$webDirectory/weather/data/station/$locationSum.index" "$locationSum" "/weather/$locationSum/"
 	done
 	# update the stats file
 	if [ $( echo "$totalWeatherLocations" | wc -l ) -gt 0 ];then
@@ -436,6 +438,7 @@ function update(){
 			echo "$totalWeatherLocations" > "$webDirectory/totalWeatherStations.index"
 		fi
 	fi
+
 	# check for the location index
 	if cacheCheck "/var/cache/2web/generated/weather/locations.index" 14;then
 		createDir "/var/cache/2web/generated/weather/"
@@ -566,7 +569,7 @@ else
 	# update webpages
 	webUpdate
 	# display the help
-	main --help
+	weather2web --help
 	showServerLinks
 	# show the server link at the bottom of the interface
 	drawSmallHeader "Module Links"
