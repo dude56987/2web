@@ -63,7 +63,8 @@ include("settingsHeader.php");
 	if(file_exists("/etc/2web/loginTimeoutHours.cfg")){
 		$timeoutHours = file_get_contents("/etc/2web/loginTimeoutHours.cfg");
 	}else{
-		$timeoutHours = 72;
+		# 30 days
+		$timeoutHours = 720;
 	}
 	echo "<li>";
 	echo "The session will currently timeout after ".$timeoutHours." hours, ".$timeoutMinutes." minutes";
@@ -87,7 +88,7 @@ include("settingsHeader.php");
 		echo "</tr>";
 		echo "<tr>";
 		echo "	<td>";
-		echo "		<input type='number' name='setSessionTimeoutHours' placeholder='Session Timeout Hours...' min='0' max='120' value='".$timeoutHours."' />";
+		echo "		<input type='number' name='setSessionTimeoutHours' placeholder='Session Timeout Hours...' min='0' max='720' value='".$timeoutHours."' />";
 		echo "	</td>";
 		echo "	<td>";
 		echo "		<input type='number' name='setSessionTimeoutMinutes' placeholder='Session Timeout Minutes...' min='0' max='59' value='".$timeoutMinutes."' />";
@@ -100,49 +101,65 @@ include("settingsHeader.php");
 </form>
 </div>
 
-<details class='titleCard' id='userIndex'>
-	<summary><h2>User Index</h2></summary>
-		<?PHP
-		# for each existing user create a jump link
-		$foundUsers=scanDir("/etc/2web/users/");
-		$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
-		foreach( $foundUsers as $foundUser){
-			$foundUser = str_replace(".cfg","",$foundUser);
-			echo "<a class='indexSeries' href='#user_$foundUser'>\n";
-			#echo "<h2 class='moreEpisodesLinkIcon'>🯆</h2>\n";
-			echo "<h2 class=''>🯆</h2>\n";
-			echo $foundUser."\n";
-			echo "</a>\n";
-		}
-		?>
-</details>
+<?PHP
+	# for each existing user create a jump link
+	$foundUsers=scanDir("/etc/2web/users/");
+	$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
+	$foundUserCount=count($foundUsers);
+	# make the lists start collapsed if they are large enough
+	if($foundUserCount > 10){
+		echo "<details class='titleCard' id='userIndex'>\n";
+		echo "	<summary><h2>User Index</h2></summary>\n";
+	}else{
+		echo "<div class='titleCard' id='userIndex'>\n";
+		echo "	<summary><h2>User Index</h2></summary>\n";
+	}
+	foreach( $foundUsers as $foundUser){
+		$foundUser = str_replace(".cfg","",$foundUser);
+		echo "<a class='indexSeries' href='#user_$foundUser'>\n";
+		#echo "<h2 class='moreEpisodesLinkIcon'>🯆</h2>\n";
+		echo "<h2 class=''>🯆</h2>\n";
+		echo $foundUser."\n";
+		echo "</a>\n";
+	}
+	if($foundUserCount > 10){
+		echo "</details>\n";
+	}else{
+		echo "</div>\n";
+	}
+?>
 
-<details class='titleCard' id='groupIndex'>
-	<summary><h2>Group  Index</h2></summary>
-		<?PHP
-		# get a list of the groups
-		$groups=scanDir("/etc/2web/groups/");
-		$groups=array_diff($groups,Array('..','.','.placeholder'));
-		foreach( $groups as $group ){
-			$group = str_replace(".cfg","",$group);
-			echo "<a class='indexSeries' href='#groupLock_$group'>\n";
-			#echo "<h2 class='moreEpisodesLinkIcon'>👪</h2>\n";
-			echo "<h2 class=''>👪</h2>\n";
-			echo $group."\n";
-			echo "</a>\n";
-		}
-		?>
-</details>
-
-<div class='settingListCard' id='manageUsers'>
-<h2>Manage Users</h2>
 <?PHP
 	# get a list of the groups
 	$groups=scanDir("/etc/2web/groups/");
 	$groups=array_diff($groups,Array('..','.','.placeholder'));
+	$foundGroupCount=count($groups);
+	# make the lists start collapsed if they are large enough
+	if($foundGroupCount > 10){
+		echo "<details class='titleCard' id='groupIndex'>\n";
+		echo "	<summary><h2>Group Index</h2></summary>\n";
+	}else{
+		echo "<div class='titleCard' id='groupIndex'>\n";
+		echo "	<summary><h2>Group Index</h2></summary>\n";
+	}
+	foreach( $groups as $group ){
+		$group = str_replace(".cfg","",$group);
+		echo "<a class='indexSeries' href='#groupLock_$group'>\n";
+		echo "<h2 class=''>👪</h2>\n";
+		echo $group."\n";
+		echo "</a>\n";
+	}
+	if($foundGroupCount > 10){
+		echo "</details>\n";
+	}else{
+		echo "</div>\n";
+	}
+?>
+
+<div class='settingListCard' id='manageUsers'>
+<h2>Manage Users</h2>
+<?PHP
 	# for each existing user build a card and place group enable/disable buttons for each group and a remove user button
-	$foundUsers=scanDir("/etc/2web/users/");
-	$foundUsers=array_diff($foundUsers,Array('..','.','.placeholder'));
 	foreach( $foundUsers as $foundUser){
 		# remove extension from filename
 		$foundUser = str_replace(".cfg","",$foundUser);
