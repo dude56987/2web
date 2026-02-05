@@ -170,12 +170,12 @@ function playVideo(){
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function playPause(){
+function playPause(videoId="video"){
 	// playPause()
 	//
 	// Toggle play/pause state of the video element with the ID 'video'
 	//
-	var video = document.getElementById("video");
+	var video = document.getElementById(videoId);
 	if(video !== null){
 		if(video.paused){
 			console.log("Playing the video.");
@@ -322,9 +322,11 @@ function toggleFullscreen(elementId="",enableScroll=false) {
 	if (elementId == ""){
 		// use the body if no element is set
 		chosenElement=document.body;
+		console.log("Toggle Fullscreen for the whole page");
 	}else{
 		// get the element by id
 		chosenElement=document.getElementById(elementId);
+		console.log("Toggle Fullscreen for '"+elementId+"'");
 	}
 	if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement){
 		if (chosenElement.requestFullscreen) {
@@ -501,7 +503,11 @@ function hideId(idToHide="notification"){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function notify(message,displayTime=500,textId="notificationText",notificationId="notification"){
+function videoNotify(message="!"){
+	notify(message,500,"notificationText","notification","video");
+}
+////////////////////////////////////////////////////////////////////////////////
+function notify(message="!",displayTime=500,textId="notificationText",notificationId="notification",addToId=""){
 	console.log("notify="+message);
 	// if a notification is being displayed, remove it
 	if(document.getElementById(notificationId) != null){
@@ -522,7 +528,11 @@ function notify(message,displayTime=500,textId="notificationText",notificationId
 		// add the text inside the notification
 		notifyObj.appendChild(notifyTextObj);
 		//document.getElementById("pageContent").appendChild(notifyObj);
-		document.body.appendChild(notifyObj);
+		if(addToId == ""){
+			document.body.appendChild(notifyObj);
+		}else{
+			document.getElementById(addToId).appendChild(notifyObj);
+		}
 		//
 		//document.getElementById("notification").style.opacity=0.9;
 		//document.getElementById("notificationText").innerHTML=message;
