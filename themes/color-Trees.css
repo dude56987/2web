@@ -35,7 +35,7 @@ html{
 	text-shadow: 0px 0px 0.2rem var(--highlightText), 0px 0px 0.2rem var(--highlightText), 0px 0px 0.2rem var(--highlightText);
 	font-weight: bolder;
 }
-h1,h2,h3,h4,h5,input,.button{
+h1,h2,h3,h4,h5,input,.button,.singleStat.showPageEpisode{
 	text-shadow: 0px 0px 0.8rem var(--highlightText), 0px 0px 0.8rem var(--highlightText), 0px 0px 0.8rem var(--highlightText) !important;
 	font-weight: bolder;
 }
