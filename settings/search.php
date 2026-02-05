@@ -136,9 +136,16 @@ if (array_key_exists("search",$_GET)){
 }
 #
 if(! $matchFound){
-	echo "<div class='warningBanner'>";
-	echo "No matches have been found, All settings are listed.";
-	echo "</div>";
+	echo "<div class='warningBanner'>\n";
+	echo "	<hr>\n";
+	#echo "	<div class='listCard'>\n";
+	echo "		No matches have been found, All settings are listed.<br>\n";
+	#echo "	</div>\n";
+	#echo "	<div class='listCard'>\n";
+	echo "		If you can not find the settings you are looking for you may need to enable the related module in <a class='smallButton' href='/settings/modules.php'>🧩 modules</a>\n";
+	#echo "	</div>\n";
+	echo "	<hr>\n";
+	echo "</div>\n";
 	$sourceFiles=$og_sourceFiles;
 	# randomize the results when a match is not found
 	shuffle($sourceFiles);
@@ -308,11 +315,11 @@ foreach($sourceFiles as $sourceFile){
 }
 if (array_key_exists("search",$_GET)){
 	if($matchFound){
-		echo "	<div class='listCard' >";
-		echo "		<a class='button' href='/settings/search.php'>";
-		echo "			Show All Settings";
-		echo "		</a>";
-		echo "	</div>";
+		echo "	<div class='listCard'>\n";
+		echo "		<a class='button' href='/settings/search.php'>\n";
+		echo "			Show All Settings\n";
+		echo "		</a>\n";
+		echo "	</div>\n";
 	}
 }
 echo "</div>\n";
