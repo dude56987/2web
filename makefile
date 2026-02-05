@@ -33,6 +33,43 @@ test-update-ondemand: install
 	sudo time -v 2web update
 test: install
 	sudo time -v 2web --parallel
+test-effects:
+	cp -rv effects/. /usr/share/2web/effects/
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-templates:
+	# copy all the template php pages into a existing install
+	cp -rv templates/. /usr/share/2web/templates/
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-libs:
+	# PHP libs
+	cp -v 2webLib.php /usr/share/2web/2webLib.php
+	# javascript libs
+	cp -v 2webLib.js /usr/share/2web/2webLib.js
+	# python libs
+	cp -v 2webLib.py /usr/share/2web/python2webLib.py
+	# shell libs
+	cp -v 2webLib.sh /var/lib/2web/common
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-settings:
+	cp -v settings/*.php /usr/share/2web/settings/
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-resolvers:
+	cp -v resolvers/*.php /usr/share/2web/resolvers/
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-themes:
+	# copy over the theme templates from source
+	cp -v themes/*.css /usr/share/2web/theme-templates/
+	# force a rebuild of the themes using built in 2web command
+	2web --rebuild-themes
+	# restart the webserver to clear out caches
+	service apache2 restart
+check-copy-dates:
+	grep "Copyright (C)" *.* */*.* */*/*.* | grep --invert-match "2025" | csvformat | csvclean -a -d ":" | csvlook --no-header-row
 test-apps:
 	# compress the apps into the install location
 	zip -9 -r -j "/usr/share/2web/example_apps/list.zip" "example_apps/list/."
