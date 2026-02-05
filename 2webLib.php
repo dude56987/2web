@@ -1290,8 +1290,9 @@ if( ! function_exists("sortPathsByDate")){
 		#
 		# The subPath is not required
 		#
-		# The subPath will be added to the paths and that combined path will be used
-		# to get the modification time used for sorting the orignal list of paths
+		# The subPath will be added to then end of the paths and that combined path
+		# will be used to get the modification time used for sorting the orignal
+		# list of paths
 
 		# sort the files by mtime
 		$sortedList=Array();
@@ -1371,6 +1372,30 @@ if( ! function_exists("debug")){
 	}
 }
 ########################################################################
+if( ! function_exists("delayedRedirect")){
+	function delayedRedirect($returnLink="",$delaySeconds=2,$target=""){
+		# backButton($returnLink,$buttonText,$delaySeconds)
+		#
+		# Draw a redirect button and automatically redirect after a delay
+		if($target != ""){
+			$target="target='$target'";
+		}
+		if($returnLink == ""){
+			$returnLink=$_SERVER["PHP_SELF"];
+		}
+		# Reload a webpage after a delay with javascript or meta refresh if scripts are disabled
+		echo "<script>\n";
+		# pause any video playback
+		echo "	pauseVideo();\n";
+		# show the spinner to indicate activity to the user
+		echo "	showSpinner();\n";
+		# start the delayed page reload
+		echo "	delayedRedirect($delaySeconds,\"$returnLink\");\n";
+		echo "</script>\n";
+		noscriptRefresh($delaySeconds, $returnLink);
+	}
+}
+########################################################################
 if( ! function_exists("redirect")){
 	function redirect($url){
 		# redirect($url)
@@ -1384,23 +1409,15 @@ if( ! function_exists("redirect")){
 }
 ########################################################################
 if( ! function_exists("noscriptRefresh")){
-	function noscriptRefresh($seconds=10){
+	function noscriptRefresh($delaySeconds=10,$returnLink="",$target=""){
 		# reload a page only if javascript is disabled
 		echo "<noscript>\n";
 		# add the noscript page refresh
-		echo "	<meta http-equiv='refresh' content='$seconds'>\n";
+		echo "	<meta http-equiv='refresh' $target content='$delaySeconds' $returnLink>\n";
 		# draw the notitication spinner
 		echo "	<div id='notification'>";
-		echo "		<div id='spinRight'>";
-		echo "			🗘";
-		echo "		</div>";
+		echo "		<img class='' src='/spinner.gif'>";
 		echo "	</div>";
-		#echo "	<style>\n";
-		# also display the global spinners
-		#echo "		.globalPulse,.globalSpinner{\n";
-		#echo "			visibility: visible !important;\n";
-		#echo "		}\n";
-		#echo "	</style>\n";
 		echo "</noscript>\n";
 	}
 }
@@ -1418,8 +1435,9 @@ if( ! function_exists("reloadPage")){
 		# show the spinner to indicate activity to the user
 		echo "	showSpinner();\n";
 		# 🗘 ⁝ ⸫ 🟃 🟂 ⚙️ 🟕 🟗
-		echo "	notify(\"🗘\",".(1000 * $delaySeconds).",\"spinRight\");\n";
+		echo "	notify(\"<img class='' src='/spinner.gif'>\",".(1000 * 1000).");\n";
 		echo "</script>\n";
+		#
 		noscriptRefresh($delaySeconds);
 	}
 }
