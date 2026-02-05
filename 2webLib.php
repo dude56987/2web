@@ -2646,8 +2646,10 @@ if( ! function_exists("isTranscodeEnabled")){
 #################################################################################
 if( ! function_exists("randomWord")){
 	function randomWord(){
-		$wordDict=file_get_contents("/usr/share/dict/words");
-		return trim(array_rand($wordDict));
+		$wordDict=file("/usr/share/dict/words");
+		//return file("/usr/share/dict/words");
+		$value=array_rand($wordDict);
+		return trim(str_replace("'s","",$wordDict[$value]));
 	}
 }
 #################################################################################
