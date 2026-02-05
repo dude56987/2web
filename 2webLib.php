@@ -2662,10 +2662,32 @@ if( ! function_exists("getDiskSize")){
 			#$freeSpace=bytesToHuman($freeBytes);
 			$totalSpace=bytesToHuman($totalBytes);
 			$usedSpace=bytesToHuman($totalBytes-$freeBytes);
-			# get the percentage
-			$percentage=floor((($totalBytes - $freeBytes) / $totalBytes) * 100);
+			$freeSpace=bytesToHuman($freeBytes);
+			# get the percentages
+			$usedPercentage=floor((($totalBytes - $freeBytes) / $totalBytes) * 100);
+			$freePercentage=floor(($freeBytes / $totalBytes) * 100);
+			# format the data
+			$output="";
+			$output.="<span class='singleStat' title='Free Space $freeSpace $freePercentage%'>\n";
+			$output.="	<span class='singleStatLabel'>\n";
+			$output.="		Free Space\n";
+			$output.="	</span>\n";
+			$output.="	<span class='singleStatValue'>\n";
+			$output.="		$freeSpace<sup class=''>$freePercentage%</sup>\n";
+			$output.="	</span>\n";
+			$output.="</span>\n";
+			$output.="<span class='singleStat' title='Used Space $usedSpace $usedPercentage%'>\n";
+			$output.="	<span class='singleStatLabel'>\n";
+			$output.="		Used Space\n";
+			$output.="	</span>\n";
+			$output.="	<span class='singleStatValue'>\n";
+			$output.="		$usedSpace<sup class=''>$usedPercentage%</sup>\n";
+			$output.="	</span>\n";
+			$output.="</span>\n";
+			return $output;
+			#$output="$usedSpace/$totalSpace %$percentage Used, $freeSpace Free";
 			# output the formatted size info
-			return "$usedSpace/$totalSpace %$percentage Used";
+			#return "$usedSpace/$totalSpace %$percentage Used, $freeSpace Free";
 		}else{
 			return "∅";
 		}
