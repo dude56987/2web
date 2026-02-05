@@ -97,6 +97,7 @@
 				this.snowFlakeDiv.style.width=this.size+"rem";
 				this.snowFlakeDiv.style.height=this.size+"rem";
 				this.snowFlakeDiv.style.lineHeight=this.size+"rem";
+				this.snowFlakeDiv.style.opacity = 1.0;
 				//this.snowFlakeDiv.style.transform="rotate(0deg)";
 				this.snowFlakeDiv.style.fontSize=this.size+"rem";
 				this.snowFlakeDiv.style.textAlign="center";
@@ -107,6 +108,8 @@
 				this.snowFlakeDiv.style.left = ( Math.floor(Math.random() * window.innerWidth));
 				// add the snowflake to the document
 				document.body.appendChild(this.snowFlakeDiv);
+				// get the snowflake div pointer after it has been added to the document
+				this.snowFlakeDiv=document.getElementById(this.globalID);
 				// increment the global snowflake number
 				globalSnowflakes+=1;
 				// setup the time check
@@ -115,14 +118,10 @@
 				// failures being random makes the particles disipate instead of vanish
 				this.failures = 0;
 				this.maxFailures = (Math.floor(Math.random() * 4)+1);
+				this.removeTrigger=false;
 				this.loopId = setInterval( () => {
-					// get the current time
-					this.currentTime = Date.now();
-					// check the time diff and have a fault tollerance for animation delays
-					if ( (this.currentTime - this.lastTime) > (1000 + 10) ){
-						this.failures+=1;
-						console.log("failure = "+this.failures+" of "+this.maxFailures);
-						if (this.failures >= this.maxFailures){
+					if (this.removeTrigger){
+						if(this.snowFlakeDiv.style.opacity <= 0){
 							// remove this object
 							console.log("currentTime='"+this.currentTime+"'");
 							console.log("this.lastTime='"+this.lastTime+"'");
@@ -133,6 +132,20 @@
 							// stop the loop
 							clearInterval(this.loopId);
 							globalSnowflakes-=1;
+						}else{
+							// reduce the opacity
+							this.snowFlakeDiv.style.opacity = (parseFloat(this.snowFlakeDiv.style.opacity) - 0.01);
+						}
+					}else{
+						// get the current time
+						this.currentTime = Date.now();
+						// check the time diff and have a fault tollerance for animation delays
+						if ( (this.currentTime - this.lastTime) > (33 * 2) ){
+							this.failures+=1;
+							console.log("failure = "+this.failures+" of "+this.maxFailures);
+							if (this.failures >= this.maxFailures){
+								this.removeTrigger=true;
+							}
 						}
 					}
 					this.lastTime=this.currentTime;
@@ -162,11 +175,12 @@
 				//		// give the flake a random location
 				//		tempFlake.style.left = ( Math.floor(Math.random() * window.innerWidth) );
 				//	}
-				}, 1000);
+				}, 33);
 		//}, ((Math.floor(Math.random() * 10)) * 1000) );
 		}
 	}
 	//for(var index=0;index<Math.floor(window.innerWidth/2);index++){
+	//for(var index=0;index<Math.floor(window.innerWidth/1);index++){
 	for(var index=0;index<Math.floor(window.innerWidth/16);index++){
 		new snowflake();
 	}
