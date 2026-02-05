@@ -873,7 +873,7 @@ function buildHomePageStats(){
 				tempFreeSpaceLabel=$(basename "$driveData" )
 			fi
 			{
-				echo "<span class='singleStat'>"
+				echo "<span class='singleStat' title='The disk $tempFreeSpaceLabel has $tempFreeSpace free'>"
 				echo "	<span class='singleStatLabel'>"
 				echo "		$tempFreeSpaceLabel Free Space"
 				echo "	</span>"
@@ -1047,6 +1047,7 @@ function updateCerts(){
 		addToLog "UPDATE" "Updating custom SSL certificate"
 		# build the custom cert and private key
 		openssl req -x509 -newkey rsa:4096 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -sha256 -days 3650 -nodes -subj "/C=XX/ST=Networked/L=Internetville/O=2web/OU=$(hostname)@2web/CN=$(hostname).local"
+		#openssl req -x509 -newkey rsa:4096 -keyout /var/cache/2web/ssl-private.key -out /var/cache/2web/ssl-cert.crt -sha256 -days 3650 -nodes
 		# add the cert to the system cert directory
 		ln -s /var/cache/2web/ssl-cert.crt /usr/share/ca-certificates/2web.crt
 		# update system cert file
@@ -1300,7 +1301,10 @@ function ALERT(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		echo "============================== ALERT ==========================================="
+		echo "$1"
+		echo "================================================================================"
 		return
 	fi
 	#colorCodeLength="${#colorCode}"
@@ -1502,9 +1506,11 @@ function INFO(){
 	#
 	# RETURN STDOUT
 	if [ "$MUTE_OPTION" == "yes" ];then
-		# skip running output if script is ran in the background
+		# skip running output if script is muted
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		# print the output without formatting if ran in the background
+		echo "$1"
 		return
 	fi
 	#
@@ -1544,7 +1550,8 @@ function ERROR(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		echo "$1"
 		return
 	fi
 	#
@@ -1737,9 +1744,9 @@ function lockProc(){
 		# set the last updated time
 		date "+%s" > "$webDirectory/lastUpdate.index"
 		# create the ram disk directory if it does not exist
-		createDir "/var/cache/2web/ram/${procName}/"
+		#createDir "/var/cache/2web/ram/${procName}/"
 		# create ramdisk for the module to use
-		mount -t tmpfs -o size=1M tmpfs /var/cache/2web/ram/${procName}/ || ERROR "MOUNTING RAMDISK FAILED"
+		#mount -t tmpfs -o size=1M tmpfs /var/cache/2web/ram/${procName}/ || ERROR "MOUNTING RAMDISK FAILED"
 	fi
 	greenText
 		drawLine
@@ -1778,14 +1785,14 @@ function exitModuleTrap(){
 	tput cnorm
 	# stop the spinner before removing the ramdisk since it uses the ramdisk
 	#stopSpinner
-	INFO "Removing '$procName' Ramdisk..."
+	#INFO "Removing '$procName' Ramdisk..."
 	# remove the ramdisk
-	if test -d "/var/cache/2web/ram/${procName}/";then
+	#if test -d "/var/cache/2web/ram/${procName}/";then
 		# umount is used to unmount the ramdisk
-		umount "/var/cache/2web/ram/${procName}/"
+		#umount "/var/cache/2web/ram/${procName}/"
 		# remove the ramdisk directory contents
-		rm -r  "/var/cache/2web/ram/${procName}/"
-	fi
+		#rm -r  "/var/cache/2web/ram/${procName}/"
+	#fi
 	INFO "Unlocking '$procName'..."
 	# remove the process lock
 	rm /var/cache/2web/web/${procName}.active
@@ -1941,7 +1948,8 @@ function drawHeader(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		echo "$1" | tr "[:lower:]" "[:upper:]"
 		return
 	fi
 	#
@@ -2313,7 +2321,9 @@ function drawLine(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		# draw the default width 80
+		echo "================================================================================"
 		return
 	fi
 	if [ "" == "$1" ];then
@@ -2671,7 +2681,10 @@ function drawSmallHeader(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		echo "================================================================================"
+		echo "$1"
+		echo "================================================================================"
 		return
 	fi
 	#
@@ -2723,6 +2736,15 @@ function showServerLinks(){
 	drawLine
 	echo "http://$(hostname).local:80/settings/"
 	drawLine
+	if [[ $(find "/etc/2web/users/" -type f -name '*.cfg' | wc -l) -eq 0 ]];then
+		redText
+		drawLine
+		drawHeader "MISSING ADMIN ACCOUNT"
+		drawLine
+		resetColor
+		# if theere are no users
+		ALERT "You should log into the webserver and set a administrator username and password to lock control of this device from unexpected visitors.\n\n\nhttps://$(hostname).local/settings/users.php#addNewUser" "Please Add Server Administrator Account"
+	fi
 }
 ################################################################################
 function addSourcePath(){
@@ -3750,12 +3772,14 @@ function loadSearchIndexResults(){
 	# Output the results of a search query to the search index
 	#
 	local searchQuery="$1"
+	#addToLog "DEBUG" "Fuzzy Search Started" "Searching for '$searchQuery'"
 	# cleanup the query
 	searchQuery="$(echo -n "$searchQuery" | sed "s/'s//g")"
 	searchQuery="$(echo -n "$searchQuery" | sed "s/＇s//g")"
 	searchQuery="$(cleanText "$searchQuery")"
 	# add spaces around special characters to make the search index not care about "query" vs "query?"
 	searchQuery="$(spaceCleanedText "$searchQuery")"
+	#addToLog "DEBUG" "Fuzzy Search Cleanup" "Cleanup search query to '$searchQuery'"
 	#
 	allIndex=""
 	IFSBACKUP=$IFS
@@ -3777,6 +3801,7 @@ function loadSearchIndexResults(){
 		done
 	done
 	IFS=$IFSBACKUP
+	#addToLog "DEBUG" "Fuzzy Search RAW results" "Raw Results for search query '$searchQuery' are <pre>$allIndex</pre>"
 	# sort the all index
 	allIndex="$(echo -e "$allIndex" | sort )"
 	# count the unique items
@@ -3788,6 +3813,7 @@ function loadSearchIndexResults(){
 	#
 	#
 	allIndex="$(echo "$allIndex" | cut -d' ' -f2- )"
+	#addToLog "DEBUG" "Fuzzy Search results" "Results for search query '$searchQuery' after cleanup of output are <pre>$allIndex</pre>"
 	#	output the index
 	echo "$allIndex"
 }
@@ -3940,7 +3966,14 @@ function sleepSpinner(){
 	#animationName="$2"
 	#delayTime="$3"
 
-
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip running output if script is ran in the background
+		sleep 1
+		return
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		sleep 1
+		return
+	fi
 
 	# set the default animation
 	if [ "$animationName" == "" ];then
@@ -3951,6 +3984,7 @@ function sleepSpinner(){
 		delayTime="0.1"
 	fi
 
+	#
 	if [ "$animationName" == "spin_white_square" ];then
 		# spinner animations
 		animation="◳◲◱◰"
@@ -3998,19 +4032,19 @@ function sleepSpinner(){
 	# green
 	colorCode="\033[0;32m"
 	#colorCode=$(greenText)
-	#
-	spinnerPositionX=$(tput cols)
-	spinnerPositionY=$(tput lines)
-	#
+	# get the number of characters in the animation
 	animationLength=${#animation}
 	# skip animation but keep the delay when muted
-	if [ "$MUTE_OPTION" == "yes" ] || [ "$TERM" == "" ];then
+	if [ "$MUTE_OPTION" == "yes" ] || [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
 		return
 		# skip running output if script is ran in the background
 		totalSleepTime="$(echo -n "$( bc -l <<< "( $animationLength * $delayTime)" )" )"
 		sleep "$totalSleepTime"
 		return
 	fi
+	# get the position based on the terminal size
+	spinnerPositionX=$(tput cols)
+	spinnerPositionY=$(tput lines)
 	# animate the spinner
 	# loop though the animation once and exit
 	for (( index=0;index<$animationLength;index++ ));do
@@ -4067,7 +4101,7 @@ function rotateSpinner(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip running output if script is ran in the background
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
 		return
 	fi
 	#
@@ -4328,7 +4362,7 @@ function countDown(){
 	if [ "$MUTE_OPTION" == "yes" ];then
 		# skip countdowns in mute mode
 		return
-	elif [ "$TERM" == "" ];then
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
 		return
 	fi
 	if [ "$FAST_OPTION" == "yes" ];then
@@ -4388,3 +4422,5 @@ function countDown(){
 	drawLine
 	sleep 1
 }
+################################################################################
+
