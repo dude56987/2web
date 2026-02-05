@@ -144,6 +144,9 @@ function update(){
 			# add to new indexes
 			addToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/random/graphs.index"
 			addToIndex "$webDirectory/graphs/$fileName/graphs.index" "$webDirectory/random/all.index"
+
+			# add graph to the search index
+			addToSearchIndex "$webDirectory/graphs/$fileName/graphs.index" "$fileName" "/graphs/$fileName/"
 		fi
 	done
 	###################################################################################################
