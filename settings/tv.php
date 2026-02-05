@@ -86,27 +86,18 @@ echo "</details>";
 
 echo "<div id='currentLinks' class='settingListCard'>";
 echo "<h2>Current links</h2>\n";
-$sourceFiles = scandir("/etc/2web/iptv/sources.d/");
-//print_r($sourceFiles);
-$sourceFiles = explode("\n",shell_exec("ls -t1 /etc/2web/iptv/sources.d/*.cfg"));
+#$sourceFiles = scandir("/etc/2web/iptv/sources.d/");
+$sourceFiles = recursiveScan("/etc/2web/iptv/sources.d/");
 // reverse the time sort
 $sourceFiles = array_reverse($sourceFiles);
-//print_r($sourceFiles);
-//echo "<table class='settingsTable'>";
 foreach($sourceFiles as $sourceFile){
 	$sourceFileName = $sourceFile;
-	//$sourceFileName = array_reverse(explode("/",$sourceFile))[0];
-	//$sourceFile = "/etc/2web/iptv/sources.d/".$sourceFile;
-	//echo "[DEBUG]: found file ".$sourceFile."<br>\n";
 	if (file_exists($sourceFile)){
-		//echo "[DEBUG]: file exists ".$sourceFile."<br>\n";
 		if (is_file($sourceFile)){
+			$link=file_get_contents($sourceFile);
 			if (strpos(strtolower($sourceFile),".cfg")){
-				echo "<div class='settingsEntry'>";
-				//echo "<hr>\n";
-				//echo "[DEBUG]: reading file ".$sourceFile."<br>\n";
-				$link=file_get_contents($sourceFile);
-				echo "	<h2>".$link."</h2>";
+				echo "<div class='settingsEntry'>\n";
+				echo "	<h2>".$link."</h2>\n";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "		<button class='button' type='submit' name='removeLink' value='".$link."'>❌ Remove Link</button>\n";
@@ -131,7 +122,20 @@ foreach($sourceFiles as $sourceFile){
 				echo "</div>\n";
 				//echo "</div>";
 			}else if (strpos(strtolower($sourceFile),".m3u")){
-				echo "	<h2>".$link."</h2>";
+				# cleanup the link
+				$tempLink = "";
+				#
+				$link=explode("\n",$link);
+				#
+				foreach($link as $lineData){
+					#
+					if (substr($lineData,0,4) != "#EXT"){
+						$link = "$lineData";
+						break;
+					}
+				}
+				echo "<div class='settingsEntry'>\n";
+				echo "<h2>".$link."</h2>\n";
 				echo "<div class='buttonContainer'>\n";
 				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='removeLink' value='".$link."'>❌ Remove Link</button>\n";
@@ -142,12 +146,10 @@ foreach($sourceFiles as $sourceFile){
 				echo "</div>\n";
 				echo "</div>\n";
 			}
-
 		}
 	}
 }
 ?>
-
 	<div id='addLink' class='inputCard'>
 	<h2>Add Link</h2>
 	<form action='admin.php' method='post'>
