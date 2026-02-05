@@ -210,20 +210,21 @@ function generateLink(){
 		wget "${domainPrefix}/favicon.ico" -O "$webDirectory/portal/${domain}/${linkSum}-icon.ico"
 		#if [ "$?" -ne 0 ];then
 		#if test -s "$webDirectory/portal/${domain}/${linkSum}-icon.ico";then
-		if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-icon.ico" | wc -c )" -gt 0 ];then
+		#if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-icon.ico" | wc -c )" -gt 0 ];then
+		if test -s "$webDirectory/portal/${domain}/${linkSum}-icon.ico";then
+			ALERT "The favicon was downloaded and will now be converted into a thumbnail..."
 			# convert the icon into a usable image
-			#convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -resize "200x200" -transparent -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
 			convert -quiet  "$webDirectory/portal/${domain}/$linkSum-icon.ico" -background transparent -resize "200x200" -flatten "$webDirectory/portal/${domain}/$linkSum-web.png"
 		fi
-		if [ "$( cat "$webDirectory/portal/${domain}/${linkSum}-web.png" | wc -c )" -gt 0 ];then
-			ALERT "The favicon downloaded correctly"
-		else
+		if ! test -s "$webDirectory/portal/${domain}/${linkSum}-web.png";then
+			ALERT "The favicon was not not able to be converted into a thumbnail. A webpage screenshot will be taken..."
 			# create a screenshot of the webpage link if the favicon fails to download
 			screenshotWebpage "$link" "$webDirectory/portal/${domain}/${linkSum}-web.png"
 		fi
 		# create the failsafe demo image
-		if ! test -f  "$webDirectory/portal/${domain}/$linkSum-web.png";then
-			demoImage "${domain}${linkSum}" "$webDirectory/portal/${domain}/$linkSum-web.png" "1920x1080"
+		if ! test -s  "$webDirectory/portal/${domain}/$linkSum-web.png";then
+			ALERT "The Screenshot has failed! A failsafe image will now be generated..."
+			demoImage "$webDirectory/portal/${domain}/$linkSum-web.png" "$domain" "1920" "1080"
 		fi
 		# create the thumbnail
 		convert -quiet  "$webDirectory/portal/${domain}/$linkSum-web.png" -resize "300x200" "$webDirectory/portal/${domain}/$linkSum-thumb.png"
@@ -282,7 +283,7 @@ function generateLink(){
 		SQLaddToIndex "$webDirectory/portal/${domain}/$linkSum.index" "$webDirectory/data.db" "portal"
 
 		# add this comic to the search index
-		addToSearchIndex "$webDirectory/portal/${domain}/$linkSum.index" "${domain} ${name}" "/portal/$domain/"
+		addToSearchIndex "$webDirectory/portal/${domain}/$linkSum.index" "${domain} ${name} ${description}" "/portal/$domain/"
 
 		# create .index files for direct links
 		{
@@ -565,6 +566,8 @@ function resetCache(){
 function nuke(){
 	webDirectory=$(webRoot)
 	kodiDirectory=$(kodiRoot)
+	# remove the search index data
+	delete "/var/cache/2web/generated/searchIndexData/portal/"
 	# remove the kodi and web portal files
 	delete "$webDirectory/portal/"
 	delete "$kodiDirectory/portal/"
