@@ -30,30 +30,24 @@ html{
 	src: url("/fonts/notomono.ttf");
 }
 @font-face{
-	font-family: fallbackFont3;
+	font-family: font2webGlyph;
 	src: url("/fonts/symbola.ttf");
 }
-@font-face{
-	font-family: fallbackFont4;
-	src: url("/fonts/emojione.ttf");
-}
 button{
-	font-family: font2web,fallbackFont,fallbackFont2,fallbackFont3,fallbackFont4,monospace;
+	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,monospace;
 	@supports (-moz-appearance:none){
 		font-family: monospace;
-		font-family: fallbackFont4;
-		font-family: fallbackFont3;
+		font-family: font2webGlyph;
 		font-family: fallbackFont2;
 		font-family: fallbackFont;
 		font-family: font2web;
 	}
 }
 html{
-	font-family: font2web,fallbackFont,fallbackFont2,fallbackFont3,fallbackFont4,monospace;
+	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,monospace;
 	@supports (-moz-appearance:none){
 		font-family: monospace;
-		font-family: fallbackFont4;
-		font-family: fallbackFont3;
+		font-family: font2webGlyph;
 		font-family: fallbackFont2;
 		font-family: fallbackFont;
 		font-family: font2web;

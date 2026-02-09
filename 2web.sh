@@ -919,7 +919,6 @@ function update2web(){
 	# /usr/share/fonts/truetype/noto/NotoMono-Regular.ttf
 	linkFile "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf" "$webDirectory/fonts/noto.ttf"
 	linkFile "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf" "$webDirectory/fonts/notomono.ttf"
-	linkFile "/usr/share/fonts/truetype/emojione/emojione-android.ttf" "$webDirectory/fonts/emojione.ttf"
 	linkFile "/usr/share/fonts/truetype/ancient-scripts/Symbola_hint.ttf" "$webDirectory/fonts/symbola.ttf"
 	linkFile "/usr/share/fonts/truetype/hermit/Hermit-medium.otf" "$webDirectory/fonts/"
 	linkFile "/usr/share/fonts/opentype/opendyslexic/OpenDyslexic-Regular.otf" "$webDirectory/fonts/"
