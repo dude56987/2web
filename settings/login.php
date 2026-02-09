@@ -212,7 +212,7 @@ if ($loggedIn){
 	echo "<hr>";
 	echo "<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='Password...'>";
 	echo "<hr>";
-	echo "<input class='button' type='submit' value='Login'>";
+	echo "<input onclick='notify(\"🔑\",\"60000\",\"spinRight\");' class='button' type='submit' value='Login'>";
 	echo "</form>";
 	echo "</div>";
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
