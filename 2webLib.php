@@ -1851,7 +1851,7 @@ if( ! function_exists("findWordGroups")){
 }
 ########################################################################
 if( ! function_exists("loadSearchIndexResults")){
-	function loadSearchIndexResults($searchQuery,$filter="all",$depth=-1,$title=""){
+	function loadSearchIndexResults($searchQuery,$filter="all",$depth=-1,$title="",$itemLimit=40,$widget=true){
 		# loadSearchIndexResults($searchQuery,$filter="all")
 		#
 		# Output the results of a search query to the search index
@@ -1923,6 +1923,13 @@ if( ! function_exists("loadSearchIndexResults")){
 		$searchQuery=explode(" ",$searchQuery);
 		# add the word groups
 		$searchQuery=array_merge($searchQuery,$wordGroups);
+		# build the sum
+		$searchSum=md5($ogQuery.$filter);
+		# load the cached file if it exists
+		if( file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
+			displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
+			return;
+		}
 		#
 		$allIndex="";
 		#
@@ -1978,43 +1985,58 @@ if( ! function_exists("loadSearchIndexResults")){
 		#	output the index
 		$outputFound=false;
 		$outputText="";
+		$outputIndex="";
 		$foundItems=0;
 		foreach (array_keys($countValues) as $word){
 			if(is_readable($word)){
 				$outputFound=true;
 				$outputText .= file_get_contents($word)."\n";
+				$outputIndex .= ($word)."\n";
 				#
 				$foundItems+=1;
 			}
-			if($foundItems > 40){
+			if($foundItems > $itemLimit){
 				# limit output to 40 working items
 				break;
 			}
 		}
 		# only draw the widget if there is output
 		if($outputFound){
-			echo "<div class='titleCard'>\n";
+			if($widget){
+				echo "<div class='titleCard'>\n";
+			}
 			if($title == ""){
 				$title=ucfirst($filter);
 			}
-			if($filter=="all"){
-				echo "<h1>Related Media</h1>\n";
-			}else{
-				echo "<h1>Related ".$title."</h1>\n";
+			if($widget){
+				if($filter=="all"){
+					echo "<h1>Related Media</h1>\n";
+				}else{
+					echo "<h1>Related ".$title."</h1>\n";
+				}
+				echo "<div class='listCard'>\n";
 			}
-			echo "<div class='listCard'>\n";
-			echo $outputText;
-			# create the search link
-			echo "<a class='indexSeries' href='/search.php?q=$ogQuery'>";
-			echo "	<h2 class='moreEpisodesLinkIcon'>";
-			echo "		🔍";
-			echo "	</h2>";
-			echo "	Full ";
-			echo "	List";
-			echo "</a>";
-			#
-			echo "</div>\n";
-			echo "</div>\n";
+			if($widget){
+				echo $outputText;
+				# create the search link
+				echo "<a class='indexSeries' href='/search.php?q=$ogQuery'>";
+				echo "	<h2 class='moreEpisodesLinkIcon'>";
+				echo "		🔍";
+				echo "	</h2>";
+				echo "	Full ";
+				echo "	List";
+				echo "</a>";
+				#
+				echo "</div>\n";
+				echo "</div>\n";
+			}else{
+				$searchSum=md5($ogQuery.$filter);
+				# check for the index sum and load it
+				if(! file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
+					file_put_contents("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index",$outputIndex);
+				}
+				displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
+			}
 		}
 	}
 }
