@@ -26,13 +26,14 @@ if($isAdmin){
 	# check for active processes
 	foreach($moduleNames as $moduleName){
 		if ( file_exists("$moduleName.active")){
-			echo "<span class='singleStat'>\n";
+			$moduleRunTime=timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
+			echo "<span class='singleStat' title='$moduleName has been running for $moduleRunTime'>\n";
 			echo "	<span class='singleStatLabel'>\n";
 			echo "		<img src='/spinner.gif' />\n";
 			echo "		$moduleName ";
 			echo "	</span>\n";
 			echo "	<span class='singleStatValue'>";
-			echo timeElapsedToHuman(file_get_contents("$moduleName.active"),"");
+			echo "		$moduleRunTime";
 			echo "	</span>\n";
 			echo "</span>\n";
 		}
@@ -125,18 +126,20 @@ echo "</div>\n";
 
 # check last update time
 if (file_exists($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg")){
+	$lastUpdateString=timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
 	echo "<div>\n";
-	echo "<span class='singleStat'>\n";
+	echo "<span class='singleStat' title='Last Updated server $lastUpdateString'>\n";
 	echo "		<span class='singleStatLabel'>Last Updated</span>\n";
-	echo "		<span class='singleStatValue'>";
-	echo timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/new/all.cfg"));
+	echo "		<span class='singleStatValue'>\n";
+	echo "			$lastUpdateString\n";
 	echo "		</span>\n";
 	echo "</span>\n";
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index")){
-		echo "<span class='singleStat'>\n";
+		$lastUpdateString=timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "<span class='singleStat' title='Last check for new or updated media was $lastUpdateString'>\n";
 		echo "		<span class='singleStatLabel'>Last Update Check</span>\n";
-		echo "		<span class='singleStatValue'>";
-		echo timeElapsedToHuman(file_get_contents($_SERVER["DOCUMENT_ROOT"]."/lastUpdate.index"));
+		echo "		<span class='singleStatValue'>\n";
+		echo "			$lastUpdateString\n";
 		echo "		</span>\n";
 		echo "</span>\n";
 	}else{
@@ -173,12 +176,13 @@ echo "<div>\n";
 if (isset($_SESSION["user"])){
 	if (isset($_SESSION["loginTime"])){
 		$loginTime=$_SESSION["loginTime"];
+		$loginTimeString=timeElapsedToHuman($loginTime);
 		# draw the login time
-		echo "<span class='singleStat'>\n";
+		echo "<span class='singleStat' title='User ".$_SESSION["user"]." logged in $loginTimeString'>\n";
 		echo "	<span class='singleStatLabel'>Login Time</span>\n";
-		echo "	<span class='singleStatValue'>";
-		echo timeElapsedToHuman($loginTime);
-		echo "</span>\n";
+		echo "	<span class='singleStatValue'>\n";
+		echo "		$loginTimeString\n";
+		echo "	</span>\n";
 		echo "</span>\n";
 	}
 }
@@ -191,7 +195,7 @@ if($isAdmin){
 	$activeJobs=count(array_diff(scanDir("/var/cache/2web/queue/active/"),Array(".","..")));
 	#
 	if ($activeJobs > 0){
-		echo "<span class='singleStat'>\n";
+		echo "<span class='singleStat' title='There are $activeJobs running jobs and $totalJobs in the queue.'>\n";
 		echo "	<span class='singleStatLabel'>\n";
 		echo "		<img src='/spinner.gif' />\n";
 		echo "		Running Jobs";
@@ -204,45 +208,55 @@ if($isAdmin){
 echo "</div>\n";
 
 # check the status of the fortunes for drawing large or small widgets
-$fortuneEnabled = False;
-if ( file_exists("/etc/2web/fortuneStatus.cfg")){
-	$fortuneEnabled = True;
+if (yesNoCfgCheck("/etc/2web/fortuneStatus.cfg")){
+	$fortuneEnabled = true;
+}else{
+	$fortuneEnabled = false;
 }
 $weatherEnabled = False;
 if (requireGroup("weather2web",false)){
 	if ( file_exists("/etc/2web/weather/homepageLocation.cfg")){
 		if(requireGroup("weather2web",false)){
-			$weatherEnabled = True;
+			$weatherEnabled = true;
 		}else{
-			$weatherEnabled = False;
+			$weatherEnabled = false;
 		}
 	}
 }
 if ($fortuneEnabled){
 	if ($weatherEnabled){
-		echo "<a class='homeWeather inputCard' href='/fortune.php'>\n";
+		$fortuneClass="inputCard";
 	}else{
-		echo "<a class='homeWeather' href='/fortune.php'>\n";
+		$fortuneClass="homeFortune";
+		echo "<h3>🔮 Fortune</h3>\n";
 	}
-	echo "<h3>🔮 Fortune</h3>\n";
-	echo "<div class='fortuneText'>\n";
+	echo "<a class='$fortuneClass' href='/fortune.php'>\n";
+	if ($weatherEnabled){
+		echo "<h3>🔮 Fortune</h3>\n";
+	}
 	# load the fortune data
 	if (file_exists("/var/cache/2web/web/fortune.index")){
 		$todaysFortune = file_get_contents("fortune.index");
+		echo "<pre class=''>\n";
 		echo "$todaysFortune";
+		echo "</pre>\n";
 	}else{
 		echo "No Fortune has been loaded yet, please wait for the server to catch up.\n";
 	}
-	echo "</div>\n";
 	echo "</a>\n";
 }
 if ($weatherEnabled){
+	$stationName=(trim(file_get_contents("/etc/2web/weather/homepageLocation.cfg")));
 	if ($fortuneEnabled){
 		$weatherClass="inputCard";
 	}else{
-		$weatherClass="";
+		$weatherClass="homeFortune";
+		echo "<h3>🌡️ $stationName</h3>\n";
 	}
-	echo "<a class='homeFortune $weatherClass' href='/weather/?station=".cleanText(trim(file_get_contents("/etc/2web/weather/homepageLocation.cfg")))."'>\n";
+	echo "<a class='$weatherClass' href='/weather/?station=".cleanText($stationName)."'>\n";
+	if ($fortuneEnabled){
+		echo "<h3>🌡️ $stationName</h3>\n";
+	}
 	# load the weather data
 	if (file_exists("/var/cache/2web/web/weather.index")){
 		$todaysWeather= file_get_contents("weather.index");
