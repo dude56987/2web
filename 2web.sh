@@ -2599,6 +2599,7 @@ elif [ "$1" == "--kodi-client" ] || [ "$1" == "kodi-client" ];then
 elif [ "$1" == "--rebuild-themes" ] || [ "$1" == "rebuild-themes" ];then
 	# reset the theme gen timer
 	date "+%s" > "/var/cache/2web/themeGen.cfg"
+	totalCPUS=$(cpuCount)
 	# run a update to rebuild the CSS files
 	build2webThemes
 elif [ "$1" == "--disable-client" ] || [ "$1" == "disable-client" ];then
