@@ -517,6 +517,8 @@ processMovie(){
 			echo "	</div>"
 			echo "</a>"
 		} > "$webDirectory/movies/$movieWebPath/movies.index"
+		# add the movie to the autocomplete index
+		addToIndex "<option value='$movieTitle ($movieYear)'>" "$webDirectory/autocomplete.index"
 
 		linkFile "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/$movieWebPath/$movieWebPath.index"
 
@@ -555,6 +557,9 @@ processMovie(){
 		# update update times for playlists
 		date "+%s" > /var/cache/2web/web/new/all.cfg
 		date "+%s" > /var/cache/2web/web/new/movies.cfg
+
+		# confirm the movie was added in the log
+		addToLog "UPDATE" "Movie Update Completed" "Updated '$movieWebPath' at '$movieDir'"
 	else
 		ALERT "[WARNING]: The file '$moviePath' could not be found!"
 	fi
@@ -740,8 +745,8 @@ processEpisode(){
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
-		episodeShowTitle=$(cleanText "$episodeShowTitle")
 		episodeShowTitle=$(alterArticles "$episodeShowTitle")
+		episodeShowTitle=$(cleanText "$episodeShowTitle")
 		episodeTitle=$(cleanXml "$nfoInfo" "title")
 		#episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | txt2tags -i - -t html -o -)
 		#episodePlot=$(ripXmlTagMultiLine "$nfoInfo" "plot" | markdown)
@@ -749,6 +754,7 @@ processEpisode(){
 		episodeSeason=$(cleanXml "$nfoInfo" "season")
 		episodeAired=$(ripXmlTag "$nfoInfo" "aired")
 		episodeSeason=$(echo "$episodeSeason" | sed "s/^[0]\{,3\}//g")
+		episodeDuration=$(cleanXml "$nfoInfo" "durationinseconds")
 		if ! test -f "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/show.title";then
 			# get the tvshow.nfo data
 			tvshowData=$(cat "$webDirectory/shows/$episodeShowTitle/tvshow.nfo")
@@ -772,7 +778,6 @@ processEpisode(){
 		#
 		episodeNumber="$(prefixZeros "$episodeNumber")"
 		#
-		#INFO "Episode number = '$episodeNumber'"
 
 		INFO "Updating $episodeShowTitle s${episodeSeason}e${episodeNumber} aired $episodeAired"
 
@@ -785,19 +790,6 @@ processEpisode(){
 			# if this episode has already been processed by the system then skip processeing it with this function
 			# - this also prevents caching below done for new cacheable videos
 			return
-		fi
-		# with  the check out of the way write the episode data gathered for website php
-		if test -d "$webDirectory/shows/$episodeShowTitle/data/";then
-			mkdir "$webDirectory/shows/$episodeShowTitle/data/"
-		fi
-		if test -f "$webDirectory/shows/$episodeShowTitle/data/showTitle.index";then
-			echo "$episodeShowTitle" > "$webDirectory/shows/$episodeShowTitle/data/showTitle.index"
-		fi
-		if test -f "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-title.index";then
-			echo "$episodeTitle" > "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-title.index"
-		fi
-		if test -f "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-plot.index";then
-			echo "$episodePlot" > "$webDirectory/shows/$episodeShowTitle/data/$episodeSeason-$episodeNumber-plot.index"
 		fi
 		#INFO "Episode page path = '$episodePagePath'"
 		#INFO "Making season directory at '$webDirectory/$episodeShowTitle/$episodeSeasonPath/'"
@@ -903,8 +895,49 @@ processEpisode(){
 
 			# read date in british date format year/month/day
 			# - split up airdate data to check if caching should be done
+			# look for the year at the start split by -
 			airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
+			# check the date is valid
+			# - figure out the delimiter
+			if echo -n "$episodeAired" | grep "-";then
+				# the delimiter is -
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year on the end split by -
+					airedYear=$(echo "$episodeAired" | cut -d'-' -f3)
+				fi
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year in the middle split by -
+					airedYear=$(echo "$episodeAired" | cut -d'-' -f1)
+				fi
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year in the middle split by -
+					airedYear=$(echo "$episodeAired" | cut -d'-' -f2)
+				fi
+			elif echo -n "$episodeAired" | grep "/";then
+				# the delimiter is /
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year at the start split by /
+					airedYear=$(echo "$episodeAired" | cut -d'/' -f1)
+				fi
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year at the end split by /
+					airedYear=$(echo "$episodeAired" | cut -d'/' -f3)
+				fi
+				if ! [ ${#airedYear} -eq 4 ];then
+					# look for the year in the middle split by /
+					airedYear=$(echo "$episodeAired" | cut -d'/' -f2)
+				fi
+			fi
+			if ! [ ${#airedYear} -eq 4 ];then
+				# if the aired year still is not correct set it to this year
+				airedYear="$((10#$(date +"%Y")))"
+			fi
+			# look for the month in the middle split by -
 			airedMonth=$(echo "$episodeAired" | cut -d'-' -f2)
+			if ! [ ${#airedMonth} -eq 2 ];then
+				# look for the month in the middle split by /
+				airedMonth=$(echo "$episodeAired" | cut -d'/' -f2)
+			fi
 			# if the config option is set to cache new episodes
 			# - cache new links in batch processing mode
 			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
@@ -998,6 +1031,8 @@ processEpisode(){
 		echo -n "$episodeTitle" > "$episodePagePath.title"
 		# build the plot
 		echo -n "$episodePlot" > "$episodePagePath.plot"
+		# store the episode length in seconds
+		echo -n "$episodeDuration" > "$episodePagePath.duration"
 
 		# link the player
 		linkFile "/usr/share/2web/templates/videoPlayer.php" "$episodePagePath"
@@ -1334,7 +1369,7 @@ processShow(){
 			rm "$webDirectory/shows/$showTitle/fanart-"*.png
 		fi
 		convert "$webDirectory/shows/$showTitle/fanart.png" -trim -blur 1x1 "$webDirectory/shows/$showTitle/fanart.png"
-		echo "Creating the fanart image from webpage..."
+		ALERT "Creating the fanart image from webpage..."
 		convert "$webDirectory/shows/$showTitle/fanart.png" -adaptive-resize 1920x1080\! -background none -font "OpenDyslexic-Bold" -fill white -stroke black -strokewidth 5 -size 1920x1080 -gravity center caption:"$showTitle" -composite "$webDirectory/shows/$showTitle/fanart.png"
 		# error log
 		addToLog "WARNING" "Could not find fanart.[png/jpg]" "$showTitle has no $show/fanart.[png/jpg], Generating one at <a href='/$show/fanart.png'>$show/fanart.png</a>"
@@ -1397,6 +1432,9 @@ processShow(){
 
 	# add the show to the main show index since it has been updated
 	addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/shows/shows.index"
+
+	# add the autocomplete data
+	addToIndex "<option value='$showTitle'>" "$webDirectory/autocomplete.index"
 
 	# add the updated show to the new shows index
 	echo "$webDirectory/shows/$showTitle/shows.index" >> "$webDirectory/new/shows.index"
@@ -1731,24 +1769,36 @@ function buildMovieIndex(){
 }
 ########################################################################
 function cleanMediaSection(){
+	# cleanMediaSection "/var/cache/2web/mediaSectionName/"
+	#
+	# - Search a subsection of the 2web server for broken file links
+	# - Broken file links means missing media, so media is removed from 2web
+	# - This only removes the links created in the 2web server, the orignal data should be untouched
+	#
+	#startDebug
 	mediaSectionLibaries=$(find "$1" -maxdepth 1 -mindepth 1 -type 'd' | sort -d)
 	IFS=$'\n'
 	# go into each show and movie directory in the website
-	for mediaPath in $mediaSectionlibaries;do
+	for mediaPath in $mediaSectionLibaries;do
 		# look for broken symlinks in the directory
-		if symlinks -r "$mediaPath" | grep -q "^dangling:";then
+		if symlinks -r "$mediaPath/" | grep -q "^dangling:";then
 			# delete entire directory for show/movie if the show/movie contains broken links
 			# a regular update will re add any shows/movies that were removed because of corrupt data
-			ALERT "rm -rv $mediaPath"
-			rm -rv "$mediaPath"
+			ALERT "rm -rv $mediaPath/"
+			addToLog "WARNING" "Cleanup Required" "The path '$mediaPath' was found to contain broken links. It was removed and will be re-added on next scheduled media rescan."
+			#rm -rv "$mediaPath/"
 		else
 			# diff lists are identical so no broken links exist
 			ALERT "NO BROKEN LINKS IN $mediaPath"
 		fi
 	done
+	#stopDebug
 }
 ################################################################################
 cleanMediaIndexFile(){
+	# cleanMediaIndexFile "indexFilePath"
+	#
+	# cleanup a index file to remove broken links to missing media
 	webPath=$1
 	webIndexName=$2
 	# read and check individual links in .index files
@@ -1764,12 +1814,14 @@ cleanMediaIndexFile(){
 		echo "Broken links could not be found in index data at $webPath$webIndexName..."
 	else
 		echo "Broken links found in $webPath$webIndexName"
+		addToLog "WARNING" "Cleanup Required" "The path '$webPath$webIndexName' was found to contain broken links. It was replaced with a generated index file. <pre>$generatedIndexData</pre>"
 		# overwrite the current data with the correct generated one
-		echo "$generatedIndexData" > "$webPath$webIndexName"
+		#echo "$generatedIndexData" > "$webPath$webIndexName"
 	fi
 }
 ################################################################################
 function cleanDatabase(){
+	return #DEBUG remove when database checking no longer has issues
 	webDirectory=$(webRoot)
 	# find and delete directories for show/movie if the show/movie contains broken links
 	cleanMediaSection "$webDirectory/movies/"
@@ -1779,7 +1831,7 @@ function cleanDatabase(){
 	cleanMediaIndexFile "$webDirectory/movies/" "movies.index"
 
 	# remove the web cached data for widgets
-	# updated(new) widgets
+	# updated (new) widgets
 	rm -rv /var/cache/2web/web/web_cache/widget_updated_movies.index
 	rm -rv /var/cache/2web/web/web_cache/widget_updated_shows.index
 	rm -rv /var/cache/2web/web/web_cache/widget_updated_episodes.index
@@ -1836,8 +1888,6 @@ function nfo2web_watch_service(){
 				if test -d "$libary";then
 					ALERT "library exists at '$libary'"
 					addToLog "INFO" "Starting Watch Service" "$libary"
-					#
-					echo "library exists at '$libary'"
 					# read each tvshow directory from the libary
 					# store these paths in a varaible to be checked when events are activated
 					watch_library "$libary" "$webDirectory" "$timeout" &
@@ -2010,23 +2060,48 @@ function processPath(){
 		showMeta=$(cat "$show/tvshow.nfo")
 		showTitle=$(ripXmlTag "$showMeta" "title")
 		#
-		showTitle=$(cleanText "$showTitle")
 		showTitle=$(alterArticles "$showTitle")
+		showTitle=$(cleanText "$showTitle")
 		#
 		if echo "$showMeta" | grep -q "<tvshow>";then
-			addToLog "UPDATE" "Updating Show Information" "$showTitle updating from <pre>$show</pre>"
+			addToLog "INFO" "Processing Show Information" "Found show '$showTitle' updating from <pre>$show</pre>"
 			processShow "$show" "$showMeta" "$showTitle" "$webDirectory"
 		else
 			echo "[ERROR]: Show nfo file is invalid!"
 			addToLog "ERROR" "Show NFO Invalid" "$show/tvshow.nfo"
+			# add to fixes directory
+			fixSum="$(echo -n "$show" | md5sum | cut -d' ' -f1)"
+			# build the fix if it does not exist
+			if ! test -f "/var/cache/2web/generated/fixes/$fixSum.cfg";then
+				createDir "/var/cache/2web/generated/fixes/"
+				{
+					echo "#$(drawLine)"
+					echo "# remove broken show path, found files in"
+					echo "#$(drawLine)"
+					# list the files found in this directory in a comment
+					find "$show" -printf "# %P\n"
+					# remove files with a interactive prompt
+					echo "rm -vi '$show';"
+				} > "/var/cache/2web/generated/fixes/$fixSum.cfg"
+			fi
 		fi
 	else
 		if cat "$show"/*.nfo | grep -q "<movie>";then
-			addToLog "UPDATE" "Updating Movie Information" "Updating movie at <pre>$show</pre>"
+			addToLog "INFO" "Processing Movie Information" "Found movie at <pre>$show</pre>"
 			# this is a move directory not a show
 			processMovie "$show" "$webDirectory"
 		else
 			addToLog "ERROR" "Movie NFO Invalid" "$show"
+			# add to fixes directory
+			fixSum="$(echo -n "$show" | md5sum | cut -d' ' -f1)"
+			# build the fix if it does not exist
+			if ! test -f "/var/cache/2web/generated/fixes/$fixSum.cfg";then
+				createDir "/var/cache/2web/generated/fixes/"
+				{
+					echo "# remove broken movie path"
+					echo "rm -v '$show';"
+				} > "/var/cache/2web/generated/fixes/$fixSum.cfg"
+			fi
 		fi
 	fi
 }
@@ -2094,7 +2169,6 @@ function update(){
 
 	kill "$SPINNER_PID"
 
-
 	if cacheCheck "$webDirectory/cleanCheck.cfg" "7";then
 		# clean the database of broken entries
 		# - this should allow you to delete data from source drives and it automatically remove it from the website.
@@ -2118,14 +2192,14 @@ function update(){
 			fi
 			if test -d "$libary";then
 				addToLog "UPDATE" "Starting library scan" "$libary"
-				echo "library exists at '$libary'"
+				ALERT "library exists at '$libary'"
 				# read each tvshow directory from the libary
 				foundLibaryPaths=$(find "$libary" -maxdepth 1 -mindepth 1 -type 'd' | shuf)
 				# read each of the paths and process them
 				#echo -n "$foundLibaryPaths" | while read -r show;do
 				for show in $foundLibaryPaths;do
 					processPath "$show" "$webDirectory" &
-					waitQueue 0.5 "$totalCPUS"
+					waitQueue 1 "$totalCPUS"
 				done
 				# block for parallel threads here
 				blockQueue 1
@@ -2154,6 +2228,15 @@ function update(){
 	# fix permissions in the new and random indexes
 	chown -R www-data:www-data "$webDirectory/new/"
 	chown -R www-data:www-data "$webDirectory/random/"
+
+	################
+	# AUTOCOMPLETE #
+	################
+	if test -f "$webDirectory/autocomplete.index";then
+		# remove duplicates sort entries Alphabetically
+		tempList=$(cat "$webDirectory/autocomplete.index" | sort -ud )
+		echo "$tempList" > "$webDirectory/autocomplete.index"
+	fi
 	#########
 	# SHOWS #
 	#########
@@ -2444,7 +2527,9 @@ elif [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 	lockProc "nfo2web"
 	nuke
 elif [ "$1" == "--clean" ] || [ "$1" == "clean" ] ;then
-	clean
+	# - cleanup broken media in the website by searching for broken media
+	#   symlinks and missing media icons
+	cleanDatabase
 elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 	# upgrade the pip packages if the module is enabled
 	lockProc "nfo2web"
