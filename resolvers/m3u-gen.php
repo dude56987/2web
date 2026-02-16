@@ -40,7 +40,9 @@ function m3u_gen($section,$title){
 	#
 	# RETURN FILES
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
+
+	$rootPath = file_get_contents("/etc/2web/kodi.cfg");
+	$rootPath = trim($rootPath);
 
 	$showTitle = $title;
 	$showTitle = str_replace('"','',$showTitle);
@@ -60,19 +62,20 @@ function m3u_gen($section,$title){
 		$showPath = "$rootPath/$section/$showTitle/";
 	}
 
-	echo "Checking $showPath is a directory...<br>\n";
+	debug("Checking $showPath is a directory...<br>\n");
 
-	echo "Show path is a directory...<br>\n";
+	debug("Show path is a directory...<br>\n");
 	# create the cache if it does not exist
 	if (! is_dir($rootServerPath."/m3u_cache/")){
+		debug("Creating /m3u_cache/ directory...<br>\n");
 		mkdir("$rootServerPath/m3u_cache/");
 	}
 
 	if (array_key_exists("sort",$_GET)){
 		if ($_GET['sort'] == 'random'){
 			// cache sum must be randomized for random option, duplicated randmizations will use the cached file
-			// - currently 100 variations of the randomization pattern can be created
-			$tempRand = rand(0,100);
+			// - currently 200 variations of the randomization pattern can be created
+			$tempRand = rand(0,200);
 			$cacheSum = md5("$tempRand".$showTitle.$_SERVER["HTTP_HOST"]);
 		}else{
 			$cacheSum = md5($showTitle.$_SERVER["HTTP_HOST"]);
@@ -88,11 +91,13 @@ function m3u_gen($section,$title){
 	}
 
 	$cacheFile = $rootServerPath."/m3u_cache/".$cacheSum.".m3u";
+	$cacheFile = str_replace("//","/",$cacheFile);
 
 	$totalFileList=Array();
 
 	// check for existing redirect
 	if (is_file($cacheFile)){
+		debug("Redirecting to existing cache file at '/m3u_cache/$cacheSum.m3u'<br>\n");
 		# redirect to the built cache file if it exists
 		redirect("/m3u_cache/$cacheSum.m3u");
 	}else{
@@ -107,14 +112,19 @@ function m3u_gen($section,$title){
 
 		$foundFiles = recursiveScan($showPath);
 
-		#var_dump($foundFiles);
+		debug("<h2>Found files</h2><pre>".var_export($foundFiles,true)."</pre>");
 
 		foreach ($foundFiles as $filePath){
+			$filePath = str_replace("//","/",$filePath);
+			# remove the root kodi path from the playlist entry so it will link to the webserver path
+			# - add back the preceding slash
+			$filePath = "/".str_replace($rootPath,"",$filePath);
 			# cleanup the scan data by removing the site root path, from the file before adding it to the m3u
 			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
-
+			debug("Scanning file path '$filePath'<br>\n");
 			if (strpos($filePath,".avi") || strpos($filePath,".strm") || strpos($filePath,".mkv") || strpos($filePath,".mp4") || strpos($filePath,".m4v") || strpos($filePath,".mpg") || strpos($filePath,".mpeg") || strpos($filePath,".ogv") || strpos($filePath,".mp3") || strpos($filePath,".ogg")){
-				$tempDataEntry = "#EXTINF:-1,$filePath - $showTitle \n";
+				#$tempDataEntry = "#EXTINF:-1,".(explode(".",basename($filePath))[0])."\n";
+				$tempDataEntry = "#EXTINF:-1,".(basename($filePath))."\n";
 				# convert .strm files into thier contents
 				if ( (substr($filePath,-5,5) == ".strm") ){
 					$filePath=str_replace("\n","",file_get_contents($_SERVER["DOCUMENT_ROOT"].$filePath));
@@ -133,6 +143,7 @@ function m3u_gen($section,$title){
 
 	if (array_key_exists("sort",$_GET)){
 		if ($_GET['sort'] == 'random'){
+			debug("Randomizing the playlist<br>\n");
 			# randomize the list before writing it to the file
 			shuffle($totalFileList);
 		}
@@ -146,25 +157,38 @@ function m3u_gen($section,$title){
 			}
 			if ($playAtFound){
 				fwrite($data, $tempLineData);
+				debug("Writing '$tempLineData' to file '$cacheFile'<br>\n");
 			}
 		}
 	}else{
+		debug("Writing the playlist<br>\n");
 		# write all lines of the playlist
 		foreach ($totalFileList as $tempLineData){
 			fwrite($data, $tempLineData);
+			debug("Writing '$tempLineData' to file '$cacheFile'<br>\n");
 		}
 	}
 	// close the file
 	fclose($data);
+	debug("Adding icon generation job to the queue<br>\n");
+	# generate a unique icon image for the playlist
+	# - this is for the playlist web interface
+	$demoImageCommand="source /var/lib/2web/common\n";
+	$demoImageCommand.="demoImage \"/var/cache/2web/web/m3u_cache/$cacheSum.png\" \"$section $showPath\" \"400\" \"200\"$\n";
+	# queue up the icon generation
+	addToQueue("multi",$demoImageCommand);
+	debug("Redirecting to the generated playlist<br>\n");
 	// redirect to episode path
 	redirect("/m3u_cache/$cacheSum.m3u");
 }
 ################################################################################
 if (array_key_exists("artist",$_GET)){
-	echo "Building Artist...<br>\n";
+	debug("Building Artist...<br>\n");
 
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi/";
+	# load the kodi path
+	$rootPath = file_get_contents("/etc/2web/kodi.cfg");
+	$rootPath = trim($rootPath);
 
 	$showTitle = $_GET['artist'];
 	$showTitle = urldecode($showTitle);
@@ -178,10 +202,11 @@ if (array_key_exists("artist",$_GET)){
 	exit();
 
 }else if (array_key_exists("showTitle",$_GET)){
-	echo "Building ShowTitle...<br>\n";
+	debug("Building ShowTitle...<br>\n");
 
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
-	$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
+	$rootPath = file_get_contents("/etc/2web/kodi.cfg");
+	$rootPath = trim($rootPath);
 
 	$showTitle = $_GET['showTitle'];
 	$showTitle = urldecode($showTitle);
@@ -194,7 +219,7 @@ if (array_key_exists("artist",$_GET)){
 	m3u_gen("shows",$showTitle);
 	exit();
 }else if (array_key_exists("movies",$_GET)){
-	echo "Building Movies...<br>\n";
+	debug("Building Movies...<br>\n");
 	m3u_gen("movies","all");
 	exit();
 }else{
@@ -204,6 +229,7 @@ if (array_key_exists("artist",$_GET)){
 	echo "<link rel='stylesheet' href='style.css'>";
 	echo "</head>";
 	echo "<body>";
+	include("/usr/share/2web/templates/header.php");
 	echo "<div class='settingListCard'>";
 	echo "<h2>Manual Video Cache Interface</h2>";
 	echo "No url was specified to the resolver!<br>";
@@ -221,32 +247,56 @@ if (array_key_exists("artist",$_GET)){
 	echo "<hr>";
 	echo "<div class='settingListCard'>";
 	echo "	<h2>WEB API EXAMPLES</h2>";
-	echo "	<p>";
-	echo "		Replace the url api key with your video web link to be cached by youtube-dl.";
-	echo "		Debug=true will generate a webpage containing debug data and video output";
-	echo "	</p>";
 	echo "<ul>";
 	echo '	<li>';
+	echo "		adding ?debug will generate a webpage containing debug data generated during building of m3u playlist.";
+	echo '	</li>';
+	echo '	<li>';
 	echo '		http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?showTitle="showTitle"';
+	echo '	</li>';
+	echo '	<li>';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?movies';
+	echo '	</li>';
+	echo '	<li>';
+	echo '		http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?artist="artistName"';
+	echo '	</li>';
+	echo '	<li>';
+	echo '		You can use playAt= in order to create a playlist that will start at a existing episode.\n';
+	echo "		<ul>";
+	echo '			<li>';
+	echo '				http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?showTitle="showTitle"&playAt=s0001e0004';
+	echo '			</li>';
+	echo "		</ul>";
+	echo '	</li>';
+	echo '	<li>';
+	echo '		You can use ?sort=random to randomize a playlist ordering.\n';
+	echo "		<ul>";
+	echo '			<li>';
+	echo '				http://'.$_SERVER["HTTP_HOST"].'/m3u-gen.php?showTitle="showTitle"&sort=random';
+	echo '			</li>';
+	echo "		</ul>";
 	echo '	</li>';
 	echo "</ul>";
 	echo "</div>";
 	echo "<div class='settingListCard'>";
 	echo "<h2>Random Cached Playlists</h2>";
-	$sourceFiles = explode("\n",shell_exec("ls -t1 m3u_gen/*.m3u"));
+	$sourceFiles = explode("\n",shell_exec("ls -t1 m3u_cache/*.m3u"));
+	#$sourceFiles = recursiveScan($showPath);
 	// reverse the time sort
-	# build the video index
+	# build the playlist index
 	foreach($sourceFiles as $sourceFile){
+		#$sourceFile=$rootPath."/m3u_cache/".$sourceFile;
 		if (file_exists($sourceFile)){
 			if (is_file($sourceFile)){
 				echo "<a class='showPageEpisode' href='".$sourceFile."'>";
+				echo "	<img src='".str_replace(".m3u",".png",$sourceFile)."' />";
 				echo "	<h3>".$sourceFile."</h3>";
 				echo "</a>";
 			}
 		}
 	}
 	echo "</div>";
-	//include("header.html");
+	include("/usr/share/2web/templates/footer.php");
 	echo "</body>";
 	echo "</html>";
 }
