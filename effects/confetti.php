@@ -62,8 +62,8 @@
 		return paintColors[pickedColor];
 	}
 	function randomFlake(){
-		var paintColors=Array("🞧","🞮","🞴","🞺","🞸","🞾");
-		var pickedColor=Math.floor(Math.random() * 6);
+		var paintColors=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾");
+		var pickedColor=Math.floor(Math.random() * paintColors.length);
 		return paintColors[pickedColor];
 	}
 	var globalSnowflakes=0;
@@ -90,6 +90,7 @@
 				this.snowFlakeDiv.style.height=this.size+"rem";
 				//this.snowFlakeDiv.style.transform="rotate(0deg)";
 				this.snowFlakeDiv.style.fontSize=this.size+"rem";
+				this.snowFlakeDiv.style.lineHeight=this.size+"rem";
 				this.snowFlakeDiv.style.textAlign="center";
 				//this.snowFlakeDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
 				this.snowFlakeDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
@@ -112,6 +113,7 @@
 						tempFlake.style.color=randomPaint();
 						tempFlake.style.width=this.size+"rem";
 						tempFlake.style.height=this.size+"rem";
+						tempFlake.style.lineHeight=this.size+"rem";
 						// randomize the spin direction
 						if(1 == Math.floor(Math.random() * 2) ){
 							tempFlake.className="snowflake_left";

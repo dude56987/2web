@@ -59,6 +59,7 @@
 		return ("#" + outputColor);
 	}
 	function randomPaint(){
+		//var paintColors=Array("red","orange","yellow","green","blue","indigo","violet");
 		var paintColors=Array("red","green","blue","yellow");
 		var pickedColor=Math.floor(Math.random() * 4);
 		return paintColors[pickedColor];

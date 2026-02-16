@@ -79,10 +79,9 @@
 				this.snowFlakeDiv.style.zIndex="-1";
 				this.snowFlakeDiv.style.width=this.size+"rem";
 				this.snowFlakeDiv.style.height=this.size+"rem";
-				//this.snowFlakeDiv.style.transform="rotate(0deg)";
 				this.snowFlakeDiv.style.fontSize=this.size+"rem";
+				//this.snowFlakeDiv.style.filter=("hue-rotate("+(Math.floor(Math.random() * 360))+"deg)");
 				this.snowFlakeDiv.style.textAlign="center";
-				//this.snowFlakeDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
 				this.snowFlakeDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
 				this.snowFlakeDiv.style.position="fixed";
 				this.snowFlakeDiv.style.top = ( ( Math.random() * (window.innerHeight + 400) ) - 400 )+"px";
@@ -106,6 +105,7 @@
 						this.size=( Math.floor(Math.random() * 5) );
 						tempFlake.style.width=this.size+"rem";
 						tempFlake.style.height=this.size+"rem";
+						//tempFlake.style.filter=("hue-rotate("+(Math.floor(Math.random() * 360))+"deg)");
 						// randomize the spin direction
 						if(1 == Math.floor(Math.random() * 2) ){
 							tempFlake.className="snowflake_left";

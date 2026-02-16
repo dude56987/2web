@@ -210,6 +210,12 @@
 			this.fishDiv.style.position="fixed";
 			this.fishDiv.style.left = ( ( Math.random() * (window.innerWidth + 400) ) - 400 )+"px";
 			this.fishDiv.style.top = ( Math.floor(Math.random() * window.innerHeight) );
+			// randomize the base fish color
+			//if(this.fishDiv.innerHTML == "🐟"){
+			//	this.fishDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+			//}else{
+			//	this.fishDiv.style.filter="";
+			//}
 			// add the fish to the document
 			document.body.appendChild(this.fishDiv);
 			// increment the fish number
@@ -251,7 +257,12 @@
 					}
 					// create a random fish
 					tempFish.innerHTML=pickAfish();
-
+					// randomize the base fish color
+					//if(tempFlake.innerHTML == "🐟"){
+					//	tempFlake.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+					//}else{
+					//	tempFlake.style.filter="";
+					//}
 					if ( tempFish.className == "fish_left" ){
 						// fish move left, move them past the right side of the screen to start
 						tempFish.style.left = (window.innerWidth + ( (Math.random() * 400) + 100 ) )+"px";

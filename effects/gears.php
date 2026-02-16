@@ -75,6 +75,7 @@
 </style>
 <script>
 	var globalSnowflakes=0;
+	var removalActive="";
 	class snowflake{
 		constructor(){
 			//setTimeout( () => {
@@ -117,7 +118,8 @@
 				this.lastTime = Date.now();
 				// failures being random makes the particles disipate instead of vanish
 				this.failures = 0;
-				this.maxFailures = (Math.floor(Math.random() * 4)+1);
+				//this.maxFailures = (Math.floor(Math.random() * 4)+1);
+				this.maxFailures = 1;
 				this.removeTrigger=false;
 				this.loopId = setInterval( () => {
 					if (this.removeTrigger){
@@ -132,9 +134,20 @@
 							// stop the loop
 							clearInterval(this.loopId);
 							globalSnowflakes-=1;
+							removalActive="";
 						}else{
-							// reduce the opacity
-							this.snowFlakeDiv.style.opacity = (parseFloat(this.snowFlakeDiv.style.opacity) - 0.01);
+							if(removalActive == ""){
+								removalActive = this.globalID;
+							}
+							if(removalActive == this.globalID){
+								// reduce the opacity
+								this.snowFlakeDiv.style.opacity = (parseFloat(this.snowFlakeDiv.style.opacity) - 0.1);
+							}else{
+								// reset the failures and the removal trigger because another particle is being removed
+								this.failures = 0;
+								this.removeTrigger=false;
+								this.snowFlakeDiv.style.opacity = 1;
+							}
 						}
 					}else{
 						// get the current time
