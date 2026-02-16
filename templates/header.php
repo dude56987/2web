@@ -177,13 +177,15 @@ if (requireGroup("webPlayer",false)){
 	}
 }
 // read the weather info for weather2web
-if (requireGroup("weather2web",false)){
-	formatEcho("<a class='button' href='/weather/'>",2);
-	formatEcho("🌤️",3);
-	formatEcho("<span class='headerText'>",3);
-	formatEcho("Weather",4);
-	formatEcho("</span>",3);
-	formatEcho("</a>",2);
+if (detectEnabledStatus("weather2web")){
+	if (requireGroup("weather2web",false)){
+		formatEcho("<a class='button' href='/weather/'>",2);
+		formatEcho("🌤️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Weather",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
+	}
 }
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
