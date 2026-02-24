@@ -644,6 +644,8 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/exit.php" "$webDirectory/exit.php"
 	# caching resolvers
 	linkFile "/usr/share/2web/resolvers/search.php" "$webDirectory/search.php"
+	# add search without .php
+	linkFile "/usr/share/2web/resolvers/search.php" "$webDirectory/search/index.php"
 	linkFile "/usr/share/2web/resolvers/ytdl-resolver.php" "$webDirectory/ytdl-resolver.php"
 	linkFile "/usr/share/2web/resolvers/iptv-resolver.php" "$webDirectory/iptv-resolver.php"
 	linkFile "/usr/share/2web/resolvers/m3u-gen.php" "$webDirectory/m3u-gen.php"
