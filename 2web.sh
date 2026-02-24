@@ -1560,22 +1560,20 @@ function clientSetupMessage(){
 	# display a message after setup of one of the clients
 	if [[ $(find "/etc/2web/users/" -type f | wc -l) -gt 0 ]];then
 		# if theere are no users
-		echo "###############################################################################"
-		echo "# You should log into the webserver and set a administrator username and      #"
-		echo "# password to lock control of this device down.                               #"
-		echo "###############################################################################"
+		drawLine
+		ALERT "You should log into the webserver and set a administrator username and password to lock control of this device down."
+		drawLine
 		echo "https://$(hostname).local/settings/users.php#addNewUser"
-		echo "###############################################################################"
-		echo "_______________________________________________________________________________"
+		drawLine
 	fi
-	echo "###############################################################################"
-	echo "# Base access to the server for control is at the below link."
-	echo "###############################################################################"
+	drawLine
+	echo "Base access to the server for control is at the below link."
+	drawLine
 	echo "http://$(hostname).local/"
-	echo "###############################################################################"
+	drawLine
 	if which pavucontrol;then
-		echo "# You may have to setup the sound output with 'pavucontrol'."
-		echo "###############################################################################"
+		echo "You may have to setup the sound output with 'pavucontrol'."
+		drawLine
 	fi
 }
 ################################################################################
