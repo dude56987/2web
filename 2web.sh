@@ -2611,6 +2611,9 @@ elif [ "$1" == "--fortune" ] || [ "$1" == "fortune" ];then
 	delete "/var/cache/2web/web/fortune.index"
 	# generate the fortune
 	generateFortune "$(webRoot)"
+elif [ "$1" == "--list-users" ] || [ "$1" == "listusers" ] ;then
+	# list the 2web users
+	find "/etc/2web/users/" -type f -name '*.cfg' -printf '%f\n' | sed "s/.cfg//g"
 elif [ "$1" == "-e" ] || [ "$1" == "--enable" ] || [ "$1" == "enable" ] ;then
 	enableMod "2web"
 elif [ "$1" == "-d" ] || [ "$1" == "--disable" ] || [ "$1" == "disable" ] ;then
