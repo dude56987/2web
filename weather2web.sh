@@ -143,10 +143,6 @@ function update(){
 					txt2html --extract\
 				)
 				{
-					echo "<h3>"
-					# below emoji for thermometer does not like to display correctly in vim, ignore the aberation
-					echo "🌡️ $weatherLocation"
-					echo "</h3>"
 					echo "<div class='weatherIcon weatherHomepageIcon right'>"
 					getWeatherIcon "$tempWeatherData"
 					echo "</div>"
