@@ -139,7 +139,7 @@ function ytdl2kodi_channel_extractor(){
 		ALERT "linkList after cleanup = $tempLinkList"
 	else
 		# write in the database that this channel link has failed
-		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist from link '$channelLink'"
+		addToLog "ERROR" "ytdl2nfo" "ytdl2nfo could not download playlist from link <pre>$channelLink</pre>"
 		# exit and do not mark as processed since no playlist/linklist could be retrieved
 		# this should also fail out if the network connection is down
 		return 1
