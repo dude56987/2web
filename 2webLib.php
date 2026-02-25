@@ -2101,7 +2101,7 @@ if( ! function_exists("getStat")){
 			$total="∅";
 		}
 		if ($drawValue){
-			echo "		<span class='singleStat'>\n";
+			echo "		<span class='singleStat' title='$label $total'>\n";
 			echo "			<span class='singleStatLabel'>$label</span>\n";
 			echo "			<span class='singleStatValue'>$total</span>\n";
 			echo "		</span>\n";
@@ -2729,7 +2729,16 @@ if( ! function_exists("getDiskSize")){
 			# output the formatted size info
 			#return "$usedSpace/$totalSpace %$percentage Used, $freeSpace Free";
 		}else{
-			return "∅";
+			$output="";
+			$output.="<span class='singleStat' title='Unknown Disk Free/Used space'>\n";
+			$output.="	<span class='singleStatLabel'>\n";
+			$output.="		Disk Space\n";
+			$output.="	</span>\n";
+			$output.="	<span class='singleStatValue'>\n";
+			$output.="		∅\n";
+			$output.="	</span>\n";
+			$output.="</span>\n";
+			return $output;
 		}
 	}
 }
