@@ -1552,7 +1552,7 @@ if( ! function_exists("startSession")){
 				$_SESSION["lastActionTime"]=$_SERVER["REQUEST_TIME"];
 			}
 		}else{
-			addToLog("DEBUG","Session Timeout","No Last Action Time Set");
+			addToLog("DEBUG","Session Timeout","No Last Action Time Set for user <pre>".$_SERVER["HTTP_USER_AGENT"]."</pre>");
 			# update the session update timeout
 			$_SESSION["lastActionTime"]=$_SERVER["REQUEST_TIME"];
 		}
