@@ -1925,10 +1925,12 @@ if( ! function_exists("loadSearchIndexResults")){
 		$searchQuery=array_merge($searchQuery,$wordGroups);
 		# build the sum
 		$searchSum=md5($ogQuery.$filter);
-		# load the cached file if it exists
-		if( file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
-			displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
-			return;
+		if(! $widget){
+			# load the cached file if it exists
+			if( file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
+				displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
+				return;
+			}
 		}
 		#
 		$allIndex="";
@@ -2753,21 +2755,26 @@ if( ! function_exists("drawMoreSearchLinks")){
 		#$searchQuery=rawurlEncode($searchQuery);
 		# start drawing the html
 		echo "<div class='titleCard' id='externalLinks'>\n";
-		echo "	<h1>External Links</h1>\n";
+		echo "	<h1>Local & External Links</h1>\n";
 		echo "	<div class='listCard'>\n";
 		# load the local search links
 		$localSearchLinks=Array();
 		# use the hostname
 		$hostTitle=ucfirst(gethostname());
 		array_push($localSearchLinks, Array("/search.php?q=",$hostTitle." Search","🔍"));
-		array_push($localSearchLinks, Array("/search.php?d=",$hostTitle." Search","🔬"));
+		array_push($localSearchLinks, Array("/search.php?m=",$hostTitle." Related Media","🧲"));
+		array_push($localSearchLinks, Array("/search.php?d=",$hostTitle." Deep Search","🔬"));
 		foreach($localSearchLinks as $linkData){
 			echo "		<a class='button' href='".$linkData[0].$searchQuery."'>".$linkData[2]." ".$linkData[1]."</a>\n";
 		}
 		# load up the external search providers
 		$externalSearchLinks=Array();
 		# external search
-		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=off&q=","Brave","🔎"));
+		# - brave with safesearch off and AI responses disabled
+		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=off&summary=0&q=","Brave","🔎"));
+		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=off&summary=1&q=","Brave AI Search","🔎🧠"));
+		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=on&summary=0&q=","Brave Safe Search","🔎🚸"));
+		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=on&summary=1&q=","Brave Safe AI Search","🔎🚸🧠"));
 		array_push($externalSearchLinks, Array("https://www.mojeek.com/search?q=","Mojeek","🔎"));
 		array_push($externalSearchLinks, Array("https://www.duckduckgo.com/?q=","DuckDuckGo","🔎"));
 		array_push($externalSearchLinks, Array("https://www.startpage.com/sp/search?q=","StartPage","🔎"));

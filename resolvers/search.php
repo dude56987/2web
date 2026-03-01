@@ -72,12 +72,16 @@ function moreBookMetaLinks($searchQuery){
 	echo "</div>\n";
 }
 ################################################################################
+function buildSearchLink($searchPrefix,$searchQuery,$buttonText){
+	echo "		<a class='button' href='/exit.php?to=".rawurlencode($searchPrefix.$searchQuery)."'>$buttonText</a>\n";
+}
+################################################################################
 function moreSearchLinks($searchQuery){
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>🔎 External Search</h2>\n";
 	echo "	<div class='listCard'>\n";
 	echo "		<a class='button' href='/exit.php?to=https://www.mojeek.com/search?q=$searchQuery'>🔎 Mojeek</a>\n";
-	echo "		<a class='button' href='/exit.php?to=https://search.brave.com/search?q=$searchQuery'>🔎 Brave</a>\n";
+	buildSearchLink("https://search.brave.com/search?safesearch=off&q=",$searchQuery,"🔎 Brave");
 	echo "		<a class='button' href='/exit.php?to=https://www.duckduckgo.com/?q=$searchQuery'>🔎 DuckDuckGo</a>\n";
 	echo "		<a class='button' href='/exit.php?to=https://www.startpage.com/sp/search?q=$searchQuery'>🔎 StartPage</a>\n";
 	echo "	</div>\n";
@@ -225,8 +229,8 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
 	#
-	$bangCommands->append(array("!vid","https://search.brave.com/videos?q="));
-	$bangCommands->append(array("!video","https://search.brave.com/videos?q="));
+	$bangCommands->append(array("!vid","https://search.brave.com/videos?safesearch=off&q="));
+	$bangCommands->append(array("!video","https://search.brave.com/videos?safesearch=off&q="));
 	# piped.video search
 	$bangCommands->append(array("!piped","https://piped.video/results?search_query="));
 	# youtube search
@@ -250,9 +254,9 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!rumble","https://rumble.com/search/video?q="));
 	$bangCommands->append(array("!r","https://rumble.com/search/video?q="));
 	# brave search
-	$bangCommands->append(array("!search","https://search.brave.com/search?q="));
-	$bangCommands->append(array("!brave","https://search.brave.com/search?q="));
-	$bangCommands->append(array("!b","https://search.brave.com/search?q="));
+	$bangCommands->append(array("!search","https://search.brave.com/search?safesearch=off&q="));
+	$bangCommands->append(array("!brave","https://search.brave.com/search?safesearch=off&q="));
+	$bangCommands->append(array("!b","https://search.brave.com/search?safesearch=off&q="));
 	# mojeek search
 	$bangCommands->append(array("!mojeek","https://www.mojeek.com/search?q="));
 	$bangCommands->append(array("!m","https://www.mojeek.com/search?q="));
@@ -286,6 +290,10 @@ function checkForBangs($searchQuery){
 	# open weather map
 	$bangCommands->append(array("!owm","https://openweathermap.org/find?q="));
 	$bangCommands->append(array("!openweathermap","https://openweathermap.org/find?q="));
+	# the 2web quick search
+	$bangCommands->append(array("!deep","/search.php?d="));
+	$bangCommands->append(array("!d","/search.php?d="));
+	$bangCommands->append(array("!full","/search.php?d="));
 	################################################################################
 	# check for !bang help command in search query
 	$bangHelp = "";
@@ -314,7 +322,12 @@ function checkForBangs($searchQuery){
 	foreach($bangCommands as $bang){
 		if (strpos($searchQuery,$bang[0])){
 			$cleanSearch=str_replace($bang[0],"",$searchQuery);
-			redirect($bangPrefix.$bang[1].$cleanSearch);
+			# ignore the prefix for local bangs
+			if (in_array($bang[0],Array("!deep","!d","!full"))){
+				redirect($bang[1].$cleanSearch);
+			}else{
+				redirect($bangPrefix.rawurlencode($bang[1].$cleanSearch));
+			}
 		}
 	}
 	return $bangHelp;
@@ -429,13 +442,13 @@ function checkSpelling($searchQuery){
 			echo "</div>";
 		}
 	}else{
-		if (! pspell_check($pspell, $_GET['q'])){
+		if (! pspell_check($pspell, $searchQuery)){
 			echo "<div class='titleCard'>";
 			echo "<h2>";
 			echo "Did you mean?";
 			echo "</h2>";
 			echo "<div class='listCard'>";
-			$spellingSuggestions =  pspell_suggest($pspell, $_GET['q']);
+			$spellingSuggestions =  pspell_suggest($pspell, $searchQuery);
 			foreach($spellingSuggestions as $word){
 				echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
 			}
@@ -462,9 +475,131 @@ function webPlayerCheck($searchQuery){
 ################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	cleanGetInput();
+	$searchQuery = $_GET["q"];
+	$searchQuery = strtolower($searchQuery);
+	$cleanQuery= cleanText($searchQuery);
+	$cleanQuery= spaceCleanedText($cleanQuery);
+	# check for bang commands
+	$bangHelp=checkForBangs($searchQuery);
+	# get the filter options for the search results
+	if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "")){
+		$filter=$_GET["filter"];
+	}else{
+		$filter="all";
+	}
+	# draw the page header
+	drawHead(" - ".$searchQuery);
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+	clear();
+	echo "<div class='settingListCard'>\n";
+	echo "	<h1 id='quickSearch'>Search Results for '$searchQuery'</h1>\n";
+	# draw the bang help if it exists
+	echo $bangHelp;
+	checkSpelling($searchQuery);
+	echo "	<div class='titleCard'>\n";
+	echo "	<h2>Filter Results</h2>";
+	echo "	<div class='listCard'>\n";
+	$filterAllButtonStatus="";
+	if ($filter == "all"){
+		$filterAllButtonStatus="activeButton";
+	}else{
+		$filterAllButtonStatus="button";
+	}
+	echo "		<a class='$filterAllButtonStatus' href='/search.php?filter=all&q=$searchQuery'>\n";
+	echo "			∞ All\n";
+	echo "		</a>\n";
+	#$searchFilters=Array("comics","repos","shows","movies","music","portal");
+	$searchFilters=Array();
+	# 2d array
+	$searchFilters=array_merge($searchFilters,Array(Array("comics","comic2web","📚")));
+	$searchFilters=array_merge($searchFilters,Array(Array("movies","movies2web","🎥")));
+	$searchFilters=array_merge($searchFilters,Array(Array("shows","shows2web","📺")));
+	$searchFilters=array_merge($searchFilters,Array(Array("music","music2web","🎧")));
+	$searchFilters=array_merge($searchFilters,Array(Array("repos","git2web","💾")));
+	$searchFilters=array_merge($searchFilters,Array(Array("live","iptv2web","📡")));
+	$searchFilters=array_merge($searchFilters,Array(Array("graphs","graph2web","📊")));
+	foreach($searchFilters as $filterName){
+		$buttonState="button";
+		if (requireGroup($filterName[1],false)){
+			if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "") && ($_GET['filter'] == $filterName[0])){
+				$buttonState="activeButton";
+			}
+			echo "		<a class='$buttonState' href='/search.php?filter=".$filterName[0]."&q=$searchQuery'>\n";
+			echo "			".$filterName[2]." ".$filterName[0]."\n";
+			echo "		</a>\n";
+		}
+	}
+	echo "		<a class='button' href='/search.php?m=$searchQuery'>\n";
+	echo "			🧲 Related Media\n";
+	echo "		</a>\n";
+	echo "		<a class='button' href='/search.php?d=$searchQuery'>\n";
+	echo "			🔬 Deep Search\n";
+	echo "		</a>\n";
+	echo "		<a class='button' href='#externalLinks'>\n";
+	echo "			🌐 External Links\n";
+	echo "		</a>\n";
+	echo "	</div>\n";
+	echo "	</div>\n";
+	# this is a quick search using only the index
+	clear();
+	echo "<hr>";
+	loadSearchIndexResults($_GET["q"],$filter,-1,"All",400,false);
+	echo "<hr>";
+	clear();
+	#
+	drawMoreSearchLinks($searchQuery);
+	echo "<hr>";
+	#loadSearchIndexResults($_GET["q"],"shows",9,"Episodes",40);
+	#loadSearchIndexResults($_GET["q"],"shows",8,"Shows",40);
+	#loadSearchIndexResults($_GET["q"],"movies",-1,"Movies",40);
+	#loadSearchIndexResults($_GET["q"],"comics",-1,"Comics",40);
+	#loadSearchIndexResults($_GET["q"],"music",-1,"Music",40);
+	#loadSearchIndexResults($_GET["q"],"music",8,"Artists",40);
+	#loadSearchIndexResults($_GET["q"],"music",9,"Albums & Tracks",40);
+	#loadSearchIndexResults($_GET["q"],"portal",-1,"Portal",40);
+	#loadSearchIndexResults($_GET["q"],"repos",-1,"Repos",40);
+	echo "<hr>";
+	echo "</div>\n";
+}else if (array_key_exists("m",$_GET) && ($_GET['m'] != "")){
+	# output matching graph
+	cleanGetInput();
+	$searchQuery = $_GET["m"];
+	$searchQuery = strtolower($searchQuery);
+	$cleanQuery= cleanText($searchQuery);
+	$cleanQuery= spaceCleanedText($cleanQuery);
+	# check for bang commands
+	$bangHelp=checkForBangs($searchQuery);
+	# draw the page header
+	drawHead(" - ".$searchQuery);
+	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+	clear();
+	echo "<div class='settingListCard'>\n";
+	echo "	<h1 id='quickSearch'>Match Results for '$searchQuery'</h1>\n";
+	# draw the bang help if it exists
+	echo $bangHelp;
+	checkSpelling($searchQuery);
+	clear();
+	echo "<hr>";
+	clear();
+	#
+	echo "<hr>";
+	loadSearchIndexResults($searchQuery,"shows",9,"Episodes",40,true);
+	loadSearchIndexResults($searchQuery,"shows",8,"Shows",40,true);
+	loadSearchIndexResults($searchQuery,"movies",-1,"Movies",40,true);
+	loadSearchIndexResults($searchQuery,"comics",-1,"Comics",40,true);
+	loadSearchIndexResults($searchQuery,"music",-1,"Music",40,true);
+	loadSearchIndexResults($searchQuery,"music",8,"Artists",40,true);
+	loadSearchIndexResults($searchQuery,"music",9,"Albums & Tracks",40,true);
+	loadSearchIndexResults($searchQuery,"portal",-1,"Portal",40,true);
+	loadSearchIndexResults($searchQuery,"repos",-1,"Repos",40,true);
+	echo "<hr>";
+	drawMoreSearchLinks($searchQuery);
+	echo "</div>\n";
+}else if (array_key_exists("d",$_GET) && ($_GET['d'] != "")){
+	cleanGetInput();
 	# check for bangs prior to building any part of the webpage
 	# - This must be done before anything is writen to the page for the redirect to work
-	$searchQuery = $_GET["q"];
+	$searchQuery = $_GET["d"];
 	# check for bang commands
 	$bangHelp=checkForBangs($searchQuery);
 	# convert the search to lowercase
@@ -508,7 +643,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "		Search completed\n";
 			echo "	</span>\n";
 			echo "	<span class='singleStatValue'>\n";
-			timeElapsedToHuman($finishedTime);
+			echo timeElapsedToHuman($finishedTime);
 			echo "	</span>\n";
 			echo "</span>\n";
 			echo "<span class='singleStat'>\n";
@@ -516,22 +651,22 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "		Search Processing Time\n";
 			echo "	</span>\n";
 			echo "	<span class='singleStatValue'>\n";
-			timeToHuman($processingTime);
+			echo timeToHuman($processingTime);
 			echo "	</span>\n";
 			echo "</span>\n";
 			if (array_key_exists("highlight",$_GET)){
 				# draw the button to disable highlighting
-				echo "<a class='button right' href='?q=".$_GET["q"]."'>\n";
+				echo "<a class='button right' href='?q=".$_GET["d"]."'>\n";
 				echo "🌃 Disable Highlight\n";
 				echo "</a>\n";
 			}else{
 				# draw the highlight button
-				echo "<a class='button right' href='?highlight&q=".$_GET["q"]."'>\n";
+				echo "<a class='button right' href='?highlight&q=".$_GET["d"]."'>\n";
 				echo "💡 Highlight\n";
 				echo "</a>\n";
 			}
 			echo "<hr>\n";
-			checkSpelling($_GET["q"]);
+			checkSpelling($searchQuery);
 			$noFoundCategories=true;
 			# draw the jump buttons
 			foreach($discoveredFiles as $filePath ){
@@ -578,26 +713,26 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			}
 		}else{
 			logPrint("the search has not finished");
-			checkSpelling($_GET["q"]);
+			checkSpelling($searchQuery);
 			$autoRefreshValue="";
 			# build the refresh
 			if (array_key_exists("autoRefresh",$_GET)){
 				echo "<div class='listCard'>";
-				echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
+				echo "<a class='button' href='?d=".$_GET["d"]."'>⏹️ Stop Refresh</a>\n";
 				$autoRefreshValue="autoRefresh&";
 			}else{
 				echo "<div class='listCard'>";
-				echo "<a class='button' href='?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
+				echo "<a class='button' href='?autoRefresh=true&d=".$_GET["d"]."'>▶️  Auto Refresh</a>\n";
 				$autoRefreshValue="";
 			}
 			if (array_key_exists("highlight",$_GET)){
 				# draw the button to disable highlighting
-				echo "<a class='button right' href='?".$autoRefreshValue."q=".$_GET["q"]."'>\n";
+				echo "<a class='button right' href='?".$autoRefreshValue."d=".$_GET["d"]."'>\n";
 				echo "🌃 Disable Highlight\n";
 				echo "</a>\n";
 			}else{
 				# draw the highlight button
-				echo "<a class='button right' href='?".$autoRefreshValue."highlight&q=".$_GET["q"]."'>\n";
+				echo "<a class='button right' href='?".$autoRefreshValue."highlight&d=".$_GET["d"]."'>\n";
 				echo "💡 Highlight\n";
 				echo "</a>\n";
 			}
@@ -637,7 +772,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 				# list the time elapsed so far
 				echo "<div class='elapsedTime'>Searching for ";
-				timeElapsedToHuman($startedTime,"");
+				echo timeElapsedToHuman($startedTime,"");
 				echo "</div>\n";
 			}else{
 				echo "<div class='elapsedTime'>Request has not yet started processing, Please wait for server to catch up...</div>\n";
@@ -698,19 +833,19 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		# build the refresh
 		if (array_key_exists("autoRefresh",$_GET)){
 			echo "<div class='listCard'>";
-			echo "<a class='button' href='?q=".$_GET["q"]."'>⏹️ Stop Refresh</a>\n";
+			echo "<a class='button' href='?q=".$_GET["d"]."'>⏹️ Stop Refresh</a>\n";
 		}else{
 			echo "<div class='listCard'>";
-			echo "<a class='button' href='search.php?autoRefresh=true&q=".$_GET["q"]."'>▶️  Auto Refresh</a>\n";
+			echo "<a class='button' href='search.php?autoRefresh=true&q=".$_GET["d"]."'>▶️  Auto Refresh</a>\n";
 		}
 		if (array_key_exists("highlight",$_GET)){
 			# draw the button to disable highlighting
-			echo "<a class='button right' href='?q=".$_GET["q"]."'>\n";
+			echo "<a class='button right' href='?d=".$_GET["d"]."'>\n";
 			echo "🌃 Disable Highlight\n";
 			echo "</a>\n";
 		}else{
 			# draw the highlight button
-			echo "<a class='button right' href='?highlight&q=".$_GET["q"]."'>\n";
+			echo "<a class='button right' href='?highlight&d=".$_GET["d"]."'>\n";
 			echo "💡 Highlight\n";
 			echo "</a>\n";
 		}
@@ -720,7 +855,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 		$command = "";
 		# set priority below apache to keep playback from skipping
 		$command .= "nice -n -5 ";
-		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["q"]).'" "'.$querySum.'" ';
+		$command .= '/usr/bin/2web_search "'.str_replace(" ","_",$_GET["d"]).'" "'.$querySum.'" ';
 		# mute the output
 		$command .= " --mute";
 
@@ -732,13 +867,13 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 
 		# redirect to the results page
 		echo "<script>";
-		echo "location.replace('?autoRefresh&q=".$_GET["q"]."')";
+		echo "location.replace('?autoRefresh&d=".$_GET["d"]."')";
 		echo "</script>";
-		echo "<noscript><meta http-equiv='refresh' content='1;URL=search.php?autoRefresh=true&q=".$_GET["q"]."'></noscript>";
+		echo "<noscript><meta http-equiv='refresh' content='1;URL=search.php?autoRefresh=true&d=".$_GET["d"]."'></noscript>";
 	}
 
 	# check if web player links need created
-	webPlayerCheck($_GET["q"]);
+	webPlayerCheck($_GET["d"]);
 	# add ai search links if they exist
 	if (file_exists($webDirectory."/ai/txt2img/index.php") || file_exists($webDirectory."/ai/prompt/index.php")){
 		echo "<div class='titleCard'>";
@@ -749,7 +884,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<input type='text' name='model' value='{ALL}' hidden>\n";
 			echo "<input type='text' name='hidden' value='no' hidden>\n";
 			echo "<input type='text' name='debug' value='no' hidden>\n";
-			echo "<input type='text' name='imageInputPrompt' value='".$_GET["q"]."' hidden>";
+			echo "<input type='text' name='imageInputPrompt' value='".$_GET["d"]."' hidden>";
 			echo "<input type='text' name='imageNegativeInputPrompt' hidden>";
 			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>🎨 Generate Image From Query</button>";
 			echo "</form>\n";
@@ -759,14 +894,21 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 			echo "<input type='text' name='model' value='{ALL}' hidden>\n";
 			echo "<input type='text' name='hidden' value='no' hidden>\n";
 			echo "<input type='text' name='debug' value='no' hidden>\n";
-			echo "<input type='text' name='prompt' value='".$_GET["q"]."' hidden>";
+			echo "<input type='text' name='prompt' value='".$_GET["d"]."' hidden>";
 			echo "<button title='Submit the prompt to generate responses.' class='button' type='submit'>👽 Prompt AI Models with Query</button>";
 			echo "</form>\n";
 		}
 		echo "</div>\n";
 		echo "</div>\n";
 	}
-
+	echo "<div class='titleCard'>\n";
+	echo "	<h2 id='quickSearch'>Quick Search</h2>\n";
+	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' href='/search.php?q=$searchQuery'>\n";
+	echo "		⚡ 2web Search\n";
+	echo "		</a>\n";
+	echo "	</div>\n";
+	echo "</div>\n";
 	echo "<h2 id='external'>External Search Links</h2>\n";
 
 	moreSearchLinks($searchQuery);
