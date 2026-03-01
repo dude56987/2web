@@ -141,61 +141,65 @@ function update(){
 		ALERT "$comicSources" "Comic Download Sources"
 		#for comicSource in $comicSources;do
 		echo "$comicSources" | while read comicSource;do
-			# generate a sum for the source
-			comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
-			# do not process the comic if it is still in the cache
-			# - Cache removes files older than x days
-			if ! test -f "/var/cache/2web/generated/comicCache/download_$comicSum.index";then
-				addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with gallery-dl from '$comicSource'"
-				# if the comic is not cached it should be downloaded
-				comicDL --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "/var/cache/2web/generated/comicCache/download_$comicSum.index"
+			if [ "$comicSource" != "" ];then
+				# generate a sum for the source
+				comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
+				# do not process the comic if it is still in the cache
+				# - Cache removes files older than x days
+				if ! test -f "/var/cache/2web/generated/comicCache/download_$comicSum.index";then
+					addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with gallery-dl from '$comicSource'"
+					# if the comic is not cached it should be downloaded
+					comicDL --write-metadata --dest "$downloadDirectory" "$comicSource" && touch "/var/cache/2web/generated/comicCache/download_$comicSum.index"
+				fi
 			fi
 		done
 		echo "$webComicSources" | while read comicSource;do
-			# generate a sum for the source
-			comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
-			# do not process the comic if it is still in the cache
-			# - Cache removes files older than x days
-			if ! test -f "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index";then
-				addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with Dosage, comic titled '$comicSource'"
-				# if the comic is not cached it should be downloaded
-				if echo "$comicSource" | grep "/";then
-					totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
-					# set the number of strips to download to be the current number + 50
-					numStrips=$(( $totalPages + 50 ))
-					# set the python path for dosage based on pip install location
-					webcomicDL --help
-					webcomicDL --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
-					# cleanup downloaded .txt files
-					rm -v "${downloadDirectory}$comicSource"/*.txt
-					find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
-						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
-						# convert each png file to a jpg file
-						convert -strip -quiet "$imageToConvert" "$newImagePath"
-					done
-					find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
-						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
-						# convert each png file to a jpg file
-						convert -strip -quiet "$imageToConvert" "$newImagePath"
-					done
-				else
-					totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
-					# set the number of strips to download to be the current number + 50
-					numStrips=$(( $totalPages + 50 ))
+			if [ "$comicSource" != "" ];then
+				# generate a sum for the source
+				comicSum=$(echo "$comicSource" | sha512sum | cut -d' ' -f1)
+				# do not process the comic if it is still in the cache
+				# - Cache removes files older than x days
+				if ! test -f "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index";then
+					addToLog "DOWNLOAD" "Downloading comic" "Downloading comic with Dosage, comic titled '$comicSource'"
+					# if the comic is not cached it should be downloaded
+					if echo "$comicSource" | grep "/";then
+						totalPages=$(find "${downloadDirectory}$comicSource"/ -name "*.jpg" | wc -l)
+						# set the number of strips to download to be the current number + 50
+						numStrips=$(( $totalPages + 50 ))
+						# set the python path for dosage based on pip install location
+						webcomicDL --help
+						webcomicDL --parallel "$totalCPUS" --adult --basepath "${downloadDirectory}/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
+						# cleanup downloaded .txt files
+						rm -v "${downloadDirectory}$comicSource"/*.txt
+						find "${downloadDirectory}$comicSource/" -name "*.png" | while read imageToConvert;do
+							newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
+							# convert each png file to a jpg file
+							convert -strip -quiet "$imageToConvert" "$newImagePath"
+						done
+						find "${downloadDirectory}$comicSource/" -name "*.gif" | while read imageToConvert;do
+							newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
+							# convert each png file to a jpg file
+							convert -strip -quiet "$imageToConvert" "$newImagePath"
+						done
+					else
+						totalPages=$(find "${downloadDirectory}dosage/$comicSource"/ -name "*.jpg" | wc -l)
+						# set the number of strips to download to be the current number + 50
+						numStrips=$(( $totalPages + 50 ))
 
-					webcomicDL --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
-					# cleanup downloaded .txt files
-					rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
-					find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
-						newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
-						# convert each png file to a jpg file
-						convert -strip -quiet "$imageToConvert" "$newImagePath"
-					done
-					find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
-						newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
-						# convert each png file to a jpg file
-						convert -strip -quiet "$imageToConvert" "$newImagePath"
-					done
+						webcomicDL --adult --basepath "${downloadDirectory}dosage/" --numstrips $numStrips --all "$comicSource" && touch "/var/cache/2web/generated/comicCache/webDownload_$comicSum.index"
+						# cleanup downloaded .txt files
+						rm -v "${downloadDirectory}dosage/$comicSource"/*.txt
+						find "${downloadDirectory}dosage/$comicSource/" -name "*.png" | while read imageToConvert;do
+							newImagePath=$(echo "$imageToConvert"	| sed "s/\.png$/.jpg/g")
+							# convert each png file to a jpg file
+							convert -strip -quiet "$imageToConvert" "$newImagePath"
+						done
+						find "${downloadDirectory}dosage/$comicSource/" -name "*.gif" | while read imageToConvert;do
+							newImagePath=$(echo "$imageToConvert"	| sed "s/\.gif$/.jpg/g")
+							# convert each png file to a jpg file
+							convert -strip -quiet "$imageToConvert" "$newImagePath"
+						done
+					fi
 				fi
 			fi
 		done
@@ -311,31 +315,34 @@ function update(){
 			done
 		fi
 	done
-	# convert mobi files to epub
-	echo "$comicLibaries" | sort | while read comicLibaryPath;do
-		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
-			ALERT "Library path is disabled '$comicLibaryPath'"
-			addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
-		else
-			# for each cbz file found in the cbz libary locations
-			find "$comicLibaryPath" -type f -name '*.mobi' | sort | while read mobiFilePath;do
-				mobiComicName=$(popPath "$mobiFilePath" | sed "s/.mobi//g")
-				# only extract the cbz once
-				if ! test -f "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf";then
-					createDir "${generatedDirectory}/comics/mobi2comic/"
-					addToLog "UPDATE" "Generating Comic" "Converting MOBI documents to PDF format from '$mobiComicName'"
-					mkdir -p "${generatedDirectory}/comics/mobi2comic/"
-					# extract the cbz file to the download directory
-					INFO "Found mobi '$mobiComicName', converting to comic book..."
-					# convert MOBI files into pdf files to be converted below
-					#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
-					ebook-convert "$mobiFilePath" "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
-					#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
-					chown -R www-data:www-data "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
-				fi
-			done
-		fi
-	done
+	# only convert mobi files if calibre is installed
+	if test -f /usr/bin/ebook-convert;then
+		# convert mobi files to epub
+		echo "$comicLibaries" | sort | while read comicLibaryPath;do
+			if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
+				ALERT "Library path is disabled '$comicLibaryPath'"
+				addToLog "INFO" "Library Scan Disabled" "Skipping scan for disabled path '$comicLibaryPath'"
+			else
+				# for each cbz file found in the cbz libary locations
+				find "$comicLibaryPath" -type f -name '*.mobi' | sort | while read mobiFilePath;do
+					mobiComicName=$(popPath "$mobiFilePath" | sed "s/.mobi//g")
+					# only extract the cbz once
+					if ! test -f "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub";then
+						createDir "${generatedDirectory}/comics/mobi2comic/"
+						addToLog "UPDATE" "Generating Comic" "Converting MOBI documents to epub format from '$mobiComicName'"
+						mkdir -p "${generatedDirectory}/comics/mobi2comic/"
+						# extract the cbz file to the download directory
+						INFO "Found mobi '$mobiComicName', converting to comic book..."
+						# convert MOBI files into pdf files to be converted below
+						#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
+						ebook-convert "$mobiFilePath" "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
+						#/usr/bin/pandoc "$mobiFilePath" --to=pdf -o "${generatedDirectory}/comics/mobi2comic/$mobiComicName.pdf" --toc
+						chown -R www-data:www-data "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub"
+					fi
+				done
+			fi
+		done
+	fi
 	# first convert epub files to pdf files
 	echo "$comicLibaries" | sort | while read comicLibaryPath;do
 		if echo "$disabledLibaries" | grep -q "$comicLibaryPath";then
@@ -579,6 +586,8 @@ function scanPages(){
 				# create comic directory
 				createDir "$webDirectory/comics/$tempComicName"
 				createDir "$webDirectory/comics/$tempComicName/$tempComicChapter"
+				# add the source path
+				addSourcePath "$pagesDirectory" "$webDirectory/comics/$tempComicName/sources.cfg"
 				# render if the page is older than 10 days
 				# get the total chapters
 				if ! test -f "$webDirectory/comics/$tempComicName/totalChapters.cfg";then
@@ -971,6 +980,13 @@ function processComicPath(){
 	fi
 	kodiDirectory="$(kodiRoot)"
 	addToLog "UPDATE" "Adding single comic" "$comicNamePath"
+
+	# check the comic is not a invalid path
+	if echo "$comicNamePath" | grep -q "/\.Trash";then
+		# do not process trash directories
+		addToLog "WARNING" "Path was Trash" "The path '$comicNamePath' was detected as a Hidden trash directory. This will not be processed. You may want to place your media source in a lower level directory of the drive it is located on. For example '/media/driveName/' becomes '/media/driveName/myPathName/'."
+		return
+	fi
 
 	INFO "link the comics to the kodi directory"
 	# link this comic to the kodi directory
