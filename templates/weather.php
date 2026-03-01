@@ -88,7 +88,7 @@
 			addToQueue("multi","weather2web --mute");
 			addToLog("DEBUG","weather check", "weather updated");
 		}
-		echo "<div class='inputCard'>\n";
+		echo "<div class='inputCard updateInfo'>\n";
 		echo "<h1>Updating Weather Information</h1>\n";
 		echo "Weather information is out of date. Updating weather information from remote server...\n";
 		echo "</div>\n";
