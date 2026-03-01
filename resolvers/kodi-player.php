@@ -280,7 +280,7 @@ if (array_key_exists("url",$_GET)){
 	echo "					<tr>\n";
 	echo "						<td>\n";
 	# build the share url interface for posting urls into the resolver to be passed to kodi
-	echo "							<input type='text' name='url' placeholder='http://example.com/media.mkv'>\n";
+	echo "							<input type='text' autocomplete='off' name='url' placeholder='http://example.com/media.mkv'>\n";
 	echo "						</td>\n";
 	echo "						<td class='kodiControlEmbededTableButton'>\n";
 	echo "							<input class='button' type='submit' value='Share Direct URL'>\n";

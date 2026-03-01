@@ -111,7 +111,7 @@ include("settingsHeader.php");
 		?>
 </div>
 
-<div id='webClientStatus' class='inputCard'>
+<div id='purgeNomediaFiles' class='inputCard'>
 	<h2>KODI Update Optimization</h2>
 		<ul>
 			<li>
@@ -128,8 +128,8 @@ include("settingsHeader.php");
 			<?PHP
 			buildYesNoCfgButton("/etc/2web/kodi/nomediaFiles.cfg","'.nomedia' Files","nomediaFiles");
 			?>
-			<form action='admin.php' class='' method='post'>
-				<button class='button' type='submit' name='purgeNomediaFiles' value='yes'>Purge Existing '.nomedia' Files</button>
+			<form action='admin.php' class='buttonForm' method='post'>
+				<button class='button' type='submit' name='purgeNomediaFiles' value='yes'>🗑️ Purge Existing '.nomedia' Files</button>
 			</form>
 		</div>
 </div>
