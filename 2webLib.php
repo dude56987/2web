@@ -2235,7 +2235,7 @@ if( ! function_exists("timeToHuman")){
 }
 ########################################################################
 if( ! function_exists("timeElapsedToHuman")){
-	function timeElapsedToHuman($timestamp,$postText=" ago"){
+	function timeElapsedToHuman($timestamp,$postText="ago"){
 		# Take a timestamp in seconds and show how long ago that timestamp happend in a human readable way.
 		#
 		# - By default ago is posted after the time.
@@ -2293,7 +2293,8 @@ if( ! function_exists("addToLog")){
 		# - use microtime to generate log entries at the time the function is executed
 		# - do not use request_time_float as this will make all log entries added by a php script to be under the same log entry
 		$logIdentifier=(string)microtime(true);
-		$logDate=date("d\/m\/y");
+		#$logDate=date("d\/m\/y");
+		$logDate=date("m\/d\/y");
 		$logTime=date("h:i:s");
 		#
 		$logDescription=str_replace("'", "''", $errorDescription);
