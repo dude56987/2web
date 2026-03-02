@@ -193,6 +193,14 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/etc/2web/portal/;
 	mkdir -p debian/var/lib/2web/;
+	# effects
+	mkdir -p debian/usr/share/2web/effects/;
+	# copy effects
+	cp -rv effects/. debian/usr/share/2web/effects/
+	# copy web help docs
+	cp -rv web_help/. debian/usr/share/2web/web_help/
+	# set permissions on effects
+	chmod -x effects/*.php
 	# create the ufw applications profile directory
 	mkdir -p debian/etc/ufw/applications.d/
 	# copy the license over to the webserver to include it in about page and in CLI tools
