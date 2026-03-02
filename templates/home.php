@@ -22,6 +22,9 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		echo "<title>".ucfirst(gethostname())."</title>\n";
+	?>
 </head>
 <body>
 
@@ -90,6 +93,18 @@
 
 	drawPosterWidget("applications");
 	drawPosterWidget("applications", True);
+
+	# draw widgets with random words
+	$randomWords=(randomWord()." ".randomWord()." ".randomWord());
+	#echo "<h1>$randomWords</h1>";
+	clear();
+	loadSearchIndexResults($randomWords,"shows",9,"Episodes to '$randomWords'");
+	loadSearchIndexResults($randomWords,"shows",8,"Shows to '$randomWords'");
+	loadSearchIndexResults($randomWords,"movies",-1,"Movies to '$randomWords'");
+	loadSearchIndexResults($randomWords,"comics",-1,"Comics to '$randomWords'");
+	loadSearchIndexResults($randomWords,"music",-1,"Music to '$randomWords'");
+	loadSearchIndexResults($randomWords,"portal",-1,"Links to '$randomWords'");
+	loadSearchIndexResults($randomWords,"repos",-1,"Repos to '$randomWords'");
 
 	# add the footer
 	include("/var/cache/2web/web/footer.php");
