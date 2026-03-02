@@ -49,12 +49,12 @@
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 if (file_exists("artist.cfg")){
-	$artist = file_get_contents("artist.cfg");
+	$artist = trim(file_get_contents("artist.cfg"));
 }
 ?>
 <div class='titleCard'>
 	<?php
-	$albumTitle=file_get_contents("album.cfg");
+	$albumTitle=trim(file_get_contents("album.cfg"));
 	if (file_exists("album.cfg")){
 		echo "<h1 id='title'>".$albumTitle."</h1>";
 	}
@@ -67,6 +67,11 @@ if (file_exists("artist.cfg")){
 			if (array_key_exists("play",$_GET)){
 				$track=($_GET['play']);
 			}
+			if (array_key_exists("player",$_GET)){
+				$player=($_GET['player']);
+			}else{
+				$player="audio";
+			}
 			if (file_exists("artist.cfg")){
 				echo "<div>Artist: ";
 				echo "<a href='..'>";
@@ -76,7 +81,7 @@ if (file_exists("artist.cfg")){
 			}
 			if (file_exists("album.cfg")){
 				echo "<div>Album: ";
-				echo file_get_contents("album.cfg");
+				echo $albumTitle;
 				echo "</div>";
 			}
 			if (array_key_exists("play",$_GET)){
@@ -94,6 +99,34 @@ if (file_exists("artist.cfg")){
 				echo file_get_contents("genre.cfg");
 				echo "</div>";
 			}
+
+			if (array_key_exists("play",$_GET)){
+				echo "<div class='listCard'>";
+
+				echo "		<a class='button' href='$track.mp3'>";
+				echo "			🔗Direct Link";
+				echo "		</a>";
+
+				$currentTitle=trim(file_get_contents($track."_title.cfg"));
+				echo "		<a class='button' href='$track.mp3' onclick='notify(\"🡇\");' download='$artist - $albumTitle - $track - $currentTitle.mp3'>";
+				echo "			<span class='downloadIcon'>🡇</span>";
+				echo "			Download";
+				echo "		</a>";
+
+				if ($player == "video"){
+					echo "		<a class='button' href='?play=$track&player=audio'>";
+					echo "			🎶 Audio Player";
+					echo "		</a>";
+				}else if ($player == "audio"){
+					if (file_exists("$track.webm")){
+						echo "		<a class='button' href='?play=$track&player=video'>";
+						echo "			🕺💃 Visualisation Player";
+						echo "		</a>";
+					}
+				}
+				echo "</div>";
+			}
+
 			if (array_key_exists("play",$_GET)){
 				if (file_exists("$track.png")){
 					echo "<img class='trackWaveform' loading='lazy' src='$track.png'>";
@@ -102,6 +135,11 @@ if (file_exists("artist.cfg")){
 			?>
 	</div>
 	<div class='listCard'>
+		<?PHP
+		echo "<a class='button' href='?play=0001'>";
+		?>
+			▶️ Play All
+		</a>
 		<?PHP
 		echo "<a class='button' href='/m3u-gen.php?artist=\"$artist/$albumTitle\"'>";
 		?>
@@ -158,7 +196,7 @@ if (file_exists("artist.cfg")){
 </div>
 
 <?php
-function buildPlayer($track,$player){
+function buildPlayer($track,$player,$artist,$albumTitle){
 	if ($player == "video"){
 		#echo "<video id='nfoMediaPlayer' controls loop autoplay poster='$track.png' data-setup='{ \"inactivityTimeout\": 0 }'>";
 		if (array_key_exists("loop",$_GET)){
@@ -182,12 +220,12 @@ function buildPlayer($track,$player){
 	# if not looping a single file
 	if (! array_key_exists("loop",$_GET)){
 		# loop the album
-		if (file_exists(str_pad(($track + 1), 3, "0", STR_PAD_LEFT).$extension)){
+		if (file_exists(str_pad(($track + 1), 4, "0", STR_PAD_LEFT).$extension)){
 			# play the next track at the end of this one
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playNext(){\n";
-			echo "	window.location='?play=".str_pad(($track + 1), 3, "0", STR_PAD_LEFT)."&player=$player#title';\n";
+			echo "	window.location='?play=".str_pad(($track + 1), 4, "0", STR_PAD_LEFT)."&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}else{
@@ -195,17 +233,17 @@ function buildPlayer($track,$player){
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playNext(){\n";
-			echo "	window.location='?play=001&player=$player#title';\n";
+			echo "	window.location='?play=0001&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}
 		# build the previous button
-		if (file_exists(str_pad(($track - 1), 3, "0", STR_PAD_LEFT).$extension)){
+		if (file_exists(str_pad(($track - 1), 4, "0", STR_PAD_LEFT).$extension)){
 			# play the next track at the end of this one
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playPrevious(){\n";
-			echo "	window.location='?play=".str_pad(($track - 1), 3, "0", STR_PAD_LEFT)."&player=$player#title';\n";
+			echo "	window.location='?play=".str_pad(($track - 1), 4, "0", STR_PAD_LEFT)."&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}else{
@@ -213,7 +251,7 @@ function buildPlayer($track,$player){
 			echo "<script>\n";
 			echo "document.getElementById('mediaPlayer').addEventListener('ended',playNext,false);\n";
 			echo "function playPrevious(){\n";
-			echo "	window.location='?play=001&player=$player#title';\n";
+			echo "	window.location='?play=0001&player=$player#title';\n";
 			echo "}\n";
 			echo "</script>\n";
 		}
@@ -226,20 +264,6 @@ function buildPlayer($track,$player){
 	echo "			⏮️ Previous Track";
 	echo "		</a>";
 
-	echo "		<a class='button' href='$track.mp3'>";
-	echo "			🔗Direct Link";
-	echo "		</a>";
-	if ($player == "video"){
-		echo "		<a class='button' href='?play=$track&player=audio'>";
-		echo "			🎶 Audio Player";
-		echo "		</a>";
-	}else if ($player == "audio"){
-		if (file_exists("$track.webm")){
-			echo "		<a class='button' href='?play=$track&player=video'>";
-			echo "			🕺💃 Visualisation Player";
-			echo "		</a>";
-		}
-	}
 	if (array_key_exists("loop",$_GET)){
 		echo "<noscript>";
 		echo "Loop album does not work without javascript enabled on the browser. Use the external player links to play the album without javascript.";
@@ -252,6 +276,15 @@ function buildPlayer($track,$player){
 		echo "			➰ Loop Track";
 		echo "		</a>";
 	}
+
+	echo "		<a class='button' onclick='playPause(\"mediaPlayer\");notify(\"⏯️\");'>";
+	echo "			⏯️ Play/Pause";
+	echo "		</a>";
+
+	echo "		<a class='button' href='?'>";
+	echo "			⏹️ Stop Playback";
+	echo "		</a>";
+
 	echo "		<a class='button' onclick='playNext()'>";
 	echo "			⏭️ Next Track";
 	echo "		</a>";
@@ -275,17 +308,17 @@ if (array_key_exists("play",$_GET)){
 	if (array_key_exists("player",$_GET)){
 		$player=($_GET['player']);
 		if ($player == "audio"){
-			buildPlayer($track,"audio");
+			buildPlayer($track,"audio",$artist,$albumTitle);
 		}else if ($player == "video"){
-			buildPlayer($track,"video");
+			buildPlayer($track,"video",$artist,$albumTitle);
 		}
 	}else{
 		# default load the video before the audio player
 		if (file_exists("$track.mp3")){
 			if (file_exists("$track.webm")){
-				buildPlayer($track,"video");
+				buildPlayer($track,"video",$artist,$albumTitle);
 			}else{
-				buildPlayer($track,"audio");
+				buildPlayer($track,"audio",$artist,$albumTitle);
 			}
 		}
 	}
@@ -308,10 +341,25 @@ sort($sourceFiles);
 
 foreach($sourceFiles as $sourceFile){
 	if (stripos($sourceFile, ".mp3")){
+		$titleData=file_get_contents(str_replace(".mp3","_title.cfg",$sourceFile));
+		$imagePath=("web-".str_replace(".mp3",".png",$sourceFile));
+		$basePath=(str_replace(".mp3","",$sourceFile));
+		if(isset($track)){
+			if($track.".mp3" == $sourceFile){
+				echo "<a class='showPageEpisode track active' href='?play=$basePath'>\n";
+			}else{
+				echo "<a class='showPageEpisode track' href='?play=$basePath'>\n";
+			}
+		}else{
+				echo "<a class='showPageEpisode track' href='?play=$basePath'>\n";
+		}
+		echo "	<img src='$imagePath'>\n";
+		echo "	$titleData\n";
+		echo "</a>\n";
 		// read the index entry
-		$data=file_get_contents(str_replace(".mp3",".index",$sourceFile));
+		#$data=file_get_contents(str_replace(".mp3",".index",$sourceFile));
 		// write the index entry
-		echo "$data";
+		#echo "$data";
 		flush();
 		ob_flush();
 		$noFileFound = False;
