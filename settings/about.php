@@ -38,11 +38,12 @@ include("settingsHeader.php");
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
 	<ul>
+		<li><a href='#version'>Version Info</a></li>
 		<li><a href='#firewall'>Firewall</a></li>
-		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
 		<li><a href='#CLI_manuals'>CLI Manual Pages</a></li>
-		<li><a href='#services'>Services</a></li>
+		<li><a href='#system_checks'>System Checks</a></li>
 		<li><a href='#sslCert'>SSL Certificate</a></li>
+		<li><a href='#license'>2web License</a></li>
 	</ul>
 </div>
 <?PHP
@@ -126,6 +127,19 @@ function drawVersionRow($title,$filePath,$extra=""){
 			echo "	</tr>";
 		}
 		echo "</table>";
+		if(is_readable("/usr/share/2web/version_hls.cfg")){
+			echo "<h3>Players</h3>";
+			echo "<table>";
+			echo "	<tr>";
+			echo "		<td>";
+			echo "			hls.js Version: ";
+			echo "		</td>";
+			echo "		<td>";
+			echo "			".file_get_contents("/usr/share/2web/version_hls.cfg");
+			echo "		</td>";
+			echo "	</tr>";
+			echo "</table>";
+		}
 		echo "</div>";
 	}
 ?>
@@ -209,8 +223,9 @@ function drawVersionRow($title,$filePath,$extra=""){
 		?>
 	</ul>
 </div>
-<div id='sslCert' class='titleCard'>
-	<h1>SSL Certificate</h1>
+
+<details id='sslCert' class='titleCard'>
+	<summary><h2>SSL Certificate</h2></summary>
 	<p>
 		You can copy and store the custom certificate in your management system from below.
 	</p>
@@ -221,10 +236,10 @@ function drawVersionRow($title,$filePath,$extra=""){
 		echo "</pre>";
 	}
 	?>
-</div>
+</details>
 
-<div id='sslCert' class='titleCard'>
-	<h1>2web License</h1>
+<details id='license' class='titleCard'>
+	<summary><h2>2web License</h2></summary>
 	<?PHP
 	if (file_exists("/usr/share/2web/LICENSE")){
 		echo "<pre>";
@@ -232,7 +247,7 @@ function drawVersionRow($title,$filePath,$extra=""){
 		echo "</pre>";
 	}
 	?>
-</div>
+</details>
 
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
