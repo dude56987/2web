@@ -135,7 +135,6 @@ if (! array_key_exists("select",$_GET)){
 	echo "<h2>KODI Players </h2>\n";
 	$sourceFiles = recursiveScan("/etc/2web/kodi/players.d/");
 	sort($sourceFiles);
-	echo "<div class='listCard'>\n";
 	# write each config file as a editable entry
 	foreach($sourceFiles as $sourceFile){
 		$sourceFileName = $sourceFile;
@@ -144,16 +143,34 @@ if (! array_key_exists("select",$_GET)){
 				if (strpos($sourceFile,".cfg") !== False){
 					$playerLink=file_get_contents($sourceFile);
 					$playerLink=str_replace("\n","",$playerLink);
+					$playerLink=trim($playerLink);
 					$playerHash=basename($sourceFile);
 					$playerHash=str_replace(".cfg","",$sourceFile);
 					# get the link name
 					$playerLinkName=explode("@",$playerLink)[1];
-					echo "		<a class='button' href='?selectedRemote=$playerLink'>🎛️ ".$playerLinkName." KODI Remote</a>\n";
+					$cleanPlayerLinkName=spaceCleanedText(cleanText($playerLinkName));
+					echo "		<a class='indexSeries' href='?selectedRemote=$playerLink'>\n";
+					if (file_exists("/var/cache/2web/web/web_cache/".$playerLinkName.".png")){
+						echo "			<img src='/web_cache/".$playerLinkName.".png'>\n";
+					}else{
+						# create a image for the player
+						# - this is for easier identifiability at a glance
+						$command ="source /var/lib/2web/common;\n";
+						$command.="demoImage \"/var/cache/2web/web/web_cache/$playerLinkName.png\" \"$cleanPlayerLinkName\" \"200\" \"200\";\n";
+						# path title width height
+						addToQueue("multi",$command);
+						# load the image
+						echo "			<img src='/loading.png'>\n";
+					}
+					echo "		<div class='title'>\n";
+					echo "			".$playerLinkName."\n";
+					echo "		</div>\n";
+					echo "		KODI Remote\n";
+					echo "		</a>\n";
 				}
 			}
 		}
 	}
-	echo "</div>\n";
 	# draw the client player button to use the client broadcast from this server
 	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
 		if (requireGroup("clientRemote",false)){
