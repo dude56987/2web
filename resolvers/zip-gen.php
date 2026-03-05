@@ -40,7 +40,9 @@ function zip_gen($title){
 	# RETURN FILES
 	$rootServerPath = $_SERVER['DOCUMENT_ROOT'];
 	if (array_key_exists("comic",$_GET)){
-		$rootPath = $_SERVER['DOCUMENT_ROOT']."/kodi";
+		$rootPath = file_get_contents("/etc/2web/kodi.cfg");
+		$rootPath = trim($rootPath);
+		$rootPath = rtrim($rootPath,"/");
 	}else if (array_key_exists("repo",$_GET)){
 		$rootPath = $_SERVER['DOCUMENT_ROOT'];
 	}
@@ -94,49 +96,19 @@ function zip_gen($title){
 		set_time_limit(900);
 
 		debug("Creating zipfile at: $fullCacheFilePath<br>\n");
-		// create the zip file
-		$data = new ZipArchive();
-		$data->open($fullCacheFilePath, ZipArchive::CREATE);
-		// recursive scan comic path for image files
-		$foundFiles = recursiveScan($comicPath);
 
-		foreach ($foundFiles as $filePath){
-			# cleanup the scan data by removing the site root path, from the file before adding it to the zip
-			$filePath = str_replace($_SERVER['DOCUMENT_ROOT'],"",$filePath);
-
-			debug("File exists adding file...<br>\n");
-			$fileName=popPath($filePath);
-			debug("Storing file in $title/$fileName<br>\n");
-
-			if (array_key_exists("comic",$_GET)){
-				if (strpos($filePath,".jpg") || strpos($filePath,".png") || strpos($filePath,".jpeg") || strpos($filePath,".webm") || strpos($filePath,".gif")){
-					debug("full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n");
-					if (file_exists($_SERVER['DOCUMENT_ROOT'].$filePath)){
-						# write each file to the zip archive on disk individually
-						if (array_key_exists("chapter",$_GET)){
-							$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$chapter."/".$fileName);
-						}else{
-							$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title."/".$fileName);
-						}
-					}else{
-						debug("File does not exist...<br>\n");
-						# write each file to the zip archive on disk individually
-						$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title."/".$fileName);
-					}
-				}
-			}else if (array_key_exists("repo",$_GET)){
-				$internalFilePath=str_replace("/repos/$title/source","",$filePath);
-				debug("file path: $filePath<br>\n");
-				debug("full file path: ".$_SERVER['DOCUMENT_ROOT']."$filePath<br>\n");
-				debug("internal file path: $internalFilePath<br>\n");
-				$data->addFile($_SERVER['DOCUMENT_ROOT'].$filePath, $title.$internalFilePath);
-			}
-		}
-		$data->close();
+		# create the zip command and add it to the queue.
+		$command="zip -jrqT -9 \"$fullCacheFilePath\" \"$comicPath\"";
+		# send it to the queue
+		addToQueue("multi",$command);
 	}
-
-	// redirect to episode path
-	redirect($cacheFilePath);
+	while(true){
+		sleep(3);
+		if(file_exists($fullCacheFilePath)){
+			// redirect to episode path
+			redirect($cacheFilePath);
+		}
+	}
 }
 ################################################################################
 if (array_key_exists("comic",$_GET)){
