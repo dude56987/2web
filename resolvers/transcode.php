@@ -16,33 +16,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
-
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
 function cacheResolve($sum,$webDirectory){
-	$debugPath="/TRANSCODE-CACHE/$sum/";
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
 		# if 60 seconds of the video has been downloaded then launch the video
-		if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp3")){
+		if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp3")){
 			header("Content-type: audio/mpeg;");
 			# redirect to discovered mp3
-			redirect("/TRANSCODE-CACHE/$sum/video.mp3");
-		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.mp4")){
+			redirect("/RESOLVER-CACHE/$sum/video.mp3");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.mp4")){
 			header("Content-type: video/mp4;");
 			// file is fully downloaded and converted play instantly
-			redirect("/TRANSCODE-CACHE/$sum/video.mp4");
-		}else if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video.m3u")){
+			redirect("/RESOLVER-CACHE/$sum/video.mp4");
+		}else if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video.m3u")){
 			# if the stream has x segments (segments start as 0)
 			# - currently 10 seconds of video
 			# - force loading of 3 segments before resolution
-			if(file_exists("$webDirectory/TRANSCODE-CACHE/$sum/video-stream0.ts")){
+			if(file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts")){
 				header("Content-type: application/mpegurl;");
 				# redirect to the stream
-				redirect("/TRANSCODE-CACHE/$sum/video.m3u");
+				redirect("/RESOLVER-CACHE/$sum/video.m3u");
 			}
 		}
 		# Sleep at end of the loop then try to find a redirect again
@@ -79,9 +77,9 @@ if (array_key_exists("path",$_GET)){
 	if ($doTranscode){
 		addToLog("INFO","Transcode","Checking for trancode for '$link'\n");
 		# check if the session has been locked
-		if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/$sum/started.cfg")){
+		if ( ! file_exists("$webServerPath/RESOLVER-CACHE/$sum/started.cfg")){
 			# create the transcode lock file
-			file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/started.cfg",time());
+			file_put_contents("$webServerPath/RESOLVER-CACHE/$sum/started.cfg",time());
 			# make sure there is no existing stream available
 			addToLog("UPDATE","Transcode Started","Transcoding link '$link'\n");
 			# ignore user abort of connection
@@ -89,26 +87,26 @@ if (array_key_exists("path",$_GET)){
 			# set execution time limit to 15 minutes
 			set_time_limit(900);
 			# create path if it does not exist
-			if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/")){
-				mkdir("$webServerPath/TRANSCODE-CACHE/");
+			if ( ! file_exists("$webServerPath/RESOLVER-CACHE/")){
+				mkdir("$webServerPath/RESOLVER-CACHE/");
 			}
 			# build the command
 			$fullLinkPath=$webServerPath.$link;
 			# create a transcode directory to store the hls stream if it does not exist
-			if ( ! file_exists("$webServerPath/TRANSCODE-CACHE/$sum/")){
-				mkdir("$webServerPath/TRANSCODE-CACHE/$sum/");
+			if ( ! file_exists("$webServerPath/RESOLVER-CACHE/$sum/")){
+				mkdir("$webServerPath/RESOLVER-CACHE/$sum/");
 			}
 			# build the transcode command
-			$command = "/usr/bin/ffmpeg -i '".$fullLinkPath."' -f mpegts - ";
-			$command .= " | /usr/bin/ffmpeg -i - ";
-			$command .= " -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webServerPath/TRANSCODE-CACHE/".$sum."/video-stream.m3u'";
+			$command = "/usr/bin/ffmpeg -i '".$fullLinkPath."' -f mpegts -c:v libx264 -c:a aac -crf 0 - ";
+			$command .= " | /usr/bin/ffmpeg -i - -c:v copy -c:a copy -crf 0 ";
+			$command .= " -hls_playlist_type event -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 10 -f hls '$webServerPath/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
 			# encode the stream into a mp4 file for compatibility with firefox
 			# - use a .part file until the mp4 is complete because partial mp4 files will not play
-			$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.m3u' -f mp4 '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4.part'";
+			$command .= "; /usr/bin/ffmpeg -i '".$webServerPath."/RESOLVER-CACHE/".$sum."/video.m3u' -f mp4 '".$webServerPath."/RESOLVER-CACHE/".$sum."/video.mp4.part'";
 			# copy the complete file
-		 	$command .= " && cp '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4.part' -f mp4 '".$webServerPath."/TRANSCODE-CACHE/".$sum."/video.mp4'";
+		 	$command .= " && cp '".$webServerPath."/RESOLVER-CACHE/".$sum."/video.mp4.part' -f mp4 '".$webServerPath."/RESOLVER-CACHE/".$sum."/video.mp4'";
 			# save the transcode command to a file
-			file_put_contents("$webServerPath/TRANSCODE-CACHE/$sum/command.cfg","$command");
+			file_put_contents("$webServerPath/RESOLVER-CACHE/$sum/command.cfg","$command");
 			# add the job to the 2web queue system
 			addToQueue("multi",$command);
 		}
