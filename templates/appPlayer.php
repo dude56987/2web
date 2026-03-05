@@ -105,6 +105,9 @@
 		<a class='button' onclick='refitApp()'>AutoFit</a>
 		<a class='button' onclick='setBackground("white")'>White Background</a>
 		<a class='button' onclick='setBackground("black")'>Black Background</a>
+		<?PHP
+		echo "<a class='button' rel='noreferer' target='_new' href='/search.php?q=".$appName."'>🔎 Search 2web</a>\n";
+		?>
 	</div>
 </div>
 
@@ -152,32 +155,12 @@
 		echo $aboutData;
 		echo "</div>";
 	}
-	?>
-<div class='titleCard'>
-	<h1>External Links</h1>
-	<div class='listCard'>
-	<?PHP
-		# load up the external search providers
-		$externalSearchLinks=Array();
-		array_push($externalSearchLinks, Array("/search.php?q=","2web"));
-		array_push($externalSearchLinks, Array("https://www.imdb.com/find?q=","IMDB"));
-		array_push($externalSearchLinks, Array("https://en.wikipedia.org/w/?search=","Wikipedia"));
-		array_push($externalSearchLinks, Array("https://archive.org/details/movies?query=","Archive.org"));
-		array_push($externalSearchLinks, Array("https://piped.video/results?search_query=","Piped"));
-		array_push($externalSearchLinks, Array("https://odysee.com/$/search?q=","Odysee"));
-		array_push($externalSearchLinks, Array("https://rumble.com/search/video?q=","Rumble"));
-		array_push($externalSearchLinks, Array("https://www.bitchute.com/search/?kind=video&query=","BitChute"));
-		array_push($externalSearchLinks, Array("https://www.twitch.tv/search?term=","Twitch"));
-		array_push($externalSearchLinks, Array("https://veoh.com/find/","VEOH"));
-		array_push($externalSearchLinks, Array("https://www.youtube.com/results?search_query=","Youtube"));
-		# draw links for each of the search providers
-		foreach($externalSearchLinks as $linkData){
-			echo "<a class='button' rel='noreferer' target='_new' href='".$linkData[0].$appName."'>🔎 ".$linkData[1]."</a>\n";
-		}
-	?>
-	</div>
-</div>
-
+	#
+	loadSearchIndexResults($appName,"shows");
+	loadSearchIndexResults($appName,"movies");
+	#
+	drawMoreSearchLinks($appName);
+?>
 </div>
 
 <hr>
