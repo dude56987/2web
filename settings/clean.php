@@ -34,6 +34,7 @@ error_reporting(E_ALL);
 ################################################################################
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
+################################################################################
 ?>
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
@@ -52,6 +53,9 @@ include("settingsHeader.php");
 
 <div id='cleanResolverCache' class='inputCard'>
 	<h2>Clean Resolver Cache</h2>
+		<?PHP
+			echo getDiskSize("/var/cache/2web/web/RESOLVER-CACHE/");
+		?>
 		<?PHP getStat("/var/cache/2web/web/cacheSize.index","Resolver Cache Size",true); ?>
 		<ul>
 			<li>
@@ -71,6 +75,9 @@ include("settingsHeader.php");
 
 <div id='cleanTranscodeCache' class='inputCard'>
 	<h2>Clean Transcode Cache</h2>
+		<?PHP
+			echo getDiskSize("/var/cache/2web/web/TRANSCODE-CACHE/");
+		?>
 		<?PHP getStat("/var/cache/2web/web/transcodeCacheSize.index","Transcode Cache Size",true); ?>
 		<ul>
 			<li>
