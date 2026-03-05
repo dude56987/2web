@@ -101,7 +101,7 @@ if (array_key_exists("url",$_GET)){
 		}
 		# create the command to build the thumbnail
 		$command = "/var/cache/2web/generated/yt-dlp/yt-dlp -c -O '".$videoPathPrefix.$videoLinkSum.$ext."' '$videoLink';";
-		$command .= "ffmpegthumbnailer -i '".$videoPathPrefix.$videoLinkSum.$ext."' -o '".$videoPathPrefix.$videoLinkSum."-thumb.png';";
+		$command .= "/usr/bin/ffmpegthumbnailer -i '".$videoPathPrefix.$videoLinkSum.$ext."' -o '".$videoPathPrefix.$videoLinkSum."-thumb.png';";
 		$command .= "touch '".$videoPathPrefix.$videoLinkSum.".finished';";
 		$command .= "touch '".$videoPathPrefix.$videoLinkSum.$ext."';";
 		#
@@ -122,7 +122,7 @@ if (array_key_exists("url",$_GET)){
 		}
 	}
 	# redirect to the web page
-	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }else if(array_key_exists("shareURL",$_GET)){
 	# ignore close connection
 	ignore_user_abort(true);
@@ -174,7 +174,7 @@ if (array_key_exists("url",$_GET)){
 		file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
 	}
 	# redirect to the web page
-	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }else if(array_key_exists("uploadMediaFile",$_FILES)){
 	# ignore close connection
 	ignore_user_abort(true);
@@ -233,7 +233,7 @@ if (array_key_exists("url",$_GET)){
 	}
 	if(! file_exists($videoPathPrefix.$fileSum."-thumb.png")){
 		# build thumbnail with the scheduler in a seprate thread
-		addToQueue("multi","ffmpegthumbnailer -i '$filePath' -o '".$videoPathPrefix.$fileSum."-thumb.png"."'");
+		addToQueue("multi","/usr/bin/ffmpegthumbnailer -i '$filePath' -o '".$videoPathPrefix.$fileSum."-thumb.png"."'");
 	}
 	# remove the file from the temp directory
 	unlink($fileName);
@@ -265,7 +265,7 @@ if (array_key_exists("url",$_GET)){
 		file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
 	}
 	# redirect to the web page
-	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php");
+	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }
 ?>
 <html class='randomFanart'>
@@ -326,6 +326,9 @@ function postFile() {
 	request.send(formdata);
 }
 </script>
+<?PHP
+	echo "<title>".ucfirst(gethostname())." - Share</title>\n";
+?>
 </head>
 <body>
 <?PHP
@@ -426,6 +429,7 @@ foreach($sourceFiles as $sourceFile){
 ksort($sortedLinkList);
 $sourceFiles=array_reverse($sortedLinkList);
 $processedTitles=0;
+$totalVideos=0;
 # build the video index
 foreach($sourceFiles as $sourceFile){
 	# build the links
@@ -446,11 +450,19 @@ foreach($sourceFiles as $sourceFile){
 	if(file_exists($thumbTemplate.".info.json")){
 		$jsonData=file_get_contents($thumbTemplate.".info.json");
 		$jsonData=json_decode($jsonData);
-		$videoTitle=$jsonData->title;
+		if($jsonData == null){
+			$videoTitle=str_replace(".php","",basename($sourceFile));
+		}else{
+			$videoTitle=$jsonData->title;
+		}
 	}else if(file_exists($thumbTemplate.".mp4.info.json")){
 		$jsonData=file_get_contents($thumbTemplate.".mp4.info.json");
 		$jsonData=json_decode($jsonData);
-		$videoTitle=$jsonData->title;
+		if($jsonData == null){
+			$videoTitle=str_replace(".php","",basename($sourceFile));
+		}else{
+			$videoTitle=$jsonData->title;
+		}
 	}else{
 		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title")){
 			$videoTitle=file_get_contents($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum.".php.title");
@@ -479,17 +491,32 @@ foreach($sourceFiles as $sourceFile){
 	}else if(file_exists($pathPrefix."video.mp4")){
 		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟡</div></div>\n";
 	}else if(file_exists($pathPrefix."video.m3u")){
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟠</div></div>\n";
+		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟠</div></div>\n";
+		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'><img class='smallSpinner' src='/spinner.gif'></div></div>\n";
+		echo "	<div class='title'>".$videoTitle." <img class='smallSpinner' src='/spinner.gif'></div>\n";
 	}else{
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
+		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
+		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🚫</div></div>\n";
 	}
 	echo "</a>\n";
+	$totalVideos+=1;
 	# increment the processed titles
 	$processedTitles+=1;
 	if ($processedTitles >= 100){
 		# break processing after the last 100 links
 		break;
 	}
+}
+if($totalVideos==0){
+	echo "<div class='inputCard'>";
+	echo "No videos have been added to the web player yet.";
+	echo "</div>";
+	echo "<div class='inputCard'>";
+	echo "To add videos copy and paste links to videos into the text input at the top of this page labeled 'Open Video Link With Resolver' and click 'share URL'.";
+	echo "</div>";
+	echo "<div class='inputCard'>";
+	echo "You can upload small videos directly from your connected device using the 'choose file' dialog at the top of the page and then clicking 'Upload File'.";
+	echo "</div>";
 }
 echo "</div>";
 include("/usr/share/2web/templates/footer.php");
