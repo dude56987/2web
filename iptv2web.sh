@@ -29,7 +29,7 @@ function ERROR(){
 	printf "[ERROR]: $output\n"
 }
 ################################################################################
-cleanLeadingSpaces(){
+function cleanLeadingSpaces(){
 	# remove punctuation from text, remove leading whitespace, and double spaces
 	#echo "$1" | inline-detox --remove-trailing | sed "s/_/ /g"
 	echo -n "$1" | sed -e "s/^[ \t]*//g" | sed "s/\ \ / /g"
@@ -164,9 +164,10 @@ examineIconLink(){
 }
 ################################################################################
 function webGenCheck(){
+	kodiDirectory=$(kodiRoot)
 	# read either from argument or filesystem
 	if echo -n "$@" | grep -q "\-\-filecheck";then
-		channelCount=$(( $(cat /var/cache/2web/web/kodi/channels.m3u | wc -l) / 2))
+		channelCount=$(( $(cat "$kodiDirectory/channels.m3u" | wc -l) / 2))
 	else
 		channelCount=$1
 	fi
@@ -766,13 +767,14 @@ function updateEPG(){
 ################################################################################
 function buildEPG(){
 	webDirectory=$1
+	kodiDirectory=$(kodiRoot)
 	################################################################################
 	# build the combined epg header
 	{
 		echo "<?xml version='1.0' encoding='UTF-8'?>"
 		echo "<!DOCTYPE tv SYSTEM 'xmltv.dtd'>"
 		echo "<tv generator-info-name='2web combined epg from $(hostname).local'>"
-	} > "$webDirectory/kodi/epg.xml"
+	} > "$kodiDirectory/epg.xml"
 	# read each downloaded epg file and combine them
 	find "$webDirectory/live/epg_cache/" -type 'f' | while read epgPath;do
 		# load the cached epg
@@ -783,10 +785,10 @@ function buildEPG(){
 		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "<tv")
 		tempEPG=$(echo "$tempEPG"| grep --invert-match --ignore-case "</tv")
 		# write the cleaned epg data to the combined epg
-		echo "$tempEPG" >> $webDirectory/kodi/epg.xml
+		echo "$tempEPG" >> "$kodiDirectory/epg.xml"
 	done
 	# add end tag to epg
-	echo "</tv>" >> $webDirectory/kodi/epg.xml
+	echo "</tv>" >> "$kodiDirectory/epg.xml"
 }
 ################################################################################
 fullUpdate(){
@@ -801,6 +803,7 @@ fullUpdate(){
 
 	INFO "Building Web Root directories"
 	webDirectory=$(webRoot)
+	kodiDirectory=$(kodiRoot)
 	createDir "$webDirectory/live/"
 	createDir "$webDirectory/live/thumbs/"
 	createDir "$webDirectory/live/icons/"
@@ -822,8 +825,8 @@ fullUpdate(){
 	channelsRawOutputPath="$webDirectory/live/channels_raw.m3u"
 
 	# link the channel lists to the kodi directory
-	linkFile "$channelsOutputPath" "$webDirectory/kodi/channels.m3u"
-	linkFile "$channelsRawOutputPath" "$webDirectory/kodi/channels_raw.m3u"
+	linkFile "$channelsOutputPath" "$kodiDirectory/channels.m3u"
+	linkFile "$channelsRawOutputPath" "$kodiDirectory/channels_raw.m3u"
 
 	# build the base new versions of the m3u files
 	INFO "Processing sources..."
@@ -1057,6 +1060,7 @@ append(){
 ################################################################################
 webGen(){
 	webDirectory=$(webRoot)
+	kodiDirectory=$(kodiRoot)
 	channelsPath="$webDirectory/live/channels.m3u"
 	################################################################################
 	if ! test -f "$webDirectory/live/hls.js";then
@@ -1272,6 +1276,7 @@ webGen(){
 ################################################################################
 resetCache(){
 	webDirectory=$(webRoot)
+	kodiDirectory=$(kodiRoot)
 	echo "The paths to be removed are"
 	echo " - $webDirectory/live/*.index"
 	echo " - $webDirectory/live/channel_*.html"
@@ -1282,25 +1287,17 @@ resetCache(){
 ################################################################################
 nuke(){
 	webDirectory=$(webRoot)
-	echo "The paths to be removed are"
-	echo " - $webDirectory/live/*.html"
-	echo " - $webDirectory/live/groups/*/"
-	echo " - $webDirectory/live/*.php"
-	echo " - $webDirectory/live/*.index"
-	echo " - $webDirectory/live/*.png"
-	echo " - $webDirectory/live/*.js"
-	echo " - $webDirectory/live/cache/*.index"
-	echo " - $webDirectory/live/*"
-	echo "Starting delete..."
-	rm -v "$webDirectory"/live/*.html
-	rm -rv "$webDirectory"/groups/*/
-	rm -v "$webDirectory"/live/*.php
-	rm -v "$webDirectory"/live/*.index
-	rm -v "$webDirectory"/live/*.png
-	rm -v "$webDirectory"/live/*.js
-	rm -v "$webDirectory"/live/cache/*.index
-	rm -rv "$webDirectory"/live/
-	rm -rv $(webRoot)/sums/iptv2web_*.cfg || echo "No file sums found..."
+	kodiDirectory=$(kodiRoot)
+	#
+	delete "$webDirectory/live/"
+	delete "$webDirectory/new/channels.index"
+	delete "$webDirectory/random/channels.index"
+	#
+	delete "$kodiDirectory/epg.xml"
+	delete "$kodiDirectory/channels.m3u"
+	delete "$kodiDirectory/channels_raw.m3u"
+	#
+	rm -rv $webDirectory/sums/iptv2web_*.cfg || echo "No file sums found..."
 }
 ################################################################################
 # if --debug flag used activate bash debugging for script
@@ -1354,8 +1351,9 @@ elif [ "$1" == "-U" ] || [ "$1" == "--upgrade" ] || [ "$1" == "upgrade" ] ;then
 	upgrade-pip "iptv2web" "streamlink"
 	upgrade-yt-dlp
 elif [ "$1" == "-l" ] || [ "$1" == "--libary" ] || [ "$1" == "libary" ] ;then
+	webDirectory=$(webRoot)
 	# copy local hls.js included in package to the website
-	linkFile /usr/share/2web/iptv/hls.js "$(webRoot)/live/hls.js"
+	linkFile /usr/share/2web/iptv/hls.js "$webDirectory/live/hls.js"
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
 	cat "/usr/share/2web/help/iptv2web.txt"
 elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
