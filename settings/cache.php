@@ -47,7 +47,37 @@ include("settingsHeader.php");
 		<li><a href='#cacheDelay'>Cache Time</a></li>
 	<ul>
 </div>
-<!-- create the theme picker based on installed themes -->
+
+<div id='cacheQuality' class='inputCard'>
+	<h2>Disk Usage</h2>
+<?PHP
+	$resolverPath="/var/cache/2web/web/RESOLVER-CACHE/";
+	$tempDiskSize=getDiskSize($resolverPath);
+	# check the disk is accessable
+	if (! is_readable($resolverPath)){
+		echo "<details>";
+		echo "<summary class='errorBanner'>🖐︎ ERROR: Path is not accessable ! 🖐︎</summary>";
+		echo "<p>This path being broken may mean the drive where the website is generated is broken!</p>";
+		echo "<ul>";
+		echo "<li>The disk could be unplugged?</li>";
+		echo "<li>The disk is not mounted?</li>";
+		echo "<li>The disk filesystem could be corrupted?</li>";
+		echo "<li>The disk could be dead/broken?</li>";
+		echo "</ul>";
+		echo "</details>";
+	}else{
+		echo "<span class='diskSize'>".$tempDiskSize."</span>\n";
+		echo "<div>\n";
+		echo "	<ul>";
+		echo "		<li>";
+		echo "			This is the disk that the cache is stored on.";
+		echo "		</li>";
+		echo "	</ul>";
+		echo "</div>\n";
+	}
+?>
+</div>
+
 <div id='cacheQuality' class='inputCard'>
 	<h2>Cache Stream Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>
@@ -211,6 +241,43 @@ include("settingsHeader.php");
 	<?php
 	buildYesNoCfgButton("/etc/2web/download-yt-dlp-stable-version.cfg","Stable Version","videoResolverStableVersion");
 	?>
+</div>
+
+<div id='loginInactivityTimeout' class='inputCard'>
+<h2>Concurrent Stream Downloads</h2>
+<ul>
+	<li>
+		How many videos can the server stream at once.
+	</li>
+	<li>
+		This depends on how powerfull your server is.
+	</li>
+	<li>
+		The default is 3 because that means 3 videos can be played while caching at the same time.
+	</li>
+	<li>
+		Any already cached videos have no limit to the viewers.
+	</li>
+<?PHP
+	if(file_exists("/etc/2web/multiQueueSize.cfg")){
+		$multiQueueSize = file_get_contents("/etc/2web/multiQueueSize.cfg");
+		$multiQueueSize = str_replace("\n","",$multiQueueSize);
+	}else{
+		$multiQueueSize = 0;
+	}
+	echo "<li>";
+	echo "	The multi queue size is '".$multiQueueSize."'";
+	echo "</li>";
+?>
+</ul>
+<form action='admin.php' method='post' class='buttonForm'>
+	<?PHP
+		echo "<h3>Set Max Parallel Jobs</h3>";
+		echo "<input type='number' name='setMultiQueueSize' min='0' max='1000' value='".$multiQueueSize."' />";
+	?>
+	<hr>
+	<button type='submit' class='button'>𝌆 Change Multi Queue Size</button>
+</form>
 </div>
 
 <?PHP
