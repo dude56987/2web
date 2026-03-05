@@ -40,9 +40,9 @@ $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 if (array_key_exists("to",$_GET) or array_key_exists("toip",$_GET)){
 	# build the link to the extrnal link
 	if( array_key_exists("to",$_GET) ){
-		$link=urldecode($_GET["to"]);
+		$link=rawurldecode($_GET["to"]);
 	}else if( array_key_exists("toip",$_GET) ){
-		$link=urldecode($_GET["toip"]);
+		$link=rawurldecode($_GET["toip"]);
 	}
 	echo "<div class='titleCard'>\n";
 	echo "	<h2>External Redirect</h2>\n";
