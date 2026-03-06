@@ -19,6 +19,8 @@
 ?>
 <hr>
 <script>
+	// create the copy buttons on pre tags
+	CreateCopyButtons();
 	// setup the keys only if they have not already been set in the interface
 	if  (typeof setupKeys !== "function"){
 		// check for any listCard elements in the document
@@ -449,6 +451,24 @@ echo "<span class='footerText'>\n";
 echo " SUPPORT\n";
 echo "</span>\n";
 echo "</a>\n";
+
+# add the button to disable effects
+if (file_exists($webDirectory."/effect.php")){
+	if ( (isset($_SESSION["effectEnabled"])) and ($_SESSION["effectEnabled"] == true) ){
+		echo "<a class='footerButton' href='?disableEffect'>\n";
+		echo "🟩";
+		echo "<span class='footerText'>\n";
+		echo "Disable Effect\n";
+		echo "</span>\n";
+	}else{
+		echo "<a class='footerButton' href='?enableEffect'>\n";
+		echo "🟥";
+		echo "<span class='footerText'>\n";
+		echo "Enable Effect\n";
+		echo "</span>\n";
+	}
+	echo "</a>\n";
+}
 
 echo "</div>\n";
 
