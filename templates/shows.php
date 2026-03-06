@@ -26,7 +26,9 @@
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
-</script>
+	<?PHP
+		echo "<title>".ucfirst(gethostname())." - Shows</title>\n";
+	?>
 </head>
 <body>
 <?php

@@ -27,6 +27,9 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		echo "<title>".ucfirst(gethostname())." - Applications</title>\n";
+	?>
 </head>
 <body>
 

@@ -45,6 +45,9 @@ if (file_exists("allHistory.mp4")){
 	}
 	?>
 	</style>
+	<?PHP
+		echo "<title>".ucfirst(gethostname())." - Repos</title>\n";
+	?>
 </head>
 <body>
 <?php

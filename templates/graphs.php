@@ -27,6 +27,9 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		echo "<title>".ucfirst(gethostname())." - Graphs</title>\n";
+	?>
 </head>
 <body>
 
@@ -38,7 +41,6 @@
 <div class='settingListCard'>
 <h1>
 	Graphs
-	<img id='spinner' src='/spinner.gif' />
 </h1>
 <?php
 # store the index path
