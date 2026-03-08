@@ -71,18 +71,8 @@ displayIndexWithPages($indexFilePath,$emptyMessage);
 		<a class="button" href="?page=all">∞ All<sup>web</sup></a>
 		<a class="button" href="/new/?filter=movies">📜 New<sup>web</sup></a>
 		<a class="button" href="/random/?filter=movies">🔀 Random<sup>web</sup></a>
-		<a class="button" href="/m3u-gen.php?movies=all">▶️ Play All<sup>External</sup></a>
-		<a class="button" href="/m3u-gen.php?movies=all&sort=random">🔀 Play Random<sup>External</sup></a>
-		<?PHP
-		# play all vlc link
-		$tempLink="vlc://".$_SERVER["SERVER_ADDR"]."/m3u-gen.php?movies=all";
-		$tempLink=str_replace(" ","%20",$tempLink);
-		echo "<a class='button vlcButton' href='$tempLink'>▶️ Play All<sup><span id='vlcIcon'>&#9650;</span> VLC</sup></a>";
-		# random vlc link
-		$tempLink="vlc://".$_SERVER["SERVER_ADDR"]."/m3u-gen.php?movies=all&sort=random";
-		$tempLink=str_replace(" ","%20",$tempLink);
-		echo "<a class='button vlcButton' href='$tempLink'>🔀 Play Random<sup><span id='vlcIcon'>&#9650;</span> VLC</sup></a>";
-		?>
+		<a class="button" href="/m3u-gen.php?movies=all" onclick='notify(\"🡇\");' download='AllMovies.m3u'>▶️ Play All<sup>External</sup></a>
+		<a class="button" href="/m3u-gen.php?movies=all&sort=random" onclick='notify(\"🡇\");' download='RandomMovies.m3u'>🔀 Play Random<sup>External</sup></a>
 	</div>
 </div>
 
