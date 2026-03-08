@@ -564,105 +564,105 @@ if (array_key_exists("newUserName",$_POST)){
 }else if (array_key_exists("2web_nuke",$_POST)){
 	if(verifyChoice("/settings/system.php")){
 		outputLog("Scheduling 2web nuke!");
-		addToQueue("multi","2web --nuke");
+		addToQueue("multi","2web --nuke --mute --fast");
 		backButton("/settings/system.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("nfo2web_nuke",$_POST)){
 	if(verifyChoice("/settings/nfo.php")){
 		outputLog("Scheduling nfo nuke!");
-		addToQueue("multi","nfo2web --nuke");
+		addToQueue("multi","nfo2web --nuke --mute --fast");
 		backButton("/settings/nfo.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("iptv2web_nuke",$_POST)){
 	if(verifyChoice("/settings/tv.php")){
 		outputLog("Scheduling iptv2web nuke!");
-		addToQueue("multi","iptv2web --nuke");
+		addToQueue("multi","iptv2web --nuke --mute --fast");
 		backButton("/settings/tv.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("comic2web_nuke",$_POST)){
 	if(verifyChoice("/settings/comics.php")){
 		outputLog("Scheduling comic2web nuke!");
-		addToQueue("multi","comic2web --nuke");
+		addToQueue("multi","/usr/bin/comic2web --nuke --mute --fast");
 		backButton("/settings/comics.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("weather2web_nuke",$_POST)){
 	if(verifyChoice("/settings/weather.php")){
 		outputLog("Scheduling weather2web nuke!");
-		addToQueue("multi","weather2web --nuke");
+		addToQueue("multi","weather2web --nuke --mute --fast");
 		backButton("/settings/weather.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("ytdl2nfo_nuke",$_POST)){
 	if(verifyChoice("/settings/ytdl2nfo.php")){
 		outputLog("Scheduling ytdl2nfo nuke!");
-		addToQueue("multi","ytdl2nfo --nuke");
+		addToQueue("multi","ytdl2nfo --nuke --mute --fast");
 		backButton("/settings/ytdl2nfo.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("graph2web_nuke",$_POST)){
 	if(verifyChoice("/settings/graphs.php")){
 		outputLog("Scheduling graph2web nuke!");
-		addToQueue("multi","graph2web --nuke");
+		addToQueue("multi","graph2web --nuke --mute --fast");
 		backButton("/settings/graphs.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("music2web_nuke",$_POST)){
 	if(verifyChoice("/settings/music.php")){
 		outputLog("Scheduling music2web nuke!");
-		addToQueue("multi","music2web --nuke");
+		addToQueue("multi","music2web --nuke --mute --fast");
 		backButton("/settings/music.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("portal2web_nuke",$_POST)){
 	if(verifyChoice("/settings/portal.php")){
 		outputLog("Scheduling portal2web nuke!");
-		addToQueue("multi","portal2web --nuke");
+		addToQueue("multi","portal2web --nuke --mute --fast");
 		backButton("/settings/portal.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("git2web_nuke",$_POST)){
 	if(verifyChoice("/settings/repos.php")){
 		outputLog("Scheduling git2web nuke!");
-		addToQueue("multi","git2web --nuke");
+		addToQueue("multi","git2web --nuke --mute --fast");
 		backButton("/settings/repos.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("ai2web_nuke",$_POST)){
 	if(verifyChoice("/settings/ai.php")){
 		outputLog("Scheduling ai2web nuke!");
-		addToQueue("multi","ai2web --nuke");
+		addToQueue("multi","ai2web --nuke --mute --fast");
 		backButton("/settings/ai.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("wiki2web_nuke",$_POST)){
 	if(verifyChoice("/settings/wiki.php")){
 		outputLog("Scheduling wiki2web nuke!");
-		addToQueue("multi","wiki2web --nuke");
+		addToQueue("multi","wiki2web --nuke --mute --fast");
 		backButton("/settings/wiki.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("rss2nfo_nuke",$_POST)){
 	if(verifyChoice("/settings/rss.php")){
 		outputLog("Scheduling rss2nfo nuke!");
-		addToQueue("multi","rss2nfo --nuke");
+		addToQueue("multi","rss2nfo --nuke --mute --fast");
 		backButton("/settings/rss.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("kodi2web_nuke",$_POST)){
 	if(verifyChoice("/settings/kodi.php")){
 		outputLog("Scheduling kodi2web nuke!");
-		addToQueue("multi","kodi2web --nuke");
+		addToQueue("multi","kodi2web --nuke --mute --fast");
 		backButton("/settings/kodi.php","🛠️ Return To Settings");
 	}
 	clear();
 }else if (array_key_exists("php2web_nuke",$_POST)){
 	if(verifyChoice("/settings/apps.php")){
 		outputLog("Scheduling php2web nuke!");
-		addToQueue("multi","php2web --nuke");
+		addToQueue("multi","php2web --nuke --mute --fast");
 		backButton("/settings/apps.php","🛠️ Return To Settings");
 	}
 	clear();
