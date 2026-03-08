@@ -70,6 +70,19 @@ function drawHeaderButton($buttonIcon,$buttonText,$buttonLink,$activeLinkArray=A
 	echo "</a>";
 }
 ########################################################################
+if (count(array_diff(scanDir("/etc/2web/users/"),array(".","..",".placeholder"))) == 0){
+	# if there are no users show the warning
+	echo "<div class='errorBanner'>\n";
+	echo "	<p>No administrator login has been created yet, Please create a administrator login to manage the server. Without a login anyone with access to the server can change settings, view user activity, and review logs.</p>\n";
+	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' href='/settings/users.php#addNewUser'>🔒 Add Administrator Login</a>\n";
+	echo "	</div>\n";
+	echo "	<p>After you create a administrator account you can enable modules to add different media sources.</p>\n";
+	echo "	<div class='listCard'>\n";
+	echo "		<a class='button' href='/settings/modules.php'>🧩 Enable Modules</a>\n";
+	echo "	</div>\n";
+	echo "</div>\n";
+}
 # build the settings search interface
 ?>
 <div class='titleCard'>
