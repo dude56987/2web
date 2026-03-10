@@ -42,6 +42,8 @@ echo "</head>";
 #echo "<div id='webTheme' class='inputCard' style=''>";
 #echo "	<style>$tempThemeData</style>";
 echo "<body>";
+# the screen overlay object for tinting the screen
+echo "<span class='screenOverlay'></span>";
 echo "<div class='titleCard'>";
 echo "	<h1>$tempTheme</h1>";
 echo "	<ul>";
