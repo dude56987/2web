@@ -298,16 +298,25 @@ if (array_key_exists("theme",$_GET)){
 	echo "	</form>\n";
 	echo "</div>";
 }
+
+
+
 ?>
 
 <form class='searchBoxForm' method='get'>
 	<?PHP
 	if (array_key_exists("search",$_GET)){
 		# place query into the search bar to allow editing of the query and resubmission
-		echo "<input id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' value='".$_GET["search"]."' >";
+		echo "<input list='themeList' id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' value='".$_GET["search"]."' >";
 	}else{
-		echo "<input id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' >";
+		echo "<input list='themeList' id='searchBox' class='searchBox' type='text' name='search' placeholder='2web Theme Search...' >";
 	}
+	echo "<datalist id='themeList'>\n";
+	foreach($sourceFiles as $sourceFile){
+		# list the themes as a datalist
+		echo "<option value='".str_replace(".css","",$sourceFile)."'>\n";
+	}
+	echo "</datalist>\n";
 	?>
 	<button class='button' type='submit'>🔎</button>
 	<a class='button' href='/settings/themes.php'>❌</a>
