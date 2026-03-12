@@ -56,6 +56,9 @@
 		echo "}\n";
 	?>
 	</style>
+	<?PHP
+		echo "<title>".basename(dirname($_SERVER["PHP_SELF"]))."</title>\n";
+	?>
 </head>
 <body>
 <?php
@@ -101,7 +104,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	$totalPages=count($discoveredFiles);
 	$totalChapters=count($discoveredDirs);
 
-	echo "<a class='button' href='index.php'>📑 Index View</a>\n";
+	echo "<a class='button' href='index.php'>📑 Default View</a>\n";
 
 	if (array_key_exists("real",$_GET)){
 		# mark realsize to true
@@ -158,7 +161,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		}
 
 		echo "<div class='settingListCard'>";
-		echo "<a class='button comicScrollIndexButton' href='index.php#$tempPageNumber'>📑 Index View</a>";
+		echo "<a class='button comicScrollIndexButton' href='index.php#$tempPageNumber'>📑 Default View</a>";
 		echo "<span class='comicScrollPageCount'>📄 <span class='footerText'>Page:</span> $tempPageNumber/$totalPages</span>";
 		echo "<a class='button comicScrollBookmarkButton' href='scroll.php#$tempPageNumber'>🔖 Bookmark Here</a>";
 		echo "</div>";

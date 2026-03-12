@@ -28,6 +28,9 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		echo "<title>".basename(dirname($_SERVER["PHP_SELF"]))."</title>\n";
+	?>
 	</style>
 	<script>
 		function comicFullscreenEnable(){
