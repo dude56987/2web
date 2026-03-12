@@ -171,6 +171,15 @@ if($topLevel){
 	# pop the directory name above the current directory
 	$chapterTitle=array_pop($comicTitleData);
 	$comicTitle=array_pop($comicTitleData);
+	# trim whitespace from left and right of title
+	$comicTitle=ltrim($comicTitle);
+	$comicTitle=rtrim($comicTitle);
+}
+# load the total pages if it exists
+if(file_exists("totalPages.cfg")){
+	$totalPages=file_get_contents("totalPages.cfg");
+}else{
+	$totalPages="";
 }
 ?>
 <html style='background-image: url("thumb.png");background-size: cover;'>
@@ -189,7 +198,7 @@ if($topLevel){
 <link rel='stylesheet' href='../../style.css'>
 <script src='/2webLib.js'></script>
 </head>
-<body>
+<body class='comicsOverviewBackground'>
 <?PHP
 	include($_SERVER["DOCUMENT_ROOT"].'/header.php')
 ?>
@@ -203,23 +212,31 @@ function setupKeys() {
 		switch (key){
 			case 'ArrowUp':
 			event.preventDefault();
+			notify("⬆️");
+			showSpinner();
 			window.location.href='..';
 			break;
 			case 'ArrowLeft':
 			event.preventDefault();
 			<?PHP
+			echo "notify(\"⬅️\");\n";
+			echo "showSpinner();\n";
 			echo "window.location.href='../$previousDir';";
 			?>
 			break;
 			case 'ArrowRight':
 			event.preventDefault();
 			<?PHP
+			echo "notify(\"➡️\");\n";
+			echo "showSpinner();\n";
 			echo "window.location.href='../$nextDir';";
 			?>
 			break;
 			case 'ArrowDown':
 			event.preventDefault();
 			<?PHP
+			echo "notify(\"📖\");\n";
+			echo "showSpinner();\n";
 			if(is_dir("0001/")){
 				echo "window.location.href='0001/';";
 			}else{
@@ -230,7 +247,9 @@ function setupKeys() {
 			case 'End':
 			event.preventDefault();
 			<?PHP
-				echo "window.location.href='../".$randomDir."';";
+			echo "notify(\"🔀\");\n";
+			echo "showSpinner();\n";
+			echo "window.location.href='../".$randomDir."';";
 			?>
 			break;
 		}
@@ -268,13 +287,41 @@ setupKeys();
 	<tr>
 		<td>
 			<?PHP
+				# # draw the image
+				# if(is_dir("0001/")){
+				# 	echo "<a target='_parent' class='indexSeries' href='0001/'>";
+				# }else{
+				# 	echo "<a target='_parent' class='indexSeries' href='0001.php'>";
+				# }
+				# echo "	<img loading='lazy' src='thumb.png' />\n";
+				# # draw the hand
+				# echo "	<div class='title'>\n";
+				# echo "		<div class='showIndexNumbers'>\n";
+				# echo "			$comicTitle";
+				# echo "		</div>\n";
+				# if($totalPages != ""){
+				# 	echo "		🗐 $totalPages";
+				# }
+				# echo "	</div>\n";
+				# echo "</a>\n";
+				#if($topLevel){
+				#	$comicPosterPath="/comics/$comicTitle/0001.png";
+				#}else{
+				#	$comicPosterPath="/comics/$comicTitle/$chapterTitle/0001.png";
+				#}
+				# draw the image
+				#if(is_dir("0001/")){
+				#	echo "<a target='_parent' class='loadComicButton' href='0001/' style='background: url(\"$comicPosterPath\")'>";
+				#}else{
+				#	echo "<a target='_parent' class='loadComicButton' href='0001.php' style='background: url(\"$comicPosterPath\")'>";
+				#}
 				if(is_dir("0001/")){
-					echo "<a target='_parent' class='button indexSeries' href='0001/'>";
+					echo "<a target='_parent' class='loadComicButton' href='0001/' style='background: url(0001/0001.jpg)'>";
 				}else{
-					echo "<a target='_parent' class='button indexSeries' href='0001.php'>";
+					echo "<a target='_parent' class='loadComicButton' href='0001.php' style='background: url(0001.jpg)'>";
 				}
-				echo "<img loading='lazy' src='thumb.png' />";
-				echo "</a>";
+				echo "▷";
+				echo "</a>\n";
 			?>
 		</td>
 	</tr>
@@ -283,9 +330,9 @@ setupKeys();
 			<div class='listCard'>
 				<?PHP
 					if($topLevel){
-						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle'>";
+						echo "<a class='button' onclick='notify(\"🡇\");' href='/zip-gen.php?comic=$comicTitle' download='$comicTitle.zip'>";
 					}else{
-						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle'>";
+						echo "<a class='button' onclick='notify(\"🡇\");' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle' download='$comicTitle $chapterTitle.zip'>";
 					}
 				?>
 					<span class='downloadIcon'>🡇</span>
@@ -293,9 +340,9 @@ setupKeys();
 				</a>
 				<?PHP
 					if($topLevel){
-						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&cbz'>";
+						echo "<a class='button' onclick='notify(\"🡇\");' href='/zip-gen.php?comic=$comicTitle&cbz' download='$comicTitle.cbz'>";
 					}else{
-						echo "<a class='button' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle&cbz'>";
+						echo "<a class='button' onclick='notify(\"🡇\");' href='/zip-gen.php?comic=$comicTitle&chapter=$chapterTitle&cbz' download='$comicTitle $chapterTitle.cbz'>";
 					}
 				?>
 					<span class='downloadIcon'>🡇</span>
@@ -332,8 +379,8 @@ setupKeys();
 </table>
 <div class='chapterTitleBox'>
 	<?PHP
-	if(file_exists("totalPages.cfg")){
-		echo "Total Pages : ".file_get_contents("totalPages.cfg");
+	if($totalPages != ""){
+		echo "Total Pages : ".$totalPages;
 	}
 	?>
 </div>
@@ -344,19 +391,20 @@ setupKeys();
 if (requireGroup("admin",false)){
 	if(file_exists("sources.cfg")){
 		echo "<div class='titleCard'>\n";
-		echo "<h2>Media Sources</h2>\n";
-		echo "<pre>\n";
-		echo file_get_contents("sources.cfg");
-		echo "</pre>\n";
 		#
 		$comicScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
-		echo "<h2>Admin Actions</h2>\n";
+		echo "	<h2>Admin Actions</h2>\n";
 		echo "	<div class='listCard'>\n";
 		echo "		<form action='/settings/admin.php' method='post'>";
 		echo "			<input type='text' name='rescanComic' value='$comicTitle' hidden>";
 		echo "			<button class='button' type='submit'>🗘 Force Media Rescan</button>";
 		echo "		</form>";
 		echo "	</div>\n";
+		echo "	<h2>Media Sources</h2>\n";
+		$sourceData=file("sources.cfg",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		foreach($sourceData as $sourceLine){
+			echo "	<pre>$sourceLine/</pre>";
+		}
 		echo "</div>\n";
 	}
 }
@@ -418,11 +466,21 @@ foreach($indexPaths as $currentPath){
 }
 ?>
 </div>
+<hr>
 <?PHP
-#
+clear();
+# related comics
 loadSearchIndexResults($comicTitle,"comics");
-#
+# random comics
 drawPosterWidget("comics", True);
+#loadSearchIndexResults($comicTitle,"shows",8,"Shows");
+#loadSearchIndexResults($comicTitle,"movies");
+#loadSearchIndexResults($comicTitle,"shows",9,"Episodes");
+#loadSearchIndexResults($comicTitle,"music");
+#loadSearchIndexResults($comicTitle,"portal");
+#loadSearchIndexResults($comicTitle,"repos");
+#
+drawMoreSearchLinks($comicTitle);
 ?>
 <hr>
 <?PHP
