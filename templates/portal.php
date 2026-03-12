@@ -27,6 +27,12 @@
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+	<?PHP
+		# find the domain name
+		$scriptDomain=basename(dirname($_SERVER["SCRIPT_NAME"]));
+		#$scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
+		echo "<title>".ucfirst(gethostname())." - Portal - ".ucfirst($scriptDomain)."</title>\n";
+	?>
 </head>
 <body>
 <?php
@@ -61,9 +67,6 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 <?php
 #
 $portalLinks=file("portal.index");
-# scan for links
-$scriptDomain=basename(dirname($_SERVER["SCRIPT_NAME"]));
-#$scriptDomain=str_ireplace(".php","",$_SERVER["SCRIPT_NAME"]);
 #$scriptDomain=str_ireplace("/portal/","",$scriptDomain);
 $hostnameIp=gethostbyname($scriptDomain);
 # remove the domain link itself
@@ -162,8 +165,13 @@ foreach($portalLinks as $portalLink){
 ?>
 </div>
 <?php
-// add random music above the footer
+clear();
+#
+loadSearchIndexResults($scriptDomain);
+#
 drawPosterWidget("portal", True);
+#
+drawMoreSearchLinks($scriptDomain);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
