@@ -203,6 +203,14 @@ if($isAdmin){
 		echo "	<span class='singleStatValue'>".$activeJobs."/".$totalJobs."</span>\n";
 		echo "</span>\n";
 	}
+	# if the queue is not running in on the server show a warning
+	if ( ! file_exists("/var/cache/2web/web/queue2web.active") ){
+		#
+		echo "<details class='warningBanner'>\n";
+		echo "<summary>🖐︎ The Queue is currently unavailable! 🖐︎</summary>\n";
+		echo "If this message is shown for  more than 15 minutes a error has occured and the queue can not be restarted. A manual unlock may be required by running <pre>2web unlock</pre> as an administrator on the server.\n";
+		echo "</details>\n";
+	}
 	#
 }
 echo "</div>\n";
