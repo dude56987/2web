@@ -35,13 +35,6 @@ error_reporting(E_ALL);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
-<div id='index' class='inputCard'>
-	<h2>Index</h2>
-	<ul>
-		<li><a href='#homepageFortuneStatus'>Homepage Fortune Status</a></li>
-	</ul>
-</div>
-</div>
 
 <div id='homepageFortuneStatus' class='inputCard'>
 	<h2>Fortune</h2>
