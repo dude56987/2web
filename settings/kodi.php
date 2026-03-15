@@ -93,6 +93,15 @@ include("settingsHeader.php");
 			<li>
 				Enable or disable the kodi HTTP share. This is a unencrypted http share of all media for use on a LAN with KODI.
 			</li>
+			<li>
+				DO NOT USE THIS IF YOU LOCKED ANYTHING WITH PERMISSIONS!
+			</li>
+			<li>
+				This share does not follow permissions structures.
+			</li>
+			<li>
+				THIS MAKES EVERYTHING ON THE SERVER PUBLIC!
+			</li>
 		</ul>
 		<?PHP
 		buildYesNoCfgButton("/etc/2web/kodi/enableHttpShare.cfg","KODI HTTP Share","kodiHttpShareStatus");
