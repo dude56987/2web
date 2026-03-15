@@ -61,7 +61,7 @@ function buildCommitTable($entriesToRead=-1){
 			echo "		<td><a href='?commit=$sourceFile#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
 			echo "		<td><span class='tableShrink'>📅 </span>";
 			# convert the elapsed time to a human readable format
-			timeElapsedToHuman(file_get_contents("date/$sourceFile.index"));
+			echo timeElapsedToHuman(file_get_contents("date/$sourceFile.index"));
 			echo "</td>\n";
 			// write the index entry
 			echo "	</tr>\n";
@@ -120,7 +120,7 @@ function buildFullLogPage($entriesToRead=-1){
 }
 ################################################################################
 function drawHeader(){
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard widget'>\n";
 	echo "		<h1>".file_get_contents("title.index")."</h1>";
 	echo "		<div class='listCard'>\n";
 	echo "			<a class='button' href='?all'>🗂️ Repository Overview</a>\n";
@@ -204,7 +204,7 @@ function searchDoc(){
 				}
 				echo "	<td>";
 				# write the file last edited time in human readable format
-				timeElapsedToHuman(file_get_contents($fileTime));
+				echo timeElapsedToHuman(file_get_contents($fileTime));
 				echo "</td>\n";
 				echo "	</tr>\n";
 			}
@@ -256,7 +256,7 @@ function drawDoc(){
 			}
 			echo "	<td>";
 			# write the file last edited time in human readable format
-			timeElapsedToHuman(file_get_contents($fileTime));
+			echo timeElapsedToHuman(file_get_contents($fileTime));
 			echo "</td>\n";
 			echo "	</tr>\n";
 		}
@@ -310,7 +310,7 @@ function drawLint(){
 			}
 			echo "	<td>";
 			# write the file last edited time in human readable format
-			timeElapsedToHuman(file_get_contents($fileTime));
+			echo timeElapsedToHuman(file_get_contents($fileTime));
 			echo "	</td>\n";
 			echo "	</tr>\n";
 			$totalReportLines += $tempLineCount;
@@ -349,11 +349,11 @@ if (file_exists("repoHistory.mp4")){
 
 	<style>
 	<?PHP
-	if (file_exists("repoHistory.mp4")){
-		$data=getcwd();
-		$data=explode('/',$data);
-		$repo=array_pop($data);
+	$data=getcwd();
+	$data=explode('/',$data);
+	$repo=array_pop($data);
 
+	if (file_exists("repoHistory.mp4")){
 		# set the background
 		echo ":root{";
 		echo "--backgroundPoster: url(\"/repos/$repo/repoHistory.png\");";
@@ -549,7 +549,7 @@ if (array_key_exists("inspector",$_GET)){
 	echo "		<td><a href='?commit=$commitName#log'>🧾 <span class='tableShrink'>LOG</span></a></td>\n";
 	echo "		<td><a href='?commit=$commitName#diff'>↔️ <span class='tableShrink'>DIFF</span></a></td>\n";
 	echo "		<td><span class='tableShrink'>📅 </span>";
-	timeElapsedToHuman(file_get_contents("date/$commitName.index"));
+	echo timeElapsedToHuman(file_get_contents("date/$commitName.index"));
 	echo "		</td>";
 	echo "	</tr>\n";
 	echo "</table>\n";
@@ -624,8 +624,6 @@ if (array_key_exists("inspector",$_GET)){
 		echo 		file_get_contents("readme.index");
 	}
 	echo "</div>\n";
-	# add the copy buttons to the readme for pre tags
-	echo "<script>CreateCopyButtons();</script>";
 
 	/*
 	echo "<div class='titleCard'>\n";
@@ -637,7 +635,14 @@ if (array_key_exists("inspector",$_GET)){
 }
 ?>
 </div>
+<?PHP
+# send current data and draw the widgets
+clear();
+loadSearchIndexResults($repo,"repos");
+drawPosterWidget("repos", True);
+?>
 <?php
+drawMoreSearchLinks($repo);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
