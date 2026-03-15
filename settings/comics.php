@@ -85,8 +85,12 @@ include("settingsHeader.php");
 		<li>.cbz (Comic Book Zip)</li>
 		<li>.pdf (Portable Document Format)</li>
 		<li>.epub (Electronic Publication)</li>
+		<li>The above file formats will be scanned for in the library paths and any subdirectorys in those paths.</li>
 		<li>local mixed jpeg/png/mp4/gif directories
 			<ul>
+				<li>given library paths must contain a tag path preceding the comics</li>
+				<li>/comicLibraryPath/tagName/comicTitle/</li>
+				<li>/comicLibraryPath/tagName/comicTitle/chapterTitle/</li>
 				<li>one directory per comic</li>
 				<li>directory name will be comic name</li>
 				<li>You can place directories with image files inside the top level directory for chapters</li>
@@ -94,6 +98,101 @@ include("settingsHeader.php");
 			</ul>
 		</li>
 	</ul>
+	<h2>Example Comic Directory Structures</h2>
+	<div class='inputCard'>
+		<details>
+			<summary><h3>Mixed Format Multi Chapter Example</h3></summary>
+			<ul>
+				<li>comicTag
+					<ul>
+						<li>ExampleComic_01
+							<ul>
+								<li>ExampleChapterTitle_01
+									<ul>
+										<li>Page_01.png</li>
+										<li>Page_02.jpg</li>
+										<li>Page_03.jpg</li>
+										<li>Page_04.mp4</li>
+										<li>Page_05.gif</li>
+									</ul>
+								</li>
+								<li>ExampleChapterTitle_02
+									<ul>
+										<li>Page_01.png</li>
+										<li>Page_02.jpg</li>
+										<li>Page_03.jpg</li>
+										<li>Page_04.mp4</li>
+										<li>Page_05.gif</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</details>
+	</div>
+	<div class='inputCard'>
+		<details>
+			<summary><h3>Mixed Format Example Without Chapters</h3></summary>
+			<ul>
+				<li>comicTag
+					<ul>
+						<li>ExampleComic_01
+							<ul>
+								<li>Page_01.png</li>
+								<li>Page_02.jpg</li>
+								<li>Page_03.jpg</li>
+								<li>Page_04.mp4</li>
+								<li>Page_05.gif</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</details>
+	</div>
+	<div class='inputCard'>
+		<details>
+			<summary><h3>Single Format Example Without Chapters</h3></summary>
+			<ul>
+				<li>comicTag
+					<ul>
+						<li>ExampleComic_01
+							<ul>
+								<li>Page_01.png</li>
+								<li>Page_02.png</li>
+								<li>Page_03.png</li>
+								<li>Page_04.png</li>
+								<li>Page_05.png</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</details>
+	</div>
+	<div class='inputCard'>
+		<details>
+			<summary><h3>Single Format Example Without Chapters</h3></summary>
+			<ul>
+				<li>comicTag
+					<ul>
+						<li>ExampleComic_01
+							<ul>
+								<li>Page_01.jpg</li>
+								<li>Page_02.jpg</li>
+								<li>Page_03.jpg</li>
+								<li>Page_04.jpg</li>
+								<li>Page_05.jpg</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</details>
+	</div>
+
 </div>
 
 <?php
@@ -125,6 +224,22 @@ foreach($sourceFiles as $sourceFile){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
 				$link=file_get_contents($sourceFile);
+				$link=trim(file_get_contents($sourceFile));
+				$tempDiskSize=getDiskSize($link);
+				# check the disk is accessable
+				if (! is_readable($link)){
+					echo "<details>";
+					echo "<summary class='errorBanner'>🖐︎ ERROR: Path is not accessable ! 🖐︎</summary>";
+					echo "<ul>";
+					echo "<li>The disk could be unplugged?</li>";
+					echo "<li>The disk is not mounted?</li>";
+					echo "<li>The disk filesystem could be corrupted?</li>";
+					echo "<li>The disk could be dead/broken?</li>";
+					echo "</ul>";
+					echo "</details>";
+				}else{
+					echo "<span class='diskSize'>".$tempDiskSize."</span>\n";
+				}
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				if (file_exists("/etc/2web/comics/disabledLibaries.d/".md5($link).".cfg")){
