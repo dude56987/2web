@@ -26,6 +26,9 @@ requireAdmin();
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
+	<?PHP
+	echo "<title>".ucfirst(gethostname())." - Settings - Modules</title>\n";
+	?>
 </head>
 <body>
 <?php
