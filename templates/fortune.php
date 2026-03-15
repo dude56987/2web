@@ -21,7 +21,10 @@
 <head>
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
-</script>
+	</script>
+	<?PHP
+	echo "<title>".ucfirst(gethostname())." - Fortune</title>\n";
+	?>
 </head>
 <body>
 <?php
@@ -39,19 +42,22 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 if (file_exists("fortune.index")){
 	$todaysFortune = file_get_contents("fortune.index");
 
-	echo "<h3>🔮 Fortune</h3>";
-	echo "<div class='fortuneText'>";
+	echo "<h3>🔮 Fortune</h3>\n";
+	echo "<div class='fortuneText'>\n";
+	echo "<pre>";
 	echo "$todaysFortune";
-	echo "</div>";
+	echo "</pre>\n";
+	echo "</div>\n";
 	if (requireGroup("admin",false)){
 		echo "		<form action='/settings/admin.php' method='post'>\n";
 		echo "			<input width='60%' type='text' name='reloadFortune' value='yes' hidden>\n";
 		echo "			<button class='button' type='submit'>👐 New Server Fortune</button>\n";
 		echo "		</form>\n";
 	}
+	drawMoreSearchLinks($todaysFortune);
 }else{
-	echo "No fortune has been generated yet...<br>";
-	echo "Reloading page automatically...";
+	echo "No fortune has been generated yet...<br>\n";
+	echo "Reloading page automatically...\n";
 	reloadPage(10);
 }
 ?>
