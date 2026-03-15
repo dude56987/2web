@@ -92,8 +92,12 @@ echo "</div>";
 ?>
 </div>
 <?php
-	// add random comics above the footer
+	# send current data and draw the widgets
+	clear();
+	loadSearchIndexResults($title,"graphs");
 	drawPosterWidget("graphs", True);
+	#
+	drawMoreSearchLinks($title);
 	// add the footer
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
