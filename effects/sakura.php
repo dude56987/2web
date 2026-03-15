@@ -16,120 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
+# include the base particle system
+include("/usr/share/2web/effects/particleBase.php");
 ?>
-<style>
-	@keyframes snowflake_left{
-		0% {
-			rotate: 0deg;
-		}
-		100% {
-			rotate: -360deg;
-		}
-	}
-	@keyframes snowflake_right{
-		0% {
-			rotate: 0deg;
-		}
-		100% {
-			rotate: 360deg;
-		}
-	}
-	.snowflake_right{
-		animation-name: snowflake_right;
-		animation-duration: 10s;
-		animation-fill-mode: forwards;
-		animation-iteration-count: infinite;
-		animation-timing-function: linear;
-		color: white;
-		user-select: none;
-		font-family: font2webGlyph;
-		emoji-variant-emoji: unicode;
-	}
-	.snowflake_left{
-		animation-name: snowflake_left;
-		animation-duration: 10s;
-		animation-fill-mode: forwards;
-		animation-iteration-count: infinite;
-		animation-timing-function: linear;
-		color: white;
-		user-select: none;
-		font-family: font2webGlyph;
-		emoji-variant-emoji: unicode;
-	}
-</style>
 <script>
-	function randomShape(){
-		//var paintColors=Array("🪷","💮","🌸","🏵️","🌼","🌺");
-		//var paintColors=Array("🪷","🌸","🏵️","🌼","🌺");
-		//var pickedColor=Math.floor(Math.random() * (paintColors.length));
-		//return paintColors[pickedColor];
-		return "🌸";
-	}
-	var globalSnowflakes=0;
-	class snowflake{
-		constructor(){
-			//setTimeout( () => {
-				this.speed=( Math.floor(Math.random() * 4) + 2 );
-				this.size=( Math.floor(Math.random() * 6) + 1 );
-				// wait a random time before building the  snowflake
-				this.snowFlakeDiv = document.createElement("div");
-				this.snowFlakeDiv.id="snowflake_"+globalSnowflakes;
-				this.globalID=this.snowFlakeDiv.id;
-				//this.snowFlakeDiv.className="spinRight";
-				if(1 == Math.floor(Math.random() * 2) ){
-					this.snowFlakeDiv.className="snowflake_left";
-				}else{
-					this.snowFlakeDiv.className="snowflake_right";
-				}
-				// create a random snowflake
-				this.snowFlakeDiv.innerHTML=randomShape();
-				this.snowFlakeDiv.style.zIndex="-1";
-				this.snowFlakeDiv.style.width=this.size+"rem";
-				this.snowFlakeDiv.style.height=this.size+"rem";
-				//this.snowFlakeDiv.style.transform="rotate(0deg)";
-				this.snowFlakeDiv.style.fontSize=this.size+"rem";
-				this.snowFlakeDiv.style.textAlign="center";
-				//this.snowFlakeDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
-				this.snowFlakeDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
-				this.snowFlakeDiv.style.position="fixed";
-				this.snowFlakeDiv.style.top = ( ( Math.random() * (window.innerHeight + 400) ) - 400 )+"px";
-				this.snowFlakeDiv.style.left = ( Math.floor(Math.random() * window.innerWidth));
-				// add the snowflake to the document
-				document.body.appendChild(this.snowFlakeDiv);
-				// increment the snowflake number
-				globalSnowflakes+=1;
-				setInterval( () => {
-					//
-					var tempFlake=document.getElementById(this.globalID);
-					// set the recuring loop to move the snow flake
-					tempFlake.style.top = (parseInt(tempFlake.style.top) + (this.speed)) + "px";
-					if ( (parseInt(tempFlake.style.top) > (window.innerHeight+100)) ){
-						// randomize the size of the flake to create distance
-						this.speed=( Math.floor(Math.random() * 4) + 2 );
-						this.size=( Math.floor(Math.random() * 6) + 1 );
-						tempFlake.style.width=this.size+"rem";
-						tempFlake.style.height=this.size+"rem";
-						// randomize the spin direction
-						if(1 == Math.floor(Math.random() * 2) ){
-							tempFlake.className="snowflake_left";
-						}else{
-							tempFlake.className="snowflake_right";
-						}
-						tempFlake.innerHTML=randomShape();
-						// move the snow flake back above the top
-						tempFlake.style.top = (-1 * ( (Math.random() * 400) + 100 ) )+"px";
-						// set a random opacity
-						//tempFlake.style.opacity = "0."+(Math.floor(Math.random() * 9));
-						// set a randomized blur
-						tempFlake.style.transform = "blur("+Math.floor(Math.random * 99)+"px);";
-						// give the flake a random location
-						tempFlake.style.left = ( Math.floor(Math.random() * window.innerWidth) );
-					}
-				}, 33);
-		//}, ((Math.floor(Math.random() * 10)) * 1000) );
-		}
-	}
-	for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-		new snowflake();
-	}
+// create the default amount of particles
+for(var index=0;index<Math.floor(window.innerWidth/12);index++){
+	new fastFallingParticle(userChosenParticles=Array("🌸"),userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=6,minSize=1,spinSpeed="slow");
+}
 </script>
