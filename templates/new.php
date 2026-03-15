@@ -156,22 +156,23 @@ drawPlaylistButton($filterType,"applications","🖥️ Applications");
 flush();
 ob_flush();
 if ($hideFilter){
-	echo "This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.";
+	echo "This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.\n";
 }else{
-	$emptyMessage = "<ul>";
-	$emptyMessage .= "<li>No $filterType items found!</li>";
-	$emptyMessage .= "</ul>";
+	$emptyMessage = "<ul>\n";
+	$emptyMessage .= "<li>No $filterType items found!</li>\n";
+	$emptyMessage .= "</ul>\n";
 	# draw the last updated time
 	if (file_exists($filterType.".cfg")){
-		echo "<span class='singleStat'>";
-		echo "	<span class='singleStatLabel'>";
-		echo "		Last Updated";
-		echo "	</span>";
-		echo "	<span class='singleStatValue'>";
-		timeElapsedToHuman(file_get_contents($filterType.".cfg"));
-		echo "	</span>";
-		echo "</span>";
-		echo "<hr>";
+		$tempTime=timeElapsedToHuman(file_get_contents($filterType.".cfg"));
+		echo "<span class='singleStat' title='Last Updated - $tempTime'>\n";
+		echo "	<span class='singleStatLabel'>\n";
+		echo "		Last Updated\n";
+		echo "	</span>\n";
+		echo "	<span class='singleStatValue'>\n";
+		echo $tempTime."\n";
+		echo "	</span>\n";
+		echo "</span>\n";
+		echo "<hr>\n";
 	}
 	# loop though and display the playlist index
 	displayIndexWithPages($filterType.".index",$emptyMessage,48,"reverse");
@@ -181,11 +182,11 @@ if ($hideFilter){
 <?php
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-echo "<style>";
-echo "	#spinner {";
-echo "		display: none;";
-echo "	}";
-echo "</style>";
+echo "<style>\n";
+echo "	#spinner {\n";
+echo "		display: none;\n";
+echo "	}\n";
+echo "</style>\n";
 ?>
 </body>
 </html>
