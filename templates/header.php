@@ -52,7 +52,22 @@ if (isset($_SESSION["user"])){
 $startTime=microtime(True);
 $webDirectory=$_SERVER["DOCUMENT_ROOT"];
 $cacheFile=$webDirectory."/web_cache/headerData.index";
-
+# load any api commands to enable or disable the effect
+if (isset($_GET["enableEffect"])){
+	$_SESSION["effectEnabled"]=true;
+}else if (isset($_GET["disableEffect"])){
+	$_SESSION["effectEnabled"]=false;
+}
+if ( (isset($_SESSION["effectEnabled"]) != true) ){
+	# set the effect enabled session value to true by default
+	$_SESSION["effectEnabled"]=true;
+}
+# apply effect file if it is enabled and exists
+if ($_SESSION["effectEnabled"]){
+	if (file_exists($webDirectory."/effect.php")){
+		include($webDirectory."/effect.php");
+	}
+}
 # if file is older than 2 hours
 if (file_exists($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
@@ -115,11 +130,16 @@ if ($writeFile){
 	# build the header
 	$fileData .= formatText("<div id='header' class='header'>");
 
+	#$fileData .= formatText("<details id='header' class='header'>");
+	#$fileData .= formatText("<div class='menuButtonBox' onclick='toggleVisibleClass(\"headerButtons\")'>", 1);
+	#$fileData .= formatText("<summary class='menuButtonBox' onclick='toggleVisibleClass(\"headerButtons\")'>", 1);
+	#$fileData .= formatText("<summary class='menuButtonBox' open>", 1);
 	$fileData .= formatText("<div class='menuButtonBox' onclick='toggleVisibleClass(\"headerButtons\")'>", 1);
 	$fileData .= formatText("<hr class='menuButton'/>",2);
 	$fileData .= formatText("<hr class='menuButton'/>",2);
 	$fileData .= formatText("<hr class='menuButton'/>",2);
 	$fileData .= formatText("</div>",1);
+	#$fileData .= formatText("</summary>",1);
 
 	//$fileData .= formatText('<div class="headerButtons" onload="hideVisibleClass(\'headerButtons\')">',1);
 
@@ -338,12 +358,12 @@ if (detectEnabledStatus("kodi2web")){
 	}
 }
 if ($drawRemote){
-	formatEcho("<a class='button' href='/remote.php'>");
-	formatEcho("🎛️");
-	formatEcho("<span class='headerText'>");
-	formatEcho("Remote");
-	formatEcho("</span>");
-	formatEcho("</a>");
+	formatEcho("<a class='button' href='/remote.php'>",2);
+	formatEcho("🎛️",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Remote",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
 }
 # try to load a session in the current window if one does not exist
 startSession();
@@ -351,7 +371,7 @@ startSession();
 if (isset($_SESSION["user"])){
 	if (requireGroup("admin",false)){
 		# admin settings
-		formatEcho("<a class='button headerLoginButton' href='/settings/modules.php'>",2);
+		formatEcho("<a class='button headerLoginButton' href='/settings/'>",2);
 		formatEcho("🛠️",3);
 		formatEcho("<span class='headerText'>",3);
 		formatEcho("Settings",4);
@@ -374,6 +394,15 @@ if (isset($_SESSION["user"])){
 	formatEcho("</span>",3);
 	formatEcho("</a>",2);
 }else{
+	#
+	if ($_SERVER['SERVER_PORT'] == 443){
+		formatEcho("<a class='button headerLoginButton' href='http://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
+		formatEcho("⚠️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Decrypt",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
+	}
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
 		formatEcho("<a class='button headerLoginButton' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
@@ -384,7 +413,6 @@ if (isset($_SESSION["user"])){
 		formatEcho("</a>",2);
 	}
 }
-
 formatEcho("<a class='button headerLoginButton' href='/help.php'>",2);
 formatEcho("<span class='helpQuestionMark'>",3);
 formatEcho("?",3);
@@ -432,14 +460,24 @@ if (isset($_SESSION["user"])){
 	formatEcho("</span>");
 	formatEcho("</a>");
 }else{
+	#
+	if ($_SERVER['SERVER_PORT'] == 443){
+		formatEcho("<a class='button' href='http://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
+		formatEcho("⚠️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Decrypt",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
+		formatEcho("<hr>",2);
+	}
 	# hide login button on the login page
 	if ($_SERVER["PHP_SELF"] != "/login.php"){
-		formatEcho("<a class='button' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>");
-		formatEcho("🔓");
-		formatEcho("<span class='headerText'>\n");
-		formatEcho("Login");
-		formatEcho("</span>");
-		formatEcho("</a>");
+		formatEcho("<a class='button' href='/login.php?redirect=https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
+		formatEcho("🔓",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Login",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
 	}
 }
 echo "	<hr>";
@@ -452,20 +490,30 @@ formatEcho("<span class='headerText'>",3);
 formatEcho("Help",4);
 formatEcho("</span>",3);
 formatEcho("</a>",2);
+
+#echo "</details>";
 echo "</div>";
 ?>
-<form class='searchBoxForm' action='/search.php' method='get'>
+<form class='searchBoxForm' action='/search.php' method='get' onSubmit='notify("🔎",60000);showSpinner();'>
 	<?PHP
 if (array_key_exists("q",$_GET)){
 		# place query into the search bar to allow editing of the query and resubmission
-		echo "<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' value='".$_GET["q"]."' >";
+		echo "<input list='searchAutocompleteData' id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' value='".$_GET["q"]."' >\n";
 	}else{
-		echo "<input id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >";
+		echo "<input list='searchAutocompleteData' id='searchBox' class='searchBox' type='text' name='q' placeholder='2web Search...' >\n";
 	}
-# do not leave a space between the search box and the button
-	?><button id='searchButton' class='searchButton' type='submit'>🔎</button>
+	# if the server has autocomplete data, load it
+	if (is_readable("/var/cache/2web/web/autocomplete.index")){
+		echo "<datalist id='searchAutocompleteData'>\n";
+		echo file_get_contents("/var/cache/2web/web/autocomplete.index");
+		echo "</datalist>\n";
+	}
+	# do not leave a space between the search box and the button
+	?>
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <?PHP
+
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
 	formatEcho("<div class='errorBanner'>\n");
 	formatEcho("<h1>");
@@ -478,6 +526,8 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
 }
 # release the lock on the session for this script to allow pages to load in parallel
 session_write_close();
+# the screen overlay object for tinting the screen
+echo "<span class='screenOverlay'></span>";
 # send the header information before the rest of the page
 flush();
 ob_flush();
