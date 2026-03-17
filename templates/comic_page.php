@@ -67,6 +67,11 @@
 		}else{
 			$isFullscreen = false;
 		}
+		if (array_key_exists("auto",$_GET)){
+			$isAuto = true;
+		}else{
+			$isAuto = false;
+		}
 		#
 		if ( $lastPage < 1 ){
 			# this means that this is the first page
@@ -108,8 +113,8 @@
 	<?PHP
 		echo "html{\n";
 		echo "	background-image: url('".$page."-thumb.png');\n";
-		echo "	background-blend-mode: color-burn;\n";
-		echo "	background-size: cover;\n";
+		#echo "	background-blend-mode: color-burn;\n";
+		echo "	background-size: contain;\n";
 		echo "}\n";
 	?>
 	</style>
@@ -211,51 +216,69 @@
 					case 'ArrowLeft':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('./$lastPage','comicFullscreen');";
+					echo "notify(\"⬅️\");\n";
+					echo "showSpinner();\n";
+					echo "window.open('./$lastPage','$lastPageTarget');\n";
 					?>
+					showSpinner();
 					break;
 					case 'ArrowRight':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('./$nextPage','$nextPageTarget');";
+					echo "notify(\"➡️\");\n";
+					echo "showSpinner();\n";
+					echo "window.open('./$nextPage','$nextPageTarget');\n";
 					?>
 					break;
 					case 'ArrowUp':
 					event.preventDefault();
 					window.location.href='index.php';
+					notify("⬆️");
+					showSpinner();
 					window.open('index.php','_parent');
 					break;
 					case 'Home':
 					event.preventDefault();
+					notify("⬆️");
+					showSpinner();
 					window.open('index.php','_parent');
 					break;
 					case 'PageDown':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('./$nextPage','$nextPageTarget');";
+					echo "notify(\"➡️\");\n";
+					echo "showSpinner();\n";
+					echo "					window.open('./$nextPage','$nextPageTarget');";
 					?>
 					break;
 					case 'PageUp':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('./$lastPage','$lastPageTarget');";
+					echo "notify(\"⬅️\");\n";
+					echo "showSpinner();\n";
+					echo "					window.open('./$lastPage','$lastPageTarget');\n";
 					?>
 					break;
 					case 'Insert':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('fullscreen.php?page=$page','_parent');";
+					echo "notify(\"⛶\");\n";
+					echo "showSpinner();\n";
+					echo "					window.open('fullscreen.php?page=$page','_parent');\n";
 					?>
 					break;
 					case 'ArrowDown':
 					event.preventDefault();
 					<?PHP
-					echo "window.open('fullscreen.php?page=$page','_parent');";
+					echo "notify(\"⛶\");\n";
+					echo "showSpinner();\n";
+					echo "					window.open('fullscreen.php?page=$page','_parent');\n";
 					?>
 					break;
 				}
 			});
 		}
+		//setupKeys();
 	</script>
 </head>
 <img class='globalSpinner' src='/spinner.gif'>
@@ -265,7 +288,10 @@
 	ob_flush();
 	if(! is_readable($page.".jpg")){
 		# if the media file is not readable load the blocked permission error
-		echo "<body id='body' onload='setupKeys();'>\n";
+		echo "<body class='comicPageBody' id='body' onload=''>\n";
+		# the screen overlay object for tinting the screen
+		echo "<span class='screenOverlay'></span>";
+		#
 		echo "<div id='comicFullscreenCheck' class=''>";
 		echo "	<p>Permissions to access this page has been disabled by the server administrator.</p>";
 		echo "	<div class='listCard'>";
@@ -314,7 +340,9 @@
 		$comicThumbType="comicThumbPane";
 	}
 
-	echo "<body id='body' onload='setupKeys();'>\n";
+	echo "<body id='body' class='comicPageBody' onload=''>\n";
+	# the screen overlay object for tinting the screen
+	echo "<span class='screenOverlay'></span>";
 	if($videoFile){
 		echo "<div id='comicPane' class='$comicPaneType zoomBoxContainer' >\n";
 	}else{
@@ -340,7 +368,7 @@
 	echo "			".$nextPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a target='_parent' class='comicIndexButton comicPageButton center' href='index.php#$page'>\n";
+	echo "	<a target='_parent' class='comicIndexButton' href='index.php#$page'>\n";
 	echo "		&uarr;\n";
 	echo "	</a>\n";
 	echo "	<div id='comicPagePopup' class='comicPagePopup center'>\n";
@@ -348,6 +376,23 @@
 	# draw the fullscreen button
 	echo "	<a target='_parent' class='comicFullscreenButton' href='fullscreen.php?page=".$page."'>";
 	echo "		⛶";
+	echo "	</a>\n";
+	# draw the autoplay controls
+	if ($isAuto){
+		if ($isFullscreen){
+			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?stop&fullscreen'>";
+		}else{
+			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?stop'>";
+		}
+		echo "		⏸️";
+	}else{
+		if ($isFullscreen){
+			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?auto&fullscreen'>";
+		}else{
+			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?auto'>";
+		}
+		echo "		▶️";
+	}
 	echo "	</a>\n";
 	# convert to intergers for use with the scroll view API
 	# and for calculating the reading progress
@@ -447,6 +492,29 @@
 		echo 'document.getElementById("zoomBox").remove();';
 		echo '</script>';
 	}
+	# check for autoplay
+	if ($isAuto){
+		# get the autoplay value
+		$autoPlayTime=$_GET["auto"];
+		# wait the autoplay amount of time and then load the next page
+		# - 30 seconds
+		if ($isFullscreen){
+			$playOptions="?fullscreen&auto";
+		}else{
+			$playOptions="?auto";
+		}
+		delayedRedirect(($nextPage.$playOptions),30,$nextPageTarget);
+	}
+	if ($isAuto){
+		echo "<script>";
+		echo "notify(\"▶️\");";
+		echo "</script>";
+	}
+	if (array_key_exists("stop",$_GET)){
+		echo "<script>";
+		echo "notify(\"⏸️\");";
+		echo "</script>";
+	}
 	?>
 	<style>
 		.globalPulse{
@@ -460,6 +528,9 @@
 		addEventListener("pageshow", (event) => {
 			hideSpinner();
 		})
+	</script>
+	<script>
+		setupKeys();
 	</script>
 </body>
 </html>
