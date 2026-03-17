@@ -35,6 +35,7 @@ requireAdmin();
 ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
+################################################################################
 ?>
 
 <div class='inputCard'>
@@ -72,6 +73,49 @@ include("settingsHeader.php");
 			</td>
 		</tr>
 	</table>
+</div>
+
+<div id='index' class='inputCard'>
+	<details>
+	<summary><h2>Supported Library file types</h2></summary>
+	<ul>
+		<li>.avi (Audio Video Interlaced)</li>
+		<li>.mkv (Makrstroa container Format)</li>
+		<li>.mp4 (Video Format)</li>
+		<li>.mov (Apple Quicktime Format)</li>
+		<li>.mpg (Video Format )</li>
+		<li>.mpeg (Video Format)</li>
+		<li>.strm (Web Stream Link)</li>
+		<li>.ogg (Video/Audio Format)</li>
+		<li>.mp3 (Audio File)</li>
+		<li>.iso (Disk Image)</li>
+	</ul>
+	<p>If you want the video to be the most compatible and work without transcoding in the browser you should convert the files into .mp4 files encoded using h264 for video and AAC for audio</p>
+	</details>
+</div>
+
+<div id='index' class='inputCard'>
+	<details>
+	<summary><h2>Library folder structure</h2></summary>
+	<ul>
+		<li>Shows are in seprate folders
+			<ul>
+				<li>Each folder must contain a tvshow.nfo</li>
+				<li>Episodes must be in seasons folders</li>
+				<li>Each episode file must have a <a href='/exit.php?to=https://kodi.wiki/view/NFO_files'>.nfo</a> file in the same folder with the same name but the nfo extension </li>
+				<li>A poster.jpg file can be included to set the poster art</li>
+				<li>A fanart.jpg file can be included to set the fanart</li>
+			</ul>
+		</li>
+		<li>Movies are in seprate folders, one per each movie
+			<ul>
+				<li>Each folder must contain a movie.nfo or a nfo file with the same filename as the movie but the .nfo extension</li>
+				<li>A poster.jpg file can be included to set the poster art</li>
+				<li>A fanart.jpg file can be included to set the fanart</li>
+			</ul>
+		</li>
+	</ul>
+	</details>
 </div>
 
 <div id='nfo_generateAudioWaveform' class='inputCard'>
@@ -119,7 +163,22 @@ foreach($sourceFiles as $sourceFile){
 		if (is_file($sourceFile)){
 			if (strpos($sourceFile,".cfg")){
 				echo "<div class='settingsEntry'>";
-				$link=file_get_contents($sourceFile);
+				$link=trim(file_get_contents($sourceFile));
+				$tempDiskSize=getDiskSize($link);
+				# check the disk is accessable
+				if (! is_readable($link)){
+					echo "<details>";
+					echo "<summary class='errorBanner'>🖐︎ ERROR: Path is not accessable ! 🖐︎</summary>";
+					echo "<ul>";
+					echo "<li>The disk could be unplugged?</li>";
+					echo "<li>The disk is not mounted?</li>";
+					echo "<li>The disk filesystem could be corrupted?</li>";
+					echo "<li>The disk could be dead/broken?</li>";
+					echo "</ul>";
+					echo "</details>";
+				}else{
+					echo "<span class='diskSize'>".$tempDiskSize."</span>\n";
+				}
 				echo "	<h2>".$link."</h2>";
 				echo "<div class='buttonContainer'>\n";
 				if (file_exists("/etc/2web/nfo/disabledLibaries.d/".md5($link).".cfg")){
