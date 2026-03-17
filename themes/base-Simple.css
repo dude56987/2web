@@ -596,6 +596,66 @@ ol li{
 	}
 }
 */
+.loadComicButton{
+	display: block;
+	/*
+	width: 40dvw;
+	min-width: 800px;
+	*/
+	min-height: 20rem;
+	margin-left:auto;
+	margin-right:auto;
+	/*
+	height: 20dvh;
+	*/
+	text-align: center;
+	vertical-align: middle;
+	font-size: 10rem;
+	text-shadow: 0px 0px 1rem var(--highlightText);
+	color: var(--glassBackground);
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+	text-decoration: none;
+	-webkit-text-stroke: 0.1rem var(--borderColor);
+	line-height: 20rem;
+}
+.loadVideoButton{
+	display: block;
+	/*
+	width: 40dvw;
+	min-width: 800px;
+	*/
+	min-height: 20rem;
+	margin-left:auto;
+	margin-right:auto;
+	/*
+	height: 20dvh;
+	*/
+	text-align: center;
+	vertical-align: middle;
+	font-size: 10rem;
+	text-shadow: 0px 0px 1rem var(--highlightText);
+	color: var(--glassBackground);
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+	text-decoration: none;
+	-webkit-text-stroke: 0.1rem var(--borderColor);
+	line-height: 20rem;
+}
+/*
+.loadVideoButton img{
+	width: 100%;
+}
+.loadVideoButton div{
+	width: 100%;
+	position: absolute;
+	text-align: center;
+	line-height: 0px;
+	text-shadow: 0px 0px 2rem var(--highlightText);
+}
+*/
 .headerButtons{
 	width: 90dvw;
 	text-align: left;
@@ -616,6 +676,12 @@ ol li{
 }
 @media (hover: hover) and (pointer: fine){
 	@media only screen and (max-width: 800px), (orientation: portrait){
+		.loadVideoButton{
+			width: 100dvw !important;
+			margin: 0px;
+			min-width: 0px !important;
+			min-height: 0px !important;
+		}
 		/*
 		.menuButton{
 			display: inline !important;
@@ -733,6 +799,12 @@ ol{
 	background-color: var(--solidBackground);
 	background-repeat: repeat;
 	background-attachment: fixed;
+}
+.comicsOverviewBackground{
+	/* Blur the comic backgrounds */
+	/*
+	backdrop-filter: blur(0.25rem);
+	*/
 }
 .moviesFanart{
 	background: url("/randomFanart.php?filter=movies");
@@ -1364,8 +1436,40 @@ a.inputCard h3{
 .comicHomeButton{
 }
 .comicIndexButton{
-	width: 40%;
 	font-size: 3rem;
+	position: fixed;
+	top: 0px;
+	left: 40dvw;
+	width: 20dvw;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	margin: 0rem;
+	padding: 0.5rem;
+	border-style: solid;
+	border-color: var(--borderColor);
+	background: var(--glassBackground);
+	color: var(--textColor);
+	border-width: 0.2rem;
+	text-decoration: none;
+	text-align: center;
+	opacity: 0;
+	transition: opacity 0.5s ease, box-shadow 0.5s ease, border-style 0.5s ease;
+	box-sizing: border-box;
+	word-wrap: normal;
+	z-index: 15;
+}
+.comicIndexButton:hover{
+	opacity: 1;
+	box-shadow: 0px 0px 0px var(--shadowColor);
+	border-style: inset !important;
+}
+.comicPageBody{
+	position: fixed;
+	top: 0px;
+	left:0px;
+	width: 100%;
+	height: 100%;
+	backdrop-filter: blur(0.5rem) brightness(0.5);
+	background: none;
 }
 .comicPagePopup{
 	position: fixed;
@@ -1433,10 +1537,12 @@ a.inputCard h3{
 .comicPageButtonLeft{
 	position: fixed;
 	left: 0px;
+	top: 0px;
 }
 .comicPageButtonRight{
 	position: fixed;
 	right: 0px;
+	top: 0px;
 }
 .indexBody{
 	text-align: center;
