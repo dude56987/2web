@@ -229,6 +229,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	($pageURL == "/settings/themes.php") ||
 	($pageURL == "/settings/about.php") ||
 	($pageURL == "/settings/manuals.php") ||
+	($pageURL == "/settings/users.php") ||
  	($pageURL == "/settings/fortune.php")){
 	$moduleName="system";
 	echo "	<div class='titleCard'>\n";
