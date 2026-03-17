@@ -129,7 +129,7 @@ if( ! function_exists("drawPosterWidget")){
 							if (strpos($sourceFile,".index")){
 								$counter += 1;
 								if ($counter == 1){
-									fwrite($fileObj,"<div class='titleCard'>");
+									fwrite($fileObj,"<div class='titleCard widget'>");
 									if ($random){
 										fwrite($fileObj,"<h1>Random ".ucfirst($filterType)."</h1>");
 									}else{
@@ -1861,6 +1861,11 @@ if( ! function_exists("loadSearchIndexResults")){
 		#   - movies
 		#   - shows
 		#
+		# - TODO
+		#  - Matching should count numbers above the search query count for index results as
+		#  - Any number over the number in the searchQuery count should count down because this means there are more matches in the name than the search itself, so two [ brackets would match twice to a search for a single bracket
+		#  - search values greater than the values found in the searchQuery should be given a negative value so you count up until the query value then after that you count back down because each additional match matches less
+		#
 
 		#
 		$filterType=$filter;
@@ -2005,7 +2010,7 @@ if( ! function_exists("loadSearchIndexResults")){
 		# only draw the widget if there is output
 		if($outputFound){
 			if($widget){
-				echo "<div class='titleCard'>\n";
+				echo "<div class='titleCard widget'>\n";
 			}
 			if($title == ""){
 				$title=ucfirst($filter);
@@ -2103,7 +2108,7 @@ if( ! function_exists("getStat")){
 			$total="∅";
 		}
 		if ($drawValue){
-			echo "		<span class='singleStat' title='$label $total'>\n";
+			echo "		<span class='singleStat' title='$label - $total'>\n";
 			echo "			<span class='singleStatLabel'>$label</span>\n";
 			echo "			<span class='singleStatValue'>$total</span>\n";
 			echo "		</span>\n";
@@ -2269,12 +2274,13 @@ if( ! function_exists("getDateStat")){
 		}else{
 			$total= 0;
 		}
+		$humanReadableTime=timeElapsedToHuman($total);
 		# only draw stats that are greater than zero
 		if ($total > 0){
-			echo "<span class='singleStat'>";
+			echo "<span class='singleStat' title='$label - $humanReadableTime'>";
 			echo "<span class='singleStatLabel'>$label</span>";
 			echo "<span class='singleStatValue'>";
-			echo timeElapsedToHuman($total);
+			echo $humanReadableTime;
 			echo "</span>";
 			echo "</span>\n";
 		}
@@ -2755,7 +2761,7 @@ if( ! function_exists("drawMoreSearchLinks")){
 		# cleanup the search query
 		#$searchQuery=rawurlEncode($searchQuery);
 		# start drawing the html
-		echo "<div class='titleCard' id='externalLinks'>\n";
+		echo "<div class='titleCard widget' id='externalLinks'>\n";
 		echo "	<h1>Local & External Links</h1>\n";
 		echo "	<div class='listCard'>\n";
 		# load the local search links
