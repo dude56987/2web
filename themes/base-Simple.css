@@ -55,13 +55,13 @@ html{
 }
 ::spelling-error{
 	text-decoration: wavy var(--highlightBackground) underline;
-	background-color: yellow;
-	color: black;
+	background-color: var(--highlightBackground);
+	color: var(--highlightText);
 }
 ::grammar-error{
 	text-decoration: wavy var(--highlightBackground) underline;
-	background-color: yellow;
-	color: black;
+	background-color: var(--highlightBackground);
+	color: var(--highlightText);
 }
 ::selection{
 	color: var(--highlightText);
