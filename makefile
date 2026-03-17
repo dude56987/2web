@@ -37,6 +37,11 @@ test-effects:
 	cp -rv effects/. /usr/share/2web/effects/
 	# restart the webserver to clear out caches
 	service apache2 restart
+test-help:
+	# copy web help web docs
+	cp -rv web_help/. /usr/share/2web/web_help/
+	# restart the webserver to clear out caches
+	service apache2 restart
 test-templates:
 	# copy all the template php pages into a existing install
 	cp -rv templates/. /usr/share/2web/templates/
@@ -189,6 +194,8 @@ build-deb: upgrade-hls
 	mkdir -p debian/etc/apache2/conf-enabled/;
 	mkdir -p debian/usr/share/bash-completion/completions/;
 	mkdir -p debian/usr/share/doc/2web/;
+	mkdir -p debian/usr/share/2web/web_help/;
+	mkdir -p debian/etc/2web/web_help/;
 	mkdir -p debian/etc/avahi/;
 	mkdir -p debian/etc/avahi/services/;
 	mkdir -p debian/etc/2web/portal/;
