@@ -85,10 +85,10 @@ sup{
 	*/
 }
 sup::before {
-	content: "(";
+	content: " ";
 }
 sup::after {
-	content: ")";
+	content: " ";
 }
 .simpleSup::before{
 	content: "" !important;
