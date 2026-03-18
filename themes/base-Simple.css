@@ -108,7 +108,9 @@ hr{
 /* fix the scrollbars */
 /* MOZILLA SCROLLBAR */
 html{
+	/*
 	scrollbar-color: var(--textColor) var(--glassBackground);
+	*/
 	scrollbar-width: auto;
 }
 /* WEBKIT SCROLLBAR*/
@@ -143,11 +145,11 @@ pre::-webkit-scrollbar-thumb{
 	border: 1px var(--textColor) solid;
 }
 html::-webkit-scrollbar{
-	width: 0.8rem;
+	width: 0.9rem;
 	background: var(--solidBackground);
 }
 html::-webkit-scrollbar-thumb{
-	width: 0.8rem;
+	width: 0.9rem;
 	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	border: 1px var(--textColor) solid;
