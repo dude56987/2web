@@ -2753,7 +2753,7 @@ if( ! function_exists("getDiskSize")){
 }
 #################################################################################
 if( ! function_exists("drawMoreSearchLinks")){
-	function drawMoreSearchLinks($searchQuery){
+	function drawMoreSearchLinks($searchQuery,$bigWidget=false){
 		#drawMoreSearchLinks($searchQuery)
 		#
 		# Draw the local and external search links in a widget
@@ -2763,9 +2763,14 @@ if( ! function_exists("drawMoreSearchLinks")){
 		# start drawing the html
 		echo "<div class='titleCard widget' id='externalLinks'>\n";
 		echo "	<h1>Local & External Links</h1>\n";
+		if($bigWidget){
+			echo "<div class='titleCard'>\n";
+			echo "<h3>Local Search Links</h3>\n";
+		}
 		echo "	<div class='listCard'>\n";
 		# load the local search links
 		$localSearchLinks=Array();
+
 		# use the hostname
 		$hostTitle=ucfirst(gethostname());
 		array_push($localSearchLinks, Array("/search.php?q=",$hostTitle." Search","🔍"));
@@ -2774,59 +2779,83 @@ if( ! function_exists("drawMoreSearchLinks")){
 		foreach($localSearchLinks as $linkData){
 			echo "		<a class='button' href='".$linkData[0].$searchQuery."'>".$linkData[2]." ".$linkData[1]."</a>\n";
 		}
+		if($bigWidget){
+			echo "</div>\n";
+			echo "</div>\n";
+		}
 		# load up the external search providers
 		$externalSearchLinks=Array();
 		# external search
 		# - brave with safesearch off and AI responses disabled
-		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=off&summary=0&q=","Brave","🔎"));
-		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=off&summary=1&q=","Brave AI Search","🔎🧠"));
-		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=on&summary=0&q=","Brave Safe Search","🔎🚸"));
-		array_push($externalSearchLinks, Array("https://search.brave.com/search?safesearch=on&summary=1&q=","Brave Safe AI Search","🔎🚸🧠"));
-		array_push($externalSearchLinks, Array("https://www.mojeek.com/search?q=","Mojeek","🔎"));
-		array_push($externalSearchLinks, Array("https://www.duckduckgo.com/?q=","DuckDuckGo","🔎"));
-		array_push($externalSearchLinks, Array("https://www.startpage.com/sp/search?q=","StartPage","🔎"));
+		$externalSearchLinks["search"]=Array();
+		array_push($externalSearchLinks["search"], Array("https://search.brave.com/search?safesearch=off&summary=0&q=","Brave","🔎"));
+		array_push($externalSearchLinks["search"], Array("https://search.brave.com/search?safesearch=off&summary=1&q=","Brave AI Search","🔎🧠"));
+		array_push($externalSearchLinks["search"], Array("https://search.brave.com/search?safesearch=on&summary=0&q=","Brave Safe Search","🔎🚸"));
+		array_push($externalSearchLinks["search"], Array("https://search.brave.com/search?safesearch=on&summary=1&q=","Brave Safe AI Search","🔎🚸🧠"));
+		array_push($externalSearchLinks["search"], Array("https://www.mojeek.com/search?q=","Mojeek","🔎"));
+		array_push($externalSearchLinks["search"], Array("https://www.duckduckgo.com/?q=","DuckDuckGo","🔎"));
+		array_push($externalSearchLinks["search"], Array("https://www.startpage.com/sp/search?q=","StartPage","🔎"));
 		# database search
-		array_push($externalSearchLinks, Array("https://en.wikipedia.org/w/?search=","Wikipedia","📚"));
-		array_push($externalSearchLinks, Array("https://www.britannica.com/search?query=","Britannica","📚"));
-		array_push($externalSearchLinks, Array("https://www.fandom.com/?s=","Fandom Wiki Search","📚"));
-		array_push($externalSearchLinks, Array("https://everything2.com/title/","Everything2 Search","📚"));
-		array_push($externalSearchLinks, Array("https://library.kiwix.org/?q=","ZIM file Search","📚"));
+		$externalSearchLinks["data"]=Array();
+		array_push($externalSearchLinks["data"], Array("https://en.wikipedia.org/w/?search=","Wikipedia","📚"));
+		array_push($externalSearchLinks["data"], Array("https://www.britannica.com/search?query=","Britannica","📚"));
+		array_push($externalSearchLinks["data"], Array("https://www.fandom.com/?s=","Fandom Wiki Search","📚"));
+		array_push($externalSearchLinks["data"], Array("https://everything2.com/title/","Everything2 Search","📚"));
+		array_push($externalSearchLinks["data"], Array("https://library.kiwix.org/?q=","ZIM file Search","📚"));
 		# video search
-		array_push($externalSearchLinks, Array("https://archive.org/details/movies?query=","Archive.org","🎞️"));
-		array_push($externalSearchLinks, Array("https://search.brave.com/videos?q=","Brave Video","🎞️"));
-		array_push($externalSearchLinks, Array("https://www.newgrounds.com/search/conduct/movies?terms=","Newgrounds","🎞️"));
-		array_push($externalSearchLinks, Array("https://piped.video/results?search_query=","Piped","🎞️"));
-		array_push($externalSearchLinks, Array("https://odysee.com/$/search?q=","Odysee","🎞️"));
-		array_push($externalSearchLinks, Array("https://rumble.com/search/video?q=","Rumble","🎞️"));
-		array_push($externalSearchLinks, Array("https://www.bitchute.com/search/?kind=video&query=","BitChute","🎞️"));
-		array_push($externalSearchLinks, Array("https://www.twitch.tv/search?term=","Twitch","🎞️"));
-		array_push($externalSearchLinks, Array("https://veoh.com/find/","VEOH","🎞️"));
-		array_push($externalSearchLinks, Array("https://www.youtube.com/results?search_query=","Youtube","🎞️"));
+		$externalSearchLinks["video"]=Array();
+		array_push($externalSearchLinks["video"], Array("https://archive.org/details/movies?query=","Archive.org","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://search.brave.com/videos?q=","Brave Video","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://www.newgrounds.com/search/conduct/movies?terms=","Newgrounds","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://piped.video/results?search_query=","Piped","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://odysee.com/$/search?q=","Odysee","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://rumble.com/search/video?q=","Rumble","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://www.bitchute.com/search/?kind=video&query=","BitChute","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://www.twitch.tv/search?term=","Twitch","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://veoh.com/find/","VEOH","🎞️"));
+		array_push($externalSearchLinks["video"], Array("https://www.youtube.com/results?search_query=","Youtube","🎞️"));
 		# media databases
-		array_push($externalSearchLinks, Array("https://www.imdb.com/find?q=","IMDB","🔎"));
-		array_push($externalSearchLinks, Array("https://thetvdb.com/search?query=","TheTVDB","🔎"));
-		array_push($externalSearchLinks, Array("https://www.themoviedb.org/search?query=","TMDB","🔎"));
+		$externalSearchLinks["mediaData"]=Array();
+		array_push($externalSearchLinks["mediaData"], Array("https://www.imdb.com/find?q=","IMDB","🔎"));
+		array_push($externalSearchLinks["mediaData"], Array("https://thetvdb.com/search?query=","TheTVDB","🔎"));
+		array_push($externalSearchLinks["mediaData"], Array("https://www.themoviedb.org/search?query=","TMDB","🔎"));
 		# maps
-		array_push($externalSearchLinks, Array("https://www.openstreetmap.org/search?query=","OpenStreetMap Search","🗺️"));
-		array_push($externalSearchLinks, Array("https://openweathermap.org/find?q=","OpenWeatherMap Search","🗺️"));
+		$externalSearchLinks["maps"]=Array();
+		array_push($externalSearchLinks["maps"], Array("https://www.openstreetmap.org/search?query=","OpenStreetMap Search","🗺️"));
+		array_push($externalSearchLinks["maps"], Array("https://openweathermap.org/find?q=","OpenWeatherMap Search","🗺️"));
 		# dictionaries
-		array_push($externalSearchLinks, Array("https://www.urbandictionary.com/define.php?term=","Urban Dictionary","📕"));
-		array_push($externalSearchLinks, Array("https://en.wiktionary.org/wiki/","Wiktionary","📕"));
-		array_push($externalSearchLinks, Array("https://www.merriam-webster.com/dictionary/","Merriam Webster Dictionary","📕"));
-		array_push($externalSearchLinks, Array("https://www.britannica.com/dictionary/","Britannica Dictionary","📕"));
-		array_push($externalSearchLinks, Array("https://www.dictionary.com/browse/","Random House Dictionary","📕"));
+		$externalSearchLinks["dictionary"]=Array();
+		array_push($externalSearchLinks["dictionary"], Array("https://www.urbandictionary.com/define.php?term=","Urban Dictionary","📕"));
+		array_push($externalSearchLinks["dictionary"], Array("https://en.wiktionary.org/wiki/","Wiktionary","📕"));
+		array_push($externalSearchLinks["dictionary"], Array("https://www.merriam-webster.com/dictionary/","Merriam Webster Dictionary","📕"));
+		array_push($externalSearchLinks["dictionary"], Array("https://www.britannica.com/dictionary/","Britannica Dictionary","📕"));
+		array_push($externalSearchLinks["dictionary"], Array("https://www.dictionary.com/browse/","Random House Dictionary","📕"));
 		# thesauri
-		array_push($externalSearchLinks, Array("https://www.merriam-webster.com/thesaurus/","Merriam Webster Thesaurus","📙"));
-		array_push($externalSearchLinks, Array("https://www.thesaurus.com/browse/","Random House Thesaurus","📙"));
+		$externalSearchLinks["thesaurus"]=Array();
+		array_push($externalSearchLinks["thesaurus"], Array("https://www.merriam-webster.com/thesaurus/","Merriam Webster Thesaurus","📙"));
+		array_push($externalSearchLinks["thesaurus"], Array("https://www.thesaurus.com/browse/","Random House Thesaurus","📙"));
 		# web tools
-		array_push($externalSearchLinks, Array("https://web.archive.org/web/","Wayback Machine","🛠️"));
-		array_push($externalSearchLinks, Array("https://downforeveryoneorjustme.com/","Down for everyone or just Me","🛠️"));
+		$externalSearchLinks["tools"]=Array();
+		array_push($externalSearchLinks["tools"], Array("https://web.archive.org/web/","Wayback Machine","🛠️"));
+		array_push($externalSearchLinks["tools"], Array("https://downforeveryoneorjustme.com/","Down for everyone or just Me","🛠️"));
 
-		# draw links for each of the search providers
-		foreach($externalSearchLinks as $linkData){
-			echo "		<a class='button' href='/exit.php?to=".rawurlencode($linkData[0].$searchQuery)."'>".$linkData[2]." ".$linkData[1]."</a>\n";
+		# loop though and draw links for each section
+		foreach(array_keys($externalSearchLinks) as $sectionTitle){
+			if($bigWidget){
+				echo "<div class='titleCard'>\n";
+				echo "	<h3>External ".ucwords($sectionTitle)." Links</h3>\n";
+				echo "	<div class='listCard'>\n";
+			}
+			# draw links for each of the search providers
+			foreach($externalSearchLinks[$sectionTitle] as $linkData){
+				echo "		<a class='button' href='/exit.php?to=".rawurlencode($linkData[0].$searchQuery)."'>".$linkData[2]." ".$linkData[1]."</a>\n";
+			}
+			if($bigWidget){
+				echo "	</div>\n";
+				echo "</div>\n";
+			}
+
 		}
-		echo "	</div>\n";
 		echo "</div>\n";
 	}
 }

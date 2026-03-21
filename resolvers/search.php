@@ -547,7 +547,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "<hr>";
 	clear();
 	#
-	drawMoreSearchLinks($searchQuery);
+	drawMoreSearchLinks($searchQuery,true);
 	echo "<hr>";
 	#loadSearchIndexResults($_GET["q"],"shows",9,"Episodes",40);
 	#loadSearchIndexResults($_GET["q"],"shows",8,"Shows",40);
