@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web confetti color effect
+# 2web redshift effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,30 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
-# include the base particle system
-include("/usr/share/2web/effects/particleBase.php");
 ?>
+<style>
+	.screenOverlay{
+		position: fixed;
+		top: 0px;
+		left: 0px;
+		width: 100dvw;
+		height: 100dvh;
+		opacity: 0.35;
+		background-color: red;
+		pointer-events: none;
+		z-index: 100;
+	}
+	img{
+		filter: grayscale(1);
+	}
+	html{
+		background-blend-mode: luminosity;
+	}
+</style>
 <script>
-var chosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾");
-var chosenColors=Array("red","green","yellow","blue");
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new fastFallingParticle(userChosenParticles=chosenParticles,userChosenColors=chosenColors,maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="fast");
-}
+// Use the screenOverlay object to create a redshift effect on the screen
+// - adjust the redshift effect based on the local system time
+// - move the opacity of the redshift overlay to 0 from 9 am to 6 pm
+// - slowly move redshift up to max of 0.35 from 6 pm to 9 am
+// - use a loop in javascript to update the screen opacity once every 120 seconds
 </script>

@@ -189,7 +189,7 @@ class fastFallingParticle{
 				}
 				// create a random particle
 				tempParticle.innerHTML=randomParticle(userChosenParticles);
-				// move the snow particle back above the top
+				// move the particle back above the top
 				tempParticle.style.top = (-1 * ( (Math.random() * 400) + 100 ) )+"px";
 				// give the particle a random location
 				tempParticle.style.left = ( Math.floor(Math.random() * window.innerWidth) );
@@ -198,6 +198,142 @@ class fastFallingParticle{
 		}, 33);
 	}
 }
+
+// start the particle constructors and classes
+class flyingParticle{
+	// a particle that flys across the screen from left to right or right to left
+	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false){
+		this.colorFlux=colorFlux;
+		this.spinSpeed=spinSpeed;
+		this.chosenParticles=userChosenParticles;
+		// randomize the left to right or right to left direction
+		if(1 == Math.floor(Math.random() * 2) ){
+			this.flyDirection="left";
+		}else{
+			this.flyDirection="right";
+		}
+		// set the particle size limits
+		this.maxSize=maxSize;
+		this.minSize=minSize;
+		// set the particle speed limits
+		this.maxSpeed=maxSpeed;
+		this.minSpeed=minSpeed;
+		// set the speed and size based on limits
+		this.speed=( Math.floor(Math.random() * this.maxSpeed) + this.minSpeed );
+		this.size=( Math.floor(Math.random() * this.maxSize) + this.minSize );
+		// create the HTML element for the particle
+		this.particleDiv = document.createElement("div");
+		this.particleDiv.id="particle_"+globalParticleCount;
+		this.globalID=this.particleDiv.id;
+		// randomize the spin direction
+		if(1 == Math.floor(Math.random() * 2) ){
+			this.particleDiv.className="particle_spin_left_"+this.spinSpeed;
+		}else{
+			this.particleDiv.className="particle_spin_right_"+this.spinSpeed;
+		}
+		// create a random particle
+		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
+		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
+		if(this.colorFlux){
+			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+		}
+		// set the position
+		if(this.flyDirection=="left"){
+			this.particleDiv.style.left = (Math.floor(window.innerWidth * Math.random()))+"px";
+			if(flipParticle == true){
+				this.particleDiv.style.scale="-1 1";
+			}else{
+				this.particleDiv.style.scale="1 1";
+			}
+		}else{
+			this.particleDiv.style.left = (Math.floor(Math.random() * window.innerWidth))+"px";
+			if(flipParticle == true){
+				this.particleDiv.style.scale="1 1";
+			}else{
+				this.particleDiv.style.scale="-1 1";
+			}
+		}
+		//
+		this.particleDiv.style.color=self.randomSimpleColor(userChosenColors);
+		this.particleDiv.style.width=this.size+"rem";
+		this.particleDiv.style.height=this.size+"rem";
+		this.particleDiv.style.fontSize=this.size+"rem";
+		this.particleDiv.style.lineHeight=this.size+"rem";
+		this.particleDiv.style.textAlign="center";
+		//this.particleDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
+		//this.particleDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
+		this.particleDiv.style.position="fixed";
+		// randomize the starting position
+		this.particleDiv.style.top = ( Math.floor(Math.random() * window.innerHeight));
+		// add the particle to the document
+		document.body.appendChild(this.particleDiv);
+		// increment the particle number
+		globalParticleCount+=1;
+		setInterval( () => {
+			// get the particle based on the global id
+			var tempParticle=document.getElementById(this.globalID);
+			// set the recuring loop to move the particle
+			if(this.flyDirection=="left"){
+				//console.log("Moving particle LEFT");
+				tempParticle.style.left = (parseInt(tempParticle.style.left) - (this.speed)) + "px";
+			}else{
+				//console.log("Moving particle RIGHT");
+				tempParticle.style.left = (parseInt(tempParticle.style.left) + (this.speed)) + "px";
+			}
+			if ( (parseInt(tempParticle.style.left) > (window.innerWidth + 100)) || (parseInt(tempParticle.style.left) < -100 ) ){
+				// randomize the size of the particle to create distance
+				this.speed=( Math.floor(Math.random() * this.maxSpeed ) + this.minSpeed );
+				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
+				tempParticle.style.color=randomSimpleColor(userChosenColors);
+				tempParticle.style.width=this.size+"rem";
+				tempParticle.style.zIndex="-1";
+				//
+				tempParticle.style.height=this.size+"rem";
+				tempParticle.style.lineHeight=this.size+"rem";
+				// randomize the left to right or right to left direction
+				if(1 == Math.floor(Math.random() * 2) ){
+					this.flyDirection="left";
+				}else{
+					this.flyDirection="right";
+				}
+				if(this.colorFlux){
+					tempParticle.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+				}
+				// randomize the spin direction
+				if(1 == Math.floor(Math.random() * 2) ){
+					tempParticle.className="particle_spin_left_"+this.spinSpeed;
+				}else{
+					tempParticle.className="particle_spin_right_"+this.spinSpeed;
+				}
+				// set a random starting position
+				tempParticle.style.top = ( Math.floor(Math.random() * window.innerHeight));
+				// create a random particle
+				tempParticle.innerHTML=randomParticle(userChosenParticles);
+				// give the particle a random offscreen location based on its movement direction
+				if(this.flyDirection=="left"){
+					//console.log("flyDirection set to LEFT");
+					tempParticle.style.left = ( Math.floor( Math.random() * 100) + window.innerWidth + 100 );
+					if(flipParticle == true){
+						this.particleDiv.style.scale="-1 1";
+					}else{
+						this.particleDiv.style.scale="1 1";
+					}
+				}else{
+					//console.log("flyDirection set to RIGHT");
+					tempParticle.style.left = ( -1 * ( Math.floor( Math.random() * 100) + 100 ) );
+					if(flipParticle == true){
+						this.particleDiv.style.scale="1 1";
+					}else{
+						this.particleDiv.style.scale="-1 1";
+					}
+				}
+			}
+		// 30 fps (Movie Framerate) is 33ms delay
+		}, 33);
+	}
+}
+
 // create the default amount of particles
 //for(var index=0;index<Math.floor(window.innerWidth/12);index++){
 	//new fastFallingParticle(userChosenParticles=Array("⚽","⚾","🥎","🏀","🏐","🏈","🏉"),userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=6,minSize=1,spinSpeed="slow");

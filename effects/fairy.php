@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web confetti color effect
+# 2web bees effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,8 @@
 include("/usr/share/2web/effects/particleBase.php");
 ?>
 <script>
-var chosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾");
-var chosenColors=Array("red","green","yellow","blue");
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new fastFallingParticle(userChosenParticles=chosenParticles,userChosenColors=chosenColors,maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="fast");
+// create the snowball particles
+for(var index=0;index<Math.floor(window.innerWidth/64);index++){
+	new flyingParticle(userChosenParticles=Array("🧚","🧚‍♂️","🧚‍♀️"),userChosenColors=Array("white"),maxSpeed=7,minSpeed=4,maxSize=6,minSize=1,spinSpeed="none",false,true);
 }
 </script>

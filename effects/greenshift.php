@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web confetti color effect
+# 2web redshift effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
-# include the base particle system
-include("/usr/share/2web/effects/particleBase.php");
 ?>
-<script>
-var chosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾");
-var chosenColors=Array("red","green","yellow","blue");
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new fastFallingParticle(userChosenParticles=chosenParticles,userChosenColors=chosenColors,maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="fast");
-}
-</script>
+<style>
+	.screenOverlay{
+		position: fixed;
+		top: 0px;
+		left: 0px;
+		width: 100dvw;
+		height: 100dvh;
+		opacity: 0.35;
+		background-color: green;
+		pointer-events: none;
+		z-index: 100;
+	}
+	img{
+		filter: grayscale(1);
+	}
+	html{
+		background-blend-mode: luminosity;
+	}
+</style>
