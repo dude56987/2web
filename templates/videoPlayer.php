@@ -79,8 +79,8 @@ function cachedMimeType($videoLink,$cacheLocation="RESOLVER-CACHE"){
 	# get the sum
 	$sum = createSum($videoLink);
 	#
-	$maxSleep=10;
-	$sleepCounter=20;
+	$maxSleep=2;
+	$sleepCounter=0;
 	# wait for either the bump or the file to be downloaded and redirect
 	while(true){
 		if(file_exists("$webDirectory/$cacheLocation/$sum/verified.cfg")){
@@ -96,10 +96,8 @@ function cachedMimeType($videoLink,$cacheLocation="RESOLVER-CACHE"){
 		}else if( file_exists("$webDirectory/$cacheLocation/$sum/video.m3u") and file_exists("$webDirectory/RESOLVER-CACHE/$sum/video-stream0.ts") ){
 			return ("application/mpegurl");
 		}
-		$maxSleep+=1;
-		if ($maxSleep > $sleepCounter){
-			$sleepCounter+=1;
-		}else{
+		$sleepCounter+=1;
+		if ($sleepCounter > $maxSleep ){
 			# if no media can be resolved return loading as the metadata type
 			return ("loading");
 		}
@@ -259,7 +257,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 <script>
 document.body.addEventListener('keydown', function(event){
 	// only allow hotkeys if the video player has focus
-	if(document.getElementById("video") == document.activeElement){
+	//if(document.getElementById("video") == document.activeElement){
 		// check for key controls on the video player
 		const key = event.key;
 		switch (key){
@@ -297,7 +295,7 @@ document.body.addEventListener('keydown', function(event){
 			notify("Seek --");
 			break;
 		}
-	}
+	//}
 });
 </script>
 <?PHP
@@ -1069,7 +1067,7 @@ document.body.addEventListener('keydown', function(event){
 	echo "</div>\n";
 	$downloadLinkText="";
 	# if the direct link is not a http external link add a direct download button for downloading from this server
-	if ( in_array(substr($tempVideoLink,-4),Array(".mp4",".mkv",".mp3",".mov",".avi")) ){
+	if ( in_array(substr($tempVideoLink,-4),Array(".mp4",".mkv",".mp3",".mov",".avi")) or in_array(substr($tempVideoLink,-3),Array(".ts")) ){
 		# look if the downloadable file is available
 		if (is_readable("/var/cache/2web/web".$tempVideoLink)){
 			# get the downloadable file size
@@ -1316,10 +1314,6 @@ clear();
 loadSearchIndexResults($titleData,"shows",9,"Episodes");
 loadSearchIndexResults($titleData,"shows",8,"Shows");
 loadSearchIndexResults($titleData,"movies");
-#loadSearchIndexResults($titleData,"comics");
-#loadSearchIndexResults($titleData,"music");
-#loadSearchIndexResults($titleData,"portal");
-#loadSearchIndexResults($titleData,"repos");
 #
 drawMoreSearchLinks($titleData);
 ?>
