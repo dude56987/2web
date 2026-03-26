@@ -1,6 +1,6 @@
 <!--
 ########################################################################
-# 2web bookshelf concept help
+# 2web home page help
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 ########################################################################
 -->
 <div class='titleCard linkInfo'>
-	<h2>The Bookshelf</h2>
+	<h2>The Home Page</h2>
 	<p>
 		If you go to the homepage
 		<a class='smallButton' href='/'>Go Home</a>

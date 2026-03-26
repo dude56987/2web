@@ -103,9 +103,19 @@ $helpSum=md5(join(";",$helpFiles));
 #
 # sort the help files by path name
 sort($helpFiles);
+$tempHelpData=Array();
+foreach($helpFiles as $helpFile){
+	if(stripos($helpFile,".php") !== false){
+		$tempHelpData=array_merge($tempHelpData,Array($helpFile));
+	}
+}
+# replace the list with the cleaned list
+$helpFiles=$tempHelpData;
+#
 $helpData="";
 $helpIndex="";
 $complexIndex=Array();
+$lastGroupName="";
 # build the help file index at the top of the page
 foreach($helpFiles as $helpFile){
 	$tempHelpGroupName=basename(dirname($helpFile));
@@ -116,7 +126,6 @@ foreach($helpFiles as $helpFile){
 		$tempHelpGroupName=ucwords($tempHelpGroupName);
 		$tempHelpGroupName=ltrim($tempHelpGroupName,"0123456789");
 		$tempHelpGroupName=trim($tempHelpGroupName);
-		$tempHelpGroupName=$tempHelpGroupName." - ";
 	}
 	# get the permissions name
 	$tempHelpIndexEntry=str_replace(".php","",$helpFile);
@@ -124,7 +133,7 @@ foreach($helpFiles as $helpFile){
 	$tempHelpIndexName=str_replace("_"," ",$tempHelpIndexName);
 	$tempHelpIndexName=ucwords($tempHelpIndexName);
 	$tempHelpIndexName=ltrim($tempHelpIndexName,"0123456789");
-	$tempHelpIndexName=ltrim($tempHelpIndexName);
+	$tempHelpIndexName=trim($tempHelpIndexName);
 	# if permissions are set with a comma
 	if(stripos($tempHelpIndexName,",") !== false){
 		# split the data into an array
@@ -135,21 +144,53 @@ foreach($helpFiles as $helpFile){
 		$tempHelpPermissions=$splitHelpData[1];
 		# check for permissions
 		if(requireGroup("$tempHelpPermissions",false)){
+			if($lastGroupName !== $tempHelpGroupName){
+				$helpIndex.="<h3>$tempHelpGroupName</h3>";
+				$lastGroupName = $tempHelpGroupName;
+			}
+			$tempHelpGroupName=$tempHelpGroupName." - ";
+			#
+			$imagePath=str_replace(".php",".cfg",$helpFile);
 			# read the help file path and use the base name as the index name
-			$helpIndex.="<li><a href='#$tempHelpGroupName$tempHelpIndexName'>$tempHelpGroupName$tempHelpIndexName</a></li>";
+			#$helpIndex.="<div class='listCard'>";
+			$helpIndex.="<a class='indexSeries' href='#$tempHelpGroupName$tempHelpIndexName'>";
+			if(is_readable($imagePath)){
+				$helpIndex.="<h2 class='MoreEpisodesLinkIcon'>".trim(file_get_contents($imagePath))."</h2>";
+			}
+			$helpIndex.="$tempHelpIndexName";
+			$helpIndex.="</a>";
+			#$helpIndex.="</div>";
 		}
 	}else{
 		# no permissions
+		#
+		# check if a group banner should be made
+		if($lastGroupName !== $tempHelpGroupName){
+			$helpIndex.="<h3>$tempHelpGroupName</h3>";
+			$lastGroupName = $tempHelpGroupName;
+		}
+		# check the image path for a image
+		$imagePath=str_replace(".php",".cfg",$helpFile);
+		#
+		$tempHelpGroupName=$tempHelpGroupName." - ";
 		# read the help file path and use the base name as the index name
-		$helpIndex.="<li><a href='#$tempHelpGroupName$tempHelpIndexName'>$tempHelpGroupName$tempHelpIndexName</a></li>";
+		#$helpIndex.="<div class='listCard'>";
+		$helpIndex.="<a class='indexSeries' href='#$tempHelpGroupName$tempHelpIndexName'>";
+		if(is_readable($imagePath)){
+			$helpIndex.="<h2 class='MoreEpisodesLinkIcon'>".trim(file_get_contents($imagePath))."</h2>";
+		}
+		$helpIndex.="$tempHelpIndexName";
+		$helpIndex.="</a>";
+
+		#$helpIndex.="</div>";
 	}
 }
 echo "<div class='titleCard'>\n";
 echo "	<h1>Help Index</h1>\n";
-echo "	<ul>\n";
+#echo "	<ul>\n";
 # draw the index before the data
 echo $helpIndex;
-echo "	</ul>\n";
+#echo "	</ul>\n";
 echo "</div>\n";
 # read each help file
 foreach($helpFiles as $helpFile){
@@ -161,8 +202,8 @@ foreach($helpFiles as $helpFile){
 		$tempHelpGroupName=ucwords($tempHelpGroupName);
 		$tempHelpGroupName=ltrim($tempHelpGroupName,"0123456789");
 		$tempHelpGroupName=trim($tempHelpGroupName);
-		$tempHelpGroupName=$tempHelpGroupName." - ";
 	}
+	$tempHelpGroupName=$tempHelpGroupName." - ";
 	$tempHelpIndexEntry=str_replace(".php","",$helpFile);
 	$tempHelpIndexName=basename($tempHelpIndexEntry);
 	$tempHelpIndexName=str_replace("_"," ",$tempHelpIndexName);
