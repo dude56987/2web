@@ -132,6 +132,19 @@ if (requireGroup("admin",false)){
 		echo "</div>\n";
 	}
 }
+# draw the most recent episodes
+# - get the latest season episodes
+# - list them in reverse order
+$newestEpisodes=array_reverse(file($newestSeason."/season.index"));
+echo "<div class='titleCard'>";
+echo "	<h2>New Episodes</h2>";
+echo "	<div class='listCard'>";
+foreach($newestEpisodes as $episodeFile){
+	echo file_get_contents(trim($episodeFile));
+}
+echo "	</div>";
+echo "</div>";
+# draw the search links
 drawMoreSearchLinks($showTitle);
 ?>
 <hr>
