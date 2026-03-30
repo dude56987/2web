@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web paint effect
+# 2web mushroom effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,10 @@
 ########################################################################
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
-#tempFlake.style.transform = "blur("+Math.floor(Math.random * 99)+"px);";
 ?>
 <script>
 // create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/6);index++){
-	//var paintColors=Array("red","orange","yellow","green","blue","indigo","violet");
-	new fastFallingParticle(userChosenParticles=Array("🌢"),userChosenColors=Array("blue","red","green","yellow"),maxSpeed=20,minSpeed=15,maxSize=3,minSize=1,spinSpeed="none");
+for(var index=0;index<Math.floor(window.innerWidth/12);index++){
+	new fastFallingParticle(userChosenParticles=Array("🍄","🍄‍🟫"),userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=5,minSize=2,spinSpeed="slow");
 }
 </script>

@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web paint effect
+# 2web dodgeball effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,17 @@
 ########################################################################
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
-#tempFlake.style.transform = "blur("+Math.floor(Math.random * 99)+"px);";
 ?>
 <script>
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/6);index++){
-	//var paintColors=Array("red","orange","yellow","green","blue","indigo","violet");
-	new fastFallingParticle(userChosenParticles=Array("🌢"),userChosenColors=Array("blue","red","green","yellow"),maxSpeed=20,minSpeed=15,maxSize=3,minSize=1,spinSpeed="none");
+// setup the particles, duplicates increase the probablity of particle being used
+var particleValues = Array("🚌","🚐","🚗","🚙","🛻","🚚","🚛","🏎️","🏍️","🚲");
+// create vehicles with color randomized
+for(var index=0;index<Math.floor(window.innerHeight/32);index++){
+	new flyingParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=19,minSpeed=14,maxSize=5,minSize=1,spinSpeed="none",true);
+}
+// draw some vehicles without color variation
+var particleValues = Array("🚑","🚒","🚓","🚕","🚜","🛺");
+for(var index=0;index<Math.floor(window.innerHeight/128);index++){
+	new flyingParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=19,minSpeed=14,maxSize=5,minSize=1,spinSpeed="none",false);
 }
 </script>

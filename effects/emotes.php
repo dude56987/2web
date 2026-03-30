@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web mail effect
+# 2web emotes effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,11 @@
 include("/usr/share/2web/effects/particleBase.php");
 ?>
 <script>
-var userChosenParticles=Array("🎷","🪗","🎸","🎺","🎻","🪕","🥁","🪘","🪇","🪈","🎹");
+
+var userChosenParticles=Array("😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","🫠","😉","😊","😇","🥰","😍","🤩","😘","😗","☺️","😚","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🫣","🤫","🤔","🫡","🤐","🤨","😐","😑","😶","🫥","😏","😒","🙄","😬","🤥","🫨","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","🫤","😟","🙁","☹️","😮","😯","😲","😳","🥺","🥹","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖");
+
 // create the default amount of particles
 for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new fastFallingParticle(userChosenParticles,userChosenColors=Array("white"),maxSpeed=5,minSpeed=2,maxSize=3,minSize=1,spinSpeed="slow");
+	new fastFallingParticle(userChosenParticles,userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=6,minSize=1,spinSpeed="slow");
 }
 </script>

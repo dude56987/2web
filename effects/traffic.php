@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web paint effect
+# 2web rain effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,8 +22,7 @@ include("/usr/share/2web/effects/particleBase.php");
 ?>
 <script>
 // create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/6);index++){
-	//var paintColors=Array("red","orange","yellow","green","blue","indigo","violet");
-	new fastFallingParticle(userChosenParticles=Array("🌢"),userChosenColors=Array("blue","red","green","yellow"),maxSpeed=20,minSpeed=15,maxSize=3,minSize=1,spinSpeed="none");
+for(var index=0;index<Math.floor(window.innerWidth/18);index++){
+	new fastFallingParticle(userChosenParticles=Array("🚍","🚔","🚖","🚘"),userChosenColors=Array("blue"),maxSpeed=20,minSpeed=15,maxSize=7,minSize=3,spinSpeed="none");
 }
 </script>

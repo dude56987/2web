@@ -34,6 +34,52 @@
 			rotate: 360deg;
 		}
 	}
+	@keyframes particle_sway_left{
+		0% {
+			rotate: 0deg;
+			transform: translateX(0rem);
+		}
+		50% {
+			rotate: -2deg;
+			transform: translateX(-9rem);
+		}
+		100% {
+			rotate: 0deg;
+			transform: translateX(0rem);
+		}
+	}
+	@keyframes particle_sway_right{
+		0% {
+			rotate: 0deg;
+			transform: translateX(0rem);
+		}
+		50% {
+			rotate: 2deg;
+			transform: translateX(9rem);
+		}
+		100% {
+			rotate: 0deg;
+			transform: translateX(0rem);
+		}
+	}
+	.particle_spin_right_sway{
+			animation-name: particle_sway_right;
+			animation-duration: 15s;
+			animation-fill-mode: forwards;
+			animation-iteration-count: infinite;
+			animation-timing-function: ease-in-out;
+			user-select: none;
+			font-family: font2webGlyph;
+	}
+	.particle_spin_left_sway{
+		animation-name: particle_sway_left;
+		animation-duration: 15s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: ease-in-out;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
 	.particle_spin_right_fast{
 		animation-name: particle_spin_right;
 		animation-duration: 2s;
@@ -119,7 +165,90 @@ function randomParticle(particles=Array("▰","🞧","🞮","🞴","🞺","🞸"
 	var pickedParticle=Math.floor(Math.random() * particles.length);
 	return particles[pickedParticle];
 }
+////////////////////////////////////////////////////////////////////////////////
 // start the particle constructors and classes
+////////////////////////////////////////////////////////////////////////////////
+class floatingParticle{
+	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="fast",colorFlux=false){
+		this.colorFlux=colorFlux;
+		this.spinSpeed=spinSpeed;
+		this.chosenParticles=userChosenParticles;
+		this.maxSize=maxSize;
+		this.minSize=minSize;
+		this.maxSpeed=maxSpeed;
+		this.minSpeed=minSpeed;
+		this.speed=( Math.floor(Math.random() * this.maxSpeed) + this.minSpeed );
+		this.size=( Math.floor(Math.random() * this.maxSize) + this.minSize );
+		this.particleDiv = document.createElement("div");
+		this.particleDiv.id="particle_"+globalParticleCount;
+		this.globalID=this.particleDiv.id;
+		// randomize the spin direction
+		if(1 == Math.floor(Math.random() * 2) ){
+			this.particleDiv.className="particle_spin_left_"+this.spinSpeed;
+		}else{
+			this.particleDiv.className="particle_spin_right_"+this.spinSpeed;
+		}
+		// create a random particle
+		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
+		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
+		if(this.colorFlux){
+			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+		}
+		this.particleDiv.style.color=self.randomSimpleColor(userChosenColors);
+		this.particleDiv.style.width=this.size+"rem";
+		this.particleDiv.style.height=this.size+"rem";
+		//this.particleDiv.style.transform="rotate(0deg)";
+		this.particleDiv.style.fontSize=this.size+"rem";
+		this.particleDiv.style.lineHeight=this.size+"rem";
+		this.particleDiv.style.textAlign="center";
+		//this.particleDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
+		//this.particleDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
+		this.particleDiv.style.position="fixed";
+		this.particleDiv.style.top = ( ( (Math.random() * window.innerHeight) + 100 + ( Math.random() * 100 ) ) )+"px";
+		this.particleDiv.style.left = ( Math.floor(Math.random() * window.innerWidth));
+		// add the particle to the document
+		document.body.appendChild(this.particleDiv);
+		// increment the particle number
+		globalParticleCount+=1;
+		setInterval( () => {
+			//
+			var tempParticle=document.getElementById(this.globalID);
+			// set the recuring loop to move the particle
+			tempParticle.style.top = (parseInt(tempParticle.style.top) - (this.speed)) + "px";
+			if ( (parseInt(tempParticle.style.top) < (-100)) ){
+				// randomize the size of the particle to create distance
+				this.speed=( Math.floor(Math.random() * this.maxSpeed ) + this.minSpeed );
+				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
+				tempParticle.style.color=randomSimpleColor(userChosenColors);
+				tempParticle.style.width=this.size+"rem";
+				tempParticle.style.zIndex="-1";
+				//tempParticle.style.zIndex=((-(this.maxSize-this.size))-1);
+				if(this.colorFlux){
+					tempParticle.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+				}
+				tempParticle.style.height=this.size+"rem";
+				tempParticle.style.lineHeight=this.size+"rem";
+				// randomize the spin direction
+				if(1 == Math.floor(Math.random() * 2) ){
+					tempParticle.className="particle_spin_left_"+this.spinSpeed;
+				}else{
+					tempParticle.className="particle_spin_right_"+this.spinSpeed;
+				}
+				// create a random particle
+				tempParticle.innerHTML=randomParticle(userChosenParticles);
+				// move the particle back below the bottom
+				tempParticle.style.top = ( ( ( window.innerHeight) + 100 + (Math.random() * 100) ) )+"px";
+				// give the particle a random location
+				tempParticle.style.left = ( Math.floor(Math.random() * window.innerWidth) );
+			}
+		// 30 fps (Movie Framerate) is 33ms delay
+		}, 33);
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+// Falling Particle
+////////////////////////////////////////////////////////////////////////////////
 class fastFallingParticle{
 	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="fast",colorFlux=false){
 		this.colorFlux=colorFlux;

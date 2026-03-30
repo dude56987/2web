@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web paint effect
+# 2web bubbles effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,14 @@
 ########################################################################
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
-#tempFlake.style.transform = "blur("+Math.floor(Math.random * 99)+"px);";
 ?>
 <script>
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/6);index++){
-	//var paintColors=Array("red","orange","yellow","green","blue","indigo","violet");
-	new fastFallingParticle(userChosenParticles=Array("🌢"),userChosenColors=Array("blue","red","green","yellow"),maxSpeed=20,minSpeed=15,maxSize=3,minSize=1,spinSpeed="none");
+// Bubbles layer 1
+for(var index=0;index<Math.floor(window.innerHeight/16);index++){
+	new floatingParticle(userChosenParticles=Array("🫧"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=1,maxSize=2,minSize=1,spinSpeed="slow",true);
+}
+// Bubbles layer 2
+for(var index=0;index<Math.floor(window.innerHeight/32);index++){
+	new floatingParticle(userChosenParticles=Array("🫧"),userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=5,minSize=1,spinSpeed="slow",true);
 }
 </script>
