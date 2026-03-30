@@ -36,7 +36,7 @@ function getQualityConfig($webDirectory){
 		debug("Loading the cacheQuality.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheQualityConfig = file_get_contents("/etc/2web/cache/cacheQuality.cfg");
+		$cacheQualityConfig = trim(file_get_contents("/etc/2web/cache/cacheQuality.cfg"));
 		return $cacheQualityConfig;
 	}else{
 		debug("No cacheQuality.cfg file could be found...");
@@ -49,7 +49,7 @@ function getCacheMode($webDirectory){
 		debug("Loading the cacheMode.cfg file...");
 		# load the cache quality config
 		# - this will be passed as a quality option to youtube-dl
-		$cacheModeConfig= file_get_contents("/etc/2web/cache/cacheMode.cfg");
+		$cacheModeConfig= trim(file_get_contents("/etc/2web/cache/cacheMode.cfg"));
 		return $cacheModeConfig;
 	}else{
 		debug("No cacheMode.cfg file could be found...");
@@ -62,7 +62,7 @@ function getUpgradeQualityConfig($webDirectory){
 		debug("Loading the cacheUpgradeQuality.cfg file...");
 		# load the cache upgrade quality config
 		# - this will be passed as a upgrade quality option to youtube-dl
-		$cacheUpgradeQualityConfig = file_get_contents("/etc/2web/cache/cacheUpgradeQuality.cfg");
+		$cacheUpgradeQualityConfig = trim(file_get_contents("/etc/2web/cache/cacheUpgradeQuality.cfg"));
 		return $cacheUpgradeQualityConfig;
 	}else{
 		debug("No cacheUpgradeQuality.cfg file could be found...");
@@ -200,21 +200,26 @@ function cacheUrl($sum,$videoLink){
 		$dlCommand .= "ffmpeg -i '$webDirectory/RESOLVER-CACHE/$sum/video.m3u' -f mp4 '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part'";
 		$dlCommand .= " && mv -v '$webDirectory/RESOLVER-CACHE/$sum/video.mp4.part' '$webDirectory/RESOLVER-CACHE/$sum/video.mp4';";
 	}
-	# use the correct format for the quality value chosen
-	if (($quality == "best") or ($quality == "worst")){
-		if ($quality == "worst"){
-			$quality = " -f '".$quality."'";
-		}else{
-			# no quality should be given for the best quality
-			$quality = "";
-		}
-	}else{
-		$quality = " -S '".$quality."'";
-	}
 	# create the stream command that will be ran to get the chosen quality and convert it into a hls stream
 	# force the most compatible version of the stream codecs
-	$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts -c:v libx264 -c:a aac -crf 0 - | ffmpeg -i - -c:v copy -c:a copy -crf 0 -hls_playlist_type event -hls_segment_type mpegts -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 30 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
-
+	if ($quality == "disabled"){
+		# disable the stream command
+		$command = "";
+	}else{
+		# use the correct format for the quality value chosen
+		if (($quality == "best") or ($quality == "worst")){
+			if ($quality == "worst"){
+				$quality = " -f '".$quality."'";
+			}else{
+				# no quality should be given for the best quality
+				$quality = "";
+			}
+		}else{
+			$quality = " -S '".$quality."'";
+		}
+		# write out the stream command with the quality
+		$command .= $quality." -o - -c '".$videoLink."' | ffmpeg -i - -f mpegts -c:v libx264 -c:a aac -crf 0 - | ffmpeg -i - -c:v copy -c:a copy -crf 0 -hls_playlist_type event -hls_segment_type mpegts -hls_list_size 0 -start_number 0 -master_pl_name video.m3u -g 30 -hls_time 16 -f hls '$webDirectory/RESOLVER-CACHE/".$sum."/video-stream.m3u'";
+	}
 	# write to the log the download start time
 	$logFile=fopen("$webDirectory/RESOLVER-CACHE/$sum/data.log", "w");
 	$tempTime = strtotime('now');
@@ -229,11 +234,19 @@ function cacheUrl($sum,$videoLink){
 	fclose($logFile);
 
 	# add the upgrade command after writing the commands to the log
-	$command .= ";".$dlCommand;
+	if ($quality == "disabled"){
+		$command .= $dlCommand;
+	}else{
+		$command .= ";".$dlCommand;
+	}
 	# run curl after download to access the video link and activate the verification process
 	#$command .= ";sleep 95;curl \"https://localhost/ytdl-resolver.php?url=$videoLink\" > /dev/null";
 	# Add the command to the processing queue
-	addToQueue("multi",$command);
+	if (yesNoCfgCheck("/etc/2web/cache/useMultiQueue.cfg","no")){
+		addToQueue("multi",$command);
+	}else{
+		addToQueue("single",$command);
+	}
 }
 ################################################################################
 function cacheResolve($sum,$webDirectory){
@@ -505,6 +518,13 @@ if (array_key_exists("url",$_GET)){
 		debug("Checking path ".$url."<br>");
 		################################################################################
 		if (file_exists("$webDirectory$url")){
+			# ignore user abort of connection
+			ignore_user_abort(true);
+			# allow parallel loading of pages for user
+			session_write_close();
+			# set execution time limit to 15 minutes
+			set_time_limit(900);
+
 			# if the json data has not yet been verified to have downloaded the entire file
 			$isVerified=verifyCacheFile($storagePath,$videoLink);
 			if($isVerified == false){

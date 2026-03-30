@@ -88,6 +88,12 @@ include("settingsHeader.php");
 			<li>
 				'best' means the highest quality available for that video. This may not be the quality expected. ('4k' or 'best' may download '720p' if that is the highest quality available)
 			</li>
+			<li>
+				When set to 'disabled' no playback will be available until the video is completely cached.
+			</li>
+			<li>
+				You must set the cache upgrade quality if you set this to 'disabled'.
+			</li>
 		</ul>
 		<select name='cacheQuality'>
 			<?php
@@ -106,6 +112,7 @@ include("settingsHeader.php");
 			<option value='res:360' >360p</option>
 			<option value='res:240' >240p</option>
 			<option value='worst'>worst</option>
+			<option value='disabled'>disabled</option>
 		</select>
 		<hr>
 		<button class='button' type='submit'>🔢 Change Quality</button>
