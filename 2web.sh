@@ -597,6 +597,7 @@ function update2web(){
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$kodiDirectory/indexHeader.html"
 	linkFile "/usr/share/2web/templates/indexHeader.html" "$webDirectory/indexHeader.html"
 	# settings interface files
+	linkFile "/usr/share/2web/settings/queue.php" "$webDirectory/settings/queue.php"
 	linkFile "/usr/share/2web/settings/selectPath.php" "$webDirectory/settings/selectPath.php"
 	linkFile "/usr/share/2web/settings/search.php" "$webDirectory/settings/index.php"
 	linkFile "/usr/share/2web/settings/modules.php" "$webDirectory/settings/modules.php"
