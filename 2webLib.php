@@ -129,17 +129,17 @@ if( ! function_exists("drawPosterWidget")){
 							if (strpos($sourceFile,".index")){
 								$counter += 1;
 								if ($counter == 1){
-									fwrite($fileObj,"<div class='titleCard widget'>");
+									fwrite($fileObj,"<div class='titleCard widget'>\n");
 									if ($random){
-										fwrite($fileObj,"<h1>Random ".ucfirst($filterType)."</h1>");
+										fwrite($fileObj,"	<h1>Random ".ucfirst($filterType)."</h1>\n");
 									}else{
-										fwrite($fileObj,"<h1>Updated ".ucfirst($filterType)."</h1>");
+										fwrite($fileObj,"	<h1>Updated ".ucfirst($filterType)."</h1>\n");
 									}
-									fwrite($fileObj,"<div class='listCard'>");
+									fwrite($fileObj,"	<div class='listCard'>\n");
 									$drawBottom = 1;
 								}
 								// read the index entry
-								$data=file_get_contents($sourceFile);
+								$data=file_get_contents_tabbed($sourceFile,2);
 								// write the index entry
 								fwrite($fileObj,"$data");
 							}
