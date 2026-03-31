@@ -220,6 +220,8 @@ build-deb: upgrade-hls
 	cp -rv config_default/. debian/etc/2web/config_default/
 	# add icon
 	cp -rv 2web_icon.png debian/usr/share/2web/favicon_default.png
+	# copy the default logo
+	cp -rv 2web_logo.png debian/usr/share/2web/logo.png
 	# make placeholder
 	#touch debian/etc/2web/search/sources.d/.placeholder
 	touch debian/etc/2web/cache/.placeholder

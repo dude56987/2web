@@ -711,6 +711,8 @@ function update2web(){
 	################################################################################
 	# link lists these can be built and rebuilt during libary update
 	################################################################################
+	# copy the logo image
+	linkFile "/usr/share/2web/logo.png" "$webDirectory/logo.png"
 	# copy over the favicon
 	linkFile "/usr/share/2web/favicon_default.png" "$webDirectory/favicon.png"
 	# only build a new .ico file if the source favicon.png has changed in contents
