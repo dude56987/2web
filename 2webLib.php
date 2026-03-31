@@ -2860,4 +2860,18 @@ if( ! function_exists("drawMoreSearchLinks")){
 	}
 }
 ################################################################################
+if( ! function_exists("file_get_contents_tabbed")){
+	function file_get_contents_tabbed($filePath,$tabs=0){
+		$outputData="";
+		$tempFileData=file($filePath,FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		foreach($tempFileData as $tempFileLine){
+			foreach(range(0,$tabs) as $tabCount){
+				$outputData.="\t";
+			}
+			$outputData.=$tempFileLine."\n";
+		}
+		return $outputData;
+	}
+}
+################################################################################
 ?>
