@@ -69,7 +69,7 @@ if ($_SESSION["effectEnabled"]){
 	}
 }
 # if file is older than 2 hours
-if (file_exists($cacheFile)){
+if (is_readable($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
 		// update the cached file
 		$writeFile=true;
@@ -176,8 +176,9 @@ if ($writeFile){
 	ignore_user_abort(false);
 }
 // read the file that is cached
-echo file_get_contents($cacheFile);
-
+if (is_readable($cacheFile)){
+	echo file_get_contents($cacheFile);
+}
 #
 formatEcho("<a class='button' href='/new/'>",2);
 formatEcho("📃",3);
@@ -342,12 +343,12 @@ if (detectEnabledStatus("kodi2web")){
 	if (yesNoCfgCheck("/etc/2web/kodi/enableHttpShare.cfg")){
 		if (yesNoCfgCheck("/etc/2web/kodi/enableHttpShareLink.cfg")){
 			#
-			formatEcho("<a class='button' href='/kodi/'>");
-			formatEcho("🇰");
-			formatEcho("<span class='headerText'>");
-			formatEcho("Kodi");
-			formatEcho("</span>");
-			formatEcho("</a>");
+			formatEcho("<a class='button' href='/kodi/'>",2);
+			formatEcho("🇰",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Kodi",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
 		}
 	}
 	#
@@ -427,38 +428,38 @@ formatEcho("</a>",2);
 # close the
 formatEcho("</div>",1);
 # close the header bracket
-formatEcho("</div>",0);
+formatEcho("</div>");
 
-formatEcho('<script>',1);
-formatEcho('setHeaderStartState();',2);
-formatEcho('</script>',1);
+formatEcho('<script>');
+formatEcho('setHeaderStartState();',1);
+formatEcho('</script>');
 
 # if the path is in the settings draw the logout button
 
 formatEcho("<div class='loginLogoutBox'>");
 if (isset($_SESSION["user"])){
 	if (requireGroup("admin",false)){
-		formatEcho("<a class='button' href='/settings/'>");
-		formatEcho("🛠️");
-		formatEcho("<span class='headerText'>");
-		formatEcho("Settings");
-		formatEcho("</span>");
-		formatEcho("</a>");
-		formatEcho("<hr>");
+		formatEcho("<a class='button' href='/settings/'>",1);
+		formatEcho("🛠️",2);
+		formatEcho("<span class='headerText'>",2);
+		formatEcho("Settings",3);
+		formatEcho("</span>",2);
+		formatEcho("</a>",1);
+		formatEcho("<hr>",1);
 	}
-	formatEcho("<a class='button' href='/logout.php'>");
-	formatEcho("🔒");
-	formatEcho("<span class='headerText'>");
-	formatEcho("Logout");
-	formatEcho("</span>");
-	formatEcho("</a>");
+	formatEcho("<a class='button' href='/logout.php'>",1);
+	formatEcho("🔒",2);
+	formatEcho("<span class='headerText'>",2);
+	formatEcho("Logout",3);
+	formatEcho("</span>",2);
+	formatEcho("</a>",1);
 }else if ($_SERVER['SERVER_PORT'] != 443){
-	formatEcho("<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>");
-	formatEcho("🔑");
-	formatEcho("<span class='headerText'>");
-	formatEcho("Encrypt");
-	formatEcho("</span>");
-	formatEcho("</a>");
+	formatEcho("<a class='button' href='https://".$_SERVER["HTTP_HOST"]."/'>",1);
+	formatEcho("🔑",2);
+	formatEcho("<span class='headerText'>",2);
+	formatEcho("Encrypt",3);
+	formatEcho("</span>",2);
+	formatEcho("</a>",1);
 }else{
 	#
 	if ($_SERVER['SERVER_PORT'] == 443){
@@ -480,19 +481,16 @@ if (isset($_SESSION["user"])){
 		formatEcho("</a>",2);
 	}
 }
-echo "	<hr>";
+echo "	<hr>\n";
 // draw the help button
-formatEcho("<a class='button' href='/help.php'>",2);
-formatEcho("<span class='helpQuestionMark'>");
-formatEcho("?");
-formatEcho("</span>");
-formatEcho("<span class='headerText'>",3);
-formatEcho("Help",4);
-formatEcho("</span>",3);
-formatEcho("</a>",2);
+formatEcho("<a class='button' href='/help.php'>",1);
+formatEcho("<span class='helpQuestionMark'>?</span>",2);
+formatEcho("<span class='headerText'>",2);
+formatEcho("Help",3);
+formatEcho("</span>",2);
+formatEcho("</a>",1);
 
-#echo "</details>";
-echo "</div>";
+echo "</div>\n";
 ?>
 <form class='searchBoxForm' action='/search.php' method='get' onSubmit='notify("🔎",60000);showSpinner();'>
 	<?PHP
@@ -504,9 +502,9 @@ if (array_key_exists("q",$_GET)){
 	}
 	# if the server has autocomplete data, load it
 	if (is_readable("/var/cache/2web/web/autocomplete.index")){
-		echo "<datalist id='searchAutocompleteData'>\n";
-		echo file_get_contents("/var/cache/2web/web/autocomplete.index");
-		echo "</datalist>\n";
+		echo "	<datalist id='searchAutocompleteData'>\n";
+		echo file_get_contents_tabbed("/var/cache/2web/web/autocomplete.index",1);
+		echo "	</datalist>\n";
 	}
 	# do not leave a space between the search box and the button
 	?>
@@ -527,7 +525,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
 # release the lock on the session for this script to allow pages to load in parallel
 session_write_close();
 # the screen overlay object for tinting the screen
-echo "<span class='screenOverlay'></span>";
+echo "<span class='screenOverlay'></span>\n";
 # send the header information before the rest of the page
 flush();
 ob_flush();

@@ -49,26 +49,22 @@ include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 ?>
 <div class='titleCard'>
 <?PHP
-echo "<h1>";
-echo "$showTitle";
-echo "</h1>";
+echo "	<h1>$showTitle</h1>\n";
 ?>
-<hr>
-<div class='listCard'>
-
+	<hr>
+	<div class='listCard'>
 <?PHP
-echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"' onclick='notify(\"🡇\");' download='$showTitle"."_all_episodes.m3u'>";
+echo "	<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"' onclick='notify(\"🡇\");' download='$showTitle"."_all_episodes.m3u'>\n";
 ?>
-	▶️ Play All<sup>External</sup>
-</a>
+			▶️ Play All<sup>External</sup>
+		</a>
 <?PHP
-echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random' onclick='notify(\"🡇\");' download='$showTitle"."_random_episodes.m3u'>";
+echo "	<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random' onclick='notify(\"🡇\");' download='$showTitle"."_random_episodes.m3u'>\n";
 ?>
-	🔀 Play Random<sup>External</sup>
-</a>
-</div>
-
-<div class='listCard'>
+			🔀 Play Random<sup>External</sup>
+		</a>
+	</div>
+	<div class='listCard'>
 <?PHP
 ################################################################################
 # after processing each season rebuild the show page index entirely
@@ -76,82 +72,72 @@ echo "<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"&sort=random'
 $seasonDirs= explode("\n",shell_exec("find '$activeDir/' -type 'd' -name 'Season*' | sort"));
 $newestSeason="";
 
-echo "	<a href='?all#seasonsTop' class='button'>";
-echo "		📁 All";
-echo "	</a>";
+echo "		<a href='?all#seasonsTop' class='button'>\n";
+echo "			📁 All\n";
+echo "		</a>\n";
 foreach($seasonDirs as $seasonDir){
 	if (is_dir($seasonDir)){
-		#if (is_file($seasonDir."/season.index")){
-		#	$seasonName = str_replace('/season.index','',$seasonDir);
-		#	$seasonName = str_replace($activeDir.'/','',$seasonName);
 			$seasonName = str_replace($activeDir.'/','',$seasonDir);
 			$newestSeason = $seasonName;
-			echo "	<a href='?season=$seasonName#$seasonName' class='button'>";
+			echo "		<a href='?season=$seasonName#$seasonName' class='button'>\n";
 			if ($seasonName == "Season 0000"){
-				echo "		📁 Specials";
+				echo "			📁 Specials\n";
 			}else{
-				echo "		📁 $seasonName";
+				echo "			📁 $seasonName\n";
 			}
-			echo "	</a>";
+			echo "		</a>\n";
 			flush();
 			ob_flush();
 		#}
 	}
 }
 ?>
-</div>
+	</div>
 <?PHP
-echo "<div class='titleCard seriesPlot'>";
-echo "<h2 class=''>";
-echo "Plot";
-echo "</h2>";
+echo "	<div class='titleCard seriesPlot'>\n";
+echo "		<h2 class=''>Plot</h2>\n";
 if (file_exists($activeDir."/poster.png")){
-	echo "<a href='poster.png'>";
-	echo "<img class='right' src='poster-web.png'>";
-	echo "</a>";
+	echo "		<a href='poster.png'>\n";
+	echo "			<img class='right' src='poster-web.png'>\n";
+	echo "		</a>\n";
 }
-echo file_get_contents($activeDir."/plot.cfg");
-echo "</div>";
+echo file_get_contents_tabbed($activeDir."/plot.cfg",1);
+echo "	</div>\n";
 # check for sources
 if (requireGroup("admin",false)){
 	if(file_exists("sources.cfg")){
-		echo "<div class='titleCard'>\n";
-		echo "<h2>Media Sources</h2>\n";
-		echo "<pre>\n";
-		echo file_get_contents("sources.cfg");
-		echo "</pre>\n";
+		echo "	<div class='titleCard'>\n";
+		echo "		<h2>Media Sources</h2>\n";
+		echo "		<pre>".file_get_contents("sources.cfg")."</pre>\n";
 		#
 		$showScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
-		echo "<h2>Admin Actions</h2>\n";
-		echo "	<div class='listCard'>\n";
-		echo "		<form action='/settings/admin.php' method='post'>";
-		echo "			<input type='text' name='rescanShow' value='$showScanPath' hidden>";
-		echo "			<button class='button' type='submit'>🗘 Force Media Rescan</button>";
-		echo "		</form>";
+		echo "		<h2>Admin Actions</h2>\n";
+		echo "		<div class='listCard'>\n";
+		echo "			<form action='/settings/admin.php' method='post'>\n";
+		echo "				<input type='text' name='rescanShow' value='$showScanPath' hidden>\n";
+		echo "				<button class='button' type='submit'>🗘 Force Media Rescan</button>\n";
+		echo "			</form>\n";
+		echo "		</div>\n";
 		echo "	</div>\n";
-		echo "</div>\n";
 	}
 }
 # draw the most recent episodes
 # - get the latest season episodes
 # - list them in reverse order
 $newestEpisodes=array_reverse(file($newestSeason."/season.index"));
-echo "<div class='titleCard'>";
-echo "	<h2>New Episodes</h2>";
-echo "	<div class='listCard'>";
+echo "<div class='titleCard'>\n";
+echo "	<h2>New Episodes</h2>\n";
+echo "	<div class='listCard'>\n";
 foreach($newestEpisodes as $episodeFile){
-	echo file_get_contents(trim($episodeFile));
+	echo file_get_contents_tabbed(trim($episodeFile),1);
 }
-echo "	</div>";
-echo "</div>";
+echo "	</div>\n";
+echo "</div>\n";
 # draw the search links
 drawMoreSearchLinks($showTitle);
 ?>
 <hr>
 </div>
-<!--
-<input id='searchBox' class='searchBox' type='text' onkeyup='filter("showPageEpisode")' placeholder='Search...' >
--->
 <form class='searchBoxForm' action="#seasonsTop" method='get'>
 	<input id='seriesSearchBox' class='searchBox' type='text' name='search' placeholder='Series Episode Search...' >
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
@@ -181,7 +167,6 @@ if (array_key_exists("random",$_GET)){
 	# get 40 random media items
 	shuffle($episodeFiles);
 	$episodeFiles=array_slice($episodeFiles,0,40);
-
 	echo "<div class='seasonContainer'>\n";
 	echo "<div class='seasonHeader'>\n";
 	echo "<h2>Random Episodes</h2>\n";
@@ -189,7 +174,7 @@ if (array_key_exists("random",$_GET)){
 	foreach($episodeFiles as $episodeFile){
 		$episodeFile=str_replace("\n","",$episodeFile);
 		if (strpos($episodeFile,".index")){
-			echo file_get_contents($episodeFile);
+			echo file_get_contents_tabbed($episodeFile);
 			flush();
 			ob_flush();
 		}
@@ -231,7 +216,7 @@ if (array_key_exists("random",$_GET)){
 									$searchResults=True;
 								}
 								#echo file_get_contents($seasonDir."/".basename($episodeFile));
-								echo file_get_contents($episodeFile);
+								echo file_get_contents_tabbed($episodeFile);
 								flush();
 								ob_flush();
 							}
@@ -255,7 +240,7 @@ if (array_key_exists("random",$_GET)){
 								}
 								# write the data
 								#echo $tempData;
-								echo file_get_contents($episodeFile);
+								echo file_get_contents_tabbed($episodeFile);
 
 								flush();
 								ob_flush();
@@ -272,7 +257,7 @@ if (array_key_exists("random",$_GET)){
 								$searchResults=True;
 							}
 							#echo file_get_contents($seasonDir."/".basename($episodeFile));
-							echo file_get_contents($episodeFile);
+							echo file_get_contents_tabbed($episodeFile);
 							flush();
 							ob_flush();
 						}
