@@ -1633,7 +1633,7 @@ if( ! function_exists("sessionRemoveValue")){
 }
 ########################################################################
 if( ! function_exists("yesNoCfgCheck")){
-	function yesNoCfgCheck($configPath){
+	function yesNoCfgCheck($configPath,$defaultValue="no"){
 		# This function checks the value of a configuration file and returns true if the file is set to yes.
 		# If no config file exists a new one will be created.
 		#
@@ -1675,10 +1675,19 @@ if( ! function_exists("yesNoCfgCheck")){
 		}else{
 			# cache the calculated value
 			#addToLog("DEBUG","SessionValue","set value '".$configPathSum."' to 'true'");
-			sessionSetValue($configPathSum,false);
+			if ($defaultValue="no"){
+				sessionSetValue($configPathSum,false);
+			}else if($defaultValue="yes"){
+				sessionSetValue($configPathSum,true);
+			}else{
+				# if a unknown default was given set it to false
+				sessionSetValue($configPathSum,false);
+				# log the error
+				addToLog("ERROR","yesnocfgcheck()","Function yesNoCfgCheck() was given a invalid default value of '".$defaultValue."' please use 'yes' or 'no'");
+			}
 			#addToLog("DEBUG","SessionValue","Verify value '".$configPathSum."' is now set to '".sessionGetValue($configPathSum)."'");
 			# no file exists return false and create default no config
-			file_put_contents($configPath , "no");
+			file_put_contents($configPath , $defaultValue);
 			return false;
 		}
 	}
