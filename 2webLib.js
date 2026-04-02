@@ -198,11 +198,11 @@ function forcePlay(){
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function seekForward(){
+function seekForward(seekTime=5){
 	// get the element pointer
 	var element = document.getElementById("video");
 	// increment the time forward in seconds
-	element.currentTime += 15;
+	element.currentTime += seekTime;
 	// get the current time and the total duration to not exceed the end of the video
 	if ( element.currentTime > element.duration ){
 		// dont let volume go beyond the duration
@@ -211,11 +211,11 @@ function seekForward(){
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function seekBackward(){
+function seekBackward(seekTime=5){
 	// get the element pointer
 	var element = document.getElementById("video");
 	// increment the time backward in seconds
-	element.currentTime -= 15;
+	element.currentTime -= seekTime;
 	// get the current time and the total duration to not exceed the end of the video
 	if ( element.currentTime < 0 ){
 		// dont let the seek go below 0
