@@ -2006,7 +2006,7 @@ if( ! function_exists("loadSearchIndexResults")){
 		foreach (array_keys($countValues) as $word){
 			if(is_readable($word)){
 				$outputFound=true;
-				$outputText .= file_get_contents($word)."\n";
+				$outputText .= file_get_contents_tabbed($word,1);
 				$outputIndex .= ($word)."\n";
 				#
 				$foundItems+=1;
@@ -2026,24 +2026,24 @@ if( ! function_exists("loadSearchIndexResults")){
 			}
 			if($widget){
 				if($filter=="all"){
-					echo "<h1>Related Media</h1>\n";
+					echo "	<h1>Related Media</h1>\n";
 				}else{
-					echo "<h1>Related ".$title."</h1>\n";
+					echo "	<h1>Related ".$title."</h1>\n";
 				}
-				echo "<div class='listCard'>\n";
+				echo "	<div class='listCard'>\n";
 			}
 			if($widget){
 				echo $outputText;
 				# create the search link
-				echo "<a class='indexSeries' href='/search.php?q=$ogQuery'>";
-				echo "	<h2 class='moreEpisodesLinkIcon'>";
-				echo "		🔍";
-				echo "	</h2>";
-				echo "	Full ";
-				echo "	List";
-				echo "</a>";
+				echo "		<a class='indexSeries' href='/search.php?q=$ogQuery'>\n";
+				echo "			<h2 class='moreEpisodesLinkIcon'>\n";
+				echo "				🔍\n";
+				echo "			</h2>\n";
+				echo "			Full \n";
+				echo "			List\n";
+				echo "		</a>\n";
 				#
-				echo "</div>\n";
+				echo "	</div>\n";
 				echo "</div>\n";
 			}else{
 				$searchSum=md5($ogQuery.$filter);
@@ -2865,6 +2865,7 @@ if( ! function_exists("drawMoreSearchLinks")){
 			}
 
 		}
+		echo "	</div>\n";
 		echo "</div>\n";
 	}
 }
