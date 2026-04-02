@@ -39,20 +39,23 @@
 		include("progress.index");
 	}
 
-	echo "<div class='titleCard'>";
+	echo "<div class='titleCard'>\n";
 	echo "<h1>";
 	echo ucfirst(gethostname());
-	echo "</h1>";
-
+	echo "</h1>\n";
 	# include stats for admins
 	if(requireGroup("graph2web",false)){
 		if ( file_exists("activityGraph.png") ){
-			echo "<div>";
-			echo "<a href='/graphs/2web_activity/'>";
-			echo "<img class='homeActivityGraph' src='activityGraph.png' />";
-			echo "</a>";
-			echo "</div>";
+			echo "<div>\n";
+			echo "	<a href='/graphs/2web_activity/'>\n";
+			echo "		<img class='homeActivityGraph' src='activityGraph.png' />\n";
+			echo "	</a>\n";
+			echo "</div>\n";
+		}else{
+			echo "<img class='homeActivityGraph' src='/logo.png' />\n";
 		}
+	}else{
+		echo "<img class='homeActivityGraph' src='/logo.png' />\n";
 	}
 	include("stats.php");
 	echo "</div>";
