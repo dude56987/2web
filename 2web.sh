@@ -1386,6 +1386,8 @@ function buildSpinnerGif(){
 		animation="🮡🮥🮪🮮🮫🮤🮠 "
 	elif [ "$animationName" == "greater_than" ];then
 		animation=">≫⋙"
+	elif [ "$animationName" == "black_and_white_boxes" ];then
+		animation="⬛◼️🔳⬜◻️🔲"
 	else
 		# draw the default spinner
 		animation="🬁🬇🬞🬏🬃🬀"
@@ -1396,6 +1398,7 @@ function buildSpinnerGif(){
 	#animationDelay=$(( $animationLength * 2 ))
 	#
 	outputPaths=""
+
 	# loop though the animation
 	for (( index=0;index<$animationLength;index++ ));do
 		# draw the spinner at the current animation step
@@ -1404,11 +1407,17 @@ function buildSpinnerGif(){
 			#convert -background transparent -pointsize 128 pango:"$title" "${outputPathPrefix}_$index.gif"
 			convert -background transparent -fill white -pointsize 32 pango:"$title" -fuzz "5%" -trim "${outputPathPrefix}$index.gif"
 			#
-			outputPaths="$outputPaths -dispose Background -delay $animationDelay -page +0+0 ${outputPathPrefix}$index.gif"
+			outputPaths="$outputPaths ${outputPathPrefix}$index.gif"
 		fi
 	done
 	# convert frames into transparent gif
-	convert $outputPaths -layers "optimize" -loop 0 "/var/cache/2web/spinners/${animationName}.gif"
+	#convert $outputPaths -layers "optimize" -set dispose Background -delay 33 -loop 0 "/var/cache/2web/spinners/${animationName}.gif"
+	#convert $outputPaths -layers "optimize" -set delay 33 -set dispose Background -loop 0 "/var/cache/2web/spinners/${animationName}.gif"
+	convert $outputPaths -set delay 10 -set dispose Background -loop 0 "/var/cache/2web/spinners/${animationName}.gif"
+
+	# create avaif with ffmpeg , imagemagic does not support it so great
+	#ffmpeg -f concat -i list.txt -vf "format=yuv420p,scale=800:-1" -an -loop 0 -c:v libaom-av1 spinner.avif
+
 	#
 	linkFile "/var/cache/2web/spinners/${animationName}.gif" "/var/cache/2web/spinner.gif"
 }
@@ -2598,6 +2607,25 @@ elif [ "$1" == "--kodi-client" ] || [ "$1" == "kodi-client" ];then
 	echo "https://settings/kodi.php#kodiPlayerPaths"
 	echo "################################################################################"
 	clientSetupMessage
+elif [ "$1" == "--rebuild-spinner" ] || [ "$1" == "rebuild-spinner" ];then
+	drawLine
+	drawHeader "Rebuilding the spinner animation"
+	drawLine
+	# rebuild the animated spinner
+	rm -v /var/cache/2web/spinner.gif
+	rm -v /var/cache/2web/spinner.png
+	rm -v /var/cache/2web/spinner_bg.png
+	rm -v /var/cache/2web/spinner.mp4
+	rm -v /var/cache/2web/spinner_long.mp4
+	rm -rv /var/cache/2web/spinners/
+	rm -rv /tmp/2web/spinner/
+	drawLine
+	startDebug
+	buildSpinnerGif
+	stopDebug
+	drawLine
+	drawSmallHeader "Spinner Has been rebuilt"
+	drawLine
 elif [ "$1" == "--rebuild-themes" ] || [ "$1" == "rebuild-themes" ];then
 	# reset the theme gen timer
 	date "+%s" > "/var/cache/2web/themeGen.cfg"
