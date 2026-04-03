@@ -17,9 +17,215 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
 */
+/******************************************************************************/
+/* CSS ANIMATIONS */
+/* - These need to be loaded at the top of the CSS file to be used below */
+/******************************************************************************/
+@keyframes pulseShine{
+	0% {
+		filter: brightness(1);
+		box-shadow: 0rem 0rem 1rem var(--highlightBackground);
+	}
+	50% {
+		filter: brightness(1.2);
+		box-shadow: -0.1rem 0rem 0rem var(--highlightBackground);
+	}
+	100% {
+		filter: brightness(1);
+		box-shadow: 0rem 0rem 1rem var(--highlightBackground);
+	}
+}
+@keyframes shimmer{
+	0% {
+		box-shadow: -0.1rem 0rem 10px var(--highlightBackground);
+	}
+	12% {
+		box-shadow: -0.1rem -0.1rem 10px var(--highlightBackground);
+	}
+	24% {
+		box-shadow: 0rem -0.1rem 10px var(--highlightBackground);
+	}
+	36% {
+		box-shadow: 0.1rem -0.1rem 10px var(--highlightBackground);
+	}
+	48% {
+		box-shadow: 0.1rem 0rem 10px var(--highlightBackground);
+	}
+	60% {
+		box-shadow: 0.1rem 0.1rem 10px var(--highlightBackground);
+	}
+	72% {
+		box-shadow: 0rem 0.1rem 10px var(--highlightBackground);
+	}
+	84% {
+		box-shadow: -0.1rem 0.1rem 10px var(--highlightBackground);
+	}
+	96% {
+		box-shadow: -0.1rem 0rem 10px var(--highlightBackground);
+	}
+	100% {
+		box-shadow: -0.1rem 0rem 10px var(--highlightBackground);
+	}
+}
+@keyframes fallIn{
+	0% {margin-top: -50%;opacity: 0;}
+	100% {margin-top: 0%;opacity: 1;}
+}
+/*
+.fallIn{
+	animation-name: fallIn !important;
+	animation-duration: 0.08s;
+	animation-fill-mode: forwards;
+}
+*/
+.rainbow{
+	animation-name: rainbow;
+	animation-duration: 20s;
+	animation-fill-mode: forwards;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+@keyframes dropBounce{
+	0% {
+		opacity: 0;
+		transform: scale(2);
+	}
+	95% {
+		transform: scale(0.9);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+@keyframes bigDropBounce{
+	0% {
+		opacity: 0;
+		transform: scaleY(1.2);
+	}
+	95% {
+		transform: scaleY(0.9);
+	}
+	100% {
+		opacity: 1;
+		transform: scaleY(1);
+	}
+}
+@keyframes spiralDrop{
+	0% {
+		opacity: 0;
+		transform: translateY(100px) scale(5);
+	}
+	25% {
+		opacity: 1;
+		transform: translateY(0px) translateX(-100px) scale(4);
+	}
+	50% {
+		transform: translateY(-100px) translateX(0px) scale(3);
+	}
+	75% {
+		transform: translateY(0px) translateX(100px) scale(2);
+	}
+	100% {
+		transform: translateY(0px) translateX(0px) scale(1);
+	}
+}
+@keyframes pushedButton{
+	0% {
+		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
+		/*
+		box-shadow: 0px 0px 1rem var(--shadowColor);
+		*/
+	}
+	20% {
+		filter: brightness(0.9);
+	}
+	100% {
+		transform: scaleY(0.98) scaleX(0.98);
+		filter: brightness(1.1);
+		box-shadow: 0px 0px 0rem;
+	}
+}
+@keyframes pulseate{
+	0% {
+		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
+	}
+	50% {
+		transform: scaleY(0.99) scaleX(0.99);
+		filter: brightness(0.8);
+	}
+	100% {
+		transform: scaleY(1) scaleX(1);
+		filter: brightness(1);
+	}
+}
+@keyframes tvOn{
+	0% {
+		opacity: 0;
+		transform: scaleY(0.01) scaleX(0.02);
+	}
+	5% {
+		opacity: 1;
+		transform: scaleY(0.01) scaleX(0.02);
+	}
+	70% {
+		transform: scaleY(0.01) scaleX(0.8);
+	}
+	90% {
+		transform: scaleY(0.9) scaleX(0.9);
+	}
+	100% {
+		transform: scaleY(1) scaleX(1);
+	}
+}
+@keyframes rainbow{
+	0% {
+		filter: hue-rotate(0deg);
+		-webkit-filter:hue-rotate(0deg);
+	}
+	50% {
+		filter: hue-rotate(180deg);
+		-webkit-filter:hue-rotate(180deg);
+	}
+	100% {
+		filter: hue-rotate(0deg);
+		-webkit-filter:hue-rotate(0deg);
+	}
+}
+@keyframes shine{
+	0% {
+		filter: brightness(1);
+	}
+	100% {
+		filter: brightness(1.5);
+	}
+}
+@keyframes spinRight{
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+@keyframes fadeIn{
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+/******************************************************************************/
+/* END CSS ANIMATIONS */
+/******************************************************************************/
+
 html{
 	height: 100dvh;
 	font-variant-emoji: unicode;
+	overflow-x: clip;
 }
 @font-face{
 	font-family: fallbackFont;
@@ -188,7 +394,10 @@ html{
 	color: var(--textColor);
 	color-scheme: dark light;
 }
-img{
+.indexSeries.img{
+	background: var(--staticBackground);
+}
+.showPageEpisode.img{
 	background: var(--staticBackground);
 }
 .channelLink {
@@ -269,84 +478,84 @@ marquee{
 	text-align: left;
 }
 h1,h2,h3,h4{
-	border-bottom: solid 0.2rem;
-	border-top: solid 0.2rem;
+	border-bottom: solid var(--borderColor) 0.2rem;
+	border-top: solid var(--borderColor) 0.2rem;
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
 }
 /* */
 .titleCard a > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard a > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard a > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard a > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard a > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard a > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard a > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard a > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard a > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard a > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard a > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard a > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 /* */
 .titleCard > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .titleCard > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .inputCard > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard > h1:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard > h2:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard > h3:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 .settingListCard > h4:first-child{
-	border-top: none !important;
+	border-top: none;
 }
 h1 {
 	color: var(--textColor);
@@ -528,6 +737,7 @@ ol li{
 	filter: blur(5px);
 	*/
 	overflow: hidden;
+	background-size: 100% 100%;
 }
 .menuButtonBox{
 	width: 3rem;
@@ -557,16 +767,17 @@ ol li{
 	display: inline-block !important;
 }
 .enabledSetting{
- background: #99ff33 !important;
- color: black !important;
- font-weight: bolder;
+	background: #99ff33 !important;
+	color: black !important;
+	font-weight: bolder;
+	text-shadow: none;
 }
 .settingsEntry h3{
 	font-size: 3rem;
 	/*
 	box-shadow: 0px 0px 1.5rem var(--borderColor);
 	*/
-	text-shadow: 1rem 1rem 1rem 1rem var(--borderColor);
+	text-shadow: 1rem 1rem 1rem var(--borderColor);
 	/*
 	-webkit-text-stroke: 0.04rem black;
 	*/
@@ -574,9 +785,10 @@ ol li{
 	border: none !important;
 }
 .disabledSetting{
- background: #CC0000 !important;
- color: white !important;
- font-weight: bolder;
+	background: #CC0000 !important;
+	color: white !important;
+	font-weight: bolder;
+	text-shadow: none;
 }
 #loadingSpinner{
 	position: absolute;
@@ -943,7 +1155,7 @@ ol{
 		float: none !important;
 	}
 	.aired{
-		width: auto !important;
+		width: 100% !important;
 		margin: auto !important;
 		float: none !important;
 	}
@@ -984,7 +1196,7 @@ ol{
 	height: 400px;
 	min-width: 800px;
 	background: black;
-	background-size: cover;
+	background-size: 100% 100%;
 	background-repeat: no-repeat;
 	background-position: center;
 }
@@ -1050,6 +1262,11 @@ ol{
 	opacity: 1;
 }
 @media all and (display-mode: fullscreen){
+	video{
+		border: none !important;
+		background: black !important;
+		color: white !important;
+	}
 	#videoPlayerContainer #video{
 		width: 100dvw !important;
 		height: 100dvh !important;
@@ -1332,9 +1549,6 @@ a.inputCard h3{
 	top: 45dvh;
 	z-index: 1;
 }
-/*
-@media screen (max-width: 800px), (orientation: portrait), (hover: none){
-*/
 @media only screen and (orientation: portrait){
 	.videoPoster{
 		width: 100%;
@@ -1591,8 +1805,10 @@ form{
 	/*
 	color: white;
 	*/
+	width: 20rem;
 	color: var(--textColor);
-	border: 0.5rem dotted;
+	border-style: ridge;
+	border-width: 0.4rem ;
 	padding: 1rem;
 	margin-right: 1rem;
 	text-align: center;
@@ -1831,6 +2047,12 @@ ol{
 .sXXeXX{
 	display: inline-block;
 }
+.videoPreview{
+	filter: blur(5px);
+}
+.videoPreview:hover{
+	filter: blur(0px);
+}
 /*******************************/
 /* EPISODE icons for show page */
 /*******************************/
@@ -1841,7 +2063,6 @@ ol{
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	text-align: center;
 	text-decoration: none;
-	color: var(--textColor);
 	text-align: center;
 	margin: 1rem;
 	margin-left: 0.2rem;
@@ -1861,8 +2082,15 @@ ol{
 	overflow-y: hidden;
 	overflow-x: hidden;
 }
+.active{
+	/* invert the colors for active buttons */
+	color: var(--highlightText);
+	border: 4px solid var(--highlightBorder);
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	background: var(--highlightBackground);
+}
 .showIndexNumbers{
-	border-bottom: 2px solid white;
+	border-bottom: 2px solid var(--borderColor);
 	margin-bottom: 6px;
 	margin-left: 6px;
 	margin-right: 6px;
@@ -1995,12 +2223,8 @@ table{
 }
 .descriptionCard{
 	margin-top: 1rem;
-	text-align: left;
-	box-shadow: 0px 0px 1rem var(--shadowColor);
-	background: var(--glassBackground);
+	text-align: left !important;
 	min-height: 30rem;
-	border-bottom: solid var(--borderColor) 0.2rem;
-	border-top: solid var(--borderColor) 0.2rem;
 }
 .plot{
 	font-family: monospace;
@@ -2018,6 +2242,16 @@ table{
 	line-height: 100dvh;
 	top: 0px;
 	left: 0px;
+	cursor: progress;
+}
+#notificationText img{
+	position: fixed;
+	top: 45dvh;
+	left: 45dvw;
+	width: 10dvw;
+	height: 10dvh;
+	margin: auto;
+	cursor: progress;
 }
 /*
 .descriptionCard h2{
@@ -2025,7 +2259,6 @@ table{
 }
 */
 .settingListCard{
-	text-align: left;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	color: var(--textColor);
 	background: var(--glassBackground);
@@ -2080,6 +2313,9 @@ table{
 }
 .settingsEntry form{
 	display: inline;
+}
+.settingsEntry .diskSize{
+	float: right;
 }
 .settingsEntry img{
 	max-width: 10rem;
@@ -2210,6 +2446,7 @@ pre{
 	text-align: left;
 	overflow: auto;
 	font-family: monospace;
+	text-decoration: none;
 }
 td table tr td{
 	/*
@@ -2244,6 +2481,19 @@ th{
 .settingsTableData{
 	width: 100%;
 }
+/*
+.screenOverlay{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100dvw;
+	height: 100dvh;
+	opacity: 0.5;
+	background-color: red;
+	pointer-events: none;
+	z-index: 100;
+}
+*/
 .weatherIcon{
 	font-size: 4rem;
 	line-height: 6rem;
@@ -2529,7 +2779,10 @@ pre{
 .albumPlayer{
 	background: url("album.png");
 	background-size: 100% 100%;
-	height: 2rem !important;
+	height: 3rem !important;
+	width: 100%;
+	margin-left: 0px;
+	margin-right: 0px;
 }
 .albumPlayerThumb{
 	float: right;
@@ -2541,6 +2794,9 @@ pre{
 .albumArt{
 	height: auto !important;
 	max-height: 6rem;
+}
+.track{
+	cursor: pointer;
 }
 .trackWaveform{
 	width: 100%;
@@ -2577,6 +2833,9 @@ pre{
 .homeWeather{
 	text-decoration: none;
 }
+.homeWeather h3{
+	border-top: solid var(--borderColor) 0.2rem !important;
+}
 .homeFortune{
 	text-decoration: none;
 }
@@ -2589,6 +2848,14 @@ pre{
 	margin-left: -3rem;
 	display: inline-block;
 	vertical-align: middle;
+	float: right;
+}
+.smallSpinner{
+	height: 1rem !important;
+	width: 1rem !important;
+	margin: 0px;
+	padding: 0px;
+	border: none;
 	float: right;
 }
 .globalPulse{
@@ -2649,6 +2916,7 @@ svg {
 .moreEpisodesLinkIcon{
 	font-size: 3rem;
 	line-height: 5rem;
+	text-shadow: 0px 0px 1rem var(--borderColor);
 }
 .homeActivityGraph{
 	max-width: 98%;
@@ -2665,7 +2933,7 @@ svg {
 	right: 2rem;
 	*/
 	float: right;
-	opacity: 0.1;
+	opacity: 0.3;
 	position: relative;
 	z-index: 10;
 	top: 0px;
@@ -2764,31 +3032,60 @@ details{
 	margin: 0.1rem;
 	overflow: hidden;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
+	cursor: crosshair;
 }
 .singleStatValue{
 	border-left: 0.2rem var(--borderColor) solid;
 	background: var(--solidBackground);
 	padding: 0.5rem;
+	/*
 	text-shadow: 0px 0px 0.2rem var(--highlightText);
+	*/
 }
 .singleStatLabel{
 	padding: 0.5rem;
+	/*
 	text-shadow: 0px 0px 0.2rem var(--highlightText);
+	*/
 }
 .singleStatLabel>img{
 	height: 1rem;
 }
+.updateInfo{
+	z-index: 2;
+	position: relative;
+}
 .errorBanner{
+	animation: pulseShine 1s infinite;
 	width: 100%;
 	background: red !important;
 	color: white !important;
 	font-weight: bold;
+	text-shadow: none;
 }
 .warningBanner{
+	animation: pulseShine 3s infinite;
 	width: 100%;
 	background: yellow !important;
 	color: black !important;
 	font-weight: bold;
+	text-shadow: none;
+	border-color: black !important;
+	*{
+		color: black !important;
+		background: yellow !important;
+		border-color: black !important;
+		*{
+			color: black !important;
+			background: yellow !important;
+			border-color: black !important;
+		}
+	}
+}
+.whiteboard{
+		color: var(--highlightText) !important;
+		background-color: var(--highlightBackground) !important;
+		text-align: left;
 }
 .imageUploadPreview{
 	vertical-align: top;
@@ -2922,6 +3219,10 @@ input{
 	font-size: 1.5rem;
 	width: 90%;
 }
+::placeholder{
+	color: var(--textColor);
+	opacity: 0.5;
+}
 textarea{
 	font-size: 1.5rem;
 	width: 100%;
@@ -2931,20 +3232,27 @@ input[type=text]{
 	color: var(--textColor);
 	caret-color: var(--textColor);
 	caret-shape: block;
+	font-size: 1.5rem;
+	box-shadow: 0px 0px 0.8rem var(--highlightBackground);
 }
 input[type=number]{
 	background: var(--solidBackground);
 	color: var(--textColor);
+	font-size: 1.5rem;
+	box-shadow: 0px 0px 0.8rem var(--highlightBackground);
 }
 input[type=password]{
 	background: var(--solidBackground);
 	color: var(--textColor);
+	font-size: 1.5rem;
+	box-shadow: 0px 0px 0.8rem var(--highlightBackground);
 }
 select{
 	background: var(--solidBackground);
 	color: var(--textColor);
 	font-size: 1.5rem;
 	width: 90%;
+	text-shadow: var(--shadowColor);
 }
 .kodiPlayerButton{
 	/*
@@ -3026,6 +3334,18 @@ details[open] summary h2::before {
 details[open] summary h2::after{
 	content:" ↑";
 }
+details summary h3::before {
+	content:"↓ ";
+}
+details summary h3::after{
+	content:" ↓";
+}
+details[open] summary h3::before {
+	content:"↑ ";
+}
+details[open] summary h3::after{
+	content:" ↑";
+}
 details{
 	h2,h1,h3{
 		border-top: none !important;
@@ -3076,13 +3396,14 @@ details{
 }
 .zoomBox {
 	position: absolute;
-	cursor: none;
-	width: 200dvh;
-	height: 80dvh;
+	cursor: crosshair;
+	width: 200dvw;
+	height: 200dvh;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
 	visibility: hidden;
 	display: none;
 	z-index: 10;
+	user-select: none;
 }
 .applicationFrame{
 	background: var(--glassBackground);
@@ -3142,6 +3463,38 @@ details{
 /* PRINT THEME */
 /******************************************************************************/
 @media print{
+	*{
+		color: black !important;
+		background: white !important;
+		text-shadow: none !important;
+	}
+	h1,h2,h3,h4{
+		border-top: solid 0.2rem black;
+		border-bottom: solid 0.2rem black;
+		border-right: none;
+		border-left: none;
+	}
+	.titleCard{
+		break-after: page;
+	}
+	.settingsListCard{
+		break-after: page;
+	}
+	.searchBox{
+		border: solid 0.2rem black;
+	}
+	.singleStat{
+		border: solid 0.2rem black;
+	}
+	td{
+		border: solid 0.2rem black;
+	}
+	.titleCard{
+		border: solid 0.2rem black;
+	}
+	.button{
+		border: solid 0.2rem black;
+	}
 	.header{
 		display: none !important;
 	}
@@ -3163,164 +3516,11 @@ details{
 	.topButtonSpace{
 		display: none !important;
 	}
-	*{
-		text-shadow: none !important;
+	.widget{
+		display: none !important;
 	}
 }
-/******************************************************************************/
-/* CSS ANIMATIONS */
-/******************************************************************************/
-@keyframes fallIn{
-	0% {margin-top: -50%;opacity: 0;}
-	100% {margin-top: 0%;opacity: 1;}
-}
-/*
-.fallIn{
-	animation-name: fallIn !important;
-	animation-duration: 0.08s;
-	animation-fill-mode: forwards;
-}
-*/
-.rainbow{
-	animation-name: rainbow;
-	animation-duration: 20s;
-	animation-fill-mode: forwards;
-	animation-iteration-count: infinite;
-	animation-timing-function: linear;
-}
-@keyframes dropBounce{
-	0% {
-		opacity: 0;
-		transform: scale(2);
-	}
-	95% {
-		transform: scale(0.9);
-	}
-	100% {
-		opacity: 1;
-		transform: scale(1);
-	}
-}
-@keyframes bigDropBounce{
-	0% {
-		opacity: 0;
-		transform: scaleY(1.2);
-	}
-	95% {
-		transform: scaleY(0.9);
-	}
-	100% {
-		opacity: 1;
-		transform: scaleY(1);
-	}
-}
-@keyframes spiralDrop{
-	0% {
-		opacity: 0;
-		transform: translateY(100px) scale(5);
-	}
-	25% {
-		opacity: 1;
-		transform: translateY(0px) translateX(-100px) scale(4);
-	}
-	50% {
-		transform: translateY(-100px) translateX(0px) scale(3);
-	}
-	75% {
-		transform: translateY(0px) translateX(100px) scale(2);
-	}
-	100% {
-		transform: translateY(0px) translateX(0px) scale(1);
-	}
-}
-@keyframes pushedButton{
-	0% {
-		transform: scaleY(1) scaleX(1);
-		filter: brightness(1);
-		/*
-		box-shadow: 0px 0px 1rem var(--shadowColor);
-		*/
-	}
-	20% {
-		filter: brightness(0.9);
-	}
-	100% {
-		transform: scaleY(0.98) scaleX(0.98);
-		filter: brightness(1.1);
-		box-shadow: 0px 0px 0rem;
-	}
-}
-@keyframes pulseate{
-	0% {
-		transform: scaleY(1) scaleX(1);
-		filter: brightness(1);
-	}
-	50% {
-		transform: scaleY(0.99) scaleX(0.99);
-		filter: brightness(0.8);
-	}
-	100% {
-		transform: scaleY(1) scaleX(1);
-		filter: brightness(1);
-	}
-}
-@keyframes tvOn{
-	0% {
-		opacity: 0;
-		transform: scaleY(0.01) scaleX(0.02);
-	}
-	5% {
-		opacity: 1;
-		transform: scaleY(0.01) scaleX(0.02);
-	}
-	70% {
-		transform: scaleY(0.01) scaleX(0.8);
-	}
-	90% {
-		transform: scaleY(0.9) scaleX(0.9);
-	}
-	100% {
-		transform: scaleY(1) scaleX(1);
-	}
-}
-@keyframes rainbow{
-	0% {
-		filter: hue-rotate(0deg);
-		-webkit-filter:hue-rotate(0deg);
-	}
-	50% {
-		filter: hue-rotate(180deg);
-		-webkit-filter:hue-rotate(180deg);
-	}
-	100% {
-		filter: hue-rotate(0deg);
-		-webkit-filter:hue-rotate(0deg);
-	}
-}
-@keyframes shine{
-	0% {
-		filter: brightness(1);
-	}
-	100% {
-		filter: brightness(1.5);
-	}
-}
-@keyframes spinRight{
-	0% {
-		rotate: 0deg;
-	}
-	100% {
-		rotate: 360deg;
-	}
-}
-@keyframes fadeIn{
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
+
 /* Page Transitions */
 /*
 @view-transition{
@@ -3385,6 +3585,14 @@ a:hover{
 	animation-fill-mode: forwards;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
+}
+.2webTextIcon{
+	width: 1rem;
+	height: 1rem;
+	display: inline;
+}
+.shimmer{
+	animation: shimmer 3s infinite;
 }
 /*
 .button:hover{
