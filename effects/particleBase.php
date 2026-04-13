@@ -40,7 +40,7 @@
 			transform: translateX(0rem);
 		}
 		50% {
-			rotate: -2deg;
+			rotate: -1deg;
 			transform: translateX(-9rem);
 		}
 		100% {
@@ -54,7 +54,7 @@
 			transform: translateX(0rem);
 		}
 		50% {
-			rotate: 2deg;
+			rotate: 1deg;
 			transform: translateX(9rem);
 		}
 		100% {
@@ -62,7 +62,14 @@
 			transform: translateX(0rem);
 		}
 	}
+	.particle:nth-child(even){
+		animation-delay: 0.1s;
+	}
+	.particle:nth-child(odd){
+		animation-delay: 0s;
+	}
 	.particle_spin_right_sway{
+			scale: -1 1;
 			animation-name: particle_sway_right;
 			animation-duration: 15s;
 			animation-fill-mode: forwards;
@@ -81,6 +88,7 @@
 		font-family: font2webGlyph;
 	}
 	.particle_spin_right_fast{
+		scale: -1 1;
 		animation-name: particle_spin_right;
 		animation-duration: 2s;
 		animation-fill-mode: forwards;
@@ -98,7 +106,27 @@
 		user-select: none;
 		font-family: font2webGlyph;
 	}
+	.particle_spin_right_superfast{
+		scale: -1 1;
+		animation-name: particle_spin_right;
+		animation-duration: 0.5s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
+	.particle_spin_left_superfast{
+		animation-name: particle_spin_left;
+		animation-duration: 0.5s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
 	.particle_spin_right_normal{
+		scale: -1 1;
 		animation-name: particle_spin_right;
 		animation-duration: 5s;
 		animation-fill-mode: forwards;
@@ -117,6 +145,7 @@
 		font-family: font2webGlyph;
 	}
 	.particle_spin_right_slow{
+		scale: -1 1;
 		animation-name: particle_spin_right;
 		animation-duration: 10s;
 		animation-fill-mode: forwards;
@@ -184,9 +213,9 @@ class floatingParticle{
 		this.globalID=this.particleDiv.id;
 		// randomize the spin direction
 		if(1 == Math.floor(Math.random() * 2) ){
-			this.particleDiv.className="particle_spin_left_"+this.spinSpeed;
+			this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
 		}else{
-			this.particleDiv.className="particle_spin_right_"+this.spinSpeed;
+			this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
@@ -205,7 +234,7 @@ class floatingParticle{
 		//this.particleDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
 		//this.particleDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
 		this.particleDiv.style.position="fixed";
-		this.particleDiv.style.top = ( ( (Math.random() * window.innerHeight) + 100 + ( Math.random() * 100 ) ) )+"px";
+		this.particleDiv.style.top = ( (Math.random() * window.innerHeight + 100 + ( Math.random() * 100 ) ) )+"px";
 		this.particleDiv.style.left = ( Math.floor(Math.random() * window.innerWidth));
 		// add the particle to the document
 		document.body.appendChild(this.particleDiv);
@@ -231,14 +260,14 @@ class floatingParticle{
 				tempParticle.style.lineHeight=this.size+"rem";
 				// randomize the spin direction
 				if(1 == Math.floor(Math.random() * 2) ){
-					tempParticle.className="particle_spin_left_"+this.spinSpeed;
+					tempParticle.className="particle particle_spin_left_"+this.spinSpeed;
 				}else{
-					tempParticle.className="particle_spin_right_"+this.spinSpeed;
+					tempParticle.className="particle particle_spin_right_"+this.spinSpeed;
 				}
 				// create a random particle
 				tempParticle.innerHTML=randomParticle(userChosenParticles);
 				// move the particle back below the bottom
-				tempParticle.style.top = ( ( ( window.innerHeight) + 100 + (Math.random() * 100) ) )+"px";
+				tempParticle.style.top = ( ( window.innerHeight) + 100 + (Math.random() * 200) )+"px";
 				// give the particle a random location
 				tempParticle.style.left = ( Math.floor(Math.random() * window.innerWidth) );
 			}
@@ -265,9 +294,9 @@ class fastFallingParticle{
 		this.globalID=this.particleDiv.id;
 		// randomize the spin direction
 		if(1 == Math.floor(Math.random() * 2) ){
-			this.particleDiv.className="particle_spin_left_"+this.spinSpeed;
+			this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
 		}else{
-			this.particleDiv.className="particle_spin_right_"+this.spinSpeed;
+			this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
@@ -312,9 +341,9 @@ class fastFallingParticle{
 				tempParticle.style.lineHeight=this.size+"rem";
 				// randomize the spin direction
 				if(1 == Math.floor(Math.random() * 2) ){
-					tempParticle.className="particle_spin_left_"+this.spinSpeed;
+					tempParticle.className="particle particle_spin_left_"+this.spinSpeed;
 				}else{
-					tempParticle.className="particle_spin_right_"+this.spinSpeed;
+					tempParticle.className="particle particle_spin_right_"+this.spinSpeed;
 				}
 				// create a random particle
 				tempParticle.innerHTML=randomParticle(userChosenParticles);
@@ -331,7 +360,7 @@ class fastFallingParticle{
 // start the particle constructors and classes
 class flyingParticle{
 	// a particle that flys across the screen from left to right or right to left
-	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false){
+	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false,lockDirection=false){
 		this.colorFlux=colorFlux;
 		this.spinSpeed=spinSpeed;
 		this.chosenParticles=userChosenParticles;
@@ -355,10 +384,18 @@ class flyingParticle{
 		this.particleDiv.id="particle_"+globalParticleCount;
 		this.globalID=this.particleDiv.id;
 		// randomize the spin direction
-		if(1 == Math.floor(Math.random() * 2) ){
-			this.particleDiv.className="particle_spin_left_"+this.spinSpeed;
+		if( lockDirection ){
+			if( this.flyDirection == "right" ){
+				this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
+			}else{
+				this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
+			}
 		}else{
-			this.particleDiv.className="particle_spin_right_"+this.spinSpeed;
+			if(1 == Math.floor(Math.random() * 2) ){
+				this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
+			}else{
+				this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
+			}
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
@@ -430,10 +467,18 @@ class flyingParticle{
 					tempParticle.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
 				}
 				// randomize the spin direction
-				if(1 == Math.floor(Math.random() * 2) ){
-					tempParticle.className="particle_spin_left_"+this.spinSpeed;
+				if( lockDirection ){
+					if( this.flyDirection == "right" ){
+						tempParticle.className="particle particle_spin_right_"+this.spinSpeed;
+					}else{
+						tempParticle.className="particle particle_spin_left_"+this.spinSpeed;
+					}
 				}else{
-					tempParticle.className="particle_spin_right_"+this.spinSpeed;
+					if(1 == Math.floor(Math.random() * 2) ){
+						tempParticle.className="particle particle_spin_left_"+this.spinSpeed;
+					}else{
+						tempParticle.className="particle particle_spin_right_"+this.spinSpeed;
+					}
 				}
 				// set a random starting position
 				tempParticle.style.top = ( Math.floor(Math.random() * window.innerHeight));
