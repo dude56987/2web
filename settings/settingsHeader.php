@@ -91,7 +91,7 @@ if (count(array_diff(scanDir("/etc/2web/users/"),array(".","..",".placeholder"))
 		<?PHP
 		# draw the module buttons if the module is enabled
 		drawHeaderButton("🔍","All","/settings/search.php");
-		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/settings/log.php","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php"));
+		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/settings/log.php","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php","/settings/queue.php"));
 		$drawVideoOnDemandButton=drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
 		if(! $drawVideoOnDemandButton ){
 			# draw the header button even if only ytdl2nfo is active
@@ -230,7 +230,8 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	($pageURL == "/settings/about.php") ||
 	($pageURL == "/settings/manuals.php") ||
 	($pageURL == "/settings/users.php") ||
- 	($pageURL == "/settings/fortune.php")){
+ 	($pageURL == "/settings/fortune.php") ||
+ 	($pageURL == "/settings/queue.php")){
 	$moduleName="system";
 	echo "	<div class='titleCard'>\n";
 	echo "		<h2>System Settings</h2>\n";
@@ -242,6 +243,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🔮","Fortunes","/settings/fortune.php");
 	drawHeaderButton("📥","Cache","/settings/cache.php");
 	drawHeaderButton("🧹","Clean","/settings/clean.php");
+	drawHeaderButton("🔢","Queue","/settings/queue.php");
 	drawHeaderButton("📋","Log","/settings/log.php");
 	drawHeaderButton("👁️","Views","/views/");
 	drawHeaderButton("📔","Manuals","/settings/manuals.php");
