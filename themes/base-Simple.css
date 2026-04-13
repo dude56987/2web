@@ -311,6 +311,19 @@ hr{
 	visiblity: hidden;
 	border-width: 0px;
 }
+.ruler{
+	visiblity: visible !important;
+	background: var(--solidBackground);
+	width: 95%;
+	border: 0.2rem solid var(--borderColor);
+	/* thicken menubuttons */
+	height: 0.4rem;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
+	margin-left: 0.1rem;
+	margin-right: 0.1rem;
+	display: inline-block !important;
+}
 /* fix the scrollbars */
 /* MOZILLA SCROLLBAR */
 html{

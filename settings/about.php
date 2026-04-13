@@ -40,6 +40,8 @@ include("settingsHeader.php");
 ?>
 <div id='index' class='inputCard'>
 	<h2>Index</h2>
+	<img loading='lazy' src='/logo.png' />
+	<hr class='ruler'>
 	<ul>
 		<li><a href='#version'>Version Info</a></li>
 		<li><a href='#firewall'>Firewall</a></li>
@@ -229,6 +231,14 @@ function drawVersionRow($title,$filePath,$extra=""){
 
 <details id='sslCert' class='titleCard'>
 	<summary><h2>SSL Certificate</h2></summary>
+	<p>
+		You must be a administrator on the server with shell access in order to alter the certificate files. This server will automatically generate a self signed certificate on first run if one does not exist. The administrator interface will not be accessable unless SSL is used.
+	</p>
+	<p>
+		If you want to setup your own SSL certificate you can replace the current certificate at
+	</p>
+	<pre>/var/cache/2web/ssl-cert.crt</pre>
+	<pre>/var/cache/2web/ssl-private.crt</pre>
 	<p>
 		You can copy and store the custom certificate in your management system from below.
 	</p>
