@@ -550,6 +550,8 @@ if (array_key_exists("url",$_GET)){
 			if(! file_exists("$webDirectory/RESOLVER-CACHE/$sum/data.log")){
 				cacheUrl($sum,$videoLink);
 			}
+			# touch the file to update the mtime and delay cache removal
+			touch($storagePath);
 			# wait for a cache link to become available and redirect
 			cacheResolve($sum,$webDirectory);
 		}
