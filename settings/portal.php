@@ -45,6 +45,8 @@ include("settingsHeader.php");
 		<li><a href='#portalscanSourcesPaths'>portal scanSources Paths</a></li>
 		<li><a href='#addPortalSource'>Add portal Source</a></li>
 		<li><a href='#portalServerSourcePaths'>Server portal Sources</a></li>
+		<li><a href='#portalBookmarks'>Portal Bookmarks</a></li>
+		<li><a href='#addPortalBookmark'>Add Portal Bookmark</a></li>
 	</ul>
 </div>
 
@@ -181,7 +183,6 @@ foreach($sourceFiles as $sourceFile){
 	</form>
 	</div>
 </div>
-
 
 <?PHP
 echo "<div id='portalBookmarks' class='settingListCard'>";
