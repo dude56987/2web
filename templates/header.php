@@ -126,7 +126,6 @@ if ($writeFile){
 	if (file_exists("$webDirectory/ai/")){
 		$aiFound=True;
 	}
-
 	# build the header
 	$fileData .= formatText("<div id='header' class='header'>");
 
@@ -511,16 +510,29 @@ if (array_key_exists("q",$_GET)){
 	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
 </form>
 <?PHP
-
+#
+if ($_SERVER['SERVER_PORT'] != 443){
+	formatEcho("<details class='warningBanner'>",2);
+	formatEcho("<summary>",2);
+	formatEcho("🖐︎ You are connected over a unencrypted HTTP connection. 🖐︎",3);
+	formatEcho("</summary>",2);
+	formatEcho("<div class='listCard'>",3);
+	formatEcho("<a class='button' href='https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]."'>",2);
+	formatEcho("🔑",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Encrypt Connection",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+	formatEcho("</div>",2);
+	formatEcho("</details>",2);
+}
+#
 if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
-	formatEcho("<div class='errorBanner'>\n");
-	formatEcho("<h1>");
-	formatEcho("<img class='localSpinner left' src='/spinner.gif'>\n");
-	formatEcho("<img class='localSpinner right' src='/spinner.gif'>\n");
-	formatEcho("Server Reboot Impending\n");
-	formatEcho("</h1>");
-	formatEcho("The server is preparing to reboot. Services may become momentarily unavailable.\n");
-	formatEcho("</div>\n");
+	#formatEcho("<img class='localPulse' src='/pulse.gif'>");
+	echo ("<div class='errorBanner'>\n");
+	echo ("<h2>Server Reboot Impending</h2>\n");
+	echo ("The server is preparing to reboot. Services may become momentarily unavailable.\n");
+	echo ("</div>\n");
 }
 # release the lock on the session for this script to allow pages to load in parallel
 session_write_close();
