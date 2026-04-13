@@ -22,7 +22,7 @@
 	<p>
 		On pages with content that uses the resolver there will be a cache link button.
 	</p>
-	<span class='button'>🔗 Cache Link</span>
+	<span class='button'>📥 Cache Link</span>
 	<p>
 		This link can be placed into a video player to play the video from the server cache.
 	</p>

@@ -22,6 +22,8 @@
 	<p>
 		Spinners are shown when a resource is loading.
 	</p>
-	<img loading='lazy' src='/spinner.gif'>
+	<div style='background: var(--staticBackground)'>
+		<img loading='lazy' src='/spinner.gif'>
+	</div>
 	<hr>
 </div>

@@ -1,6 +1,6 @@
 <!--
 ########################################################################
-# 2web help drawers
+# 2web help spinners
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,32 +18,12 @@
 ########################################################################
 -->
 <div class='titleCard linkInfo'>
-	<h2 id="">Warning Banners</h2>
+	<h2 id="">Notifications</h2>
 	<p>
-		Warning banners indicate things that need your attention.
+		Notifications are for indication of user initated activity mostly. When you activate most parts of the interface first a notification will be shown and then the pulse will be shown at the bottom. The pulse will remain untill the page has finished loading. This is mostly noticable on slower computers and network routers. Notifications will disapear when clicked or after a short delay.
 	</p>
-	<hr>
-	<div class='warningBanner'>
-		This is a simple warning banner.
-	</div>
-	<p>
-		This is a warning banner with a drawer. Click the warning in order to view more information.
-	</p>
-	<details class='warningBanner'>
-		<summary>🖐︎ Click Me! 🖐︎</summary>
-		This is where you would find further information or actions to deal with the warning.
-	</details>
-	<p>
-		Warning banners can also contain complex information.
-	</p>
-	<div class='warningBanner'>
-		This Is the content of a warning banner. Banners can contain any kind of content...
-		<pre>that is necessary for the warning...</pre>
-		<ul>
-			<li>to...</li>
-			<li>be...</li>
-			<li>understood.</li>
-		</ul>
+	<div class='listCard'>
+		<a class='button' onclick='notify("BOO!");'>Show Notification</a>
 	</div>
 	<hr>
 </div>

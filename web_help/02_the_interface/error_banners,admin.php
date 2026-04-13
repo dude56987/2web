@@ -18,27 +18,17 @@
 ########################################################################
 -->
 <div class='titleCard linkInfo'>
-	<h2 id="">Warning Banners</h2>
-	<p>
-		Warning banners indicate things that need your attention.
-	</p>
+	<h2 id="">Error Banners</h2>
 	<hr>
-	<div class='warningBanner'>
-		This is a simple warning banner.
+	<div class='errorBanner'>
+		This is a simple error banner.
 	</div>
 	<p>
-		This is a warning banner with a drawer. Click the warning in order to view more information.
+		Error banners indicate things that need your immediate attention.
 	</p>
-	<details class='warningBanner'>
-		<summary>🖐︎ Click Me! 🖐︎</summary>
-		This is where you would find further information or actions to deal with the warning.
-	</details>
-	<p>
-		Warning banners can also contain complex information.
-	</p>
-	<div class='warningBanner'>
-		This Is the content of a warning banner. Banners can contain any kind of content...
-		<pre>that is necessary for the warning...</pre>
+	<div class='errorBanner'>
+		This Is the content of a error banner. Banners can contain any kind of content...
+		<pre>that is necessary for the error...</pre>
 		<ul>
 			<li>to...</li>
 			<li>be...</li>
