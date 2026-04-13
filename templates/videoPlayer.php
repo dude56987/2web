@@ -265,34 +265,43 @@ document.body.addEventListener('keydown', function(event){
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			toggleFullscreen("video");
+			// hide the video controls after keypresses
+			window.video.controls=false;
 			break;
 			case "ArrowDown":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			volumeDown();
 			notify("Vol -");
-			//videoNotify("Vol -");
+			window.video.controls=false;
 			break;
 			case "ArrowUp":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			volumeUp();
-			//videoNotify("Vol +");
 			notify("Vol +");
+			window.video.controls=false;
 			break;
 			case "ArrowRight":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			seekForward();
-			//videoNotify("Seek ++");
 			notify("Seek ++");
+			window.video.controls=false;
 			break;
 			case "ArrowLeft":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			seekBackward();
-			//videoNotify("Seek --");
 			notify("Seek --");
+			window.video.controls=false;
+			break;
+			case " ":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			playPause();
+			notify("⏯️");
+			window.video.controls=false;
 			break;
 		}
 	//}
@@ -380,7 +389,7 @@ document.body.addEventListener('keydown', function(event){
 		}
 		# load the json and build the page
 		if(property_exists($jsonData, "age_limit")){
-			$ratingText="<span class='button'>Required Viewing Age: ".$jsonData->age_limit."</span>";
+			$ratingText="<span class='button'>Recommended Minimum Viewing Age: ".$jsonData->age_limit."</span>";
 		}else{
 			# there is no description so it is unrated
 			$ratingText="<span class='button'>Rating : UNRATED</span>";
@@ -600,17 +609,30 @@ document.body.addEventListener('keydown', function(event){
 	# draw the rating button
 	echo $ratingText;
 	# draw cache state for cached videos
+	# - check if the cache was had issue and was delayed or broken
+	$cacheDelayed=false;
 	if ( $httpLink ){
 		$pathPrefix=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".getCacheSum($directLinkData)."/";
 		#
 		if(file_exists($pathPrefix."verified.cfg")){
-			echo "	<div class='button'>Cache State <div class='radioIcon'>🟢</div></div>\n";
+			echo "	<div class='button' title='Video is completely cached and ready for playback.'>Cache State <div class='radioIcon'>🟢</div></div>\n";
 		}else if(file_exists($pathPrefix."video.mp4")){
-			echo "	<div class='button'>Cache State <div class='radioIcon'>🟡</div></div>\n";
+			echo "	<div class='button' title='Final video is available but unverified.'>Cache State <div class='radioIcon'>🟡</div></div>\n";
 		}else if(file_exists($pathPrefix."video.m3u")){
-			echo "	<div class='button'>Cache State <div class='radioIcon'>🟠</div></div>\n";
+			#echo "	<div class='button' title='HLS stream is available for playback.'>Cache State <div class='radioIcon'>🟠</div></div>\n";
+			echo "	<div class='button'>Cache State <img class='smallSpinner' src='/spinner.gif'></div>\n";
 		}else{
-			echo "	<div class='button'>Cache State <div class='radioIcon'>🔴</div></div>\n";
+			# check if the failed cache is older than 10 minutes
+			if( is_readable($pathPrefix) and (time()-filemtime($pathPrefix) > 600) ){
+				echo "	<div class='button' title='This video may not be caching properly.'>Cache State <div class='radioIcon'>⚠️</div></div>\n";
+				$tempMessage="A video could not be cached after 10 minutes. This means the queue is running slow or that the media can not be cached.";
+				addToLog("ERROR","Broken Video Link",$tempMessage);
+				$cacheDelayed=true;
+			}else if( is_readable($pathPrefix) and (time()-filemtime($pathPrefix) > 60) ){
+				echo "	<div class='button' title='Cache is waiting for queue to open up...'>Cache State <div class='radioIcon'>⏳</div></div>\n";
+			}else{
+				echo "	<div class='button' title='Video is not being cached yet, Hit the play button to cache and play the video.'>Cache State <div class='radioIcon'>🔴</div></div>\n";
+			}
 		}
 	}
 	if (array_key_exists("play",$_GET)){
@@ -621,6 +643,14 @@ document.body.addEventListener('keydown', function(event){
 </div>
 </div>
 <?PHP
+		# if the cache has been delayed show a warning
+		if($cacheDelayed){
+			$startCacheTime=timeElapsedToHuman(filemtime($pathPrefix));
+			echo "<br>\n";
+			echo "<div class='warningBanner'>The media may not be caching correctly...<br>Caching was started $startCacheTime</div>\n";
+			echo "<br>\n";
+		}
+
 		# flush output so far to the page
 		clear();
 
@@ -1067,7 +1097,7 @@ document.body.addEventListener('keydown', function(event){
 	echo "</div>\n";
 	$downloadLinkText="";
 	# if the direct link is not a http external link add a direct download button for downloading from this server
-	if ( in_array(substr($tempVideoLink,-4),Array(".mp4",".mkv",".mp3",".mov",".avi")) or in_array(substr($tempVideoLink,-3),Array(".ts")) ){
+	if ( in_array(substr($tempVideoLink,-4),Array(".mp4",".mkv",".mp3",".mov",".avi",".avi")) or in_array(substr($tempVideoLink,-3),Array(".ts")) or in_array(substr($tempVideoLink,-5),Array(".webm")) ){
 		# look if the downloadable file is available
 		if (is_readable("/var/cache/2web/web".$tempVideoLink)){
 			# get the downloadable file size
@@ -1307,6 +1337,24 @@ echo $adminData;
 			document.body.style.cursor="none";
 		}, 2000);
 	});
+	// end of playback function
+	function playbackEnd(){
+		closeFullscreen();
+		// show the notification
+		notify("🔚");
+		// disable autoplay
+		document.getElementById('video').autoplay=false;
+		// reload the video element
+		document.getElementById('video').load();
+		console.log("End of playback reached!");
+	}
+<?PHP
+# only activate playback end event if video looping is disabled
+if(! isset($_GET["loop"])){
+	# end of playback event
+	echo "document.getElementById('video').addEventListener('ended',playbackEnd,false);";
+}
+?>
 </script>
 <?PHP
 # send current data and draw the widgets
