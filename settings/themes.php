@@ -458,23 +458,30 @@ if ( ! array_key_exists("search",$_GET) ){
 			<li>
 				Custom effects can be installed by placing PHP files in "/usr/share/2web/effects/"
 			</li>
-		</ul>
-		<form action='admin.php' class='buttonForm' method='post'>
 			<?PHP
 				# get the current effect
 				$currentEffect=trim(file_get_contents("/etc/2web/effect.cfg"));
 				$foundEffects=scanDir("/usr/share/2web/effects/");
 				$foundEffects=array_diff($foundEffects, Array(".",".."));
 				$foundEffects=array_merge($foundEffects, Array("none"));
+				# count the effects
+				$foundEffectsCount=count($foundEffects);
+				echo "<li>Total Effects: $foundEffectsCount</li>";
+			?>
+		</ul>
+		<form action='admin.php' class='buttonForm' method='post'>
+			<?PHP
+				# draw the effect list as a selectable
 				echo "<select name='changeEffect'>";
 				foreach($foundEffects as $effectName){
 					# cleanup the effect name
 					$effectName=str_replace(".php","",$effectName);
+					$cleanEffectName=ucwords(str_replace("_"," ",$effectName));
 					# add the effects
 					if($currentEffect == $effectName){
-						echo "<option value='".$effectName."' selected>".$effectName."</option>\n";
+						echo "<option value='".$effectName."' selected>".$cleanEffectName."</option>\n";
 					}else{
-						echo "<option value='".$effectName."'>".$effectName."</option>\n";
+						echo "<option value='".$effectName."'>".$cleanEffectName."</option>\n";
 					}
 				}
 				echo "</select>";
