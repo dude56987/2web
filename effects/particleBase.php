@@ -166,6 +166,7 @@
 </style>
 <script>
 var globalParticleCount=0;
+var removalActive="";
 // random color
 function randomColor(){
 	var outputColor="";
@@ -507,6 +508,93 @@ class flyingParticle{
 		}, 33);
 	}
 }
+// start the particle constructors and classes
+class staticParticle{
+	// a particle that flys across the screen from left to right or right to left
+	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false,lockDirection=false){
+		this.colorFlux=colorFlux;
+		this.spinSpeed=spinSpeed;
+		this.chosenParticles=userChosenParticles;
+		// randomize the left to right or right to left direction
+		if(1 == Math.floor(Math.random() * 2) ){
+			this.flyDirection="left";
+		}else{
+			this.flyDirection="right";
+		}
+		// set the particle size limits
+		this.maxSize=maxSize;
+		this.minSize=minSize;
+		// set the particle speed limits
+		this.maxSpeed=maxSpeed;
+		this.minSpeed=minSpeed;
+		// set the speed and size based on limits
+		this.speed=( Math.floor(Math.random() * this.maxSpeed) + this.minSpeed );
+		this.size=( Math.floor(Math.random() * this.maxSize) + this.minSize );
+		// create the HTML element for the particle
+		this.particleDiv = document.createElement("div");
+		this.particleDiv.id="particle_"+globalParticleCount;
+		this.globalID=this.particleDiv.id;
+		// randomize the spin direction
+		if( lockDirection ){
+			if( this.flyDirection == "right" ){
+				this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
+			}else{
+				this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
+			}
+		}else{
+			if(1 == Math.floor(Math.random() * 2) ){
+				this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
+			}else{
+				this.particleDiv.className="particle particle_spin_right_"+this.spinSpeed;
+			}
+		}
+		// create a random particle
+		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
+		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
+		if(this.colorFlux){
+			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
+		}
+		// set the position
+		if(this.flyDirection=="left"){
+			this.particleDiv.style.left = (Math.floor(window.innerWidth * Math.random()))+"px";
+			if(flipParticle == true){
+				this.particleDiv.style.scale="-1 1";
+			}else{
+				this.particleDiv.style.scale="1 1";
+			}
+		}else{
+			this.particleDiv.style.left = (Math.floor(Math.random() * window.innerWidth))+"px";
+			if(flipParticle == true){
+				this.particleDiv.style.scale="1 1";
+			}else{
+				this.particleDiv.style.scale="-1 1";
+			}
+		}
+		//
+		this.particleDiv.style.color=self.randomSimpleColor(userChosenColors);
+		this.particleDiv.style.width=this.size+"rem";
+		this.particleDiv.style.height=this.size+"rem";
+		this.particleDiv.style.fontSize=this.size+"rem";
+		this.particleDiv.style.lineHeight=this.size+"rem";
+		this.particleDiv.style.textAlign="center";
+		//this.particleDiv.style.opacity = "0."+(Math.floor(Math.random() * 9));
+		//this.particleDiv.style.transform = "blur("+Math.floor(Math.random * 10)+"px);";
+		this.particleDiv.style.position="fixed";
+		// randomize the starting position
+		this.particleDiv.style.top = ( Math.floor(Math.random() * window.innerHeight));
+		// add the particle to the document
+		document.body.appendChild(this.particleDiv);
+		// increment the particle number
+		globalParticleCount+=1;
+		this.maxFailures = 1;
+		this.removeTrigger=false;
+		this.failures = 0;
+		this.lastTime = Date.now();
+		this.currentTime = Date.now();
+	}
+}
+
 
 // create the default amount of particles
 //for(var index=0;index<Math.floor(window.innerWidth/12);index++){

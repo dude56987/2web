@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web nite gears effect
+# 2web dodgeball effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,11 @@
 include("/usr/share/2web/effects/particleBase.php");
 ?>
 <script>
+// 🌀
 // setup the particles, duplicates increase the probablity of particle being used
-var particleValues = Array("⚙️");
+var particleValues = Array("꩜");
 // create the default amount of particles
 for(var index=0;index<Math.floor(window.innerWidth/16);index++){
-	new staticParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=7,minSize=4,spinSpeed="slow",colorFlux=true,flipParticle=false,lockDirection=false);
+	new staticParticle(userChosenParticles=particleValues,userChosenColors=Array("cyan"),maxSpeed=30,minSpeed=20,maxSize=8,minSize=3,spinSpeed="slow",colorFlux=true,flipParticle=false,lockDirection=true);
 }
 </script>
