@@ -638,10 +638,11 @@ if (array_key_exists("inspector",$_GET)){
 <?PHP
 # send current data and draw the widgets
 clear();
+echo "<hr class='ruler'>\n";
 loadSearchIndexResults($repo,"repos");
 drawPosterWidget("repos", True);
-?>
-<?php
+echo "<hr class='ruler'>\n";
+clear();
 drawMoreSearchLinks($repo);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");

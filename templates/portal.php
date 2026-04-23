@@ -166,11 +166,12 @@ foreach($portalLinks as $portalLink){
 </div>
 <?php
 clear();
-#
+echo "<hr class='ruler'>\n";
+# draw the widgets
 loadSearchIndexResults($scriptDomain);
-#
 drawPosterWidget("portal", True);
-#
+echo "<hr class='ruler'>\n";
+# draw more search links
 drawMoreSearchLinks($scriptDomain);
 // add the footer
 include($_SERVER['DOCUMENT_ROOT']."/footer.php");

@@ -466,19 +466,14 @@ foreach($indexPaths as $currentPath){
 }
 ?>
 </div>
-<hr>
 <?PHP
 clear();
+echo "<hr class='ruler'>\n";
 # related comics
 loadSearchIndexResults($comicTitle,"comics");
 # random comics
 drawPosterWidget("comics", True);
-#loadSearchIndexResults($comicTitle,"shows",8,"Shows");
-#loadSearchIndexResults($comicTitle,"movies");
-#loadSearchIndexResults($comicTitle,"shows",9,"Episodes");
-#loadSearchIndexResults($comicTitle,"music");
-#loadSearchIndexResults($comicTitle,"portal");
-#loadSearchIndexResults($comicTitle,"repos");
+echo "<hr class='ruler'>\n";
 #
 drawMoreSearchLinks($comicTitle);
 ?>

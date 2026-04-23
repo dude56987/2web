@@ -94,8 +94,10 @@ echo "</div>";
 <?php
 	# send current data and draw the widgets
 	clear();
+	echo "<hr class='ruler'>\n";
 	loadSearchIndexResults($title,"graphs");
 	drawPosterWidget("graphs", True);
+	echo "<hr class='ruler'>\n";
 	#
 	drawMoreSearchLinks($title);
 	// add the footer

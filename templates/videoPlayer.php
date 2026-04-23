@@ -1356,12 +1356,14 @@ if(! isset($_GET["loop"])){
 }
 ?>
 </script>
+<hr class='ruler'>
 <?PHP
 # send current data and draw the widgets
 clear();
 loadSearchIndexResults($titleData,"shows",9,"Episodes");
 loadSearchIndexResults($titleData,"shows",8,"Shows");
 loadSearchIndexResults($titleData,"movies");
+echo "<hr class='ruler'>\n";
 #
 drawMoreSearchLinks($titleData);
 ?>

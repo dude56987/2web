@@ -283,13 +283,14 @@ if (! array_key_exists("random",$_GET)){
 }
 ?>
 </div>
-<hr>
 <?PHP
 	clear();
+	echo "<hr class='ruler'>\n";
 	loadSearchIndexResults($showTitle,"shows",8,"Shows");
 	loadSearchIndexResults($showTitle,"movies");
 	drawPosterWidget("shows",true);
 
+	echo "<hr class='ruler'>\n";
 	drawMoreSearchLinks($showTitle);
 
 	# add footer

@@ -156,8 +156,10 @@
 		echo "</div>";
 	}
 	#
-	loadSearchIndexResults($appName,"shows");
-	loadSearchIndexResults($appName,"movies");
+	echo "<hr class='ruler'>\n";
+	loadSearchIndexResults($appName,"applications");
+	loadSearchIndexResults($appName,"all");
+	echo "<hr class='ruler'>\n";
 	#
 	drawMoreSearchLinks($appName);
 ?>
