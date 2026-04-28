@@ -2003,17 +2003,44 @@ if( ! function_exists("loadSearchIndexResults")){
 		$outputText="";
 		$outputIndex="";
 		$foundItems=0;
+		$fastDisplayCount=0;
+		$fastDisplayLimit=40;
+		$fastDisplayUsed=false;
 		foreach (array_keys($countValues) as $word){
 			if(is_readable($word)){
 				$outputFound=true;
-				$outputText .= file_get_contents_tabbed($word,1);
-				$outputIndex .= ($word)."\n";
-				#
-				$foundItems+=1;
-			}
-			if($foundItems > $itemLimit){
-				# limit output to 40 working items
-				break;
+				if($widget){
+					# store the content for placement in the widget
+					$outputText .= file_get_contents_tabbed($word,1);
+					# only increment the found items to limit the output of widgets
+					# - do not apply the item limit to the paginated output below
+					$foundItems+=1;
+					if($foundItems > $itemLimit){
+						# limit output to 40 working items
+						break;
+					}
+				}else{
+					# store the content in a index
+					$outputIndex .= ($word)."\n";
+					if ($fastDisplayCount < $fastDisplayLimit){
+						# draw the imediate index
+						echo file_get_contents_tabbed($word,1);
+						clear();
+						$fastDisplayCount+=1;
+						if ($fastDisplayCount == $fastDisplayLimit){
+							echo "<hr class='ruler'>\n";
+							echo "<hr>\n";
+							$extraOptions="";
+							if (isSet($_GET["filter"])){
+								$extraOptions.=("&filter=".$_GET["filter"]);
+							}
+							echo "<a class='button bigButton' href='?q=$ogQuery$extraOptions' onclick='notify(\"🔗\");'>🗃️ Load More Results</a>\n";
+							echo "<hr>\n";
+							clear();
+							$fastDisplayUsed=true;
+						}
+					}
+				}
 			}
 		}
 		# only draw the widget if there is output
@@ -2051,7 +2078,9 @@ if( ! function_exists("loadSearchIndexResults")){
 				if(! file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
 					file_put_contents("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index",$outputIndex);
 				}
-				displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
+				if ($fastDisplayUsed == false){
+					displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
+				}
 			}
 		}
 	}
