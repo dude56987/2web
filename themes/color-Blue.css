@@ -28,6 +28,11 @@
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
+@media (prefers-reduced-transparency: reduce){
+	:root{
+		--glassBackground: rgb(0,0,100);
+	}
+}
 .helpQuestionMark{
 	background: chocolate !important;
 }

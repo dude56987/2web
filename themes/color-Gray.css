@@ -28,3 +28,6 @@
 	--highlightBorder: lightgray;
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
+@media (prefers-reduced-transparency: reduce){
+	--glassBackground: rgb(100,100,100);
+}
