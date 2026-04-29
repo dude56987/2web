@@ -239,10 +239,20 @@ html{
 	font-family: font2webGlyph;
 	src: url("/fonts/symbola.ttf");
 }
+@font-face{
+	font-family: font2webGlyph2;
+	src: url("/fonts/unifont_upper.otf");
+}
+@font-face{
+	font-family: font2webGlyph3;
+	src: url("/fonts/unifont.otf");
+}
 button{
-	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,monospace;
+	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,font2webGlyph2,font2webGlyph3,monospace;
 	@supports (-moz-appearance:none){
 		font-family: monospace;
+		font-family: font2webGlyph3;
+		font-family: font2webGlyph2;
 		font-family: font2webGlyph;
 		font-family: fallbackFont2;
 		font-family: fallbackFont;
@@ -250,9 +260,11 @@ button{
 	}
 }
 html{
-	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,monospace;
+	font-family: font2web,fallbackFont,fallbackFont2,font2webGlyph,font2webGlyph2,font2webGlyph3,monospace;
 	@supports (-moz-appearance:none){
 		font-family: monospace;
+		font-family: font2webGlyph3;
+		font-family: font2webGlyph2;
 		font-family: font2webGlyph;
 		font-family: fallbackFont2;
 		font-family: fallbackFont;
@@ -315,9 +327,9 @@ hr{
 	visiblity: visible !important;
 	background: var(--solidBackground);
 	width: 95%;
-	border: 0.2rem solid var(--borderColor);
+	border: 0.5rem solid var(--borderColor);
 	/* thicken menubuttons */
-	height: 0.4rem;
+	height: 0.5rem;
 	margin-top: 0.2rem;
 	margin-bottom: 0.2rem;
 	margin-left: 0.1rem;
@@ -1321,6 +1333,12 @@ ol{
 	height: 2rem;
 	vertical-align: middle;
 }
+.bigButton{
+	display: block !important;
+	width: 90% !important;
+	margin-left: auto !important;
+	margin-right: auto !important;
+}
 .button{
 	font-size: 1rem;
 	box-shadow: 0px 0px 1rem var(--shadowColor);
@@ -2257,6 +2275,9 @@ table{
 	left: 0px;
 	cursor: progress;
 }
+#notificationText{
+	background: var(--staticBackground) !important;
+}
 #notificationText img{
 	position: fixed;
 	top: 45dvh;
@@ -2277,7 +2298,10 @@ table{
 	background: var(--glassBackground);
 	min-height: 8rem;
 	text-align: center;
-	margin-bottom: 1rem;
+	margin-bottom: 0.5rem;
+	margin-top: 0.5rem;
+	margin-left: 0rem;
+	margin-right: 0rem;
 	border-bottom: solid var(--borderColor) 0.2rem;
 	border-top: solid var(--borderColor) 0.2rem;
 	overflow: hidden;
@@ -2707,18 +2731,48 @@ pre{
 	padding: 1rem;
 	margin: 0.5rem;
 }
-/* Set the dark mode theme */
-@media (perfers-color-scheme: dark){
-	:root{
-		--solidBackground: #383838 !important;
-		--glassBackground: rgba(100,100,100,0.85) !important;
-		--borderColor: white !important;
-		--textColor: white !important;
-		--shadowColor: black !important;
-		--highlightText: black !important;
-		--highlightBackground: white !important;
-		--highlightBorder: lightgray !important;
-		--staticBackground: radial-gradient(var(--solidBackground), rgba(0,0,0,0)) !important;
+@media (prefers-reduced-motion: reduce){
+	.particle{
+		display: none !important;
+	}
+	*{
+		animation: none !important;
+		transition: none !important;
+	}
+}
+@media (prefers-contrast: more){
+	*{
+		color: black !important;
+		background: white !important;
+		text-shadow: none !important;
+		box-shadow: none !important;
+	}
+	h1,h2,h3,h4{
+		border-top: solid 0.3rem black;
+		border-bottom: solid 0.3rem black;
+		border-right: none;
+		border-left: none;
+	}
+	.titleCard{
+		break-after: page;
+	}
+	.settingsListCard{
+		break-after: page;
+	}
+	.searchBox{
+		border: solid 0.3rem black;
+	}
+	.singleStat{
+		border: solid 0.3rem black;
+	}
+	td{
+		border: solid 0.3rem black;
+	}
+	.titleCard{
+		border: solid 0.3rem black;
+	}
+	.button{
+		border: solid 0.3rem black;
 	}
 }
 /* WIKI styles*/
@@ -2880,9 +2934,15 @@ pre{
 	border-top: solid var(--borderColor) 0.1rem;
 	background: var(--glassBackground);
 	z-index: 20;
+	opacity: 1;
+	transition: 5s opacity;
+	animation-timing-function: linear;
 }
 .globalPulse:hover{
+	transition: 5s opacity;
+	animation-timing-function: ease-out;
 	z-index: 0 !important;
+	opacity: 0;
 }
 .globalSpinner{
 	position: fixed;
@@ -2906,6 +2966,11 @@ pre{
 	border-bottom: solid var(--borderColor) 0.1rem;
 	background: var(--glassBackground);
 	z-index: 20;
+}
+.localPulse:hover{
+	z-index: 0 !important;
+	bottom: unset !important;
+	top: 0px;
 }
 .gitRepoGraph{
 	border: solid var(--borderColor) 0.1rem;
@@ -3075,6 +3140,10 @@ details{
 	color: white !important;
 	font-weight: bold;
 	text-shadow: none;
+	border-left: none;
+	border-right: none;
+	border-top: 0.2rem var(--borderColor) solid;
+	border-bottom: 0.2rem var(--borderColor) solid;
 }
 .warningBanner{
 	animation: pulseShine 3s infinite;
@@ -3082,18 +3151,18 @@ details{
 	background: yellow !important;
 	color: black !important;
 	font-weight: bold;
-	text-shadow: none;
+	text-shadow: 0px 0px 1rem white);
+	border-top: 0.2rem var(--borderColor) solid;
+	border-bottom: 0.2rem var(--borderColor) solid;
 	border-color: black !important;
+	/*
 	*{
 		color: black !important;
 		background: yellow !important;
 		border-color: black !important;
-		*{
-			color: black !important;
-			background: yellow !important;
-			border-color: black !important;
-		}
+		text-shadow: 0px 0px 1rem white);
 	}
+	*/
 }
 .whiteboard{
 		color: var(--highlightText) !important;
@@ -3530,6 +3599,9 @@ details{
 		display: none !important;
 	}
 	.widget{
+		display: none !important;
+	}
+	.particle{
 		display: none !important;
 	}
 }
