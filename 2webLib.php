@@ -373,6 +373,7 @@ if( ! function_exists("addToQueue")){
 if( ! function_exists("listAllIndex")){
 	function listAllIndex($indexPath,$sortMethod="forward"){
 		# List all text files stored in a .index file
+		#
 		$foundData=false;
 		$tempData="";
 		#logPrint("loading index file ".$indexPath);
@@ -462,6 +463,7 @@ if( ! function_exists("listIndexPage")){
 		if ( file_exists( $indexPath ) ){
 			$pageCounter=1;
 			$pageItemCounter=0;
+			$totalFoundItems=0;
 			if ($sortMethod == "forward"){
 				# forward read method read data the most memory efficent way
 				$fileHandle = fopen( $indexPath , "r" );
@@ -483,6 +485,7 @@ if( ! function_exists("listIndexPage")){
 					if ( $pageCounter == $pageNumber ){
 						# read the file in peices
 						$foundData = readFileInPackets($fileData);
+						$totalFoundItems+=1;
 					}
 				}
 			}else if ($sortMethod == "reverse"){
@@ -504,6 +507,7 @@ if( ! function_exists("listIndexPage")){
 						#$foundData = file_get_contents($line);
 						#echo $foundData;
 						$foundData = readFileInPackets($line);
+						$totalFoundItems+=1;
 					}
 				}
 			}else if ($sortMethod == "random"){
@@ -527,10 +531,14 @@ if( ! function_exists("listIndexPage")){
 						#$foundData = file_get_contents($line);
 						#echo $foundData;
 						$foundData = readFileInPackets($line);
+						$totalFoundItems+=1;
 					}
 				}
 			}
 			#logPrint("index file '$indexPath' is a file reading");
+		}
+		if ($totalFoundItems == 0){
+			displayEmptyMessage("Index Was Empty");
 		}
 		# blank the data
 		if ($foundData){
@@ -858,6 +866,52 @@ if( ! function_exists("displayIndexWithPages")){
 				echo "</div>\n";
 				echo "</div>";
 			}
+			if($fileItemCount == 0){
+				displayEmptyMessage("Index was empty");
+			}
+		}
+	}
+}
+################################################################################
+if( ! function_exists("displayEmptyMessage")){
+	function displayEmptyMessage($message="No results were found.",$search=""){
+		# empty message
+		# draw the empty message
+		echo "<h2>";
+		echo $message;
+		echo "</h2>";
+		echo "<hr class='ruler'>";
+		if($search == ""){
+			# draw the random media widgets
+			drawPosterWidget("all", True);
+			# random movies and shows
+			drawPosterWidget("movies", True);
+			drawPosterWidget("shows", True);
+			#
+			drawPosterWidget("comics", True);
+			#
+			drawPosterWidget("music",True,True);
+			#
+			drawPosterWidget("repos", True);
+			#
+			drawPosterWidget("portal", True);
+			#
+			drawPosterWidget("graphs", True);
+			#
+			drawPosterWidget("applications", True);
+		}else{
+			echo "<hr>";
+			loadSearchIndexResults($search,"episodes",9,"Episodes",40,true);
+			loadSearchIndexResults($search,"shows",8,"Shows",40,true);
+			loadSearchIndexResults($search,"movies",-1,"Movies",40,true);
+			loadSearchIndexResults($search,"comics",-1,"Comics",40,true);
+			loadSearchIndexResults($search,"music",-1,"Music",40,true);
+			loadSearchIndexResults($search,"artists",8,"Artists",40,true);
+			loadSearchIndexResults($search,"albums",9,"Albums & Tracks",40,true);
+			loadSearchIndexResults($search,"portal",-1,"Portal",40,true);
+			loadSearchIndexResults($search,"repos",-1,"Repos",40,true);
+			loadSearchIndexResults($search,"live",-1,"Live Channels",40,true);
+			echo "<hr>";
 		}
 	}
 }
@@ -1848,6 +1902,22 @@ if( ! function_exists("requireGroup")){
 if( ! function_exists("findWordGroups")){
 	function findWordGroups($searchQuery){
 		# create an array from a string of the word groups
+		#
+		# - The string becomes word groupings for example
+		#
+		# "The quick brown fox jumps over the lazy dog"
+		#
+		# - The above string is split based on groupings with a context of
+		#   two words
+		#  - "the quick"
+		#  - "quick brown"
+		#  - "brown fox"
+		#  - "fox jumps"
+		#  - "jumps over"
+		#  - "over the"
+		#  - "the lazy"
+		#  - "lazy dog"
+		#
 		$foundWords=explode(" ",$searchQuery);
 		$outputData=Array();
 		for($index=0;$index<count($foundWords);$index++){
@@ -1869,6 +1939,9 @@ if( ! function_exists("loadSearchIndexResults")){
 		#   - comics
 		#   - movies
 		#   - shows
+		#   - episodes
+		#
+		# - Some filter options overwrite depth option like 'episodes' and 'tracks'
 		#
 		# - TODO
 		#  - Matching should count numbers above the search query count for index results as
@@ -1878,17 +1951,22 @@ if( ! function_exists("loadSearchIndexResults")){
 
 		#
 		$filterType=$filter;
+		$filterPath="";
+		$userGroupPerms=Array();
 		# check for group permissions in filter type
 		if ($filterType == "all"){
 			$groups=listModules();
+			# mark output to be shown unless permission check is failed
+			$showOutput = true;
 			# check user has all permissions for groups
 			foreach($groups as $groupName){
 				if(! requireGroup($groupName, false)){
 					$showOutput = false;
-					break;
+					#break;
+					#echo "";
 				}else{
-					# mark output to be shown
-					$showOutput = true;
+					#$showOutput = true;
+					array_push($userGroupPerms,$groupName);
 				}
 			}
 		}else if ($filterType == "graphs"){
@@ -1896,49 +1974,68 @@ if( ! function_exists("loadSearchIndexResults")){
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
 		}else if ($filterType == "channels"){
+			$filterPath = "live";
 			$showOutput = requireGroup("iptv2web", false);
 		}else if ($filterType == "repos"){
 			$showOutput = requireGroup("git2web", false);
 		}else if ($filterType == "episodes"){
+			# episodes is a meta path for episodes in the shows path
+			$filterPath = "shows";
+			# set the depth for this filter
+			$depth=9;
 			$showOutput = requireGroup("nfo2web", false);
 		}else if ($filterType == "movies"){
 			$showOutput = requireGroup("nfo2web", false);
 		}else if ($filterType == "shows"){
+			# set the depth for this filter
+			$depth=8;
 			$showOutput = requireGroup("nfo2web", false);
 		}else if ($filterType == "music"){
 			$showOutput = requireGroup("music2web", false);
 		}else if ($filterType == "artists"){
+			$filterPath = "music";
+			$depth=8;
 			$showOutput = requireGroup("music2web", false);
 		}else if ($filterType == "albums"){
+			$filterPath = "music";
+			$depth=9;
 			$showOutput = requireGroup("music2web", false);
 		}else if ($filterType == "tracks"){
+			$depth=9;
+			$filterPath= "music";
 			$showOutput = requireGroup("music2web", false);
 		}else if ($filterType == "portal"){
 			$showOutput = requireGroup("portal2web", false);
-		}else if ($filterType == "channels"){
-			$showOutput = requireGroup("iptv2web", false);
 		}else if ($filterType == "applications"){
 			$showOutput = requireGroup("php2web", false);
 		}else{
 			$showOutput = true;
 		}
-		if ($showOutput == false){
-			# hide the output if group permissions are not available for this widget
-			return false;
+		#
+		if($filterPath == ""){
+			$filterPath = "$filterType";
 		}
-
 		# get the orignal query
 		$ogQuery=$searchQuery;
 		$searchQuery=cleanText($searchQuery);
 		$searchQuery=spaceCleanedText($searchQuery);
-		# split the query into word groups
+		# check if output should be shown based on permissions
+		if ($showOutput == false){
+			if (! $widget){
+				# show empty message when displaying search results
+				displayEmptyMessage("You do not have permission to access this content filter.","$searchQuery");
+			}
+			# hide the output if group permissions are not available for this widget
+			return false;
+		}
+		# split the query into word groupings
 		$wordGroups=findWordGroups($searchQuery);
 		# explode the search query into an array
 		$searchQuery=explode(" ",$searchQuery);
 		# add the word groups
 		$searchQuery=array_merge($searchQuery,$wordGroups);
 		# build the sum
-		$searchSum=md5($ogQuery.$filter);
+		$searchSum=md5($ogQuery.$filter.join(";",$userGroupPerms));
 		if(! $widget){
 			# load the cached file if it exists
 			if( file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
@@ -1947,57 +2044,51 @@ if( ! function_exists("loadSearchIndexResults")){
 			}
 		}
 		#
-		$allIndex="";
+		$allIndex=Array();
+		$tempIndex=Array();
 		#
 		foreach ($searchQuery as $word){
 			$cleanWord=strtolower("$word");
 			if (is_readable("/var/cache/2web/generated/searchIndex/$cleanWord.index")){
 				# check if the filter is enabled
-				if($filter=="all"){
-					# load the index for each word
-					$allIndex .= file_get_contents("/var/cache/2web/generated/searchIndex/$cleanWord.index");
-				}else{
-					$tempIndex="";
-					# load the word file
-					$tempFileIndex = file("/var/cache/2web/generated/searchIndex/$cleanWord.index");
-					# filter file by the secondary web path
-					# - comics
-					# - movies
-					# - shows
-					foreach ($tempFileIndex as $tempIndexEntry){
-						if(stripos($tempIndexEntry,"/var/cache/2web/web/$filter/") !== false){
-							# figure out the depth
-							if($depth > -1){
-								# only give items of a specific depth
-								if (stripos($tempIndexEntry,"/") !== false){
-									#addToLog("DEBUG","widget index entry","index entry '".$tempIndexEntry."'");
-									#addToLog("DEBUG","widget count","Widget count '".count(explode("/",$tempIndexEntry))."'");
-									#addToLog("DEBUG","widget depth","Widget depth '".$depth."'");
-									if( count(explode("/",$tempIndexEntry)) == ($depth) ){
-										#addToLog("DEBUG","Depth Matched","Adding index entry '".$tempIndexEntry."'");
-										$tempIndex .= $tempIndexEntry;
-									}
+				# load the word file
+				$tempFileIndex = file("/var/cache/2web/generated/searchIndex/$cleanWord.index", FILE_IGNORE_NEW_LINES);
+				# filter file by the secondary web path
+				# - comics
+				# - movies
+				# - shows
+				foreach ($tempFileIndex as $tempIndexEntry){
+					#
+					if( (stripos($tempIndexEntry,"/var/cache/2web/web/$filterPath/") !== false) or ($filterPath == "all") ){
+						# figure out the depth
+						if($depth > -1){
+							# only give items of a specific depth
+							if (stripos($tempIndexEntry,"/") !== false){
+								if( count(explode("/",$tempIndexEntry)) == ($depth) ){
+									array_push($tempIndex,$tempIndexEntry);
 								}
 							}else{
-								# no depth argument was given
-								$tempIndex .= $tempIndexEntry;
+								# add all entries if the depth argument is not given ignore the depth
+								array_push($tempIndex,$tempIndexEntry);
 							}
+						}else{
+							# no depth argument was given
+							array_push($tempIndex,$tempIndexEntry);
 						}
 					}
-					# add the filtered temp index to the all index
-					$allIndex .= $tempIndex;
 				}
 			}
 		}
-		# split the index into a array
-		$allIndex=explode("\n",$allIndex);
+		# the filtered temp index will now become the all index
+		$allIndex = $tempIndex;
 		# sort the all index
+		# - this will alphabetize results with the same score
 		sort($allIndex);
 		# count the unique items
+		# - this also removes duplicates from the array
 		$countValues=array_count_values($allIndex);
+		# sort based on count of repeated values
 		arsort($countValues);
-		# limit output to 40 results
-		#$countValues=array_slice($countValues,0,40);
 		#	output the index
 		$outputFound=false;
 		$outputText="";
@@ -2006,12 +2097,12 @@ if( ! function_exists("loadSearchIndexResults")){
 		$fastDisplayCount=0;
 		$fastDisplayLimit=40;
 		$fastDisplayUsed=false;
-		foreach (array_keys($countValues) as $word){
-			if(is_readable($word)){
+		foreach (array_keys($countValues) as $tempMediaIconPath){
+			if(file_exists($tempMediaIconPath)){
 				$outputFound=true;
 				if($widget){
 					# store the content for placement in the widget
-					$outputText .= file_get_contents_tabbed($word,1);
+					$outputText .= file_get_contents_tabbed($tempMediaIconPath,1);
 					# only increment the found items to limit the output of widgets
 					# - do not apply the item limit to the paginated output below
 					$foundItems+=1;
@@ -2021,10 +2112,11 @@ if( ! function_exists("loadSearchIndexResults")){
 					}
 				}else{
 					# store the content in a index
-					$outputIndex .= ($word)."\n";
+					$outputIndex .= ($tempMediaIconPath)."\n";
 					if ($fastDisplayCount < $fastDisplayLimit){
 						# draw the imediate index
-						echo file_get_contents_tabbed($word,1);
+						echo file_get_contents_tabbed($tempMediaIconPath,1);
+						$foundItems+=1;
 						clear();
 						$fastDisplayCount+=1;
 						if ($fastDisplayCount == $fastDisplayLimit){
@@ -2034,6 +2126,7 @@ if( ! function_exists("loadSearchIndexResults")){
 							if (isSet($_GET["filter"])){
 								$extraOptions.=("&filter=".$_GET["filter"]);
 							}
+							#
 							echo "<a class='button bigButton' href='?q=$ogQuery$extraOptions' onclick='notify(\"🔗\");'>🗃️ Load More Results</a>\n";
 							echo "<hr>\n";
 							clear();
@@ -2044,7 +2137,7 @@ if( ! function_exists("loadSearchIndexResults")){
 			}
 		}
 		# only draw the widget if there is output
-		if($outputFound){
+		if($foundItems > 0){
 			if($widget){
 				echo "<div class='titleCard widget'>\n";
 			}
@@ -2061,8 +2154,13 @@ if( ! function_exists("loadSearchIndexResults")){
 			}
 			if($widget){
 				echo $outputText;
-				# create the search link
-				echo "		<a class='indexSeries' href='/search.php?q=$ogQuery'>\n";
+				# create the search link with filters enabled if used
+				#if(isset($_GET["filter"])){
+				#	echo "		<a class='indexSeries' href='/search.php?q=$ogQuery&filter=$filterPath'>\n";
+				#}else{
+				#	echo "		<a class='indexSeries' href='/search.php?q=$ogQuery'>\n";
+				#}
+				echo "		<a class='indexSeries' href='/search.php?q=$ogQuery&filter=$filter'>\n";
 				echo "			<h2 class='moreEpisodesLinkIcon'>\n";
 				echo "				🔍\n";
 				echo "			</h2>\n";
@@ -2073,7 +2171,7 @@ if( ! function_exists("loadSearchIndexResults")){
 				echo "	</div>\n";
 				echo "</div>\n";
 			}else{
-				$searchSum=md5($ogQuery.$filter);
+				#$searchSum=md5($ogQuery.$filter);
 				# check for the index sum and load it
 				if(! file_exists("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index")){
 					file_put_contents("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index",$outputIndex);
@@ -2081,6 +2179,11 @@ if( ! function_exists("loadSearchIndexResults")){
 				if ($fastDisplayUsed == false){
 					displayIndexWithPages("/var/cache/2web/web/web_cache/fuzzy_$searchSum.index","No Results Found!",48);
 				}
+			}
+		}else{
+			#
+			if(! $widget){
+				displayEmptyMessage("No search results were found.",$ogQuery);
 			}
 		}
 	}
@@ -2453,7 +2556,6 @@ if( ! function_exists("cleanText")){
 		# clean up the text for use in web urls and directory paths
 		# - uses fullwidth versions of caracters that interfere with URLs
 		$filters=loadCleanTextFilter();
-		#addToLog("DEBUG","Loading clean text filters",var_export($filters,true));
 		#
 		$cleanedText=$inputText;
 		# read each filter value and run the filter on the text

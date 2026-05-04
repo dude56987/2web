@@ -188,6 +188,82 @@ function moreSynLinks($searchQuery){
 	echo "</div>\n";
 }
 ################################################################################
+function searchDict($searchQuery){
+	echo "<script>console.log('Searching dict');</script>";
+	# only search for single word queries
+	if (stripos($searchQuery," ") !== false){
+		# log in the browser console that no dict results were logged
+		echo "<script>console.log('No dictionary results for multi word queries.');</script>";
+		# exit the function because a single word does not contain spaces
+		return false;
+	}else{
+		# run the search
+		echo "<script>console.log('Searching the server dictionaries...');</script>";
+	}
+	# build the dict data
+	$dictData="";
+	$definitionCounter=0;
+	$definitionData = shell_exec("dict '".escapeshellcmd($searchQuery)."' | tr -s '\n'");
+	if ( $definitionData ){
+		$definitionData = preg_replace("/[0-9]{1,9} definition data/","",$definitionData);
+		# build the definition data
+		$definitionData = explode("\n",$definitionData);
+
+		$dictData .= "<div class='settingListCard'>\n";
+		$dictData .= "<h2>";
+		$dictData .= "Definition";
+		$dictData .= "</h2>";
+		$dictData .= "<div class='listCard'>\n";
+
+		$tempDefinition="";
+		$allDefinitions=Array();
+		foreach($definitionData as $definitionLine){
+			# check the tab depth
+			if (stripos($definitionLine,"definitions found")){
+				# this is the header and should be skipped
+				echo " ";
+			}else if (strlen($definitionLine) >= 2){
+				if (($definitionLine[0] != " ") && ($definitionLine[1] != " ")){
+					# this is the start of a new definition
+					# append the previous definition to the definition array
+					$allDefinitions=array_merge($allDefinitions,Array($tempDefinition));
+					# blank the temp definition out for adding the new definiton
+					$tempDefinition = "";
+					# add the discovered line to the new definition entry
+					$tempDefinition .= $definitionLine."\n";
+				}else{
+					# this is part of the current definition
+					$tempDefinition .= $definitionLine."\n";
+				}
+			}else{
+				$tempDefinition .= $definitionLine."\n";
+			}
+		}
+		# for each definition draw a definition box object
+		foreach($allDefinitions as $definition){
+			if (strlen($definition) >= 2){
+				if (($definition[0] != " ") && ($definition[1] != " ")){
+					$dictData .= "<div class='inputCard'>";
+					$dictData .= "<h3>Definition ".($definitionCounter+1)."</h3>";
+					$dictData .= "<pre class=''>";
+					$dictData .= $definition;
+					$dictData .= "</pre>";
+					$dictData .= "</div>";
+					$definitionCounter+=1;
+				}
+			}
+		}
+		$dictData .= "</div>";
+		$dictData .= "</div>";
+	}
+	# if definitons are found print the output
+	if( $definitionCounter > 0 ){
+		echo $dictData;
+	}else{
+		echo "<script>console.log('No dictionary results. Found definiton count \"$definitionCounter\"');</script>";
+	}
+}
+################################################################################
 function scan_dir($directory){
 	if (is_dir($directory)){
 		$tempData = scandir($directory);
@@ -493,9 +569,21 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	clear();
 	echo "<div class='settingListCard'>\n";
 	echo "	<h1 id='quickSearch'>Search Results for '$searchQuery'</h1>\n";
+	# load special weather command if used
+	if ( ($_GET['q'] == "weather") or ($_GET['q'] == "!weather") ){
+		if(file_exists("/var/cache/2web/web/weather.index")){
+			echo "<div>\n";
+			echo "<h2>Current Weather<h2>\n";
+			echo file_get_contents("/var/cache/2web/web/weather.index");
+			echo "</div>\n";
+		}
+	}
 	# draw the bang help if it exists
 	echo $bangHelp;
 	checkSpelling($searchQuery);
+	# search for dictonary results for each word
+	searchDict($cleanQuery);
+	# draw the results filters
 	echo "	<div class='titleCard'>\n";
 	echo "	<h2>Filter Results</h2>";
 	echo "	<div class='listCard'>\n";
@@ -510,25 +598,32 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	echo "		</a>\n";
 	#$searchFilters=Array("comics","repos","shows","movies","music","portal");
 	$searchFilters=Array();
-	# 2d array
-	$searchFilters=array_merge($searchFilters,Array(Array("comics","comic2web","📚")));
-	$searchFilters=array_merge($searchFilters,Array(Array("movies","movies2web","🎥")));
-	$searchFilters=array_merge($searchFilters,Array(Array("shows","shows2web","📺")));
-	$searchFilters=array_merge($searchFilters,Array(Array("music","music2web","🎧")));
-	$searchFilters=array_merge($searchFilters,Array(Array("repos","git2web","💾")));
-	$searchFilters=array_merge($searchFilters,Array(Array("live","iptv2web","📡")));
-	$searchFilters=array_merge($searchFilters,Array(Array("graphs","graph2web","📊")));
-	foreach($searchFilters as $filterName){
+
+	function drawFilterButton($path,$permGroup,$buttonText,$searchQuery){
 		$buttonState="button";
-		if (requireGroup($filterName[1],false)){
-			if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "") && ($_GET['filter'] == $filterName[0])){
+		if (requireGroup($permGroup,false)){
+			if (array_key_exists("filter",$_GET) && ($_GET['filter'] != "") && ($_GET['filter'] == $path)){
 				$buttonState="activeButton";
 			}
-			echo "		<a class='$buttonState' href='/search.php?filter=".$filterName[0]."&q=$searchQuery'>\n";
-			echo "			".$filterName[2]." ".$filterName[0]."\n";
+			echo "		<a class='$buttonState' href='/search.php?filter=".$path."&q=$searchQuery'>\n";
+			echo "			".$buttonText."\n";
 			echo "		</a>\n";
 		}
 	}
+	# draw all the filter buttons
+	# - path to filter for and button text
+	# - permisssions required for this path
+	# - Icon for the filter
+	# - optional depth to filter for
+	drawFilterButton("comics","comic2web","📚 Comics",$searchQuery);
+	drawFilterButton("movies","nfo2web","🎥 Movies",$searchQuery);
+	drawFilterButton("shows","nfo2web","📺 Shows",$searchQuery);
+	drawFilterButton("episodes","nfo2web","🎞️ Episodes",$searchQuery);
+	drawFilterButton("music","music2web","🎧 Music",$searchQuery);
+	drawFilterButton("repos","git2web","💾 Repos",$searchQuery);
+	drawFilterButton("live","iptv2web","📡 Live",$searchQuery);
+	drawFilterButton("graphs","graph2web","📊 Graphs",$searchQuery);
+	drawFilterButton("applications","php2web","💾 Applications",$searchQuery);
 	echo "		<a class='button' href='/search.php?m=$searchQuery'>\n";
 	echo "			🧲 Related Media\n";
 	echo "		</a>\n";
@@ -543,23 +638,15 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	# this is a quick search using only the index
 	clear();
 	echo "<hr>";
-	loadSearchIndexResults($_GET["q"],$filter,-1,"All",400,false);
-	echo "<hr>";
-	clear();
 	#
-	drawMoreSearchLinks($searchQuery,true);
-	echo "<hr>";
-	#loadSearchIndexResults($_GET["q"],"shows",9,"Episodes",40);
-	#loadSearchIndexResults($_GET["q"],"shows",8,"Shows",40);
-	#loadSearchIndexResults($_GET["q"],"movies",-1,"Movies",40);
-	#loadSearchIndexResults($_GET["q"],"comics",-1,"Comics",40);
-	#loadSearchIndexResults($_GET["q"],"music",-1,"Music",40);
-	#loadSearchIndexResults($_GET["q"],"music",8,"Artists",40);
-	#loadSearchIndexResults($_GET["q"],"music",9,"Albums & Tracks",40);
-	#loadSearchIndexResults($_GET["q"],"portal",-1,"Portal",40);
-	#loadSearchIndexResults($_GET["q"],"repos",-1,"Repos",40);
+	loadSearchIndexResults($_GET["q"],$filter,-1,"All",400,false);
+	clear();
 	echo "<hr>";
 	echo "</div>\n";
+	#
+	echo "<hr class='ruler'>";
+	#
+	drawMoreSearchLinks($searchQuery,true);
 }else if (array_key_exists("m",$_GET) && ($_GET['m'] != "")){
 	# output matching graph
 	cleanGetInput();
@@ -583,15 +670,16 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	clear();
 	#
 	echo "<hr>";
-	loadSearchIndexResults($searchQuery,"shows",9,"Episodes",40,true);
+	loadSearchIndexResults($searchQuery,"episodes",9,"Episodes",40,true);
 	loadSearchIndexResults($searchQuery,"shows",8,"Shows",40,true);
 	loadSearchIndexResults($searchQuery,"movies",-1,"Movies",40,true);
 	loadSearchIndexResults($searchQuery,"comics",-1,"Comics",40,true);
 	loadSearchIndexResults($searchQuery,"music",-1,"Music",40,true);
-	loadSearchIndexResults($searchQuery,"music",8,"Artists",40,true);
-	loadSearchIndexResults($searchQuery,"music",9,"Albums & Tracks",40,true);
+	loadSearchIndexResults($searchQuery,"artists",8,"Artists",40,true);
+	loadSearchIndexResults($searchQuery,"albums",9,"Albums & Tracks",40,true);
 	loadSearchIndexResults($searchQuery,"portal",-1,"Portal",40,true);
 	loadSearchIndexResults($searchQuery,"repos",-1,"Repos",40,true);
+	loadSearchIndexResults($searchQuery,"live",-1,"Live Channels",40,true);
 	echo "<hr>";
 	drawMoreSearchLinks($searchQuery);
 	echo "</div>\n";
