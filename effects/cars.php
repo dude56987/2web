@@ -21,7 +21,17 @@ include("/usr/share/2web/effects/particleBase.php");
 ?>
 <script>
 // setup the particles, duplicates increase the probablity of particle being used
-var particleValues = Array("🚌","🚐","🚗","🚙","🛻","🚚","🚛","🏎️","🏍️","🚲");
+var particleValues = Array("🚲");
+// create vehicles with color randomized
+for(var index=0;index<Math.floor(window.innerHeight/512);index++){
+	new flyingParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=8,minSpeed=6,maxSize=2,minSize=1,spinSpeed="none",true);
+}
+var particleValues = Array("🏍️");
+// create vehicles with color randomized
+for(var index=0;index<Math.floor(window.innerHeight/512);index++){
+	new flyingParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=20,minSpeed=14,maxSize=2,minSize=1,spinSpeed="none",true);
+}
+var particleValues = Array("🚌","🚐","🚗","🚙","🛻","🚚","🚛","🏎️");
 // create vehicles with color randomized
 for(var index=0;index<Math.floor(window.innerHeight/32);index++){
 	new flyingParticle(userChosenParticles=particleValues,userChosenColors=Array("white"),maxSpeed=19,minSpeed=14,maxSize=5,minSize=1,spinSpeed="none",true);

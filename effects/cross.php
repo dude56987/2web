@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web gears effect
+# 2web bubbles effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,15 +20,20 @@
 include("/usr/share/2web/effects/particleBase.php");
 ?>
 <style>
-	.particle{
-		text-shadow: 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black !important;
+	.particle_spin_left_sway{
+		text-shadow: yellow 0 0 1rem,red 0 0 3rem,orange 0 0 6rem;
+	}
+	.particle_spin_right_sway{
+		text-shadow: yellow 0 0 1rem,red 0 0 3rem,orange 0 0 6rem;
 	}
 </style>
 <script>
-// setup the particles, duplicates increase the probablity of particle being used
-var particleValues = Array("⛭");
-// create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new staticParticle(userChosenParticles=particleValues,userChosenColors=Array("gray"),maxSpeed=4,minSpeed=2,maxSize=7,minSize=4,spinSpeed="slow",colorFlux=false,flipParticle=false,lockDirection=false);
+// Bubbles layer 1
+for(var index=0;index<Math.floor(window.innerHeight/16);index++){
+	new floatingParticle(userChosenParticles=Array("✟","🕇"),userChosenColors=Array("white"),maxSpeed=2,minSpeed=1,maxSize=2,minSize=1,spinSpeed="sway",false);
+}
+// Bubbles layer 2
+for(var index=0;index<Math.floor(window.innerHeight/16);index++){
+	new floatingParticle(userChosenParticles=Array("✟","🕇"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=2,maxSize=8,minSize=1,spinSpeed="sway",false);
 }
 </script>

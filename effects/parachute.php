@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web gears effect
+# 2web snow effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,16 +19,9 @@
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
 ?>
-<style>
-	.particle{
-		text-shadow: 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black !important;
-	}
-</style>
 <script>
-// setup the particles, duplicates increase the probablity of particle being used
-var particleValues = Array("⛭");
 // create the default amount of particles
-for(var index=0;index<Math.floor(window.innerWidth/12);index++){
-	new staticParticle(userChosenParticles=particleValues,userChosenColors=Array("gray"),maxSpeed=4,minSpeed=2,maxSize=7,minSize=4,spinSpeed="slow",colorFlux=false,flipParticle=false,lockDirection=false);
+for(var index=0;index<Math.floor(window.innerWidth/64);index++){
+	new fastFallingParticle(userChosenParticles=Array("🪂"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=1,maxSize=6,minSize=4,spinSpeed="sway",fluxColor=true);
 }
 </script>

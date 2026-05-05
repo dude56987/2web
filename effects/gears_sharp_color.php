@@ -19,6 +19,11 @@
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
 ?>
+<style>
+	.particle{
+		text-shadow: 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black, 0px 0px 0.2rem black !important;
+	}
+</style>
 <script>
 // setup the particles, duplicates increase the probablity of particle being used
 var particleValues = Array("⛭");

@@ -62,23 +62,94 @@
 			transform: translateX(0rem);
 		}
 	}
-	.particle:nth-child(even){
-		animation-delay: 0.1s;
+	@keyframes particle_blink{
+		0% {
+			scale: 1 1;
+		}
+		2% {
+			scale: 1 0;
+		}
+		4% {
+			scale: 1 1;
+		}
+		100% {
+			scale: 1 1;
+		}
 	}
-	.particle:nth-child(odd){
-		animation-delay: 0s;
+	@keyframes particle_flux{
+		0% {
+			filter: hue-rotate(0deg);
+			-webkit-filter:hue-rotate(0deg);
+		}
+		25% {
+			filter: hue-rotate(90deg);
+			-webkit-filter:hue-rotate(90deg);
+		}
+		50% {
+			filter: hue-rotate(180deg);
+			-webkit-filter:hue-rotate(180deg);
+		}
+		75% {
+			filter: hue-rotate(270deg);
+			-webkit-filter:hue-rotate(270deg);
+		}
+		100% {
+			filter: hue-rotate(360deg);
+			-webkit-filter:hue-rotate(360deg);
+		}
 	}
-	.particle_spin_right_sway{
+	.particle_spin_right_blink{
+		scale: -1 1;
+		animation-name: particle_blink;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
+	.particle_spin_left_blink{
+		scale: -1 1;
+		animation-name: particle_blink;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+
+	}
+	.particle_spin_right_flux{
 			scale: -1 1;
-			animation-name: particle_sway_right;
-			animation-duration: 15s;
+			animation-name: particle_flux;
+			animation-duration: 8s;
 			animation-fill-mode: forwards;
 			animation-iteration-count: infinite;
-			animation-timing-function: ease-in-out;
+			animation-timing-function: linear;
 			user-select: none;
 			font-family: font2webGlyph;
 	}
+	.particle_spin_left_flux{
+		animation-name: particle_flux;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
+	.particle_spin_right_sway{
+		scale: -1 1;
+		animation-name: particle_sway_right;
+		animation-duration: 15s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: ease-in-out;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
 	.particle_spin_left_sway{
+		scale: 1 1;
 		animation-name: particle_sway_left;
 		animation-duration: 15s;
 		animation-fill-mode: forwards;
@@ -163,10 +234,105 @@
 		user-select: none;
 		font-family: font2webGlyph;
 	}
+	/* Add variablity to animation start position */
+	*:nth-of-type(30n){
+		animation-delay: -30s !important;
+	}
+	*:nth-of-type(30n-29){
+		animation-delay: -29s !important;
+	}
+	*:nth-of-type(30n-28){
+		animation-delay: -28s !important;
+	}
+	*:nth-of-type(30n-27){
+		animation-delay: -27s !important;
+	}
+	*:nth-of-type(30n-26){
+		animation-delay: -26s !important;
+	}
+	*:nth-of-type(30n-25){
+		animation-delay: -25s !important;
+	}
+	*:nth-of-type(30n-24){
+		animation-delay: -24s !important;
+	}
+	*:nth-of-type(30n-23){
+		animation-delay: -23s !important;
+	}
+	*:nth-of-type(30n-22){
+		animation-delay: -22s !important;
+	}
+	*:nth-of-type(30n-21){
+		animation-delay: -21s !important;
+	}
+	*:nth-of-type(30n-20){
+		animation-delay: -20s !important;
+	}
+	*:nth-of-type(30n-19){
+		animation-delay: -19s !important;
+	}
+	*:nth-of-type(30n-18){
+		animation-delay: -18s !important;
+	}
+	*:nth-of-type(30n-17){
+		animation-delay: -17s !important;
+	}
+	*:nth-of-type(30n-16){
+		animation-delay: -16s !important;
+	}
+	*:nth-of-type(30n-15){
+		animation-delay: -15s !important;
+	}
+	*:nth-of-type(30n-14){
+		animation-delay: -14s !important;
+	}
+	*:nth-of-type(30n-13){
+		animation-delay: -13s !important;
+	}
+	*:nth-of-type(30n-12){
+		animation-delay: -12s !important;
+	}
+	*:nth-of-type(30n-11){
+		animation-delay: -11s !important;
+	}
+	*:nth-of-type(30n-10){
+		animation-delay: -10s !important;
+	}
+	*:nth-of-type(30n-9){
+		animation-delay: -9s !important;
+	}
+	*:nth-of-type(30n-8){
+		animation-delay: -8s !important;
+	}
+	*:nth-of-type(30n-7){
+		animation-delay: -7s !important;
+	}
+	*:nth-of-type(30n-6){
+		animation-delay: -6s !important;
+	}
+	*:nth-of-type(30n-5){
+		animation-delay: -5s !important;
+	}
+	*:nth-of-type(30n-4){
+		animation-delay: -4s !important;
+	}
+	*:nth-of-type(30n-3){
+		animation-delay: -3s !important;
+	}
+	*:nth-of-type(30n-2){
+		animation-delay: -2s !important;
+	}
+	*:nth-of-type(30n-1){
+		animation-delay: -1s !important;
+	}
 </style>
 <script>
 var globalParticleCount=0;
 var removalActive="";
+function particleStatus(){
+	// Check the status of the particle system
+	console.log("The Particle system is running with '"+globalParticleCount+"' active particles.")
+}
 // random color
 function randomColor(){
 	var outputColor="";
@@ -192,6 +358,11 @@ function randomSimpleColor(paintColors=Array("red","yellow","green","blue")){
 }
 function randomParticle(particles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾")){
 	// pick a random element from an array of strings for use as a particle in the particles system
+	var pickedParticle=Math.floor(Math.random() * particles.length);
+	return particles[pickedParticle];
+}
+function randomWeight(particles=Array("bold","bolder","normal","lighter")){
+	// randomize the weight to generate variety in shapes
 	var pickedParticle=Math.floor(Math.random() * particles.length);
 	return particles[pickedParticle];
 }
@@ -293,6 +464,7 @@ class fastFallingParticle{
 		this.particleDiv = document.createElement("div");
 		this.particleDiv.id="particle_"+globalParticleCount;
 		this.globalID=this.particleDiv.id;
+		this.particleDiv.style.fontWeight=randomWeight();
 		// randomize the spin direction
 		if(1 == Math.floor(Math.random() * 2) ){
 			this.particleDiv.className="particle particle_spin_left_"+this.spinSpeed;
@@ -334,6 +506,7 @@ class fastFallingParticle{
 				tempParticle.style.color=randomSimpleColor(userChosenColors);
 				tempParticle.style.width=this.size+"rem";
 				tempParticle.style.zIndex="-1";
+				tempParticle.style.fontWeight=randomWeight();
 				//tempParticle.style.zIndex=((-(this.maxSize-this.size))-1);
 				if(this.colorFlux){
 					tempParticle.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -511,7 +684,7 @@ class flyingParticle{
 // start the particle constructors and classes
 class staticParticle{
 	// a particle that flys across the screen from left to right or right to left
-	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false,lockDirection=false){
+	constructor(userChosenParticles=Array("▰","🞧","🞮","🞴","🞺","🞸","🞾"),userChosenColors=Array("red","green","blue","yellow"),maxSpeed=9,minSpeed=7,maxSize=3,minSize=1,spinSpeed="none",colorFlux=false,flipParticle=false,lockDirection=false,parallelAnimations=10){
 		this.colorFlux=colorFlux;
 		this.spinSpeed=spinSpeed;
 		this.chosenParticles=userChosenParticles;
@@ -551,6 +724,10 @@ class staticParticle{
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
 		this.particleDiv.style.zIndex="-1";
+		// randomize the animation loop starting position when creating the particle
+		//this.particleDiv.style.animationDelay=( -1 * ( Math.floor(Math.random() * parallelAnimations) ) );
+		// randomize the weight
+		this.particleDiv.style.fontWeight=randomWeight();
 		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
 		if(this.colorFlux){
 			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -594,8 +771,7 @@ class staticParticle{
 		this.currentTime = Date.now();
 	}
 }
-
-
+console.log("Particle System Loaded...");
 // create the default amount of particles
 //for(var index=0;index<Math.floor(window.innerWidth/12);index++){
 	//new fastFallingParticle(userChosenParticles=Array("⚽","⚾","🥎","🏀","🏐","🏈","🏉"),userChosenColors=Array("white"),maxSpeed=4,minSpeed=2,maxSize=6,minSize=1,spinSpeed="slow");
