@@ -148,18 +148,33 @@ html::-webkit-scrollbar-thumb:vertical{
 	animation-timing-function: linear;
 }
 /* rotate the element animation starting positions */
-*:nth-of-type(1n){
+*:nth-of-type(10n){
 	animation-delay: -1s;
 }
-*:nth-of-type(2n){
+*:nth-of-type(10n-9){
 	animation-delay: -2s;
 }
-*:nth-of-type(3n){
+*:nth-of-type(10n-8){
 	animation-delay: -3s;
 }
-*:nth-of-type(4n){
+*:nth-of-type(10n-7){
 	animation-delay: -4s;
 }
-*:nth-of-type(5n){
+*:nth-of-type(10n-6){
 	animation-delay: -5s;
+}
+*:nth-of-type(10n-5){
+	animation-delay: -6s;
+}
+*:nth-of-type(10n-4){
+	animation-delay: -7s;
+}
+*:nth-of-type(10n-3){
+	animation-delay: -8s;
+}
+*:nth-of-type(10n-2){
+	animation-delay: -9s;
+}
+*:nth-of-type(10n-1){
+	animation-delay: -10s;
 }

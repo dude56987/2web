@@ -43,8 +43,30 @@
 		rgba(238,130,238,0.85) 84%,
 		rgba(238,130,238,0.85) 100%
 	);
-
-
+	/* red orange yellow green blue indigo violet */
+	--solidBackgroundRev: repeating-linear-gradient(266deg,
+		/* red */
+		rgba(255,0,0,0.85),
+		rgba(255,0,0,0.85) 14%,
+		/* orange */
+		rgba(255,165,0,0.85) 14%,
+		rgba(255,165,0,0.85) 28%,
+		/* yellow */
+		rgba(255,255,0,0.85) 28%,
+		rgba(255,255,0,0.85) 42%,
+		/* green */
+		rgba(0,255,0,0.85) 42%,
+		rgba(0,255,0,0.85) 56%,
+		/* blue */
+		rgba(0,0,255,0.85) 56%,
+		rgba(0,0,255,0.85) 70%,
+		/* indigo */
+		rgba(75,0,130,0.85) 70%,
+		rgba(75,0,130,0.85) 84%,
+		/* violet */
+		rgba(238,130,238,0.85) 84%,
+		rgba(238,130,238,0.85) 100%
+	);
 	/* red orange yellow green blue indigo violet */
 	--glassBackground: repeating-linear-gradient(34deg,
 		/* red */
@@ -78,72 +100,42 @@
 	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 }
 html{
+	text-shadow: 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText) !important;
+	font-weight: bolder;
+}
+th,td,h1,h2,h3,h4,h5,input,.button,.singleStat,.showPageEpisode{
+	text-shadow: 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText), 0px 0px 0.4rem var(--highlightText) !important;
+	font-weight: bolder;
+}
+html{
 	/* outline all text in black so it is readable on the rainbow gradient.*/
 	/* -webkit-text-stroke: 0.04em black; */
 	/* text-shadow: 0.1em 0.1em black; */
-	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
 	background-image: var(--solidBackground);
 	/* Make the font thicker for readability */
 	font-weight: bolder;
 }
-h1,h2,h3{
+.button:nth-of-type(odd){
 	background-image: var(--solidBackground) !important;
-	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText) !important;
 }
-td{
-	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
+.button:nth-of-type(even){
+	background-image: var(--solidBackgroundRev) !important;
 }
-th{
-	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
-	background-image: var(--solidBackground);
-}
-table{
-	background-image: var(--glassBackground);
-}
-.singleStat{
-	background-image: var(--solidBackground);
-}
-.comicPageButton{
-	background-image: var(--solidBackground);
-}
-.comicPagePopup{
-	background-image: var(--solidBackground);
-}
-.searchButton{
-	background-image: var(--solidBackground);
-}
-.titleCard{
-	background-image: var(--glassBackground);
-}
-.button{
+.indexSeries:nth-of-type(odd){
 	background-image: var(--solidBackground) !important;
-	text-shadow: 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText), 0px 0px 0.5rem var(--highlightText);
 }
-.menuButton{
-	background-image: var(--glassBackground);
+.indexSeries:nth-of-type(even){
+	background-image: var(--solidBackgroundRev) !important;
 }
-.searchBox{
-	background-image: var(--glassBackground);
+h1,h2,h3,h4,h5{
+	background-image: var(--solidBackground) !important;
 }
-.showPageEpisode{
+th,table,.singleStat,.comicPageButton,.comicPagePopup,.searchButton,.titleCard,.button,.menuButton{
 	background-image: var(--solidBackground);
 }
-.descriptionCard{
+.searchBox,.showPageEpisode,.descriptionCard,.settingListCard,.inputCard,.indexSeries,.seasonContainer{
 	background-image: var(--glassBackground);
 }
-.settingListCard{
-	background-image: var(--glassBackground);
-}
-.inputCard{
-	background-image: var(--glassBackground);
-}
-.indexSeries{
-	background-image: var(--glassBackground);
-}
-.seasonContainer{
-	background-image: var(--glassBackground);
-}
-
 .listCard::-webkit-scrollbar:horizontal{
 	background: var(--glassBackground);
 }

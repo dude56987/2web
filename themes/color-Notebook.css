@@ -1,0 +1,216 @@
+/*
+########################################################################
+# 2web paper theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	--solidBackground: #B0B0B0;
+	--glassBackground: rgba(255,255,255,0.85);
+	--borderColor: black;
+	--textColor: black;
+	--shadowColor: black;
+	--highlightText: white;
+	--highlightBackground: black;
+	--highlightBorder: black;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+/* Fix white on white loading pulse being hidden */
+.globalPulse{
+	background-color: var(--solidBackground) !important;
+}
+/* rotate the button colors */
+.showPageEpisode:nth-of-type(8n),
+.indexSeries:nth-of-type(8n),
+.button:nth-of-type(8n){
+	background-color: red !important;
+	color: white !important;
+	text-shadow:
+	0px 0px 0.5rem black,
+	0px 0px 0.5rem black,
+	0px 0px 0.5rem black !important;
+}
+.showPageEpisode:nth-of-type(8n-7),
+.indexSeries:nth-of-type(8n-7),
+.button:nth-of-type(8n-7){
+	background-color: green !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+.showPageEpisode:nth-of-type(8n-6),
+.indexSeries:nth-of-type(8n-6),
+.button:nth-of-type(8n-6){
+	background-color: yellow !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+.showPageEpisode:nth-of-type(8n-5),
+.indexSeries:nth-of-type(8n-5),
+.button:nth-of-type(8n-5){
+	background-color: blue !important;
+	color: white !important;
+	text-shadow:
+	0px 0px 0.5rem black,
+	0px 0px 0.5rem black,
+	0px 0px 0.5rem black !important;
+}
+.showPageEpisode:nth-of-type(8n-4),
+.indexSeries:nth-of-type(8n-4),
+.button:nth-of-type(8n-4){
+	background-color: pink !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+.showPageEpisode:nth-of-type(8n-3),
+.indexSeries:nth-of-type(8n-3),
+.button:nth-of-type(8n-3){
+	background-color: teal !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+.showPageEpisode:nth-of-type(8n-2),
+.indexSeries:nth-of-type(8n-2),
+.button:nth-of-type(8n-2){
+	background-color: orange !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+.showPageEpisode:nth-of-type(8n-1),
+.indexSeries:nth-of-type(8n-1),
+.button:nth-of-type(8n-1){
+	background-color: cyan !important;
+	text-shadow:
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white,
+	0px 0px 0.5rem white !important;
+}
+/* rotate the header colors */
+.header:nth-of-type(8n),
+.listCard:nth-of-type(8n),
+.inputCard:nth-of-type(8n),
+.settingListCard:nth-of-type(8n),
+.titleCard:nth-of-type(8n){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: red;
+		color: white;
+		text-shadow:
+		0px 0px 0.5rem black,
+		0px 0px 0.5rem black,
+		0px 0px 0.5rem black;
+	}
+}
+.header:nth-of-type(8n-7),
+.listCard:nth-of-type(8n-7),
+.inputCard:nth-of-type(8n-7),
+.settingListCard:nth-of-type(8n-7),
+.titlecard:nth-of-type(8n-7){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: green;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
+.header:nth-of-type(8n-6),
+.listCard:nth-of-type(8n-6),
+.inputCard:nth-of-type(8n-6),
+.settingListCard:nth-of-type(8n-6),
+.titlecard:nth-of-type(8n-6){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: yellow;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
+.header:nth-of-type(8n-5),
+.listCard:nth-of-type(8n-5),
+.inputCard:nth-of-type(8n-5),
+.settingListCard:nth-of-type(8n-5),
+.titlecard:nth-of-type(8n-5){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: blue;
+		color: white;
+		text-shadow:
+		0px 0px 0.5rem black,
+		0px 0px 0.5rem black,
+		0px 0px 0.5rem black;
+	}
+}
+.header:nth-of-type(8n-4),
+.listCard:nth-of-type(8n-4),
+.inputCard:nth-of-type(8n-4),
+.settingListCard:nth-of-type(8n-4),
+.titlecard:nth-of-type(8n-4){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: pink;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
+.header:nth-of-type(8n-3),
+.listCard:nth-of-type(8n-3),
+.inputCard:nth-of-type(8n-3),
+.settingListCard:nth-of-type(8n-3),
+.titlecard:nth-of-type(8n-3){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: teal;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
+.header:nth-of-type(8n-2),
+.listCard:nth-of-type(8n-2),
+.inputCard:nth-of-type(8n-2),
+.settingListCard:nth-of-type(8n-2),
+.titlecard:nth-of-type(8n-2){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: orange;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
+.header:nth-of-type(8n-1),
+.listCard:nth-of-type(8n-1),
+.inputCard:nth-of-type(8n-1),
+.settingListCard:nth-of-type(8n-1),
+.titlecard:nth-of-type(8n-1){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: cyan;
+		text-shadow:
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white,
+		0px 0px 0.5rem white;
+	}
+}
