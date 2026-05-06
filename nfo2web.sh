@@ -1091,7 +1091,12 @@ processEpisode(){
 		echo -ne "$(date)" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath.index"
 
 		echo -ne "$tempEpisodeSeasonThumb" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index"
-
+		# add the data to the split filter for remote content
+		if [ "$episodeStudio" == "Internet" ];then
+			addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/new/webcasts.index"
+		else
+			addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/new/broadcasts.index"
+		fi
 		#$episodeSum=$(echo "/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.php" | sha512sum | cut -d' ' -f1)
 		#echo -ne "$episodeSum" > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.cfg"
 
@@ -1411,6 +1416,13 @@ processShow(){
 	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "studio" "$episodeStudio" "shows"
 	addPlaylist "$webDirectory/shows/$showTitle/shows.index" "grade" "$episodeGrade" "shows"
 
+	# add the data to the split filter for remote content
+	if [ "$episodeStudio" == "Internet" ];then
+		addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/new/webcasts.index"
+	else
+		addToIndex "$webDirectory/shows/$showTitle/shows.index" "$webDirectory/new/broadcasts.index"
+	fi
+
 	# add this to the search index
 	addToSearchIndex "$webDirectory/shows/$showTitle/shows.index" "${showTitle} ${episodeGrade} ${episodeStudio}" "/shows/$showTitle/"
 
@@ -1722,42 +1734,46 @@ scanForRandomBackgrounds(){
 ########################################################################
 function nuke(){
 	# Remove this module from the website and remove all related metadata
-	#
 	echo "[INFO]: Reseting web cache to blank..."
 	webDirectory="$(webRoot)"
 	kodiDirectory="$(kodiRoot)"
-	#
+	# remove movie and show search data
 	delete "/var/cache/2web/generated/searchIndexData/movies/"
 	delete "/var/cache/2web/generated/searchIndexData/shows/"
-	#
+	# remove movies directory
 	delete "$webDirectory/movies/"
 	delete "$kodiDirectory/movies/"
-	#
+	# remove shows directory
 	delete "$webDirectory/shows/"
 	delete "$kodiDirectory/shows/"
-	#
+	# remove random playlists
 	delete "$webDirectory/random/movies.index"
 	delete "$webDirectory/random/shows.index"
 	delete "$webDirectory/random/episodes.index"
-	#
+	# remove new playlists
 	delete "$webDirectory/new/movies.index"
 	delete "$webDirectory/new/shows.index"
 	delete "$webDirectory/new/episodes.index"
+	delete "$webDirectory/new/webcasts.index"
+	delete "$webDirectory/new/broadcasts.index"
 	# remove found tags
 	rm -v $webDirectory/tags/*.index
+	# remove all sums generated
 	rm -v  $webDirectory/sums/nfo2web_*.cfg || echo "No file sums found..."
 	# remove sql data
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table shows;"
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table movies;"
 	sqlite3 --cmd ".timeout 60000" $webDirectory/data.db "drop table episodes;"
-	# remove widgets cached
+	# remove cached widget data
 	delete "$webDirectory/web_cache/widget_random_movies.index"
 	delete "$webDirectory/web_cache/widget_random_shows.index"
 	delete "$webDirectory/web_cache/widget_random_episodes.index"
 	delete "$webDirectory/web_cache/widget_new_movies.index"
 	delete "$webDirectory/web_cache/widget_new_shows.index"
 	delete "$webDirectory/web_cache/widget_new_episodes.index"
-
+	delete "$webDirectory/web_cache/widget_new_webcasts.index"
+	delete "$webDirectory/web_cache/widget_new_broadcasts.index"
+	#
 	echo "[SUCCESS]: Web cache states reset, update to rebuild everything."
 	echo "[SUCCESS]: Site will remain the same until updated."
 	echo "[INFO]: Use 'nfo2web update' to generate a new website..."

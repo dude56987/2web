@@ -53,9 +53,11 @@
 			echo "</div>\n";
 		}else{
 			echo "<img class='homeActivityGraph' src='/logo.png' />\n";
+			echo "<hr>";
 		}
 	}else{
 		echo "<img class='homeActivityGraph' src='/logo.png' />\n";
+		echo "<hr>";
 	}
 	include("stats.php");
 	echo "</div>";
@@ -67,6 +69,9 @@
 	drawPosterWidget("episodes");
 	drawPosterWidget("shows");
 	drawPosterWidget("movies");
+	#
+	drawPosterWidget("webcasts");
+	drawPosterWidget("broadcasts");
 	# random movies and shows
 	drawPosterWidget("movies", True);
 	drawPosterWidget("shows", True);

@@ -884,6 +884,8 @@ if( ! function_exists("displayEmptyMessage")){
 		if($search == ""){
 			# draw the random media widgets
 			drawPosterWidget("all", True);
+			drawPosterWidget("webcasts", True);
+			drawPosterWidget("broadcasts", True);
 			# random movies and shows
 			drawPosterWidget("movies", True);
 			drawPosterWidget("shows", True);
@@ -1775,6 +1777,14 @@ if( ! function_exists("checkFilePathPermissions")){
 				$drawResult=true;
 			}
 		}else if (stripos($filePath,"_episodes") !== false){
+			if (requireGroup("nfo2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_broadcasts") !== false){
+			if (requireGroup("nfo2web",false)){
+				$drawResult=true;
+			}
+		}else if (stripos($filePath,"_webcasts") !== false){
 			if (requireGroup("nfo2web",false)){
 				$drawResult=true;
 			}

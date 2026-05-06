@@ -106,7 +106,7 @@ if (array_key_exists("filter",$_GET)){
 	echo "<h2>Recently added ".ucfirst($filterType)."</h2>";
 }else{
 	$filterType="all";
-	echo "<h2>Recently added Media</h2>";
+	echo "<h2>Recently added Media Filters</h2>";
 }
 # if any content is restricted the all group will be locked
 # the all group is default so a message will be shown below if all is locked
@@ -132,8 +132,10 @@ if ($filterType == "all"){
 <a class='button' href='?filter=all'>📜 All</a>
 <?PHP
 
+drawPlaylistButton($filterType,"webcasts","🌐 Webcasts");
+drawPlaylistButton($filterType,"broadcasts","🎬 Broadcasts");
 drawPlaylistButton($filterType,"episodes","🎞️ Episodes");
-drawPlaylistButton($filterType,"shows","📺 shows");
+drawPlaylistButton($filterType,"shows","📺 Shows");
 drawPlaylistButton($filterType,"movies","🎥 Movies");
 drawPlaylistButton($filterType,"comics","📚 Comics");
 drawPlaylistButton($filterType,"music","🎧 Music");
@@ -150,13 +152,27 @@ drawPlaylistButton($filterType,"applications","🖥️ Applications");
 </div>
 </div>
 
-
 <div class='settingListCard'>
 <?php
 flush();
 ob_flush();
 if ($hideFilter){
-	echo "This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.\n";
+	echo "<h2>This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.</h2>\n";
+	# draw new media widgets, only accessable filters will be shown
+	drawPosterWidget("webcasts");
+	drawPosterWidget("broadcasts");
+	drawPosterWidget("episodes");
+	drawPosterWidget("shows");
+	drawPosterWidget("movies");
+	drawPosterWidget("comics");
+	drawPosterWidget("albums",False,True);
+	drawPosterWidget("artists",False,True);
+	drawPosterWidget("channels",False,True);
+	drawPosterWidget("channels",True,True);
+	drawPosterWidget("repos");
+	drawPosterWidget("portal");
+	drawPosterWidget("graphs");
+	drawPosterWidget("applications");
 }else{
 	$emptyMessage = "<ul>\n";
 	$emptyMessage .= "<li>No $filterType items found!</li>\n";
