@@ -173,7 +173,7 @@ $totalThemes=count($sourceFiles);
 				</li>
 				<li>
 				<?PHP
-					echo "Total installed Themes: ".$totalThemes."\n";
+					echo "Total installed Themes: ".number_format($totalThemes)."\n";
 				?>
 				</li>
 			</ul>
@@ -245,7 +245,11 @@ $totalThemes=count($sourceFiles);
 	#shuffle($baseNames);
 	foreach($baseNames as $name){
 		# add theme base compentents
-		echo "<option value='".$name."' >".$name."</option>\n";
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
 	}
 	echo "</select>";
 	echo "</td>";
@@ -255,7 +259,11 @@ $totalThemes=count($sourceFiles);
 	#shuffle($colorNames);
 	foreach($colorNames as $name){
 		# add theme color compentents
-		echo "<option value='".$name."' >".$name."</option>\n";
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
 	}
 	echo "</select>";
 	echo "</td>";
@@ -265,7 +273,11 @@ $totalThemes=count($sourceFiles);
 	#shuffle($fontNames);
 	foreach($fontNames as $name){
 		# add theme mod compentents
-		echo "<option value='".$name."' >".$name."</option>\n";
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
 	}
 	echo "</select>";
 	echo "</td>";
@@ -275,7 +287,11 @@ $totalThemes=count($sourceFiles);
 	#shuffle($modNames);
 	foreach($modNames as $name){
 		# add theme mod compentents
-		echo "<option value='".$name."' >".$name."</option>\n";
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
 	}
 	echo "</select>";
 	echo "</td>";
@@ -412,7 +428,7 @@ if ( ! array_key_exists("search",$_GET) ){
 	<div class='titleCard'>
 		<h2>More Themes</h2>
 		<?PHP
-			echo "<p>Total installed Themes: ".$totalThemes."</p>";
+			echo "<p>Total installed Themes: ".number_format($totalThemes)."</p>";
 		?>
 		<p>You can enable more generated theme variations or write completely custom themes for the CSS of the webserver.</p>
 		<p>You can create custom colors for the existing generated themes with <a href='#createColor'>Create Color Profile</a> above.</p>
@@ -490,6 +506,39 @@ if ( ! array_key_exists("search",$_GET) ){
 		</form>
 	</div>
 </div>
+
+
+<div class='titleCard'>
+	<h2>Totals</h2>
+
+	<table>
+		<tr>
+			<th>
+				Themes
+			</th>
+			<th>
+				Effects
+			</th>
+			<th>
+				Total Combinations
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<?PHP echo number_format($totalThemes) ?>
+			</td>
+			<td>
+				<?PHP echo number_format($foundEffectsCount) ?>
+			</td>
+			<td>
+				<?PHP echo number_format($totalThemes * $foundEffectsCount) ?>
+			</td>
+		</tr>
+	</table>
+
+</div>
+
+
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>
