@@ -255,57 +255,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 </head>
 <body>
 <script>
-document.body.addEventListener('keydown', function(event){
-	// only allow hotkeys if the video player has focus
-	//if(document.getElementById("video") == document.activeElement){
-		// check for key controls on the video player
-		const key = event.key;
-		switch (key){
-			case "Insert":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			toggleFullscreen("video");
-			// hide the video controls after keypresses
-			window.video.controls=false;
-			break;
-			case "ArrowDown":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			volumeDown();
-			notify("Vol -");
-			window.video.controls=false;
-			break;
-			case "ArrowUp":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			volumeUp();
-			notify("Vol +");
-			window.video.controls=false;
-			break;
-			case "ArrowRight":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			seekForward();
-			notify("Seek ++");
-			window.video.controls=false;
-			break;
-			case "ArrowLeft":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			seekBackward();
-			notify("Seek --");
-			window.video.controls=false;
-			break;
-			case " ":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			playPause();
-			notify("⏯️");
-			window.video.controls=false;
-			break;
-		}
-	//}
-});
+
 </script>
 <?PHP
 	include("/usr/share/2web/templates/header.php");
@@ -612,12 +562,16 @@ document.body.addEventListener('keydown', function(event){
 	# - check if the cache was had issue and was delayed or broken
 	$cacheDelayed=false;
 	if ( $httpLink ){
-		$pathPrefix=$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".getCacheSum($directLinkData)."/";
+		$webPrefix="/RESOLVER-CACHE/".getCacheSum($directLinkData)."/";
+		$pathPrefix=$_SERVER["DOCUMENT_ROOT"].$webPrefix;
 		#
 		if(file_exists($pathPrefix."verified.cfg")){
 			echo "	<div class='button' title='Video is completely cached and ready for playback.'>Cache State <div class='radioIcon'>🟢</div></div>\n";
 		}else if(file_exists($pathPrefix."video.mp4")){
 			echo "	<div class='button' title='Final video is available but unverified.'>Cache State <div class='radioIcon'>🟡</div></div>\n";
+			if(file_exists($pathPrefix."video.webm")){
+				echo "	<a class='button' href='".$webPrefix."video.webm'>🪠 Load Intermediate File</a>\n";
+			}
 		}else if(file_exists($pathPrefix."video.m3u")){
 			#echo "	<div class='button' title='HLS stream is available for playback.'>Cache State <div class='radioIcon'>🟠</div></div>\n";
 			echo "	<div class='button'>Cache State <img class='smallSpinner' src='/spinner.gif'></div>\n";
@@ -635,6 +589,26 @@ document.body.addEventListener('keydown', function(event){
 			}
 		}
 	}
+	$theatreModeEnabled=false;
+	if(file_exists("season.index")){
+		if (! array_key_exists("loop",$_GET)){
+			if (array_key_exists("autoplay",$_GET)){
+				echo "<a class='button' href='?'>⏹️ Stop Auto Play</a>\n";
+				$theatreModeEnabled=true;
+			}else{
+				echo "<a class='button' href='?autoplay&play'>🎦 Auto Play Season</a>\n";
+			}
+			if (array_key_exists("playrandom",$_GET)){
+				echo "<a class='button' href='?'>⏹️ Stop Random Play</a>\n";
+				$theatreModeEnabled=true;
+			}else{
+				echo "<a class='button' href='?playrandom&play'>🔀 Play Random from Season</a>\n";
+			}
+		}
+	}
+	if($theatreModeEnabled){
+		echo "<button class='button' onclick='window.video.focus();'>⛶ Focus Video</button>";
+	}
 	if (array_key_exists("play",$_GET)){
 		# draw the fullscreen button
 		echo "<button class='button' onclick='toggleFullscreen(\"video\");playVideo();'>⛶ Fullscreen</button>\n";
@@ -646,11 +620,58 @@ document.body.addEventListener('keydown', function(event){
 		# if the cache has been delayed show a warning
 		if($cacheDelayed){
 			$startCacheTime=timeElapsedToHuman(filemtime($pathPrefix));
-			echo "<br>\n";
-			echo "<div class='warningBanner'>The media may not be caching correctly...<br>Caching was started $startCacheTime</div>\n";
-			echo "<br>\n";
+			echo "<div class='titleCard'>\n";
+			echo "	<h2>Video Caching Issues</h2>"."\n";
+			echo "	<hr>\n";
+			echo "	<div class='warningBanner'>\n";
+			echo "		The media may not be caching correctly..."."\n";
+			echo "		<hr>\n";
+			echo "		Caching was started $startCacheTime"."\n";
+			if (requireGroup("admin",false)){
+				#echo "		<hr class='ruler'>\n";
+				echo "		<hr>\n";
+				echo "		As a administrator you can remove the video to reset the caching and try again. This is not recommended. You may also want to check if the <a href='/settings/queue.php'>queue</a> is full.";
+				echo "		<hr>\n";
+				echo "		<div class='listCard'>\n";
+				echo "			<form action='/settings/admin.php' method='post'>\n";
+				echo "				<input width='60%' type='text' name='removeCachedVideo' value='".$jsonSum."' hidden>\n";
+				echo "				<button class='button' type='submit'>🗑️ Remove Cached Video</button>\n";
+				echo "			</form>\n";
+				echo "			<a class='button' href='/settings/queue.php'>🔢 Queue Settings</a>\n";
+				echo "		</div>\n";
+			}
+			echo "	</div>\n";
+			echo "	<hr>\n";
+			echo "</div>\n";
+			echo "<hr>\n";
 		}
-
+		if($theatreModeEnabled){
+			echo "	<div class='warningBanner desktopOnly'>\n";
+			echo "		<p>\n";
+			echo "			You may want to enable browser fullscreen with the <a class='button' onclick='toggleFullscreen(\"video\");playVideo();'>F11</a> Key. You may also want to <button class='button' onclick='window.video.focus()'>Refocus</button> the video.\n";
+			echo "		</p>\n";
+			echo "	</div>\n";
+			echo "<hr>\n";
+			#echo "<script>"."\n";
+			#echo "if(navigator.getAutoplayPolicy(window.video) ===  'allowed'){"."\n";
+			#echo "	var divData = document.createElement('div');"."\n";
+			#echo "	divData.appendChild(document.createTextNode('Autoplay is allowed!'));"."\n";
+			#echo "	divData.setAttribute('class', 'warningBanner');"."\n";
+			#echo "	Document.body.appendChild(divData);"."\n";
+			#echo "}else if(navigator.getAutoplayPolicy(window.video) ===  'allowed-muted'){"."\n";
+			#echo "	var divData = document.createElement('div');"."\n";
+			#echo "	divData.appendChild(document.createTextNode('Please Allow Autoplay without mute for the site in order to use autoplay.'));"."\n";
+			#echo "	divData.setAttribute('class', 'warningBanner');"."\n";
+			#echo "	Document.body.appendChild(divData);"."\n";
+			#echo "}else{"."\n";
+			## autoplay is disabled
+			#echo "	var divData = document.createElement('div');"."\n";
+			#echo "	divData.appendChild(document.createTextNode('Please Allow Autoplay for the site in order to use autoplay.'));"."\n";
+			#echo "	divData.setAttribute('class', 'warningBanner');"."\n";
+			#echo "	Document.body.appendChild(divData);"."\n";
+			#echo "}"."\n";
+			#echo "</script>"."\n";
+		}
 		# flush output so far to the page
 		clear();
 
@@ -715,6 +736,18 @@ document.body.addEventListener('keydown', function(event){
 				$tempVideoLink=$directLinkData;
 			}
 		}
+		if ($theatreModeEnabled){
+			# create the autoplay style
+			# - no newlines for inline style
+			$autoPlayStyle ="width: 100dvw;";
+			$autoPlayStyle.="height: 100dvh;";
+			$autoPlayStyle.="margin: 0px;";
+			$autoPlayStyle.="position: relative;";
+			$autoPlayStyle.="border-size: 0px;";
+			$autoPlayStyle.="z-index: 100;";
+		}else{
+			$autoPlayStyle="";
+		}
 		#
 		if (array_key_exists("play",$_GET)){
 			# check if the video is still loading in the cache
@@ -725,7 +758,7 @@ document.body.addEventListener('keydown', function(event){
 				#echo "<div class='titleCard'>";
 				#echo "Video is loading, page will automatically refresh...";
 				#echo "</div>";
-				echo "<video id='video' class='nfoMediaPlayer' poster='$posterPath' controls preload='auto' >\n";
+				echo "<video id='video' class='nfoMediaPlayer' style='$autoPlayStyle' poster='$posterPath' controls preload='auto' >\n";
 				echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 				echo "</video>\n";
 				# reload the page after a 10 second delay
@@ -734,33 +767,33 @@ document.body.addEventListener('keydown', function(event){
 				# draw the player based on the video link mime type
 				if (is_in_array("video/mp4", $videoMimeType)){
 					if (array_key_exists("loop",$_GET)){
-						echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' autoplay loop controls preload='auto' >\n";
+						echo "<video id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' poster='$posterPath' autoplay loop controls preload='auto' >\n";
 					}else{
-						echo "<video id='video' class='nfoMediaPlayer' class='' poster='$posterPath' autoplay controls preload='auto' >\n";
+						echo "<video id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' poster='$posterPath' autoplay controls preload='auto' >\n";
 					}
 					echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 					echo "</video>\n";
 				}else if (is_in_array("audio/mpeg", $videoMimeType)){
 					if (array_key_exists("loop",$_GET)){
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls preload='auto' >\n";
 					}else{
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' controls preload='auto' >\n";
 					}
 					echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
 					echo "</audio>\n";
 				}else if (is_in_array("video/webm", $videoMimeType)){
 					if (array_key_exists("loop",$_GET)){
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls  preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls  preload='auto' >\n";
 					}else{
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls  preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' controls  preload='auto' >\n";
 					}
 					echo "	<source src='$fullPathVideoLink' type='video/webm'>\n";
 					echo "</audio>\n";
 				}else if (is_in_array("video/ogg", $videoMimeType)){
 					if (array_key_exists("loop",$_GET)){
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls  preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls  preload='auto' >\n";
 					}else{
-						echo "<audio id='video' class='nfoMediaPlayer' class='' style='background-image: url(\"$posterPath\");' controls  preload='auto' >\n";
+						echo "<audio id='video' class='nfoMediaPlayer' style='$autoPlayStyle' class='' style='background-image: url(\"$posterPath\");' controls  preload='auto' >\n";
 					}
 					echo "	<source src='$fullPathVideoLink' type='video/ogg'>\n";
 					echo "</audio>\n";
@@ -828,7 +861,6 @@ document.body.addEventListener('keydown', function(event){
 					echo "			console.log('No Active buffer, forcefully reloading the video.');\n";
 					echo "		}\n;";
 					echo "		pauseVideo();\n";
-					echo "		window.video.controls=false;\n";
 					echo "		window.video.poster=\"/loading.png\";\n";
 					echo "		currentPlaybackTime=window.video.currentTime;\n";
 					# get the currently buffered time
@@ -858,7 +890,6 @@ document.body.addEventListener('keydown', function(event){
 					echo "		if (sleepTime>=0){\n;";
 					echo "			bufferSleepTime=sleepTime;\n;";
 					echo "		}\n;";
-					echo "		window.video.controls=false;\n";
 					# add the loading spinner
 					echo "		var loadingObj = document.createElement(\"img\");\n";
 					echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
@@ -922,7 +953,9 @@ document.body.addEventListener('keydown', function(event){
 					echo "			}\n";
 					# remove all loading spinners generated by buffer events
 					#echo "			while(window.loadingSpinner == null){;\n";
+					echo "			if(window.loadingSpinner !== null){\n";
 					echo "				window.loadingSpinner.remove();\n";
+					echo "			}\n";
 					#echo "			}\n";
 					echo "			window.video.controls=true;\n";
 					echo "			activeBuffering=false;\n";
@@ -1015,7 +1048,9 @@ document.body.addEventListener('keydown', function(event){
 					# - This is the message displayed when a local media type is given but transcoding is disabled
 					echo "<div class='titleCard'>\n";
 					echo "	<div class='videoPosterContainer'>";
-					echo "		<img class='videoPoster' src='$posterPath' />";
+					echo "		<div class='videoPoster failedVideoPoster' style='background:url(\"$posterPath\")'>";
+					echo "			X";
+					echo "		</div>";
 					echo "	</div>";
 					echo "	<div class='titleCard'>\n";
 					echo "		The server administrator has disabled video transcoding.<br>\n";
@@ -1286,10 +1321,86 @@ document.body.addEventListener('keydown', function(event){
 <?PHP
 	# write the plot data
 	echo $plotData;
+	clear();
+	# draw the next episode, previous episode, and first episode of season button
+	$previousEpisodeData="";
+	$nextEpisodeData="";
+	#
+	$nextEpisodeLink="";
+	$previousEpisodeLink="";
+	#
+	if( file_exists("season.index") or file_exists("../season.index") ){
+		if( file_exists("season.index") ){
+			$seasonFileIndexData=file("season.index", FILE_IGNORE_NEW_LINES);
+		}else{
+			$seasonFileIndexData=file("../season.index", FILE_IGNORE_NEW_LINES);
+		}
+		$thisEpisodePath=$_SERVER["SCRIPT_FILENAME"];
+		$thisEpisodePath=str_replace(".php",".index",$thisEpisodePath);
+		#echo "This Path = '$thisEpisodePath'\n";
+		#echo "Season Index = '".implode("\n",$seasonFileIndexData)."'\n";
+		# get the key for the array
+		$thisEpisodeKey=array_search($thisEpisodePath,$seasonFileIndexData);
+		#
+		if ($thisEpisodeKey){
+			#echo "This Episode Key = '$thisEpisodeKey'\n";
+			# draw the next button data
+			if (isset($seasonFileIndexData[$thisEpisodeKey+1])){
+				$nextEpisodePath=$seasonFileIndexData[$thisEpisodeKey+1];
+				$nextEpisodeLink=str_replace("/var/cache/2web/web","",$nextEpisodePath);
+				$nextEpisodeLink=str_replace(".index",".php",$nextEpisodeLink);
+				#echo "Next Path = '$nextEpisodePath'\n";
+				$nextEpisodeData=file_get_contents($nextEpisodePath);
+			}
+			$previousEpisodePath=$seasonFileIndexData[$thisEpisodeKey-1];
+			#echo "previous Path = '$previousEpisodePath'\n";
+			# draw the previous button data
+			if (isset($seasonFileIndexData[$thisEpisodeKey-1])){
+				$previousEpisodePath=$seasonFileIndexData[$thisEpisodeKey-1];
+				$previousEpisodeLink=str_replace("/var/cache/2web/web","",$previousEpisodePath);
+				$previousEpisodeLink=str_replace(".index",".php",$previousEpisodeLink);
+				#echo "previous Path = '$previousEpisodePath'\n";
+				$previousEpisodeData=file_get_contents($previousEpisodePath);
+			}
+		}
+	}
+	if( ($previousEpisodeData != "") or ($nextEpisodeData != "") ){
+		echo "<table>";
+		echo "	<tr>";
+		if($previousEpisodeData != ""){
+			echo "		<th>";
+			echo "			Previous Episode";
+			echo "		</th>";
+		}
+		if($nextEpisodeData != ""){
+			echo "		<th>";
+			echo "			Next Episode";
+			echo "		</th>";
+		}
+		echo "	</tr>";
+		echo "	<tr>";
+		if($previousEpisodeData != ""){
+			echo "		<td>";
+			echo "			$previousEpisodeData\n";
+			echo "		</td>";
+		}
+		if($nextEpisodeData != ""){
+			echo "		<td>";
+			echo "			$nextEpisodeData\n";
+			echo "		</td>";
+		}
+		echo "	</tr>";
+		echo "</table>";
+	}
+	clear();
 	# write the video channel url if the json is loaded
 	echo $videoChannelUrl;
 	# send data to the client
-	clear();
+?>
+</div>
+<?PHP
+	# draw the video preview thumbnails if they are found
+	$previewExists=false;
 ?>
 </div>
 <?PHP
@@ -1322,32 +1433,46 @@ echo $adminData;
 # build the auto hide controls timer in javascript
 ?>
 <script>
-	var controlHideTimeout;
-	//window.video.addEventListener("mousemove", function() {
-	window.addEventListener("mousemove", function() {
-		// show the moved cursor and video controls
-		document.body.style.cursor="default";
-		window.video.controls=true;
-		window.clearTimeout(controlHideTimeout);
-		console.log("Mouse moved Unhide the mouse/controls");
-		// hide the cursor and video controls after 2 seconds of inactivity
-		controlHideTimeout = setTimeout(() =>{
-			console.log("Hide the mouse/controls when inactive");
-			window.video.controls=false;
-			document.body.style.cursor="none";
-		}, 2000);
-	});
-	// end of playback function
-	function playbackEnd(){
-		closeFullscreen();
-		// show the notification
-		notify("🔚");
-		// disable autoplay
-		document.getElementById('video').autoplay=false;
-		// reload the video element
-		document.getElementById('video').load();
-		console.log("End of playback reached!");
-	}
+var controlHideTimeout;
+// the video must be focused before the controls are hidden
+window.video.focus();
+// by default disable the controls until mouse is moved or screen is touched
+window.video.controls=false;
+document.body.style.cursor="none";
+// hide controls when client is not a touchscreen
+//if(navigator.maxTouchPoints == 0){
+//function showControls(){
+//	// show the moved cursor and video controls
+//	document.body.style.cursor="default";
+//	window.video.controls=true;
+//	window.clearTimeout(controlHideTimeout);
+//	console.log("Mouse moved Unhide the mouse/controls");
+//	// hide the cursor and video controls after 2 seconds of inactivity
+//	controlHideTimeout = setTimeout(() =>{
+//		console.log("Hide the mouse/controls when inactive");
+//		window.video.controls=false;
+//		document.body.style.cursor="none";
+//	}, 2000);
+//};
+//	//});
+//// add event for mouse move or screen touch
+//window.addEventListener("mousemove", showControls);
+//window.addEventListener("touchstart", showControls);
+//}
+// end of playback function
+function playbackEnd(){
+	closeFullscreen();
+	// show the notification
+	notify("🔚");
+	var tempVideoElement = document.getElementById('video');
+	// disable autoplay
+	tempVideoElement.autoplay=false;
+	// reload the video element
+	tempVideoElement.load();
+	// refocus the video player after reload
+	tempVideoElement.focus();
+	console.log("End of playback reached!");
+}
 <?PHP
 # only activate playback end event if video looping is disabled
 if(! isset($_GET["loop"])){
@@ -1355,14 +1480,167 @@ if(! isset($_GET["loop"])){
 	echo "document.getElementById('video').addEventListener('ended',playbackEnd,false);";
 }
 ?>
+document.body.addEventListener('keydown', function(event){
+	// only allow hotkeys if the video player has focus
+	if(document.activeElement.nodeName != "INPUT"){
+		// check for key controls on the video player
+		const key = event.key;
+		switch (key){
+			case "Insert":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			toggleFullscreen("video");
+			// hide the video controls after keypresses
+			window.video.controls=false;
+			break;
+			case "ArrowDown":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			volumeDown();
+			notify("Vol -");
+			window.video.controls=false;
+			break;
+			case "ArrowUp":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			volumeUp();
+			notify("Vol +");
+			window.video.controls=false;
+			break;
+			case "ArrowRight":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			seekForward();
+			notify("Seek ++");
+			window.video.controls=false;
+			break;
+			case "ArrowLeft":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			seekBackward();
+			notify("Seek --");
+			window.video.controls=false;
+			break;
+			case " ":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			playPause();
+			notify("⏯️");
+			window.video.controls=false;
+			break;
+			case "MediaPlayPause":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			playPause();
+			notify("⏯️");
+			window.video.controls=false;
+			break;
+		}
+	}
+});
+navigator.mediaSession.setActionHandler("play", function(event){
+	console.log("media key play pressed");
+	if(document.activeElement.nodeName != "INPUT"){
+		playPause();
+		notify("⏯️");
+		window.video.controls=false;
+	}
+});
+navigator.mediaSession.setActionHandler("pause", function(event){
+	console.log("media key pause pressed");
+	if(document.activeElement.nodeName != "INPUT"){
+		playPause();
+		notify("⏯️");
+		window.video.controls=false;
+	}
+});
+navigator.mediaSession.setActionHandler("stop", function(event){
+	console.log("media key stop pressed");
+	if(document.activeElement.nodeName != "INPUT"){
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		playPause();
+		//playbackEnd();
+		//document.getElementById('video').focus();
+		notify("⏹️");
+		window.video.controls=false;
+	}
+});
+navigator.mediaSession.setActionHandler("seekforward", function(event){
+	console.log("media key seek forward pressed");
+	if(document.activeElement.nodeName != "INPUT"){
+		seekForward();
+		notify("Seek ++");
+		window.video.controls=false;
+	}
+});
+navigator.mediaSession.setActionHandler("seekbackward", function(event){
+	console.log("media key seek backward pressed");
+	if(document.activeElement.nodeName != "INPUT"){
+		seekBackward();
+		notify("Seek --");
+		window.video.controls=false;
+	}
+});
+<?PHP
+if ($nextEpisodeLink != ""){
+	echo "navigator.mediaSession.setActionHandler(\"nexttrack\", function(event){"."\n";
+	echo "	console.log(\"media key next track pressed\");\n";
+	#echo "	if(document.activeElement.nodeName != \"INPUT\"){"."\n";
+	echo "		//event.preventDefault();"."\n";
+	echo "		//event.stopImmediatePropagation();"."\n";
+	echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play\");"."\n";
+	echo "		notify(\"Next Track\");"."\n";
+	echo "		window.video.controls=false;"."\n";
+	#echo "	}"."\n";
+	echo "});"."\n";
+}
+if ($previousEpisodeLink != ""){
+	echo "navigator.mediaSession.setActionHandler(\"previoustrack\", function(event){"."\n";
+	echo "	console.log(\"media key previous track pressed\");\n";
+	#echo "	if(document.activeElement.nodeName != \"INPUT\"){"."\n";
+	echo "		//event.preventDefault();"."\n";
+	echo "		//event.stopImmediatePropagation();"."\n";
+	echo "		delayedRedirect(0,\"$previousEpisodeLink?autoplay&play\");"."\n";
+	echo "		notify(\"Previous Track\");"."\n";
+	echo "		window.video.controls=false;"."\n";
+	#echo "	}"."\n";
+	echo "});"."\n";
+}
+if (array_key_exists("playrandom",$_GET)){
+	if(file_exists("season.index")){
+		shuffle($seasonFileIndexData);
+		$randomEpisodePath=$seasonFileIndexData[0];
+		$randomEpisodeLink=str_replace("/var/cache/2web/web","",$randomEpisodePath);
+		$randomEpisodeLink=str_replace(".index",".php",$randomEpisodeLink);
+		# get a random video
+		echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
+		echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom\");"."\n";
+		echo "},false);"."\n";
+	}
+}
+if (array_key_exists("autoplay",$_GET)){
+	if ($nextEpisodeLink != ""){
+		echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
+		echo "	delayedRedirect(0,\"$nextEpisodeLink?play&autoplay\");"."\n";
+		echo "},false);"."\n";
+	}
+}
+if (array_key_exists("play",$_GET)){
+	echo "window.video.onload = function(){\n";
+	echo "	document.getElementById('video').focus();\n";
+	echo "}\n";
+}
+?>
 </script>
 <hr class='ruler'>
 <?PHP
 # send current data and draw the widgets
 clear();
-loadSearchIndexResults($titleData,"shows",9,"Episodes");
+loadSearchIndexResults($titleData,"episodes",9,"Episodes");
 loadSearchIndexResults($titleData,"shows",8,"Shows");
 loadSearchIndexResults($titleData,"movies");
+loadSearchIndexResults($titleData,"all");
 echo "<hr class='ruler'>\n";
 #
 drawMoreSearchLinks($titleData);
