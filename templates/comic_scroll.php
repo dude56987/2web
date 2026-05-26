@@ -68,7 +68,8 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
 <?PHP
 	# draw header
-	echo "<div class='titleCard'>\n";
+	echo "<div id='comicScrollReader'>\n";
+	echo "<div id='readerTitle' class='titleCard'>\n";
 	echo "<h1>$comic</h1>\n";
 
 	#echo "comic='$comic'<br>\n";
@@ -103,8 +104,10 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# come up with chapter and page counts from cleaned lists
 	$totalPages=count($discoveredFiles);
 	$totalChapters=count($discoveredDirs);
-
-	echo "<a class='button' href='index.php'>📑 Default View</a>\n";
+	echo "<hr>\n";
+	echo "<div class='listCard'>\n";
+	echo "<a class='button' href='index.php'>📑 Overview</a>\n";
+	echo "<a class='button' href='0001.php'>📖 Reader View</a>\n";
 
 	if (array_key_exists("real",$_GET)){
 		# mark realsize to true
@@ -115,11 +118,13 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		echo "<a class='button' href='?real'>🖼️ Real Size View</a>\n";
 	}
 
-	echo "<a class='button' onclick='toggleFullscreen(\"\",true);'>⛶ Toggle Fullscreen</a>\n";
+	echo "<a class='button' onclick='toggleFullscreen(\"comicScrollReader\",true);'>⛶ Toggle Fullscreen</a>\n";
 
-	echo "<div>";
-	echo "Pages: $totalPages";
 	echo "</div>";
+	echo "<div>";
+	drawStat("Total Pages",$totalPages);
+	echo "</div>";
+	echo "<hr>\n";
 	if ($totalChapters > 0){
 		echo "<div>";
 		echo "Chapters: $totalChapters";
@@ -153,21 +158,37 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		#$tempPageNumber=explode('/',$tempFileName);
 		#$tempPageNumber=array_pop($tempPageNumber);
 		#$tempPageNumber=str_replace(".jpg","",$tempPageNumber);
-
+		$tempPageNumberString=str_pad($tempPageNumber,4,"0",STR_PAD_LEFT);
 		if($realSize){
-			echo "<img id='$tempPageNumber' class='comicScrollViewImgReal' loading='lazy' src='$tempFileName' />";
+			echo "<img id='$tempPageNumberString' class='comicScrollViewImgReal' loading='lazy' src='$tempFileName' />";
 		}else{
-			echo "<img id='$tempPageNumber' style='background-image: url(\"$tempFileThumb\");' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
+			echo "<img id='$tempPageNumberString' style='background-image: url(\"$tempFileThumb\");' class='comicScrollViewImg' loading='lazy' src='$tempFileName' />";
 		}
-
-		echo "<div class='settingListCard'>";
-		echo "<a class='button comicScrollIndexButton' href='index.php#$tempPageNumber'>📑 Default View</a>";
-		echo "<span class='comicScrollPageCount'>📄 <span class='footerText'>Page:</span> $tempPageNumber/$totalPages</span>";
-		echo "<a class='button comicScrollBookmarkButton' href='scroll.php#$tempPageNumber'>🔖 Bookmark Here</a>";
-		echo "</div>";
+		echo "	<hr class='ruler'>";
+		echo "<details>\n";
+		echo "<summary>\n";
+		echo "	<h2><span class='comicScrollPageCount'>📄 <span class='footerText'>Page:</span> $tempPageNumberString/$totalPages</span></h2>\n";
+		echo "</summary>\n";
+		echo "<div class='listCard'>\n";
+		echo "<a class='button comicScrollIndexButton' href='index.php'>📑 Overview</a>\n";
+		# switch to other views for this comic page
+		echo "<a class='button comicScrollIndexButton' href='$tempPageNumberString.php'>📖 Reader View</a>\n";
+		if (array_key_exists("real",$_GET)){
+			echo "<a class='button comicScrollIndexButton' href='scroll.php#$tempPageNumberString'>📜 Scroll View</a>\n";
+		}else{
+			echo "<a class='button comicScrollIndexButton' href='scroll.php?real#$tempPageNumberString'>🖼️ Real Size View</a>\n";
+		}
+		echo "<a class='button comicScrollBookmarkButton' href='scroll.php#$tempPageNumberString'>🔖 Bookmark This Page</a>\n";
+		#echo "<a class='button' href='#$tempPageNumberString' onclick='toggleFullscreen(\"comicScrollReader\",true);'>⛶ Toggle Fullscreen</a>\n";
+		echo "<a class='button comicScrollBookmarkButton' href='#readerTitle'>↑ Go To Top</a>\n";
+		echo "</details>\n";
+		echo "	<hr class='ruler'>";
 	}
 	if (array_key_exists("chapter",$_GET)){
-		echo "<h2>End of Chapter $chapterNumber</h2>";
+		echo "<h2>End of Chapter $chapterNumber</h2>\n";
+		echo "<div class='listCard'>\n";
+		echo "	<a class='button' href='#readerTitle'>↑ Go To Top</a>\n";
+		echo "</div>\n";
 	}
 	if ($totalChapters > 0){
 		echo "	<div class='listCard'>\n";
@@ -181,6 +202,10 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	}
 
 ?>
+</div>
+	<div class='settingListCard'>
+		🔚
+	</div>
 </div>
 <?php
 	// add random comics above the footer

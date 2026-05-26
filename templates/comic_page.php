@@ -281,7 +281,6 @@
 		//setupKeys();
 	</script>
 </head>
-<img class='globalSpinner' src='/spinner.gif'>
 <?PHP
 	# send the loading bar code while the page loads the rest of the content
 	flush();
@@ -354,69 +353,94 @@
 		echo "<source src='".$page.".jpg' type='$videoMimeType'>\n";
 		echo "</video>\n";
 	}
-	echo "	<a id='leftButton' onclick='showSpinner();' target='$lastPageTarget' href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
+	echo "	<a id='leftButton' onclick='showSpinner();notify(\"⬅️\");' target='$lastPageTarget' href='$lastPage' class='comicPageButton comicPageButtonLeft left'>\n";
 	echo "		&#8617;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
 	echo "			".$lastPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a id='rightButton' onclick='showSpinner();' target='$nextPageTarget' href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
+	echo "	<a id='rightButton' onclick='showSpinner();notify(\"➡️\");' target='$nextPageTarget' href='$nextPage' class='comicPageButton comicPageButtonRight right'>\n";
 	echo "		&#8618;\n";
 	echo "		<br>\n";
 	echo "		<span class='comicPageNumbers'>\n";
 	echo "			".$nextPageNumber."\n";
 	echo "		</span>\n";
 	echo "	</a>\n";
-	echo "	<a target='_parent' class='comicIndexButton' href='index.php#$page'>\n";
+	echo "	<a target='_parent' class='comicIndexButton' href='index.php#$page' onclick='notify(".'"⬆️"'."'>"."\n";
 	echo "		&uarr;\n";
 	echo "	</a>\n";
 	echo "	<div id='comicPagePopup' class='comicPagePopup center'>\n";
 	echo "		Page $page / ".prefixNumbers($totalPages)."\n";
-	# draw the fullscreen button
-	echo "	<a target='_parent' class='comicFullscreenButton' href='fullscreen.php?page=".$page."'>";
-	echo "		⛶";
-	echo "	</a>\n";
+	# check if this may be a scroll
+	if ($imageHeight > ( $imageWidth * 4 )){
+		echo "<div class='warningBanner'>\n";
+		echo "	This may be more readable in scroll view.";
+		echo "	<a class='comicFullscreenButton' title='Switch to Scroll View' href='scroll.php#$page' onclick='closeFullscreen();notify(\"📜\");'>";
+		echo "		📜";
+		echo "		<span class='comicFullscreenButtonText'>Scroll View</span>\n";
+		echo "	</a>\n";
+		echo "</div>\n";
+	}
+	echo "	<table class='controlTable'>\n";
+	echo "		<tr>\n";
 	# draw the autoplay controls
 	if ($isAuto){
+		echo "		<td>\n";
 		if ($isFullscreen){
-			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?stop&fullscreen'>";
+			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Stop Slideshow' href='?stop&fullscreen' onclick='notify(\"⏸️\");'>\n";
 		}else{
-			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?stop'>";
+			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Stop Slideshow' href='?stop' onclick='notify(\"⏸️\");'>\n";
 		}
-		echo "		⏸️";
+		echo "			⏸️\n";
+	echo "				<span class='comicFullscreenButtonText'>Pause</span>\n";
+		echo "		</a>\n";
+		echo "		</td>\n";
 	}else{
+		echo "		<td>";
 		if ($isFullscreen){
-			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?auto&fullscreen'>";
+			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Play as Slideshow' href='?auto&fullscreen' onclick='notify(\"▶️\");'>\n";
 		}else{
-			echo "	<a target='$nextPageTarget' class='comicFullscreenButton' href='?auto'>";
+			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Play as Slideshow' href='?auto' onclick='notify(\"▶️\");'>\n";
 		}
-		echo "		▶️";
+		echo "			▶️";
+	echo "				<span class='comicFullscreenButtonText'>Play</span>\n";
+		echo "		</a>\n";
+		echo "		</td>\n";
 	}
-	echo "	</a>\n";
+	# switch to scroll view
+	echo "		<td>\n";
+	echo "			<a class='comicFullscreenButton' title='Switch to Real Size View' href='scroll.php?real#$page' onclick='closeFullscreen();notify(\"🖼️\");'>";
+	echo "				🖼️";
+	echo "				<span class='comicFullscreenButtonText'>Real View</span>\n";
+	echo "			</a>\n";
+	echo "		</td>\n";
+	echo "		<td>\n";
+	echo "			<a class='comicFullscreenButton' title='Switch to Scroll View' href='scroll.php#$page' onclick='closeFullscreen();notify(\"📜\");'>";
+	echo "				📜";
+	echo "				<span class='comicFullscreenButtonText'>Scroll View</span>\n";
+	echo "			</a>\n";
+	echo "		</td>\n";
+	# draw the fullscreen button
+	echo "		<td>\n";
+	echo "			<a target='_parent' class='comicFullscreenButton' title='Toggle Fullscreen' href='fullscreen.php?page=".$page."' onclick='notify(\"⛶\");'>\n";
+	echo "				⛶";
+	echo "				<span class='comicFullscreenButtonText'>Fullscreen</span>\n";
+	echo "			</a>\n";
+	echo "		</td>\n";
+	echo "		</tr>\n";
+	echo "	</table>\n";
 	# convert to intergers for use with the scroll view API
 	# and for calculating the reading progress
 	$page=(int)$page;
 	# draw the progress bar
 	$progress=floor(($page/$totalPages)*100);
 	# Draw the progress bar showing reading progress of the comic
-	echo "<div class='progressBar'>\n";
-	echo "\t<div class='progressBarBar' style='width: ".$progress."%;'>\n";
-	echo ($progress."%");
-	echo "\t</div>\n";
-	echo "</div>\n";
-	# check if this may be a scroll
-	if ($imageHeight > ( $imageWidth * 4 )){
-		# the image is to long to be read by the page view add a link to scroll view
-		echo "<div class='listCard'>";
-		echo "	<a class='button' href='scroll.php?real#$page'>";
-		echo "		🖼️ Real Size View";
-		echo "	</a>\n";
-		echo "	<a class='button' href='scroll.php#$page'>";
-		echo "		📜 Scroll View";
-		echo "	</a>\n";
-		echo "</div>";
-	}
+	echo "	<div class='progressBar'>"."\n";
+	echo "		<div class='progressBarBar' style='width: ".$progress."%;'>\n";
+	echo "			".($progress."%")."\n";
+	echo "		</div>\n";
+	echo "	</div>\n";
 	#
 	echo "</div>\n";
 	echo "</div>\n";
@@ -482,7 +506,7 @@
 		// show the popup by changing the inline style text
 		document.getElementById('comicPagePopup').style.cssText="opacity: 1 !important;";
 		// hide the popup after a delay
-		setTimeout(reHidePopup, 1000);
+		setTimeout(reHidePopup, 3000);
 	</script>
 	<?PHP
 	#
@@ -530,7 +554,32 @@
 		})
 	</script>
 	<script>
-		setupKeys();
+		function timeStamp(){
+			return Math.floor(Date.now() / 1000);
+		}
+		//
+		var controlHideTimeout;
+		//
+		function showControls(){
+			// enable the cursor
+			window.comicPane.style.cursor="default";
+			window.clearTimeout(controlHideTimeout);
+			console.log("Mouse moved Unhide the mouse/controls");
+			// hide the cursor and video controls after 2 seconds of inactivity
+			controlHideTimeout = setTimeout(() =>{
+				console.log("Hide the mouse/controls when inactive");
+				// hide the cursor
+				window.comicPane.style.cursor="none";
+			}, 2000);
+		};
+		// add event for mouse move or screen touch
+		window.addEventListener("mousemove", showControls);
+		window.addEventListener("touchstart", showControls);
+		// hide the cursor after page load
+		window.body.onload = function(){
+			setupKeys();
+			showControls();
+		}
 	</script>
 </body>
 </html>

@@ -195,7 +195,7 @@ if($topLevel){
 </title>
 <style>
 </style>
-<link rel='stylesheet' href='../../style.css'>
+<link rel='stylesheet' href='/style.css'>
 <script src='/2webLib.js'></script>
 </head>
 <body class='comicsOverviewBackground'>
@@ -282,7 +282,78 @@ setupKeys();
 		}
 	?>
 </div>
+<hr>
+<div class='chapterPagesBox'>
+	<?PHP
+	function drawComic(){
+		$books=Array("📙","📘","📗","📕");
+		shuffle($books);
+		echo $books[0];
+	}
+	if($totalPages != ""){
+		echo "Total Pages : ".$totalPages."\n";
+		# a comic is ~25 pages
+		$foundComics=ceil($totalPages / 25);
+		if($foundComics > 20){
+			# if there are more than 100 found comics draw stacks
+			$titleFoundComics=$foundComics;
+			$foundComics=ceil($foundComics/ 3);
+			$stacks=true;
+		}else{
+			$titleFoundComics=$foundComics;
+			$stacks=false;
+		}
+		echo "<div class='comicSizeVisual' title='Found the equivalent of \"$titleFoundComics\" floppy comic books.'>"."\n";
+		if ($foundComics==1){
+			if ($totalPages==1){
+				echo "🖼️";
+			}else if ($totalPages>20){
+				drawComic();
+			}else if ($totalPages<5){
+				echo "📄";
+			}else{
+				echo "📒";
+			}
+		}else{
+			foreach(range(1,$foundComics) as $indexCounter){
+				if($stacks){
+					echo "📚";
+				}else{
+					drawComic();
+				}
+			}
+		}
+		echo "</div>\n";
+	}
+	if(file_exists("totalChapters.cfg")){
+		$totalChapters=file_get_contents("totalChapters.cfg");
+	}else{
+		$totalChapters="";
+	}
+	if($totalChapters != ""){
+		echo "Total Chapters : ".$totalChapters."\n";
+		echo "<div>"."\n";
 
+		if($totalChapters > 20){
+			# if there are more than 100 found comics draw stacks
+			$foundComics=ceil($totalChapters / 3);
+			$stacks=true;
+		}else{
+			$foundComics=$totalChapters;
+			$stacks=false;
+		}
+		foreach(range(1,$foundComics) as $indexCounter){
+			if($stacks){
+				echo "📚";
+			}else{
+				drawComic();
+			}
+		}
+		echo "</div>"."\n";
+	}
+	?>
+</div>
+<hr>
 <table class='controlTable'>
 	<tr>
 		<td>
@@ -377,13 +448,6 @@ setupKeys();
 		</td>
 	</tr>
 </table>
-<div class='chapterTitleBox'>
-	<?PHP
-	if($totalPages != ""){
-		echo "Total Pages : ".$totalPages;
-	}
-	?>
-</div>
 </div>
 </div>
 <?PHP
