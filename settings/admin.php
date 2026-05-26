@@ -1184,6 +1184,16 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	backButton("/settings/weather.php#setWeatherHomepageLocation","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("enableViewTracking",$_POST)){
+	$link=$_POST['enableViewTracking'];
+	yesNoCfgSet("/etc/2web/enableViewTracking.cfg", $_POST['enableViewTracking']);
+	backButton("/views/#enableViewTracking","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("enable404Tracking",$_POST)){
+	$link=$_POST['enable404Tracking'];
+	yesNoCfgSet("/etc/2web/enable404Tracking.cfg", $_POST['enable404Tracking']);
+	backButton("/views/#enable404Tracking","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("playOnKodiButton",$_POST)){
 	$link=$_POST['playOnKodiButton'];
 	yesNoCfgSet("/etc/2web/kodi/playOnKodiButton.cfg", $_POST['playOnKodiButton']);

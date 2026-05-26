@@ -84,35 +84,103 @@ if (stripos($unknownUrl,".png") !== false){
 		</div>
 		<?PHP
 			# write the 404 request to 404.db
+			if(yesNoCfgCheck("/etc/2web/enable404Tracking.cfg","no")){
+				# write page views to sql database
+				ignore_user_abort(true);
+				# if the view count database does not exist create it
+				if (! file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
+					createViewsDatabase();
+				}
+				# load the views database add 404 section
+				$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+				# set the timeout to 1 minute since most webbrowsers timeout loading before this
+				$databaseObj->busyTimeout(60000);
+				# load the views database
+				# - scriptName includes php get API request data
+				$databaseSearchQuery='select * from "error_count" where url = \''.$_SERVER['REQUEST_URI'].'\';';
+				$result = $databaseObj->query($databaseSearchQuery);
+				# search views database for this pages view count
+				$data = $result->fetchArray();
+				# if the current url url is in the database
+				if ( $data != false){
+					# increment the view counter
+					$updatedViewCount = $data["views"] + 1;
+				}else{
+					$updatedViewCount = 1;
+				}
+				$dbUpdateQuery  = 'REPLACE INTO "error_count" (url, views) ';
+				$dbUpdateQuery .= "VALUES ('".$_SERVER['REQUEST_URI']."', '".$updatedViewCount."') ";
+				$dbUpdateQuery .= ";";
+				# update the database
+				$databaseObj->query($dbUpdateQuery);
 
-			# write page views to sql database
-			ignore_user_abort(true);
-			# if the view count database does not exist create it
-			if (! file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
-				createViewsDatabase();
+				# store debug data on 404 events
+				$logData="";
+				$logData.="<table>"."\n";
+				$logData.="	<tr>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			IS_HTTPS"."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			HTTP_USER_AGENT"."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			REMOTE_ADDR"."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			REMOTE_PORT "."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			QUERY_STRING"."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			REQUEST_METHOD"."\n";
+				$logData.="		</th>"."\n";
+				$logData.="		<th>"."\n";
+				$logData.="			REQUEST_TIME "."\n";
+				$logData.="		</th>"."\n";
+				$logData.="	</tr>"."\n";
+				$logData.="	<tr>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['HTTPS']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['HTTP_USER_AGENT']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['REMOTE_ADDR']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['REMOTE_PORT']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['QUERY_STRING']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['REQUEST_METHOD']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="		<td>"."\n";
+				$logData.="			".$_SERVER['REQUEST_TIME']."\n";
+				$logData.="		</td>"."\n";
+				$logData.="	</tr>"."\n";
+				$logData.="</table>"."\n";
+				# store the debug data
+				$URIsum=md5(cleanText($_SERVER["REQUEST_URI"]));
+				$dataSum=md5($logData);
+				if(! file_exists("/var/cache/2web/generated/404/$URIsum/$dataSum.cfg")){
+					# create a directory for the url
+					createDir("/var/cache/2web/generated/404/reports/$URIsum/");
+					createDir("/var/cache/2web/generated/404/keys/");
+					# save the 404 report
+					file_put_contents("/var/cache/2web/generated/404/reports/$URIsum/$dataSum.cfg",$logData);
+					# add 404 report to the index
+					addToIndex("/var/cache/2web/generated/404/reports/$URIsum/$dataSum.cfg","/var/cache/2web/generated/404/reports.index");
+				}
+				if(! file_exists("/var/cache/2web/generated/404/keys/$URIsum.cfg")){
+					# save the 404 url key
+					file_put_contents("/var/cache/2web/generated/404/keys/$URIsum.cfg",$_SERVER["REQUEST_URI"]);
+				}
 			}
-			# load the views database add 404 section
-			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
-			# set the timeout to 1 minute since most webbrowsers timeout loading before this
-			$databaseObj->busyTimeout(60000);
-			# load the views database
-			# - scriptName includes php get API request data
-			$databaseSearchQuery='select * from "error_count" where url = \''.$_SERVER['REQUEST_URI'].'\';';
-			$result = $databaseObj->query($databaseSearchQuery);
-			# search views database for this pages view count
-			$data = $result->fetchArray();
-			# if the current url url is in the database
-			if ( $data != false){
-				# increment the view counter
-				$updatedViewCount = $data["views"] + 1;
-			}else{
-				$updatedViewCount = 1;
-			}
-			$dbUpdateQuery  = 'REPLACE INTO "error_count" (url, views) ';
-			$dbUpdateQuery .= "VALUES ('".$_SERVER['REQUEST_URI']."', '".$updatedViewCount."') ";
-			$dbUpdateQuery .= ";";
-			# update the database
-			$databaseObj->query($dbUpdateQuery);
 		?>
 	</div>
 	<?php

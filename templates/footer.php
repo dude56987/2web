@@ -123,61 +123,64 @@ foreach(array_keys($_GET) as $keyName){
 }
 # write page views to sql database
 ignore_user_abort(true);
-# if the view count database does not exist create it
-if (! file_exists($webDirectory."/views.db")){
-	createViewsDatabase();
-}
-# load the views database
-$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
-# set the timeout to 1 minute since most webbrowsers timeout loading before this
-$databaseObj->busyTimeout(90000);
-# load the views database
-# - scriptName includes php get API request data
-$databaseSearchQuery='select * from "view_count" where url = \''.$scriptName.'\';';
-$result = $databaseObj->query($databaseSearchQuery);
-# search views database for this pages view count
-$data = $result->fetchArray();
-# close the database to process the data
-$databaseObj->close();
-unset($databaseObj);
-# if the current url url is in the database
-if ( $data != false){
-	# increment the view counter
-	$updatedViewCount = $data["views"] + 1;
-}else{
-	$updatedViewCount = 1;
-}
-$dbUpdateQuery  = 'REPLACE INTO "view_count" (url, views) ';
-$dbUpdateQuery .= "VALUES ('".$scriptName."', '".$updatedViewCount."') ";
-#$dbUpdateQuery .= "ON DUPLICATE KEY UPDATE";
-#$dbUpdateQuery .= "views = '".$updatedViewCount."'";
-$dbUpdateQuery .= ";";
-# load the views database
-$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
-# set the timeout to 1 minute since most webbrowsers timeout loading before this
-$databaseObj->busyTimeout(90000);
-# update the database
-$databaseObj->query($dbUpdateQuery);
-# clear up memory of database file
-$databaseObj->close();
-unset($databaseObj);
+# check if view tracking is enabled
+if(yesNoCfgCheck("/etc/2web/enableViewTracking.cfg","no")){
+	# if the view count database does not exist create it
+	if (! file_exists($webDirectory."/views.db")){
+		createViewsDatabase();
+	}
+	# load the views database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(90000);
+	# load the views database
+	# - scriptName includes php get API request data
+	$databaseSearchQuery='select * from "view_count" where url = \''.$scriptName.'\';';
+	$result = $databaseObj->query($databaseSearchQuery);
+	# search views database for this pages view count
+	$data = $result->fetchArray();
+	# close the database to process the data
+	$databaseObj->close();
+	unset($databaseObj);
+	# if the current url url is in the database
+	if ( $data != false){
+		# increment the view counter
+		$updatedViewCount = $data["views"] + 1;
+	}else{
+		$updatedViewCount = 1;
+	}
+	$dbUpdateQuery  = 'REPLACE INTO "view_count" (url, views) ';
+	$dbUpdateQuery .= "VALUES ('".$scriptName."', '".$updatedViewCount."') ";
+	#$dbUpdateQuery .= "ON DUPLICATE KEY UPDATE";
+	#$dbUpdateQuery .= "views = '".$updatedViewCount."'";
+	$dbUpdateQuery .= ";";
+	# load the views database
+	$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+	# set the timeout to 1 minute since most webbrowsers timeout loading before this
+	$databaseObj->busyTimeout(90000);
+	# update the database
+	$databaseObj->query($dbUpdateQuery);
+	# clear up memory of database file
+	$databaseObj->close();
+	unset($databaseObj);
 
-# display the page view
-echo "<div class='viewCounterBox'>\n";
-echo "<a class='viewCounterHeader' href='/views/'>";
-echo "👁️";
-echo "</a>";
-echo "<span class='viewCounter'>";
-echo $updatedViewCount;
-echo "</span>";
-echo "<span class='executionTimeHeader'>";
-echo "⏱️";
-echo "</span>";
-echo "<span class='executionTime'>";
-echo round((microtime(True) - $startTime), 4);
-echo "</span>\n";
-echo "</div>\n";
-echo "<hr>\n";
+	# display the page view
+	echo "<div class='viewCounterBox'>\n";
+	echo "<a class='viewCounterHeader' href='/views/'>";
+	echo "👁️";
+	echo "</a>";
+	echo "<span class='viewCounter'>";
+	echo $updatedViewCount;
+	echo "</span>";
+	echo "<span class='executionTimeHeader'>";
+	echo "⏱️";
+	echo "</span>";
+	echo "<span class='executionTime'>";
+	echo round((microtime(True) - $startTime), 4);
+	echo "</span>\n";
+	echo "</div>\n";
+	echo "<hr>\n";
+}
 # figure out the header data template
 $cacheFile=$webDirectory."/web_cache/footerData.index";
 # if file is older than 1 hours
