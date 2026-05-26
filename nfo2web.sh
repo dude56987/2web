@@ -938,9 +938,18 @@ processEpisode(){
 				# look for the month in the middle split by /
 				airedMonth=$(echo "$episodeAired" | cut -d'/' -f2)
 			fi
-			# if the config option is set to cache new episodes
-			# - cache new links in batch processing mode
-			if [ "$(cat /etc/2web/cacheNewEpisodes.cfg)" == "yes" ] ;then
+			# cache new links in batch processing mode
+			# - the default should cache nothing
+			checkEpisodeForCaching="no"
+			if yesNocfgCheck "/etc/2web/cacheNewEpisodes.cfg";then
+				# if the config option is set to cache new episodes
+				checkEpisodeForCaching="yes"
+			elif yesNoCfgCheck "$webDirectory/shows/$episodeShowTitle/forceCache.cfg" "no";then
+				# or the force cache has been set to yes for a series
+				checkEpisodeForCaching="yes"
+			fi
+			#
+			if [[ $checkEpisodeForCaching == "yes" ]];then
 				yt_download_command=""
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
@@ -953,7 +962,48 @@ processEpisode(){
 						# create the directory to store the cached data
 						createDir "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# create the command for caching
-						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp --max-filesize '6g' --retries '500' --retry-sleep 'exp=2:512:2' --js-runtimes node:/usr/bin/nodejs --no-mtime --fragment-retries '100' -f best --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
+						#
+						# read the upgrade quality setting and apply it to the command
+						if test -f "/etc/2web/cache/cacheUpgradeQuality.cfg";then
+							# load the config for quality
+							upgradeQuality="$(cat "/etc/2web/cache/cacheUpgradeQuality.cfg")"
+							# update the download command
+							if [ "$upgradeQuality" == "best" ] || [ "$upgradeQuality" == "worst" ];then
+								if [[ "$upgradeQuality" == "worst" ]];then
+									upgradeQuality=" -f '$upgradeQuality'"
+								else
+									# no quality should be given for the best quality
+									upgradeQuality=""
+								fi
+							elif [[ "$upgradeQuality" == "none" ]];then
+								if test -f "/etc/2web/cache/cacheQuality.cfg";then
+									$streamQuality= "$(cat "/etc/2web/cache/cacheQuality.cfg")"
+									# load the stream quality config the same way
+									if [ "$streamQuality" == "best" ] || [ "$streamQuality" == "worst" ];then
+										if [ "$streamQuality" == "worst" ];then
+											upgradeQuality=" -f '$streamQuality'"
+										else
+											# no quality should be given for the best quality
+											upgradeQuality=""
+										fi
+									else
+										# custom upgrade quality from stream quality setting
+										upgradeQuality=" -S '$streamQuality'"
+									fi
+								else
+									# no stream upgrade quality file exists so default to best
+									upgradeQuality=""
+								fi
+							else
+								# custom upgrade quality from upgradeQuality
+								upgradeQuality=" -S '$upgradeQuality'"
+							fi
+						else
+							# no upgrae quality file exists so default to best
+							upgradeQuality=""
+						fi
+						#
+						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp -4 --concurrent-fragments $cpuCount --max-filesize '6g' --retries '500' --retry-sleep 'exp=2:512:2' --js-runtimes node:/usr/bin/nodejs --no-mtime --fragment-retries '100' $upgradeQuality --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
 						{
 							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
@@ -966,7 +1016,7 @@ processEpisode(){
 						} > "$webDirectory/RESOLVER-CACHE/$tempSum/data_nfo.log"
 						chown -R www-data:www-data "$webDirectory/RESOLVER-CACHE/$tempSum/"
 						# launch the command in the queue scheduler
-						queue2web --add idle "$temp_cache_command"
+						queue2web --add single "$temp_cache_command"
 					fi
 				fi
 			fi
