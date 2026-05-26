@@ -72,6 +72,30 @@
 			}
 		}
 	}
+	var controlHideTimeout;
+	function showControls(){
+		// show the moved cursor and video controls
+		if(window.video){
+			window.video.controls=true;
+		}
+		// enable the cursor
+		document.body.style.cursor="default";
+		window.clearTimeout(controlHideTimeout);
+		console.log("Mouse moved Unhide the mouse/controls");
+		// hide the cursor and video controls after 2 seconds of inactivity
+		controlHideTimeout = setTimeout(() =>{
+			console.log("Hide the mouse/controls when inactive");
+			if(window.video){
+				// hide video controls
+				window.video.controls=false;
+			}
+			// hide the cursor
+			document.body.style.cursor="none";
+		}, 2000);
+	};
+	// add event for mouse move or screen touch
+	window.addEventListener("mousemove", showControls);
+	window.addEventListener("touchstart", showControls);
 </script>
 <?php
 
