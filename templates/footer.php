@@ -67,7 +67,7 @@
 				// make sure this is not a reference in the page
 				if ( linkElements[index].getAttribute("href").indexOf("#") == -1 ){
 					// enable the spinner
-					linkElements[index].setAttribute("onclick", "notify('⏳');showSpinner();");
+					linkElements[index].setAttribute("onclick", "notify('⚙︎',60000,'spinRight');showSpinner();");
 				}
 			}
 		}
