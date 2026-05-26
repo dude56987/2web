@@ -2287,16 +2287,16 @@ if( ! function_exists("buildYesNoCfgButton")){
 		if (file_exists($configPath)){
 			$selected=file_get_contents($configPath);
 			if ($selected == "yes"){
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='$buttonName' value='no'>$enabledIcon Disable $buttonText</button>\n";
 				echo "	</form>\n";
 			}else{
-				echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+				echo "	<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
 				echo "	<button class='button' type='submit' name='$buttonName' value='yes'>$disabledIcon Enable $buttonText</button>\n";
 				echo "	</form>\n";
 			}
 		}else{
-			echo "	<form action='admin.php' class='buttonForm' method='post'>\n";
+			echo "	<form action='/settings/admin.php' class='buttonForm' method='post'>\n";
 			echo "	<button class='button' type='submit' name='$buttonName' value='yes'>$disabledIcon Enable $buttonText</button>\n";
 			echo "	</form>\n";
 		}
