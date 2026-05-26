@@ -46,7 +46,6 @@ if ( ! file_exists("/var/cache/2web/web/queue2web.active") ){
 	echo "If this message is shown for  more than 15 minutes a error has occured and the queue can not be restarted. A manual unlock may be required by running <pre>2web unlock</pre> as an administrator on the server.\n";
 	echo "</details>\n";
 }
-
 echo "<div id='portalscanSourcesPaths' class='titleCard'>\n";
 echo "<h2>Queue Data</h2>\n";
 #
@@ -56,6 +55,7 @@ $multiQueueFiles = recursiveScan("/var/cache/2web/queue/multi/");
 $singleQueueFiles = recursiveScan("/var/cache/2web/queue/single/");
 $idleQueueFiles = recursiveScan("/var/cache/2web/queue/idle/");
 $failedQueueFiles = recursiveScan("/var/cache/2web/queue/failed/");
+$logQueueFiles = recursiveScan("/var/cache/2web/queue/log/");
 # count it up
 
 $activeQueueCount=count($activeQueueFiles);
@@ -82,6 +82,23 @@ echo "		<td>".$idleQueueCount."</td>\n";
 echo "		<td>".$failedQueueCount."</td>\n";
 echo "	</tr>\n";
 echo "</table>\n";
+# modules array
+$moduleNames = Array("nfo2web","comic2web","iptv2web","graph2web","music2web","weather2web","ytdl2nfo","epg2web","ai2web","portal2web","wiki2web", "git2web","kodi2web");
+# check for active processes
+foreach($moduleNames as $moduleName){
+	if ( file_exists("/var/cache/2web/web/$moduleName.active")){
+		$moduleRunTime=timeElapsedToHuman(file_get_contents("/var/cache/2web/web/$moduleName.active"),"");
+		echo "<span class='singleStat' title='$moduleName has been running for $moduleRunTime'>\n";
+		echo "	<span class='singleStatLabel'>\n";
+		echo "		<img src='/spinner.gif' />\n";
+		echo "		$moduleName ";
+		echo "	</span>\n";
+		echo "	<span class='singleStatValue'>";
+		echo "		$moduleRunTime";
+		echo "	</span>\n";
+		echo "</span>\n";
+	}
+}
 echo "</div>\n";
 if($totalQueueCount > 0){
 	echo "<div id='' class='titleCard'>\n";
@@ -90,6 +107,8 @@ if($totalQueueCount > 0){
 	echo "		<th>Queue Type</th>\n";
 	echo "		<th>State</th>\n";
 	echo "		<th>Command</th>\n";
+	echo "		<th>Log</th>\n";
+	echo "		<th>Started</th>\n";
 	#echo "		<th>Log</th>\n";
 	echo "	</tr>\n";
 	# draw each of the jobs in the queue
@@ -107,12 +126,13 @@ if($totalQueueCount > 0){
 		#
 		echo "		<td class='whiteBoard'>".trim(file_get_contents($multiQueueFilePath))."</td>\n";
 		# get the log data
-		#$tempLogPath="/var/cache/2web/queue/log/".basename($multiQueueFilePath);
-		#if (is_readable($tempLogPath)){
-		#	echo "		<td class='whiteBoard'>".trim(file_get_contents($tempLogPath))."</td>\n";
-		#}else{
-		#	echo "		<td class='whiteBoard'>No Log Data Yet</td>\n";
-		#}
+		$tempLogPath="/var/cache/2web/queue/log/".basename($multiQueueFilePath);
+		if (is_readable($tempLogPath)){
+			echo "		<td class=''><a class='button' href='#".basename($tempLogPath)."'>Data</a></td>\n";
+		}else{
+			echo "		<td class='whiteBoard'>No Log Data Yet</td>\n";
+		}
+		echo "<td>".timeElapsedToHuman(filemtime($multiQueueFilePath))."</td>";
 		echo "	</tr>\n";
 	}
 	foreach($singleQueueFiles as $multiQueueFilePath){
@@ -128,40 +148,74 @@ if($totalQueueCount > 0){
 		#
 		echo "		<td class='whiteBoard'>".trim(file_get_contents($multiQueueFilePath))."</td>\n";
 		# get the log data
-		#$tempLogPath="/var/cache/2web/queue/log/".basename($multiQueueFilePath);
-		#if (is_readable($tempLogPath)){
-		#	echo "		<td class='whiteBoard'>".trim(file_get_contents($tempLogPath))."</td>\n";
-		#}else{
-		#	echo "		<td class='whiteBoard'>No Log Data Yet</td>\n";
-		#}
+		$tempLogPath="/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($multiQueueFilePath));
+		if (is_readable($tempLogPath)){
+			echo "		<td class=''><a class='button' href='#".basename($tempLogPath)."'>Data</a></td>\n";
+		}else{
+			echo "		<td class=''>No Log Data Yet</td>\n";
+		}
+		echo "<td>".timeElapsedToHuman(filemtime($multiQueueFilePath))."</td>";
 		echo "	</tr>\n";
 	}
 	foreach($idleQueueFiles as $multiQueueFilePath){
 		echo "	<tr>\n";
 		echo "		<td>Idle</td>\n";
-		echo "		<td class='whiteBoard'>".trim(file_get_contents($multiQueueFilePath))."</td>\n";
 		# get the log data
-		#$tempLogPath="/var/cache/2web/queue/active/".str_replace(".cmd",".active",basename($multiQueueFilePath));
-		#if (is_readable($tempLogPath)){
-		#	echo "		<td class='whiteBoard'>".trim(file_get_contents($tempLogPath))."</td>\n";
-		#}else{
-		#	echo "		<td class='whiteBoard'>No Log Data Yet</td>\n";
-		#}
+		$tempStatePath="/var/cache/2web/queue/active/".str_replace(".cmd",".active",basename($multiQueueFilePath));
+		if(is_readable($tempStatePath)){
+			echo "		<td class='enabledSetting'>Running</td>\n";
+		}else{
+			echo "		<td class='disabledSetting'>Waiting...</td>\n";
+		}
+		echo "		<td class='whiteBoard'>".trim(file_get_contents($multiQueueFilePath))."</td>\n";
+		$tempLogPath="/var/cache/2web/queue/active/".str_replace(".cmd",".active",basename($multiQueueFilePath));
+		if (is_readable($tempLogPath)){
+			echo "		<td class=''><a class='button' href='#".basename($tempLogPath)."'>Data</a></td>\n";
+		}else{
+			echo "		<td class=''>No Log Data Yet</td>\n";
+		}
+		echo "		<td>".timeElapsedToHuman(filemtime($multiQueueFilePath))."</td>\n";
 		echo "	</tr>\n";
 	}
 	echo "</table>\n";
 	echo "</div>\n";
 }
+
 echo "<div id='' class='titleCard'>\n";
-echo "<h1>Failed Job Log</h1>\n";
-foreach($failedQueueFiles as $failedQueueFilePath){
-	echo "	<h2>".basename($failedQueueFilePath)."</h2>\n";
-	# get the log data if it exists for the failed job
-	if(is_readable("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($failedQueueFilePath)))){
-		echo "	<pre>".file_get_contents(("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($failedQueueFilePath))))."</pre>\n";
+echo "<h1>Job Logs</h1>\n";
+foreach(array_reverse($logQueueFiles) as $logQueueFilePath){
+	#echo "	<h2>".basename($logQueueFilePath)."</h2>\n";
+	echo "<details>";
+	echo "	<summary><h2>".basename($logQueueFilePath)." | ".timeElapsedToHuman(filemtime($logQueueFilePath))."</h2></summary>\n";
+	# get the log data if it exists for the log job
+	if(is_readable("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($logQueueFilePath)))){
+		echo "<div class='whiteboard' id='".basename($logQueueFilePath)."'>";
+		# write the log data
+		echo str_replace("\n","<br>",file_get_contents(("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($logQueueFilePath)))));
+		echo "</div>\n";
 	}else{
-		echo "	<pre>".$failedQueueFilePath."</pre>\n";
+		echo "	<pre>No Log Data Exists.</pre>\n";
 	}
+	echo "</details>";
+}
+echo "</div>\n";
+
+echo "<div id='' class='titleCard'>\n";
+echo "<h1>Failed Queue Job Logs</h1>\n";
+foreach(array_reverse($failedQueueFiles) as $logQueueFilePath){
+	#echo "	<h2>".basename($logQueueFilePath)."</h2>\n";
+	echo "<details>";
+	echo "	<summary><h2>".basename($logQueueFilePath)." | ".timeElapsedToHuman(filemtime($logQueueFilePath))."</h2></summary>\n";
+	# get the log data if it exists for the log job
+	if(is_readable("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($logQueueFilePath)))){
+		echo "<div class='whiteboard' id='".basename($logQueueFilePath)."'>";
+		# write the log data
+		echo file_get_contents(("/var/cache/2web/queue/log/".str_replace(".cmd",".log",basename($logQueueFilePath))));
+		echo "</div>\n";
+	}else{
+		echo "	<pre>No Log Data Exists.</pre>\n";
+	}
+	echo "</details>";
 }
 echo "</div>\n";
 
