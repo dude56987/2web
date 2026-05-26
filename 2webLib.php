@@ -1471,9 +1471,11 @@ if( ! function_exists("noscriptRefresh")){
 		# add the noscript page refresh
 		echo "	<meta http-equiv='refresh' $target content='$delaySeconds' $returnLink>\n";
 		# draw the notitication spinner
-		echo "	<div id='notification'>";
-		echo "		<img class='' src='/spinner.gif'>";
-		echo "	</div>";
+		echo "	<div id='notification'>\n";
+		echo "		<div id='notificationText'>\n";
+		echo "			<img src='/spinner.gif' />\n";
+		echo "		</div>\n";
+		echo "	</div>\n";
 		echo "</noscript>\n";
 	}
 }
@@ -1490,8 +1492,10 @@ if( ! function_exists("reloadPage")){
 		echo "	delayedRefresh($delaySeconds);\n";
 		# show the spinner to indicate activity to the user
 		echo "	showSpinner();\n";
-		# 🗘 ⁝ ⸫ 🟃 🟂 ⚙️ 🟕 🟗
-		echo "	notify(\"<img class='' src='/spinner.gif'>\",".(1000 * 1000).");\n";
+		# 🗘 ⁝ ⸫ 🟃 🟂 ⚙️ 🟕 🟗 ⚙︎
+		echo "	notify('⚙︎',".(1000 * $delaySeconds).",'spinRight');\n";
+
+
 		echo "</script>\n";
 		#
 		noscriptRefresh($delaySeconds);
