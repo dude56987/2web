@@ -2215,6 +2215,18 @@ if( ! function_exists("getIdentity")){
 	}
 }
 ########################################################################
+if( ! function_exists("drawStat")){
+	function drawStat($label,$stat){
+		# Draw a stat widget
+		#
+		# RETURN OUTPUT
+		echo "		<span class='singleStat' title='$label - $stat'>\n";
+		echo "			<span class='singleStatLabel'>$label</span>\n";
+		echo "			<span class='singleStatValue'>$stat</span>\n";
+		echo "		</span>\n";
+	}
+}
+########################################################################
 if( ! function_exists("getStat")){
 	function getStat($totalPath, $label, $showEmpty=false){
 		# get a value from a file and print a stat on a webpage
@@ -2259,10 +2271,7 @@ if( ! function_exists("getStat")){
 			$total="∅";
 		}
 		if ($drawValue){
-			echo "		<span class='singleStat' title='$label - $total'>\n";
-			echo "			<span class='singleStatLabel'>$label</span>\n";
-			echo "			<span class='singleStatValue'>$total</span>\n";
-			echo "		</span>\n";
+			drawStat($label,$total);
 		}
 	}
 }
@@ -3022,6 +3031,74 @@ if( ! function_exists("file_get_contents_tabbed")){
 			$outputData.=$tempFileLine."\n";
 		}
 		return $outputData;
+	}
+}
+################################################################################
+if( ! function_exists("cpuCount")){
+	function cpuCount(){
+		# PARALLEL PROCESSING COMMAND
+		# List the total number of cores the system has available for multithreading
+		#
+		# RETURN INT
+
+		#
+		$cpuData=file("/proc/cpuinfo");
+		$cpuCounter=0;
+		foreach($cpuData as $line){
+			# check for cpu cores
+			if (stripos($line,"processor") !== false){
+				$cpuCounter+=1;
+			}
+		}
+		# remove one cpu from the total cpu count, this will prevent service interuptions
+		$cpuCounter=( $cpuCounter - 1 );
+		if ($cpuCounter < 2){
+			$cpuCounter=1;
+		}
+		# output the cpu count
+		return $cpuCounter;
+	}
+}
+################################################################################
+if( ! function_exists("addToIndex")){
+	function addToIndex($indexItem, $indexPath){
+		# addToIndex $indexItem $indexPath
+		#
+		# Add a item to a index file, prevent duplicate entries
+		#
+		if (file_exists($indexPath)){
+			$indexFileData=file($indexPath);
+			$foundIndex=array_search($indexItem, $indexFileData);
+			# if the data does not already exist in the index
+			if ($foundIndex == false){
+				# the item is not in the index add it
+				appendFile($indexPath,$indexItem."\n");
+			}
+		}else{
+			# create the blank index file
+			#file_put_contents($indexPath,"");
+			touch($indexPath);
+			# the index file does not exist
+			appendFile($indexPath,$indexItem."\n");
+		}
+		return true;
+	}
+}
+################################################################################
+if( ! function_exists("createDir")){
+	function createDir($directoryPath){
+		# Create a path for use in the webserver
+		#
+		# directoryPath : The directory to create with webserver permissions
+		#
+		# - Create a directory with permissions for the web user www-data
+		# - Create path recursively if necessary
+		#
+		# RETURN FILES
+		if (! file_exists($directoryPath)){
+			# create the directory ownership of directory and subdirectories as www-data
+			mkdir($directoryPath, 0777, true);
+		}
 	}
 }
 ################################################################################
