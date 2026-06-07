@@ -15,6 +15,48 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+################################################################################
+# loadOption must be created first to store the globals used by the library
+################################################################################
+function loadOption(){
+	# loadOption "$optionName" "$input"
+	#
+	# Load a option from the input usually done at the top level of a script
+	#
+	# - Normally you would use $@ as the input
+	# - This will detect --optionName and can be used to store the true or
+	#   false value
+	#
+	optionString="$1"
+	input="$2"
+	#
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	# load a option
+	if echo -n "$input" | grep -q -e "--${optionString}";then
+		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to yes"
+		# load the option
+		echo -n "yes"
+	else
+		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to no"
+		# load the default of no
+		echo -n "no"
+	fi
+}
+########################################################################
+# Read the user flags and generate values for the global variables
+# - ex. --parallel
+# - ex. --mute
+# - ex. --fast
+########################################################################
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FORCE_OPTION="$(loadOption "force" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
+########################################################################
+# You must set LINE_THEME in the script using this lib
+########################################################################
+# List the functions
 ########################################################################
 function resetColor(){
 	# display termail code to reset all color codes
@@ -4240,31 +4282,6 @@ function stopSpinner(){
 			# stop the animated spinner
 			kill "$SPINNER_PID" || INFO "No Spinner could be stopped..."
 		fi
-	fi
-}
-########################################################################
-function loadOption(){
-	# loadOption "$optionName" "$input"
-	#
-	# Load a option from the input usually done at the top level of a script
-	#
-	# - Normally you would use $@ as the input
-	# - This will detect --optionName and can be used to store the true or
-	#   false value
-	#
-	optionString="$1"
-	input="$2"
-	#
-	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
-	# load a option
-	if echo -n "$input" | grep -q -e "--${optionString}";then
-		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to yes"
-		# load the option
-		echo -n "yes"
-	else
-		#addToLog "INFO" "Loading Option" "${moduleName} option $optionString set to no"
-		# load the default of no
-		echo -n "no"
 	fi
 }
 ########################################################################
