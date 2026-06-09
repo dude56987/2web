@@ -24,6 +24,7 @@
 # force debugging
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
+ini_set('memory_limit',"4G");
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
@@ -188,6 +189,138 @@ function moreSynLinks($searchQuery){
 	echo "</div>\n";
 }
 ################################################################################
+function searchSlang($searchQuery){
+	echo "<script>console.log('Searching dict');</script>";
+	# only search for single word queries
+	if (stripos($searchQuery," ") !== false){
+		# log in the browser console that no dict results were logged
+		echo "<script>console.log('No Slang dictionary results for multi word queries.');</script>";
+		# exit the function because a single word does not contain spaces
+		return false;
+	}else{
+		# run the search
+		echo "<script>console.log('Searching the server slang dictionaries...');</script>";
+	}
+	# build the dict data
+	$tempDictData="";
+	$definitionCounter=0;
+	# get all the slang files
+	$definitionFiles = recursiveScan("/usr/share/2web/databases/slang/");
+	$definitionData=Array();
+	# combine the files
+	foreach($definitionFiles as $definitionFilePath){
+		$definitionData=array_merge($definitionData,file($definitionFilePath, FILE_IGNORE_NEW_LINES));
+	}
+	if ( count($definitionData) > 2 ){
+		# build the definition data
+		$tempDefinition="";
+		$allDefinitions=Array();
+		#
+		foreach($definitionData as $definitionLine){
+			#
+			if (stripos($definitionLine,$searchQuery) !== false){
+				# read all the synonyms on the line of the file
+				$synonymData=explode(",",$definitionLine);
+				# randomize the synonyms display order
+				if ($synonymData[0] == $searchQuery){
+					$tempDefText=array_slice($synonymData,1);
+					# draw the specific definition data
+					$tempDictData .= "	<div class='inputCard'>"."\n";
+					$tempDictData .= "		<h2>".ucfirst($synonymData[0])."</h2>"."\n";
+					$tempDictData .= "		<div class='definitionData'>"."\n";
+					$tempDictData .= "			".implode(",",$tempDefText)."\n";
+					$tempDictData .= "		</div>"."\n";
+					$tempDictData .= "	</div>"."\n";
+					$definitionCounter+=1;
+				}
+			}
+		}
+	}
+	# if definitons are found print the output
+	if( $definitionCounter > 0 ){
+		echo "<div class='settingListCard'>"."\n";
+		echo "	<h3>Found ".$definitionCounter." Slang Definitions</h3>"."\n";
+		echo "	<div class='listCard'>"."\n";
+		echo "		".$tempDictData."\n";
+		echo "	</div>"."\n";
+		echo "</div>"."\n";
+	}else{
+		echo "<script>console.log('No slang results. Found slang definiton count \"$definitionCounter\"');</script>";
+	}
+}
+################################################################################
+function searchThesaurus($searchQuery){
+	echo "<script>console.log('Searching dict');</script>";
+	# only search for single word queries
+	if (stripos($searchQuery," ") !== false){
+		# log in the browser console that no dict results were logged
+		echo "<script>console.log('No dictionary results for multi word queries.');</script>";
+		# exit the function because a single word does not contain spaces
+		return false;
+	}else{
+		# run the search
+		echo "<script>console.log('Searching the server dictionaries...');</script>";
+	}
+	# build the dict data
+	$dictData="";
+	$definitionCounter=0;
+	# get all the thesaurus files
+	$definitionFiles = recursiveScan("/usr/share/2web/databases/thesaurus/");
+	$definitionData=Array();
+	# combine the files
+	foreach($definitionFiles as $definitionFilePath){
+		$definitionData=array_merge($definitionData,file($definitionFilePath, FILE_IGNORE_NEW_LINES));
+	}
+	if ( count($definitionData) > 2 ){
+		# build the definition data
+		#$dictData .= "<div class='settingListCard'>\n";
+		#$dictData .= "<h2>";
+		#$dictData .= "Thesaurus";
+		#$dictData .= "</h2>\n";
+		#$dictData .= "<div class='listCard'>\n";
+
+		$tempDefinition="";
+		$allDefinitions=Array();
+		foreach($definitionData as $definitionLine){
+			#
+			if (stripos($definitionLine,$searchQuery) !== false){
+				# read all the synonyms on the line of the file
+				$synonymData=explode(",",$definitionLine);
+				# randomize the synonyms display order
+				if ($synonymData[0] == $searchQuery){
+					# shuffle the data
+					shuffle($synonymData);
+					#
+					$dictData .= "<div class='titleCard'>\n";
+					$dictData .= "	<h3>Found ".count($synonymData)." Synonyms</h3>\n";
+					$dictData .= "	<div class='listCard'>\n";
+					foreach($synonymData as $singleWord){
+						$dictData .= "	<a class='button' href='?q=".$singleWord."'>\n";
+						$dictData .= "		".$singleWord."\n";
+						$dictData .= "	</a>\n";
+						$definitionCounter+=1;
+					}
+					$dictData .= "	</div>\n";
+					$dictData .= "</div>\n";
+					# stop searching after finding the correct word
+					break;
+				}
+			}else{
+				# this is part of the current definition
+				$tempDefinition .= $definitionLine."\n";
+			}
+		}
+		#$dictData .= "</div>\n";
+		#$dictData .= "</div>\n";
+	}
+	# if definitons are found print the output
+	if( $definitionCounter > 0 ){
+		echo $dictData;
+	}else{
+		echo "<script>console.log('No synonyms results. Found definiton count \"$definitionCounter\"');</script>";
+	}
+}
+################################################################################
 function searchDict($searchQuery){
 	echo "<script>console.log('Searching dict');</script>";
 	# only search for single word queries
@@ -261,6 +394,96 @@ function searchDict($searchQuery){
 		echo $dictData;
 	}else{
 		echo "<script>console.log('No dictionary results. Found definiton count \"$definitionCounter\"');</script>";
+	}
+}
+################################################################################
+function searchCalc($searchQuery){
+	echo "<script>console.log('Checking Calculator...');</script>";
+	$searchQuery=uncleanText($searchQuery);
+	$searchQuery=str_replace(" ","",$searchQuery);
+	$searchQuery=str_ireplace("x","*",$searchQuery);
+	$searchQuery=str_replace("÷","/",$searchQuery);
+	# only search for single word queries
+	if (stripos($searchQuery,"=") !== false){
+		$searchQuery=str_replace("=","",$searchQuery);
+		# run the search
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"+") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"-") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"/") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"*") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"%") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else if (stripos($searchQuery,"^") !== false){
+		echo "<script>console.log('Running calculations on query... \"$searchQuery\"');</script>";
+	}else{
+		# log in the browser console that no data could be calculated
+		echo "<script>console.log('No calculations can be done on query. \"$searchQuery\"');</script>";
+		# exit the function because no calculation symbols were found
+		return false;
+	}
+	#
+	foreach(str_split($searchQuery) as $tempCharacter){
+		#if ( ctype_alpha($tempCharacter) or ctype_punct($tempCharacter) ){
+		if ( ctype_alpha($tempCharacter) ){
+			# log in the browser console that no data could be calculated
+			echo "<script>console.log('No calculations can be done on query with letters. \"$searchQuery\"');</script>";
+			# exit the function there are letters so it is not a calculation
+			return false;
+		}
+	}
+	################################################################################
+	# WARNING : Beware of bad actors trying to inject code here.
+	# - Only run bc after checking that ONLY calculations are in the query.
+	################################################################################
+	# calculate and format the output
+	$calculationData=shell_exec('echo "'.$searchQuery.'" | /usr/bin/bc -l');
+	# if anwsers are found
+	if( $calculationData !== null ){
+		# cleanup the calculation data if it was valid
+		$calculationData=str_replace("\n","",$calculationData);
+		# remove newline formatting used by bc
+		$calculationData=str_replace("\\","",$calculationData);
+		echo "<div class='titleCard calcData'>\n";
+		echo "<h2>🧮 Calculator</h2>";
+		# calculate the string
+		if ((stripos($searchQuery,"=") !== false) ){
+			echo "			$searchQuery ";
+		}else{
+			echo "			$searchQuery = ";
+		}
+		echo "		<hr class='ruler'>\n";
+		$formattedData=number_format($calculationData);
+		if ($formattedData=="inf"){
+			# print the unformatted data
+			echo "			".$calculationData."\n";
+		}else{
+			# print the formatted data
+			echo "			".$formattedData."\n";
+		}
+		echo "</div>\n";
+	}else{
+		# log in the console
+		echo "<script>console.log('Found no calculation data this equation was invalid \"$calculationData\"');</script>";
+		# draw the invalid calculation on the output
+		echo "<div class='titleCard calcData'>\n";
+		echo "<h2>🧮 Calculator</h2>";
+		# calculate the string
+		if ((stripos($searchQuery,"=") !== false) ){
+			echo "			$searchQuery ";
+		}else{
+			echo "			$searchQuery = ";
+		}
+		echo "		<hr class='ruler'>\n";
+		echo "		<div class='disabledSetting'>\n";
+		# the calculation was invalid
+		echo "			INVALID EQUATION\n";
+		echo "		</div>\n";
+		echo "</div>\n";
 	}
 }
 ################################################################################
@@ -519,39 +742,45 @@ function checkSpelling($searchQuery){
 		}
 	}else{
 		if (! pspell_check($pspell, $searchQuery)){
-			echo "<div class='titleCard'>";
-			echo "<h2>";
-			echo "Did you mean?";
-			echo "</h2>";
-			echo "<div class='listCard'>";
 			$spellingSuggestions =  pspell_suggest($pspell, $searchQuery);
-			foreach($spellingSuggestions as $word){
-				echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+			if (count($spellingSuggestions) > 0){
+				echo "<div class='titleCard'>";
+				echo "<h2>";
+				echo "Did you mean?";
+				echo "</h2>";
+				echo "<div class='listCard'>";
+				foreach($spellingSuggestions as $word){
+					echo "		<a class='button' href='/search.php?q=$word'>$word</a>";
+				}
+				echo "</div>";
+				echo "</div>";
 			}
-			echo "</div>";
-			echo "</div>";
 		}
 	}
 }
 ################################################################################
 function webPlayerCheck($searchQuery){
 	# check if this is a url and if it is then add a link that pushes it into the web player
-	if(requireGroup("webPlayer", false)){
+	if(is_url($searchQuery)){
+		echo "<div class='titleCard'>";
+		echo "	<h2>External Links Options</h2>";
+		echo "	<div class='listCard'>";
 		# if the user has web player permissions check if a link can be created
-		if(is_url($searchQuery)){
-			echo "<div class='titleCard'>";
-			echo "	<h2>Open Link In Web Player</h2>";
-			echo "	<div class='listCard'>";
-			echo "		<a class='button' href='/web-player.php?shareURL=\"".$searchQuery."\"'>🎞️ Load Link In Web Player</a>";
-			echo "	</div>";
-			echo "</div>";
+		if(yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+			if(requireGroup("webPlayer", false)){
+				echo "		<a class='button' href='/web-player.php?shareURL=\"".$searchQuery."\"'>🎞️ Load Link In The Web Player</a>";
+			}
 		}
+		echo "		<a class='button' href='/exit.php?to=".$searchQuery."'>🚪︎ Go to External Link</a>";
+		echo "	</div>";
+		echo "</div>";
 	}
 }
 ################################################################################
 if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	cleanGetInput();
 	$searchQuery = $_GET["q"];
+	$ogQuery=$searchQuery;
 	$searchQuery = strtolower($searchQuery);
 	$cleanQuery= cleanText($searchQuery);
 	$cleanQuery= spaceCleanedText($cleanQuery);
@@ -580,9 +809,13 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	}
 	# draw the bang help if it exists
 	echo $bangHelp;
+	searchCalc($cleanQuery);
 	checkSpelling($searchQuery);
 	# search for dictonary results for each word
 	searchDict($cleanQuery);
+	searchThesaurus($searchQuery);
+	searchSlang($cleanQuery);
+	webPlayerCheck($ogQuery);
 	# draw the results filters
 	echo "	<div class='titleCard'>\n";
 	echo "	<h2>Filter Results</h2>";
@@ -671,6 +904,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	#
 	echo "<hr>";
 	loadSearchIndexResults($searchQuery,"episodes",9,"Episodes",40,true);
+	loadSearchIndexResults($searchQuery,"videos",9,"Videos",40,true);
 	loadSearchIndexResults($searchQuery,"shows",8,"Shows",40,true);
 	loadSearchIndexResults($searchQuery,"movies",-1,"Movies",40,true);
 	loadSearchIndexResults($searchQuery,"comics",-1,"Comics",40,true);
