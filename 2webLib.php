@@ -49,6 +49,8 @@ if( ! function_exists("drawPosterWidget")){
 			$showOutput = requireGroup("graph2web", false);
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
+		}else if ($filterType == "video"){
+			$showOutput = requireGroup("video2web", false);
 		}else if ($filterType == "channels"){
 			$showOutput = requireGroup("iptv2web", false);
 		}else if ($filterType == "repos"){
@@ -258,7 +260,7 @@ if( ! function_exists("detectEnabledStatus")){
 if( ! function_exists("listModules")){
 	function listModules($allModules=false){
 		# by default only the modules used by content filters will be shown
-		$modules=Array("2web","nfo2web","comic2web","music2web","iptv2web","graph2web","wiki2web","git2web","portal2web","php2web");
+		$modules=Array("2web","nfo2web","video2web","comic2web","music2web","iptv2web","graph2web","wiki2web","git2web","portal2web","php2web");
 		if ($allModules){
 			# all background loading modules
 			$modules=array_merge($modules,Array("kodi2web","ytdl2nfo","rss2nfo","weather2web","ai2web"));
@@ -889,6 +891,8 @@ if( ! function_exists("displayEmptyMessage")){
 			# random movies and shows
 			drawPosterWidget("movies", True);
 			drawPosterWidget("shows", True);
+			# random videos
+			drawPosterWidget("videos", True);
 			#
 			drawPosterWidget("comics", True);
 			#
@@ -904,6 +908,7 @@ if( ! function_exists("displayEmptyMessage")){
 		}else{
 			echo "<hr>";
 			loadSearchIndexResults($search,"episodes",9,"Episodes",40,true);
+			loadSearchIndexResults($search,"videos",9,"Videos",40,true);
 			loadSearchIndexResults($search,"shows",8,"Shows",40,true);
 			loadSearchIndexResults($search,"movies",-1,"Movies",40,true);
 			loadSearchIndexResults($search,"comics",-1,"Comics",40,true);
@@ -1780,6 +1785,10 @@ if( ! function_exists("checkFilePathPermissions")){
 			if (requireGroup("comic2web",false)){
 				$drawResult=true;
 			}
+		}else if (stripos($filePath,"_video") !== false){
+			if (requireGroup("video2web",false)){
+				$drawResult=true;
+			}
 		}else if (stripos($filePath,"_episodes") !== false){
 			if (requireGroup("nfo2web",false)){
 				$drawResult=true;
@@ -1987,6 +1996,8 @@ if( ! function_exists("loadSearchIndexResults")){
 			$showOutput = requireGroup("graph2web", false);
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
+		}else if ($filterType == "videos"){
+			$showOutput = requireGroup("video2web", false);
 		}else if ($filterType == "channels"){
 			$filterPath = "live";
 			$showOutput = requireGroup("iptv2web", false);
@@ -2408,18 +2419,23 @@ if( ! function_exists("timeElapsedToHuman")){
 		# Take a timestamp in seconds and show how long ago that timestamp happend in a human readable way.
 		#
 		# - By default ago is posted after the time.
+		# - The second option is post time text default="ago"
 		#
 		# - EX) 10 minutes 4 seconds ago
 		# - EX) 2 days 12 hours ago
 		#
 
 		# remove newlines in timestamp
-		# - second argument is post time text default=" ago"
-		$timestamp=str_replace("\n","",$timestamp);
-
+		$timestamp=trim($timestamp);
+		if ( ! is_numeric($timestamp)){
+			# if the timestamp is not a timestamp
+			# just return as a string
+			return "$timestamp";
+		}
+		#
 		$currentTime=time();
 		$elapsedTime=( $currentTime - $timestamp );
-
+		#
 		$outputTime="";
 		# convert the elapsed time to human
 		$outputTime .= timeToHuman($elapsedTime);
@@ -2465,7 +2481,8 @@ if( ! function_exists("addToLog")){
 		$logIdentifier=(string)microtime(true);
 		#$logDate=date("d\/m\/y");
 		$logDate=date("m\/d\/y");
-		$logTime=date("h:i:s");
+		# timestamp to be converted to realitive time upon rendering
+		$logTime=date("U");
 		#
 		$logDescription=str_replace("'", "''", $errorDescription);
 		#
