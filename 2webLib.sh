@@ -1,6 +1,6 @@
 #! /bin/bash
-########################################################################
-# 2web function library
+################################################################################
+# 2web Function Library
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -1697,33 +1697,41 @@ function upgrade-yt-dlp(){
 	# create the directories to store the download
 	createDir "/var/cache/2web/generated/yt-dlp/"
 	createDir "/var/cache/2web/downloads/yt-dlp/"
+	createDir "/var/cache/2web/downloads/yt-dlp/stable/"
+	createDir "/var/cache/2web/downloads/yt-dlp/unstable/"
 	# download yt-dlp directly
 	# - only download the file if the modified time is newer
 	# - fetch the stable or unstable version based on cfg file
 	if yesNoCfgCheck "/etc/2web/download-yt-dlp-stable-version.cfg" "yes";then
-		wget -N "$stableLink" -P "/var/cache/2web/downloads/yt-dlp/"
+		wget -N "$stableLink" -P "/var/cache/2web/downloads/yt-dlp/stable/"
+		yt_dlp_downloadPath="/var/cache/2web/downloads/yt-dlp/stable/"
+		yt_dlp_downloadFile="/var/cache/2web/downloads/yt-dlp/stable/yt-dlp"
 	else
-		wget -N "$unstableLink" -P "/var/cache/2web/downloads/yt-dlp/"
+		wget -N "$unstableLink" -P "/var/cache/2web/downloads/yt-dlp/unstable/"
+		yt_dlp_downloadPath="/var/cache/2web/downloads/yt-dlp/unstable/"
+		yt_dlp_downloadFile="/var/cache/2web/downloads/yt-dlp/unstable/yt-dlp"
 	fi
 	# get the sum of the downloaded cache file
-	newFileSum=$(md5sum "/var/cache/2web/downloads/yt-dlp/yt-dlp" | cut -d' ' -f1 )
+	newFileSum=$(md5sum "$yt_dlp_downloadFile" | cut -d' ' -f1 )
 	# check if the file is already installed
-	if test -f "/var/cache/2web/generated/yt-dlp/yt-dlp";then
+	if checkFileDataSum "$yt_dlp_downloadFile";then
 		# if the file is installed get the file sum
-		oldFileSum=$(md5sum "/var/cache/2web/generated/yt-dlp/yt-dlp" | cut -d' ' -f1 )
+		oldFileSum=$(md5sum "$yt_dlp_downloadFile" | cut -d' ' -f1 )
 	else
 		oldFileSum=0
 	fi
 	# check the new file is diffrent than the old file by comparing the sums
-	if [ $newFileSum == $oldFileSum ];then
+	if [ "$newFileSum" == "$oldFileSum" ];then
 		ALERT "No upgrade could not be found..."
 	else
 		# upgrade the package with the new one
 		addToLog "UPDATE" "Upgrading Package" "Upgrading the yt-dlp package."
 		# copy over the new file
-		cp -v "/var/cache/2web/downloads/yt-dlp/yt-dlp" "/var/cache/2web/generated/yt-dlp/yt-dlp"
+		cp -v "$yt_dlp_downloadFile" "/var/cache/2web/generated/yt-dlp/yt-dlp"
 		# set the permissions
 		chmod +x "/var/cache/2web/generated/yt-dlp/yt-dlp"
+		# set the lock file
+		setFileDataSum "$yt_dlp_downloadFile"
 	fi
 }
 ################################################################################
