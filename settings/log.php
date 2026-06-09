@@ -44,7 +44,7 @@ requireAdmin();
 	include($_SERVER['DOCUMENT_ROOT'].'/settings/settingsHeader.php');
 	# add the javascript sorter controls
 ?>
-<div class='titleCard'>
+<div class='titleCard settingsHeader'>
 	<h2>Change Max Log Length</h2>
 	<ul>
 		<li>Log will be cut to this length once every 24 hours.</li>
@@ -104,6 +104,8 @@ requireAdmin();
 		<a class='button' href='?search=debug'>Debug</a>
 		<a class='button' href='?search=new'>New</a>
 	</div>
+	<h2>Print Log</h2>
+	<button class='button' onclick="window.print();">🖨️ Print Log</button>
 </div>
 <hr>
 <!--  add the search box -->
@@ -113,6 +115,9 @@ requireAdmin();
 </form>
 <hr>
 <div class='settingListCard'>
+	<?PHP
+	echo "<h2>".date("l jS \of F Y h:i:s A")."</h2>";
+	?>
 	<hr id='tableTop'>
 	<table>
 	<tr>
@@ -184,7 +189,7 @@ requireAdmin();
 		$data .= $row['date'];
 		$data .= "</td>\n";
 		$data .= "<td>\n";
-		$data .= $row['time'];
+		$data .= timeElapsedToHuman($row['time']);
 		$data .= "</td>\n";
 		$data .= "</tr>\n";
 		$logDataNumber+=1;
@@ -205,6 +210,11 @@ requireAdmin();
 	?>
 	</table>
 </div>
+<!--  add the search box -->
+<form class='searchBoxForm' method='get'>
+	<input id='searchBox' class='searchBox' type='text' name='search' placeholder='Log Entry Search...' >
+	<button id='searchButton' class='searchButton' type='submit'>🔎</button>
+</form>
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT'].'/footer.php');
 ?>
