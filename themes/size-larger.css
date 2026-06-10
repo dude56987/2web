@@ -1,6 +1,6 @@
 /*
 ########################################################################
-# 2web small theme without custom font
+# 2web large size theme
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,5 +18,5 @@
 ########################################################################
 */
 html{
-	font-size: 8px;
+	font-size: 20px;
 }

@@ -1,0 +1,119 @@
+/*
+########################################################################
+# 2web paper theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	--solidBackground: black;
+	--glassBackground: rgba(0,0,0,0.85);
+	--borderColor: white;
+	--textColor: white;
+	--shadowColor: white;
+	--highlightText: white;
+	--highlightBackground: black;
+	--highlightBorder: black;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+/* Fix white on white loading pulse being hidden */
+.globalPulse{
+	background-color: var(--solidBackground) !important;
+}
+html{
+	text-shadow: none !important;
+}
+.moreEpisodesLinkIcon{
+	background: black !important;
+}
+.showPageEpisode > h2{
+	background: black !important;
+	color: white !important;
+}
+/* rotate the button colors */
+.showPageEpisode:nth-of-type(4n),
+.indexSeries:nth-of-type(4n),
+.button:nth-of-type(4n){
+	background-color: lightpink !important;
+	color: black !important;
+	text-shadow: none;
+}
+.showPageEpisode:nth-of-type(4n-3),
+.indexSeries:nth-of-type(4n-3),
+.button:nth-of-type(4n-3){
+	background-color: orange !important;
+	color: black !important;
+	text-shadow: none;
+}
+.showPageEpisode:nth-of-type(4n-2),
+.indexSeries:nth-of-type(4n-2),
+.button:nth-of-type(4n-2){
+	background-color: cornflowerblue !important;
+	color: black !important;
+	text-shadow:
+	text-shadow: none;
+}
+.showPageEpisode:nth-of-type(4n-1),
+.indexSeries:nth-of-type(4n-1),
+.button:nth-of-type(4n-1){
+	background-color: darkviolet !important;
+	color: white !important;
+	text-shadow: none;
+}
+/* rotate the header colors */
+.header:nth-of-type(4n),
+.listCard:nth-of-type(4n),
+.inputCard:nth-of-type(4n),
+.settingListCard:nth-of-type(4n),
+.titleCard:nth-of-type(4n){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: lightpink;
+		color: black !important;
+		text-shadow: none;
+	}
+}
+.header:nth-of-type(4n-3),
+.listCard:nth-of-type(4n-3),
+.inputCard:nth-of-type(4n-3),
+.settingListCard:nth-of-type(4n-3),
+.titlecard:nth-of-type(4n-3){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: orange;
+		color: black !important;
+		text-shadow: none;
+	}
+}
+.header:nth-of-type(4n-2),
+.listCard:nth-of-type(4n-2),
+.inputCard:nth-of-type(4n-2),
+.settingListCard:nth-of-type(4n-2),
+.titlecard:nth-of-type(4n-2){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: cornflowerblue;
+		color: black !important;
+		text-shadow: none;
+	}
+}
+.header:nth-of-type(4n-1),
+.listCard:nth-of-type(4n-1),
+.inputCard:nth-of-type(4n-1),
+.settingListCard:nth-of-type(4n-1),
+.titlecard:nth-of-type(4n-1){
+	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
+		background-color: darkviolet;
+		color: black !important;
+		text-shadow: none;
+	}
+}

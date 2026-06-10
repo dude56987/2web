@@ -140,13 +140,15 @@ html::-webkit-scrollbar-thumb:vertical{
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }
-*:hover{
+/*
+*{
 	animation-name: rainbow;
 	animation-duration: 10s;
 	animation-fill-mode: forwards;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }
+*/
 /* rotate the element animation starting positions */
 *:nth-of-type(10n){
 	animation-delay: -1s;

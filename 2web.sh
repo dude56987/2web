@@ -397,17 +397,14 @@ function buildActivityGraph(){
 }
 ########################################################################
 function buildSingleTheme(){
-	local tempPathBase="$1"
-	local tempPathColor="$2"
-	local tempPathFont="$3"
-	local tempPathMod="$4"
+	createdThemeName="$1"
+	themeColor="$2"
+	themeFont="$3"
+	themeMod="$4"
+	themeBase="$5"
+	themeEdge="$6"
+	themeSize="$7"
 	#
-	local themeColor="$5"
-	local themeFont="$6"
-	local themeMod="$7"
-	local themeBase="$8"
-	#
-	local tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathMod}"
 	#
 	INFO "Building theme '$tempThemeName'..."
 	# build the theme
@@ -418,6 +415,12 @@ function buildSingleTheme(){
 		if test -f "$themeFont";then
 			cat "$themeFont"
 		fi
+		if test -f "$themeSize";then
+			cat "$themeSize"
+		fi
+		if test -f "$themeEdge";then
+			cat "$themeEdge"
+		fi
 		if test -f "$themeMod";then
 			cat "$themeMod"
 		fi
@@ -425,6 +428,8 @@ function buildSingleTheme(){
 			cat "$themeBase"
 		fi
 	} > "/usr/share/2web/themes/$tempThemeName.css"
+	chown www-data:www-data "/usr/share/2web/themes/$tempThemeName.css"
+
 }
 ########################################################################
 function build2webThemes(){
@@ -457,6 +462,10 @@ function build2webThemes(){
 		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
 		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
 		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
+		themeEdges=$(find "/usr/share/2web/theme-templates/" -type f -name 'edge-*.css')
+		themeEdges=$(echo "$themeEdges" | sed -z "s/\n/ /g")
+		themeSizes=$(find "/usr/share/2web/theme-templates/" -type f -name 'size-*.css')
+		themeSizes=$(echo "$themeSizes" | sed -z "s/\n/ /g")
 		# build the custom stylesheets if they need to be built
 		for themeColor in $themeColors;do
 			tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
@@ -466,8 +475,15 @@ function build2webThemes(){
 					tempPathMod=$(echo "$themeMod" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/mod-//g" )
 					for themeBase in $themeBases;do
 						tempPathBase=$(echo "$themeBase" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/base-//g" )
-						buildSingleTheme "$tempPathBase" "$tempPathColor" "$tempPathFont" "$tempPathMod" "$themeColor" "$themeFont" "$themeMod" "$themeBase" &
-						waitQueue 0.5 "$totalCPUS"
+						for themeEdge in $themeEdges;do
+							tempPathEdge=$(echo "$themeEdge" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/edge-//g" )
+							for themeSize in $themeSizes;do
+								tempPathSize=$(echo "$themeSize" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/size-//g" )
+								tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathEdge}-${tempPathMod}-${tempPathSize}"
+								buildSingleTheme "$tempThemeName" "$themeColor" "$themeFont" "$themeMod" "$themeBase" "$themeEdge" "$themeSize" &
+								waitQueue 0.5 "$totalCPUS"
+							done
+						done
 					done
 				done
 			done

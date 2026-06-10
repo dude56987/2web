@@ -1,6 +1,6 @@
 /*
 ########################################################################
-# 2web font theme for no set font
+# 2web default no custom edges
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,3 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
 */
-@font-face{
-	font-family: font2web;
-	src: unset;
-}

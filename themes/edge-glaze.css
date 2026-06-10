@@ -1,7 +1,7 @@
 /*
 ########################################################################
-# 2web small theme font for opendyslexic
-## Copyright (C) 2026  Carl J Smith
+# 2web glazed edges theme component
+# Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,10 +17,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
 */
-@font-face{
-	font-family: font2web;
-	src: url("/fonts/OpenDyslexic-Regular.otf");
-}
-html{
-	font-size: 11px;
+*{
+	border-color: transparent !important;
 }

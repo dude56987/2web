@@ -1,0 +1,58 @@
+/*
+########################################################################
+# 2web FIRE theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+/* ********************************************************************** */
+/* This theme will be dark or light based on the client system settings.  */
+/* ********************************************************************** */
+/* Set the dark mode theme */
+@media (prefers-color-scheme: dark){
+	:root{
+		--solidBackground: #3b0a0a;
+		--glassBackground: rgba(64,0,0,0.85);
+		--borderColor: #bebebe;
+		--textColor: #bebebe;
+		--shadowColor: black;
+		--highlightText: black;
+		--highlightBackground: #bebebe;
+		--highlightBorder: lightgray;
+		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+	}
+	@media (prefers-reduced-transparency: reduce){
+		:root{
+			--glassBackground: rgb(64,0,0) !important;
+		}
+	}
+}
+/* Set the light mode theme */
+@media (prefers-color-scheme: light){
+	:root{
+		--solidBackground: darkred;
+		--glassBackground: rgba(100,0,0,0.85);
+		--borderColor: white;
+		--textColor: white;
+		--shadowColor: black;
+		--highlightText: black;
+		--highlightBackground: white;
+		--highlightBorder: lightgray;
+		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+	}
+	@media (prefers-reduced-transparency: reduce){
+		--glassBackground: rgb(100,0,0);
+	}
+}

@@ -215,6 +215,8 @@ $totalThemes=count($sourceFiles);
 	$baseNames=Array();
 	$colorNames=Array();
 	$fontNames=Array();
+	$edgeNames=Array();
+	$sizeNames=Array();
 	$modNames=Array();
 	foreach($themeParts as $sourceFile){
 		# read the theme components and filter out elements into thier sections
@@ -224,6 +226,10 @@ $totalThemes=count($sourceFiles);
 			$colorNames=array_merge($colorNames,Array(str_replace(".css","",str_replace("color-","",basename($sourceFile)))));
 		}else if (stripos($sourceFile,"font-") !== false){
 			$fontNames=array_merge($fontNames,Array(str_replace(".css","",str_replace("font-","",basename($sourceFile)))));
+		}else if (stripos($sourceFile,"edge-") !== false){
+			$edgeNames=array_merge($edgeNames,Array(str_replace(".css","",str_replace("edge-","",basename($sourceFile)))));
+		}else if (stripos($sourceFile,"size-") !== false){
+			$sizeNames=array_merge($sizeNames,Array(str_replace(".css","",str_replace("size-","",basename($sourceFile)))));
 		}else if (stripos($sourceFile,"mod-") !== false){
 			$modNames=array_merge($modNames,Array(str_replace(".css","",str_replace("mod-","",basename($sourceFile)))));
 		}
@@ -237,7 +243,9 @@ $totalThemes=count($sourceFiles);
 	echo "	<th>Base</th>";
 	echo "	<th>Color</th>";
 	echo "	<th>Font</th>";
+	echo "	<th>Edge</th>";
 	echo "	<th>Mod</th>";
+	echo "	<th>Size</th>";
 	echo "</tr>";
 	echo "<td>";
 	# read the theme components
@@ -283,9 +291,36 @@ $totalThemes=count($sourceFiles);
 	echo "</td>";
 	echo "<td>";
 	#
+	echo "<select name='themePartEdge'>";
+	#shuffle($fontNames);
+	foreach($edgeNames as $name){
+		# add theme mod compentents
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "<td>";
+	#
 	echo "<select name='themePartMod'>";
 	#shuffle($modNames);
 	foreach($modNames as $name){
+		# add theme mod compentents
+		if ( stripos($activeThemeData, $name) !== false ){
+			echo "<option selected value='".$name."' >".$name."</option>\n";
+		}else{
+			echo "<option value='".$name."' >".$name."</option>\n";
+		}
+	}
+	echo "</select>";
+	echo "</td>";
+	echo "<td>";
+	#
+	echo "<select name='themePartSize'>";
+	foreach($sizeNames as $name){
 		# add theme mod compentents
 		if ( stripos($activeThemeData, $name) !== false ){
 			echo "<option selected value='".$name."' >".$name."</option>\n";
@@ -314,8 +349,6 @@ if (array_key_exists("theme",$_GET)){
 	echo "	</form>\n";
 	echo "</div>";
 }
-
-
 
 ?>
 
