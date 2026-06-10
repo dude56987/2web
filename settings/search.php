@@ -276,6 +276,10 @@ foreach($sourceFiles as $sourceFile){
 		$tempIcon="📥";
 		$tempTitle="$themeName";
 		$permissionsPassed=true;
+	}else if($themeName == "removal"){
+		$tempIcon="🔥";
+		$tempTitle="$themeName";
+		$permissionsPassed=true;
 	}else if($themeName == "help"){
 		$tempIcon="?";
 		$tempTitle="$themeName";
