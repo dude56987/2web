@@ -23,18 +23,34 @@ source "/var/lib/2web/common"
 function processEpisode(){
 	# Generate episode nfo structure from the json object and download thumbnails if they are found
 	#
-	#processEpisode "$rssObject" "$processedEpisodes" "$totalEpisodes" "$finishedSources" "$totalSources" &
+	#processEpisode "$rssObject" "$totalEpisodes" "$finishedSources" "$totalSources" &
 	#
 	# RETURN FILES
 	rssObject=$1
-	processedEpisodes=$2
-	totalEpisodes=$3
-	finishedSources=$4
-	totalSources=$5
+	totalEpisodes=$2
+	finishedSources=$3
+	totalSources=$4
+
+	# load the show title information
+	showTitle="$(echo "$rssObject" | jq -r ".playlist_title")"
+	# get the playback url
+	playbackUrl="$(echo "$rssObject" | jq -r ".url")"
+	addToLog "INFO" "Processing Episode" "Processing show '$showTitle' episode URL '$playbackUrl'"
+	INFO "Processing show '$showTitle' episode URL '$playbackUrl'"
+	# create a sum of the url link
+	urlSum="$(echo "$playbackUrl" | sha512sum | cut -d' ' -f1)"
+	# create the processing directory if it does not exist
+	createDir "/var/cache/2web/downloads/rss/$showTitle/"
+	# log sums of processed urls so duplicate rss entries do not create duplicate episodes
+	if grep -q "$urlSum" "/var/cache/2web/downloads/rss/$showTitle/processedEpisodes.index";then
+		INFO "Shows:[$finishedSources/$totalSources] Episodes:[$finishedEpisodes/$totalEpisodes] - Already processed this episode link."
+		# skip processing already processed link
+		return
+	fi
 	#
-	showTitle=$(echo "$rssObject" | jq -r ".playlist_title")
 	if ! test -f "/var/cache/2web/generated/rss/$showTitle/tvshow.nfo";then
 		INFO "Shows:[$finishedSources/$totalSources] Episodes:[$finishedEpisodes/$totalEpisodes] - Creating show $showTitle"
+		addToLog "NEW" "Adding RSS Show" "Building show NFO data for '$showTitle'"
 		# create the show directory
 		createDir "/var/cache/2web/generated/rss/$showTitle/"
 		showSource=$(echo "$rssObject" | jq -r ".playlist_id")
@@ -71,6 +87,7 @@ function processEpisode(){
 	else
 		INFO "Shows:[$finishedSources/$totalSources] Episodes:[$finishedEpisodes/$totalEpisodes] - $showTitle : Adding Episode $episodeTitle"
 
+		addToLog "NEW" "Adding RSS Show Episode" "Creating NFO data for show '$showTitle' episode '$episodeTitle'"
 		plot=$(echo "$rssObject" | jq -r ".description")
 		runtime=$(echo "$rssObject" | jq -r ".duration")
 		# get thumbnail data if it is available
@@ -80,6 +97,7 @@ function processEpisode(){
 		# check the thumbnail is a real link
 		#if echo "$thumbnail" | grep -q --ignore-case "http" | grep -q --ignore-case "://";then
 		if [ $(echo "$thumbnail" | wc --bytes) -gt 6 ];then
+			addToLog "DOWNLOAD" "Adding RSS Show Episode" "Downloading thumbnail for '$showTitle' episode '$episodeTitle'"
 			downloadThumbnail "$thumbnail" "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle-thumb" ".jpg"
 		fi
 		{
@@ -120,11 +138,12 @@ function processEpisode(){
 			# end the nfo file
 			echo "</episodedetails>"
 		} > "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle.nfo"
-		# get the playback url
-		playbackUrl=$(echo "$rssObject" | jq -r ".url")
 		# generate a .strm file from the media found in the rss
 		echo "$playbackUrl" > "/var/cache/2web/generated/rss/$showTitle/$airDateYear/s${airDateYear}e$episodeNumber - $episodeTitle.strm"
 	fi
+	# store the sum of the processed episode to prevent repeated processing
+	addToIndex "$urlSum" "/var/cache/2web/downloads/rss/$showTitle/processedEpisodes.index"
+	ALERT "Added New Episode of '$showTitle' to already processed episode list as '$episodeTitle'"
 }
 ################################################################################
 rss2nfo_update(){
@@ -164,9 +183,10 @@ rss2nfo_update(){
 			rssSum=$(echo "$rssSource" | sha512sum | cut -d' ' -f1)
 			# check for existing cached rss json data limited to once per day
 			if cacheCheck "/var/cache/2web/downloads/rss/cache/$rssSum.cfg" "1";then
+				jsRuntime="--js-runtimes quickjs:/usr/bin/qjs"
 				# use yt-dlp to download the rss and convert it into json
 				INFO "Shows:[$finishedSources/$totalSources] - Downloading rss and converting to json from $rssSource"
-				rssAsJson=$(timeout 120 /var/cache/2web/generated/yt-dlp/yt-dlp --flat-playlist --abort-on-error -j "$rssSource")
+				rssAsJson=$(timeout 120 /var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime --flat-playlist --abort-on-error -j "$rssSource")
 				# only write valid rss data to the cache
 				if [ 5 -lt $(echo "$rssAsJson" | wc -c) ];then
 					addToLog "UPDATE" "RSS Download Succeded" "New RSS file from '$rssSource' was successfull"
@@ -190,7 +210,7 @@ rss2nfo_update(){
 			# - reverse line sorting order to be oldest to newest
 			echo "$rssAsJson" | tac | while read -r rssObject;do
 				# process rss episode
-				processEpisode "$rssObject" "$processedEpisodes" "$totalEpisodes" "$finishedSources" "$totalSources" &
+				processEpisode "$rssObject" "$totalEpisodes" "$finishedSources" "$totalSources" &
 				waitQueue 0.5 "$totalCPUS"
 				finishedEpisodes=$(( $finishedEpisodes + 1 ))
 			done
@@ -236,7 +256,7 @@ elif [ "$1" == "-r" ] || [ "$1" == "--reset" ] || [ "$1" == "reset" ] ;then
 	lockProc "rss2nfo"
 	ALERT "Removing the downloaded RSS feeds."
 	# cleanup the rss data
-	rm -rv "/var/cache/2web/web/downloads/rss/"
+	rm -rv "/var/cache/2web/downloads/rss/"
 elif [ "$1" == "-n" ] || [ "$1" == "--nuke" ] || [ "$1" == "nuke" ] ;then
 	lockProc "rss2nfo"
 	ALERT "Removing NFO data generated from rss feeds."
