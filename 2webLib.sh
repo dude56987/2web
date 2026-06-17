@@ -2010,6 +2010,8 @@ function drawHeader(){
 	# - Add a failsafe for if the theme fails
 	# - Add a super failsafe if figlet fails completely to draw the text without formatting
 	figlet -w "$termWidth" -c -f "smblock" "$1" || \
+	figlet -w "$termWidth" -c -f "smslant" "$1" || \
+	figlet -w "$termWidth" -c -f "slant" "$1" || \
 	figlet -w "$termWidth" -c -f "big" "$1" || \
 	figlet -w "$termWidth" -c "$1" || \
 	echo "$1"
