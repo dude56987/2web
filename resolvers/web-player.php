@@ -72,6 +72,7 @@ if (array_key_exists("url",$_GET)){
 
 	# create the directory to store the video metadata
 	$videoPathPrefix=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$videoLinkSum."/";
+	#$videoPathPrefix="/var/cache/2web/web/web_player/";
 	# make the local cache path for the video in the web player
 	if (! file_exists($videoPathPrefix)){
 		mkdir($videoPathPrefix);
@@ -121,6 +122,16 @@ if (array_key_exists("url",$_GET)){
 			file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
 		}
 	}
+	# add the link to the web player index
+	$linkPath=($videoPathPrefix.$videoLinkSum.".index");
+	$webLinkPath=("/web_player/".$videoLinkSum.".php");
+	# add the new video to the index for the web player
+	# - this allows  the web player to treat the added videos as a season
+	#   for autoplay and random play
+	addToIndex("$linkPath","/var/cache/2web/web/web_player/season.index");
+	# link the season index
+	$seasonPath=($videoPathPrefix."season.index");
+	linkFile("/var/cache/2web/web/web_player/season.index",$seasonPath);
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }else if(array_key_exists("shareURL",$_GET)){
@@ -162,6 +173,7 @@ if (array_key_exists("url",$_GET)){
 	$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
 	# create the directory to store the video metadata
 	$videoPathPrefix="/var/cache/2web/web/web_player/".$videoLinkSum."/";
+	#$videoPathPrefix="/var/cache/2web/web/web_player/";
 	if (! file_exists($videoPathPrefix)){
 		mkdir($videoPathPrefix);
 	}
@@ -173,6 +185,16 @@ if (array_key_exists("url",$_GET)){
 	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.directLink")){
 		file_put_contents($videoPathPrefix.$videoLinkSum.".php.directLink", $orignalVideoLink);
 	}
+	# add the link to the web player index
+	$linkPath=($videoPathPrefix.$videoLinkSum.".index");
+	$webLinkPath=("/web_player/".$videoLinkSum.".php");
+	# add the new video to the index for the web player
+	# - this allows  the web player to treat the added videos as a season
+	#   for autoplay and random play
+	addToIndex("$linkPath","/var/cache/2web/web/web_player/season.index");
+	# link the season index
+	$seasonPath=($videoPathPrefix."season.index");
+	linkFile("/var/cache/2web/web/web_player/season.index",$seasonPath);
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }else if(array_key_exists("uploadMediaFile",$_FILES)){
@@ -192,6 +214,7 @@ if (array_key_exists("url",$_GET)){
 	$videoLinkSum=$fileSum;
 	# create the directory to store the video metadata
 	$videoPathPrefix=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$videoLinkSum."/";
+	#$videoPathPrefix="/var/cache/2web/web/web_player/";
 	# build the directory used to store all the data
 	if (! file_exists($videoPathPrefix)){
 		mkdir($videoPathPrefix);
@@ -264,6 +287,16 @@ if (array_key_exists("url",$_GET)){
 	if(! file_exists($videoPathPrefix.$videoLinkSum.".php.strmLink")){
 		file_put_contents($videoPathPrefix.$videoLinkSum.".php.strmLink", "http://".$_SERVER["HTTP_HOST"]."/web_player/".$videoLinkSum."/".$videoLinkSum.".strm");
 	}
+	# add the link to the web player index
+	$linkPath=($videoPathPrefix."/".$videoLinkSum."/".$videoLinkSum.".index");
+	$webLinkPath=("/web_player/"."/".$videoLinkSum."/".$videoLinkSum.".php");
+	# add the new video to the index for the web player
+	# - this allows  the web player to treat the added videos as a season
+	#   for autoplay and random play
+	addToIndex("$linkPath","/var/cache/2web/web/web_player/season.index");
+	# link the season index
+	$seasonPath=($videoPathPrefix."season.index");
+	linkFile("/var/cache/2web/web/web_player/season.index",$seasonPath);
 	# redirect to the web page
 	redirect("/web_player/".$videoLinkSum."/".$videoLinkSum.".php?play");
 }
@@ -430,6 +463,7 @@ ksort($sortedLinkList);
 $sourceFiles=array_reverse($sortedLinkList);
 $processedTitles=0;
 $totalVideos=0;
+$relatedTextSearchString="";
 # build the video index
 foreach($sourceFiles as $sourceFile){
 	# build the links
@@ -470,35 +504,60 @@ foreach($sourceFiles as $sourceFile){
 			$videoTitle=str_replace(".php","",basename($sourceFile));
 		}
 	}
+	# build the thumb data
+	$thumbData="";
 	if(file_exists($pathPrefix."verified.cfg")){
-		echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
+		$thumbData .= "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
 	}else{
-		echo "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
+		$thumbData .= "<a class='showPageEpisode' href='".("/web_player/".$directLinkSum."/".$directLinkSum.".php")."'>\n";
 	}
-
 	if(file_exists($thumbTemplate.".png")){
-		echo "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
+		$thumbData .= "<img loading='lazy' src='".$cachePathTemplate.".png"."' />\n";
 	}else if(file_exists($thumbTemplate.".mp4.png")){
-		echo "<img loading='lazy' src='".$cachePathTemplate.".mp4.png"."' />\n";
+		$thumbData .= "<img loading='lazy' src='".$cachePathTemplate.".mp4.png"."' />\n";
 	}else if(file_exists($_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png")){
-		echo "<img loading='lazy' src='"."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png"."' />\n";
+		$thumbData .= "<img loading='lazy' src='"."/web_player/".$directLinkSum."/".$directLinkSum."-thumb.png"."' />\n";
 	}
+	# start the stored thumb data
+	$storedThumbData=$thumbData;
 	#
 	$localCachePath=$_SERVER["DOCUMENT_ROOT"]."/web_player/".$directLinkSum."/".$directLinkSum;
 	#
+	$updateThumbnail=false;
+	#
 	if(file_exists($pathPrefix."verified.cfg")){
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+		$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+		$updateThumbnail=true;
 	}else if(file_exists($pathPrefix."video.mp4")){
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟡</div></div>\n";
+		$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟡</div></div>\n";
+		$updateThumbnail=true;
 	}else if(file_exists($pathPrefix."video.m3u")){
 		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟠</div></div>\n";
-		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'><img class='smallSpinner' src='/spinner.gif'></div></div>\n";
-		echo "	<div class='title'>".$videoTitle." <img class='smallSpinner' src='/spinner.gif'></div>\n";
+		$thumbData .= "	<div class='title'>".$videoTitle." <img class='smallSpinner' src='/spinner.gif'></div>\n";
 	}else{
-		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
-		echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🚫</div></div>\n";
+		if( is_readable($pathPrefix."data.log") and (time()-filemtime($pathPrefix."data.log") > 600) ){
+			$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>⚠️</div></div>\n";
+			$tempMessage="A video could not be cached after 10 minutes. This means the queue is running slow or that the media can not be cached.";
+			addToLog("ERROR","Broken Video Link",$tempMessage);
+		}else if( is_readable($pathPrefix."data.log") and (time()-filemtime($pathPrefix."data.log") > 60) ){
+			$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>⏳</div></div>\n";
+		}else{
+			$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🔴</div></div>\n";
+		}
 	}
-	echo "</a>\n";
+	if($updateThumbnail){
+		if(! file_exists("/var/cache/2web/web/web_player/".$directLinkSum."/".$directLinkSum.".index")){
+			# save the stored thumb data
+			$storedThumbData.="<div class='title'>".$videoTitle."</div>\n";
+			$storedThumbData.="</a>";
+			# write the thumb
+			file_put_contents("/var/cache/2web/web/web_player/$directLinkSum/$directLinkSum.index",$storedThumbData);
+		}
+	}
+	# add the title to the related search string
+	$relatedTextSearchString.=$videoTitle." ";
+	$thumbData .= "</a>\n";
+	echo $thumbData;
 	$totalVideos+=1;
 	# increment the processed titles
 	$processedTitles+=1;
@@ -519,6 +578,20 @@ if($totalVideos==0){
 	echo "</div>";
 }
 echo "</div>";
+echo "<hr class='ruler'>\n";
+clear();
+# limit the size of the search array
+$relatedTextSearchString=explode(" ",$relatedTextSearchString);
+$relatedTextSearchString=array_slice($relatedTextSearchString,0,32);
+$relatedTextSearchString=join(" ",$relatedTextSearchString);
+# load related elements based on the titles of the web player media
+loadSearchIndexResults($relatedTextSearchString,"episodes",9,"Episodes");
+loadSearchIndexResults($relatedTextSearchString,"shows",8,"Shows");
+loadSearchIndexResults($relatedTextSearchString,"movies");
+loadSearchIndexResults($relatedTextSearchString,"all");
+echo "<hr class='ruler'>\n";
+clear();
+drawMoreSearchLinks($relatedTextSearchString);
 include("/usr/share/2web/templates/footer.php");
 echo "</body>";
 echo "</html>";
