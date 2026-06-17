@@ -104,7 +104,8 @@ function ytdl2kodi_channel_extractor(){
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	ALERT "Updating the playlist..."
 	# try to rip as a playlist
-	jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+	#jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+	jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
 	tempLinkList=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime --flat-playlist --abort-on-error -j "$channelLink")
 	errorCode=$?
 	ALERT "tempLinkList = $tempLinkList"
@@ -186,7 +187,8 @@ function ytdl2kodi_channel_extractor(){
 			tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
 			tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
 			echo "tempLinkUrl= $tempLinkUrl"
-			jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+			#jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+			jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
 			tempJsonInfo=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl")
 			tempJsonInfo2=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl2")
 
@@ -624,7 +626,8 @@ function ytdl2kodi_video_extractor(){
 	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
 	ALERT "Extracting metadata from '$selection'..."
-	jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+	#jsRuntime=" --js-runtimes node:/usr/bin/nodejs"
+	jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
 	# use the pip package
 	ALERT "timeout --preserve-status \"$timeLimitSeconds\" /var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
 	info=$(timeout --preserve-status "$timeLimitSeconds" /var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
