@@ -39,9 +39,28 @@ test-effects:
 	service apache2 restart
 test-help:
 	# copy web help web docs
+	rm -rv /usr/share/2web/web_help/ || echo "No existing help documents..."
 	cp -rv web_help/. /usr/share/2web/web_help/
 	# restart the webserver to clear out caches
 	service apache2 restart
+test-modules:
+	# copy modules including the comments
+	cp -v nfo2web.sh /usr/bin/nfo2web
+	cp -v comic2web.sh /usr/bin/comic2web
+	cp -v video2web.sh /usr/bin/video2web
+	cp -v music2web.sh /usr/bin/music2web
+	cp -v graph2web.sh /usr/bin/graph2web
+	cp -v git2web.sh /usr/bin/git2web
+	cp -v iptv2web.sh /usr/bin/iptv2web
+	cp -v kodi2web.sh /usr/bin/kodi2web
+	cp -v php2web.sh /usr/bin/php2web
+	cp -v portal2web.sh /usr/bin/portal2web
+	cp -v rss2nfo.sh /usr/bin/rss2nfo
+	cp -v weather2web.sh /usr/bin/weather2web
+	cp -v wiki2web.sh /usr/bin/wiki2web
+	cp -v ytdl2nfo.sh /usr/bin/ytdl2nfo
+	cp -v ai2web.sh /usr/bin/ai2web
+	cp -v 2web.sh /usr/bin/2web
 test-templates:
 	# copy all the template php pages into a existing install
 	cp -rv templates/. /usr/share/2web/templates/
@@ -66,11 +85,22 @@ test-resolvers:
 	cp -v resolvers/*.php /usr/share/2web/resolvers/
 	# restart the webserver to clear out caches
 	service apache2 restart
-test-themes:
-	# copy over the theme templates from source
+reset-themes:
+	# remove existing theme components
+	rm -v /usr/share/2web/theme-templates/*.css || echo "No Theme components exist..."
+	# remove existing themes
+	rm -v /usr/share/2web/themes/*.css || echo "No Themes exist..."
+	# copy over theme components from source to install location
 	cp -v themes/*.css /usr/share/2web/theme-templates/
 	# force a rebuild of the themes using built in 2web command
-	2web --rebuild-themes
+	2web --rebuild-themes --fast --force
+	# restart the webserver to clear out caches
+	service apache2 restart
+test-themes:
+	# copy over theme components from source to install location
+	cp -v themes/*.css /usr/share/2web/theme-templates/
+	# force a rebuild of the themes using built in 2web command
+	2web --rebuild-themes --fast --force
 	# restart the webserver to clear out caches
 	service apache2 restart
 check-copy-dates:
