@@ -1341,6 +1341,31 @@ if (array_key_exists("newUserName",$_POST)){
 	outputLog("Bookmark file '$filePath' was successfully removed.","goodLog");
 	#
 	backButton("/settings/portal.php#removePortalBookmark","🛠️ Return To Settings");
+}else if (array_key_exists("useQueueLogs",$_POST)){
+	outputLog("Setting 'useQueueLogs.cfg' to '".$_POST["useQueueLogs"]."'");
+	# set the log limit
+	file_put_contents("/etc/2web/useQueueLogs.cfg",$_POST["useQueueLogs"]);
+	# after changing the setting, reset queue2web
+	# - run a unlock in the idle queue
+	addToQueue("idle","queue2web unlock");
+	backButton("/settings/queue.php","🛠️ Return To Log");
+	clear();
+}else if (array_key_exists("cleanQueueLogs",$_POST)){
+	outputLog("Removing all existing queue logs");
+	# remove the existing resolver cache data then run 2web to rebuild the cache folder
+	$command="source /var/lib/2web/common;";
+	# remove the directories
+	$command.="rm -rv /var/cache/2web/queue/log/;";
+	# recreate the directory
+	$command.="createDir /var/cache/2web/queue/log/;";
+	$command.="rm -rv /var/cache/2web/queue/failed/;";
+	$command.="createDir /var/cache/2web/queue/failed/;";
+	# queue the command
+	addToQueue("multi",$command);
+	# set the log limit
+	file_put_contents("/etc/2web/cleanQueueLogs.cfg",$_POST["cleanQueueLogs"]);
+	backButton("/settings/queue.php","🛠️ Return To Log");
+	clear();
 }else if (array_key_exists("changeLogLimit",$_POST)){
 	outputLog("Changing the max log entries to '".$_POST["changeLogLimit"]."'");
 	# set the log limit

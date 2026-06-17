@@ -37,6 +37,38 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
 
+<div id='moduleStatus' class='inputCard'>
+	<h2>Index</h2>
+	<ul>
+		<li><a href='#useQueueLogs'>Use Queue Logs</a></li>
+		<li><a href='#cleanQueueLogs'>Clean Queue Logs</a></li>
+		<li><a href='#queueLogs'>Queue Logs</a></li>
+		<li><a href='#queueFailedLogs'>Queue Failed Logs</a></li>
+	</ul>
+</div>
+
+<div id='useQueueLogs' class='inputCard'>
+	<h1>Queue Logs</h1>
+	<ul>
+		<li>Log output of queue jobs into a text file readable in the web interface below</li>
+		<li>You must restart queue2web in order to apply this change. The easiest way to do this is to reboot the system. You can however run "2web unlock" as a administrator on the server and wait ~15 minutes for the queue system to reactivate.</li>
+	</ul>
+	<?php
+	buildYesNoCfgButton("/etc/2web/useQueueLogs.cfg","Queue Logging","useQueueLogs");
+	?>
+</div>
+
+<div id='cleanAllQueueLogs' class='inputCard'>
+	<h1>Clean All Queue Logs</h1>
+	<ul>
+		<li>Remove all existing logs for queues.</li>
+		<li>Removes failed and successfull logs.</li>
+	</ul>
+	<form action='admin.php' class='buttonForm' method='post'>
+		<button class='button' type='submit' name='cleanQueueLogs' value='yes'>🧹 Clean Queue Logs</button>
+	</form>
+</div>
+
 <?php
 # if the queue is not running in on the server show a warning
 if ( ! file_exists("/var/cache/2web/web/queue2web.active") ){
@@ -64,7 +96,6 @@ $singleQueueCount=count($singleQueueFiles);
 $idleQueueCount=count($idleQueueFiles);
 $failedQueueCount=count($failedQueueFiles);
 $totalQueueCount=($multiQueueCount+$singleQueueCount+$idleQueueCount);
-#
 #
 echo "<table>\n";
 echo "	<tr>\n";
