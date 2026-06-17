@@ -1,9 +1,23 @@
 <?php
 	#ini_set('display_errors', 1);
+	ini_set('memory_limit',"4G");
 	include("/usr/share/2web/2webLib.php");
 	########################################################################
 	startSession();
 	########################################################################
+	# Check permissions
+	if((stripos($_SERVER["SCRIPT_FILENAME"],"/videos/") !== false) ){
+		requireGroup("video2web");
+	}else if((stripos($_SERVER["SCRIPT_FILENAME"],"/shows/") !== false) ){
+		requireGroup("nfo2web");
+	}else if((stripos($_SERVER["SCRIPT_FILENAME"],"/movies/") !== false) ){
+		requireGroup("nfo2web");
+	}else if((stripos($_SERVER["SCRIPT_FILENAME"],"/web_player/") !== false) ){
+		requireGroup("webPlayer");
+	}else{
+		requireGroup("2web");
+	}
+	#
 	# get the title data
 	$titlePath=$_SERVER["SCRIPT_FILENAME"].".title";
 	# get the sum from the filename
@@ -199,11 +213,22 @@ if($useJson){
 	echo "<html id='top' class='seriesBackground'>";
 }
 if (file_exists("show.title")){
+	# get the season of the show title
+	if (file_exists("season.title")){
+		$seasonTitle=file_get_contents("season.title");
+	}else{
+		$seasonTitle="";
+	}
 	# get the show title
 	$showTitle=file_get_contents("show.title");
 	# get the numeric title
 	$numericTitlePath=$_SERVER["SCRIPT_FILENAME"].".numTitle";
-	$numericTitleData=file_get_contents($numericTitlePath);
+	if (is_readable($numericTitlePath)){
+		$numericTitleData=file_get_contents($numericTitlePath);
+	}else{
+		# if a numeric title does not exist use the season title
+		$numericTitleData="$titleData";
+	}
 	echo "<title>$showTitle - $numericTitleData</title>";
 }else	if(file_exists("movie.title")){
 	$movieTitle=file_get_contents("movie.title");
@@ -212,9 +237,13 @@ if (file_exists("show.title")){
 	# set the title from the title file
 	$movieTitle=file_get_contents($_SERVER["SCRIPT_FILENAME"].".title");
 	echo "<title>".$movieTitle."</title>";
+}else if(isset($titleData)){
+	$movieTitle=$titleData;
+	echo "<title>".$titleData."</title>";
 }else{
 	# set the title from the script name
 	$movieTitle=str_replace(".php","",basename($_SERVER["PHP_SELF"]));
+	echo "<title>".$movieTitle."</title>";
 }
 # update the hostname
 if ( $_SERVER["HTTP_HOST"] == "localhost" ){
@@ -239,14 +268,23 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	# look for fanart and poster
 	echo ":root{\n";
 	if (file_exists("show.title")){
-		$seasonTitle=file_get_contents("season.title");
 		# set the show poster and fanart as the background
 		echo "--backgroundPoster: url(\"/shows/$showTitle/poster.png\");";
 		echo "--backgroundFanart: url(\"/shows/$showTitle/fanart.png\");";
-	}else{
+	}else if (file_exists("movie.title")){
 		#
 		echo "--backgroundPoster: url(\"/movies/$movieTitle/poster.png\");";
 		echo "--backgroundFanart: url(\"/movies/$movieTitle/fanart.png\");";
+	}else{
+		$tempPosterPathName=$_SERVER["SCRIPT_FILENAME"];
+		$tempPosterPathName=str_replace(".php","-thumb.png",$tempPosterPathName);
+		if (file_exists($tempPosterPathName)){
+			# use the thumbnail for posters if it exists
+			echo "--backgroundPoster: url(\"".$tempPosterPathName."\");";
+		}else{
+			# default to random all for posters if nothing else works
+			echo "--backgroundPoster: url(\"/randomFanart.php\");";
+		}
 	}
 	echo "}";
 	?>
@@ -337,12 +375,29 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			reloadPage(10);
 			exit();
 		}
+		#
+		if(file_exists($jsonPath)){
+			if(property_exists($jsonData, "age_limit")){
+				$tempAgeLimit=$jsonData->age_limit;
+				if(($tempAgeLimit) >= 18){
+					$ageIcon="🔞 ";
+				}else if(($tempAgeLimit) < 13){
+					$ageIcon="🚸";
+				}else if(($tempAgeLimit) < 18){
+					$ageIcon="👪";
+				}else if(($tempAgeLimit) == 0){
+					$ageIcon="🤖";
+				}else{
+					$ageIcon="?";
+				}
+			}
+		}
 		# load the json and build the page
 		if(property_exists($jsonData, "age_limit")){
-			$ratingText="<span class='button'>Recommended Minimum Viewing Age: ".$jsonData->age_limit."</span>";
+			$ratingText="<a class='button' href='#'>$ageIcon Recommended Minimum Viewing Age: ".$jsonData->age_limit."</a>";
 		}else{
 			# there is no description so it is unrated
-			$ratingText="<span class='button'>Rating : UNRATED</span>";
+			$ratingText="<a class='button' href='#'>Rating : UNRATED</a>";
 		}
 		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.png")){
 			# get the thumbnail
@@ -358,6 +413,19 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					addToQueue("multi","/usr/bin/ffmpegthumbnailer -i '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp4' -s 400 -c png -o '".$_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.png'");
 					# set the current thumbnail to be the poster.png
 					$posterPath="/RESOLVER-CACHE/".$jsonSum."/video.png";
+				}else if ( ( time() - filemtime($_SERVER["DOCUMENT_ROOT"]."/RESOLVER-CACHE/".$jsonSum."/video.mp3") ) > 90){
+					$mp3Path="/var/cache/2web/web/RESOLVER-CACHE/".$jsonSum."/video.mp3";
+					$thumbPath="/var/cache/2web/web/RESOLVER-CACHE/".$jsonSum."/audio.png";
+					#
+					if(! file_exists($thumbPath)){
+						#
+						$command="source /var/lib/2web/common;\n";
+						$command.="generateThumbnailFromMedia \"$mp3Path\" \"$thumbPath\";\n";
+						#
+						addToQueue("multi",$command);
+					}
+					#
+					$posterPath="/RESOLVER-CACHE/".$jsonSum."/audio.png";
 				}else{
 					# set the current thumbnail to be the poster.png
 					$posterPath="/plasmaPoster.png";
@@ -511,9 +579,17 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			}
 		}
 	}
+	# - check if the video is part of a show or in the web player then write link
+	#   back to the season or just draw the title
 	if (file_exists("show.title")){
-		# write the data
-		echo "<a href='/shows/".$showTitle."/?season=Season ".$seasonTitle."#Season ".$seasonTitle."'>".$showTitle."</a> $numericTitleData";
+		# link back to the season view
+		if((stripos($_SERVER["SCRIPT_FILENAME"],"/videos/") !== false) ){
+			# check if the script is running from videos
+			echo "<a href='/videos/".$showTitle."/?season=Season ".$seasonTitle."#Season ".$seasonTitle."'>".$showTitle."</a> $numericTitleData";
+		}else{
+			# check if the script is running from shows or movies
+			echo "<a href='/shows/".$showTitle."/?season=Season ".$seasonTitle."#Season ".$seasonTitle."'>".$showTitle."</a> $numericTitleData";
+		}
 	}else if($useJson){
 		# use the title data if this is a video in the cache
 		echo $titleData;
@@ -562,30 +638,31 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	# - check if the cache was had issue and was delayed or broken
 	$cacheDelayed=false;
 	if ( $httpLink ){
+		$cacheHelpLink="/help.php#The%20Interface%20-%20Cache%20States";
 		$webPrefix="/RESOLVER-CACHE/".getCacheSum($directLinkData)."/";
 		$pathPrefix=$_SERVER["DOCUMENT_ROOT"].$webPrefix;
 		#
 		if(file_exists($pathPrefix."verified.cfg")){
-			echo "	<div class='button' title='Video is completely cached and ready for playback.'>Cache State <div class='radioIcon'>🟢</div></div>\n";
+			echo "	<a class='button' href='$cacheHelpLink' title='Video is completely cached and ready for playback.'>Cache State <div class='radioIcon'>🟢</div></a>\n";
 		}else if(file_exists($pathPrefix."video.mp4")){
-			echo "	<div class='button' title='Final video is available but unverified.'>Cache State <div class='radioIcon'>🟡</div></div>\n";
+			echo "	<a class='button' href='$cacheHelpLink' title='Final video is available but unverified.'>Cache State <div class='radioIcon'>🟡</div></a>\n";
 			if(file_exists($pathPrefix."video.webm")){
 				echo "	<a class='button' href='".$webPrefix."video.webm'>🪠 Load Intermediate File</a>\n";
 			}
 		}else if(file_exists($pathPrefix."video.m3u")){
 			#echo "	<div class='button' title='HLS stream is available for playback.'>Cache State <div class='radioIcon'>🟠</div></div>\n";
-			echo "	<div class='button'>Cache State <img class='smallSpinner' src='/spinner.gif'></div>\n";
+			echo "	<a class='button' href='$cacheHelpLink'>Cache State <img class='smallSpinner' src='/spinner.gif'></a>\n";
 		}else{
 			# check if the failed cache is older than 10 minutes
 			if( is_readable($pathPrefix) and (time()-filemtime($pathPrefix) > 600) ){
-				echo "	<div class='button' title='This video may not be caching properly.'>Cache State <div class='radioIcon'>⚠️</div></div>\n";
+				echo "	<a class='button' href='$cacheHelpLink' title='This video may not be caching properly.'>Cache State <div class='radioIcon'>⚠️</div></a>\n";
 				$tempMessage="A video could not be cached after 10 minutes. This means the queue is running slow or that the media can not be cached.";
 				addToLog("ERROR","Broken Video Link",$tempMessage);
 				$cacheDelayed=true;
 			}else if( is_readable($pathPrefix) and (time()-filemtime($pathPrefix) > 60) ){
-				echo "	<div class='button' title='Cache is waiting for queue to open up...'>Cache State <div class='radioIcon'>⏳</div></div>\n";
+				echo "	<a class='button' href='$cacheHelpLink' title='Cache is waiting for queue to open up...'>Cache State <div class='radioIcon'>⏳</div></a>\n";
 			}else{
-				echo "	<div class='button' title='Video is not being cached yet, Hit the play button to cache and play the video.'>Cache State <div class='radioIcon'>🔴</div></div>\n";
+				echo "	<a class='button' href='$cacheHelpLink' title='Video is not being cached yet, Hit the play button to cache and play the video.'>Cache State <div class='radioIcon'>🔴</div></a>\n";
 			}
 		}
 	}
@@ -696,12 +773,8 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			# - the transcoder will transcode all local videos for playback on webpages.
 			if (isTranscodeEnabled()){
 				# send the link to the resolver to transcode it using the same method as the resolver
-				#$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/transcode.php?path="'.urlencode($directLinkData).'"';
-				#$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?path='.urlencode($directLinkData);
 				$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?path='.urlencode($directLinkData);
-				#$fullPathVideoLink=$proto.$_SERVER["HTTP_HOST"].'/ytdl-resolver.php?url='.($proto.$_SERVER["HTTP_HOST"].$directLinkData);
 				# get mime data if the resolver has it cached
-				#$videoMimeType=cachedMimeType(urlencode($directLinkData));
 				$videoMimeType=cachedMimeType($directLinkData);
 				# get the transcode path link
 			}else{
@@ -745,6 +818,11 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			$autoPlayStyle.="position: relative;";
 			$autoPlayStyle.="border-size: 0px;";
 			$autoPlayStyle.="z-index: 100;";
+			echo "<style>"."\n";
+			echo "html::-webkit-scrollbar{"."\n";
+			echo "	width: 0px !important;"."\n";
+			echo "}"."\n";
+			echo "</style>"."\n";
 		}else{
 			$autoPlayStyle="";
 		}
@@ -755,9 +833,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 				# reload the page if no mime type could be found for playback
 				# - some videos will not generate a hls stream but will generate another playable
 				#   stream eventually so the page will reload until it finds a playable one
-				#echo "<div class='titleCard'>";
-				#echo "Video is loading, page will automatically refresh...";
-				#echo "</div>";
 				echo "<video id='video' class='nfoMediaPlayer' style='$autoPlayStyle' poster='$posterPath' controls preload='auto' >\n";
 				echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
 				echo "</video>\n";
@@ -804,7 +879,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					# draw the hls stream player webpage player
 					echo "<script>\n";
 					# remove existing video and replace it with a hls stream
-					#echo "	document.write(\"<video id='video' class='livePlayer' poster='$posterPath' controls></video>\");\n";
 					echo "	var activeBuffering=false;\n";
 					echo "	var videoObj = document.createElement(\"video\");\n";
 					echo "	videoObj.setAttribute(\"id\", \"video\");\n";
@@ -894,11 +968,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					echo "		var loadingObj = document.createElement(\"img\");\n";
 					echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
 					echo "		loadingObj.setAttribute(\"src\", \"/spinner.gif\");\n";
-					##echo "		var loadingObj = document.createElement(\"div\");\n";
-					##echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
-					##echo "		loadingObj.setAttribute(\"class\", \"spinRight\");\n";
-					##echo "		loadingObj.innerHTML=\"🗘\";\n";
-					##echo "		window.mediaPlayerContainer.appendChild(loadingObj);\n";
 					# insert the loading element before the video player so it acts as a overlay
 					echo "		window.mediaPlayerContainer.insertBefore(loadingObj,window.video);\n";
 					# log
@@ -981,51 +1050,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					# log the error in the browser console for debugging
 					echo "		console.log(event)\n";
 					echo "		console.log(data)\n";
-					# prevent the video from reloading more than once every 30 seconds
-					#echo "		if( ( getCurrentTime() - resetTime ) > 30 ){\n";
-					#echo "			resetTime=new Date();\n";
-					#echo "			resetTime=resetTime.getSeconds();\n";
-					# reload the video
-					##echo "		if(activeBuffering == false){\n;";
-					##echo "			console.log('No Active buffer, reloading the video.');\n";
-					##echo "			activeBuffering=true;\n;";
-					#echo "			console.log(event)\n";
-					#echo "			console.log(data)\n";
-					#echo "			reloadVideo();\n";
-					# look for buffer errors that are recoverable from
-					##echo "			if(event.error.details==\"bufferStalledError\"){\n";
-					##echo "					console.log(event)\n";
-					##echo "					reloadVideo(1);\n";
-					##echo "			}else if(event.error.details==\"bufferAppendError\"){\n";
-					##echo "					console.log(event)\n";
-					##echo "					reloadVideo(1);\n";
-					##echo "			}else{\n";
-					## only reload on fatal unknown errors
-					###echo "				if(data.fatal){\n";
-					##echo "					reloadVideo(3);\n";
-					##echo "					bufferSleepTime+=1;\n";
-					###echo "				}\n";
-					##echo "			}\n";
-					##echo "		}\n";
-					##echo "		}\n";
-					# reload the page if the playback fails 100 times
-					# limit buffer sleeping time to 15 seconds
-					##echo "		console.log(event.error.name);\n";
-					##echo "		if(event.error.name == \"QuotaExceededError\"){\n";
-					##echo "			console.log(\"Browser does not want to load a larger buffer.\");\n";
-					##echo "		}else{\n";#
-					##echo "			if(bufferSleepTime < 5){\n";
-					##echo "				bufferSleepTime+=1;\n";
-					##echo "				console.log(event);\n";
-					##echo "				console.log(data);\n";
-					##echo "				forceReloadVideo();\n";
-					###echo "				reloadVideo();\n";
-					##echo "			}else{\n";#
-					### force reload of the video completely
-					##echo "				forceReloadVideo();\n";
-					##echo "			}\n";
-					##echo "		}\n";
-					#echo "		forceReloadVideo();\n";
 					echo "		reloadVideo(0);\n";
 					echo "		failed_video_playback_count+=1;\n";
 					echo "		console.log('failed_video_playback_count:'+failed_video_playback_count);\n";
@@ -1066,8 +1090,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			}
 
 		}else{
-			#echo "<a class='loadVideoButton' href='?play'><img src='$posterPath'><div>⯈</div></a>\n";
-			#echo "<a class='loadVideoButton' href='?play' style='background: url(\"$posterPath\")'>⯈</a>\n";
 			echo "<a class='loadVideoButton' href='?play' style='background: url(\"$posterPath\")'>▷</a>\n";
 		}
 	clear();
@@ -1088,8 +1110,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		$copyLinkText .= "$fullPathVideoLink\n";
 	}
 	# if the direct link is not a http external link add a direct download button for downloading from this server
-	#$copyLinkText .= "<button class='copyButton hardLink' onclick='copyToClipboard(\"$directLinkData\");'>\n";
-	#$copyLinkText .= "</button>\n";
 	$copyLinkText .= "</pre>\n";
 	# draw the copy link
 	echo "$copyLinkText";
@@ -1142,7 +1162,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			$downloadFileSize="?";
 		}
 		$downloadLinkText .= "<div>\n";
-		#$downloadLinkText .= "<a class='button hardLink' rel='noreferer' href='".$tempVideoLink."' download='$archiveTitle'>\n";
 		$downloadLinkText .= "<a class='button hardLink' onclick='notify(\"🡇\");' href='".$tempVideoLink."' download='$archiveTitle'>\n";
 		$downloadLinkText .= "<span class='downloadIcon'>🡇</span>Download $downloadFileSize\n";
 		$downloadLinkText .= "</a>\n";
@@ -1156,29 +1175,15 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		echo "📥Cache Link\n";
 		echo "</a>\n";
 		echo "</div>\n";
-		#
-		#$downloadLinkText .= "<div>\n";
-		#$downloadLinkText .= "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".$directLinkData."' download='$archiveTitle'>\n";
-		#$downloadLinkText .= "<span class='downloadIcon'>🡇</span> Cache Download Link\n";
-		#$downloadLinkText .= "</a>\n";
-		#$downloadLinkText .= "</div>\n";
 	}else{
 		# only draw a cache link for local links if the transcoder is enabled
 		if (isTranscodeEnabled()){
 			# this is a local link so show the transcode cache link unless transcoding is disabled
 			echo "<div>\n";
-			#echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/transcode.php?path=".$directLinkData."'>\n";
-			#echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".($proto.$_SERVER["HTTP_HOST"].$directLinkData)."'>\n";
 			echo "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?path=".urlencode($directLinkData)."'>\n";
 			echo "📥Cache Link\n";
 			echo "</a>\n";
 			echo "</div>\n";
-			#
-			#$downloadLinkText .= "<div>\n";
-			#$downloadLinkText .= "<a class='button hardLink' href='".$proto.$_SERVER["HTTP_HOST"]."/transcode.php?path=".$directLinkData."' download='$archiveTitle'>\n";
-			#$downloadLinkText .= "<span class='downloadIcon'>🡇</span> Cache Download Link\n";
-			#$downloadLinkText .= "</a>\n";
-			#$downloadLinkText .= "</div>\n";
 		}
 	}
 	# build the continue playing playlist links
@@ -1226,8 +1231,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 				if( (stripos( $directLinkData , "http://" ) !== false) or (stripos( $directLinkData , "https://" ) !== false) ){
 					echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$directLinkData)."'>\n";
 				}else{
-					#echo "<a class='button hardLink' target='_new' href='/client/?play=/ytdl-resolver.php?url=http://".$directLinkData."'>\n";
-					#echo "<a class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$proto.$_SERVER["HTTP_HOST"]."/".$directLinkData)."'>\n";
 					echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/client/$mimeData$playbackType=".urlencode("$tempPathPrefix/ytdl-resolver.php?url=".$directLinkData)."'>\n";
 				}
 				echo "🎟️ Play on Client\n";
@@ -1260,7 +1263,12 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					if($httpLink){
 						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?shareURL=".str_replace(" ","%20","$directLinkData")."'>\n";
 					}else{
-						echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+						# localhost domain can not be used for casting to remote kodi instances
+						if( ($_SERVER["HTTP_HOST"] == "127.0.0.1") or ($_SERVER["HTTP_HOST"] == "localhost") ){
+							echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".gethostname().".local".str_replace(" ","%20","$directLinkData")."'>\n";
+						}else{
+							echo "<a onclick='pauseVideo();' class='button hardLink' target='_new' href='/kodi-player.php?url="."http://".$_SERVER["HTTP_HOST"].str_replace(" ","%20","$directLinkData")."'>\n";
+						}
 					}
 				}
 				echo "🇰Play on KODI\n";
@@ -1337,13 +1345,10 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		}
 		$thisEpisodePath=$_SERVER["SCRIPT_FILENAME"];
 		$thisEpisodePath=str_replace(".php",".index",$thisEpisodePath);
-		#echo "This Path = '$thisEpisodePath'\n";
-		#echo "Season Index = '".implode("\n",$seasonFileIndexData)."'\n";
 		# get the key for the array
 		$thisEpisodeKey=array_search($thisEpisodePath,$seasonFileIndexData);
 		#
 		if ($thisEpisodeKey){
-			#echo "This Episode Key = '$thisEpisodeKey'\n";
 			# draw the next button data
 			if (isset($seasonFileIndexData[$thisEpisodeKey+1])){
 				$nextEpisodePath=$seasonFileIndexData[$thisEpisodeKey+1];
@@ -1353,13 +1358,11 @@ if (array_key_exists("HTTPS",$_SERVER)){
 				$nextEpisodeData=file_get_contents($nextEpisodePath);
 			}
 			$previousEpisodePath=$seasonFileIndexData[$thisEpisodeKey-1];
-			#echo "previous Path = '$previousEpisodePath'\n";
 			# draw the previous button data
 			if (isset($seasonFileIndexData[$thisEpisodeKey-1])){
 				$previousEpisodePath=$seasonFileIndexData[$thisEpisodeKey-1];
 				$previousEpisodeLink=str_replace("/var/cache/2web/web","",$previousEpisodePath);
 				$previousEpisodeLink=str_replace(".index",".php",$previousEpisodeLink);
-				#echo "previous Path = '$previousEpisodePath'\n";
 				$previousEpisodeData=file_get_contents($previousEpisodePath);
 			}
 		}
@@ -1439,26 +1442,6 @@ window.video.focus();
 // by default disable the controls until mouse is moved or screen is touched
 window.video.controls=false;
 document.body.style.cursor="none";
-// hide controls when client is not a touchscreen
-//if(navigator.maxTouchPoints == 0){
-//function showControls(){
-//	// show the moved cursor and video controls
-//	document.body.style.cursor="default";
-//	window.video.controls=true;
-//	window.clearTimeout(controlHideTimeout);
-//	console.log("Mouse moved Unhide the mouse/controls");
-//	// hide the cursor and video controls after 2 seconds of inactivity
-//	controlHideTimeout = setTimeout(() =>{
-//		console.log("Hide the mouse/controls when inactive");
-//		window.video.controls=false;
-//		document.body.style.cursor="none";
-//	}, 2000);
-//};
-//	//});
-//// add event for mouse move or screen touch
-//window.addEventListener("mousemove", showControls);
-//window.addEventListener("touchstart", showControls);
-//}
 // end of playback function
 function playbackEnd(){
 	closeFullscreen();
@@ -1478,6 +1461,14 @@ function playbackEnd(){
 if(! isset($_GET["loop"])){
 	# end of playback event
 	echo "document.getElementById('video').addEventListener('ended',playbackEnd,false);";
+}
+if (array_key_exists("playrandom",$_GET)){
+	if(file_exists("season.index")){
+		shuffle($seasonFileIndexData);
+		$randomEpisodePath=$seasonFileIndexData[0];
+		$randomEpisodeLink=str_replace("/var/cache/2web/web","",$randomEpisodePath);
+		$randomEpisodeLink=str_replace(".index",".php",$randomEpisodeLink);
+	}
 }
 ?>
 document.body.addEventListener('keydown', function(event){
@@ -1535,6 +1526,27 @@ document.body.addEventListener('keydown', function(event){
 			notify("⏯️");
 			window.video.controls=false;
 			break;
+			<?PHP
+			if ($nextEpisodeLink != ""){
+				echo "		case \"Enter\":"."\n";
+				echo "		console.log(\"enter key pressed, next track activated\");"."\n";
+				echo "		event.preventDefault();"."\n";
+				echo "		event.stopImmediatePropagation();"."\n";
+				# play next in random or sequential playlist
+				if (array_key_exists("playrandom",$_GET)){
+					echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play\");"."\n";
+					echo "		notify(\"🔀\");"."\n";
+				}else if (array_key_exists("autoplay",$_GET)){
+					echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play\");"."\n";
+					echo "		notify(\"Next Track\");"."\n";
+				}else{
+					echo "		delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
+					echo "		notify(\"Next Track\");"."\n";
+				}
+				echo "		window.video.controls=false;"."\n";
+				echo "		break;"."\n";
+			}
+			?>
 		}
 	}
 });
@@ -1560,8 +1572,6 @@ navigator.mediaSession.setActionHandler("stop", function(event){
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		playPause();
-		//playbackEnd();
-		//document.getElementById('video').focus();
 		notify("⏹️");
 		window.video.controls=false;
 	}
@@ -1583,36 +1593,45 @@ navigator.mediaSession.setActionHandler("seekbackward", function(event){
 	}
 });
 <?PHP
+
 if ($nextEpisodeLink != ""){
 	echo "navigator.mediaSession.setActionHandler(\"nexttrack\", function(event){"."\n";
 	echo "	console.log(\"media key next track pressed\");\n";
-	#echo "	if(document.activeElement.nodeName != \"INPUT\"){"."\n";
 	echo "		//event.preventDefault();"."\n";
 	echo "		//event.stopImmediatePropagation();"."\n";
-	echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play\");"."\n";
-	echo "		notify(\"Next Track\");"."\n";
+	if (array_key_exists("playrandom",$_GET)){
+		echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play\");"."\n";
+		echo "		notify(\"🔀\");"."\n";
+	}else if (array_key_exists("autoplay",$_GET)){
+		echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play\");"."\n";
+		echo "		notify(\"Next Track\");"."\n";
+	}else{
+		echo "		delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
+		echo "		notify(\"Next Track\");"."\n";
+	}
 	echo "		window.video.controls=false;"."\n";
-	#echo "	}"."\n";
 	echo "});"."\n";
 }
 if ($previousEpisodeLink != ""){
 	echo "navigator.mediaSession.setActionHandler(\"previoustrack\", function(event){"."\n";
 	echo "	console.log(\"media key previous track pressed\");\n";
-	#echo "	if(document.activeElement.nodeName != \"INPUT\"){"."\n";
 	echo "		//event.preventDefault();"."\n";
 	echo "		//event.stopImmediatePropagation();"."\n";
-	echo "		delayedRedirect(0,\"$previousEpisodeLink?autoplay&play\");"."\n";
-	echo "		notify(\"Previous Track\");"."\n";
+	if (array_key_exists("playrandom",$_GET)){
+		echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play\");"."\n";
+		echo "		notify(\"🔀\");"."\n";
+	}else if (array_key_exists("autoplay",$_GET)){
+		echo "		delayedRedirect(0,\"$previousEpisodeLink?autoplay&play\");"."\n";
+		echo "		notify(\"Previous Track\");"."\n";
+	}else{
+		echo "		delayedRedirect(0,\"$previousEpisodeLink\");"."\n";
+		echo "		notify(\"Previous Track\");"."\n";
+	}
 	echo "		window.video.controls=false;"."\n";
-	#echo "	}"."\n";
 	echo "});"."\n";
 }
 if (array_key_exists("playrandom",$_GET)){
 	if(file_exists("season.index")){
-		shuffle($seasonFileIndexData);
-		$randomEpisodePath=$seasonFileIndexData[0];
-		$randomEpisodeLink=str_replace("/var/cache/2web/web","",$randomEpisodePath);
-		$randomEpisodeLink=str_replace(".index",".php",$randomEpisodeLink);
 		# get a random video
 		echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
 		echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom\");"."\n";
@@ -1639,6 +1658,7 @@ if (array_key_exists("play",$_GET)){
 clear();
 loadSearchIndexResults($titleData,"episodes",9,"Episodes");
 loadSearchIndexResults($titleData,"shows",8,"Shows");
+loadSearchIndexResults($titleData,"videos",9,"Videos");
 loadSearchIndexResults($titleData,"movies");
 loadSearchIndexResults($titleData,"all");
 echo "<hr class='ruler'>\n";
