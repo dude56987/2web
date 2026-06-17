@@ -770,17 +770,30 @@ function processRepo(){
 			commitCount=$(( commitCount + 1 ))
 			INFO "$repoName : Building commit page $commitCount/$totalCommits for $commitAddress "
 			#commitAddress=$(echo "$commitAddress" | cut -d' ' -f1)
-			cleanText "$(timeout 120 git show "$commitAddress" --stat )" > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+			# only create commits that have not already been created
+			if ! test -f "$webDirectory/repos/$repoName/log/$commitAddress.index";then
+				cleanText "$(timeout 120 git show "$commitAddress" --stat )" > "$webDirectory/repos/$repoName/log/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
-			cleanText "$(timeout 120 git diff "$commitAddress"~ "$commitAddress" )" > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+			if ! test -f "$webDirectory/repos/$repoName/diff/$commitAddress.index";then
+				cleanText "$(timeout 120 git diff "$commitAddress"~ "$commitAddress" )" > "$webDirectory/repos/$repoName/diff/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
-			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct')" > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+			if ! test -f "$webDirectory/repos/$repoName/date/$commitAddress.index";then
+				cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ct')" > "$webDirectory/repos/$repoName/date/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
-			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an')" > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+			if ! test -f "$webDirectory/repos/$repoName/author/$commitAddress.index";then
+				cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%an')" > "$webDirectory/repos/$repoName/author/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
-			timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+			if ! test -f "$webDirectory/repos/$repoName/email/$commitAddress.index";then
+				timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%ae' > "$webDirectory/repos/$repoName/email/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
-			cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s')" > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+			if ! test -f "$webDirectory/repos/$repoName/msg/$commitAddress.index";then
+				cleanText "$(timeout 120 git show "$commitAddress" --no-patch --no-notes --pretty='%s')" > "$webDirectory/repos/$repoName/msg/$commitAddress.index" &
+			fi
 			waitQueue 0.5 "$totalCPUS"
 		done
 		INFO "$repoName : Building README.md"
