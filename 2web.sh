@@ -2239,8 +2239,71 @@ elif [ "$1" == "-cc" ] || [ "$1" == "--clean-cache" ] || [ "$1" == "cleancache" 
 		fi
 	fi
 elif [ "$1" == "-f" ] || [ "$1" == "--fix-permissions" ] || [ "$1" == "fix-permissions" ];then
-	chown www-data:www-data -R /var/cache/2web/web/
-	chown www-data:www-data -R /var/cache/2web/downloads/
+	drawLine
+	drawHeader "Fix Permissions"
+	drawLine
+	ALERT "This will run a script to set any incorrect web permissions in 2web.\nThis will help after backup recovery of 2web settings or cache."
+	# add a spinner
+	rotateSpinner &
+	SPINNER_PID="$!"
+	drawLine
+	drawHeader "Fixing Config Permissions"
+	drawLine
+	# fix ownership of config directories created by the web interface
+	INFO "Fix permisions for web config directories '/var/cache/2web/*/*.d/'"
+	chown www-data:www-data -R -v /etc/2web/*/*.d/
+	INFO "Fix permisions for web config directories '/etc/2web/*.cfg'"
+	chown www-data:www-data -v /etc/2web/*.cfg
+	chown www-data:www-data -v /etc/2web/*/*.cfg
+	# configs only editable by the system admin on the local machine
+	chown root:root -v /etc/2web/web.cfg
+	chown root:root -v /etc/2web/kodi.cfg
+	chown root:root -v /etc/2web/generated.cfg
+	chown root:root -v /etc/2web/download.cfg
+	# module admin only configs
+	chown root:root -v /etc/2web/*/libaries.cfg
+	chown root:root -v /etc/2web/*/disabledLibaries.cfg
+	chown root:root -v /etc/2web/*/sources.cfg
+	chown root:root -v /etc/2web/*/radioSources.cfg
+	chown root:root -v /etc/2web/*/locations.cfg
+	chown root:root -v /etc/2web/*/players.cfg
+	chown root:root -v /etc/2web/*/bookmarks.cfg
+	chown root:root -v /etc/2web/*/scanSources.cfg
+	chown root:root -v /etc/2web/*/scanPorts.cfg
+	chown root:root -v /etc/2web/*/usernameSources.cfg
+	drawLine
+	drawHeader "Fixing Website Permissions"
+	drawLine
+	# fix web permissions
+	INFO "Fix permisions for web settings '/var/cache/2web/web/settings/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/settings/
+	INFO "Fix permisions for web cache '/var/cache/2web/web/web_cache/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/web_cache/
+	INFO "Fix permisions for web new '/var/cache/2web/web/new/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/new/
+	INFO "Fix permisions for web random '/var/cache/2web/web/random/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/random/
+	INFO "Fix permisions for web shows '/var/cache/2web/web/shows/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/shows/
+	INFO "Fix permisions for web movies '/var/cache/2web/web/movies/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/movies/
+	INFO "Fix permisions for web resolver cache '/var/cache/2web/web/RESOLVER-CACHE/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/RESOLVER-CACHE/
+	INFO "Fix permisions for generated content cache '/var/cache/2web/generated/'"
+	chown www-data:www-data -R -v /var/cache/2web/generated/
+	INFO "Fix permisions for download cache '/var/cache/2web/downloads/'"
+	chown www-data:www-data -R -v /var/cache/2web/downloads/
+	drawLine
+	drawHeader "Fixing Permissions for the Entire Website"
+	drawSmallHeader "This may take some time..."
+	drawLine
+	INFO "Fix permisions for entire website '/var/cache/2web/web/'"
+	chown www-data:www-data -R -v /var/cache/2web/web/
+	# stop the spinner
+	kill "$SPINNER_PID"
+	drawLine
+	drawSmallHeader "Permissions Fixed"
+	drawLine
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ];then
 	cat /usr/share/2web/help/2web.txt
 elif [ "$1" == "-v" ] || [ "$1" == "--version" ] || [ "$1" == "version" ];then
