@@ -3328,7 +3328,7 @@ function addToLog(){
 	# create identifier date to organize the data, this is really accurate
 	logIdentifier="$(date "+%s.%N")"
 	logDate="$(date "+%D")"
-	logTime="$(date "+%R:%S")"
+	logTime="$(date "+%s")"
 
 	#
 	logDescription=$(echo -e "$errorDescription" | sed "s/'/''/g" )
