@@ -293,6 +293,9 @@ processMovie(){
 		elif [ -f "${moviePath//.nfo/.mp4}" ];then
 			videoPath="${moviePath//.nfo/.mp4}"
 			sufix=".mp4"
+		elif [ -f "${moviePath//.nfo/.ts}" ];then
+			videoPath="${moviePath//.nfo/.ts}"
+			sufix=".ts"
 		elif [ -f "${moviePath//.nfo/.mp3}" ];then
 			videoPath="${moviePath//.nfo/.mp3}"
 			sufix=".mp3"
@@ -414,14 +417,14 @@ processMovie(){
 		fi
 		if test -s "$videoPath";then
 			# build the preview thumbnails
-			ffmpegthumbnailer -t "6%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_1.png"
-			ffmpegthumbnailer -t "12%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_2.png"
-			ffmpegthumbnailer -t "25%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_3.png"
-			ffmpegthumbnailer -t "37%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_4.png"
-			ffmpegthumbnailer -t "50%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_5.png"
-			ffmpegthumbnailer -t "62%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_6.png"
-			ffmpegthumbnailer -t "75%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_7.png"
-			ffmpegthumbnailer -t "87%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/$movieWebPath/preview_8.png"
+			ffmpegthumbnailer -t "6%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_1.png"
+			ffmpegthumbnailer -t "12%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_2.png"
+			ffmpegthumbnailer -t "25%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_3.png"
+			ffmpegthumbnailer -t "37%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_4.png"
+			ffmpegthumbnailer -t "50%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_5.png"
+			ffmpegthumbnailer -t "62%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_6.png"
+			ffmpegthumbnailer -t "75%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_7.png"
+			ffmpegthumbnailer -t "87%" -i "$videoPath" -s 200 -c png -o "$webDirectory/movies/${movieWebPath}_preview_8.png"
 		fi
 
 
@@ -741,7 +744,11 @@ processEpisode(){
 	logPagePath="$webDirectory/settings/log.php"
 	showLogPath="$webDirectory/shows/$episodeShowTitle/log.index"
 	# check the episode file path exists before anything is done
-	if [ -f "$episode" ];then
+	if ! test -f "$episode";then
+		ALERT "[WARNING]: The file '$episode' could not be found!"
+		# skip processing episode if the media file is missing
+		return
+	fi
 		# for each episode build a page for the episode
 		nfoInfo=$(cat "$episode")
 		# rip the episode title
@@ -773,7 +780,7 @@ processEpisode(){
 		#
 		episodeSeasonPath="Season $episodeSeason"
 		episodeNumber=$(cleanXml "$nfoInfo" "episode")
-		# remove leading zeros
+		# remove any leading zeros
 		episodeNumber=$(echo "$episodeNumber" | sed "s/^[0]\{,3\}//g")
 		#
 		episodeNumber="$(prefixZeros "$episodeNumber")"
@@ -804,6 +811,9 @@ processEpisode(){
 		elif [ -f "${episode//.nfo/.mp4}" ];then
 			videoPath="${episode//.nfo/.mp4}"
 			sufix=".mp4"
+		elif [ -f "${episode//.nfo/.ts}" ];then
+			videoPath="${episode//.nfo/.ts}"
+			sufix=".ts"
 		elif [ -f "${episode//.nfo/.mp3}" ];then
 			videoPath="${episode//.nfo/.mp3}"
 			sufix=".mp3"
@@ -941,7 +951,7 @@ processEpisode(){
 			# cache new links in batch processing mode
 			# - the default should cache nothing
 			checkEpisodeForCaching="no"
-			if yesNocfgCheck "/etc/2web/cacheNewEpisodes.cfg";then
+			if yesNoCfgCheck "/etc/2web/cacheNewEpisodes.cfg";then
 				# if the config option is set to cache new episodes
 				checkEpisodeForCaching="yes"
 			elif yesNoCfgCheck "$webDirectory/shows/$episodeShowTitle/forceCache.cfg" "no";then
@@ -949,7 +959,7 @@ processEpisode(){
 				checkEpisodeForCaching="yes"
 			fi
 			#
-			if [[ $checkEpisodeForCaching == "yes" ]];then
+			if [ "$checkEpisodeForCaching" == "yes" ];then
 				yt_download_command=""
 				# if the airdate was this year
 				if [ $((10#$airedYear)) -eq "$((10#$(date +"%Y")))" ];then
@@ -966,21 +976,21 @@ processEpisode(){
 						# read the upgrade quality setting and apply it to the command
 						if test -f "/etc/2web/cache/cacheUpgradeQuality.cfg";then
 							# load the config for quality
-							upgradeQuality="$(cat "/etc/2web/cache/cacheUpgradeQuality.cfg")"
+							upgradeQuality="$(cat "/etc/2web/cache/cacheUpgradeQuality.cfg" | tr -d '\n')"
 							# update the download command
-							if [ "$upgradeQuality" == "best" ] || [ "$upgradeQuality" == "worst" ];then
+							if echo -n "$upgradeQuality" | grep -q "best" || echo -n "$upgradeQuality" | grep -q "worst";then
 								if [[ "$upgradeQuality" == "worst" ]];then
 									upgradeQuality=" -f '$upgradeQuality'"
 								else
 									# no quality should be given for the best quality
 									upgradeQuality=""
 								fi
-							elif [[ "$upgradeQuality" == "none" ]];then
+							elif echo -n "$upgradeQuality" | grep -q "none";then
 								if test -f "/etc/2web/cache/cacheQuality.cfg";then
-									$streamQuality= "$(cat "/etc/2web/cache/cacheQuality.cfg")"
+									$streamQuality="$(cat "/etc/2web/cache/cacheQuality.cfg" | tr -d '\n')"
 									# load the stream quality config the same way
-									if [ "$streamQuality" == "best" ] || [ "$streamQuality" == "worst" ];then
-										if [ "$streamQuality" == "worst" ];then
+									if echo -n "$streamQuality" | grep -q "best" || echo -n "$streamQuality" | grep -q "worst";then
+										if echo -n "$streamQuality" | grep -q "worst";then
 											upgradeQuality=" -f '$streamQuality'"
 										else
 											# no quality should be given for the best quality
@@ -1002,8 +1012,11 @@ processEpisode(){
 							# no upgrae quality file exists so default to best
 							upgradeQuality=""
 						fi
+						# load the javascript runtime
+						#jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
+						jsRuntime="--js-runtimes quickjs:/usr/bin/qjs"
 						#
-						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp -4 --concurrent-fragments $cpuCount --max-filesize '6g' --retries '500' --retry-sleep 'exp=2:512:2' --js-runtimes node:/usr/bin/nodejs --no-mtime --fragment-retries '100' $upgradeQuality --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
+						temp_cache_command="/var/cache/2web/generated/yt-dlp/yt-dlp -4 --concurrent-fragments $totalCPUS --max-filesize '6g' --retries '500' --retry-sleep 'exp=2:512:2' $jsRuntime --no-mtime --fragment-retries '100' $upgradeQuality --embed-subs --abort-on-error --abort-on-unavailable-fragments --embed-thumbnail --recode-video mp4 --continue --write-info-json -o '$webDirectory/RESOLVER-CACHE/$tempSum/video.mp4' -c '$ytLink'"
 						# store processing info into a log file
 						{
 							echo "Video link cached with nfo2web because it was added and was orignally posted this same month"
@@ -1169,10 +1182,6 @@ processEpisode(){
 
 		# add this to the search index
 		addToSearchIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "${episodePath} ${episodeShowTitle} ${episodeGrade} ${episodeStudio} ${airedYear}" "/shows/$episodeShowTitle/"
-
-	else
-		ALERT "[WARNING]: The file '$episode' could not be found!"
-	fi
 }
 ################################################################################
 processShow(){
@@ -1339,6 +1348,12 @@ processShow(){
 		if test -d "$season";then
 			# generate the season name from the path
 			seasonName=$(echo "$season" | rev | cut -d'/' -f1 | rev)
+			if echo "$seasonName" | grep --ignore-case -q "season ";then
+				# cleanup season name more
+				seasonName="$(echo "$seasonName" | sed "s/[sS]eason\ //g")"
+			fi
+			seasonName="$(prefixZeros "$seasonName")"
+			seasonName="Season $seasonName"
 			seasonSum=$(echo -n "$season" | sha512sum | cut -d' ' -f1)
 
 			# get the season folder sum, youtube channels can have 9999 max episodes a season
@@ -1400,7 +1415,8 @@ processShow(){
 				headerPagePath="$webDirectory/header.php"
 				# build top of show webpage containing all of the shows meta info
 				linkFile "/usr/share/2web/templates/seasons.php" "$showPagePath"
-
+				# create the directory if it does not exist
+				createDir "$webDirectory/shows/$showTitle/$seasonName/"
 				# update the season sum file
 				touch "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
 				echo "$libarySeasonSum" > "$webDirectory/shows/$showTitle/$seasonName/state_${seasonSum}_season.cfg"
@@ -2211,6 +2227,11 @@ function update(){
 	kodiDirectory="$(kodiRoot)"
 	# create the log path
 	logPagePath="$webDirectory/log/$(date "+%s").log"
+	createDir "$webDirectory/movies/"
+	createDir "$webDirectory/shows/"
+	# link the movies and shows index
+	linkFile "/usr/share/2web/templates/movies.php" "$webDirectory/movies/index.php"
+	linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
 	# create the homepage path
 	showIndexPath="$webDirectory/shows/index.php"
 	movieIndexPath="$webDirectory/movies/index.php"
@@ -2402,11 +2423,6 @@ showHelp(){
 # set the theme of the lines in CLI output
 LINE_THEME="stickDance"
 #
-INPUT_OPTIONS="$@"
-PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
-MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
-FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
-#
 debugCheck
 #
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ] ;then
@@ -2455,6 +2471,8 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mkv" &
 		elif [ $videoType  -eq 1 ];then
 			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.avi" &
+		elif [ $videoType  -eq 2 ];then
+			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.ts" &
 		elif [ $videoType  -eq 2 ];then
 			ffmpeg -i "/var/cache/2web/spinner.gif" -loop 10 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/movies/$randomTitle/$randomTitle.mp4" &
 		elif [ $videoType  -eq 3 ];then
@@ -2528,6 +2546,8 @@ elif [ "$1" == "--demo-data" ] || [ "$1" == "demo-data" ] ;then
 					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.avi" &
 				elif [ $videoType  -eq 2 ];then
 					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mp4" &
+				elif [ $videoType  -eq 2 ];then
+					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx264 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.ts" &
 				elif [ $videoType  -eq 3 ];then
 					ffmpeg -i "/var/cache/2web/spinner.gif" -loop 3 -c:v libx265 -c:a aac "/var/cache/2web/generated/demo/nfo/shows/$randomTitle/Season $index2/$randomEpisodeTitle.mkv" &
 				elif [ $videoType  -eq 4 ];then
