@@ -215,6 +215,9 @@ function updateApplication(){
 		addToIndex "$webDirectory/applications/$appTitle/applications.index" "$webDirectory/new/applications.index"
 		addToIndex "$webDirectory/applications/$appTitle/applications.index" "$webDirectory/new/all.index"
 
+		# add this to the search index
+		addToSearchIndex "$webDirectory/applications/$appTitle/applications.index" "$appTitle" "/applications/$appTitle/"
+
 		# random indexes
 		linkFile "$webDirectory/applications/applications.index"  "$webDirectory/random/applications.index"
 
@@ -295,6 +298,8 @@ function nuke(){
 	webDirectory="$(webRoot)"
 	downloadDirectory="$(downloadDir)"
 	generatedDirectory="$(generatedRoot)"
+	# remove the search index data
+	delete "/var/cache/2web/generated/searchIndexData/applications/"
 	# remove new and random indexes
 	delete "$webDirectory/new/applications.index"
 	delete "$webDirectory/random/applications.index"
