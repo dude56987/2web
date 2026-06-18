@@ -125,6 +125,16 @@ function processThreadedJob(){
 		else
 			jobOutput="Job Output Log Disabled"
 		fi
+		# draw the job output to the terminal if mute is not enabled
+		if [ "$MUTE_OPTION" == "yes" ];then
+			echo "Job Ended $(date)"
+		else
+			drawLine
+			drawSmallHeader "Job Ended Log"
+			ALERT "$jobOutput" "$(date)"
+			drawLine
+		fi
+		# output the job to the CLI
 		if [ 0 -eq $exitStatus ];then
 			# remove the job from the queue
 			rm -v "$queueFile"
@@ -133,7 +143,12 @@ function processThreadedJob(){
 		else
 			addToLog "ERROR" "Queue Job Failed" "Command in queue '$queueFileData' has failed.<br><h2>Job Output</h2><pre>$jobOutput</pre>"
 			# failed jobs should be moved into the failed job directory and ignored from then on
-			cp -v "$queueFile" "/var/cache/2web/queue/failed/"
+			if [ "$useLogs" == "yes" ];then
+				cp -v "$queueFile" "/var/cache/2web/queue/failed/"
+			else
+				# remove log if disabled
+				rm -v "$logFilePath"
+			fi
 			# remove the orignal command file to prevent the queue from trying to run a failed job again
 			rm -v "$queueFile"
 		fi
