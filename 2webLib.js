@@ -242,15 +242,18 @@ function volumeUp(){
 		var volumeString = String(tempVolume);
 	}
 	//document.getElementById("currentVolume").innerHTML=volumeString;
-	return false;
+	return volumeString;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function volumeDown(){
 	var tempVolume = document.getElementById("video").volume;
-	if ( (tempVolume - 0.05) < 0 ){
-		// dont let volume go above one
-		tempVolume = 0;
-		document.getElementById("video").volume = 0;
+	// when volume is low slow down volume jumps
+	if ( (tempVolume) <= 0.20 ){
+		if ( (tempVolume) <= 0.10 ){
+			document.getElementById("video").volume -= 0.001;
+		} else {
+			document.getElementById("video").volume -= 0.01;
+		}
 	} else {
 		document.getElementById("video").volume -= 0.10;
 	}
@@ -262,8 +265,12 @@ function volumeDown(){
 	} else {
 		var volumeString = String(tempVolume);
 	}
-	//document.getElementById("currentVolume").innerHTML=volumeString;
-	return false;
+	if ( (tempVolume ) < 0 ){
+		// dont let volume go below zero
+		tempVolume = 0;
+		document.getElementById("video").volume = 0;
+	}
+	return volumeString;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function muteUnMute(){
@@ -414,23 +421,44 @@ function openFullscreen() {
 	} else if (video.msRequestFullscreen) { /* IE11 */
 		video.msRequestFullscreen();
 	}
-	document.getElementById("fullscreenButton").style = "display:none;";
-	document.getElementById("exitFullscreenButton").style = "display: inline-block;";
+	if(document.getElementById("fullscreenButton")){
+		document.getElementById("fullscreenButton").style = "display:none;";
+	}
+	if(document.getElementById("exitFullscreenButton")){
+		document.getElementById("exitFullscreenButton").style = "display: inline-block;";
+	}
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function closeFullscreen() {
-	// Close fullscreen
-	if (document.exitFullscreen) {
-		document.exitFullscreen();
-	} else if (document.webkitExitFullscreen) { /* Safari */
-		document.webkitExitFullscreen();
-	} else if (document.msExitFullscreen) { /* IE11 */
-		document.msExitFullscreen();
+function closeFullscreen(elementId="") {
+	// if the element is fullscreen close the fullscreen element
+	var chosenElement;
+	var topButton;
+	if (elementId == ""){
+		// use the body if no element is set
+		chosenElement=document.body;
+		console.log("Toggle Fullscreen for the whole page");
+	}else{
+		// get the element by id
+		chosenElement=document.getElementById(elementId);
+		console.log("Toggle Fullscreen for '"+elementId+"'");
 	}
-	document.getElementById("fullscreenButton").style = "display: inline-block;";
-	document.getElementById("exitFullscreenButton").style = "display: none;";
-	return false;
+	if ((!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) == false){
+		// Close fullscreen
+		if (document.exitFullscreen) {
+			document.exitFullscreen();
+		} else if (document.webkitExitFullscreen) {
+			document.webkitExitFullscreen();
+		} else if (document.msExitFullscreen) {
+			document.msExitFullscreen();
+		}
+		// add back the top button
+		if (document.getElementById("topButton")){
+			topButton = document.getElementById("topButton");
+			topButton.style.display="block";
+		}
+	}
+	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function file_get_contents(fileUrl) {
@@ -441,7 +469,7 @@ function file_get_contents(fileUrl) {
 	return xhttp.responseText;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function delayedRefresh(timeout) {
+function delayedRefresh(timeout=0) {
 	// reload the page after a timeout
 	setTimeout(function() {
 		// reload the page only if the search bar does not have focus
@@ -507,23 +535,25 @@ function videoNotify(message="!"){
 	notify(message,500,"notificationText","notification","video");
 }
 ////////////////////////////////////////////////////////////////////////////////
-function notify(message="!",displayTime=500,textId="notificationText",notificationId="notification",addToId=""){
+function notify(message="!",displayTime=400,textClass="notificationText",notificationId="notification",addToId=""){
 	console.log("notify="+message);
 	// if a notification is being displayed, remove it
-	if(document.getElementById(notificationId) != null){
-		document.getElementById(notificationId).remove();
+	if(document.getElementById("notification") != null){
+		document.getElementById("notification").remove();
 	}
-	if(document.getElementById(notificationId) == null){
+	if(document.getElementById("notification") == null){
 		console.log("Notification Sent ='"+message+"'");
 		// build the notification
 		var notifyObj = document.createElement("div");
 		var notifyTextObj = document.createElement("div");
-		notifyObj.setAttribute("id", notificationId);
+		notifyObj.setAttribute("id", "notification");
+		notifyObj.setAttribute("class", notificationId);
 		// hide the notification on click
-		notifyObj.setAttribute("onClick", "hideId(\""+notificationId+"\")");
-		notifyTextObj.setAttribute("id", textId);
+		notifyObj.setAttribute("onClick", "hideId('notificationId')");
+		notifyTextObj.setAttribute("id", "notificationText");
+		notifyTextObj.setAttribute("class", textClass);
 		// set the message and css
-		notifyObj.style.opacity=0.9;
+		notifyObj.style.opacity=1.0;
 		notifyTextObj.innerHTML=message;
 		// add the text inside the notification
 		notifyObj.appendChild(notifyTextObj);
@@ -539,12 +569,12 @@ function notify(message="!",displayTime=500,textId="notificationText",notificati
 		// hide the message after .5 seconds
 		notificationTimer = setTimeout(() =>{
 			//
-			if(document.getElementById(notificationId) != null){
+			if(document.getElementById("notification") != null){
 				//
-				document.getElementById(notificationId).style.opacity=0;
+				document.getElementById("notification").style.opacity=0;
 				// allow animation time to run then remove the object
 				notificationTimeoutTimer = setTimeout(() =>{
-					document.getElementById(notificationId).remove();
+					document.getElementById("notification").remove();
 				}, displayTime);
 			}
 		}, 355);
