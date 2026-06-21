@@ -161,62 +161,82 @@ if ($loggedIn){
 	}
 
 	# you are logged in show logout button
-	echo "<html class='randomFanart'>";
-	echo "<head>";
-	echo "	<link rel='stylesheet' type='text/css' href='/style.css'>";
-	echo "	<script src='/2webLib.js'></script>";
-	echo "</head>";
-	echo "<body>";
+	echo "<html class='randomFanart'>"."\n";
+	echo "<head>"."\n";
+	echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"."\n";
+	echo "	<script src='/2webLib.js'></script>"."\n";
+	echo "</head>"."\n";
+	echo "<body>"."\n";
 	include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	# no login is detected draw the login window
-	echo "<div class='inputCard'>";
-	echo "<h1>Logout of ".ucfirst(gethostname())."</h1>";
-	echo "$errorMessages";
-	echo "<hr>";
+	echo "<div class='inputCard'>"."\n";
+	echo "<h1>Logout of ".ucfirst(gethostname())."</h1>"."\n";
+	echo "$errorMessages"."\n";
+	echo "<hr>"."\n";
 	if ($noLogins){
-		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/settings/users.php#addNewUser'>🔒 Add Administrator Login</a>";
-		echo "</div>";
-		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/settings/modules.php'>🧩 Enable Modules</a>";
-		echo "</div>";
-		echo "<div class='listCard'>";
-		echo "	<a class='button' href='/logout.php'>⤴️ Logout</a>";
-		echo "</div>";
+		echo "<div class='listCard'>"."\n";
+		echo "	<a class='button' href='/settings/users.php#addNewUser'>🔒 Add Administrator Login</a>"."\n";
+		echo "</div>"."\n";
+		echo "<div class='listCard'>"."\n";
+		echo "	<a class='button' href='/settings/modules.php'>🧩 Enable Modules</a>"."\n";
+		echo "</div>"."\n";
+		echo "<div class='listCard'>"."\n";
+		echo "	<a class='button' href='/logout.php'>⤴️ Logout</a>"."\n";
+		echo "</div>"."\n";
 	}else{
-		echo "<div>Logged in as ".$_SESSION["user"]."</div>";
-		echo "<hr>";
-		echo "<a class='button' href='/logout.php'>🔒 Logout</a>";
+		echo "<div class='listCard'><p>✅ Logged in as ".$_SESSION["user"]."</p></div>"."\n";
+		echo "<div class='listCard'>"."\n";
+		echo "	<a class='button' href='/'>"."\n";
+		echo "		🏠"."\n";
+		echo "		<span class='headerText'>"."\n";
+		echo "			Go to Homepage"."\n";
+		echo "		</span>"."\n";
+		echo "	</a>"."\n";
+		echo "</div>"."\n";
+		echo "<div class='listCard'>"."\n";
+		echo "	<a class='button' href='/logout.php'>🔒 Logout</a>"."\n";
+		echo "</div>"."\n";
 	}
-	echo "<hr>";
-	echo "</div>";
+	echo "	<hr>"."\n";
+	echo "</div>"."\n";
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-	echo "</body>";
-	echo "</html>";
+	echo "</body>"."\n";
+	echo "</html>"."\n";
 }else{
-	# you are logged out
-	echo "<html class='randomFanart'>";
-	echo "<head>";
-	echo "	<link rel='stylesheet' type='text/css' href='/style.css'>";
-	echo "	<script src='/2webLib.js'></script>";
-	echo "</head>";
-	echo "<body>";
-	include($_SERVER['DOCUMENT_ROOT']."/header.php");
+	# you are logged out draw the login interface
+	if (requireGroup("2web",false)){
+		# hide fanart without permissions
+		echo "<html class='randomFanart'>"."\n";
+	}else{
+		echo "<html class='lockedBackground'>"."\n";
+	}
+	echo "<head>"."\n";
+	echo "	<link rel='stylesheet' type='text/css' href='/style.css'>"."\n";
+	echo "	<script src='/2webLib.js'></script>"."\n";
+	echo "</head>"."\n";
+	echo "<body>"."\n";
+	if (requireGroup("2web",false)){
+		# hide header without permissions
+		include($_SERVER['DOCUMENT_ROOT']."/header.php");
+	}
 	# no login is detected draw the login window
-	echo "<div class='inputCard'>";
-	echo "<h1>Login To ".ucfirst(gethostname())."</h1>";
-	echo "$errorMessages";
-	echo "<form method='post'>";
-	echo "<hr>";
-	echo "<input class='loginName' type='text' autocorrect='off' autocapitalize='none' name='userLogin' placeholder='Username...' autofocus>";
-	echo "<hr>";
-	echo "<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='Password...'>";
-	echo "<hr>";
-	echo "<input onclick='notify(\"🔑\",\"60000\",\"spinRight\");' class='button' type='submit' value='Login'>";
-	echo "</form>";
-	echo "</div>";
-	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
-	echo "</body>";
-	echo "</html>";
+	echo "<div class='inputCard'>"."\n";
+	echo "	<h1>Login To ".ucfirst(gethostname())."</h1>"."\n";
+	echo "	$errorMessages"."\n";
+	echo "	<form method='post'>"."\n";
+	echo "		<hr>"."\n";
+	echo "		<input class='loginName' type='text' autocorrect='off' autocapitalize='none' name='userLogin' placeholder='Username...' autofocus>"."\n";
+	echo "		<hr>"."\n";
+	echo "		<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='Password...'>"."\n";
+	echo "		<hr>"."\n";
+	echo "		<input onclick='notify(\"🔑\",\"60000\",\"spinRight\");' class='button' type='submit' value='Login'>"."\n";
+	echo "	</form>"."\n";
+	echo "</div>"."\n";
+	if (requireGroup("2web",false)){
+		# hide footer without permissions
+		include($_SERVER['DOCUMENT_ROOT']."/footer.php");
+	}
+	echo "</body>"."\n";
+	echo "</html>"."\n";
 }
 ?>
