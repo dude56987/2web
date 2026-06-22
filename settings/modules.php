@@ -137,6 +137,19 @@ foreach($modules as $module){
 		echo "		<li>\n";
 		echo "			Can read CBZ,ZIP,EPUB,PDF,TXT,HTML,PS,MD into the libraries.";
 		echo "		</li>\n";
+	}elseif ($module == "video2web"){
+		echo "		<li>\n";
+		echo "			Will enable video Processing.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Enable or disable video section of the website.\n";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Add a collection of videos grouped by directory name and sorted by file creation year.";
+		echo "		</li>\n";
+		echo "		<li>\n";
+		echo "			Can read MP4,WEBM,GIF,WEBP,MKV into the libraries.";
+		echo "		</li>\n";
 	}elseif ($module == "weather2web"){
 		echo "		<li>\n";
 		echo "			Will enable Weather Station Processing.\n";
@@ -277,6 +290,9 @@ foreach($modules as $module){
 	}else if ($module == "comic2web"){
 		$settingsTempPath="/settings/comics.php";
 		$settingsTempIcon="📚";
+	}else if ($module == "video2web"){
+		$settingsTempPath="/settings/videos.php";
+		$settingsTempIcon="📽️";
 	}else if ($module == "kodi2web"){
 		$settingsTempPath="/settings/kodi.php";
 		$settingsTempIcon="🇰";

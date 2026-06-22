@@ -384,6 +384,9 @@ build-deb: upgrade-hls
 	echo "#! /bin/bash" > debian/usr/bin/comic2web
 	cat build/sh_head.txt > debian/usr/bin/comic2web
 	grep --invert-match "^[[:blank:]]*#" comic2web.sh | tr -s '\n' >> debian/usr/bin/comic2web
+	echo "#! /bin/bash" > debian/usr/bin/video2web
+	cat build/sh_head.txt > debian/usr/bin/video2web
+	grep --invert-match "^[[:blank:]]*#" video2web.sh | tr -s '\n' >> debian/usr/bin/video2web
 	echo "#! /bin/bash" > debian/usr/bin/graph2web
 	cat build/sh_head.txt > debian/usr/bin/graph2web
 	grep --invert-match "^[[:blank:]]*#" graph2web.sh | tr -s '\n' >> debian/usr/bin/graph2web
@@ -582,6 +585,8 @@ build-deb: upgrade-hls
 	/usr/bin/git log --stat | grep "^ portal2web.sh" | wc -l >> debian/usr/share/2web/version_portal2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_comic2web.cfg
 	/usr/bin/git log --stat | grep "^ comic2web.sh" | wc -l >> debian/usr/share/2web/version_comic2web.cfg
+	echo -n "#" > debian/usr/share/2web/version_video2web.cfg
+	/usr/bin/git log --stat | grep "^ video2web.sh" | wc -l >> debian/usr/share/2web/version_video2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_weather2web.cfg
 	/usr/bin/git log --stat | grep "^ weather2web.sh" | wc -l >> debian/usr/share/2web/version_weather2web.cfg
 	echo -n "#" > debian/usr/share/2web/version_music2web.cfg

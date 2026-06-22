@@ -119,7 +119,6 @@ include("settingsHeader.php");
 	</form>
 </div>
 
-<!-- create the theme picker based on installed themes -->
 <div id='cacheUpgradeQuality' class='inputCard'>
 	<h2>Cache Upgrade Quality</h2>
 	<form action='admin.php' class='buttonForm' method='post'>

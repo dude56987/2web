@@ -85,21 +85,22 @@ if (count(array_diff(scanDir("/etc/2web/users/"),array(".","..",".placeholder"))
 }
 # build the settings search interface
 ?>
-<div class='titleCard'>
+<div class='titleCard settingsHeader'>
 	<h2>Settings</h2>
 	<div class='listCard'>
 		<?PHP
 		# draw the module buttons if the module is enabled
 		drawHeaderButton("🔍","All","/settings/search.php");
-		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/settings/log.php","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php","/settings/queue.php"));
+		drawHeaderButton("🎛️","System","/settings/system.php",Array("/settings/modules.php","/settings/users.php","/settings/themes.php","/settings/cache.php","/settings/log.php","/settings/views.php","/views/","/settings/about.php","/settings/fortune.php","/settings/clean.php","/settings/manuals.php","/settings/queue.php"));
 		$drawVideoOnDemandButton=drawModuleHeaderButton("nfo2web","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
 		if(! $drawVideoOnDemandButton ){
 			# draw the header button even if only ytdl2nfo is active
 			$drawVideoOnDemandButton=drawModuleHeaderButton("ytdl2nfo","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
 		}
 		if(! $drawVideoOnDemandButton ){
-			drawModuleHeaderButton("rss2nfo","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php"));
+			drawModuleHeaderButton("rss2nfo","🎞️","Video On Demand","/settings/nfo.php",Array("/settings/rss.php","/settings/ytdl.php",""));
 		}
+		drawModuleHeaderButton("video2web","📽️","My Videos","/settings/videos.php",Array("/settings/videos.php"));
 		drawModuleHeaderButton("music2web","🎧","Music","/settings/music.php");
 		drawModuleHeaderButton("comic2web","📚","Comics","/settings/comics.php",Array("/settings/comicsDL.php"));
 		drawModuleHeaderButton("iptv2web","📡","Live","/settings/tv.php",Array("/settings/tv.php","/settings/radio.php","/settings/iptv_blocked.php"));
@@ -129,7 +130,7 @@ function drawModuleHeaderWarning($moduleName){
 if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || ($pageURL == "/settings/iptv_blocked.php")){
 	$moduleName="iptv2web";
 	drawModuleHeaderWarning($moduleName);
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>Live Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	drawHeaderButton("📺","TV","/settings/tv.php");
@@ -146,7 +147,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 		$moduleName="rss2nfo";
 	}
 	drawModuleHeaderWarning($moduleName);
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>Video On Demand Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	drawHeaderButton("🎞️","Libaries","/settings/nfo.php");
@@ -163,7 +164,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 }elseif (($pageURL == "/settings/ai.php") || ($pageURL == "/settings/ai_embeds.php") || ($pageURL == "/settings/ai_prompt.php") || ($pageURL == "/settings/ai_txt2img.php") || ($pageURL == "/settings/ai_subtitles.php") || ($pageURL == "/settings/ai_audio.php") ){
 	$moduleName="ai2web";
 	drawModuleHeaderWarning($moduleName);
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>AI Settings</h2>\n";
 	echo "		<div class='warningBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
 	echo "		<div class='listCard'>\n";
@@ -178,13 +179,16 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 }elseif (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";
 	drawModuleHeaderWarning($moduleName);
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>Portal Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	drawHeaderButton("⛓️","Sources","/settings/portal.php");
 	drawHeaderButton("🌐","Scanning","/settings/portal_scanning.php");
 	echo "		</div>";
 	echo "	</div>";
+}elseif ($pageURL == "/settings/videos.php"){
+	$moduleName="video2web";
+	drawModuleHeaderWarning($moduleName);
 }elseif ($pageURL == "/settings/music.php"){
 	$moduleName="music2web";
 	drawModuleHeaderWarning($moduleName);
@@ -194,7 +198,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 }elseif (($pageURL == "/settings/comicsDL.php") || ($pageURL == "/settings/comics.php")){
 	$moduleName="comic2web";
 	drawModuleHeaderWarning($moduleName);
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>Comics Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	drawHeaderButton("📚","Libaries","/settings/comics.php");
@@ -226,6 +230,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	($pageURL == "/settings/clean.php") ||
 	($pageURL == "/settings/log.php") ||
 	(stripos($pageURL, "/views/") !== false) ||
+	($pageURL == "/settings/views.php") ||
 	($pageURL == "/settings/themes.php") ||
 	($pageURL == "/settings/about.php") ||
 	($pageURL == "/settings/manuals.php") ||
@@ -233,7 +238,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
  	($pageURL == "/settings/fortune.php") ||
  	($pageURL == "/settings/queue.php")){
 	$moduleName="system";
-	echo "	<div class='titleCard'>\n";
+	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>System Settings</h2>\n";
 	echo "		<div class='listCard'>";
 	drawHeaderButton("🎛️","General","/settings/system.php");
@@ -245,7 +250,7 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	drawHeaderButton("🧹","Clean","/settings/clean.php");
 	drawHeaderButton("🔢","Queue","/settings/queue.php");
 	drawHeaderButton("📋","Log","/settings/log.php");
-	drawHeaderButton("👁️","Views","/views/");
+	drawHeaderButton("👁️","Views","/settings/views.php");
 	drawHeaderButton("📔","Manuals","/settings/manuals.php");
 	drawHeaderButton("❓","About","/settings/about.php");
 	echo "		</div>";

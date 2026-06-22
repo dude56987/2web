@@ -589,6 +589,13 @@ if (array_key_exists("newUserName",$_POST)){
 		backButton("/settings/comics.php","🛠️ Return To Settings");
 	}
 	clear();
+}else if (array_key_exists("video2web_nuke",$_POST)){
+	if(verifyChoice("/settings/videos.php")){
+		outputLog("Scheduling video2web nuke!");
+		addToQueue("multi","/usr/bin/video2web --nuke --mute --fast");
+		backButton("/settings/videos.php","🛠️ Return To Settings");
+	}
+	clear();
 }else if (array_key_exists("weather2web_nuke",$_POST)){
 	if(verifyChoice("/settings/weather.php")){
 		outputLog("Scheduling weather2web nuke!");
@@ -1082,6 +1089,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomPathConfig("disableComicLibrary","/etc/2web/comics/disabledLibaries.d/","comics.php");
 }else if (array_key_exists("enableComicLibrary",$_POST)){
 	removeCustomConfig("enableComicLibrary","/etc/2web/comics/disabledLibaries.d/","comics.php");
+}else if (array_key_exists("disableVideoLibrary",$_POST)){
+	addCustomPathConfig("disableVideoLibrary","/etc/2web/videos/disabledLibaries.d/","videos.php");
+}else if (array_key_exists("enableVideoLibrary",$_POST)){
+	removeCustomConfig("enableVideoLibrary","/etc/2web/videos/disabledLibaries.d/","videos.php");
 }else if (array_key_exists("addWeatherLocation",$_POST)){
 	$weatherLocation=$_POST["addWeatherLocation"];
 	#
@@ -1269,6 +1280,11 @@ if (array_key_exists("newUserName",$_POST)){
 	setModStatus("comic2web",$status);
 	backButton("/settings/modules.php#comic2webStatus","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("video2webStatus",$_POST)){
+	$status=$_POST['video2webStatus'];
+	setModStatus("video2web",$status);
+	backButton("/settings/modules.php#video2webStatus","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("music2webStatus",$_POST)){
 	$status=$_POST['music2webStatus'];
 	setModStatus("music2web",$status);
@@ -1384,6 +1400,10 @@ if (array_key_exists("newUserName",$_POST)){
 	addCustomPathConfig("addComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
 }else if(array_key_exists("removeComicLibrary",$_POST)){
 	removeCustomConfig("removeComicLibrary","/etc/2web/comics/libaries.d/","comics.php");
+}else if (array_key_exists("addVideoLibrary",$_POST)){
+	addCustomPathConfig("addVideoLibrary","/etc/2web/videos/libaries.d/","videos.php");
+}else if(array_key_exists("removeVideoLibrary",$_POST)){
+	removeCustomConfig("removeVideoLibrary","/etc/2web/videos/libaries.d/","videos.php");
 }else if (array_key_exists("addAppLibrary",$_POST)){
 	addCustomPathConfig("addAppLibrary","/etc/2web/applications/libaries.d/","apps.php");
 }else if(array_key_exists("removeAppLibrary",$_POST)){

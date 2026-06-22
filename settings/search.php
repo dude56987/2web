@@ -204,6 +204,14 @@ foreach($sourceFiles as $sourceFile){
 		$tempIcon="📶";
 		$tempTitle="Video RSS Feeds";
 		$permissionsPassed=checkModStatus("rss2nfo");
+	}else if($themeName == "videos"){
+		$tempIcon="📽️";
+		$tempTitle="My Videos";
+		$permissionsPassed=checkModStatus("video2web");
+	}else if($themeName == "queue"){
+		$tempIcon="🔢";
+		$tempTitle="Queue";
+		$permissionsPassed=true;
 	}else if($themeName == "repos"){
 		$tempIcon="💾";
 		$tempTitle="Git Repos";
@@ -217,7 +225,7 @@ foreach($sourceFiles as $sourceFile){
 		$tempTitle="Live Audio";
 		$permissionsPassed=checkModStatus("iptv2web");
 	}else if($themeName == "iptv_blocked"){
-		$tempIcon="🚫";
+		$tempIcon="🧱";
 		$tempTitle="Blocked Live Channels";
 		$permissionsPassed=checkModStatus("iptv2web");
 	}else if($themeName == "wiki"){
@@ -228,6 +236,10 @@ foreach($sourceFiles as $sourceFile){
 		$tempIcon="🎞️";
 		$tempTitle="On-Demand";
 		$permissionsPassed=checkModStatus("nfo2web");
+	}else if($themeName == "views"){
+		$tempIcon="👁️";
+		$tempTitle="Views";
+		$permissionsPassed=true;
 	}else if($themeName == "clean"){
 		$tempIcon="🧹";
 		$tempTitle="$themeName";

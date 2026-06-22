@@ -852,6 +852,7 @@ if (array_key_exists("q",$_GET) && ($_GET['q'] != "")){
 	drawFilterButton("movies","nfo2web","🎥 Movies",$searchQuery);
 	drawFilterButton("shows","nfo2web","📺 Shows",$searchQuery);
 	drawFilterButton("episodes","nfo2web","🎞️ Episodes",$searchQuery);
+	drawFilterButton("videos","video2web","📽️ Videos",$searchQuery);
 	drawFilterButton("music","music2web","🎧 Music",$searchQuery);
 	drawFilterButton("repos","git2web","💾 Repos",$searchQuery);
 	drawFilterButton("live","iptv2web","📡 Live",$searchQuery);
