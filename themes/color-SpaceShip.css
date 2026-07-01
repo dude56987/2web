@@ -42,6 +42,9 @@ html{
 	background: black !important;
 	color: white !important;
 }
+.indexSeries,.titleCard,.settingListCard,.showPageEpisode{
+	box-shadow: none !important;
+}
 /* rotate the button colors */
 .showPageEpisode:nth-of-type(4n),
 .indexSeries:nth-of-type(4n),
@@ -68,7 +71,7 @@ html{
 .showPageEpisode:nth-of-type(4n-1),
 .indexSeries:nth-of-type(4n-1),
 .button:nth-of-type(4n-1){
-	background-color: darkviolet !important;
+	background-color: hotpink !important;
 	color: white !important;
 	text-shadow: none;
 }
@@ -112,7 +115,7 @@ html{
 .settingListCard:nth-of-type(4n-1),
 .titlecard:nth-of-type(4n-1){
 	h1,h2,h3,h4,h5,.button,.indexSeries,.showPageEpisode{
-		background-color: darkviolet;
+		background-color: hotpink;
 		color: black !important;
 		text-shadow: none;
 	}

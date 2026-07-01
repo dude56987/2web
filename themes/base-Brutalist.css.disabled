@@ -1,0 +1,196 @@
+/*
+########################################################################
+# 2web NoCSS base theme component loads no base CSS formatting
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+h1,h2,h3,h4,h5{
+	background: var(--solidBackground) !important;
+}
+th,table,.singleStat,.comicPageButton,.comicPagePopup,.searchButton,.titleCard,.button,.menuButton{
+	background: var(--solidBackground);
+}
+.searchBox,.showPageEpisode,.descriptionCard,.settingListCard,.inputCard,.indexSeries,.seasonContainer{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+html::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+	border-width: 2px !important;
+}
+.channelList::-webkit-scrollbar:horizontal{
+	background: var(--glassBackground);
+}
+.channelList::-webkit-scrollbar-thumb:horizontal{
+	background: var(--glassBackground);
+}
+.listCard::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.listCard::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+html::-webkit-scrollbar-thumb:vertical{
+	background: var(--solidBackground);
+	border-width: 2px !important;
+}
+.channelList::-webkit-scrollbar:vertical{
+	background: var(--solidBackground);
+}
+.channelList::-webkit-scrollbar-thumb:vertical{
+	background: var(--soildBackground);
+}
+html{
+	color: var(--textColor);
+	border-color: var(--borderColor);
+}
+::spelling-error{
+	text-decoration: wavy var(--highlightBackground) underline;
+	background-color: yellow;
+	color: black;
+}
+::grammar-error{
+	text-decoration: wavy var(--highlightBackground) underline;
+	background-color: yellow;
+	color: black;
+}
+::selection{
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	text-shadow: none;
+}
+::-moz-selection{
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	text-shadow: none;
+}
+body{
+	background: var(--glassBackground);
+}
+
+button,.smallButton,.button{
+	border: solid var(--borderColor) 0.2rem;
+	box-shadow: 0px 0px 1rem var(--shadowColor);
+	font-size: 1rem;
+	margin: 0.2rem;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
+	padding: 0.2rem;
+	background: var(--glassBackground);
+	color: var(--textColor);
+	text-decoration: none;
+	text-align: center;
+	cursor: pointer;
+	overflow: hidden;
+	line-height: 1rem;
+}
+button:hover,.smallButton:hover,.button:hover{
+	color: var(--highlightText);
+	background: var(--highlightBackground);
+	border-color: var(--highlightBorder);
+	.singleStatValue{
+		color: var(--highlightText);
+		background: var(--highlightBackground);
+		border-color: var(--highlightBorder);
+	}
+}
+a{
+	color: var(--textColor);
+	text-decoration: underline;
+}
+a:hover{
+	text-decoration: none;
+	text-shadow: none;
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+}
+hr{
+	visiblity: hidden;
+	border-width: 0px;
+}
+.ruler{
+	visiblity: visible !important;
+	background: var(--solidBackground);
+	width: 95%;
+	border: 0.5rem solid var(--borderColor);
+	/* thicken menubuttons */
+	height: 0.5rem;
+	margin-top: 0.2rem;
+	margin-bottom: 0.2rem;
+	margin-left: auto;
+	margin-right: auto;
+	display: block !important;
+}
+.searchButton{
+	width: 100%;
+}
+.searchBox{
+	width: 100%;
+}
+.globalPulse{
+	position: fixed;
+	width: 100dvw;
+	height: 2rem;
+	left: 0px;
+	bottom: 0px;
+	border-top: solid var(--borderColor) 0.1rem;
+	background: var(--glassBackground);
+	z-index: 20;
+	opacity: 1;
+	transition: 5s opacity;
+	animation-timing-function: linear;
+}
+.pulseBar{
+	animation-name: pulseBarAnimation;
+	animation-duration: 10s;
+	animation-delay: 0s;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+	height: 100%;
+	width: 5dvw;
+	background-color: var(--textColor);
+	position: absolute;
+}
+.globalPulse:hover{
+	transition: 5s opacity;
+	animation-timing-function: ease-out;
+	z-index: 0 !important;
+	opacity: 0;
+}
+@keyframes pulseBarAnimation{
+	0% {
+		left: 0dvw;
+	}
+	50% {
+		left: 95dvw;
+	}
+	100% {
+		left: 0dvw;
+	}
+}
