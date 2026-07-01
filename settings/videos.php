@@ -103,7 +103,7 @@ include("settingsHeader.php");
 				</li>
 			</ul>
 			<p>
-				This will generate a group with Show_Title_01 and the episodes will be grouped by the creation year of the files. The videos will be ordered alphabetically for each year.
+				This will generate a group with Example_Group_Title_01 and the episodes will be grouped by the creation year of the files. The videos will be ordered alphabetically for each year.
 			</p>
 			<p>
 				The directory structure above this does not matter. Library paths are scanned recursively.
