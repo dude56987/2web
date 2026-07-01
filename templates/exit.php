@@ -30,6 +30,7 @@ include("/usr/share/2web/2webLib.php");
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
 	<link rel='icon' type='image/png' href='/favicon.png'>
+		<title><?PHP echo gethostname(); ?> - External Redirect</title>
 </head>
 <body>
 <?PHP
