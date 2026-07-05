@@ -224,6 +224,10 @@ function update(){
 				txtComicName=$(popPath "$txtFilePath" | sed "s/.txt//g")
 				# only extract the cbz once
 				if ! test -f "${generatedDirectory}/comics/txt2comic/$txtComicName.html";then
+					createDir "$webDirectory/comics/$txtComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/txt2comic/$txtComicName/" "$webDirectory/comics/$txtComicName/sources.cfg"
+
 					mkdir -p "${generatedDirectory}/comics/txt2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found txt '$txtComicName', converting to comic book..."
@@ -246,6 +250,10 @@ function update(){
 				psComicName=$(popPath "$psFilePath" | sed "s/.ps//g")
 				# only extract the .ps once
 				if ! test -d "${generatedDirectory}/comics/ps2comic/$psComicName/$psComicName.pdf";then
+					createDir "$webDirectory/comics/$psComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/ps2comic/$psComicName/" "$webDirectory/comics/$psComicName/sources.cfg"
+
 					mkdir -p "${generatedDirectory}/comics/ps2comic/$psComicName/"
 					# extract the .ps file to the download directory
 					INFO "Found ps '$psComicName', converting to comic book..."
@@ -268,6 +276,11 @@ function update(){
 				markdownComicName=$(popPath "$markdownFilePath" | sed "s/.md//g")
 				# only extract the cbz once
 				if ! test -d "${generatedDirectory}/comics/markdown2comic/$markdownComicName/$markdownComicName.pdf";then
+
+					createDir "$webDirectory/comics/$markdownComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/markdown2comic/$markdownComicName/" "$webDirectory/comics/$markdownComicName/sources.cfg"
+
 					addToLog "UPDATE" "Generating Comic" "Converting markdown documents to PDF format from '$markdownComicName'"
 					mkdir -p "${generatedDirectory}/comics/markdown2comic/$markdownComicName/"
 					# extract the cbz file to the download directory
@@ -303,6 +316,9 @@ function update(){
 				htmlComicName=$(popPath "$htmlFilePath" | sed "s/.html//g")
 				# only extract the cbz once
 				if ! test -f "${generatedDirectory}/comics/html2comic/$htmlComicName/$htmlComicName.pdf";then
+					createDir "$webDirectory/comics/$htmlComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/html2comic/$htmlComicName/" "$webDirectory/comics/$htmlComicName/sources.cfg"
 					addToLog "UPDATE" "Generating Comic" "Converting HTML documents to PDF format from '$htmlComicName'"
 					mkdir -p "${generatedDirectory}/comics/html2comic/$htmlComicName/"
 					# extract the cbz file to the download directory
@@ -328,6 +344,10 @@ function update(){
 					mobiComicName=$(popPath "$mobiFilePath" | sed "s/.mobi//g")
 					# only extract the cbz once
 					if ! test -f "${generatedDirectory}/comics/mobi2comic/$mobiComicName.epub";then
+						createDir "$webDirectory/comics/$mobiComicName/"
+						# add the source path information to the comic web path
+						addSourcePath "${generatedDirectory}/comics/mobi2comic/$mobiComicName/" "$webDirectory/comics/$mobiComicName/sources.cfg"
+
 						createDir "${generatedDirectory}/comics/mobi2comic/"
 						addToLog "UPDATE" "Generating Comic" "Converting MOBI documents to epub format from '$mobiComicName'"
 						mkdir -p "${generatedDirectory}/comics/mobi2comic/"
@@ -354,9 +374,13 @@ function update(){
 				epubComicName=$(popPath "$epubFilePath" | sed "s/.epub//g")
 				# only extract the cbz once
 				if ! test -f "${generatedDirectory}/comics/epub2comic/$epubComicName.pdf";then
+					createDir "$webDirectory/comics/$epubComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/epub2comic/$epubComicName/" "$webDirectory/comics/$epubComicName/sources.cfg"
 					createDir "${generatedDirectory}/comics/epub2comic/"
 					addToLog "UPDATE" "Generating Comic" "Converting EPUB documents to PDF format from '$epubComicName'"
-					mkdir -p "${generatedDirectory}/comics/epub2comic/"
+
+					createDir "${generatedDirectory}/comics/epub2comic/"
 					# extract the cbz file to the download directory
 					INFO "Found epub '$epubComicName', converting to comic book..."
 					# convert epub files into pdf files to be converted below
@@ -381,6 +405,9 @@ function update(){
 				pdfComicName=$(popPath "$pdfFilePath" | sed "s/.pdf//g")
 				# only extract the pdf once
 				if ! test -d "${generatedDirectory}/comics/pdf2comic/$pdfComicName/";then
+					createDir "$webDirectory/comics/$pdfComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/pdf2comic/$pdfComicName/" "$webDirectory/comics/$pdfComicName/sources.cfg"
 					createDir "${generatedDirectory}/comics/pdf2comic/$pdfComicName/"
 					# extract the pdf file to the download directory
 					ALERT "Found pdf '$pdfComicName', converting to comic book..."
@@ -412,6 +439,9 @@ function update(){
 				cbzComicName=$(popPath "$cbzFilePath" | sed "s/.cbz//g")
 				# only extract the cbz once
 				if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+					createDir "$webDirectory/comics/$cbzComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/cbz2comic/$cbzComicName/" "$webDirectory/comics/$cbzComicName/sources.cfg"
 					addToLog "UPDATE" "Extracting Comic" "Converting CBZ file to image directory from '$cbzComicName'"
 					createDir "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
 					# extract the cbz file to the download directory
@@ -433,6 +463,10 @@ function update(){
 				cbzComicName=$(popPath "$cbzFilePath" | sed "s/.zip//g")
 				# only extract the cbz once
 				if ! test -d "${generatedDirectory}/comics/cbz2comic/$cbzComicName/";then
+					createDir "$webDirectory/comics/$cbzComicName/"
+					# add the source path information to the comic web path
+					addSourcePath "${generatedDirectory}/comics/cbz2comic/$cbzComicName/" "$webDirectory/comics/$cbzComicName/sources.cfg"
+
 					addToLog "UPDATE" "Extracting Comic" "Converting ZIP file to image directory from '$cbzComicName'"
 					mkdir -p "${generatedDirectory}/comics/cbz2comic/$cbzComicName/"
 					# extract the zip file to the download directory
