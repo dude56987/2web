@@ -119,7 +119,38 @@
 	?>
 	</style>
 	<script src='/2webLib.js'></script>
-		<script>
+</head>
+<?PHP
+	# send the loading bar code while the page loads the rest of the content
+	flush();
+	ob_flush();
+	if(! is_readable($page.".jpg")){
+		# if the media file is not readable load the blocked permission error
+		echo "<body class='comicPageBody' id='body'>\n";
+		# the screen overlay object for tinting the screen
+		echo "<span class='screenOverlay'></span>";
+		#
+		echo "<div id='comicFullscreenCheck' class=''>";
+		echo "	<p>Permissions to access this page has been disabled by the server administrator.</p>";
+		echo "	<div class='listCard'>";
+		echo "		<a class='button' href='index.php'>Close Comic</a>";
+		echo "	</div>";
+		echo "	<div class='listCard'>";
+		echo "		<a class='button' target='$lastPageTarget' href='$lastPage'>Last Page</a>";
+		echo "		<a class='button' target='$nextPageTarget' href='$nextPage'>Next Page</a>";
+		echo "	</div>";
+		echo "</div>";
+		echo "</body>";
+		echo "</html>";
+		exit();
+	}
+	echo "<body id='body' class='comicPageBody'>\n";
+	# load the pulse as soon as possible in the page
+	echo "<div class='globalPulse'><div class='pulseBar'></div></div>"."\n";
+?>
+	<script>
+		// show the spinner during loading
+		showSpinner();
 		// build the javascript zoom box that is activated when the picture is left clicked
 		function zoomInBox(idTag, zoom) {
 			var img;
@@ -280,31 +311,8 @@
 		}
 		//setupKeys();
 	</script>
-</head>
 <?PHP
-	# send the loading bar code while the page loads the rest of the content
-	flush();
-	ob_flush();
-	if(! is_readable($page.".jpg")){
-		# if the media file is not readable load the blocked permission error
-		echo "<body class='comicPageBody' id='body' onload=''>\n";
-		# the screen overlay object for tinting the screen
-		echo "<span class='screenOverlay'></span>";
-		#
-		echo "<div id='comicFullscreenCheck' class=''>";
-		echo "	<p>Permissions to access this page has been disabled by the server administrator.</p>";
-		echo "	<div class='listCard'>";
-		echo "		<a class='button' href='index.php'>Close Comic</a>";
-		echo "	</div>";
-		echo "	<div class='listCard'>";
-		echo "		<a class='button' target='$lastPageTarget' href='$lastPage'>Last Page</a>";
-		echo "		<a class='button' target='$nextPageTarget' href='$nextPage'>Next Page</a>";
-		echo "	</div>";
-		echo "</div>";
-		echo "</body>";
-		echo "</html>";
-		exit();
-	}
+	# get the mime type of the image
 	if(mime_content_type($page.".jpg") == "image/jpeg"){
 		$imageSizeData=getimagesize($page.".jpg");
 		$videoFile=false;
@@ -338,8 +346,26 @@
 		$comicPaneType="comicPane";
 		$comicThumbType="comicThumbPane";
 	}
-
-	echo "<body id='body' class='comicPageBody' onload=''>\n";
+	if ($isAuto){
+		$redirectTime=30;
+		# progress bar for auto play
+		echo "	<div id='progressDataBox' class='progressBar'>"."\n";
+		echo "		<div id='progressData' class='progressBarBar'>"."\n";
+		echo "		</div>"."\n";
+		echo "	</div>"."\n";
+		echo "	<script>"."\n";
+		echo "		var sleepCounter=0;"."\n";
+		echo "		setInterval(function() {"."\n";
+		echo "			sleepCounter+=(100/($redirectTime*30));"."\n";
+		#echo "			window.progressData.innerHTML=Math.floor(sleepCounter)+'%';"."\n";
+		echo "			if(sleepCounter > 100){"."\n";
+		echo "				sleepCounter = 100;"."\n";
+		#echo "				delayedRedirect(0,'$nextPageTarget')"."\n";
+		echo "			};"."\n";
+		echo "			window.progressData.style.width=sleepCounter+'%';"."\n";
+		echo "		},33);"."\n";
+		echo "	</script>"."\n";
+	}
 	# the screen overlay object for tinting the screen
 	echo "<span class='screenOverlay'></span>";
 	if($videoFile){
@@ -527,7 +553,7 @@
 		}else{
 			$playOptions="?auto";
 		}
-		delayedRedirect(($nextPage.$playOptions),30,$nextPageTarget);
+		delayedRedirect(($nextPage.$playOptions),$redirectTime,$nextPageTarget);
 	}
 	if ($isAuto){
 		echo "<script>";
@@ -540,14 +566,6 @@
 		echo "</script>";
 	}
 	?>
-	<style>
-		.globalPulse{
-			visibility: hidden;
-		}
-		.globalSpinner{
-			visibility: hidden;
-		}
-	</style>
 	<script>
 		addEventListener("pageshow", (event) => {
 			hideSpinner();
@@ -575,11 +593,35 @@
 		// add event for mouse move or screen touch
 		window.addEventListener("mousemove", showControls);
 		window.addEventListener("touchstart", showControls);
-		// hide the cursor after page load
-		window.body.onload = function(){
-			setupKeys();
-			showControls();
-		}
+		//
+		var almostLoadedCheckLoop = setInterval(function() {
+			// run after the page has completely finished loading images
+			if(document.readyState == "interactive" || document.readyState == "complete"){
+				setupKeys();
+				clearInterval(almostLoadedCheckLoop);
+			}
+		},500);
+		// After the page is fully loaded including images
+		var loadCheckLoop = setInterval(function() {
+			console.log("readyState = ",document.readyState);
+			// run after the page has completely finished loading images
+			if(document.readyState == "complete"){
+				console.log("Page is fully loaded");
+				showControls();
+				hideSpinner();
+				// stop the load check loop
+				clearInterval(loadCheckLoop);
+			}
+		},500);
+		//});
 	</script>
+	<style>
+		.globalPulse{
+			visibility: hidden;
+		}
+		.globalSpinner{
+			visibility: hidden;
+		}
+	</style>
 </body>
 </html>
