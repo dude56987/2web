@@ -66,11 +66,13 @@
 # add header
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 ?>
+<a id='comicScrollPauseButton' class='comicScrollPauseButton button' onclick='ToggleAutoscroll();'>⏯️</a>
 <?PHP
 	# draw header
 	echo "<div id='comicScrollReader'>\n";
 	echo "<div id='readerTitle' class='titleCard'>\n";
 	echo "<h1>$comic</h1>\n";
+
 
 	#echo "comic='$comic'<br>\n";
 	#echo "comicPath='".$_SERVER['DOCUMENT_ROOT']."/comics/".$comic."/'<br>\n";
@@ -120,6 +122,12 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 	echo "<a class='button' onclick='toggleFullscreen(\"comicScrollReader\",true);'>⛶ Toggle Fullscreen</a>\n";
 
+	echo "<a class='button' onclick='autoScrollComic(3);notify(\"⏬\");'>⏬ Default Auto Scroll</a>\n";
+	echo "<a class='button' onclick='autoScrollComic(2);notify(\"🔽\");'>🔽Slow Auto Scroll</a>\n";
+	echo "<a class='button' onclick='autoScrollComic(1);notify(\"🐢\");'>🐢Slower Auto Scroll</a>\n";
+	#
+	echo "<a class='button' onclick='toggleLightSwitch();notify(\"🌕/☀️\");'>🌕/☀️ LightSwitch</a>\n";
+
 	echo "</div>";
 	echo "<div>";
 	drawStat("Total Pages",$totalPages);
@@ -141,7 +149,7 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	}
 
 	echo "</div>\n";
-	echo "<div class='settingListCard'>";
+	echo "<div id='bookPages' class='settingListCard'>";
 	$tempPageNumber=0;
 
 	if (array_key_exists("chapter",$_GET)){
@@ -207,6 +215,103 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 		🔚
 	</div>
 </div>
+<script>
+	// locks to prevent autoscroll
+	var autoScroll=false;
+	var cursorHidden=false;
+	function ToggleAutoscroll(){
+		notify("⏯️");
+		// update the scroll position when play or pause is pressed
+		scrollPosition=window.scrollY;
+		// flip that bit back and forth
+		if(autoScroll==false){
+			autoScroll=true;
+			window.topButton.style.display='none';
+		}else{
+			autoScroll=false;
+			window.topButton.style.display='block';
+		}
+		return true;
+	}
+	var globalLight=false;
+	function toggleLightSwitch(){
+		// invert the color of the pages
+
+		// search though the document for elements with listCard class
+		var elements;
+		var newFilter;
+		// flip the light back and forth
+		if(globalLight){
+			newFilter="";
+			globalLight=false;
+		}else{
+			newFilter="invert(1)";
+			globalLight=true;
+		}
+		//
+		elements = document.getElementsByClassName("comicScrollViewImgReal");
+		for (var element of elements){
+			element.style.filter=newFilter;
+		}
+		//
+		elements = document.getElementsByClassName("comicScrollViewImg");
+		for (var element of elements){
+			element.style.filter=newFilter;
+		}
+		//
+		return true;
+	}
+	//
+	var scrollPosition = 0;
+	//  - scroll the page down when the user is not moving the mouse or touching the screen
+	//  after a delay of 2 seconds
+	function showControls(){
+		// enable the cursor
+		document.body.style.cursor="default";
+		window.clearTimeout(controlHideTimeout);
+		console.log("Mouse moved Unhide the mouse/controls");
+		cursorHidden=false;
+		// hide the cursor and video controls after 2 seconds of inactivity
+		controlHideTimeout = setTimeout(() =>{
+			console.log("Hide the mouse/controls when inactive");
+			cursorHidden=true;
+			// hide the cursor
+			document.body.style.cursor="none";
+		}, 2000);
+	};
+	function autoScrollComic(scrollSpeed=3){
+		window.comicScrollPauseButton.style.display="block";
+		// set scroll to true
+		autoScroll=true;
+		// hide the back to top button
+		window.topButton.style.display='none';
+		//cursorHidden=true;
+		setInterval(function() {
+			if (autoScroll){
+		//		if (cursorHidden){
+					// scroll to the position on the page
+					scroll(0,scrollPosition);
+					scrollPosition+=scrollSpeed;
+					if (scrollPosition > document.body.scrollHeight){
+						scrollPosition=0;
+						delayedRefresh(5);
+					}
+		//		}else{
+		//			console.log("Cursor is NOT Hidden");
+				}
+		//	}else{
+		//		console.log("Auto Scroll Disabled");
+		//	}
+		},33);
+	}
+	// add event for mouse move or screen touch
+	window.addEventListener("mousemove", showControls);
+	window.addEventListener("touchstart", showControls);
+	// hide the cursor after page load
+	document.body.onload = function(){
+		showControls();
+	}
+</script>
 <?php
 	// add random comics above the footer
 	drawPosterWidget("comics", True);
