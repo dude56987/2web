@@ -100,6 +100,19 @@
 			}
 			?>
 		</div>
+		<noscript>
+			<div class='errorBanner'>
+				<hr>
+				Fullscreen Requires Javascript to be enabled.
+				<hr>
+				Press the Disable button to go back.
+				<hr>
+				If you do not want to enable javascript you can use your browsers fullscreen function.
+				<hr>
+				On desktop computers the hotkey is usually the <a class='button noclick'>F11</a> key on the keyboard.
+				<hr>
+			</div>
+		</noscript>
 	</div>
 	<?PHP
 	# check for ?page=
