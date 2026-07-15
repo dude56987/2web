@@ -26,6 +26,6 @@ include("/usr/share/2web/effects/particleBase.php");
 </style>
 <script>
 for(var index=0;index<Math.floor(window.innerHeight/32);index++){
-	new floatingParticle(userChosenParticles=Array("🛸"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=1,maxSize=6,minSize=1,spinSpeed="sway",fluxColor=true);
+	new floatingParticle(userChosenParticles=Array("🛸"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=1,maxSize=6,minSize=1,spinSpeed="sway",fluxColor=false);
 }
 </script>

@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web alien effect
+# 2web gears effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,13 +19,12 @@
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
 ?>
-<style>
-	.particle{
-		text-shadow: green 0 0.5rem 1rem,green 0 1rem 2rem,green 0 2rem 4rem;
-	}
-</style>
 <script>
-for(var index=0;index<Math.floor(window.innerHeight/32);index++){
-	new floatingParticle(userChosenParticles=Array("🛸"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=1,maxSize=6,minSize=1,spinSpeed="sway",fluxColor=true);
+// setup the particles, duplicates increase the probablity of particle being used
+//var particleValues = Array("⛭");
+var particleValues = Array("🛸");
+// create the default amount of particles
+for(var index=0;index<Math.floor(window.innerWidth/64);index++){
+	new lightParticle(userChosenParticles=particleValues,userChosenColors=Array("var(--solidBackground)"),maxSpeed=10,minSpeed=2,maxSize=200,minSize=1,spinSpeed="slow",colorFlux=true,flipParticle=false,lockDirection=false);
 }
 </script>
