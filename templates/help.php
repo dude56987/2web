@@ -1,3 +1,8 @@
+<?php
+	ini_set('display_errors', 1);
+	include("/usr/share/2web/2webLib.php");
+	requireGroup("help");
+?>
 <!--
 ########################################################################
 # 2web public help document
@@ -27,14 +32,7 @@
 </head>
 <body>
 <?PHP
-include("header.php");
-include("/usr/share/2web/2webLib.php");
-?>
-<!--
-<div class='titleCard linkInfo'>
-<h1>Help</h1>
--->
-<?PHP
+include("/usr/share/2web/templates/header.php");
 ################################################################################
 # 2web dynamic help document
 ################################################################################
@@ -187,6 +185,7 @@ foreach($helpFiles as $helpFile){
 }
 echo "<div class='titleCard'>\n";
 echo "	<h1>Help Index</h1>\n";
+
 #echo "	<ul>\n";
 # draw the index before the data
 echo $helpIndex;
@@ -241,7 +240,7 @@ foreach($helpFiles as $helpFile){
 		}
 	}
 }
-include("footer.php")
+include("/usr/share/2web/templates/footer.php")
 ?>
 </body>
 </html>

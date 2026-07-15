@@ -3,6 +3,7 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 # this is part of the default group
 requireGroup("2web");
+requireGroup("playlists");
 # check for group permissions in filter type
 if (array_key_exists("filter",$_GET)){
 	$filterType=$_GET['filter'];

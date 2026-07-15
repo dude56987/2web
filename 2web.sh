@@ -962,6 +962,10 @@ function update2web(){
 
 	# enable the resolver group to control access
 	createDir "/etc/2web/groups/resolver/"
+	# create the playlist group
+	createDir "/etc/2web/groups/playlists/"
+	# create the help docs group
+	createDir "/etc/2web/groups/help/"
 
 	# install the php streaming script
 	#ln -s "/usr/share/2web/stream.php" "$webDirectory/stream.php"

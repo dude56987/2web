@@ -3,6 +3,7 @@ ini_set('display_errors', 1);
 include("/usr/share/2web/2webLib.php");
 # this is part of the default group
 requireGroup("2web");
+requireGroup("playlists");
 # get the group type
 if (array_key_exists("group",$_GET)){
 	$groupType=$_GET['group'];
