@@ -624,7 +624,7 @@ ol li{
   position: fixed; /* Fixed/sticky position */
   bottom: 0px; /* Place the button at the bottom of the page */
   right: 0px; /* Place the button 30px from the right */
-  z-index: 99; /* Make sure it does not overlap */
+  z-index: 101; /* Make sure it does not overlap */
 	padding: 0px;
 	width: 2rem;
 }
@@ -770,7 +770,7 @@ ol li{
 	padding: 0px;
 	cursor: pointer;
 	position: relative;
-	z-index: 2;
+	z-index: 100;
 	margin-bottom: 0.3rem;
 }
 .menuButtonBox:hover{
@@ -900,10 +900,14 @@ ol li{
 	text-align: left;
 	line-height: 0rem;
 	position: relative;
-	z-index: 2;
+	z-index: 100;
 }
 /* Media check for touchscreens */
 @media (pointer: coarse){
+	/* Hide objects only for desktops on touchscreens */
+	.desktopOnly{
+		display: none !important;
+	}
 	/* show sup content on touchscreens */
 	sup{
 		display: inline-block;
@@ -914,7 +918,14 @@ ol li{
 	}
 }
 @media (hover: hover) and (pointer: fine){
+	/* Hide objects only for touchscreens on desktops */
+	.touchOnly{
+		display: none !important;
+	}
 	@media only screen and (max-width: 800px), (orientation: portrait){
+		#progressDataBox{
+			width: 100dvw !important;
+		}
 		.loadVideoButton{
 			width: 100dvw !important;
 			margin: 0px;
@@ -1132,7 +1143,7 @@ ol{
 		margin-left: auto;
 		margin-right: auto;
 	}
-	.nfoMediaPlayer, video, audio{
+	.nfoMediaPlayer{
 		background-size: 100% 100%;
 		margin: 0px !important;
 		width: 100% !important;
@@ -1211,7 +1222,7 @@ ol{
 		*/
 	}
 }
-.nfoMediaPlayer, video, audio{
+.nfoMediaPlayer{
 	background-size: 100% 100%;
 	margin: 15px;
 	/*
@@ -1248,12 +1259,36 @@ ol{
 }
 .videoPosterContainer{
 	background: black;
-	width: 800px;
+	max-width: 100%;
 	margin: auto;
 }
 .videoPoster{
-	height: 30rem;
 	max-width: 100%;
+}
+.failedVideoPoster{
+	display: block;
+	/*
+	width: 40dvw;
+	min-width: 800px;
+	*/
+	min-height: 25rem;
+	margin-left:auto;
+	margin-right:auto;
+	/*
+	height: 20dvh;
+	*/
+	text-align: center;
+	vertical-align: middle;
+	font-size: 25rem;
+	text-shadow: 0px 0px 1rem var(--highlightText);
+	color: var(--glassBackground);
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+	text-decoration: none;
+	-webkit-text-stroke: 0.1rem var(--borderColor);
+	line-height: 25rem;
+	user-select: none;
 }
 .videoPlayerControls{
 	font-size: 100% !important;
@@ -1271,9 +1306,6 @@ ol{
 	vertical-align: top;
 }
 */
-#video{
-	min-height: 20rem;
-}
 #videoPlayerContainer{
 	background: var(--glassBackground);
 	box-shadow: 0px 0px 1rem var(--shadowColor);
@@ -1745,6 +1777,11 @@ a.inputCard h3{
 	border-style: inset !important;
 	*/
 	border-bottom: none;
+}
+.onlyScript{
+	/* Functions as opposite of noscript tag noscript */
+	display: none;
+	transition: display 2s ease-in-out;
 }
 .comicPageButton{
 	width: 20%;
@@ -2262,21 +2299,24 @@ table{
 }
 #notification{
 	background-color: var(--glassBackground);
-	color: var(--textColor);
-	position: fixed;
 	opacity: 0.9 !important;
-	z-index: 1;
+	z-index: 151;
+	position: fixed;
 	height: 100dvh;
 	width: 100dvw;
-	font-size: 20dvh;
-	transition: opacity 0.5s ease-in-out;
 	line-height: 100dvh;
+	font-size: 20dvh;
 	top: 0px;
 	left: 0px;
+	transition: opacity 0.5s ease-in-out;
 	cursor: progress;
 }
 #notificationText{
-	background: var(--staticBackground) !important;
+	color: var(--solidBackground);
+	font-family: font2webGlyph;
+	font-variant-emoji: text !important;
+	text-shadow: 0px 0px 0.2rem var(--borderColor), 0px 0px 0.2rem var(--borderColor), 0px 0px 0.2rem var(--borderColor), 0px 0px 0.2rem var(--borderColor), 0px 0px 0.2rem var(--borderColor), 0px 0px 0.2rem  var(--borderColor) !important;
+	user-select: none;
 }
 #notificationText img{
 	position: fixed;
@@ -3308,6 +3348,112 @@ input{
 textarea{
 	font-size: 1.5rem;
 	width: 100%;
+}
+input[type=range]{
+	-webkit-appearance: none;
+	background: var(--solidBackground);
+}
+input[type=range]::-webkit-slider-thumb{
+	-webkit-appearance: none;
+	apearance: none;
+	width: 1rem;
+	height: 1rem;
+	background: var(--textColor);
+	cursor: pointer;
+}
+.widthSpacer{
+	width: 100%;
+}
+#volumeSlider{
+	width: 20dvw;
+	height: 1.0rem;
+	border: 0.2rem solid var(--borderColor);
+}
+#volumeSlider::-moz-range-thumb{
+	width: 0.5rem;
+	height: 1.0rem;
+}
+#volumeSlider::-webkit-slider-thumb{
+	width: 0.5rem;
+	height: 1.0rem;
+}
+.positionSliderContainer{
+	width: 100%;
+}
+#positionSlider{
+	width: 99%;
+	height: 1.2rem;
+	border: 0.2rem solid var(--borderColor);
+}
+#positionSlider::-webkit-slider-thumb{
+	width: 0.5rem;
+	height: 1.2rem;
+}
+#positionSlider::-moz-range-thumb{
+	width: 0.5rem;
+	height: 1.2rem;
+}
+#videoTotalTime{
+	width: 8rem;
+	font-size: 1rem;
+}
+#videoCurrentTime{
+	width: 8rem;
+	font-size: 1rem;
+}
+#playerControlsContainer:hover{
+	opacity: 1;
+}
+#videoContainer{
+	background: black;
+	min-height: 20rem;
+	box-shadow: 0px 0px 1.5rem var(--borderColor);
+	height: 400px;
+	width: 800px;
+	margin: auto;
+	position: relative;
+	/* */
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+#videoContainer > #video{
+	background-size: 100% 100%;
+	background: black;
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+#videoContainer > #video{
+	width: 100%;
+	height: 100%;
+}
+#playerControlsContainer{
+	background: var(--glassBackground);
+	color: var(--textColor);
+	/* */
+	position: absolute;
+	bottom: 0px;
+	display: block;
+	transition: opacity 1s;
+	margin: auto;
+	opacity: 0;
+}
+#playerControls{
+	background: var(--glassBackground);
+	color: var(--textColor);
+	margin: 0px;
+	border: solid 0.2rem var(--borderColor) !important;
+}
+#playPauseButton{
+	font-family: font2webGlyph !important;
+	font-variant-emoji: text !important;
+}
+input[type=range]::-moz-range-thumb{
+	width: 1rem;
+	height: 1rem;
+	background: var(--textColor);
+	cursor: pointer;
 }
 input[type=text]{
 	background: var(--solidBackground);

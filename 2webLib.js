@@ -179,10 +179,20 @@ function playPause(videoId="video"){
 	if(video !== null){
 		if(video.paused){
 			console.log("Playing the video.");
+			videoNotify("▶️");
+			showControls();
 			video.play();
+			if(window.playPauseButton){
+				window.playPauseButton.innerHTML=("⏸️");
+			}
 		}else{
 			console.log("Pausing the video.");
+			videoNotify("⏸️");
+			showControls();
 			video.pause();
+			if(window.playPauseButton){
+				window.playPauseButton.innerHTML="▶️";
+			}
 		}
 	}
 	return false;
@@ -208,6 +218,11 @@ function seekForward(seekTime=5){
 		// dont let volume go beyond the duration
 		element.currentTime = element.duration;
 	}
+	if(window.positionSlider && window.video){
+		window.positionSlider.value=window.video.currentTime;
+	}
+	showControls();
+	videoNotify("⏩"+timeToClock(element.currentTime));
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,76 +236,272 @@ function seekBackward(seekTime=5){
 		// dont let the seek go below 0
 		element.currentTime = 0;
 	}
+	if(window.positionSlider && window.video){
+		window.positionSlider.value=window.video.currentTime;
+	}
+	showControls();
+	videoNotify("⏪"+timeToClock(element.currentTime));
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function volumeUp(){
-	var tempVolume = document.getElementById("video").volume;
-	if ( (tempVolume + 0.05) > 1 ){
-		// dont let volume go below zero
-		tempVolume = 1;
-		document.getElementById("video").volume = 1;
-	} else {
-		document.getElementById("video").volume += 0.10;
+	// unmute video when volume is changed
+	if(window.video){
+		window.video.muted=false;
 	}
-	tempVolume = Math.floor(tempVolume * 100);
+	var tempVolume;
+	var volumeString;
+	tempVolume = Math.floor(window.video.volume * 100);
 	if (tempVolume < 10){
-		var volumeString = "&nbsp;&nbsp;"+String(tempVolume);
+		volumeString = "00"+String(tempVolume);
 	}else if (tempVolume < 100){
-		var volumeString = "&nbsp;"+String(tempVolume);
+		volumeString = "0"+String(tempVolume);
 	} else {
-		var volumeString = String(tempVolume);
+		volumeString = String(tempVolume);
 	}
+	if(window.video.volume < 1){
+		window.video.volume += 0.01;
+	}
+	if(window.video.volume > 0.99){
+		window.video.volume = 1.0;
+	}
+
+	if(window.volumeSlider){
+		window.volumeSlider.value = window.video.volume;
+	}
+	if(window.volumeIcon){
+		window.volumeIcon.innerHTML= getVolumeIcon();
+	}
+	showControls();
+	//notify("Vol ++<br>%"+volumeString);
+	videoNotify(getVolumeIcon()+"%"+volumeString);
 	//document.getElementById("currentVolume").innerHTML=volumeString;
 	return volumeString;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function volumeDown(){
-	var tempVolume = document.getElementById("video").volume;
-	// when volume is low slow down volume jumps
-	if ( (tempVolume) <= 0.20 ){
-		if ( (tempVolume) <= 0.10 ){
-			document.getElementById("video").volume -= 0.001;
-		} else {
-			document.getElementById("video").volume -= 0.01;
-		}
-	} else {
-		document.getElementById("video").volume -= 0.10;
+	// unmute video when volume is changed
+	if(window.video){
+		window.video.muted=false;
 	}
-	tempVolume = Math.floor(tempVolume * 100);
+	var tempVolume;
+	var volumeString;
+	// lower volume by 1 %
+	tempVolume = Math.floor(window.video.volume * 100);
 	if (tempVolume < 10){
-		var volumeString = "&nbsp;&nbsp;"+String(tempVolume);
+		volumeString = "00"+String(tempVolume);
 	}else if (tempVolume < 100){
-		var volumeString = "&nbsp;"+String(tempVolume);
+		volumeString = "0"+String(tempVolume);
 	} else {
-		var volumeString = String(tempVolume);
+		volumeString = String(tempVolume);
 	}
 	if ( (tempVolume ) < 0 ){
 		// dont let volume go below zero
 		tempVolume = 0;
-		document.getElementById("video").volume = 0;
 	}
+	if(window.video.volume > 0){
+		window.video.volume -= 0.01;
+	}
+	if(window.video.volume < 0.01){
+		window.video.volume = 0;
+	}
+	//
+	if(window.volumeSlider){
+		window.volumeSlider.value = window.video.volume;
+	}
+	if(window.volumeIcon){
+		window.volumeIcon.innerHTML= getVolumeIcon();
+	}
+	showControls();
+	//
+	videoNotify(getVolumeIcon()+"%"+volumeString);
 	return volumeString;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function muteUnMute(){
-	var video = document.getElementById("video");
-	var muteButton = document.getElementById("muteButton");
-	var unMuteButton = document.getElementById("unMuteButton");
-	if(video.muted){
-		video.muted = false;
-		if(muteButton){
-			muteButton.style.display = 'inline-block';
-			unMuteButton.style.display = 'none';
+function getVolumeIcon(){
+	//
+	if(window.video.muted){
+		return '🔇';
+	}else if(window.video.volume >= 0.9){
+		return '📢';
+	}else if(window.video.volume <= 0.0){
+		return '🔇';
+	}else if(window.video.volume < 0.3){
+		return '🔈';
+	}else if(window.video.volume < 0.6){
+		return '🔉';
+	}else{
+		return '🔊';
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+function toggleMute(){
+	if(window.video.muted){
+		window.video.muted = false;
+		if(window.muteButton){
+			window.muteButton.innerHTML="📢";
 		}
 	}else{
-		video.muted = true;
-		if(muteButton){
-			muteButton.style.display = 'none';
-			unMuteButton.style.display = 'inline-block';
+		window.video.muted = true;
+		if(window.muteButton){
+			window.muteButton.innerHTML="🔇";
 		}
 	}
+	if(window.volumeIcon){
+		window.volumeIcon.innerHTML= getVolumeIcon();
+	}
 	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function timeToHuman(timestamp=0){
+	// Take a duration in seconds and print that in a human readable way.
+	//
+	// This converts a duration in seconds into a human readable format.
+	//
+	// EX) 1 Hour 2 Minutes 4 Seconds
+	// EX) 2 Minutes 4 Seconds
+	// EX) 4 years 2 days 10 hours 2 Minutes 4 Seconds
+
+	// verify this is a timestamp
+	//if(Number.isInteger(timestamp)){
+	//	// return empty
+	//	return "<span title='Unknown Timestamp'>∅</span>";
+	//}
+
+	// check for decimals in the input
+	timestamp=Math.floor(timestamp);
+
+	var yearInSeconds=(((60 * 60) * 24) * 365);
+	var dayInSeconds=((60 * 60) * 24);
+	var hourInSeconds=(60 * 60);
+	var minuteInSeconds=(60);
+
+	var yearsPassed=0;
+	var daysPassed=0;
+	var hoursPassed=0;
+	var minutesPassed=0;
+
+	var outputTime="";
+
+	if (timestamp > yearInSeconds ){
+		yearsPassed=Math.floor( timestamp / yearInSeconds );
+		timestamp -= yearsPassed * yearInSeconds;
+		if (yearsPassed == 1){
+			outputTime += yearsPassed+" year ";
+		}else if (yearsPassed > 1){
+			outputTime += yearsPassed+" years ";
+		}
+	}
+
+	if (timestamp > dayInSeconds ){
+		daysPassed=Math.floor( timestamp / dayInSeconds );
+		timestamp -= daysPassed * dayInSeconds;
+		if (daysPassed == 1){
+			outputTime += daysPassed+" day ";
+		}else if (daysPassed > 1){
+			outputTime += daysPassed+" days ";
+		}
+		if (yearsPassed > 0){
+			return outputTime;
+		}
+	}
+
+	if (timestamp > hourInSeconds ){
+		hoursPassed=Math.floor( timestamp / hourInSeconds );
+		timestamp -= hoursPassed * hourInSeconds;
+		if (hoursPassed == 1){
+			outputTime += hoursPassed+"hour ";
+		}else if (hoursPassed > 1){
+			outputTime += hoursPassed+" hours ";
+		}
+		if (daysPassed > 0){
+			return outputTime;
+		}
+	}
+
+	if (timestamp > minuteInSeconds ){
+		minutesPassed=Math.floor( timestamp / minuteInSeconds );
+		timestamp -= minutesPassed * minuteInSeconds;
+		if (minutesPassed == 1){
+			outputTime += minutesPassed+" minute ";
+		}else if (minutesPassed > 1){
+			outputTime += minutesPassed+" minutes ";
+		}
+		if (hoursPassed > 0){
+			return outputTime;
+		}
+	}
+	// write out the remaining seconds
+	if (timestamp == 1){
+		outputTime += timestamp+" second ";
+	}else{
+		outputTime += timestamp+" seconds ";
+	}
+	return outputTime;
+}
+////////////////////////////////////////////////////////////////////////////////
+function timeToClock(timestamp=0){
+	// Take a duration in seconds and print that in a human readable way.
+	//
+	// This converts a duration in seconds into a human readable format.
+	//
+	// EX) 1 Hour 2 Minutes 4 Seconds
+	// EX) 2 Minutes 4 Seconds
+	// EX) 4 years 2 days 10 hours 2 Minutes 4 Seconds
+
+	// check for decimals in the input
+	timestamp=Math.floor(timestamp);
+
+	var hourInSeconds=(60 * 60);
+	var minuteInSeconds=(60);
+
+	var hoursPassed=0;
+	var minutesPassed=0;
+
+	var outputTime="";
+	// get the hours
+	if (timestamp > hourInSeconds ){
+		hoursPassed=Math.floor( timestamp / hourInSeconds );
+		timestamp -= hoursPassed * hourInSeconds;
+		if (hoursPassed > 0){
+			if (hoursPassed < 10){
+				outputTime += "0"+hoursPassed+":";
+			}else{
+				outputTime += hoursPassed+":";
+			}
+		}else{
+			outputTime += "00:";
+		}
+	}else{
+		outputTime += "00:";
+	}
+	// get the minutes
+	if (timestamp > minuteInSeconds ){
+		minutesPassed=Math.floor( timestamp / minuteInSeconds );
+		timestamp -= minutesPassed * minuteInSeconds;
+		if (minutesPassed > 0){
+			if (minutesPassed < 10){
+				outputTime += "0"+minutesPassed+":";
+			}else{
+				outputTime += minutesPassed+":";
+			}
+		}else{
+			outputTime += "00:";
+		}
+	}else{
+		outputTime += "00:";
+	}
+	// write out the remaining seconds
+	if (timestamp > 0){
+		if (timestamp < 10){
+			outputTime += "0"+timestamp;
+		}else{
+			outputTime += timestamp;
+		}
+	}else{
+		outputTime += "00";
+	}
+	return outputTime;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function showControls(){
@@ -531,11 +742,11 @@ function hideId(idToHide="notification"){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function videoNotify(message="!"){
-	notify(message,500,"notificationText","notification","video");
+function videoNotify(message="!",displayTime=500){
+	notify(message,displayTime,"notificationText","notification","videoContainer","toggleFullscreen('videoContainer')");
 }
 ////////////////////////////////////////////////////////////////////////////////
-function notify(message="!",displayTime=400,textClass="notificationText",notificationId="notification",addToId=""){
+function notify(message="!",displayTime=400,textClass="notificationText",notificationId="notification",addToId="",onclickAction=""){
 	console.log("notify="+message);
 	// if a notification is being displayed, remove it
 	if(document.getElementById("notification") != null){
@@ -549,7 +760,10 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 		notifyObj.setAttribute("id", "notification");
 		notifyObj.setAttribute("class", notificationId);
 		// hide the notification on click
-		notifyObj.setAttribute("onClick", "hideId('notificationId')");
+		if (onclickAction == ""){
+			onclickAction="hideId('notification')";
+		}
+		notifyObj.setAttribute("onClick", onclickAction);
 		notifyTextObj.setAttribute("id", "notificationText");
 		notifyTextObj.setAttribute("class", textClass);
 		// set the message and css
@@ -558,10 +772,10 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 		// add the text inside the notification
 		notifyObj.appendChild(notifyTextObj);
 		//document.getElementById("pageContent").appendChild(notifyObj);
-		if(addToId == ""){
-			document.body.appendChild(notifyObj);
-		}else{
+		if(document.getElementById(addToId)){
 			document.getElementById(addToId).appendChild(notifyObj);
+		}else{
+			document.body.appendChild(notifyObj);
 		}
 		//
 		//document.getElementById("notification").style.opacity=0.9;
@@ -574,7 +788,9 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 				document.getElementById("notification").style.opacity=0;
 				// allow animation time to run then remove the object
 				notificationTimeoutTimer = setTimeout(() =>{
-					document.getElementById("notification").remove();
+					if (window.notification){
+						window.notification.remove();
+					}
 				}, displayTime);
 			}
 		}, 355);
