@@ -168,7 +168,7 @@ if ($filterType == "all"){
 	</h2>
 	<div class='listCard'>
 		<a class='button' href='/new/'>
-			📜 NEW
+			📜 New
 		</a>
 		<?PHP
 		if (array_key_exists("filter",$_GET)){
@@ -177,7 +177,7 @@ if ($filterType == "all"){
 			echo "<a class='button' href='/random/'>";
 		}
 		?>
-			🔀 RANDOM
+			🔀 Random
 		</a>
 		<a class='activeButton' href='/tags/'>
 			🔖 Tags
