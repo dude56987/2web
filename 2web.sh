@@ -39,6 +39,23 @@ function debugCheck(){
 	fi
 }
 ########################################################################
+function defaultThemeName(){
+	echo "Simple-Default_LightDark-OpenDyslexic-solid-vaulted-Default.css"
+}
+########################################################################
+function setDefaultTheme(){
+		# The default theme is changed for new versions
+		echo "$(defaultThemeName)" > "/etc/2web/theme.cfg"
+		chown www-data:www-data "/etc/2web/theme.cfg"
+}
+########################################################################
+function setDefaultEffect(){
+	effect="gears_round_themed"
+	# build the default effect config
+	echo "$effect" > "/etc/2web/effect.cfg"
+	chown www-data:www-data "/etc/2web/effect.cfg"
+}
+########################################################################
 function enableApacheServer(){
 	delete "/etc/apache2/conf-enabled/0000-default.conf"
 	delete "/etc/apache2/conf-enabled/000-default.conf"
@@ -397,6 +414,12 @@ function buildActivityGraph(){
 }
 ########################################################################
 function buildSingleTheme(){
+	# buildSingleTheme $createdThemeName $themeColor $themeFont $themeMod $themeBase $themeEdge $themeSize
+	#
+	# Build a single theme from theme components
+	#
+	#
+
 	createdThemeName="$1"
 	themeColor="$2"
 	themeFont="$3"
@@ -404,10 +427,8 @@ function buildSingleTheme(){
 	themeBase="$5"
 	themeEdge="$6"
 	themeSize="$7"
-	#
-	#
-	INFO "Building theme '$tempThemeName'..."
-	# build the theme
+
+
 	{
 		if test -f "$themeColor";then
 			cat "$themeColor"
@@ -435,6 +456,7 @@ function buildSingleTheme(){
 function build2webThemes(){
 	webDirectory="/var/cache/2web/web"
 	updateThemes="no"
+	themeCounter=1
 	# if the build date of the software has changed then update the generated css themes for the site
 	# - only one needs to be true so stop checks if one is true
 	if checkFileDataSum "$webDirectory" "/usr/share/2web/buildDate.cfg";then
@@ -455,18 +477,58 @@ function build2webThemes(){
 	if [ "$updateThemes" == "yes" ];then
 		ALERT "Rebuilding all themes..."
 		themeColors=$(find "/usr/share/2web/theme-templates/" -type f -name 'color-*.css')
-		themeColors=$(echo "$themeColors" | sed -z "s/\n/ /g")
+		themeColors=$(echo "$themeColors" | shuf | sed -z "s/\n/ /g")
 		themeFonts=$(find "/usr/share/2web/theme-templates/" -type f -name 'font-*.css')
-		themeFonts=$(echo "$themeFonts" | sed -z "s/\n/ /g")
+		themeFonts=$(echo "$themeFonts" | shuf | sed -z "s/\n/ /g")
 		themeMods=$(find "/usr/share/2web/theme-templates/" -type f -name 'mod-*.css')
-		themeMods=$(echo "$themeMods" | sed -z "s/\n/ /g")
+		themeMods=$(echo "$themeMods" | shuf | sed -z "s/\n/ /g")
 		themeBases=$(find "/usr/share/2web/theme-templates/" -type f -name 'base-*.css')
-		themeBases=$(echo "$themeBases" | sed -z "s/\n/ /g")
+		themeBases=$(echo "$themeBases" | shuf | sed -z "s/\n/ /g")
 		themeEdges=$(find "/usr/share/2web/theme-templates/" -type f -name 'edge-*.css')
-		themeEdges=$(echo "$themeEdges" | sed -z "s/\n/ /g")
+		themeEdges=$(echo "$themeEdges" | shuf | sed -z "s/\n/ /g")
 		themeSizes=$(find "/usr/share/2web/theme-templates/" -type f -name 'size-*.css')
-		themeSizes=$(echo "$themeSizes" | sed -z "s/\n/ /g")
-		# build the custom stylesheets if they need to be built
+		themeSizes=$(echo "$themeSizes" | shuf | sed -z "s/\n/ /g")
+		#
+		#totalThemes="$(echo -n "${themeColors} ${themeFonts} ${themeMods} ${themeBases} ${themeEdges} ${themeSizes}")"
+		tempSectionThemes="$(echo -n "$totalThemes" | tr -s " " | wc -w)"
+		#totalThemes="$(echo -n "$totalThemes*$totalThemes" | bc -l )"
+		#totalThemes="$(( $totalThemes * $totalThemes ))"
+		#totalThemes=0
+		totalThemes="$(( $(echo "$themeColors" | wc -w) * $(echo "$themeFonts" | wc -w) * $(echo "$themeMods" | wc -w) * $(echo "$themeBases" | wc -w) * $(echo "$themeEdges" | wc -w) * $(echo "$themeSizes" | wc -w) ))"
+		################################################################################
+		# build the current selected theme before any other themes
+		################################################################################
+		# only build this first if a theme is selected
+		if test -f "/etc/2web/theme.cfg";then
+			INFO "Searching for the currently selected theme to build it first"
+			currentSelectedThemeName="$(cat "/etc/2web/theme.cfg" | sed "s/\n//g" | sed "s/\.css//g")"
+			#
+			themeBase="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f1)"
+			themeColor="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f2)"
+			themeFont="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f3)"
+			themeEdge="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f4)"
+			themeMod="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f5)"
+			themeSize="$(echo -n "$currentSelectedThemeName" | cut -d'-' -f6)"
+			#
+			tempThemeName="${themeBase}-${themeColor}-${themeFont}-${themeEdge}-${themeMod}-${themeSize}"
+			# convert theme components to paths
+			themeBase="/usr/share/2web/theme-templates/base-$themeBase.css"
+			themeColor="/usr/share/2web/theme-templates/color-$themeColor.css"
+			themeFont="/usr/share/2web/theme-templates/font-$themeFont.css"
+			themeEdge="/usr/share/2web/theme-templates/edge-$themeEdge.css"
+			themeMod="/usr/share/2web/theme-templates/mod-$themeMod.css"
+			themeSize="/usr/share/2web/theme-templates/size-$themeSize.css"
+
+			# if the tempTheme name matches the current theme name build it
+			if [ "$tempThemeName" == "$currentSelectedThemeName" ];then
+				INFO "Building current selected theme '$tempThemeName'..."
+				buildSingleTheme "$tempThemeName" "$themeColor" "$themeFont" "$themeMod" "$themeBase" "$themeEdge" "$themeSize" &
+				waitQueue 0.1 "$totalCPUS"
+			fi
+		fi
+		################################################################################
+		# build all the themes using all enabled components
+		################################################################################
 		for themeColor in $themeColors;do
 			tempPathColor=$(echo "$themeColor" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1 | sed "s/color-//g" )
 			for themeFont in $themeFonts;do
@@ -480,8 +542,10 @@ function build2webThemes(){
 							for themeSize in $themeSizes;do
 								tempPathSize=$(echo "$themeSize" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1  | sed "s/size-//g" )
 								tempThemeName="${tempPathBase}-${tempPathColor}-${tempPathFont}-${tempPathEdge}-${tempPathMod}-${tempPathSize}"
+								INFO "Building theme [$themeCounter/$totalThemes] '$tempThemeName'..."
 								buildSingleTheme "$tempThemeName" "$themeColor" "$themeFont" "$themeMod" "$themeBase" "$themeEdge" "$themeSize" &
-								waitQueue 0.5 "$totalCPUS"
+								themeCounter=$(( $themeCounter + 1 ))
+								waitQueue 0.1 "$totalCPUS"
 							done
 						done
 					done
@@ -695,16 +759,14 @@ function update2web(){
 	# - the site is for use on a internal network not online but still should not be crawled
 	# - Can be edited by the user
 	linkFile "/etc/2web/config_default/robots.txt" "$webDirectory/robots.txt"
+	INFO "Linking Web Directory effect files..."
 	# add the enabled effect
 	if test -f "/etc/2web/effect.cfg";then
 		# load the effect config
 		effect=$(cat -s "/etc/2web/effect.cfg" | tr -d '\n')
 	else
-		# build the default effect config
-		echo "none" > "/etc/2web/effect.cfg"
-		chown www-data:www-data "/etc/2web/effect.cfg"
 		# load default
-		effect="none"
+		setDefaultEffect
 	fi
 	# load each of the active effect into the effects file for the webserver
 	if test -s "/usr/share/2web/effects/$effect.php";then
@@ -917,9 +979,7 @@ function update2web(){
 
 	# link the stylesheet based on the chosen theme
 	if ! test -f /etc/2web/theme.cfg;then
-		# the default theme is gray
-		echo "Simple-Gray-OpenDyslexic-round.css" > "/etc/2web/theme.cfg"
-		chown www-data:www-data "/etc/2web/theme.cfg"
+		setDefaultTheme
 	fi
 	# check if the user has set randomTheme.cfg to yes to change to a random theme every 30 minutes
 	if yesNoCfgCheck "/etc/2web/randomTheme.cfg";then
@@ -2706,6 +2766,27 @@ elif [ "$1" == "--rebuild-spinner" ] || [ "$1" == "rebuild-spinner" ];then
 	drawSmallHeader "Spinner Has been rebuilt"
 	drawLine
 elif [ "$1" == "--rebuild-themes" ] || [ "$1" == "rebuild-themes" ];then
+	# reset the theme gen timer
+	date "+%s" > "/var/cache/2web/themeGen.cfg"
+	totalCPUS=$(cpuCount)
+	# run a update to rebuild the CSS files
+	build2webThemes
+elif [ "$1" == "--default-theme" ] || [ "$1" == "default-theme" ];then
+	startDebug
+	# reset to the default theme
+	setDefaultTheme
+	# link the theme and overwrite if another theme is chosen
+	ln -sf "/usr/share/2web/themes/$(defaultThemeName)" "/var/cache/2web/web/style.css"
+	#
+	chown www-data:www-data "/var/cache/2web/web/style.css"
+	stopDebug
+elif [ "$1" == "--default-effect" ] || [ "$1" == "default-effect" ];then
+	# reset to the default theme
+	setDefaultEffect
+elif [ "$1" == "--reset-themes" ] || [ "$1" == "reset-themes" ];then
+	# remove existing themes
+	delete /usr/share/2web/themes/
+	createDir /usr/share/2web/themes/
 	# reset the theme gen timer
 	date "+%s" > "/var/cache/2web/themeGen.cfg"
 	totalCPUS=$(cpuCount)
