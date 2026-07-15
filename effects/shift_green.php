@@ -27,7 +27,7 @@
 		opacity: 0.35;
 		background-color: green;
 		pointer-events: none;
-		z-index: 100;
+		z-index: 200;
 	}
 	img{
 		filter: grayscale(1);
