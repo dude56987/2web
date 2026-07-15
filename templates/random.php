@@ -107,7 +107,7 @@ if (array_key_exists("filter",$_GET)){
 	echo "<h2>Random ".ucfirst($filterType)."</h2>";
 }else{
 	$filterType="all";
-	echo "<h2>Random Media</h2>";
+	echo "<h2>Random Media Filters</h2>";
 }
 # if any content is restricted the all group will be locked
 # the all group is default so a message will be shown below if all is locked
@@ -156,7 +156,20 @@ SQLdrawPlaylistButton($filterType,"applications","🖥️ Applications");
 flush();
 ob_flush();
 if ($hideFilter){
-	echo "This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.";
+	echo "<h2>This filter is disabled because the content is restricted without login. Please use individual filters to access allowed playlists.</h2>\n";
+	# draw new media widgets, only accessable filters will be shown
+	drawPosterWidget("episodes",True);
+	drawPosterWidget("shows",True);
+	drawPosterWidget("movies",True);
+	drawPosterWidget("comics",True);
+	drawPosterWidget("albums",True,"icon");
+	drawPosterWidget("artists",True,"icon");
+	drawPosterWidget("channels",True,"icon");
+	drawPosterWidget("channels",True,"icon");
+	drawPosterWidget("repos",True);
+	drawPosterWidget("portal",True);
+	drawPosterWidget("graphs",True);
+	drawPosterWidget("applications","icon");
 }else{
 	$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/random_$filterType.index";
 	if (file_exists($cacheFile)){
