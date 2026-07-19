@@ -19,6 +19,8 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("nfo2web");
 	}else if ($filterType == "movies"){
 		requireGroup("nfo2web");
+	}else if ($filterType == "videos"){
+		requireGroup("video2web");
 	}else if ($filterType == "shows"){
 		requireGroup("nfo2web");
 	}else if ($filterType == "music"){
@@ -138,6 +140,7 @@ drawPlaylistButton($filterType,"broadcasts","🎬 Broadcasts");
 drawPlaylistButton($filterType,"episodes","🎞️ Episodes");
 drawPlaylistButton($filterType,"shows","📺 Shows");
 drawPlaylistButton($filterType,"movies","🎥 Movies");
+drawPlaylistButton($filterType,"videos","📽️ Videos");
 drawPlaylistButton($filterType,"comics","📚 Comics");
 drawPlaylistButton($filterType,"music","🎧 Music");
 drawPlaylistButton($filterType,"channels","📡 Channels");
