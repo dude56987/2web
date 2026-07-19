@@ -72,11 +72,30 @@
 			}
 		}
 	}
+	// unhide onlyScript class with javascript
+	// - elements that should only display when javascript is enabled
+	var linkElements=document.getElementsByClassName("onlyScript");
+	var tempTarget;
+	// loop though the found elements
+	for(let index = 0; index < linkElements.length; index++){
+		// unhide the elements
+		tempTarget = linkElements[index].style.display="unset" ;
+	}
+	//
 	var controlHideTimeout;
+	// hide the cursor by default when javascript is enabled
+	document.body.style.cursor="none";
 	function showControls(){
 		// show the moved cursor and video controls
 		if(window.video){
-			window.video.controls=true;
+			window.video.controls=false;
+			if(window.playerControlsContainer){
+				window.playerControlsContainer.style.opacity=1;
+			}
+		}else{
+			if(window.video){
+				window.video.controls=true;
+			}
 		}
 		// enable the cursor
 		document.body.style.cursor="default";
@@ -85,9 +104,14 @@
 		// hide the cursor and video controls after 2 seconds of inactivity
 		controlHideTimeout = setTimeout(() =>{
 			console.log("Hide the mouse/controls when inactive");
-			if(window.video){
-				// hide video controls
+			if(window.playerControlsContainer){
 				window.video.controls=false;
+				window.playerControlsContainer.style.opacity=0;
+			}else{
+				if(window.video){
+					// hide video controls
+					window.video.controls=false;
+				}
 			}
 			// hide the cursor
 			document.body.style.cursor="none";
@@ -521,7 +545,14 @@ echo "</style>\n";
 # if the page is loaded from the back button hide the spinner with javascript
 ?>
 <script>
+var pageShown=0;
 addEventListener("pageshow", (event) => {
-	hideSpinner();
+	if (pageShown > 0){
+		hideSpinner();
+		if(window.notification){
+			window.notification.remove();
+		}
+	}
+	pageShown+=1;
 })
 </script>

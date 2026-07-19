@@ -32,9 +32,11 @@ if (isset($_SESSION["user"])){
 		redirect("https://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]);
 	}
 }
+#<img class='globalPulse' src='/pulse.gif'>
 ?>
+<!-- global CSS loading animation -->
+<div class='globalPulse'><div class='pulseBar'></div></div>
 <!-- create top jump button -->
-<img class='globalPulse' src='/pulse.gif'>
 <a href='#' id='topButton' class='button'>&uarr;<div><div id='scrollProgress'></div></div></a>
 
 <script>
@@ -68,7 +70,7 @@ if ($_SESSION["effectEnabled"]){
 		include($webDirectory."/effect.php");
 	}
 }
-# if file is older than 2 hours
+# if file is older than 1 minute
 if (is_readable($cacheFile)){
 	if (time()-filemtime($cacheFile) > 60){
 		// update the cached file
@@ -94,6 +96,7 @@ if ($writeFile){
 	$showsFound=False;
 	$musicFound=False;
 	$comicsFound=False;
+	$videosFound=False;
 	$channelsFound=False;
 	$reposFound=False;
 	$portalsFound=False;
@@ -113,6 +116,9 @@ if ($writeFile){
 	}
 	if (file_exists("$webDirectory/comics/comics.index")){
 		$comicsFound=True;
+	}
+	if (file_exists("$webDirectory/videos/videos.index")){
+		$videosFound=True;
 	}
 	if (file_exists("$webDirectory/live/index.php")){
 		$channelsFound=True;
@@ -179,12 +185,14 @@ if (is_readable($cacheFile)){
 	echo file_get_contents($cacheFile);
 }
 #
-formatEcho("<a class='button' href='/new/'>",2);
-formatEcho("📃",3);
-formatEcho("<span class='headerText'>",3);
-formatEcho("Playlists",4);
-formatEcho("</span>",3);
-formatEcho("</a>",2);
+if (requireGroup("playlists",false)){
+	formatEcho("<a class='button' href='/new/'>",2);
+	formatEcho("📃",3);
+	formatEcho("<span class='headerText'>",3);
+	formatEcho("Playlists",4);
+	formatEcho("</span>",3);
+	formatEcho("</a>",2);
+}
 #
 if (requireGroup("webPlayer",false)){
 	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
@@ -233,6 +241,16 @@ if (detectEnabledStatus("music2web")){
 		formatEcho("🎧",3);
 		formatEcho("<span class='headerText'>",3);
 		formatEcho("Music",4);
+		formatEcho("</span>",3);
+		formatEcho("</a>",2);
+	}
+}
+if (detectEnabledStatus("video2web")){
+	if (requireGroup("video2web",false)){
+		formatEcho("<a class='button' href='/videos'>",2);
+		formatEcho("📽️",3);
+		formatEcho("<span class='headerText'>",3);
+		formatEcho("Videos",4);
 		formatEcho("</span>",3);
 		formatEcho("</a>",2);
 	}
@@ -491,7 +509,7 @@ formatEcho("</a>",1);
 
 echo "</div>\n";
 ?>
-<form class='searchBoxForm' action='/search.php' method='get' onSubmit='notify("🔎",60000);showSpinner();'>
+<form class='searchBoxForm' action='/search.php' method='get' onSubmit='notify("🔎",1000);showSpinner();'>
 	<?PHP
 if (array_key_exists("q",$_GET)){
 		# place query into the search bar to allow editing of the query and resubmission
@@ -532,6 +550,11 @@ if (file_exists($_SERVER['DOCUMENT_ROOT']."/rebootAlert.cfg")){
 	echo ("<div class='errorBanner'>\n");
 	echo ("<h2>Server Reboot Impending</h2>\n");
 	echo ("The server is preparing to reboot. Services may become momentarily unavailable.\n");
+	# only show solutions to admins
+	if(requireGroup("admin",false)){
+		echo ("You can run the below command on the server in order to force the reboot.\n");
+		echo ("<pre>2web --force-reboot</pre>\n");
+	}
 	echo ("</div>\n");
 }
 # release the lock on the session for this script to allow pages to load in parallel
