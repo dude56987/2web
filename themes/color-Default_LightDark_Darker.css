@@ -42,8 +42,8 @@
 /* Set the light mode theme */
 @media (prefers-color-scheme: light){
 	:root{
-		--solidBackground: #B0B0B0;
-		--glassBackground: rgba(255,255,255,0.85);
+		--solidBackground: papayawhip;
+		--glassBackground: rgba(255,239,214,0.85);
 		--borderColor: black;
 		--textColor: black;
 		--shadowColor: black;
@@ -52,13 +52,14 @@
 		--highlightBorder: black;
 		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
 	}
-	/* Fix white on white loading pulse being hidden */
-	.globalPulse{
-		background-color: var(--solidBackground);
-	}
 	@media (prefers-reduced-transparency: reduce){
 		:root{
-			--glassBackground: rgb(255,255,255) !important;
+			--glassBackground: papayawhip !important;
 		}
 	}
 }
+/* Fix white on white loading pulse being hidden */
+.globalPulse{
+	background-color: var(--solidBackground);
+}
+
