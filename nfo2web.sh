@@ -16,43 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ########################################################################
-#set -x
-#export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-export PS4='+ ${LINENO}	|	'
-# set tab size to 4 to make output more readable
-tabs 4
-########################################################################
 source /var/lib/2web/common
-########################################################################
-if echo "$@" | grep -q -e "--debug";then
-	set -x
-fi
-########################################################################
-STOP(){
-	echo ">>>>>>>>>>>DEBUG STOPPER<<<<<<<<<<<"
-	read -r
-}
-########################################################################
-function debugCheck(){
-	if test -f /etc/2web/nfo/debug.enabled;then
-		# if debug mode is enabled show execution
-		set -x
-	else
-		if ! test -d /etc/2web/nfo/;then
-			# create dir if one does not exist
-			mkdir -p /etc/2web/nfo/
-		fi
-		if ! test -f /etc/2web/nfo/debug.disabled;then
-			# create debug flag file disabed, if it does not exist
-			touch /etc/2web/nfo/debug.disabled
-		fi
-	fi
-}
 ########################################################################
 function validString(){
 	# validString $string
 	#
-	stringToCheck="$1"
+	local stringToCheck="$1"
 	if test -n "$stringToCheck";then
 		# a valid string was given
 		return 0
@@ -65,7 +34,7 @@ function validString(){
 	fi
 }
 ########################################################################
-ripXmlTag(){
+function ripXmlTag(){
 	data=$1
 	tag=$2
 
@@ -90,7 +59,7 @@ ripXmlTag(){
 	fi
 }
 ########################################################################
-ripXmlTagMultiLine(){
+function ripXmlTagMultiLine(){
 	# ripXmlTagMultiLine "$data" "$tag"
 	#
 	# Pull xml data that crosses multuple lines	in a file
@@ -130,13 +99,13 @@ ripXmlTagMultiLine(){
 	fi
 }
 ########################################################################
-cleanXml(){
+function cleanXml(){
 	data=$1
 	tag=$2
 	cleanText "$(ripXmlTag "$data" "$tag")"
 }
 ########################################################################
-checkMovieThumbPaths(){
+function checkMovieThumbPaths(){
 	# checkMovieThumbPaths $movieDir $thumbnail $thumbnailShort $thumbnailPath $thumbnailPathKodi
 	#
 	# Check paths for thumbnails
@@ -181,7 +150,7 @@ checkMovieThumbPaths(){
 	return 1
 }
 ########################################################################
-processMovie(){
+function processMovie(){
 	moviePath=$1
 	webDirectory=$2
 	# figure out the movie directory
@@ -539,7 +508,9 @@ processMovie(){
 
 		# add the movie to the main movie index since it has been updated
 		addToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/movies.index"
-
+		# add to the marathon playlists
+		addToIndex "$webDirectory/movies/$movieWebPath/movies.index" "$webDirectory/movies/marathon.index"
+		linkFile "$webDirectory/movies/marathon.index" "$webDirectory/movies/$movieWebPath/marathon.index"
 		# add the updated movie to the new movies index
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/movies.index"
 		echo "$webDirectory/movies/$movieWebPath/movies.index" >> "$webDirectory/new/all.index"
@@ -568,7 +539,7 @@ processMovie(){
 	fi
 }
 ########################################################################
-getThumbnailExt(){
+function getThumbnailExt(){
 	thumbnailPath=$1
 	########################################################################
 	if test -f "$thumbnailPath.jpg";then
@@ -583,7 +554,7 @@ getThumbnailExt(){
 	return 0
 }
 ########################################################################
-checkForEpisodeThumbnail(){
+function checkForEpisodeThumbnail(){
 	thumbnail=$1
 	thumbnailPath=$2
 	thumbnailPathKodi=$3
@@ -734,7 +705,7 @@ checkForEpisodeThumbnail(){
 	fi
 }
 ########################################################################
-processEpisode(){
+function processEpisode(){
 	# episode is the path to the episode nfo file
 	episode="$1"
 	episodeShowTitle="$2"
@@ -1146,6 +1117,8 @@ processEpisode(){
 
 		# add the episode to the season index
 		addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
+		addToIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "$webDirectory/shows/$episodeShowTitle/marathon.index"
+		linkFile "$webDirectory/shows/$episodeShowTitle/marathon.index" "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/marathon.index"
 		# sort the season episodes alphabetically
 		#cat "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index" | sort > "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/season.index"
 
@@ -1184,7 +1157,7 @@ processEpisode(){
 		addToSearchIndex "$webDirectory/shows/$episodeShowTitle/$episodeSeasonPath/$episodePath.index" "${episodePath} ${episodeShowTitle} ${episodeGrade} ${episodeStudio} ${airedYear}" "/shows/$episodeShowTitle/"
 }
 ################################################################################
-processShow(){
+function processShow(){
 	show=$1
 	showMeta=$2
 	showTitle=$3
@@ -1539,7 +1512,7 @@ processShow(){
 	date "+%s" > /var/cache/2web/web/new/episodes.cfg
 }
 ########################################################################
-getLibSum(){
+function getLibSum(){
 	# find all state sums for shows and create a collective sum
 	totalList=""
 	while read -r line;do
@@ -1555,7 +1528,7 @@ getLibSum(){
 }
 ################################################################################
 ################################################################################
-buildUpdatedShows(){
+function buildUpdatedShows(){
 	# buildUpdatedShows $webDirectory $numberOfShows
 	################################################################################
 	# Build a list of updated shows
@@ -1577,7 +1550,7 @@ buildUpdatedShows(){
 	fi
 }
 ################################################################################
-buildRandomShows(){
+function buildRandomShows(){
 	# buildRandomShows $webDirectory $numberOfShows $sourcePrefix
 	################################################################################
 	# Build a list of updated shows
@@ -1600,7 +1573,7 @@ buildRandomShows(){
 	fi
 }
 ################################################################################
-buildRandomChannels(){
+function buildRandomChannels(){
 	################################################################################
 	# Build a list of randomly generated channels
 	################################################################################
@@ -1622,7 +1595,7 @@ buildRandomChannels(){
 	fi
 }
 ########################################################################
-buildUpdatedMovies(){
+function buildUpdatedMovies(){
 	# buildUpdatedMovies $webDirectory $numberOfMovies $sourcePrefix
 	################################################################################
 	# Build a list of updated movies
@@ -1645,7 +1618,7 @@ buildUpdatedMovies(){
 	fi
 }
 ########################################################################
-buildRandomMovies(){
+function buildRandomMovies(){
 	# buildRandomMovies $webDirectory $numberOfMovies $sourcePrefix
 	################################################################################
 	# Build a list of updated movies
@@ -1668,7 +1641,7 @@ buildRandomMovies(){
 	fi
 }
 ################################################################################
-buildRandomComics(){
+function buildRandomComics(){
 	# buildRandomMovies $webDirectory $numberOfMovies $sourcePrefix
 	################################################################################
 	# Build a list of updated movies
@@ -1696,17 +1669,17 @@ function buildShowIndex(){
 	linkFile "/usr/share/2web/templates/shows.php" "$webDirectory/shows/index.php"
 }
 ########################################################################
-getDirSumByTime(){
-	line=$1
+function getDirSumByTime(){
+	local line=$1
 	# get the sum of the directory modification time
-	totalList=$(stat --format="%Y" "$line")
+	local totalList=$(stat --format="%Y" "$line")
 	# convert lists into sum
-	tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
+	local tempLibList="$(echo -n "$totalList" | sha512sum | cut -d' ' -f1)"
 	# write the sum to stdout
 	echo "$tempLibList"
 }
 ########################################################################
-updateInProgress(){
+function updateInProgress(){
 	echo -e "<div class='progressIndicator'>"
 	echo -e "\t<span class='progressText'>Update In Progress...</span>"
 	echo -e "\t<script>"
@@ -1716,9 +1689,9 @@ updateInProgress(){
 	echo -e "</div>"
 }
 #########################################################################
-scanForRandomBackgrounds(){
-	webDirectory="$1"
-	backgroundUpdateDelay="7"
+function scanForRandomBackgrounds(){
+	local webDirectory="$1"
+	local backgroundUpdateDelay="7"
 	#########################################################################
 	# build the show fanart and poster indexes
 	################################################################################
@@ -1877,7 +1850,7 @@ function cleanMediaSection(){
 	#stopDebug
 }
 ################################################################################
-cleanMediaIndexFile(){
+function cleanMediaIndexFile(){
 	# cleanMediaIndexFile "indexFilePath"
 	#
 	# cleanup a index file to remove broken links to missing media
@@ -2416,7 +2389,7 @@ function update(){
 	kill "$SPINNER_PID"
 }
 ########################################################################
-showHelp(){
+function showHelp(){
 	cat /usr/share/2web/help/nfo2web.txt
 }
 ########################################################################

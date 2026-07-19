@@ -1443,6 +1443,59 @@ function stopDebug(){
 	drawLine
 	set +x
 }
+################################################################################
+function STOP(){
+	# STOP
+	#
+	# This will stop the program and wait for the user to hit enter.
+
+	# skip if output is muted
+	if [ "$MUTE_OPTION" == "yes" ];then
+		# skip running output if script is muted
+		return
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		# print the output without formatting if ran in the background
+		echo "$1"
+		return
+	fi
+	#
+	drawSmallHeader "EXECUTION PAUSED"
+	#drawSmallHeader "HIT ENTER TO RESUME"
+	drawSmallHeader "HIT ANY KEY TO RESUME"
+	drawSmallHeader "[CTRL]+[C] To Exit."
+	sleep 0.5
+	# read input to a fake varaiable to prevent skipping read in script
+	#read -p "" -n 1 -s -r nullFakeVaraiableNumbaUno
+	#read -n 1
+	#read
+	#read -n 1 -s
+	#read -n1 -s <&/dev/null
+	#read -n1 -s -r < "/proc/${PPID}/fd/0"
+	# read input but read from the parent process terminal
+	# - if you do not specify the PID this will not stop execution
+	read -n 1 -s -r < "/proc/${PPID}/fd/0"
+}
+########################################################################
+function debugCheck(){
+	# debugCheck
+	#
+	# Check if the global debug is enabled for 2web.
+
+	# Check if debug is enabled for the module
+	if test -f /etc/2web/debug.enabled;then
+		# if debug mode is enabled show execution
+		set -x
+	else
+		if ! test -d /etc/2web;then
+			# create dir if one does not exist
+			mkdir -p /etc/2web/
+		fi
+		if ! test -f /etc/2web/debug.disabled;then
+			# create debug flag file disabed, if it does not exist
+			touch /etc/2web/debug.disabled
+		fi
+	fi
+}
 ########################################################################
 function drawCellLine(){
 	# draw a line above or below a cell
