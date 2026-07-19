@@ -127,9 +127,11 @@ function cacheUrl($sum,$videoLink){
 	debug("Build the command<br>");
 	$command = "set -x;";
 	$command .= "nice -n -5 ";
+	$cores=cpuCount();
 	// add the download to the cache with the processing queue
 	if (file_exists("/var/cache/2web/generated/yt-dlp/yt-dlp")){
-		$command .= "/var/cache/2web/generated/yt-dlp/yt-dlp -4 --abort-on-error --sponsorblock-mark all ";
+		# -N makes fragment downloads paralleleize
+		$command .= "/var/cache/2web/generated/yt-dlp/yt-dlp -4 --concurrent-fragments $cores --abort-on-error --sponsorblock-mark all ";
 	}else if (file_exists("/usr/local/bin/yt-dlp")){
 		debug("yt-dlp found<br>");
 		# add the sponsorblock video bookmarks to the video file when using yt-dlp
@@ -140,6 +142,14 @@ function cacheUrl($sum,$videoLink){
 	} else {
 		$command .= "youtube-dl";
 	}
+	# Add the javscript runtime to use with the resolver
+	# - quickjs is available on ubuntu, debian, dietpi, and devuan
+	if (file_exists("/usr/bin/qjs")){
+		$command .= " --js-runtimes quickjs:/usr/bin/qjs";
+	}else{
+		addToLog("ERROR","resolver.php","NO JAVASCRIPT ENGINE IS INSTALLED! Install the javascript engine (quickJS)");
+	}
+	# get the quality and mode config settings
 	$quality = getQualityConfig($webDirectory);
 	$cacheMode = getCacheMode($webDirectory);
 	debug("The web interface set quality is '".$quality."'");
@@ -151,15 +161,10 @@ function cacheUrl($sum,$videoLink){
 	$command .= " --retries '1000'";
 	# back off exponentally after failures and max out at 512 second wait times
 	$command .= " --retry-sleep 'exp=2:512:2'";
-	# figure out the javscript runtime installed to use for resolver
-	# - deno is enabled by default if installed but there are no offical packages for it
-	# - nodejs is available on debian and ubuntu
-	#   - nodejs is currently required only during the build process to update hls.js (2026)
-	# - quickjs is only availble on ubuntu
-	if (file_exists("/usr/bin/nodejs")){
-		$command .= " --js-runtimes node:/usr/bin/nodejs";
-	}elseif (file_exists("/usr/bin/qjs")){
-		$command .= " --js-runtimes quickjs:/usr/bin/qjs";
+	if (file_exists("/usr/bin/ffmpeg")){
+		$command .= " --ffmpeg-location /usr/bin/ffmpeg";
+	}elseif (file_exists("/bin/ffmpeg")){
+		$command .= " --ffmpeg-location /bin/ffmpeg";
 	}
 	$command .= " --no-mtime";
 	$command .= " --fragment-retries '100'";
@@ -239,6 +244,11 @@ function cacheUrl($sum,$videoLink){
 	}else{
 		$command .= ";".$dlCommand;
 	}
+	# check for mp3 files and generate thumbnails after download process has completed
+	$command .= ";";
+	$command .= " if test -s \"$webDirectory/RESOLVER-CACHE/$sum/video.mp3\";then";
+	$command .= " ffmpegthumbnailer -i \"$webDirectory/RESOLVER-CACHE/$sum/video.mp3\" -o \"$webDirectory/RESOLVER-CACHE/$sum/video.png\";";
+	$command .= " fi";
 	# run curl after download to access the video link and activate the verification process
 	#$command .= ";sleep 95;curl \"https://localhost/ytdl-resolver.php?url=$videoLink\" > /dev/null";
 	# Add the command to the processing queue
@@ -322,6 +332,9 @@ function cacheResolve($sum,$webDirectory){
 			#
 			header($mime);
 			redirect($path);
+			#header($mime.'filename="'.basename($path).'";');
+			#readfile($path);
+
 		}
 		# Sleep at end of the loop then try to find a redirect again
 		sleep(1);
