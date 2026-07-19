@@ -412,7 +412,7 @@
 	echo "		<tr>\n";
 	# draw the autoplay controls
 	if ($isAuto){
-		echo "		<td>\n";
+		echo "		<td class='onlyScript'>\n";
 		if ($isFullscreen){
 			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Stop Slideshow' href='?stop&fullscreen' onclick='notify(\"⏸️\");'>\n";
 		}else{
@@ -423,7 +423,7 @@
 		echo "		</a>\n";
 		echo "		</td>\n";
 	}else{
-		echo "		<td>";
+		echo "		<td class='onlyScript'>";
 		if ($isFullscreen){
 			echo "		<a target='$nextPageTarget' class='comicFullscreenButton' title='Play as Slideshow' href='?auto&fullscreen' onclick='notify(\"▶️\");'>\n";
 		}else{
@@ -448,7 +448,7 @@
 	echo "			</a>\n";
 	echo "		</td>\n";
 	# draw the fullscreen button
-	echo "		<td>\n";
+	echo "		<td class='onlyScript'>\n";
 	echo "			<a target='_parent' class='comicFullscreenButton' title='Toggle Fullscreen' href='fullscreen.php?page=".$page."' onclick='notify(\"⛶\");'>\n";
 	echo "				⛶";
 	echo "				<span class='comicFullscreenButtonText'>Fullscreen</span>\n";
@@ -614,6 +614,15 @@
 			}
 		},500);
 		//});
+		// unhide onlyScript class with javascript
+		// - elements that should only display when javascript is enabled
+		var linkElements=document.getElementsByClassName("onlyScript");
+		var tempTarget;
+		// loop though the found elements
+		for(let index = 0; index < linkElements.length; index++){
+			// unhide the elements
+			tempTarget = linkElements[index].style.display="unset" ;
+		}
 	</script>
 	<style>
 		.globalPulse{

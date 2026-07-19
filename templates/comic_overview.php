@@ -456,6 +456,7 @@ if (requireGroup("admin",false)){
 	if(file_exists("sources.cfg")){
 		echo "<div class='titleCard'>\n";
 		#
+		$sourceData=file("sources.cfg",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 		$comicScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
 		echo "	<h2>Admin Actions</h2>\n";
 		echo "	<div class='listCard'>\n";
@@ -463,9 +464,13 @@ if (requireGroup("admin",false)){
 		echo "			<input type='text' name='rescanComic' value='$comicTitle' hidden>";
 		echo "			<button class='button' type='submit'>🗘 Force Media Rescan</button>";
 		echo "		</form>";
+		# mark each source line for removal
+		echo "		<form action='/settings/admin.php' method='post'>";
+		echo "			<input type='text' name='markMediaForRemoval' value='/var/cache/2web/web/comics/$comicTitle/sources.cfg' hidden>";
+		echo "			<button class='button' type='submit'>❌ Mark For Removal</button>";
+		echo "		</form>";
 		echo "	</div>\n";
 		echo "	<h2>Media Sources</h2>\n";
-		$sourceData=file("sources.cfg",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 		foreach($sourceData as $sourceLine){
 			echo "	<pre>$sourceLine/</pre>";
 		}

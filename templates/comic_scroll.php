@@ -211,8 +211,12 @@ include($_SERVER['DOCUMENT_ROOT']."/header.php");
 
 ?>
 </div>
-	<div class='settingListCard'>
-		🔚
+	<div class='inputCard'>
+		<hr>
+		<hr>
+		<a class='button' href='#'>↑ Return To Top ↑</a>
+		<hr>
+		<hr>
 	</div>
 </div>
 <script>
