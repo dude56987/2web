@@ -144,9 +144,16 @@ function randomColor(){
 </div>
 
 <?PHP
+# flush output to the client
+clear();
 # read in theme files in /usr/share/2web/
 $sourceFiles=scandir("/usr/share/2web/themes/");
 $sourceFiles=array_diff($sourceFiles,Array("..","."));
+# Add the custom theme directory
+$userSourceFiles=scandir("/etc/2web/themes/");
+$userSourceFiles=array_diff($userSourceFiles,Array("..","."));
+#
+$sourceFiles=array_merge($sourceFiles,$userSourceFiles);
 # check if a page number is set
 $tempSourceFiles=Array();
 # filter the files
@@ -203,6 +210,7 @@ $totalThemes=count($sourceFiles);
 	</form>
 </div>
 <?php
+	clear();
 	# build a theme
 	#
 	# get the list of theme construction files
@@ -349,7 +357,7 @@ if (array_key_exists("theme",$_GET)){
 	echo "	</form>\n";
 	echo "</div>";
 }
-
+clear();
 ?>
 
 <form class='searchBoxForm' method='get'>
