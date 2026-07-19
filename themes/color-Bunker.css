@@ -1,0 +1,59 @@
+/*
+########################################################################
+# 2web radioactive theme
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+:root{
+	--solidBackground: #278A7D;
+	--glassBackground: rgba(15,15,15,0.85);
+	--borderColor: #278A7D;
+	--textColor: #00FF4A;
+	--shadowColor: black;
+	--highlightText: white;
+	--highlightBackground: #FF8E4D;
+	--highlightBorder: #FF843d;
+	--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+}
+.downloadIcon{
+	background: yellowGreen !important;
+}
+html{
+	/*
+	text-shadow: 0px 1px 0rem #006659 !important;
+	*/
+	text-shadow: 0px 1px 0rem black !important;
+}
+pre{
+	text-shadow: none !important;
+}
+h1,h2,h3,h4,h5,input,.button,.singleStat.showPageEpisode{
+	text-shadow: 0px 1px 0rem black !important;
+}
+.showPageEpisode:hover,
+.indexSeries:hover,
+.button:hover,
+button:hover{
+	h1,h2,h3{
+		color: var(--highlightText) !important;
+		background: var(--highlightBackground) !important;
+		border-color: var(--highlightBorder) !important;
+		/*
+		text-shadow: 0px 1px 0rem #006659 !important;
+		*/
+		text-shadow: 0px 1px 0rem black !important;
+	}
+}

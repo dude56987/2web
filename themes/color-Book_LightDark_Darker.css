@@ -1,0 +1,64 @@
+/*
+########################################################################
+# 2web user set theme Book
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+/* ********************************************************************** */
+/* This theme will be dark or light based on the client system settings.  */
+/* ********************************************************************** */
+/* Set the dark mode theme */
+@media (prefers-color-scheme: dark){
+	:root{
+		--solidBackground: sandybrown;
+		--glassBackground: rgba(244,164,96,0.85);
+		--borderColor: black;
+		--textColor: black;
+		--shadowColor: black;
+		--highlightText: white;
+		--highlightBackground: black;
+		--highlightBorder: black;
+		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+	}
+	@media (prefers-reduced-transparency: reduce){
+		:root{
+			--glassBackground: sandybrown !important;
+		}
+	}
+}
+/* Set the light mode theme */
+@media (prefers-color-scheme: light){
+	:root{
+		--solidBackground: burlywood;
+		--glassBackground: rgba(222,184,135,0.85);
+		--borderColor: black;
+		--textColor: black;
+		--shadowColor: black;
+		--highlightText: white;
+		--highlightBackground: black;
+		--highlightBorder: black;
+		--staticBackground: radial-gradient(var(--solidBackground), var(--glassBackground));
+	}
+	@media (prefers-reduced-transparency: reduce){
+		:root{
+			--glassBackground: burlywood !important;
+		}
+	}
+}
+/* Fix white on white loading pulse being hidden */
+.globalPulse{
+	background-color: var(--solidBackground) !important;
+}
