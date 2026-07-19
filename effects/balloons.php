@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web lantern effect
+# 2web color balloons effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify

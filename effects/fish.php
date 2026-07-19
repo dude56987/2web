@@ -26,7 +26,7 @@ var fishValues=Array("🐠","🐠","🐠","🐠","🐠","🐠","🐠","🐠","�
 var tinyFishValues=Array("𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","𜲒","𜲔","🦐","🦐","🦀");
 // draw the small fish
 for(var index=0;index<Math.floor(window.innerHeight/64);index++){
-	new flyingParticle(userChosenParticles=tinyFishValues,userChosenColors=Array("blue","yellow","red","white"),maxSpeed=5,minSpeed=2,maxSize=2,minSize=1,spinSpeed="none",false);
+	new flyingParticle(userChosenParticles=tinyFishValues,userChosenColors=Array("blue","yellow","red","white"),maxSpeed=5,minSpeed=2,maxSize=2,minSize=1,spinSpeed="thrash",false);
 }
 // Bubbles layer 1
 //for(var index=0;index<Math.floor(window.innerHeight/32);index++){
@@ -34,7 +34,7 @@ for(var index=0;index<Math.floor(window.innerHeight/64);index++){
 //}
 // draw the big fish
 for(var index=0;index<Math.floor(window.innerHeight/12);index++){
-	new flyingParticle(userChosenParticles=fishValues,userChosenColors=Array("white"),maxSpeed=7,minSpeed=4,maxSize=6,minSize=1,spinSpeed="none",true);
+	new flyingParticle(userChosenParticles=fishValues,userChosenColors=Array("white"),maxSpeed=7,minSpeed=4,maxSize=6,minSize=1,spinSpeed="thrash",true);
 }
 // Bubbles layer 2
 for(var index=0;index<Math.floor(window.innerHeight/32);index++){

@@ -43,11 +43,11 @@ for(var index=0;index<Math.floor(window.innerHeight/512);index++){
 }
 // draw the small fish
 for(var index=0;index<Math.floor(window.innerHeight/64);index++){
-	new flyingParticle(userChosenParticles=tinyFishValues,userChosenColors=fishColors,maxSpeed=5,minSpeed=2,maxSize=2,minSize=1,spinSpeed="none",fluxColors=false);
+	new flyingParticle(userChosenParticles=tinyFishValues,userChosenColors=fishColors,maxSpeed=5,minSpeed=2,maxSize=2,minSize=1,spinSpeed="thrash",fluxColors=false);
 }
 // draw the big fish
 for(var index=0;index<Math.floor(window.innerHeight/12);index++){
-	new flyingParticle(userChosenParticles=fishValues,userChosenColors=fishColors,maxSpeed=7,minSpeed=4,maxSize=3,minSize=1,spinSpeed="none",fluxColors=false);
+	new flyingParticle(userChosenParticles=fishValues,userChosenColors=fishColors,maxSpeed=7,minSpeed=4,maxSize=3,minSize=1,spinSpeed="thrash",fluxColors=false);
 }
 // Bubbles sharp spinning lopsided
 for(var index=0;index<Math.floor(window.innerHeight/12);index++){

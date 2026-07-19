@@ -29,11 +29,11 @@ include("/usr/share/2web/effects/particleBase.php");
 </style>
 <script>
 // Bubbles layer 1
-for(var index=0;index<Math.floor(window.innerHeight/16);index++){
+for(var index=0;index<Math.floor(window.innerWidth/32);index++){
 	new floatingParticle(userChosenParticles=Array("✟","🕇"),userChosenColors=Array("white"),maxSpeed=2,minSpeed=1,maxSize=2,minSize=1,spinSpeed="sway",false);
 }
 // Bubbles layer 2
-for(var index=0;index<Math.floor(window.innerHeight/16);index++){
+for(var index=0;index<Math.floor(window.innerWidth/32);index++){
 	new floatingParticle(userChosenParticles=Array("✟","🕇"),userChosenColors=Array("white"),maxSpeed=3,minSpeed=2,maxSize=8,minSize=1,spinSpeed="sway",false);
 }
 </script>

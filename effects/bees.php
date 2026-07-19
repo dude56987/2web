@@ -19,6 +19,11 @@
 # include the base particle system
 include("/usr/share/2web/effects/particleBase.php");
 ?>
+<style>
+	.particle{
+		text-shadow: none !important;
+	}
+</style>
 <script>
 // create the snowball particles
 for(var index=0;index<Math.floor(window.innerWidth/32);index++){
