@@ -128,7 +128,7 @@ if (stripos($unknownUrl,".png") !== false){
 				$logData.="			REMOTE_ADDR"."\n";
 				$logData.="		</th>"."\n";
 				$logData.="		<th>"."\n";
-				$logData.="			REMOTE_PORT "."\n";
+				$logData.="			REMOTE_PORT"."\n";
 				$logData.="		</th>"."\n";
 				$logData.="		<th>"."\n";
 				$logData.="			QUERY_STRING"."\n";
@@ -137,7 +137,7 @@ if (stripos($unknownUrl,".png") !== false){
 				$logData.="			REQUEST_METHOD"."\n";
 				$logData.="		</th>"."\n";
 				$logData.="		<th>"."\n";
-				$logData.="			REQUEST_TIME "."\n";
+				$logData.="			REQUEST_TIME"."\n";
 				$logData.="		</th>"."\n";
 				$logData.="	</tr>"."\n";
 				$logData.="	<tr>"."\n";
@@ -164,6 +164,12 @@ if (stripos($unknownUrl,".png") !== false){
 				$logData.="		</td>"."\n";
 				$logData.="	</tr>"."\n";
 				$logData.="</table>"."\n";
+				if (isset($_SERVER['HTTP_REFERER'])){
+					$logData.="<h3>HTTP_REFERER</h3>"."\n";
+					$logData.="<pre>"."\n";
+					$logData.="	".$_SERVER['HTTP_REFERER']."\n";
+					$logData.="</pre>"."\n";
+				}
 				# store the debug data
 				$URIsum=md5(cleanText($_SERVER["REQUEST_URI"]));
 				$dataSum=md5($logData);
