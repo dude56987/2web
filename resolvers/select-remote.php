@@ -172,7 +172,7 @@ if (! array_key_exists("select",$_GET)){
 		}
 	}
 	# draw the client player button to use the client broadcast from this server
-	if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
+	if (yesNoCfgCheck("/etc/2web/client.cfg")){
 		if (requireGroup("clientRemote",false)){
 			echo "<h2>Client Remote</h2>\n";
 			echo "<p>\n";

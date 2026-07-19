@@ -56,7 +56,19 @@ function drawRemoteHeader(){
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton ' onclick='window.close();' href='/'>❌<div>CLOSE</div></a>\n";
 	echo "					</td>\n";
 	echo "					<td>\n";
-	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>👆<div>Select Remote</div></a>\n";
+	if(isset($_SESSION["remoteTitle"])){
+		if(is_readable("/var/cache/2web/web/web_cache/".$_SESSION["remoteTitle"].".png")){
+			#
+			echo "<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>";
+			echo "	<img src='/web_cache/".$_SESSION["remoteTitle"].".png' title='Change Selected Remote\nCurrent Remote is ".$_SESSION["remoteTitle"]."' >";
+			echo "</a>\n";
+		}else{
+			echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>👆<div>Select Remote</div></a>\n";
+		}
+	}else{
+		echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/remote.php?select'>👆<div>Select Remote</div></a>\n";
+	}
+	echo "						";
 	echo "					</td>\n";
 	echo "					<td>\n";
 	echo "						<a class='kodiPlayerButtonHome kodiPlayerButton' href='/kodi-player.php?share' title='Share Link'>⛓️<div>Share</div></a>\n";
@@ -87,6 +99,13 @@ if (array_key_exists("url",$_GET)){
 		# convert https to http requests for kodi
 		if (substr($_GET["url"],0,7) == "https://"){
 			$_GET["url"] = "http://".substr($_GET["url"],7);
+		}
+		# convert localhost links to use mdns
+		if (stripos($_GET["url"],"://127.0.0.1") !== false){
+			$_GET["url"] = str_replace("://127.0.0.1",("://".gethostname().".local"),$_GET["url"]);
+		}
+		if (stripos($_GET["url"],"://localhost") !== false){
+			$_GET["url"] = str_replace("://localhost",("://".gethostname().".local"),$_GET["url"]);
 		}
 		# clean up the quotes
 		$videoLink = cleanQuotes($videoLink);
