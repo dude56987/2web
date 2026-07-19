@@ -49,7 +49,7 @@ if( ! function_exists("drawPosterWidget")){
 			$showOutput = requireGroup("graph2web", false);
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
-		}else if ($filterType == "video"){
+		}else if ($filterType == "videos"){
 			$showOutput = requireGroup("video2web", false);
 		}else if ($filterType == "channels"){
 			$showOutput = requireGroup("iptv2web", false);
