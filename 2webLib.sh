@@ -26,6 +26,7 @@ function loadOption(){
 	# - Normally you would use $@ as the input
 	# - This will detect --optionName and can be used to store the true or
 	#   false value
+	# - Will create a "yes" or "no" string output not a return value
 	#
 	optionString="$1"
 	input="$2"
@@ -42,19 +43,6 @@ function loadOption(){
 		echo -n "no"
 	fi
 }
-########################################################################
-# Read the user flags and generate values for the global variables
-# - ex. --parallel
-# - ex. --mute
-# - ex. --fast
-########################################################################
-INPUT_OPTIONS="$@"
-PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
-MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
-FORCE_OPTION="$(loadOption "force" "$INPUT_OPTIONS")"
-FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
-########################################################################
-# You must set LINE_THEME in the script using this lib
 ########################################################################
 # List the functions
 ########################################################################
@@ -4492,15 +4480,106 @@ function countDown(){
 	tput cup "6" "0"
 	redText
 	drawLine
-	drawHeader "0000 $shortMessage"
+	drawHeader "**** $shortMessage"
 	drawLine
 	resetColor
 	sleep 1
 	tput cup "6" "0"
 	drawLine
-	drawHeader "0000 $shortMessage"
+	drawHeader "____ $shortMessage"
 	drawLine
 	sleep 1
 }
 ################################################################################
+function smallCountdown(){
+	# smallCountdown "$outputMessageText" "$countdownSeconds"
+	#
+	# Launch a small countdown where the output only takes up one line
 
+	# launch a visual countdown timer
+	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
+	#
+	countDownTime="$2"
+	#
+	shortMessage="$1"
+	# fix empty options
+	if [ "$countDownTime" == "" ];then
+		countDownTime=10
+	fi
+	# check for global control options
+	if [ "$MUTE_OPTION" == "yes" ];then
+		sleep "$countDownTime"
+		# skip countdowns in mute mode
+		return
+	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		sleep "$countDownTime"
+		return
+	fi
+	if [ "$FAST_OPTION" == "yes" ];then
+		# skip countdowns in fast mode
+		return
+	fi
+	#
+	clear
+	# count down
+	for countDownTime in $(seq 1 $countDownTime | tac);do
+		# prefix the countdown time
+		countDownTime="$(prefixZeros "$countDownTime")"
+		if [ "$countDownTime" -gt 10 ];then
+			INFO "$shortMessage $(resetColor)$countDownTime$(resetColor)"
+		else
+			INFO "$shortMessage $(redText)$countDownTime$(resetColor)"
+		fi
+		sleep 1
+	done
+	# give the user 2 extra seconds to cancel the countdown after it has expired
+	INFO "$shortMessage $(yellowText)####$(resetColor)"
+	sleep 1
+	INFO "$shortMessage $(redText)____$(resetColor)"
+	sleep 1
+}
+########################################################################
+function incrementWeeklyGraphData(){
+	# add one to a weekly round robin graph
+	graphTitle="$1"
+	dayOfWeek="$(date "+%A")"
+	#
+	createDir "/var/cache/2web/generated/graphData/$graphTitle/"
+	graphDir="/var/cache/2web/generated/graphData/$graphTitle/"
+	graphPath="$graphDir$dayOfWeek.cfg"
+	if test -f "$graphPath";then
+		#
+		currentValue="$(cat "$graphPath")"
+		{
+			echo "$(( $currentValue + 1 ))"
+		} > "$graphPath"
+	else
+		echo "1" > "$graphPath"
+	fi
+}
+########################################################################
+# Read the user flags and generate values for the global variables
+# - ex. --parallel
+# - ex. --mute
+# - ex. --fast
+########################################################################
+INPUT_OPTIONS="$@"
+PARALLEL_OPTION="$(loadOption "parallel" "$INPUT_OPTIONS")"
+MUTE_OPTION="$(loadOption "mute" "$INPUT_OPTIONS")"
+FORCE_OPTION="$(loadOption "force" "$INPUT_OPTIONS")"
+FAST_OPTION="$(loadOption "fast" "$INPUT_OPTIONS")"
+IGNORE_STEAM_OPTION="$(loadOption "ignore-steam" "$INPUT_OPTIONS")"
+########################################################################
+# You must set LINE_THEME in the script using this lib
+########################################################################
+# Check if debug flag is enabled for the script
+########################################################################
+if echo "$@" | grep -q -e "--debug";then
+	set -x
+fi
+########################################################################
+# Format the debug output to show line numbers
+export PS4='+ ${LINENO}	|	'
+# set tab size to 4 to make output more readable
+tabs 4
+########################################################################
