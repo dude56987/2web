@@ -21,6 +21,7 @@
 ################################################################################
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
+ini_set('memory_limit',"4G");
 error_reporting(E_ALL);
 include("/usr/share/2web/2webLib.php");
 ################################################################################
@@ -316,6 +317,7 @@ function postFile() {
 	var request = new XMLHttpRequest();
 	// add a event trigger
 	request.upload.addEventListener('progress', function (event) {
+		console.log("upload event"+event);
 		// get the size for the file uploaded
 		var fileSize = document.getElementById('fileUploadInput').files[0].size;
 		// if the file has not completed upload draw the updated progress bar
@@ -525,7 +527,13 @@ foreach($sourceFiles as $sourceFile){
 	#
 	$updateThumbnail=false;
 	#
-	if(file_exists($pathPrefix."verified.cfg")){
+	if(file_exists($localCachePath.".mp4")){
+		$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+		$updateThumbnail=true;
+	}else if(file_exists($localCachePath.".webm")){
+		$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
+		$updateThumbnail=true;
+	}else if(file_exists($pathPrefix."verified.cfg")){
 		$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟢</div></div>\n";
 		$updateThumbnail=true;
 	}else if(file_exists($pathPrefix."video.mp4")){
@@ -533,7 +541,7 @@ foreach($sourceFiles as $sourceFile){
 		$updateThumbnail=true;
 	}else if(file_exists($pathPrefix."video.m3u")){
 		#echo "	<div class='title'>".$videoTitle."<div class='radioIcon'>🟠</div></div>\n";
-		$thumbData .= "	<div class='title'>".$videoTitle." <img class='smallSpinner' src='/spinner.gif'></div>\n";
+		$thumbData .= "	<div class='title'>".$videoTitle." <span class='smallSpinner spinRight'>⚙︎</span></div>\n";
 	}else{
 		if( is_readable($pathPrefix."data.log") and (time()-filemtime($pathPrefix."data.log") > 600) ){
 			$thumbData .= "	<div class='title'>".$videoTitle."<div class='radioIcon'>⚠️</div></div>\n";
