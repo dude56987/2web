@@ -140,15 +140,7 @@ function pauseVideo(){
 	//
 	// Attempt to pause the video element with the ID 'video'
 	//
-	var video = document.getElementById("video");
-	if(video !== null){
-		if(video.paused){
-			console.log("Video is already paused.");
-		}else{
-			console.log("Pausing the video.");
-			video.pause();
-		}
-	}
+	playPause("video","pause");
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,54 +149,68 @@ function playVideo(){
 	//
 	// Attempt to play the video element with the ID 'video'
 	//
-	var video = document.getElementById("video");
-	// if the video element exists
-	if(video !== null){
-		if(video.paused){
-			console.log("Playing the video.");
-			video.play();
-		}else{
-			console.log("Video is already playing.");
-		}
-	}
+	playPause("video","play");
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function playPause(videoId="video"){
+function playPause(videoId="video",force="off"){
 	// playPause()
 	//
 	// Toggle play/pause state of the video element with the ID 'video'
 	//
+	// Force can be set to either play or pause in order to force a play or pause
+	// of the video.
 	var video = document.getElementById(videoId);
+	var videoIsPaused;
+	var forcePlay=false;
+	var forcePause=false;
+	// check the video exists
 	if(video !== null){
-		if(video.paused){
+		// set videoIsPaused after checking the video exists
+		videoIsPaused=video.paused;
+		// figure out if a force option was used
+		if(force=="play"){
+			forcePlay=true;
+		}else if(force=="pause"){
+			forcePause=true;
+		}else{
+			// toggle the video state when no force is used
+			if(videoIsPaused){
+				forcePlay=true;
+			}else{
+				forcePause=true;
+			}
+		}
+		// only one action can be taken
+		if(forcePlay){
 			console.log("Playing the video.");
-			videoNotify("▶️");
+			videoNotify("▶︎","notification","notificationText",true);
 			showControls();
 			video.play();
 			if(window.playPauseButton){
-				window.playPauseButton.innerHTML=("⏸️");
+				window.playPauseButton.innerHTML=("⏸︎");
 			}
-		}else{
+			if(window.audioVisualizer){
+				window.audioVisualizer.style.opacity=1;
+			}
+		}else if(forcePause){
 			console.log("Pausing the video.");
-			videoNotify("⏸️");
+			videoNotify("⏸︎","notification","notificationText",true);
 			showControls();
 			video.pause();
 			if(window.playPauseButton){
-				window.playPauseButton.innerHTML="▶️";
+				window.playPauseButton.innerHTML="▶︎";
+			}
+			if(window.audioVisualizer){
+				window.audioVisualizer.style.opacity=0;
 			}
 		}
 	}
-	return false;
+	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function forcePlay(){
-	var video = document.getElementById("video");
-	var playButton = document.getElementById("playButton");
-	var pauseButton = document.getElementById("pauseButton");
-	video.play();
-	playButton.style.display = 'none';
-	pauseButton.style.display = 'inline-block';
+	playPause("video","play");
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,17 +327,17 @@ function volumeDown(){
 function getVolumeIcon(){
 	//
 	if(window.video.muted){
-		return '🔇';
+		return '🔇︎';
 	}else if(window.video.volume >= 0.9){
-		return '📢';
+		return '📣︎';
 	}else if(window.video.volume <= 0.0){
-		return '🔇';
+		return '🔇︎';
 	}else if(window.video.volume < 0.3){
-		return '🔈';
+		return '🔈︎';
 	}else if(window.video.volume < 0.6){
-		return '🔉';
+		return '🔉︎';
 	}else{
-		return '🔊';
+		return '🔊︎';
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +357,78 @@ function toggleMute(){
 		window.volumeIcon.innerHTML= getVolumeIcon();
 	}
 	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function toggleLoop(){
+	if(window.video.loop){
+		window.video.loop = false;
+		if(window.loopButton){
+			window.loopButton.innerHTML="🔚︎";
+		}
+	}else{
+		window.video.loop = true;
+		if(window.loopButton){
+			window.loopButton.innerHTML="🔂︎";
+		}
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
+function flipVideo(){
+	videoNotify("↔️");
+	if(window.video.style.scale=="1 -1"){
+		console.log("x is unchanged");
+		console.log("y is flopped");
+		window.video.style.scale="-1 -1";
+	}else if( (window.video.style.scale=="1 1") || (window.video.style.scale=="1") || (window.video.style.scale=="")){
+		// "1 1" can be stored in browser as "1" or ""
+		console.log("x is unchanged");
+		console.log("y is unchanged");
+		window.video.style.scale="-1 1";
+	}else if(window.video.style.scale=="-1 1"){
+		console.log("x is flipped");
+		console.log("y is unchanged");
+		window.video.style.scale="1 1";
+	}else if( (window.video.style.scale=="-1 -1") || (window.video.style.scale=="-1") ){
+		// "-1 -1" can also be "-1"
+		console.log("x is flipped");
+		console.log("y is flopped");
+		window.video.style.scale="1 -1";
+	}else{
+		// something has went wrong reset the scale
+		console.log("scale is unknown '"+window.video.style.scale+"'");
+		window.video.style.scale="1 1";
+	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+function flopVideo(){
+	videoNotify("↕️");
+	// flop the y axis of the video
+	if(window.video.style.scale=="1 -1"){
+		console.log("x is unchanged");
+		console.log("y is flopped");
+		window.video.style.scale="1 1";
+	}else if( (window.video.style.scale=="1 1") || (window.video.style.scale=="1") || (window.video.style.scale=="")){
+		// "1 1" can be stored in browser as "1" or ""
+		console.log("x is unchanged");
+		console.log("y is unchanged");
+		window.video.style.scale="1 -1";
+	}else if(window.video.style.scale=="-1 1"){
+		console.log("x is flipped");
+		console.log("y is unchanged");
+		window.video.style.scale="-1 -1";
+	}else if( (window.video.style.scale=="-1 -1") || (window.video.style.scale=="-1") ){
+		// "-1 -1" can also be "-1"
+		console.log("x is flipped");
+		console.log("y is flopped");
+		window.video.style.scale="-1 1";
+	}else{
+		// something has went wrong reset the scale
+		console.log("scale is unknown '"+window.video.style.scale+"'");
+		window.video.style.scale="1 1";
+	}
+	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 function timeToHuman(timestamp=0){
@@ -504,28 +582,6 @@ function timeToClock(timestamp=0){
 	return outputTime;
 }
 ////////////////////////////////////////////////////////////////////////////////
-function showControls(){
-	var video = document.getElementById("video");
-	var showControls = document.getElementById("showControls");
-	var hideControls = document.getElementById("hideControls");
-	// show controls for video
-	showControls.style.display = 'none';
-	hideControls.style.display = 'inline-block';
-	video.setAttribute("controls","controls");
-	return false;
-}
-////////////////////////////////////////////////////////////////////////////////
-function hideControls(){
-	var video = document.getElementById("video");
-	var showControls = document.getElementById("showControls");
-	var hideControls = document.getElementById("hideControls");
-	// show controls for video
-	showControls.style.display = 'inline-block';
-	hideControls.style.display = 'none';
-	video.removeAttribute("controls");
-	return false;
-}
-////////////////////////////////////////////////////////////////////////////////
 function reloadVideo(){
  document.getElementById("video").load();
 }
@@ -564,6 +620,8 @@ function toggleFullscreen(elementId="",enableScroll=false) {
 			// renable the scrolling on the element
 			chosenElement.style.overflowY="scroll";
 		}
+		// play the video
+		playVideo();
 	}else{
 		// Close fullscreen
 		if (document.exitFullscreen) {
@@ -742,8 +800,13 @@ function hideId(idToHide="notification"){
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function videoNotify(message="!",displayTime=500){
-	notify(message,displayTime,"notificationText","notification","videoContainer","toggleFullscreen('videoContainer')");
+function videoNotify(message="!",displayTime=500,textClass="notificationText",notificationId="notification",fullscreenOnClick=false){
+	if (fullscreenOnClick){
+		clickEvent="toggleFullscreen('videoContainer')";
+	}else{
+		clickEvent="window."+notificationId+".remove()";
+	}
+	notify(message,displayTime,textClass,notificationId,"videoContainer",clickEvent);
 }
 ////////////////////////////////////////////////////////////////////////////////
 function notify(message="!",displayTime=400,textClass="notificationText",notificationId="notification",addToId="",onclickAction=""){
@@ -767,7 +830,6 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 		notifyTextObj.setAttribute("id", "notificationText");
 		notifyTextObj.setAttribute("class", textClass);
 		// set the message and css
-		notifyObj.style.opacity=1.0;
 		notifyTextObj.innerHTML=message;
 		// add the text inside the notification
 		notifyObj.appendChild(notifyTextObj);
@@ -781,19 +843,24 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 		//document.getElementById("notification").style.opacity=0.9;
 		//document.getElementById("notificationText").innerHTML=message;
 		// hide the message after .5 seconds
-		notificationTimer = setTimeout(() =>{
+		setTimeout(() =>{
+			console.log("Removed notification after '"+displayTime+"'ms");
 			//
-			if(document.getElementById("notification") != null){
+			if(window.notification){
 				//
-				document.getElementById("notification").style.opacity=0;
+				window.notification.style.opacity=0;
 				// allow animation time to run then remove the object
-				notificationTimeoutTimer = setTimeout(() =>{
+				setTimeout(() =>{
+					console.log("Remove notification animation finished");
 					if (window.notification){
 						window.notification.remove();
+						console.log("Removed notification from DOM");
 					}
-				}, displayTime);
+				}, 500);
+			}else{
+				console.log("No Notification exists in DOM to remove");
 			}
-		}, 355);
+		}, displayTime);
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
