@@ -71,8 +71,8 @@ function ytdl2kodi_channel_extractor(){
 		# load the cache update delay
 		channelCacheUpdateDelay=$(cat /etc/2web/ytdl/channelCacheUpdateDelay.cfg)
 	else
-		# set the cache update delay to six hours
-		channelCacheUpdateDelay="6"
+		# set the cache update delay to 12 hours
+		channelCacheUpdateDelay="12"
 		touch /etc/2web/ytdl/channelCacheUpdateDelay.cfg
 		echo "$channelCacheUpdateDelay" > /etc/2web/ytdl/channelCacheUpdateDelay.cfg
 	fi
@@ -84,7 +84,7 @@ function ytdl2kodi_channel_extractor(){
 	if grep -q "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg";then
 		# get the line containing the channel link
 		temp=$(grep "$channelLink" "/etc/2web/ytdl/channelUpdateCache.cfg")
-		#  check the second field which will be a date
+		# check the second field which will be a date
 		resetTime=$(echo "$temp" | cut -d " " -f2)
 		ALERT "{ resetTime = $resetTime } > { now = ~$(date '+%s' ) }"
 		# update the channel updated cache if the reset time is less than the current time
@@ -104,8 +104,8 @@ function ytdl2kodi_channel_extractor(){
 	channelSum=$(echo "$channelLink" | sha256sum | cut -d' ' -f1)
 	ALERT "Updating the playlist..."
 	# try to rip as a playlist
-	#jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
 	jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
+	incrementWeeklyGraphData "yt-dlp"
 	tempLinkList=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime --flat-playlist --abort-on-error -j "$channelLink")
 	errorCode=$?
 	ALERT "tempLinkList = $tempLinkList"
@@ -177,6 +177,7 @@ function ytdl2kodi_channel_extractor(){
 		if ! validString "$showTitle";then
 			showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".uploader" | head -1)
 		fi
+
 		if ! validString "$showTitle";then
 			# get the second video from the playlist and compare the uploader name to the first
 			# if the first is the same as the second, that means the playlist title is correct
@@ -187,9 +188,10 @@ function ytdl2kodi_channel_extractor(){
 			tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
 			tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
 			echo "tempLinkUrl= $tempLinkUrl"
-			#jsRuntime=" --js-runtimes node:/usr/bin/nodejs";
 			jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
+			incrementWeeklyGraphData "yt-dlp"
 			tempJsonInfo=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl")
+			incrementWeeklyGraphData "yt-dlp"
 			tempJsonInfo2=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl2")
 
 			tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
@@ -241,6 +243,8 @@ function ytdl2kodi_channel_extractor(){
 		echo "Using link domain name generate a show title for all videos from this domain"
 		showTitle=$(ytdl2kodi_rip_title "$channelLink")
 	fi
+	# cleanup the title
+	showTitle="$(cleanText "$showTitle")"
 	echo "Show title set to '$showTitle'"
 	################################################################################
 	################################################################################
@@ -276,6 +280,7 @@ function ytdl2kodi_channel_extractor(){
 	fi
 	################################################################################
 	processedEpisodes=0
+	processingProgress=0
 	# merge existing
 	#$oldLinks=$(cat /etc/2web/ytdl/previousDownloads.cfg)
 	#$linklist=$(echo -e "$linkList\n$oldLinks")
@@ -290,25 +295,25 @@ function ytdl2kodi_channel_extractor(){
 			ALERT "Exceeded Episode Processing Limit, skipping rendering episode..."
 			return 2
 		fi
-		ALERT "Preprocessing '$link' ..."
-		ALERT "Running metadata extractor on '$link' ..."
+		#INFO "[$processedEpisodes/$totalEpisodes] Running metadata extractor on '$link' ..."
 		if [ "$link" == "$channelLink" ];then
 			# this means a link was found to the channel itself, this can cause problems
 			ALERT "Found link to the channel on the channel page..."
 		else
-			# check links aginst existing stream files to pervent duplicating the work
+			# check links against existing stream files to pervent duplicating the work
 			if echo "$@" | grep -q "\-\-username";then
-				INFO "Running username video extraction..."
+				INFO "[$processingProgress/$totalEpisodes] Running username video extraction on '$link'..."
 				if ytdl2kodi_video_extractor "$link" "$channelLink" "$showTitle" --username;then
 					processedEpisodes=$(($processedEpisodes + 1))
 				fi
 			else
-				INFO "Running video extraction...."
+				INFO "[$processingProgress/$totalEpisodes] Running video extraction on '$link'...."
 				if ytdl2kodi_video_extractor "$link" "$channelLink";then
 					processedEpisodes=$(($processedEpisodes + 1))
 				fi
 			fi
 		fi
+		processingProgress=$(($processingProgress + 1))
 	done
 	################################################################################
 	# set the timer in the cache after the channel has been extracted
@@ -604,7 +609,7 @@ function ytdl2kodi_video_extractor(){
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$channelSum.cfg"
 	#selectionSum=$(echo -n "$selection" | sha256sum | cut -d' ' -f1)
 	if checkProcessedSum "$selection" "$channelSum";then
-		INFO "The data for the selection '$selection' has already been processed."
+		#INFO "The data for the selection '$selection' has already been processed."
 		return 1
 	fi
 	drawLine
@@ -626,10 +631,10 @@ function ytdl2kodi_video_extractor(){
 	timeLimitSeconds=$(cat "/etc/2web/ytdl/videoFetchTimeLimit.cfg")
 	################################################################################
 	ALERT "Extracting metadata from '$selection'..."
-	#jsRuntime=" --js-runtimes node:/usr/bin/nodejs"
 	jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
 	# use the pip package
 	ALERT "timeout --preserve-status \"$timeLimitSeconds\" /var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j --abort-on-error --no-playlist --playlist-end 1 \"$selection\""
+	incrementWeeklyGraphData "yt-dlp"
 	info=$(timeout --preserve-status "$timeLimitSeconds" /var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j --abort-on-error --no-playlist --playlist-end 1 "$selection")
 	infoCheck=$?
 	if [ $infoCheck -eq 0 ];then
@@ -702,6 +707,9 @@ function ytdl2kodi_video_extractor(){
 		# get the file title in metadata
 		title=$(echo "$probeData" | grep "^title"| tr -s ' ' | cut -d':' -f2 | head -1)
 	fi
+
+	# cleanup the title
+	title="$(cleanText "$title")"
 
 	# write the webpage as the plot
 	plot=$(echo "$info" | jq -r ".description" | xargs -0)
