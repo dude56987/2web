@@ -1,6 +1,38 @@
 <?PHP
 include("/usr/share/2web/2webLib.php");
 requireAdmin();
+# auto redirects based on source page
+$comingFrom=$_SERVER["HTTP_REFERER"];
+addToLog("DEBUG","comingFrom","$comingFrom");
+if(stripos($comingFrom,"/comics/") !== false){
+	redirect("/settings/comics.php");
+}else if(stripos($comingFrom,"/shows/") !== false){
+	redirect("/settings/nfo.php");
+}else if(stripos($comingFrom,"/movies/") !== false){
+	redirect("/settings/nfo.php");
+}else if(stripos($comingFrom,"/videos/") !== false){
+	redirect("/settings/videos.php");
+}else if(stripos($comingFrom,"/music/") !== false){
+	redirect("/settings/music.php");
+}else if(stripos($comingFrom,"/graphs/") !== false){
+	redirect("/settings/graphs.php");
+}else if(stripos($comingFrom,"/weather/") !== false){
+	redirect("/settings/weather.php");
+}else if(stripos($comingFrom,"/portal/") !== false){
+	redirect("/settings/portal.php");
+}else if(stripos($comingFrom,"/applications/") !== false){
+	redirect("/settings/apps.php");
+}else if(stripos($comingFrom,"/wiki/") !== false){
+	redirect("/settings/wiki.php");
+}else if(stripos($comingFrom,"/live/") !== false){
+	redirect("/settings/tv.php");
+}else if(stripos($comingFrom,"/web_player") !== false){
+	redirect("/settings/system.php#webPlayerStatus");
+}else if(stripos($comingFrom,"/web-player.php") !== false){
+	redirect("/settings/system.php#webPlayerStatus");
+}else if(stripos($comingFrom,"/repos/") !== false){
+	redirect("/settings/repos.php");
+}
 ?>
 <!--
 ########################################################################
