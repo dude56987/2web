@@ -251,6 +251,8 @@ function cacheUrl($sum,$videoLink){
 	$command .= " fi";
 	# run curl after download to access the video link and activate the verification process
 	#$command .= ";sleep 95;curl \"https://localhost/ytdl-resolver.php?url=$videoLink\" > /dev/null";
+	# mark a use of yt-dlp for the graph data
+	incrementWeeklyGraphData("yt-dlp");
 	# Add the command to the processing queue
 	if (yesNoCfgCheck("/etc/2web/cache/useMultiQueue.cfg","no")){
 		addToQueue("multi",$command);

@@ -3123,4 +3123,28 @@ if( ! function_exists("createDir")){
 	}
 }
 ################################################################################
+if( ! function_exists("incrementWeeklyGraphData")){
+	function incrementWeeklyGraphData($graphTitle){
+		# add one to a weekly round robin graph
+		$dayOfWeek=date("l");
+		#
+		$graphDir="/var/cache/2web/generated/graphData/$graphTitle/";
+		createDir($graphDir);
+		$graphPath="$graphDir$dayOfWeek.cfg";
+		if (file_exists("$graphPath")){
+			#
+			$currentValue=trim(file_get_contents($graphPath));
+			$sixDaysInSeconds=((((60 * 60) * 60) * 24) * 6);
+			if ( ( time() - filemtime($graphPath) ) > ($sixDaysInSeconds) ){
+				$currentValue=1;
+			}else{
+				$currentValue += 1;
+			}
+			file_put_contents($graphPath,$currentValue);
+		}else{
+			file_put_contents($graphPath,"1");
+		}
+	}
+}
+################################################################################
 ?>
