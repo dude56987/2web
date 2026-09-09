@@ -166,6 +166,34 @@
 			-webkit-filter:hue-rotate(360deg);
 		}
 	}
+	@keyframes particle_shimmer{
+		0% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.2);
+		}
+		100% {
+			filter: brightness(1);
+		}
+	}
+	.particle_spin_left_shimmer{
+		animation-name: particle_shimmer;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: ease-in-out;
+		user-select: none;
+	}
+	.particle_spin_right_shimmer{
+		scale: -1 1;
+		animation-name: particle_shimmer;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: ease-in-out;
+		user-select: none;
+	}
 	.particle_spin_right_blink{
 		scale: -1 1;
 		animation-name: particle_blink;
@@ -174,7 +202,6 @@
 		animation-iteration-count: infinite;
 		animation-timing-function: linear;
 		user-select: none;
-		font-family: font2webGlyph;
 	}
 	.particle_spin_left_blink{
 		scale: -1 1;
@@ -184,18 +211,15 @@
 		animation-iteration-count: infinite;
 		animation-timing-function: linear;
 		user-select: none;
-		font-family: font2webGlyph;
-
 	}
 	.particle_spin_right_flux{
-			scale: -1 1;
-			animation-name: particle_flux;
-			animation-duration: 8s;
-			animation-fill-mode: forwards;
-			animation-iteration-count: infinite;
-			animation-timing-function: linear;
-			user-select: none;
-			font-family: font2webGlyph;
+		scale: -1 1;
+		animation-name: particle_flux;
+		animation-duration: 8s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
 	}
 	.particle_spin_left_flux{
 		animation-name: particle_flux;
@@ -204,7 +228,6 @@
 		animation-iteration-count: infinite;
 		animation-timing-function: linear;
 		user-select: none;
-		font-family: font2webGlyph;
 	}
 	.particle_spin_right_sway{
 		scale: -1 1;
@@ -214,7 +237,6 @@
 		animation-iteration-count: infinite;
 		animation-timing-function: ease-in-out;
 		user-select: none;
-		font-family: font2webGlyph;
 	}
 	.particle_spin_left_sway{
 		scale: 1 1;
@@ -341,95 +363,98 @@
 		font-family: font2webGlyph;
 	}
 	/* Add variablity to animation start position */
-	*:nth-of-type(30n){
+	.particle:nth-of-type(30n){
 		animation-delay: -30s !important;
 	}
-	*:nth-of-type(30n-29){
+	.particle:nth-of-type(30n-29){
 		animation-delay: -29s !important;
 	}
-	*:nth-of-type(30n-28){
+	.particle:nth-of-type(30n-28){
 		animation-delay: -28s !important;
 	}
-	*:nth-of-type(30n-27){
+	.particle:nth-of-type(30n-27){
 		animation-delay: -27s !important;
 	}
-	*:nth-of-type(30n-26){
+	.particle:nth-of-type(30n-26){
 		animation-delay: -26s !important;
 	}
-	*:nth-of-type(30n-25){
+	.particle:nth-of-type(30n-25){
 		animation-delay: -25s !important;
 	}
-	*:nth-of-type(30n-24){
+	.particle:nth-of-type(30n-24){
 		animation-delay: -24s !important;
 	}
-	*:nth-of-type(30n-23){
+	.particle:nth-of-type(30n-23){
 		animation-delay: -23s !important;
 	}
-	*:nth-of-type(30n-22){
+	.particle:nth-of-type(30n-22){
 		animation-delay: -22s !important;
 	}
-	*:nth-of-type(30n-21){
+	.particle:nth-of-type(30n-21){
 		animation-delay: -21s !important;
 	}
-	*:nth-of-type(30n-20){
+	.particle:nth-of-type(30n-20){
 		animation-delay: -20s !important;
 	}
-	*:nth-of-type(30n-19){
+	.particle:nth-of-type(30n-19){
 		animation-delay: -19s !important;
 	}
-	*:nth-of-type(30n-18){
+	.particle:nth-of-type(30n-18){
 		animation-delay: -18s !important;
 	}
-	*:nth-of-type(30n-17){
+	.particle:nth-of-type(30n-17){
 		animation-delay: -17s !important;
 	}
-	*:nth-of-type(30n-16){
+	.particle:nth-of-type(30n-16){
 		animation-delay: -16s !important;
 	}
-	*:nth-of-type(30n-15){
+	.particle:nth-of-type(30n-15){
 		animation-delay: -15s !important;
 	}
-	*:nth-of-type(30n-14){
+	.particle:nth-of-type(30n-14){
 		animation-delay: -14s !important;
 	}
-	*:nth-of-type(30n-13){
+	.particle:nth-of-type(30n-13){
 		animation-delay: -13s !important;
 	}
-	*:nth-of-type(30n-12){
+	.particle:nth-of-type(30n-12){
 		animation-delay: -12s !important;
 	}
-	*:nth-of-type(30n-11){
+	.particle:nth-of-type(30n-11){
 		animation-delay: -11s !important;
 	}
-	*:nth-of-type(30n-10){
+	.particle:nth-of-type(30n-10){
 		animation-delay: -10s !important;
 	}
-	*:nth-of-type(30n-9){
+	.particle:nth-of-type(30n-9){
 		animation-delay: -9s !important;
 	}
-	*:nth-of-type(30n-8){
+	.particle:nth-of-type(30n-8){
 		animation-delay: -8s !important;
 	}
-	*:nth-of-type(30n-7){
+	.particle:nth-of-type(30n-7){
 		animation-delay: -7s !important;
 	}
-	*:nth-of-type(30n-6){
+	.particle:nth-of-type(30n-6){
 		animation-delay: -6s !important;
 	}
-	*:nth-of-type(30n-5){
+	.particle:nth-of-type(30n-5){
 		animation-delay: -5s !important;
 	}
-	*:nth-of-type(30n-4){
+	.particle:nth-of-type(30n-4){
 		animation-delay: -4s !important;
 	}
-	*:nth-of-type(30n-3){
+	.particle:nth-of-type(30n-3){
 		animation-delay: -3s !important;
 	}
-	*:nth-of-type(30n-2){
+	.particle:nth-of-type(30n-2){
 		animation-delay: -2s !important;
 	}
-	*:nth-of-type(30n-1){
+	.particle:nth-of-type(30n-1){
 		animation-delay: -1s !important;
+	}
+	.particle{
+		z-index: -1;
 	}
 </style>
 <script>
@@ -510,7 +535,7 @@ class floatingParticle{
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
-		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex="-1";
 		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
 		if(this.colorFlux){
 			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -565,7 +590,7 @@ class floatingParticle{
 				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
 				tempParticle.style.color=randomSimpleColor(userChosenColors);
 				tempParticle.style.width=this.size+"rem";
-				tempParticle.style.zIndex="-1";
+				//tempParticle.style.zIndex="-1";
 				//tempParticle.style.zIndex=((-(this.maxSize-this.size))-1);
 				if(this.colorFlux){
 					tempParticle.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -615,7 +640,7 @@ class fastFallingParticle{
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
-		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex="-1";
 		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
 		if(this.colorFlux){
 			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -647,7 +672,7 @@ class fastFallingParticle{
 				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
 				tempParticle.style.color=randomSimpleColor(userChosenColors);
 				tempParticle.style.width=this.size+"rem";
-				tempParticle.style.zIndex="-1";
+				//tempParticle.style.zIndex="-1";
 				tempParticle.style.fontWeight=randomWeight();
 				//tempParticle.style.zIndex=((-(this.maxSize-this.size))-1);
 				if(this.colorFlux){
@@ -715,7 +740,7 @@ class flyingParticle{
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
-		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex="-1";
 		//this.particleDiv.style.zIndex=((-(this.maxSize-this.size))-1);
 		if(this.colorFlux){
 			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
@@ -769,7 +794,7 @@ class flyingParticle{
 				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
 				tempParticle.style.color=randomSimpleColor(userChosenColors);
 				tempParticle.style.width=this.size+"rem";
-				tempParticle.style.zIndex="-1";
+				//tempParticle.style.zIndex="-1";
 				//
 				tempParticle.style.height=this.size+"rem";
 				tempParticle.style.lineHeight=this.size+"rem";
@@ -865,7 +890,7 @@ class staticParticle{
 		}
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
-		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex="-1";
 		// randomize the animation loop starting position when creating the particle
 		//this.particleDiv.style.animationDelay=( -1 * ( Math.floor(Math.random() * parallelAnimations) ) );
 		// randomize the weight
@@ -967,7 +992,7 @@ class lightParticle{
 		// create a random particle
 		this.particleDiv.innerHTML=randomParticle(userChosenParticles);
 		//
-		this.particleDiv.style.zIndex="-1";
+		//this.particleDiv.style.zIndex="-1";
 		if(this.colorFlux){
 			this.particleDiv.style.filter="hue-rotate("+(Math.floor(Math.random() * 360))+"deg)";
 		}
@@ -1028,7 +1053,7 @@ class lightParticle{
 			(parseInt(tempParticle.style.top) < (-200)) ){
 				// reset the size of the particle
 				tempParticle.style.color=randomSimpleColor(userChosenColors);
-				tempParticle.style.zIndex="-1";
+				//tempParticle.style.zIndex="-1";
 				// reset the position to the center
 				this.particleDiv.style.top=(window.innerHeight/2)+"px";
 				this.particleDiv.style.left=(window.innerWidth/2)+"px";
