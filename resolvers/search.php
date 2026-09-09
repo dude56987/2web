@@ -528,6 +528,7 @@ function checkForBangs($searchQuery){
 	$bangCommands->append(array("!start","https://www.startpage.com/sp/search?q="));
 	$bangCommands->append(array("!s","https://www.startpage.com/sp/search?q="));
 	#
+	$bangCommands->append(array("!v","https://search.brave.com/videos?safesearch=off&q="));
 	$bangCommands->append(array("!vid","https://search.brave.com/videos?safesearch=off&q="));
 	$bangCommands->append(array("!video","https://search.brave.com/videos?safesearch=off&q="));
 	# piped.video search
