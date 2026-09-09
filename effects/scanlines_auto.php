@@ -1,6 +1,6 @@
 <?PHP
 ########################################################################
-# 2web CRT effect
+# 2web Scanlines effect
 # Copyright (C) 2026  Carl J Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,28 +18,7 @@
 ########################################################################
 ?>
 <style>
-	@keyframes crt_flicker{
-		0%{
-			background: repeating-linear-gradient(90deg,transparent 1px,black 2px);
-		}
-		20%{
-			background: repeating-linear-gradient(90deg,black 1px,black 2px);
-		}
-		40%{
-			background: repeating-linear-gradient(90deg,transparent 1px,black 2px);
-		}
-		60%{
-			background: repeating-linear-gradient(90deg,black 1px,black 2px);
-		}
-		80%{
-			background: repeating-linear-gradient(90deg,transparent 1px,black 2px);
-		}
-		100%{
-			background: repeating-linear-gradient(90deg,black 1px,black 2px);
-		}
-	}
 	.screenOverlay{
-		animation: crt_flicker 0.3s infinite;
 		position: fixed;
 		top: 0px;
 		left: 0px;
@@ -48,7 +27,15 @@
 		opacity: 0.35;
 		pointer-events: none;
 		z-index: 200;
-		background: repeating-linear-gradient(90deg,transparent 1px,black 2px),
-			repeating-linear-gradient(0deg,transparent 1px,black 2px);
+	}
+	@media (prefers-color-scheme: dark){
+		.screenOverlay{
+			background: repeating-linear-gradient(0deg,transparent 1px,black 2px);
+		}
+	}
+	@media (prefers-color-scheme: light){
+		.screenOverlay{
+			background: repeating-linear-gradient(0deg,transparent 1px,white 2px);
+		}
 	}
 </style>
