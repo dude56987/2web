@@ -1,0 +1,92 @@
+/*
+########################################################################
+# 2web tight round theme mod
+# Copyright (C) 2026  Carl J Smith
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+########################################################################
+*/
+.button,h1,h2,h3,h4,h5{
+	padding: 0.1rem !important;
+}
+.listCard .activeButton{
+	line-height: 1.5rem !important;
+}
+.listCard .button{
+	line-height: 1.5rem !important;
+}
+/* Round Everything */
+.button{
+	border-radius: 5px;
+}
+.activeButton{
+	border-radius: 5px;
+}
+.searchButton{
+	border-radius: 5px;
+}
+input{
+	border-radius: 5px;
+}
+.indexSeries{
+	border-radius: 5px;
+}
+.titleCard{
+	border-radius: 5px;
+}
+.inputCard{
+	border-radius: 5px;
+}
+.seasonContainer{
+	border-radius: 5px;
+}
+/*
+.titleCard h1,h2,h3{
+	border-radius: 0.3rem;
+}
+*/
+.showPageEpisode{
+	border-radius: 5px;
+}
+.channelList{
+	border-radius: 5px;
+}
+video{
+	border-radius: 0px;
+}
+@media all and (display-mode: fullscreen){
+	video{
+		border-radius: 0rem;
+	}
+}
+.weatherForcast{
+	border-radius: 5px;
+}
+.portalPreviewContainer{
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+@media only screen and (max-width: 800px), (orientation: portrait){
+	#topButton{
+		/* Disable the border radius on the top button*/
+		border-radius: 0px;
+	}
+}
+.homeActivityGraph{
+	border-radius: 5px;
+}
+.gitRepoGraph{
+	border-radius: 5px;
+}
+
