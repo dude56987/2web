@@ -474,11 +474,14 @@ function delete(){
 	# - Create path recursively if necessary
 	#
 	# RETURN FILES
+
 	if test -d "$1";then
 		ALERT "Preparing to remove files in '$1'"
 		if [ "$FAST_OPTION" == "yes" ];then
 			ALERT "Removing Files in '$1'"
-			rm -r "$1" &
+			# fix the trailing / in the directory path
+			deletePath="$( echo "$1/" | tr -s '/' )"
+			rm -r "$deletePath" &
 			# use blockQueue to activate the spinner while waiting for process to end
 			blockQueue 1
 			# verify the removal was successfull
@@ -492,6 +495,7 @@ function delete(){
 		tempDirFiles=$(find "$1" -type l -o -type f)
 		# sort the dirs and reverse them so they are removed longest path to shortest
 		tempDirDirs=$(find "$1" -type d | sort -u | tac )
+		#ALERT "$tempDirDirs" "tempDirDirs"
 		#
 		tempDirFileCount=$(echo -n "$tempDirFiles" | wc -l)
 		tempDirDirCount=$(echo -n "$tempDirDirs" | wc -l)
@@ -501,7 +505,8 @@ function delete(){
 		if [ "$theTotal" == "0" ];then
 			ALERT "All Files have already been removed."
 			# remove the empty directory
-			rmdir -v "$1"
+			# - use rm -rv not rmdir in case some files named with spaces at the end exist
+			rm -rv "$1"
 			#
 			return
 		fi
@@ -564,7 +569,7 @@ function delete(){
 						if [ "$tempDirFilePath" == "" ];then
 							ALERT "Empty Path Given"
 						else
-							ERROR "File could not be removed at '$tempDirFilePath'"
+							ERROR "File could not be removed at $( echo -e "${tempDirFilePath}\n" )$( ls -lash "$tempDirFilePath" )"
 						fi
 					fi
 				done
@@ -582,11 +587,10 @@ function delete(){
 				if test -d "$tempDirDirPath";then
 					# check if fast mode is enabled
 					if [ $theTotal -gt 1000 ];then
-						rm -r "$tempDirDirPath" &
+						# slow the removal if the total is greater than 1000
 						sleep "$sleepDirTime"
-					else
-						rmdir "$tempDirDirPath" &
 					fi
+					rm -r "$tempDirDirPath" &
 					# calculate the percent and remove decimals
 					progressPercent="$(echo "$( bc -l <<< "( $progressCount / $tempDirDirCount ) * 100" )" | cut -d'.' -f1 )"
 					INFO "[$progressCount/$tempDirDirCount] ${progressPercent}% Removing directory '$tempDirDirPath'"
@@ -596,7 +600,7 @@ function delete(){
 					if [ "$tempDirDirPath" == "" ];then
 						ALERT "Empty Path Given"
 					else
-						ERROR "Path could not be removed at $( echo -e "${tempDirDirPath}\n" )$( tree "$tempDirDirPath" )"
+						ERROR "Path does not exist at $( echo -e "${tempDirDirPath}\n" )$( ls -lash "$tempDirDirPath" )"
 					fi
 				fi
 			done
@@ -604,7 +608,7 @@ function delete(){
 		fi
 		# return codes
 		if test -d "$1";then
-			ERROR "Removal of directory '$1' Failed!"
+			ERROR "Removal of directory '$1' Failed!\n$( ls -lash "$1" )"
 			return 1
 		else
 			ALERT "Removal of directory '$1' complete !"
@@ -614,7 +618,7 @@ function delete(){
 		# this is a single file path, remove the file
 		rm -v "$1"
 		if test -f "$1";then
-			ERROR "Removal of file '$1' Failed!"
+			ERROR "Removal of file '$1' Failed!\n$( ls -lash "$1")"
 			return 1
 		else
 			ALERT "Removal of file '$1' complete !"
@@ -624,7 +628,7 @@ function delete(){
 		# this is a symlink remove it
 		rm -v "$1"
 		if test -s "$1";then
-			ERROR "Removal of symlink '$1' Failed!"
+			ERROR "Removal of symlink '$1' Failed!\n$( ls -lash "$1")"
 			return 1
 		else
 			ALERT "Removal of symlink '$1' complete !"
