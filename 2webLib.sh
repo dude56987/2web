@@ -194,6 +194,12 @@ function timeToHuman(){
 	# remove newlines in timestamp
 	timestamp="$(echo -n "$1" | sed "s/\n//g" )"
 
+	# check for decimals
+	if echo -n "$timestamp" | grep -q "\.";then
+		# split off decimal places without rounding
+		timestamp="$( echo -n "$timestamp" | cut -d '.' -f1 )"
+	fi
+
 	yearInSeconds=$(( ( (60 * 60) * 24 ) * 365 ))
 	dayInSeconds=$(( ( (60 * 60) * 24 ) ))
 	hourInSeconds=$(( 60 * 60 ))
@@ -209,7 +215,7 @@ function timeToHuman(){
 		timestamp=$(( $timestamp - ( $yearsPassed * $yearInSeconds ) ))
 		if [ $yearsPassed == 1 ];then
 			echo -n "$yearsPassed year "
-		elif ($yearsPassed > 1);then
+		elif [ $yearsPassed -gt 1 ];then
 			echo -n "$yearsPassed years "
 		fi
 	fi
