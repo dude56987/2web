@@ -259,6 +259,97 @@ function timeToHuman(){
 		echo -n "$timestamp seconds "
 	fi
 }
+########################################################################
+function prefixZerosSmall(){
+	unformatedNumber="$1"
+	# draw blank and zeros as 00
+	if [ "$unformatedNumber" == "" ];then
+		echo "00"
+		return
+	elif [ "$unformatedNumber" == "0" ];then
+		echo "00"
+		return
+	fi
+	# figure out the prefix amount based on the value
+	if [ "$(( 10#$unformatedNumber ))" -le 0 ];then
+		formatedNumber="00"
+	elif [ "$(( 10#$unformatedNumber ))" -lt 10 ];then
+		# add a zero to make it format correctly
+		formatedNumber="0$unformatedNumber"
+	else
+		formatedNumber="$unformatedNumber"
+	fi
+	echo "$formatedNumber"
+}
+########################################################################
+function timeToClock(){
+	# remove newlines in timestamp
+	timestamp="$(echo -n "$1" | sed "s/\n//g" )"
+	if [ "$timestamp" == "yes" ];then
+		echo "00:00:00"
+		return 1
+	fi
+	# check for decimals
+	if echo -n "$timestamp" | grep -q "\.";then
+		# split off decimal places without rounding
+		timestamp="$( echo -n "$timestamp" | cut -d '.' -f1 )"
+	fi
+
+	yearInSeconds=$(( ( (60 * 60) * 24 ) * 365 ))
+	dayInSeconds=$(( ( (60 * 60) * 24 ) ))
+	hourInSeconds=$(( 60 * 60 ))
+	minuteInSeconds=60
+
+	yearsPassed=0
+	daysPassed=0
+	hoursPassed=0
+	minutesPassed=0
+
+	if [ $timestamp -gt $yearInSeconds ];then
+		yearsPassed=$(( $timestamp / $yearInSeconds ))
+		timestamp=$(( $timestamp - ( $yearsPassed * $yearInSeconds ) ))
+		yearsPassed="$( prefixZerosSmall "$yearsPassed")"
+		if [ $yearsPassed == 1 ];then
+			echo -n "$yearsPassed year "
+		elif [ $yearsPassed -gt 1 ];then
+			echo -n "$yearsPassed years "
+		fi
+	fi
+
+	if [ $timestamp -gt $dayInSeconds ];then
+		daysPassed=$(( $timestamp / $dayInSeconds ))
+		timestamp=$(( $timestamp - ( $daysPassed * $dayInSeconds ) ))
+		daysPassed="$( prefixZerosSmall "$daysPassed")"
+		if [ $daysPassed == 1 ];then
+			echo -n "$daysPassed day "
+		elif [ $daysPassed -gt 1 ];then
+			echo -n "$daysPassed days "
+		fi
+	fi
+
+	if [ $timestamp -gt $hourInSeconds ];then
+		hoursPassed=$(( $timestamp / $hourInSeconds ))
+		timestamp=$(( $timestamp - ( $hoursPassed * $hourInSeconds ) ))
+		hoursPassed="$( prefixZerosSmall "$hoursPassed")"
+		echo -n "$hoursPassed:"
+	else
+		echo -n "00:";
+	fi
+
+	if [ $timestamp -gt $minuteInSeconds ];then
+		minutesPassed=$(( $timestamp / $minuteInSeconds ))
+		timestamp=$(( $timestamp - ( $minutesPassed * $minuteInSeconds ) ))
+		minutesPassed="$( prefixZerosSmall "$minutesPassed")"
+		echo -n "$minutesPassed:"
+	else
+		echo -n "00:";
+	fi
+	timestamp="$( prefixZerosSmall "$timestamp")"
+	# write out the remaining seconds
+	echo -n "$timestamp"
+}
+
+
 ################################################################################
 function spaceCleanedText(){
 	# clean up the text for use in web urls and directory paths
