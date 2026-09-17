@@ -1197,6 +1197,9 @@ function alterArticles(){
 	#  - The
 	# - Leading Intergers are also treated as articles
 	#
+	# - If used in conjunction with cleanText() you must use alter articles first.
+	# - Alter articles generates a regular comma not a fullwidth comma like cleanText() uses.
+	#
 	# ex)
 	#    "The Big Man" becomes "Big Man, The"
 	# ex)
