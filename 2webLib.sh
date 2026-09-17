@@ -1856,12 +1856,14 @@ function upgrade-yt-dlp(){
 		yt_dlp_downloadPath="/var/cache/2web/downloads/yt-dlp/unstable/"
 		yt_dlp_downloadFile="/var/cache/2web/downloads/yt-dlp/unstable/yt-dlp"
 	fi
+	# set the permissions for the downloaded file
+	chown www-data:www-data "$yt_dlp_downloadFile"
 	# get the sum of the downloaded cache file
 	newFileSum=$(md5sum "$yt_dlp_downloadFile" | cut -d' ' -f1 )
 	# check if the file is already installed
-	if checkFileDataSum "$yt_dlp_downloadFile";then
+	if test -f "/var/cache/2web/generated/yt-dlp/yt-dlp";then
 		# if the file is installed get the file sum
-		oldFileSum=$(md5sum "$yt_dlp_downloadFile" | cut -d' ' -f1 )
+		oldFileSum=$(md5sum "/var/cache/2web/generated/yt-dlp/yt-dlp" | cut -d' ' -f1 )
 	else
 		oldFileSum=0
 	fi
@@ -1875,8 +1877,7 @@ function upgrade-yt-dlp(){
 		cp -v "$yt_dlp_downloadFile" "/var/cache/2web/generated/yt-dlp/yt-dlp"
 		# set the permissions
 		chmod +x "/var/cache/2web/generated/yt-dlp/yt-dlp"
-		# set the lock file
-		setFileDataSum "$yt_dlp_downloadFile"
+		chown www-data:www-data "/var/cache/2web/generated/yt-dlp/yt-dlp"
 	fi
 }
 ################################################################################
