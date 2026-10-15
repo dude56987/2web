@@ -167,14 +167,6 @@ if (($pageURL == "/settings/tv.php") || ($pageURL == "/settings/radio.php") || (
 	echo "	<div class='titleCard settingsHeader'>\n";
 	echo "		<h2>AI Settings</h2>\n";
 	echo "		<div class='warningBanner'>The AI tools are currently UNSTABLE and may contain missing/broken features.</div>";
-	echo "		<div class='listCard'>\n";
-	drawHeaderButton("🧠","Main","/settings/ai.php");
-	drawHeaderButton("🪄","Intergrations","/settings/ai_embeds.php");
-	drawHeaderButton("👽","Prompting","/settings/ai_prompt.php");
-	drawHeaderButton("🎨","Image Gen","/settings/ai_txt2img.php");
-	drawHeaderButton("📹","Subtitle Gen","/settings/ai_subtitles.php");
-	drawHeaderButton("📢","Audio Gen","/settings/ai_audio.php");
-	echo "		</div>";
 	echo "	</div>\n";
 }elseif (($pageURL == "/settings/portal.php") || ($pageURL == "/settings/portal_scanning.php")){
 	$moduleName="portal2web";

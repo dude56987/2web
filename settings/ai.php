@@ -36,32 +36,13 @@ ini_set('display_errors', 1);
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
 include("settingsHeader.php");
 ?>
-
-<div id='index' class='inputCard'>
-	<h2>Index</h2>
+<div id='' class='titleCard'>
+	<h2>ai2web Module</h2>
 	<ul>
-		<li><a href='#aiCompareGenerate'>Generate Comparisons</a></li>
+		<li>AI Module is currently not working.</li>
+		<li>Machine Learning tecniques used in the background of 2web can NOT be managed here.</li>
 	</ul>
 </div>
-
-<div id='aiCompareGenerate' class='inputCard'>
-	<h2>Generate Comparisons</h2>
-		<ul>
-			<li>
-				Generate comparisons for related videos section of webpages.
-			</li>
-			<li>
-				This is EXTREMELY <span title='Central Processing Unit'>CPU</span><sup>Central Processing Unit</sup> expensive. It is generating a <span title='Large Language Model'>LLM</span><sup>Large Language Model</sup> for local content from scratch. This process may take weeks to complete but can be interupted and picked up after a unexpected system reboot.
-			</li>
-			<li>
-				<span class='disabledSetting'>Webpages do NOT support this yet.</span>
-			</li>
-		</ul>
-		<?php
-		buildYesNoCfgButton("/etc/2web/ai/aiCompareGenerate.cfg","Comparison Generation","aiCompareGenerate");
-		?>
-</div>
-
 <?PHP
 	include($_SERVER['DOCUMENT_ROOT']."/footer.php");
 ?>

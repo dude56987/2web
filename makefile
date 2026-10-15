@@ -323,32 +323,6 @@ build-deb: upgrade-hls
 	cat build/sh_head.txt > debian/usr/bin/queue2web
 	grep --invert-match "^[[:blank:]]*#" queue2web.sh | tr -s '\n' >> debian/usr/bin/queue2web
 	################################################################################
-	# build ai prompt tools
-	################################################################################
-	# build the text prompt
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_prompt
-	cat build/py_head.txt > debian/usr/bin/ai2web_prompt
-	grep --invert-match "^[[:blank:]]*#" ai2web_prompt.py | tr -s '\n' >> debian/usr/bin/ai2web_prompt
-	# build the audio prompt
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_audio
-	cat build/py_head.txt > debian/usr/bin/ai2web_audio
-	grep --invert-match "^[[:blank:]]*#" ai2web_audio.py | tr -s '\n' >> debian/usr/bin/ai2web_audio
-	# txt2img
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2img
-	cat build/py_head.txt > debian/usr/bin/ai2web_txt2img
-	grep --invert-match "^[[:blank:]]*#" ai2web_txt2img.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2img
-	# txt2txt
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_txt2txt
-	cat build/py_head.txt > debian/usr/bin/ai2web_txt2txt
-	grep --invert-match "^[[:blank:]]*#" ai2web_txt2txt.py | tr -s '\n' >> debian/usr/bin/ai2web_txt2txt
-	# q2a
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_q2a
-	cat build/py_head.txt > debian/usr/bin/ai2web_q2a
-	grep --invert-match "^[[:blank:]]*#" ai2web_q2a.py | tr -s '\n' >> debian/usr/bin/ai2web_q2a
-	# img2img
-	echo "#! /usr/bin/python3" > debian/usr/bin/ai2web_img2img
-	cat build/py_head.txt > debian/usr/bin/ai2web_img2img
-	grep --invert-match "^[[:blank:]]*#" ai2web_img2img.py | tr -s '\n' >> debian/usr/bin/ai2web_img2img
 	# 2web_search global search helper
 	echo "#! /bin/bash" > debian/usr/bin/2web_search
 	cat build/sh_head.txt > debian/usr/bin/2web_search

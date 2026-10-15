@@ -215,17 +215,11 @@ foreach($modules as $module){
 		echo "			Will enable <a href='https://wikipedia.org/wiki/Git'>git</a> repo processing.\n";
 		echo "		</li>\n";
 	}elseif ($module == "ai2web"){
-		echo "		<div class='warningBanner'>\n";
-		echo "			 WARNING: This module is under development and still 🫨 UNSTABLE. Some services and functions of the module may not work completely or correctly.\n";
-		echo "		</div>\n";
 		echo "		<li>\n";
-		echo "			Will enable machine learning for recommending videos.\n";
+		echo "			 WARNING: This module is 🫨 UNSTABLE. NOTHING WORKS.\n";
 		echo "		</li>\n";
 		echo "		<li>\n";
-		echo "			Will enable diffusion based image generation from text.\n";
-		echo "		</li>\n";
-		echo "		<li>\n";
-		echo "			Will enable gpt4all web interface for prompting.\n";
+		echo "			Will make available AI tools using local server data for weights.\n";
 		echo "		</li>\n";
 	}elseif ($module == "rss2nfo"){
 		echo "		<li>\n";
