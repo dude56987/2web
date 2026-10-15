@@ -174,9 +174,22 @@ if (array_key_exists("url",$_GET)){
 	$videoLink = $proto."://".$_SERVER["HTTP_HOST"]."/ytdl-resolver.php?url=".'"'.$videoLink.'"';
 	# create the directory to store the video metadata
 	$videoPathPrefix="/var/cache/2web/web/web_player/".$videoLinkSum."/";
-	#$videoPathPrefix="/var/cache/2web/web/web_player/";
+	#
 	if (! file_exists($videoPathPrefix)){
 		mkdir($videoPathPrefix);
+	}
+	# create the index link if it is set
+	if(isset($_GET["indexPath"])){
+		addToLog("INFO","Adding Index Path","Adding index path '".$_GET["indexPath"]."'");
+		if(file_exists("/var/cache/2web/web".$_GET["indexPath"])){
+			addToLog("INFO","Adding Index Path","Index Path exists '".$_GET["indexPath"]."'");
+			# if the path does not contain a up path ".."
+			if ((stripos($_GET["indexPath"],"..") !== false) == false){
+				addToLog("INFO","Adding Index Path","Index Path contains no abusive code '".$_GET["indexPath"]."'");
+				# link the index file into the web player path
+				link("/var/cache/2web/web".$_GET["indexPath"],("/var/cache/2web/web/RESOLVER-CACHE/$videoLinkSum/video.index"));
+			}
+		}
 	}
 	# build the php page
 	if(! file_exists($videoPathPrefix.$videoLinkSum.".php")){
