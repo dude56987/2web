@@ -44,21 +44,64 @@
 		$titleData=$jsonSum;
 		$useJson=false;
 	}
+	# check for direct link data
+	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
+	if (file_exists($directLinkPath)){
+		$directLinkData=file_get_contents($directLinkPath);
+		#
+		$directLinkData=trim($directLinkData, "\r\n");
+		#
+		$directLinkExists=true;
+		# remove parenthesis from video link if they exist
+		$directLinkData=str_replace('"','',$directLinkData);
+		$directLinkData=str_replace("'","",$directLinkData);
+		# remove hash data if found
+		if ( strpos($directLinkData,"#") !== false) {
+			# split the string based on the hash
+			$tempData=explode("#",$directLinkData);
+			$directLinkData=$tempData[0];
+		}
+		# create the sum of the file
+		$sum=createSum($directLinkData);
+	}else{
+		$directLinkExists=false;
+	}
 	# check group permissions based on what the player is being used for
 	if($useJson){
-		requireGroup("webPlayer");
 		# load the json data
 		$jsonData=json_decode(file_get_contents($jsonPath));
-		if (isset($jsonData)){
-			if ($jsonData != ""){
+		if (file_exists($jsonPath)){
+			if ( ($jsonData != "") and ($jsonData != null) and ($jsonData != "null") ){
 				# get the title
 				if(property_exists($jsonData, "title")){
 					$titleData=$jsonData->title;
 				}
+			}else{
+				# if the json data is incorrect
+				$titleData=$jsonSum;
+				$useJson=false;
+				# use the direct link to dump json data to the resolver cache location
+				if ($directLinkExists){
+					incrementWeeklyGraphData("yt-dlp");
+					# remove and re-download the broken json data
+					unlink($jsonPath);
+					# load the javascript runtime to use
+					$jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs";
+					# add a job to the queue to get the title
+					$command = "/var/cache/2web/generated/yt-dlp/yt-dlp --no-download --dump-single-json $jsRuntime ";
+					$command .= "\"$directLinkData\"";
+					$command .= " > \"$jsonPath\"";
+					#
+					addToQueue("multi",$command);
+					# a reload will be required to update the data
+					# - Auto Reload can lead to infinite loops without a limit
+					#
+					# this will require a reload
+					#reloadPage(10);
+					#exit();
+				}
 			}
 		}
-	}else{
-		requireGroup("nfo2web");
 	}
 ?>
 <!--
@@ -141,6 +184,8 @@ function getCacheLink($videoLink,$mimeType,$cacheType="RESOLVER-CACHE"){
 	#
 	if ("video/mp4" == $mimeType){
 		return ("/$cacheType/$sum/video.mp4");
+	}else if ("video/mp2t" == $mimeType){
+		return ("/$cacheType/$sum/video.mp4");
 	}else if ("video/x-m4v" == $mimeType){
 		return ("/$cacheType/$sum/video.mp4");
 	}else if ("video/webm" == $mimeType){
@@ -151,6 +196,12 @@ function getCacheLink($videoLink,$mimeType,$cacheType="RESOLVER-CACHE"){
 		return ("/$cacheType/$sum/video.m3u");
 	}else if ("video/ogg" == $mimeType){
 		return ("/$cacheType/$sum/video.ogg");
+	}else if("http://" == substr($videoLink,0,6)){
+		addToLog("INFO","videoPlayer.php","HTTP Web link has no mime type '$videoLink'");
+		return ("$videoLink");
+	}else if("https://" == substr($videoLink,0,7)){
+		addToLog("INFO","videoPlayer.php","HTTPS Web link has no mime type '$videoLink'");
+		return ("$videoLink");
 	}else{
 		# all cached locations have failed to find this video
 		addToLog("ERROR","videoPlayer.php","No mime type '$mimeType' exists for getCacheLink($videoLink)");
@@ -265,6 +316,28 @@ if (array_key_exists("HTTPS",$_SERVER)){
 <link rel='stylesheet' href='/style.css' />
 <script src='/2webLib.js'></script>
 <script src='/hls.js'></script>
+<script>
+	function videoBuffering(){
+		// Show a spinner on the video until the video starts playing again
+
+		// hide the default browser buffering spinner
+		window.video.controls=false;
+		// 1 hour and the spinner will automatically stop
+		videoNotify("🕛",3600000,"spinRight","notificationText","notification");
+		// get the stop time
+		videoBufferStopTime=window.video.currentTime;
+		// set a interval to wait until playback has resumed
+		bufferInterval = setInterval(() =>{
+			// check the position of video playback has not changed
+			if (window.video.currentTime != videoBufferStopTime){
+				// remove the notification
+				if(window.notification){
+					window.notification.remove();
+				}
+			}
+		},33);
+	}
+</script>
 <style>
 <?PHP
 	# look for fanart and poster
@@ -273,10 +346,15 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		# set the show poster and fanart as the background
 		echo "--backgroundPoster: url(\"/shows/$showTitle/poster.png\");";
 		echo "--backgroundFanart: url(\"/shows/$showTitle/fanart.png\");";
+		# get the episode thumbnail
+		$tempPosterPathName=$_SERVER["SCRIPT_FILENAME"];
+		$tempPosterPathName=str_replace(".php","-thumb.png",$tempPosterPathName);
+		$tempPosterPathName=str_replace("/var/cache/2web/web","",$tempPosterPathName);
 	}else if (file_exists("movie.title")){
 		#
 		echo "--backgroundPoster: url(\"/movies/$movieTitle/poster.png\");";
 		echo "--backgroundFanart: url(\"/movies/$movieTitle/fanart.png\");";
+		$tempPosterPathName="/movies/$movieTitle/poster.png";
 	}else{
 		$tempPosterPathName=$_SERVER["SCRIPT_FILENAME"];
 		$tempPosterPathName=str_replace(".php","-thumb.png",$tempPosterPathName);
@@ -286,12 +364,16 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		}else{
 			# default to random all for posters if nothing else works
 			echo "--backgroundPoster: url(\"/randomFanart.php\");";
+			$tempPosterPathName="/favicon.png";
 		}
 	}
 	echo "}";
 	?>
 </style>
-<link rel='icon' type='image/png' href='/favicon.png'>
+<?PHP
+	# set the favicon to the poster
+	echo "<link rel='icon' type='image/png' href='$tempPosterPathName'>"
+?>
 </head>
 <body>
 <script>
@@ -315,28 +397,6 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		}
 	}else{
 		$adminData="";
-	}
-	# check for direct link
-	$directLinkPath=$_SERVER["SCRIPT_FILENAME"].".directLink";
-	if (file_exists($directLinkPath)){
-		$directLinkData=file_get_contents($directLinkPath);
-		#
-		$directLinkData=trim($directLinkData, "\r\n");
-		#
-		$directLinkExists=true;
-		# remove parenthesis from video link if they exist
-		$directLinkData=str_replace('"','',$directLinkData);
-		$directLinkData=str_replace("'","",$directLinkData);
-		# remove hash data if found
-		if ( strpos($directLinkData,"#") !== false) {
-			# split the string based on the hash
-			$tempData=explode("#",$directLinkData);
-			$directLinkData=$tempData[0];
-		}
-		# create the sum of the file
-		$sum=createSum($directLinkData);
-	}else{
-		$directLinkExists=false;
 	}
 	# check if the direct link is a link to a external source rather than the local server
 	if ( substr($directLinkData,0,1) == "/" ){
@@ -362,36 +422,20 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	# this should always be set even if it is empty
 	$videoChannelUrl="";
 	# load data from the json file
-	if(file_exists($jsonPath)){
-		if( ( $jsonData == null ) or ( $jsonData == "null" ) ){
-			# remove and re-download the json data
-			# remove the json data
-			unlink($jsonPath);
-			# add a job to the queue to get the title
-			$command = "/var/cache/2web/generated/yt-dlp/yt-dlp --no-download --dump-single-json ";
-			$command .= "\"$directLinkData\"";
-			$command .= " > \"$jsonPath\"";
-			#
-			addToQueue("multi",$command);
-			# this will require a reload
-			reloadPage(10);
-			exit();
-		}
+	if($useJson){
 		#
-		if(file_exists($jsonPath)){
-			if(property_exists($jsonData, "age_limit")){
-				$tempAgeLimit=$jsonData->age_limit;
-				if(($tempAgeLimit) >= 18){
-					$ageIcon="🔞 ";
-				}else if(($tempAgeLimit) < 13){
-					$ageIcon="🚸";
-				}else if(($tempAgeLimit) < 18){
-					$ageIcon="👪";
-				}else if(($tempAgeLimit) == 0){
-					$ageIcon="🤖";
-				}else{
-					$ageIcon="?";
-				}
+		if(property_exists($jsonData, "age_limit")){
+			$tempAgeLimit=$jsonData->age_limit;
+			if(($tempAgeLimit) >= 18){
+				$ageIcon="🔞 ";
+			}else if(($tempAgeLimit) < 13){
+				$ageIcon="🚸";
+			}else if(($tempAgeLimit) < 18){
+				$ageIcon="👪";
+			}else if(($tempAgeLimit) == 0){
+				$ageIcon="🤖";
+			}else{
+				$ageIcon="?";
 			}
 		}
 		# load the json and build the page
@@ -575,7 +619,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 <div class='titleCard'>
 <h1>
 <?PHP
-	if(file_exists($jsonPath)){
+	if($useJson){
 		if(property_exists($jsonData, "age_limit")){
 			if(($jsonData->age_limit) == 18){
 				echo "🔞 ";
@@ -652,6 +696,14 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		$pathPrefix=$_SERVER["DOCUMENT_ROOT"].$webPrefix;
 		#
 		if(file_exists($pathPrefix."verified.cfg")){
+			# if the file was verified less than 90 seconds ago send a verified notification during page load
+			if (array_key_exists("play",$_GET) == false){
+				if( (time()-filemtime($pathPrefix."verified.cfg") < 60) ){
+					echo "<script>";
+					echo "	videoNotify(\"✔️ Verified\",2000);";
+					echo "</script>";
+				}
+			}
 			echo "	<a class='button' href='$cacheHelpLink' title='Video is completely cached and ready for playback.'>Cache State <div class='radioIcon'>🟢</div></a>\n";
 		}else if(file_exists($pathPrefix."video.mp4")){
 			echo "	<a class='button' href='$cacheHelpLink' title='Final video is available but unverified.'>Cache State <div class='radioIcon'>🟡</div></a>\n";
@@ -660,7 +712,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			}
 		}else if(file_exists($pathPrefix."video.m3u")){
 			#echo "	<div class='button' title='HLS stream is available for playback.'>Cache State <div class='radioIcon'>🟠</div></div>\n";
-			echo "	<a class='button' href='$cacheHelpLink'>Cache State <img class='smallSpinner' src='/spinner.gif'></a>\n";
+			echo "	<a class='button' href='$cacheHelpLink'>Cache State <span class='smallSpinner spinRight'>⚙︎</span>\n";
 		}else{
 			# check if the failed cache is older than 10 minutes
 			if( is_readable($pathPrefix) and (time()-filemtime($pathPrefix) > 600) ){
@@ -683,13 +735,13 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			echo "<a class='button' href='?'>⏹️ Stop Auto Play</a>\n";
 			$theatreModeEnabled=true;
 		}else{
-			echo "<a class='button' href='?autoplay&play$loopOption'>🎦 Auto Play</a>\n";
+			echo "<a class='button' href='?autoplay&play$loopOption#video'>🎦 Auto Play</a>\n";
 		}
 		if (array_key_exists("playrandom",$_GET)){
 			echo "<a class='button' href='?'>⏹️ Stop Random Play</a>\n";
 			$theatreModeEnabled=true;
 		}else{
-			echo "<a class='button' href='?playrandom&play$loopOption'>🔀 Play Random</a>\n";
+			echo "<a class='button' href='?playrandom&play$loopOption#video'>🔀 Play Random</a>\n";
 		}
 	}
 	echo "</span>\n";
@@ -701,7 +753,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	if (array_key_exists("play",$_GET)){
 		echo "<span class='onlyScript'>\n";
 		# draw the fullscreen button
-		echo "<button class='button onlyScript' onclick='toggleFullscreen(\"videoContainer\");playVideo();'>⛶ Fullscreen</button>\n";
+		echo "<button class='button onlyScript' onclick='toggleFullscreen(\"videoContainer\");'>⛶ Fullscreen</button>\n";
 		echo "</span>\n";
 	}
 	?>
@@ -740,11 +792,16 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			echo "	<div class='warningBanner'>\n";
 			echo "		<p class='desktopOnly'>\n";
 			# the f11 button link pointing to temporary fullscreen is on purpose in case it is clicked by accident
-			echo "			To enable browser fullscreen use the <a class='button' onclick='toggleFullscreen(\"videoContainer\");playVideo();'>F11</a> Key";
+			echo "			To enable browser fullscreen use the <a class='button' onclick='toggleFullscreen(\"videoContainer\");'>F11</a> Key";
 			echo "		</p>\n";
 			echo "		<p class=''>\n";
-			echo "			You can <button class='button' onclick='window.video.focus()'>Refocus</button> the video to fill your screen.\n";
+			echo "			You can <a class='button' href='#video'>Refocus</a> the video to fill your screen.\n";
 			echo "		</p>\n";
+			echo "		<noscript>\n";
+			echo "			<p class=''>\n";
+			echo "				Auto Play and Random Play Require javascript to function correctly. You can <a class='button' href='?stop'>🛑 Exit</a> autoplay mode to return to the normal page.\n";
+			echo "			</p>\n";
+			echo "		</noscript>\n";
 			echo "	</div>\n";
 			echo "<hr>\n";
 			#echo "<script>"."\n";
@@ -827,6 +884,9 @@ if (array_key_exists("HTTPS",$_SERVER)){
 				$tempVideoLink=$directLinkData;
 			}
 		}
+		# make mime type lowercase
+		# - some transcoders set mimetype metadata with capital letters
+		$videoMimeType=strtolower($videoMimeType);
 		if ($theatreModeEnabled){
 			# create the autoplay style
 			# - no newlines for inline style
@@ -884,6 +944,8 @@ if (array_key_exists("HTTPS",$_SERVER)){
 			$thisEpisodePath=str_replace(".php",".index",$thisEpisodePath);
 			# get the key for the array
 			$thisEpisodeKey=array_search($thisEpisodePath,$seasonFileIndexData);
+			# remove prefix
+			$thisEpisodePath=str_replace("/var/cache/2web/web","",$thisEpisodePath);
 			#
 			if ($thisEpisodeKey >= 0){
 				# draw the next button data
@@ -942,7 +1004,8 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		}
 		#
 		if (array_key_exists("play",$_GET)){
-			$playerEnabled=true;
+			$drawControls=true;
+			$playableFormatFound=true;
 			# set the background for the playback container
 			#$autoPlayStyle.="background-image: url(\"$posterPath\");";
 			# check if the video is still loading in the cache
@@ -950,11 +1013,10 @@ if (array_key_exists("HTTPS",$_SERVER)){
 				# reload the page if no mime type could be found for playback
 				# - some videos will not generate a hls stream but will generate another playable
 				#   stream eventually so the page will reload until it finds a playable one
-				echo "<div id='videoContainer' style='$autoPlayStyle'>\n";
+				echo "<div id='videoContainer' class='nfoMediaPlayer' style='$autoPlayStyle'>\n";
 				echo "	<video id='video' class='' poster='$posterPath' controls preload='auto' >\n";
 				echo "		<source src='$fullPathVideoLink' type='video/mp4'>\n";
 				echo "	</video>\n";
-				echo "</div>\n";
 				# reload the page after a 10 second delay
 				reloadPage(10);
 			}else{
@@ -980,16 +1042,21 @@ if (array_key_exists("HTTPS",$_SERVER)){
 						echo "<video id='video' class='' class='' poster='$posterPath' autoplay controls preload='auto' >\n";
 					}
 					# m4v is mp4 format but sometimes with DRM, browsers use the mp4 type for playback
-					echo "	<source src='$fullPathVideoLink' type='video/mp4'>\n";
-					echo "</video>\n";
+					echo "	<source src='$fullPathVideoLink' type='video/mp4'>"."\n";
+					echo "</video>"."\n";
 				}else if (is_in_array("audio/mpeg", $videoMimeType)){
+					# draw effect in the video player when audio is playing
+					echo "<div id='audioVisualizerContainer' onclick=''>\n";
+					echo "<a id='playPauseVisualizerOverlay' onclick='playPause()'></a>";
+					echo "<iframe id='audioVisualizer' src='/visualizer.php?bg=$posterPath'></iframe>"."\n";
+					echo "</div>\n";
 					if (array_key_exists("loop",$_GET)){
-						echo "<audio id='video' class='' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls preload='auto' >\n";
+						echo "<audio id='video' class='' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls preload='auto' >"."\n";
 					}else{
-						echo "<audio id='video' class='' class='' style='background-image: url(\"$posterPath\");' controls preload='auto' >\n";
+						echo "<audio id='video' class='' class='' style='background-image: url(\"$posterPath\");' controls preload='auto' >"."\n";
 					}
-					echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>\n";
-					echo "</audio>\n";
+					echo "	<source src='$fullPathVideoLink' type='audio/mpeg'>"."\n";
+					echo "</audio>"."\n";
 				}else if (is_in_array("video/webm", $videoMimeType)){
 					if (array_key_exists("loop",$_GET)){
 						echo "<video id='video' class='' class='' style='background-image: url(\"$posterPath\");' autoplay loop controls  preload='auto' >\n";
@@ -1008,19 +1075,20 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					echo "</video>\n";
 				}else if (is_in_array("application/mpegurl", $videoMimeType)){
 					# hls stream
-					echo "<div id='mediaPlayerContainer'>\n";
-					echo "</div>\n";
+					#echo "<div id='mediaPlayerContainer'>\n";
+					#echo "</div>\n";
 					# draw the hls stream player webpage player
 					echo "<script>\n";
 					# remove existing video and replace it with a hls stream
 					echo "	var activeBuffering=false;\n";
 					echo "	var videoObj = document.createElement(\"video\");\n";
 					echo "	videoObj.setAttribute(\"id\", \"video\");\n";
-					echo "	videoObj.setAttribute(\"class\", \"livePlayer\");\n";
+					#echo "	videoObj.setAttribute(\"class\", \"livePlayer\");\n";
 					echo "	videoObj.setAttribute(\"poster\", \"$posterPath\");\n";
 					echo "	videoObj.setAttribute(\"controls\", \"true\");\n";
 					echo "	videoObj.setAttribute(\"autoplay\", \"true\");\n";
-					echo "	window.mediaPlayerContainer.appendChild(videoObj);\n";
+					#echo "	window.mediaPlayerContainer.appendChild(videoObj);\n";
+					echo "	window.videoContainer.appendChild(videoObj);\n";
 					# set the global variables
 					echo "	var currentPlaybackTime;\n";
 					echo "	var videoIsPaused = false;\n";
@@ -1099,82 +1167,28 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					echo "			bufferSleepTime=sleepTime;\n;";
 					echo "		}\n;";
 					# add the loading spinner
-					echo "		var loadingObj = document.createElement(\"img\");\n";
-					echo "		loadingObj.setAttribute(\"id\", \"loadingSpinner\");\n";
-					echo "		loadingObj.setAttribute(\"src\", \"/spinner.gif\");\n";
+					echo "		videoBuffering();";
 					# insert the loading element before the video player so it acts as a overlay
-					echo "		window.mediaPlayerContainer.insertBefore(loadingObj,window.video);\n";
-					# log
 					echo "		console.log(bufferSleepTime);\n";
-					# the sleep time for the buffering of a video is a exponental curve of wait time
-					# - the user should experience none of this because the video should keep playing
-					#   until the buffer time has been activated
-					##echo "		bufferSleepTime=(bufferSleepTime * 2)\n";
-					##echo "		console.log(bufferSleepTime);\n";
 					# delay the reload by 10 seconds
-					#echo "		currentPlaybackTime=0;\n";
 					echo "		videoIsPaused = window.video.paused;\n";
 					echo "		window.video.poster=\"/loading.png\";\n";
-					#
 					#echo "		currentPlaybackTime=window.video.currentTime;\n";
 					echo "		pauseVideo();\n";
-					## reload the video to reshow the poster image
-					##
-					##echo "		hls.loadSource('$tempVideoLink');\n";
-					##echo "		hls.attachMedia(video);\n";
-					##
-					#echo "		window.video.poster=\"/spinner.gif\";\n";
-					# pause the video to keep it from playing during buffer
-					#echo "		pauseVideo();\n";
-					##echo "		if(videoIsPaused){\n";
-					##echo "			pauseVideo();\n";
-					##echo "		}else{\n";
-					##echo "			playVideo();\n";
-					##echo "		}\n";
-					##echo "		notify(\"🗘\",".(1000 * 1).",\"spinRight\");\n";
-					## reset the playback time to zero in order to display the poster
-					##echo "		currentPlaybackTime=0;\n";
-					## set the poster to the loading spinner
-					## get the current playback time
+					# get the current playback time
 					echo "		setTimeout(function() {\n";
-					##echo "			if( video.currentTime > ( currentPlaybackTime + sleepTime ) ){\n";
-					##echo "				document.video.currentTime == ( currentPlaybackTime + sleepTime );\n";
-					##echo "			}\n";
-					#echo "			hls.loadSource('$tempVideoLink');\n";
-					#echo "			hls.attachMedia(window.video);\n";
-					#echo "			hls.recoverMediaError();\n";
 					echo "			hls.startLoad();\n";
 					# set the poster back to the poster
 					echo "			window.video.poster=\"$posterPath\";\n";
-					# seek back to the same playback time and resume the video
-					#echo "			window.video.currentTime=currentPlaybackTime;\n";
-					# remove the spinner
-					echo "			if(videoIsPaused){\n";
-					echo "				pauseVideo();\n";
-					echo "			}else{\n";
-					echo "				playVideo();\n";
-					echo "			}\n";
 					# remove all loading spinners generated by buffer events
-					#echo "			while(window.loadingSpinner == null){;\n";
 					echo "			if(window.loadingSpinner !== null){\n";
 					echo "				window.loadingSpinner.remove();\n";
 					echo "			}\n";
-					#echo "			}\n";
 					echo "			window.video.controls=true;\n";
 					echo "			activeBuffering=false;\n";
-					#echo "		document.getElementById(\"notification\").remove();\n";
-					#echo "		},(1000*bufferSleepTime));\n";
 					echo "		},(1000*bufferSleepTime));\n";
 					echo "		console.log(bufferSleepTime);\n";
 					echo "	}\n";
-					# get the current time
-					#echo "	function getCurrentTime(){\n";
-					#echo "		var resetTime;\n";
-					#echo "		resetTime=new Date();\n";
-					#echo "		resetTime=resetTime.getSeconds();\n";
-					#echo "		return resetTime;\n";
-					#echo "	}\n";
-					#echo "	var resetTime = getCurrentTime();\n";
 					# create the global failure count
 					echo "	var failed_video_playback_count=0;\n";
 					# use sleep time to increse the buffering time given on a error
@@ -1202,31 +1216,32 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					# refresh if javascript is disabled
 					noscriptRefresh(10);
 				}else{
+					$drawControls=false;
 					# This is a unsupported media file that can not be played with the web player
 					# - This is the message displayed when a local media type is given but transcoding is disabled
 					echo "	<div class='videoPosterContainer'>";
-					echo "		<details>";
-					echo "		<summary>";
-					echo "			<div class='videoPoster failedVideoPoster' style='background:url(\"$posterPath\")'>";
-					echo "				X";
-					echo "			</div>";
-					echo "		</summary>";
+					echo "		<details>\n";
+					echo "		<summary>\n";
+					echo "			<div class='videoPoster failedVideoPoster' style='background:url(\"$posterPath\")'>\n";
+					echo "				X\n";
+					echo "			</div>\n";
+					echo "		</summary>\n";
 					echo "			<div class='failedVideoPosterMessage'>\n";
 					echo "				The server administrator has disabled video transcoding.<br>\n";
 					echo "				Video player can not currently play this file type '$videoMimeType'.<br>\n";
 					echo "				Use the direct links or external links below to download or access media with a external application.<br>\n";
 					echo "				The help page contains more infomation about direct links.<br>\n";
 					echo "				<hr>\n";
-					echo "				<a class='button' href='/help.php#direct_linking'><span class='helpQuestionMark'>?</span> Direct Link Help</a>\n";
+					echo "				<a class='button' href='/help.php#The%20Interface%20-%20Direct%20Links'><span class='helpQuestionMark'>?</span> Direct Link Help</a>\n";
 					echo "				<hr>\n";
-					echo "			</div>";
-					echo "		</details>";
+					echo "			</div>\n";
+					echo "		</details>\n";
 					echo "	</div>\n";
 					# if the video will not play but a automatic playback method is active
-					if (array_key_exists("playRandom",$_GET)){
+					if (array_key_exists("playrandom",$_GET)){
 						# skip to the next random video
 						echo "<script>\n";
-						echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom$loopOption\");"."\n";
+						echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom$loopOption#video\");"."\n";
 						echo "</script>\n";
 					}else if	(array_key_exists("autoplay",$_GET)){
 						# skip to the next video
@@ -1234,138 +1249,166 @@ if (array_key_exists("HTTPS",$_SERVER)){
 						echo "	delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");"."\n";
 						echo "</script>"."\n";
 					}
-					$playerEnabled=false;
+					$playableFormatFound=false;
 				}
 			}
-			# draw the video controls and close the video container
-			echo "	<div id='playerControlsContainer'>\n";
-			echo "	<div class='onlyScript'>\n";
-			echo "	<div id='playerControls' class=''>\n";
-			echo "		<table class='controlTable'>\n";
-			echo "			<tr>\n";
-			echo "				<td>\n";
-			echo "					<button id='playPauseButton' class='smallButton left' onclick='playPause();'>⏯️</button>\n";
-			echo "				</td>\n";
-			echo "				<td id='videoCurrentTime'>00:00:00</td>\n";
-			echo "				<td>/</td>\n";
-			echo "				<td id='videoTotalTime'>00:00:00</td>\n";
-			echo "				<td class='widthSpacer'>\n";
-			echo "				</td>\n";
-			#echo "				<td>\n";
-			#echo "					<button id='muteButton' class='smallButton' onclick='muteUnMute()'>🔇</button>\n";
-			#echo "				</td>\n";
-			echo "				<td>\n";
-			echo "					<table class='controlTable'>\n";
-			echo "						<tr>\n";
-			echo "							<td>\n";
-			echo "								<button class='smallButton' id='volumeIcon' onclick='toggleMute()'>📢</button>"."\n";
-			echo "							</td>\n";
-			echo "							<td>\n";
-			# draw the slider control
-			echo "								<input id='volumeSlider' type='range' min='0' max='1' step='0.005'>"."\n";
-			echo "							</td>\n";
-			echo "							<td>\n";
-			echo "								<button class='smallButton' onclick='toggleFullscreen(\"videoContainer\");playVideo();'>⛶</button>\n";
-			echo "							</td>\n";
-			echo "						</tr>\n";
-			echo "					</table>\n";
-			echo "				</td>\n";
-			echo "			</tr>\n";
-			echo "		</table>\n";
-			#echo "		<table class='controlTable'>\n";
-			#echo "			<tr>\n";
-			#echo "			</tr>\n";
-			#echo "		</table>\n";
-			echo "		<table class='controlTable'>\n";
-			echo "			<tr>\n";
-			if ($previousEpisodeLink != ""){
-				if (array_key_exists("playrandom",$_GET)){
-					$buttonScript="delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");";
-					$buttonScript.="notify(\"🔀\");";
-					$buttonIcon="🔀";
-				}else if (array_key_exists("autoplay",$_GET)){
-					$buttonScript="delayedRedirect(0,\"$previousEpisodeLink?autoplay&play$loopOption\");";
-					$buttonScript.="notify(\"⏮️\");";
-					$buttonIcon="⏮️";
-				}else{
-					$buttonScript="delayedRedirect(0,\"$previousEpisodeLink?play\");";
-					$buttonScript.="notify(\"⏮️\");";
-					$buttonIcon="⏮️";
-				}
-				# draw the button
+			if ($drawControls){
+				# draw the video controls and close the video container
+				echo "	<div id='playerControlsContainer'>\n";
+				echo "	<div class='onlyScript'>\n";
+				echo "	<div id='playerControls' class=''>\n";
+				echo "		<table class='controlTable'>\n";
+				echo "			<tr>\n";
 				echo "				<td>\n";
-				echo "					<button class='smallButton' onclick='$buttonScript'>$buttonIcon</button>\n";
+				echo "					<button id='playPauseButton' class='smallButton' onclick='playPause();'><span class='glyph'>⏯︎</span></button>\n";
 				echo "				</td>\n";
-			}
-			echo "				<td class='positionSliderContainer'>\n";
-			echo "					<input id='positionSlider' type='range' min='0' max='1' step='0.05' value='0'>"."\n";
-			echo "				</td>\n";
-			if ($nextEpisodeLink != ""){
-				if (array_key_exists("playrandom",$_GET)){
-					$buttonScript="delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");";
-					$buttonScript.="notify(\"🔀\");";
-					$buttonIcon="🔀";
-				}else if (array_key_exists("autoplay",$_GET)){
-					$buttonScript="delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");";
-					$buttonScript.="notify(\"⏭️\");";
-					$buttonIcon="⏭️";
-				}else{
-					$buttonScript="delayedRedirect(0,\"$nextEpisodeLink?play\");";
-					$buttonScript.="notify(\"⏭️\");";
-					$buttonIcon="⏭️";
+				if ($previousEpisodeLink != ""){
+					if (array_key_exists("playrandom",$_GET)){
+						$buttonScript="delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption#video\");";
+						$buttonIcon="🔀";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+						$drawPreviousButton=false;
+					}else if (array_key_exists("autoplay",$_GET)){
+						$buttonScript="delayedRedirect(0,\"$previousEpisodeLink?autoplay&play$loopOption\");";
+						$buttonIcon="⏮︎";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+						$drawPreviousButton=true;
+					}else{
+						$buttonScript="delayedRedirect(0,\"$previousEpisodeLink?play#video\");";
+						$buttonIcon="⏮︎";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+						$drawPreviousButton=true;
+					}
+					# only draw button if not in random mode
+					if($drawPreviousButton=true){
+						# draw the button
+						echo "				<td>\n";
+						echo "					<button id='previousButton'  class='smallButton' onclick='$buttonScript'>$buttonIcon</button>\n";
+						echo "				</td>\n";
+					}
 				}
-				# draw the button
 				echo "				<td>\n";
-				echo "					<button class='smallButton' onclick='$buttonScript'>$buttonIcon</button>\n";
+				echo "					<a id='stopButton' class='smallButton' href='?stop'><span class='glyph'>⏹︎</span></a>\n";
 				echo "				</td>\n";
+				if ($nextEpisodeLink != ""){
+					if (array_key_exists("playrandom",$_GET)){
+						$buttonScript="delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption#video\");";
+						$buttonIcon="🔀";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+					}else if (array_key_exists("autoplay",$_GET)){
+						$buttonScript="delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");";
+						$buttonIcon="⏭︎";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+					}else{
+						$buttonScript="delayedRedirect(0,\"$nextEpisodeLink?play#video\");";
+						$buttonIcon="⏭︎";
+						$buttonScript.="videoNotify(\"$buttonIcon\");";
+					}
+					# draw the button
+					echo "				<td>\n";
+					echo "					<button id='nextButton' class='smallButton' onclick='$buttonScript'>$buttonIcon</button>\n";
+					echo "				</td>\n";
+				}
+				echo "				<td>\n";
+				if (array_key_exists("loop",$_GET)){
+					echo "					<button id='loopButton' class='smallButton' onclick='toggleLoop()'>🔂︎</button>\n";
+				}else{
+					echo "					<button id='loopButton' class='smallButton' onclick='toggleLoop()'>🔚︎</button>\n";
+				}
+				echo "				</td>\n";
+				echo "				<td>\n";
+				echo "					<button id='pinControlsButton' class='smallButton' onclick='togglePinControls()'>🔓︎</button>\n";
+				echo "				</td>\n";
+				echo "				<td class='widthSpacer' title='$titleData'>\n";
+				echo "					🔠︎\n";
+				echo "				</td>\n";
+				echo "				<td>\n";
+				echo "					<table class='controlTable'>\n";
+				echo "						<tr>\n";
+				echo "							<td>\n";
+				echo "								<button class='smallButton' id='volumeIcon' onclick='toggleMute()'>📣︎</button>"."\n";
+				echo "							</td>\n";
+				echo "							<td>\n";
+				# draw the slider control
+				echo "								<input id='volumeSlider' type='range' min='0' max='1' step='0.005'>"."\n";
+				echo "							</td>\n";
+				echo "							<td>\n";
+				echo "								<button class='smallButton' onclick='toggleFullscreen(\"videoContainer\");'>⛶</button>\n";
+				echo "							</td>\n";
+				echo "						</tr>\n";
+				echo "					</table>\n";
+				echo "				</td>\n";
+				echo "			</tr>\n";
+				echo "		</table>\n";
+				#echo "		<table class='controlTable'>\n";
+				#echo "			<tr>\n";
+				#echo "			</tr>\n";
+				#echo "		</table>\n";
+				echo "		<table class='controlTable'>\n";
+				echo "			<tr>\n";
+				echo "				<td id='videoCurrentTime'>00:00:00</td>\n";
+				echo "				<td class='positionSliderContainer'>\n";
+				echo "					<input id='positionSlider' type='range' min='0' max='1' step='0.05' value='0'>"."\n";
+				echo "				</td>\n";
+				echo "				<td id='videoTotalTime'>00:00:00</td>\n";
+				echo "			</tr>\n";
+				echo "		</table>\n";
+				echo "	</div>\n";
+				echo "	</div>\n";
+				echo "	</div>\n";
+				# run the scripts to update the video controls
+				if ($playableFormatFound){
+					echo "		<script>"."\n";
+					echo "			window.volumeSlider.value=(window.video.volume);"."\n";
+					# update the cursor position
+					echo "			window.setInterval(() => {"."\n";
+					#echo "				window.positionSlider.value=window.video.currentTime;"."\n";
+					#echo "				window.positionSlider.max=window.video.duration;"."\n";
+					# update the time
+					#echo "				var nowVideoMinutes=Math.floor(window.video.currentTime/60);"."\n";
+					#echo "				var nowVideoSeconds=Math.floor(window.video.currentTime-(nowVideoMinutes * 60));"."\n";
+					#echo "				window.videoCurrentTime.innerHTML=(nowVideoMinutes+':'+nowVideoSeconds);"."\n";
+					#echo "				var currentPos=new Date(window.video.currentTime * 1000).toISOString().substring(14,19);"."\n";
+					#echo "				window.videoCurrentTime.innerHTML=(currentPos);"."\n";
+					echo "				window.positionSlider.value=window.video.currentTime;"."\n";
+					echo "				window.videoCurrentTime.innerHTML=timeToClock(window.video.currentTime);"."\n";
+					# check the player controls are not to big
+					#echo "				if(window.playerControls.scrollWidth > window.videoContainer){"."\n";
+					#echo "					window.videoCurrentTime.innerHTML='';"."\n";
+					#echo "					window.videoTimeDash.innerHTML='';"."\n";
+					#echo "				}else{"."\n";
+					#echo "					window.videoTimeDash.innerHTML='/';"."\n";
+					#echo "					window.videoCurrentTime.innerHTML=timeToClock(window.video.currentTime);"."\n";
+					#echo "				}"."\n";
+					#echo "				window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
+					# 33ms = 30fps
+					echo "			},1000);"."\n";
+					echo "			window.setInterval(() => {"."\n";
+					# draw the video duration
+					echo "				window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
+					echo "				window.positionSlider.max=window.video.duration;"."\n";
+					echo "				window.positionSlider.value=window.video.currentTime;"."\n";
+					echo "			},5000);"."\n";
+					# check for the position slider changes
+					echo "			window.positionSlider.addEventListener(\"input\", (event) => {"."\n";
+					echo "				window.video.currentTime=event.target.value;"."\n";
+					echo "				window.positionSlider.max=window.video.duration;"."\n";
+					echo "				window.positionSlider.value=window.video.currentTime;"."\n";
+					echo "				window.videoCurrentTime.innerHTML=timeToClock(window.video.currentTime);"."\n";
+					echo "			});"."\n";
+					# enable the volume slider
+					echo "			window.volumeSlider.addEventListener(\"input\", (event) => {"."\n";
+					echo "				window.video.muted=false;"."\n";
+					echo "				window.video.volume=(window.volumeSlider.value);"."\n";
+					echo "				window.volumeIcon.innerHTML=getVolumeIcon();"."\n";
+					#echo "				window.video.volume=event.target.value;"."\n";
+					echo "			});"."\n";
+					echo "		</script>"."\n";
+				}
 			}
-			echo "			</tr>\n";
-			echo "		</table>\n";
-			echo "	</div>\n";
-			echo "	</div>\n";
-			echo "	</div>\n";
 			echo "</div>\n";
-			# run the scripts to update the video controls
-			if ($playerEnabled){
-				echo "		<script>"."\n";
-				echo "			window.volumeSlider.value=(window.video.volume);"."\n";
-				# update the cursor position
-				echo "			window.setInterval(() => {"."\n";
-				#echo "				window.positionSlider.value=window.video.currentTime;"."\n";
-				#echo "				window.positionSlider.max=window.video.duration;"."\n";
-				# update the time
-				#echo "				var nowVideoMinutes=Math.floor(window.video.currentTime/60);"."\n";
-				#echo "				var nowVideoSeconds=Math.floor(window.video.currentTime-(nowVideoMinutes * 60));"."\n";
-				#echo "				window.videoCurrentTime.innerHTML=(nowVideoMinutes+':'+nowVideoSeconds);"."\n";
-				#echo "				var currentPos=new Date(window.video.currentTime * 1000).toISOString().substring(14,19);"."\n";
-				#echo "				window.videoCurrentTime.innerHTML=(currentPos);"."\n";
-				echo "				window.videoCurrentTime.innerHTML=timeToClock(window.video.currentTime);"."\n";
-				echo "				window.positionSlider.value=window.video.currentTime;"."\n";
-				#echo "				window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
-				# 33ms = 30fps
-				echo "			},1000);"."\n";
-				echo "			window.setInterval(() => {"."\n";
-				# draw the video duration
-				echo "				window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
-				echo "			},5000);"."\n";
-				# check for the position slider changes
-				echo "			window.positionSlider.addEventListener(\"input\", (event) => {"."\n";
-				echo "				window.video.currentTime=event.target.value;"."\n";
-				echo "				window.positionSlider.max=window.video.duration;"."\n";
-				echo "				window.positionSlider.value=window.video.currentTime;"."\n";
-				echo "				window.videoCurrentTime.innerHTML=timeToClock(window.video.currentTime);"."\n";
-				echo "			});"."\n";
-				# enable the volume slider
-				echo "			window.volumeSlider.addEventListener(\"input\", (event) => {"."\n";
-				echo "				window.video.muted=false;"."\n";
-				echo "				window.video.volume=(window.volumeSlider.value);"."\n";
-				echo "				window.volumeIcon.innerHTML=getVolumeIcon();"."\n";
-				#echo "				window.video.volume=event.target.value;"."\n";
-				echo "			});"."\n";
-				echo "		</script>"."\n";
-			}
 		}else{
-			echo "<a class='loadVideoButton' href='?play' style='background: url(\"$posterPath\")'>▷</a>\n";
+			echo "<a class='loadVideoButton' href='?play#video' style='background: url(\"$posterPath\")'>▷</a>\n";
 		}
 	clear();
 	?>
@@ -1559,6 +1602,9 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	}else if ( $userClientName == "select" ){
 		if ($videoMimeType == "application/mpegurl"){
 			$playbackType="stream";
+		}else if ($videoMimeType == "video/mp2t"){
+			# mp4 video sometimes with DRM
+			$playbackType="play";
 		}else if ($videoMimeType == "video/x-m4v"){
 			# mp4 video sometimes with DRM
 			$playbackType="play";
@@ -1577,7 +1623,7 @@ if (array_key_exists("HTTPS",$_SERVER)){
 		echo "</a>\n";
 		echo "</div>\n";
 	}
-	echo "<div>";
+	echo "<div>\n";
 	#
 	if (array_key_exists("autoplay",$_GET)){
 		$autoplayOption="&autoplay";
@@ -1588,14 +1634,28 @@ if (array_key_exists("HTTPS",$_SERVER)){
 	}
 	# add code to turn looping the video on or off
 	if (array_key_exists("loop",$_GET)){
-		echo "		<a class='hardLink button' href='?play$autoplayOption'>\n";
+		echo "		<a class='hardLink button' href='?play$autoplayOption#video'>\n";
 		echo "			① Play Once\n";
 		echo "		</a>\n";
 	}else{
-		echo "		<a class='hardLink button' href='?play&loop$autoplayOption'>\n";
+		echo "		<a class='hardLink button' href='?play&loop$autoplayOption#video'>\n";
 		echo "			∞ Loop Playback\n";
 		echo "		</a>\n";
 	}
+	if (array_key_exists("play",$_GET)){
+		# add flip and flop buttons
+		echo "	<div>\n";
+		echo "		<a class='hardLink button onlyScript' onclick='flipVideo();'>\n";
+		echo "			↔️ Flip Video\n";
+		echo "		</a>\n";
+		echo "	</div>\n";
+		echo "	<div>\n";
+		echo "		<a class='hardLink button onlyScript' onclick='flopVideo();'>\n";
+		echo "			↕️ Flop Video\n";
+		echo "		</a>\n";
+		echo "	</div>\n";
+	}
+	# check for add to web player button
 	if( $httpLink ){
 		# if the web player is enabled
 		if (yesNoCfgCheck("/etc/2web/webPlayer.cfg")){
@@ -1605,7 +1665,8 @@ if (array_key_exists("HTTPS",$_SERVER)){
 					# if the user has web player permissions check if a link can be created
 					if(is_url($directLinkData)){
 						echo "	<div>\n";
-						echo "		<a class='hardLink button' href='/web-player.php?shareURL=$directLinkData'>\n";
+						# link the file and include the index path for this video
+						echo "		<a class='hardLink button' href='/web-player.php?indexPath=$thisEpisodePath&shareURL=$directLinkData'>\n";
 						echo "			📥 Add To Web Player\n";
 						echo "		</a>\n";
 						echo "	</div>\n";
@@ -1691,17 +1752,20 @@ echo $adminData;
 ?>
 <script>
 var controlHideTimeout;
-document.body.style.cursor="none";
 // end of playback function
 function playbackEnd(){
 	closeFullscreen();
 	// show the notification
-	notify("🔚");
+	videoNotify("🔚");
 	var tempVideoElement = document.getElementById('video');
 	// disable autoplay
 	tempVideoElement.autoplay=false;
 	// reload the video element
 	tempVideoElement.load();
+	if(window.audioVisualizer){
+		// hide the audio visulization on playback end
+		window.audioVisualizer.style.opacity=0;
+	}
 	// refocus the video player after reload
 	tempVideoElement.focus();
 	console.log("End of playback reached!");
@@ -1711,25 +1775,70 @@ function playbackEnd(){
 if ( ($nextEpisodeLink != "") or ( isset($_GET["playrandom"]) and ($randomEpisodeLink != "") ) ){
 	# play next in random or sequential playlist
 	if (array_key_exists("playrandom",$_GET)){
-		echo "var playNextLink=\"$randomEpisodeLink?playrandom&play$loopOption\";"."\n";
+		echo "var playNextLink=\"$randomEpisodeLink?playrandom&play$loopOption#video\";"."\n";
 	}else if (array_key_exists("autoplay",$_GET)){
-		echo "var playNextLink=\"$nextEpisodeLink?playrandom&play$loopOption\";"."\n";
+		echo "var playNextLink=\"$nextEpisodeLink?playrandom&play$loopOption#video\";"."\n";
 	}else{
-		echo "var playNextLink=\"$nextEpisodeLink\";"."\n";
+		echo "var playNextLink=\"$nextEpisodeLink#video\";"."\n";
 	}
 }
 ?>
+if(window.video){
+	// add video loading event
+	window.video.addEventListener("waiting", videoBuffering);
+	window.video.addEventListener("stalled", videoBuffering);
+	// add the first play function
+	function firstPlay(){
+			if(window.video){
+				// hide the thumbnail when play is pressed the first time
+				window.video.style.backgroundImage="";
+			}
+	}
+	// add the first play event
+	window.video.addEventListener("play", firstPlay);
+}
+// the keys varaible needs to be global
 document.body.addEventListener('keydown', function(event){
+	//
+	var checkKeys=true;
 	// only allow hotkeys if the video player has focus
-	if(document.activeElement.nodeName != "INPUT"){
+	if(document.activeElement.nodeName == "INPUT"){
+		if(document.activeElement.hasAttribute("type")){
+			if(document.activeElement.type == "text"){
+				// a text box has been selected
+				checkKeys=false;
+			}
+		}
+	}
+	if(checkKeys){
 		// check for key controls on the video player
 		const key = event.key;
 		switch (key){
+			case "Delete":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			toggleLoop();
+			window.video.controls=false;
+			break;
+			case "End":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			window.location="?playrandom&play#video";
+			// hide the video controls after keypresses
+			window.video.controls=false;
+			break;
 			case "Insert":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			toggleFullscreen("videoContainer");
 			// hide the video controls after keypresses
+			window.video.controls=false;
+			break;
+			case "Backspace":
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			window.video.focus()
+			window.location="?stop";
 			window.video.controls=false;
 			break;
 			case "ArrowDown":
@@ -1761,43 +1870,49 @@ document.body.addEventListener('keydown', function(event){
 			window.video.controls=false;
 			break;
 			case " ":
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			window.video.focus()
-			playPause();
-			notify("⏯️");
-			window.video.controls=false;
-			break;
+			if(window.video){
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				window.video.focus()
+				playPause();
+				window.video.controls=false;
+				break;
+			}else{
+				window.location="?play#video"
+			}
 			case "MediaPlayPause":
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			window.video.focus()
 			playPause();
-			notify("⏯️");
 			window.video.controls=false;
 			break;
 			<?PHP
 			if ( ($nextEpisodeLink != "") or ( isset($_GET["playrandom"]) and ($randomEpisodeLink != "") ) ){
 				echo "		case \"Enter\":"."\n";
-				echo "		console.log(\"enter key pressed, next track activated\");"."\n";
-				echo "		event.preventDefault();"."\n";
-				echo "		event.stopImmediatePropagation();"."\n";
-				echo "		window.video.focus();"."\n";
+				echo "		if(window.video){"."\n";
+				echo "			console.log(\"enter key pressed, next track activated\");"."\n";
+				echo "			event.preventDefault();"."\n";
+				echo "			event.stopImmediatePropagation();"."\n";
+				echo "			window.video.focus();"."\n";
 				# play next in random or sequential playlist
 				if (array_key_exists("playrandom",$_GET)){
-					echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");"."\n";
+					echo "			delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption#video\");"."\n";
 					#echo "		delayedRedirect(0,playNextLink);"."\n";
-					echo "		notify(\"🔀\");"."\n";
+					echo "			videoNotify(\"🔀\");"."\n";
 				}else if (array_key_exists("autoplay",$_GET)){
-					echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");"."\n";
-					#echo "		delayedRedirect(0,playNextLink);"."\n";
-					echo "		notify(\"⏭️\");"."\n";
+					echo "			delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");"."\n";
+					#echo "			delayedRedirect(0,playNextLink);"."\n";
+					echo "			videoNotify(\"⏭️\");"."\n";
 				}else{
-					echo "		delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
-					#echo "		delayedRedirect(0,playNextLink);"."\n";
-					echo "		notify(\"⏭️\");"."\n";
+					echo "			delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
+					#echo "			delayedRedirect(0,playNextLink);"."\n";
+					echo "			videoNotify(\"⏭️\");"."\n";
 				}
-				echo "		window.video.controls=false;"."\n";
+				echo "			window.video.controls=false;"."\n";
+				echo "		}else{"."\n";
+				echo "			window.location=\"?play#video\";";
+				echo "		}"."\n";
 				echo "		break;"."\n";
 			}
 			?>
@@ -1807,10 +1922,13 @@ document.body.addEventListener('keydown', function(event){
 navigator.mediaSession.setActionHandler("play", function(event){
 	console.log("media key play pressed");
 	if(document.activeElement.nodeName != "INPUT"){
-		window.video.focus()
-		playPause();
-		notify("⏯️");
-		window.video.controls=false;
+		if(window.video){
+			window.video.focus()
+			playPause();
+			window.video.controls=false;
+		}else{
+			window.location="?play#video"
+		}
 	}
 });
 navigator.mediaSession.setActionHandler("pause", function(event){
@@ -1818,19 +1936,19 @@ navigator.mediaSession.setActionHandler("pause", function(event){
 	if(document.activeElement.nodeName != "INPUT"){
 		window.video.focus()
 		playPause();
-		notify("⏯️");
 		window.video.controls=false;
 	}
 });
 navigator.mediaSession.setActionHandler("stop", function(event){
 	console.log("media key stop pressed");
 	if(document.activeElement.nodeName != "INPUT"){
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		window.video.focus()
-		pauseVideo();
-		notify("⏹️");
-		window.video.controls=false;
+		if(window.video){
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			videoNotify("⏹️");
+			window.video.controls=false;
+			window.location="?stop";
+		}
 	}
 });
 navigator.mediaSession.setActionHandler("seekforward", function(event){
@@ -1838,7 +1956,7 @@ navigator.mediaSession.setActionHandler("seekforward", function(event){
 	if(document.activeElement.nodeName != "INPUT"){
 		window.video.focus()
 		seekForward();
-		notify("Seek ++");
+		videoNotify("Seek ++");
 		window.video.controls=false;
 	}
 });
@@ -1847,100 +1965,102 @@ navigator.mediaSession.setActionHandler("seekbackward", function(event){
 	if(document.activeElement.nodeName != "INPUT"){
 		window.video.focus()
 		seekBackward();
-		notify("Seek --");
+		videoNotify("Seek --");
 		window.video.controls=false;
 	}
 });
 <?PHP
-if ($playerEnabled){
-	if ($nextEpisodeLink != ""){
-		echo "navigator.mediaSession.setActionHandler(\"nexttrack\", function(event){"."\n";
-		echo "	console.log(\"media key next track pressed\");\n";
-		echo "		//event.preventDefault();"."\n";
-		echo "		//event.stopImmediatePropagation();"."\n";
-		if (array_key_exists("playrandom",$_GET)){
-			#echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");"."\n";
-			echo "		delayedRedirect(0,playNextLink);"."\n";
-			echo "		notify(\"🔀\");"."\n";
-		}else if (array_key_exists("autoplay",$_GET)){
-			#echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");"."\n";
-			echo "		delayedRedirect(0,playNextLink);"."\n";
-			echo "		notify(\"Next Track\");"."\n";
-		}else{
-			#echo "		delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
-			echo "		delayedRedirect(0,playNextLink);"."\n";
-			echo "		notify(\"Next Track\");"."\n";
-		}
-		echo "		window.video.controls=false;"."\n";
-		echo "});"."\n";
-	}
-	if ($previousEpisodeLink != ""){
-		echo "navigator.mediaSession.setActionHandler(\"previoustrack\", function(event){"."\n";
-		echo "	console.log(\"media key previous track pressed\");\n";
-		echo "		//event.preventDefault();"."\n";
-		echo "		//event.stopImmediatePropagation();"."\n";
-		if (array_key_exists("playrandom",$_GET)){
-			echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");"."\n";
-			echo "		notify(\"🔀\");"."\n";
-		}else if (array_key_exists("autoplay",$_GET)){
-			echo "		delayedRedirect(0,\"$previousEpisodeLink?autoplay&play$loopOption\");"."\n";
-			echo "		notify(\"⏮️\");"."\n";
-		}else{
-			echo "		delayedRedirect(0,\"$previousEpisodeLink\");"."\n";
-			echo "		notify(\"⏮️\");"."\n";
-		}
-		echo "		window.video.controls=false;"."\n";
-		echo "});"."\n";
-	}
-	if (array_key_exists("playrandom",$_GET)){
-		if(file_exists("season.index")){
-			# get a random video
-			echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
-			echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom$loopOption\");"."\n";
-			echo "},false);"."\n";
-		}
-	}
-	if (array_key_exists("autoplay",$_GET)){
+if (array_key_exists("play",$_GET)){
+	if ($playableFormatFound){
 		if ($nextEpisodeLink != ""){
-			echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
-			echo "	delayedRedirect(0,\"$nextEpisodeLink?play&autoplay$loopOption\");"."\n";
-			echo "},false);"."\n";
+			echo "navigator.mediaSession.setActionHandler(\"nexttrack\", function(event){"."\n";
+			echo "	console.log(\"media key next track pressed\");\n";
+			echo "		//event.preventDefault();"."\n";
+			echo "		//event.stopImmediatePropagation();"."\n";
+			if (array_key_exists("playrandom",$_GET)){
+				#echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption\");"."\n";
+				echo "		delayedRedirect(0,playNextLink);"."\n";
+				echo "		videoNotify(\"🔀\");"."\n";
+			}else if (array_key_exists("autoplay",$_GET)){
+				#echo "		delayedRedirect(0,\"$nextEpisodeLink?autoplay&play$loopOption\");"."\n";
+				echo "		delayedRedirect(0,playNextLink);"."\n";
+				echo "		videoNotify(\"Next Track\");"."\n";
+			}else{
+				#echo "		delayedRedirect(0,\"$nextEpisodeLink\");"."\n";
+				echo "		delayedRedirect(0,playNextLink);"."\n";
+				echo "		videoNotify(\"Next Track\");"."\n";
+			}
+			echo "		window.video.controls=false;"."\n";
+			echo "});"."\n";
 		}
+		if ($previousEpisodeLink != ""){
+			echo "navigator.mediaSession.setActionHandler(\"previoustrack\", function(event){"."\n";
+			echo "	console.log(\"media key previous track pressed\");\n";
+			echo "		//event.preventDefault();"."\n";
+			echo "		//event.stopImmediatePropagation();"."\n";
+			if (array_key_exists("playrandom",$_GET)){
+				echo "		delayedRedirect(0,\"$randomEpisodeLink?playrandom&play$loopOption#video\");"."\n";
+				echo "		videoNotify(\"🔀\");"."\n";
+			}else if (array_key_exists("autoplay",$_GET)){
+				echo "		delayedRedirect(0,\"$previousEpisodeLink?autoplay&play$loopOption#video\");"."\n";
+				echo "		videoNotify(\"⏮️\");"."\n";
+			}else{
+				echo "		delayedRedirect(0,\"$previousEpisodeLink#video\");"."\n";
+				echo "		videoNotify(\"⏮️\");"."\n";
+			}
+			echo "		window.video.controls=false;"."\n";
+			echo "});"."\n";
+		}
+		if (array_key_exists("playrandom",$_GET)){
+			if(file_exists("season.index")){
+				# get a random video
+				echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
+				echo "	delayedRedirect(0,\"$randomEpisodeLink?play&playrandom$loopOption#video\");"."\n";
+				echo "},false);"."\n";
+			}
+		}
+		if (array_key_exists("autoplay",$_GET)){
+			if ($nextEpisodeLink != ""){
+				echo "document.getElementById('video').addEventListener('ended',function(event){"."\n";
+				echo "	delayedRedirect(0,\"$nextEpisodeLink?play&autoplay$loopOption#video\");"."\n";
+				echo "},false);"."\n";
+			}
+		}
+		echo "window.video.onload = function(){"."\n";
+		echo "	document.getElementById('video').focus();"."\n";
+		echo "}"."\n";
+		echo "window.video.onload = function(){"."\n";
+		echo "}"."\n";
+		# After the page is fully loaded including images
+		echo "var loadCheckLoop = setInterval(function() {"."\n";
+		echo "console.log('readyState = ',document.readyState);"."\n";
+		# run after the page has completely finished loading images
+		echo "	if(document.readyState == 'complete'){"."\n";
+		# only activate playback end event if video looping is disabled
+		if(! isset($_GET["loop"])){
+			# end of playback event
+			echo "window.video.addEventListener('ended',playbackEnd,false);"."\n";
+		}
+		# the video must be focused before the controls are hidden
+		echo "		console.log('Focus the video container');"."\n";
+		#echo "		window.videoContainer.focus();"."\n";
+		echo "		window.video.focus();"."\n";
+		echo "		window.playerControlsContainer.style.opacity=0;"."\n";
+		# by default disable the controls until mouse is moved or screen is touched
+		echo "		window.video.controls=false;"."\n";
+		echo "		console.log('Page is fully loaded');"."\n";
+		echo "		window.positionSlider.value=window.video.currentTime;"."\n";
+		echo "		window.positionSlider.max=window.video.duration;"."\n";
+		echo "		window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
+		echo "		hideSpinner();"."\n";
+		# stop the load check loop
+		echo "		clearInterval(loadCheckLoop);"."\n";
+		echo "	}"."\n";
+		echo "},500);"."\n";
+		echo "window.video.onclick = function(){"."\n";
+		echo "	playPause();"."\n";
+		echo "}"."\n";
 	}
-	echo "window.video.onload = function(){"."\n";
-	echo "	document.getElementById('video').focus();"."\n";
-	echo "}"."\n";
-	echo "window.video.onload = function(){"."\n";
-	echo "}"."\n";
-	# After the page is fully loaded including images
-	echo "var loadCheckLoop = setInterval(function() {"."\n";
-	echo "console.log('readyState = ',document.readyState);"."\n";
-	# run after the page has completely finished loading images
-	echo "	if(document.readyState == 'complete'){"."\n";
-	# only activate playback end event if video looping is disabled
-	if(! isset($_GET["loop"])){
-		# end of playback event
-		echo "window.video.addEventListener('ended',playbackEnd,false);"."\n";
-	}
-	# the video must be focused before the controls are hidden
-	echo "		console.log('Focus the video container');"."\n";
-	#echo "		window.videoContainer.focus();"."\n";
-	echo "		window.video.focus();"."\n";
-	echo "		window.playerControlsContainer.style.opacity=0;"."\n";
-	# by default disable the controls until mouse is moved or screen is touched
-	echo "		window.video.controls=false;"."\n";
-	echo "		console.log('Page is fully loaded');"."\n";
-	echo "		window.positionSlider.value=window.video.currentTime;"."\n";
-	echo "		window.positionSlider.max=window.video.duration;"."\n";
-	echo "		window.videoTotalTime.innerHTML=timeToClock(window.video.duration);"."\n";
-	echo "		hideSpinner();"."\n";
-	# stop the load check loop
-	echo "		clearInterval(loadCheckLoop);"."\n";
-	echo "	}"."\n";
-	echo "},500);"."\n";
-	echo "window.video.onclick = function(){"."\n";
-	echo "	playPause();"."\n";
-	echo "}"."\n";
 }
 ?>
 </script>
