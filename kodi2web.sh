@@ -52,8 +52,6 @@ function update(){
 	################################################################################
 	# make the download directory if is does not exist
 	createDir "$downloadDirectory"
-	# make comics directory
-	createDir "$webDirectory/kodi/"
 	# the kodi player cache
 	createDir "$webDirectory/kodi-player/"
 	#createDir "$webDirectory/kodi/data/"
