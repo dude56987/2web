@@ -37,9 +37,15 @@ function updateApplication(){
 	# load arguments
 	appSum="$1"
 	foundAppFile="$2"
-
-	# get the sum of the downloaded cache file
-	newFileSum=$(md5sum "$foundAppFile" | cut -d' ' -f1 )
+	if test -f "$foundAppFile";then
+		# - this is a zip file
+		# get the sum of the downloaded cache file
+		newFileSum=$(md5sum "$foundAppFile" | cut -d' ' -f1 )
+	elif test -d "$foundAppFile";then
+		# - this is a directory
+		# create a sum based on the files found
+		newFileSum=$(md5sum "$(ls -laR "$foundAppFile")" | cut -d' ' -f1)
+	fi
 
 	#addToLog "DEBUG" "Checking app sums" "Checking Sum at '/var/cache/2web/generated/appSums/$appSum.cfg'"
 	# check if the file is already installed
@@ -63,49 +69,74 @@ function updateApplication(){
 		# update the application
 		################################################################################
 		addToLog "UPDATE" "Updating application" "Updating application at '$foundAppFile'"
-		# remove existing application version
-		if test -f "/var/cache/2web/web/applications/$appTitle/";then
-			rm -rv "/var/cache/2web/web/applications/$appTitle/"
+		isDirectory="no"
+
+		if test -f "${foundAppFile}/index.php";then
+			isDirectory="yes"
+		elif test -f "${foundAppFile}/index.html";then
+			isDirectory="yes"
+		elif test -f "${foundAppFile}/index.htm";then
+			isDirectory="yes"
+		elif test -f "${foundAppFile}/main.php";then
+			isDirectory="yes"
 		fi
 
-		# read the metadata found inside the zip file
-
-		# read file list from zip file and scan for metadata files
-		zipFileList=$(unzip -l "$foundAppFile")
-
-		# check for the index file
-		# - at least one of these must exist in order to load the application in the web page
-		if echo "$zipFileList" | grep -q "index.php";then
-			INFO "This is a valid application..."
-		elif echo "$zipFileList" | grep -q "index.html";then
-			INFO "This is a valid application..."
-		elif echo "$zipFileList" | grep -q "index.htm";then
-			INFO "This is a valid application..."
-		elif echo "$zipFileList" | grep -q "main.php";then
-			INFO "This is a valid application..."
+		# check if this is a zip file or a directory
+		if [ "$isDirectory" == "yes" ];then
+			# this is a directory
+			# get the title if a file exists
+			if find "$foundAppFile/" -maxdepth 1 -type f | grep -q "title.cfg";then
+				appTitle="$(cat "$foundAppFile/title.cfg")"
+			else
+				# show a warning
+				addToLog "WARNING" "Partial App Directory" "The found application directory '$foundAppFile' is broken because it contains no application title. Acceptable paths are 'title.cfg'. One will be generated..."
+				appTitle="$(basename "$foundAppFile")"
+			fi
+			# cleanup the title
+			appTitle="$(cleanText "$appTitle")"
 		else
-			####################################
-			# This is a catastrophic error
-			####################################
-			ALERT "This is a broken application..."
-			# if the index file can not be found this is not a application that can be loaded
-			addToLog "ERROR" "Broken App" "The found application file '$foundAppFile' is broken because it contains no 'index.php', 'index.html', or 'index.htm' file to load."
-			# update the sum so the update will not try to install again and fail again
-			echo "$newFileSum" > "/var/cache/2web/generated/appSums/$appSum.cfg"
-			# exit the function to stop the processing
-			return
-		fi
+			# this is a zip file
+			# unzip the zip file
 
-		####################################
-		# load the metadata in the zip file
-		####################################
-		# look for the title
-		if echo "$zipFileList" | grep -q "title.cfg";then
-			appTitle=$(unzip "$foundAppFile" -p "title.cfg")
-		else
-			# show a warning
-			addToLog "WARNING" "Partial App" "The found application file '$foundAppFile' is broken because it contains no application title. Acceptable paths are 'title.cfg'. One will be generated..."
-			appTitle=$(basename "$foundAppFile" | cut -d'.' -f1)
+			# read the metadata found inside the zip file
+
+			# read file list from zip file and scan for metadata files
+			zipFileList=$(unzip -l "$foundAppFile")
+
+			# check for the index file
+			# - at least one of these must exist in order to load the application in the web page
+			if echo "$zipFileList" | grep -q "index.php";then
+				INFO "This is a valid application..."
+			elif echo "$zipFileList" | grep -q "index.html";then
+				INFO "This is a valid application..."
+			elif echo "$zipFileList" | grep -q "index.htm";then
+				INFO "This is a valid application..."
+			elif echo "$zipFileList" | grep -q "main.php";then
+				INFO "This is a valid application..."
+			else
+				####################################
+				# This is a catastrophic error
+				####################################
+				ALERT "This is a broken application..."
+				# if the index file can not be found this is not a application that can be loaded
+				addToLog "ERROR" "Broken App" "The found application file '$foundAppFile' is broken because it contains no 'index.php', 'index.html', or 'index.htm' file to load."
+				# update the sum so the update will not try to install again and fail again
+				echo "$newFileSum" > "/var/cache/2web/generated/appSums/$appSum.cfg"
+				# exit the function to stop the processing
+				return
+			fi
+
+			####################################
+			# load the metadata in the zip file
+			####################################
+			# look for the title
+			if echo "$zipFileList" | grep -q "title.cfg";then
+				appTitle=$(unzip "$foundAppFile" -p "title.cfg")
+			else
+				# show a warning
+				addToLog "WARNING" "Partial App" "The found application file '$foundAppFile' is broken because it contains no application title. Acceptable paths are 'title.cfg'. One will be generated..."
+				appTitle=$(basename "$foundAppFile" | cut -d'.' -f1)
+			fi
 		fi
 		# remove any previously existing application version
 		if test -f "/var/cache/2web/web/applications/$appTitle/";then
@@ -115,8 +146,14 @@ function updateApplication(){
 		createDir "/var/cache/2web/web/applications/$appTitle/"
 		createDir "/etc/2web/applications/settings/$appTitle/"
 
-		# extract the application
-		unzip "$foundAppFile" -d "/var/cache/2web/web/applications/$appTitle/"
+		# install the application based on what it is
+		if [ "$isDirectory" == "yes" ];then
+			# copy the files in the application directory
+			cp -vr "$foundAppFile/." "/var/cache/2web/web/applications/$appTitle/"
+		else
+			# extract the application zip
+			unzip "$foundAppFile" -d "/var/cache/2web/web/applications/$appTitle/"
+		fi
 
 		# only add the player if the app is not a 2web full intergration app
 		# - includes 2web header and footer in the app
@@ -267,13 +304,43 @@ update(){
 		addToLog "INFO" "Scanning Application Library..." "$phpLibaryPath"
 		# read the applications found in the library path
 		find "$phpLibaryPath" -mindepth 1 -type f -name '*.zip' | sort | while read foundAppFile;do
-			INFO "Found application '$foundAppFile'"
+			INFO "Found application ZIP file '$foundAppFile'"
 			# create a sum of the app file found based on the path
 			appSum=$(echo "$foundAppFile" | md5sum | cut -d' ' -f1 )
 			# update the application if it has changed
 			updateApplication "$appSum" "$foundAppFile" &
 			#
 			waitQueue 0.2 "$totalCPUS"
+		done
+		# scan for a subdirectory structure of php applications
+		# - A directory containing directories with the apps in them
+		find "$phpLibaryPath" -mindepth 1 -type d | sort | while read foundAppFile;do
+			addToLog "DEBUG" "PHP Directory Found" "'Looking at found application directory $foundAppFile'"
+			isDirectory="no"
+			# foundAppFile should contain a trailing slash /
+			if test -f "${foundAppFile}/index.php";then
+				isDirectory="yes"
+			elif test -f "${foundAppFile}/index.html";then
+				isDirectory="yes"
+			elif test -f "${foundAppFile}/index.htm";then
+				isDirectory="yes"
+			elif test -f "${foundAppFile}/main.php";then
+				isDirectory="yes"
+			fi
+			if [ "$isDirectory" == "yes" ];then
+				addToLog "DEBUG" "PHP Directory Works" "'Found application directory $foundAppFile' is a usable application."
+				# if the index.php exists copy the directory as a application
+				INFO "Found application directory '$foundAppFile'"
+				# create a sum of the app file found based on the path
+				appSum=$(echo "$foundAppFile" | md5sum | cut -d' ' -f1 )
+				# update the application if it has changed
+				updateApplication "$appSum" "$foundAppFile" &
+				#
+				waitQueue 0.2 "$totalCPUS"
+			else
+				addToLog "WARNING" "Partial App Directory" "The found application directory '$foundAppFile' is broken because it contains no index.php/index.html/index.htm/main.php file..."
+				ERROR "This application directory '$foundAppFile' does not work."
+			fi
 		done
 	done
 	# block for parallel threads here
