@@ -35,9 +35,17 @@ requireAdmin();
 <div class='settingListCard'>
 	<h1>Media Data Marked for removal</h1>
 	<p>
-		Media paths below have been marked for removal on the server. Media is not automaticaly removed. A server administrator with access to the filesystem must remove the source path manualy. You can then force a media rescan to remove it from the web interface. You must then remove the media from this removal list.
+		Media paths below have been marked for removal on the server. Media is not automatically removed. A server administrator with access to the filesystem must remove the source path manually. You can then force a media rescan to remove it from the web interface. You must then remove the media from this removal list.
 	</p>
-	<?PHP
+<?PHP
+	$removalScript="#! /bin/bash\n";
+	$removalScript.="################################################################################\n";
+	$removalScript.="# - You need to review this script before running it on the server to prevent unwanted deletions.\n";
+	$removalScript.="# - This script will remove sources of all content marked for removal on this page.\n";
+	$removalScript.="# - You must run this script on the server as a administrator in order to remove the sources.\n";
+	$removalScript.="# - Each item must also be removed from the removal list.\n";
+	$removalScript.="################################################################################\n\n";
+	$scriptGenerated=false;
 	if(is_dir("/var/cache/2web/generated/removal/")){
 		#
 		$sourceData=scandir("/var/cache/2web/generated/removal/");
@@ -52,7 +60,7 @@ requireAdmin();
 			#
 			$tempPath=trim(file_get_contents("/var/cache/2web/generated/removal/".$mediaName."/path.cfg"));
 			#
-			echo "<h2>$mediaName</h2>\n";
+			echo "<a href='/$tempPath/$mediaName/'><h2>$mediaName</h2></a>\n";
 			echo "<table>\n";
 			foreach($tempSources as $sourcePath){
 				$sourcePath=trim($sourcePath);
@@ -60,11 +68,18 @@ requireAdmin();
 				echo "		<td>\n";
 				echo "			$sourcePath\n";
 				echo "		</td>\n";
+				$removalScript.="################################################################################\n";
+				$removalScript.="# $mediaName\n";
+				$removalScript.="################################################################################\n";
 				# check the source path
 				if(file_exists($sourcePath)){
 					echo "		<td class='disabledSetting'>\n";
 					echo "			Source Path Exists\n";
 					echo "		</td>\n";
+					#
+					$removalScript.="# remove source directory of $mediaName\n";
+					$removalScript.="rm -rv '$sourcePath/'\n";
+					$scriptGenerated=true;
 				}else{
 					echo "		<td class='enabledSetting'>\n";
 					echo "			Source Path Removed\n";
@@ -75,11 +90,30 @@ requireAdmin();
 					echo "		<td class='disabledSetting'>\n";
 					echo "			Web Path Exists\n";
 					echo "		</td>\n";
+					$removalScript.="# remove web directory of $mediaName\n";
+					$removalScript.="rm -rv '/var/cache/2web/web/$tempPath/$mediaName/'\n";
+					$scriptGenerated=true;
 				}else{
 					echo "		<td class='enabledSetting'>\n";
 					echo "			Web Path Removed\n";
 					echo "		</td>\n";
 				}
+				if(file_exists("/var/cache/2web/kodi/$tempPath/$mediaName/")){
+					$removalScript.="# remove KODI directory of $mediaName\n";
+					$removalScript.="rm -rv '/var/cache/2web/web/kodi/$tempPath/$mediaName/'\n";
+					$scriptGenerated=true;
+				}
+				if(file_exists("/var/cache/2web/kodi_cache/$tempPath/$mediaName/")){
+					$removalScript.="# remove KODI directory of $mediaName\n";
+					$removalScript.="rm -rv '/var/cache/2web/kodi_cache/$tempPath/$mediaName/'\n";
+					$scriptGenerated=true;
+				}
+				# remove any search index data
+				if(file_exists("/var/cache/2web/generated/searchIndexData/$tempPath/$mediaName/")){
+					$removalScript.="# remove search index data of $mediaName\n";
+					$removalScript.="rm -rv \"/var/cache/2web/generated/searchIndexData/$tempPath/$mediaName/\"\n";
+				}
+				$removalScript.="#==============================================================================#\n\n";
 				# draw the button to rescan the media in order to remove it from the web path
 				echo "		<td>\n";
 				# filter based on path in order to create the correct rescan button
@@ -109,6 +143,13 @@ requireAdmin();
 	?>
 </div>
 <?PHP
+	#
+	if($scriptGenerated){
+		echo "<div class='titleCard'>\n";
+		echo "	<h2>Removal Script</h2>\n";
+		echo "	<pre>$removalScript</pre>\n";
+		echo "</div>\n";
+	}
 	include($_SERVER['DOCUMENT_ROOT'].'/footer.php');
 ?>
 </body>
