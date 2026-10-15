@@ -193,6 +193,7 @@ if($topLevel){
 }
 ?>
 </title>
+<link rel='icon' type='image/png' href='0001-thumb.png' >
 <style>
 </style>
 <link rel='stylesheet' href='/style.css'>

@@ -46,8 +46,8 @@
 	<meta meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
 	<link rel='stylesheet' type='text/css' href='/style.css'>
 	<script src='/2webLib.js'></script>
-	<link rel='icon' type='image/png' href='/favicon.png'>
 	<?PHP
+		#echo "<link rel='icon' type='image/png' href='/favicon.png'>\n";
 		# get the total pages from the stored location
 		$totalPages=file_get_contents("totalPages.cfg");
 		# convert total pages into a interger
@@ -108,6 +108,9 @@
 		}
 		#
 		echo "<title>$comic - Page $page / ".prefixNumbers($totalPages)."</title>\n";
+
+		# draw the favicon as the thumbnail of the current page
+		echo "<link rel='icon' type='image/png' href='$page-thumb.png' >\n";
 	?>
 	<style>
 	<?PHP
