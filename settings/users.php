@@ -160,6 +160,8 @@ include("settingsHeader.php");
 <h2>Manage Users</h2>
 <?PHP
 	# for each existing user build a card and place group enable/disable buttons for each group and a remove user button
+	# store the lock status after first check
+	$groupLockStatus=Array();
 	foreach( $foundUsers as $foundUser){
 		# remove extension from filename
 		$foundUser = str_replace(".cfg","",$foundUser);
@@ -172,6 +174,9 @@ include("settingsHeader.php");
 		echo "		Group";
 		echo "	</th>";
 		echo "	<th>";
+		echo "		Lockstate";
+		echo "	</th>";
+		echo "	<th>";
 		echo "		Access Permissions";
 		echo "	</th>";
 		echo "</tr>";
@@ -179,6 +184,26 @@ include("settingsHeader.php");
 			echo "<tr>";
 			echo "	<td>";
 			echo "		$group";
+			echo "	</td>";
+			if (isset($groupLockStatus[$group])){
+				# load cached status
+				$currentLockStatus=$groupLockStatus[$group];
+			}else{
+				# update the status from the file
+				$groupLockStatus[$group]=file_exists("/etc/2web/lockedGroups/$group.cfg");
+				# update the status
+				$currentLockStatus=$groupLockStatus[$group];
+			}
+			if($group=="admin"){
+				echo "	<td class=''>";
+				echo "🪄";
+			}else if($currentLockStatus){
+				echo "	<td class='enabledSetting'>";
+				echo "🔒 Locked";
+			}else{
+				echo "	<td class='disabledSetting'>";
+				echo "🔓 Unlocked";
+			}
 			echo "	</td>";
 			echo "	<td>";
 			# build buttons to add or remove users from the groups that exist
