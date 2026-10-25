@@ -219,9 +219,12 @@ if ($loggedIn){
 		# hide header without permissions
 		include($_SERVER['DOCUMENT_ROOT']."/header.php");
 	}
+	if($errorMessages==""){
+		$errorMessages="Use the form below to login to ".ucfirst(gethostname())."\n";
+	}
 	# no login is detected draw the login window
 	echo "<div class='inputCard'>"."\n";
-	echo "	<h1>Login To ".ucfirst(gethostname())."</h1>"."\n";
+	echo "	<h1>🛂︎ Login Required</h1>"."\n";
 	echo "	$errorMessages"."\n";
 	echo "	<form method='post'>"."\n";
 	echo "		<hr>"."\n";
@@ -229,7 +232,7 @@ if ($loggedIn){
 	echo "		<hr>"."\n";
 	echo "		<input class='loginPass' type='password' autocorrect='off' autocapitalize='none' name='password' placeholder='Password...'>"."\n";
 	echo "		<hr>"."\n";
-	echo "		<input onclick='notify(\"🔑\",\"60000\",\"spinRight\");' class='button' type='submit' value='Login'>"."\n";
+	echo "		<input onclick='notify(\"🔑\",\"60000\",\"spinRight\");' class='button' type='submit' value='🪪︎ Validate Login'>"."\n";
 	echo "	</form>"."\n";
 	echo "</div>"."\n";
 	if (requireGroup("2web",false)){
