@@ -17,6 +17,261 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ################################################################################
 ini_set('display_errors', 1);
+if( ! function_exists("drawViewsWidget")){
+	function drawViewsWidget($filterType="all", $inverse=False, $linkType="poster"){
+		# Draw a widget using the view count database
+		#
+		# - By default draw the most popular list
+		# - Show items by the most popular
+		# - Show items by the least popular items
+		# - Still allows filtering by content
+		# - $inverse will show the least viewed content
+		# - Content of the same exact popularity will be randomized within that list
+		#
+		# - The filter type determines which playlist filter the widget pulls items from
+		# - The random variable sets if this is a widget containing random entries
+		# - The linktype determines the formatting used
+		# - The content rendered by this widget will be cached long term. So the playlist
+		#   section of the site itself will be ahead of any widgets rendered by this
+		#   function. However this function will update widget data on access. So if you
+		#   load up a page with the widget and the site has not cached it recently, the
+		#   same data as the playlists page will be loaded. The cache prevents high usage
+		#   of the site from hammering the server databases.
+
+		# require the views database to exist
+		if (file_exists($_SERVER['DOCUMENT_ROOT']."/views.db")){
+			# check for group permissions in filter type
+			if ($filterType == "all"){
+				$groups=listModules();
+				# check user has all permissions for groups
+				foreach($groups as $groupName){
+					if(! requireGroup($groupName, false)){
+						$showOutput = false;
+						break;
+					}else{
+						# mark output to be shown
+						$showOutput = true;
+					}
+				}
+			}else if ($filterType == "graphs"){
+				$showOutput = requireGroup("graph2web", false);
+			}else if ($filterType == "comics"){
+				$showOutput = requireGroup("comic2web", false);
+			}else if ($filterType == "videogroups"){
+				$showOutput = requireGroup("video2web", false);
+			}else if ($filterType == "videos"){
+				$showOutput = requireGroup("video2web", false);
+			}else if ($filterType == "channels"){
+				$showOutput = requireGroup("iptv2web", false);
+			}else if ($filterType == "repos"){
+				$showOutput = requireGroup("git2web", false);
+			}else if ($filterType == "episodes"){
+				$showOutput = requireGroup("nfo2web", false);
+			}else if ($filterType == "movies"){
+				$showOutput = requireGroup("nfo2web", false);
+			}else if ($filterType == "shows"){
+				$showOutput = requireGroup("nfo2web", false);
+			}else if ($filterType == "music"){
+				$showOutput = requireGroup("music2web", false);
+			}else if ($filterType == "artists"){
+				$showOutput = requireGroup("music2web", false);
+			}else if ($filterType == "albums"){
+				$showOutput = requireGroup("music2web", false);
+			}else if ($filterType == "tracks"){
+				$showOutput = requireGroup("music2web", false);
+			}else if ($filterType == "portal"){
+				$showOutput = requireGroup("portal2web", false);
+			}else if ($filterType == "channels"){
+				$showOutput = requireGroup("iptv2web", false);
+			}else if ($filterType == "applications"){
+				$showOutput = requireGroup("php2web", false);
+			}else{
+				$showOutput = true;
+			}
+			if ($showOutput == false){
+				# hide the output if group permissions are not available for this widget
+				return false;
+			}
+			# Draw the poster widget as HTML
+			$dataSourcePath=$_SERVER['DOCUMENT_ROOT']."/views.db";
+			if (file_exists($dataSourcePath)){
+				if ($inverse){
+					$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/widget_unpopular_$filterType.index";
+				}else{
+					$cacheFile=$_SERVER['DOCUMENT_ROOT']."/web_cache/widget_popular_$filterType.index";
+				}
+				if (file_exists($cacheFile)){
+					if (time()-filemtime($cacheFile) > 2 * 3600){
+						// update the cached file
+						$writeFile=true;
+					}else{
+						// read from the already cached file
+						$writeFile=false;
+					}
+				}else{
+					# write the file if it does not exist
+					$writeFile=true;
+				}
+				if ($writeFile){
+					# load the views database
+					$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+					# set the timeout to 1 minute since most webbrowsers timeout loading before this
+					$databaseObj->busyTimeout(60000);
+					# get the list of views to a path in the sql database
+					if ($inverse){
+						# sort least seen content first
+						$result = $databaseObj->query("select * from watch_count order by views;");
+					}else{
+						# sort most seen content first
+						$result = $databaseObj->query("select * from watch_count order by views DESC;");
+					}
+
+					$dataResults=Array();
+					$foundIndexFiles=Array();
+					# check if the table exists in the sql database
+					while($row = $result->fetchArray()){
+						# add each row to the array
+						array_push($dataResults,$row['path']);
+						# draw the icon for the page if it can be found
+						# - the views are not listed here only the ranking
+						# - views are listed for admin
+						$tempUrl=$row["path"];
+						# if a index file exists for this item on the most popular list
+						# draw the index file in the list
+						#
+						$tempIndexPath=($tempUrl);
+						if (file_exists($tempIndexPath)){
+							if ($filterType=="all"){
+								# store all the index files unfiltered
+								$foundIndexFiles=array_merge($foundIndexFiles,Array($tempIndexPath));
+							}else{
+								# check the filter is correct
+								if (stripos($tempUrl,"/$filterType/") !== false){
+									# store the url
+									$foundIndexFiles=array_merge($foundIndexFiles,Array($tempIndexPath));
+								}
+							}
+						}
+						#
+					}
+					# add the cached source files to the page
+					$sourceFiles=$foundIndexFiles;
+					#
+					#
+					#
+					# get data from views database, sort and cache output as a file in web_cache
+					#
+					#
+					#
+					# read the views database
+					# get 800 items based on view count of pages
+					# take the items and sort them into a 2d array of the values based on duplicate view counts
+					# randomize the list items inside the view count group
+					# list the items sorted by the view count
+					# filter the items in order to remove icons that do not exist
+					# if inverse is set reverse the sort in order to show the least viewed media items
+					# cache the result in the 2web cache
+					# use the inverse value and the last updated date for the server in order to generate a hash for the cache storage value
+					#
+					#
+					#
+					#
+					# open the cache index file
+					$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
+
+					$counter=0;
+					$drawBottom=0;
+					foreach($sourceFiles as $sourceFile){
+						$sourceFileName = $sourceFile;
+						if (file_exists($sourceFile)){
+							if (is_file($sourceFile)){
+								if (strpos($sourceFile,".index")){
+									$counter += 1;
+									if ($counter == 1){
+										fwrite($fileObj,"<div class='titleCard widget'>\n");
+										if ($inverse){
+											fwrite($fileObj,"	<h1>Explore ".ucfirst($filterType)."</h1>\n");
+										}else{
+											fwrite($fileObj,"	<h1>Popular ".ucfirst($filterType)."</h1>\n");
+										}
+										fwrite($fileObj,"	<div class='listCard'>\n");
+										$drawBottom = 1;
+									}
+									// read the index entry
+									$data=file_get_contents_tabbed($sourceFile,2);
+									// write the index entry
+									fwrite($fileObj,"$data");
+								}
+							}
+							# limit results
+							if ($counter >= 16){
+								// break the loop
+								break;
+							}
+						}
+					}
+					if ($drawBottom == 1){
+						if ($filterType == "music"){
+							$linkType="icon";
+						}else if ($filterType == "music"){
+							$linkType="icon";
+						}else if ($filterType == "albums"){
+							$linkType="icon";
+						}else if ($filterType == "artists"){
+							$linkType="icon";
+						}else if ($filterType == "episodes"){
+							$linkType="episode";
+						}else if ($filterType == "portal"){
+							$linkType="episode";
+						}else{
+							$linkType="poster";
+						}
+						if ($linkType == "icon"){
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='indexSeries' href='/popular.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
+							fwrite($fileObj,"</a>");
+						}else if ($linkType == "episode"){
+							# show page episode
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='indexSeries' href='/popular.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
+							fwrite($fileObj,"</a>");
+						}else{
+							// create a final link to the full new list
+							fwrite($fileObj,"<a class='indexSeries' href='/popular.php?filter=$filterType'>");
+							fwrite($fileObj,"<h2 class='moreEpisodesLinkIcon'>");
+							fwrite($fileObj,"📜");
+							fwrite($fileObj,"</h2>");
+							fwrite($fileObj,"Full ");
+							fwrite($fileObj,"List");
+							fwrite($fileObj,"</a>");
+						}
+					}
+					fwrite($fileObj,"</div>");
+					fwrite($fileObj,"</div>");
+					// close the file
+					fclose($fileObj);
+				}
+				// read the file that is cached
+				echo file_get_contents($cacheFile);
+				// flush the buffer
+				flush();
+				ob_flush();
+			}
+		}else{
+			return;
+		}
+	}
+}
 ################################################################################
 if( ! function_exists("drawPosterWidget")){
 	function drawPosterWidget($filterType, $random=False, $linkType="poster"){
@@ -49,6 +304,8 @@ if( ! function_exists("drawPosterWidget")){
 			$showOutput = requireGroup("graph2web", false);
 		}else if ($filterType == "comics"){
 			$showOutput = requireGroup("comic2web", false);
+		}else if ($filterType == "videogroups"){
+			$showOutput = requireGroup("video2web", false);
 		}else if ($filterType == "videos"){
 			$showOutput = requireGroup("video2web", false);
 		}else if ($filterType == "channels"){
@@ -891,8 +1148,9 @@ if( ! function_exists("displayEmptyMessage")){
 			# random movies and shows
 			drawPosterWidget("movies", True);
 			drawPosterWidget("shows", True);
-			# random videos
+			# random videos and groups
 			drawPosterWidget("videos", True);
+			drawPosterWidget("videogroups", True);
 			#
 			drawPosterWidget("comics", True);
 			#
@@ -909,6 +1167,7 @@ if( ! function_exists("displayEmptyMessage")){
 			echo "<hr>";
 			loadSearchIndexResults($search,"episodes",9,"Episodes",40,true);
 			loadSearchIndexResults($search,"videos",9,"Videos",40,true);
+			loadSearchIndexResults($search,"videogroups",9,"Video Groups",40,true);
 			loadSearchIndexResults($search,"shows",8,"Shows",40,true);
 			loadSearchIndexResults($search,"movies",-1,"Movies",40,true);
 			loadSearchIndexResults($search,"comics",-1,"Comics",40,true);
