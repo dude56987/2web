@@ -2,6 +2,61 @@
 	ini_set('display_errors', 1);
 	include("/usr/share/2web/2webLib.php");
 	requireGroup("nfo2web");
+	########################################################################
+	# this file is to be placed in the show directory
+	# - /shows/$showName/index.php
+	$activeDir=getcwd();
+	$showTitle=array_reverse(explode('/',$activeDir))[0];
+	#
+	if (array_key_exists("autoplay",$_GET)){
+		$seasons=scandir($activeDir);
+		#echo "<pre>".var_export($seasons,true)."</pre>"."\n";
+		#
+		$seasons=array_diff($seasons,Array(".",".."));
+		#echo "<pre>".var_export($seasons,true)."</pre>"."\n";
+		#
+		sort($seasons);
+		#echo "<pre>".var_export($seasons,true)."</pre>"."\n";
+		#
+		if (is_readable($seasons[0]."/season.index")){
+			$episodes=file( ($seasons[0]."/season.index") , FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+			sort($episodes);
+			#echo "<pre>".var_export($episodes,true)."</pre>"."\n";
+			$episodePath=str_replace("/var/cache/2web/web","",$episodes[0]);
+			#echo "<pre>".var_export($episodePath,true)."</pre>"."\n";
+			$episodePath=str_replace(".index",".php",$episodePath);
+			#echo "<pre>".var_export($episodePath,true)."</pre>"."\n";
+			if(isset($_GET["loop"])){
+				$loopOption="&loop";
+			}else{
+				$loopOption="";
+			}
+			$episodePath=$episodePath."?autoplay&play$loopOption";
+			#echo "<pre>".var_export($episodePath,true)."</pre>"."\n";
+			redirect($episodePath);
+		}
+	}
+	if (array_key_exists("playrandom",$_GET)){
+		$seasons=scandir($activeDir);
+		#
+		$seasons=array_diff($seasons,Array(".",".."));
+		#
+		sort($seasons);
+		#
+		if (is_readable($seasons[0]."/season.index")){
+			$episodes=file( ($seasons[0]."/season.index") , FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+			shuffle($episodes);
+			$episodePath=str_replace("/var/cache/2web/web","",$episodes[0]);
+			$episodePath=str_replace(".index",".php",$episodePath);
+			if(isset($_GET["loop"])){
+				$loopOption="&loop";
+			}else{
+				$loopOption="";
+			}
+			$episodePath=$episodePath."?playrandom&play$loopOption";
+			redirect($episodePath);
+		}
+	}
 ?>
 <!--
 ########################################################################
@@ -41,10 +96,6 @@
 </head>
 <body>
 <?PHP
-// this file is to be placed in the show directory
-// - /shows/$showName/index.php
-$activeDir=getcwd();
-$showTitle=array_reverse(explode('/',$activeDir))[0];
 include($_SERVER['DOCUMENT_ROOT'].'/header.php');
 ?>
 <div class='titleCard'>
@@ -54,6 +105,15 @@ echo "	<h1>$showTitle</h1>\n";
 	<hr>
 	<div class='listCard'>
 <?PHP
+#
+echo "<a class='button' href='?autoplay' onclick='notify(\"▶️\")'>▶️ Play All</a>\n";
+echo "<a class='button' href='?playrandom' onclick='notify(\"🔀\")'>🔀 Play Random</a>\n";
+#
+echo "<a class='button' href='?autoplay&loop' onclick='notify(\"▶️\")'>▶️ Loop All</a>\n";
+echo "<a class='button' href='?playrandom&loop' onclick='notify(\"🔀\")'>🔀 Loop Random</a>\n";
+#
+echo "<a class='button' href='?random=".rand(0,10000)."#seasonsTop' onclick='notify(\"🎲\",\"60000\",\"spinRight\")'>🎲 Random Episodes</a>\n";
+#
 echo "	<a class='button' href='/m3u-gen.php?showTitle=\"$showTitle\"' onclick='notify(\"🡇\");' download='$showTitle"."_all_episodes.m3u'>\n";
 ?>
 			▶️ Play All<sup>External</sup>
@@ -94,29 +154,58 @@ foreach($seasonDirs as $seasonDir){
 ?>
 	</div>
 <?PHP
-echo "	<div class='titleCard seriesPlot'>\n";
-echo "		<h2 class=''>Plot</h2>\n";
-if (file_exists($activeDir."/poster.png")){
-	echo "		<a href='poster.png'>\n";
-	echo "			<img class='right' src='poster-web.png'>\n";
-	echo "		</a>\n";
+if (is_readable($activeDir."/plot.cfg")){
+	echo "	<div class='titleCard seriesPlot'>\n";
+	echo "		<h2 class=''>Plot</h2>\n";
+	if (file_exists($activeDir."/poster.png")){
+		echo "		<a href='poster.png'>\n";
+		echo "			<img loading='lazy' class='right' src='poster-web.png'>\n";
+		echo "		</a>\n";
+	}
+	echo file_get_contents_tabbed($activeDir."/plot.cfg",1);
+	#echo "Local Collection of videos sorted by Year.";
+	echo "	</div>\n";
+}else{
+	if (file_exists($activeDir."/poster.png")){
+		echo "		<a href='poster.png'>\n";
+		echo "			<img loading='lazy' class='' src='poster-web.png'>\n";
+		echo "		</a>\n";
+	}
 }
-echo file_get_contents_tabbed($activeDir."/plot.cfg",1);
-echo "	</div>\n";
-# check for sources
 if (requireGroup("admin",false)){
+	# display the admin tools if sources are available
 	if(file_exists("sources.cfg")){
 		echo "	<div class='titleCard'>\n";
 		echo "		<h2>Media Sources</h2>\n";
 		echo "		<pre>".file_get_contents("sources.cfg")."</pre>\n";
 		#
 		$showScanPath=basename(dirname($_SERVER["SCRIPT_FILENAME"]));
+		# check for the videos section
+		if (stripos($_SERVER["SCRIPT_FILENAME"],"/videos/") !== false){
+			$mediaRescanType="rescanVideos";
+		}else{
+			$mediaRescanType="rescanShow";
+		}
 		echo "		<h2>Admin Actions</h2>\n";
 		echo "		<div class='listCard'>\n";
+		# remove existing data and rescan this show
 		echo "			<form action='/settings/admin.php' method='post'>\n";
-		echo "				<input type='text' name='rescanShow' value='$showScanPath' hidden>\n";
+		echo "				<input type='text' name='$mediaRescanType' value='$showScanPath' hidden>\n";
 		echo "				<button class='button' type='submit'>🗘 Force Media Rescan</button>\n";
 		echo "			</form>\n";
+		if (is_readable($activeDir."/plot.cfg")){
+			echo "			<form action='/settings/admin.php' method='post'>\n";
+			echo "				<input type='text' name='showTitle' value='$showScanPath' hidden>\n";
+			# enable or disable a single show
+			if ( yesNoCfgCheck("/var/cache/2web/web/shows/$showScanPath/forceCache.cfg","no") ){
+				echo "				<input type='text' name='forceCacheNewEpisodesForShow' value='no' hidden>\n";
+				echo "				<button class='button' type='submit'>🟢 Disable Auto Cache of New Episodes</button>\n";
+			}else{
+				echo "				<input type='text' name='forceCacheNewEpisodesForShow' value='yes' hidden>\n";
+				echo "				<button class='button' type='submit'>◯ Enable Auto Cache of New Episodes</button>\n";
+			}
+			echo "			</form>\n";
+		}
 		echo "		</div>\n";
 		echo "	</div>\n";
 	}
@@ -124,15 +213,58 @@ if (requireGroup("admin",false)){
 # draw the most recent episodes
 # - get the latest season episodes
 # - list them in reverse order
-$newestEpisodes=array_reverse(file($newestSeason."/season.index"));
-echo "<div class='titleCard'>\n";
-echo "	<h2>New Episodes</h2>\n";
-echo "	<div class='listCard'>\n";
-foreach($newestEpisodes as $episodeFile){
-	echo file_get_contents_tabbed(trim($episodeFile),1);
+if(is_readable("marathon.index")){
+	#
+	$newEpisodesCacheSum=md5($showTitle);
+	#
+	$newEpisodeCachePath="/var/cache/2web/web/web_cache/new_episodes_$newEpisodesCacheSum.cfg";
+	# rebuild the new episodes list once every day
+	if(cacheCheck($newEpisodeCachePath,1)){
+		# cache the new file
+		$newestEpisodes=array_reverse(file("marathon.index",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+		$newEpisodeIndexData="";
+		$totalNewEpisodes=0;
+		# get the new episode index files
+		foreach($newestEpisodes as $episodeFile){
+			# make sure the path is readable
+			if(is_readable($episodeFile)){
+				# check if the episode is less than 30 days old in the web interface
+				if (time()-filemtime($episodeFile) < ((60*60)*24)*30){
+					$newEpisodeIndexData.=file_get_contents_tabbed(trim($episodeFile),1);
+					$totalNewEpisodes+=1;
+				}
+			}
+			# limit output to 40 episodes
+			if($totalNewEpisodes>=40){
+				break;
+			}
+		}
+		# add the more link to the new episodes data
+		# - use ?season to load only that single season this prevents this button from being non-working
+		#   until the entire page has completely loaded.
+		$newEpisodeIndexData.="<a class='indexSeries' href='?season=$newestSeason#$newestSeason'>\n";
+		$newEpisodeIndexData.="	<h2 class='moreEpisodesLinkIcon'>+</h2>\n";
+		$newEpisodeIndexData.="	More\n";
+		$newEpisodeIndexData.="</a>\n";
+		# check if any episodes were found and list them
+		if($totalNewEpisodes>0){
+			$newEpisodeCacheData="<div class='titleCard'>\n";
+			$newEpisodeCacheData.="	<h2 title='New Episodes ordered by Newest to Oldest'>New Episodes</sup></h2>\n";
+			$newEpisodeCacheData.="	<div class='listCard'>\n";
+			$newEpisodeCacheData.="		$newEpisodeIndexData";
+			$newEpisodeCacheData.="	</div>\n";
+			$newEpisodeCacheData.="</div>\n";
+		}else{
+			# cache has no data but create file anyway to prevent excess rescans
+			$newEpisodeCacheData="";
+		}
+		file_put_contents($newEpisodeCachePath,$newEpisodeCacheData);
+		echo "$newEpisodeCacheData";
+	}else{
+		# load the cached data
+		echo file_get_contents($newEpisodeCachePath);
+	}
 }
-echo "	</div>\n";
-echo "</div>\n";
 # draw the search links
 drawMoreSearchLinks($showTitle);
 ?>
@@ -145,7 +277,7 @@ drawMoreSearchLinks($showTitle);
 <?PHP
 	# use a random number to force a page refresh
 	# - random does not really take a input value
-	echo "<a class='searchButton' href='?random=".rand(0,10000)."#seasonsTop'>🎲</a>\n";
+	echo "<a class='searchButton' href='?random=".rand(0,10000)."#seasonsTop' onclick='notify(\"🎲\",\"60000\",\"spinRight\")'>🎲</a>\n";
 ?>
 </form>
 <hr id='seasonsTop'>
@@ -157,6 +289,10 @@ if (array_key_exists("search",$_GET)){
 $searchResults=False;
 
 if (array_key_exists("random",$_GET)){
+	# show random spinner
+	echo "<script>"."\n";
+	echo "	notify(\"🎲\",\"2000\",\"spinRight\")"."\n";
+	echo "</script>"."\n";
 	$episodeFiles=Array();
 	foreach($seasonDirs as $seasonDir){
 		if (is_readable("$seasonDir/season.index")){
@@ -190,7 +326,7 @@ if (array_key_exists("random",$_GET)){
 				// set so script keeps running even if user cancels it
 				ignore_user_abort(true);
 				#$episodeFiles = scanDir($seasonDir);
-				$episodeFiles = file("$seasonDir/season.index");
+				$episodeFiles = file("$seasonDir/season.index",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 				# sort the episode names
 				sort($episodeFiles);
 
