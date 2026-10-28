@@ -70,7 +70,13 @@ function enableApacheServer(){
 	linkFile "/etc/apache2/sites-available/0000-2web-website.conf" "/etc/apache2/sites-enabled/0000-2web-website.conf"
 	linkFile "/etc/apache2/sites-available/0000-2web-website-SSL.conf" "/etc/apache2/sites-enabled/0000-2web-website-SSL.conf"
 	# restart apache to apply changes
-	apache2ctl restart
+	if test -f "/usr/sbin/apache2ctl";then
+		/usr/sbin/apache2ctl restart
+	elif test -f "/usr/bin/apache2ctl";then
+		/usr/bin/apache2ctl restart
+	else
+		apache2ctl restart
+	fi
 }
 ########################################################################
 function disableApacheServer(){
@@ -90,7 +96,13 @@ function disableApacheServer(){
 		ln -s "/etc/apache2/sites-available/0-default.conf" "/etc/apache2/sites-enabled/0-default.conf"
 	fi
 	# restart apache to apply changes
-	apache2ctl restart
+	if test -f "/usr/sbin/apache2ctl";then
+		/usr/sbin/apache2ctl restart
+	elif test -f "/usr/bin/apache2ctl";then
+		/usr/bin/apache2ctl restart
+	else
+		apache2ctl restart
+	fi
 }
 ########################################################################
 function enableCronJob(){
