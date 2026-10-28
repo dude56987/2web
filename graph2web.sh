@@ -273,6 +273,7 @@ function resetCache(){
 }
 ################################################################################
 function nuke(){
+	countdown "Until Graphs section will be removed" "All graph2web data will be Deleted" 30
 	webDirectory=$(webRoot)
 	kodiDirectory=$(kodiRoot)
 	# remove the kodi and web graph files
