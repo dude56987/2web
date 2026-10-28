@@ -106,13 +106,17 @@ test-themes:
 check-copy-dates:
 	grep "Copyright (C)" *.* */*.* */*/*.* | grep --invert-match "2025" | csvformat | csvclean -a -d ":" | csvlook --no-header-row
 test-apps:
-	# compress the apps into the install location
-	zip -9 -r -j "/usr/share/2web/example_apps/list.zip" "example_apps/list/."
-	zip -9 -r -j "/usr/share/2web/example_apps/ticket.zip" "example_apps/ticket/."
-	zip -9 -r -j "/usr/share/2web/example_apps/calc.zip" "example_apps/calc/."
-	# re-install the example apps
-	php2web nuke
-	php2web
+	#######################################################
+	# Copy the example apps into the system
+	#######################################################
+	cp -r example_apps/*/ "/usr/share/2web/example_apps/"
+	#######################################################
+	# This will take a minute and produce no output
+	#######################################################
+	# remove installed apps
+	php2web nuke --fast --mute --ignore-steam
+	# install the example apps
+	php2web --fast --mute --ignore-steam
 lint:
 	# check the templates
 	php -l templates/*.php
