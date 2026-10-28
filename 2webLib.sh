@@ -4666,6 +4666,54 @@ function incrementWeeklyGraphData(){
 		echo "1" > "$graphPath"
 	fi
 }
+################################################################################
+function views_db_query(){
+	# db_query "queryString"
+	#
+	# Run a quick db query on the views database
+	#
+	sqlite3 -cmd ".timeout 90000" "/var/cache/2web/web/views.db" "$1"
+}
+################################################################################
+function createViewsDatabase(){
+	# createViewsDatabase
+	#
+	# create the views database if it does not exist
+	#
+	if yesNoCfgCheck "/etc/2web/enableViewTracking.cfg" "no" ;then
+		if test -f "/var/cache/2web/web/views.db";then
+			# the database exists
+			INFO "Views Database Exists..."
+		else
+			INFO "Views Database is being created..."
+			# get the list of tables in the sql database
+			views_db_query "PRAGMA journal_mode=WAL;"
+			views_db_query "PRAGMA wal_autocheckpoint=20;"
+			# the view counts for every page
+			# - views are seprated by API requests as well as webpages
+			views_db_query "create table view_count(url text primary key,views int);"
+			# the page 404 error counts
+			views_db_query "create table error_count(url text primary key,views int);"
+			# the view counts
+			views_db_query "create table watch_count(path text primary key,views int);"
+		fi
+	fi
+}
+################################################################################
+function touchWatchCount(){
+	# touchWatchCount $indexFile
+	#
+	# -	Create the watch count entry in the database with a value of zero
+	# - Only set the value to zero if the value does not yet exist
+	indexFile="$1"
+	# set the watch count to zero for a index file if it does not exist in the database
+	if yesNoCfgCheck "/etc/2web/enableViewTracking.cfg" "no" ;then
+		# create the views database if it does not exist
+		createViewsDatabase
+		# insert a path if one does not yet exist and set the watch count to zero
+		views_db_query "INSERT OR IGNORE INTO watch_count (path,views) VALUES ('$indexFile',0);"
+	fi
+}
 ########################################################################
 # Read the user flags and generate values for the global variables
 # - ex. --parallel
