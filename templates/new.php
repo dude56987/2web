@@ -21,6 +21,8 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("nfo2web");
 	}else if ($filterType == "videos"){
 		requireGroup("video2web");
+	}else if ($filterType == "videogroups"){
+		requireGroup("video2web");
 	}else if ($filterType == "shows"){
 		requireGroup("nfo2web");
 	}else if ($filterType == "music"){
@@ -37,6 +39,46 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("php2web");
 	}
 }
+# auto redirects based on source page
+$comingFrom=$_SERVER["HTTP_REFERER"];
+$newPath="";
+addToLog("DEBUG","comingFrom","$comingFrom");
+if(stripos($comingFrom,"/comics/") !== false){
+	$newPath="?filter=comics";
+}else if(stripos($comingFrom,"/shows/") !== false){
+	$newPath=("?filter=episodes");
+}else if(stripos($comingFrom,"/movies/") !== false){
+	$newPath=("?filter=movies");
+}else if(stripos($comingFrom,"/videos/") !== false){
+	$newPath=("?filter=videos");
+}else if(stripos($comingFrom,"/music/") !== false){
+	$newPath=("?filter=music");
+}else if(stripos($comingFrom,"/graphs/") !== false){
+	$newPath=("?filter=graphs");
+}else if(stripos($comingFrom,"/portal/") !== false){
+	$newPath=("?filter=portal");
+}else if(stripos($comingFrom,"/applications/") !== false){
+	$newPath=("?filter=applications");
+}else if(stripos($comingFrom,"/wiki/") !== false){
+	$newPath=("?filter=wiki");
+}else if(stripos($comingFrom,"/live/") !== false){
+	$newPath=("?filter=channels");
+}else if(stripos($comingFrom,"/web_player") !== false){
+	$newPath=("?filter=webcasts");
+}else if(stripos($comingFrom,"/web-player.php") !== false){
+	$newPath=("?filter=webcasts");
+}else if(stripos($comingFrom,"/repos/") !== false){
+	$newPath=("?filter=repos");
+}
+# if newpath has been set
+if($newPath != ""){
+	# check the page has not already redirected
+	if((stripos($_SERVER["REQUEST_URI"],"$newPath") !== false)==false){
+		# redirect to the filter based on the page the user is coming from
+		redirect($newPath,true);
+	}
+}
+
 ?>
 <!--
 ########################################################################
@@ -75,33 +117,10 @@ if (array_key_exists("filter",$_GET)){
 <?php
 ################################################################################
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
+# draw the playlists header
+# - requires $filterType to be set
+include("/usr/share/2web/templates/playlists_header.php");
 ?>
-<div class='titleCard'>
-	<h2>
-		Playlists
-	</h2>
-	<div class='listCard'>
-			<a class='activeButton' href='/new/'>
-			📜 New
-		</a>
-		<?PHP
-		if (array_key_exists("filter",$_GET)){
-			echo "<a class='button' href='/random/?filter=$filterType'>";
-		}else{
-			echo "<a class='button' href='/random/'>";
-		}
-		?>
-			🔀 Random
-		</a>
-		<?PHP
-		if(checkModStatus("nfo2web")){
-			echo "<a class='button' href='/tags/'>\n";
-			echo "	🔖 Tags\n";
-			echo "</a>\n";
-		}
-		?>
-	</div>
-</div>
 <div class='titleCard'>
 <?php
 if (array_key_exists("filter",$_GET)){
@@ -141,6 +160,7 @@ drawPlaylistButton($filterType,"episodes","🎞️ Episodes");
 drawPlaylistButton($filterType,"shows","📺 Shows");
 drawPlaylistButton($filterType,"movies","🎥 Movies");
 drawPlaylistButton($filterType,"videos","📽️ Videos");
+drawPlaylistButton($filterType,"videogroups","📼 Video Groups");
 drawPlaylistButton($filterType,"comics","📚 Comics");
 drawPlaylistButton($filterType,"music","🎧 Music");
 drawPlaylistButton($filterType,"channels","📡 Channels");

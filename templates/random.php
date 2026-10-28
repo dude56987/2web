@@ -21,6 +21,8 @@ if (array_key_exists("filter",$_GET)){
 		requireGroup("nfo2web");
 	}else if ($filterType == "videos"){
 		requireGroup("video2web");
+	}else if ($filterType == "videogroups"){
+		requireGroup("video2web");
 	}else if ($filterType == "shows"){
 		requireGroup("nfo2web");
 	}else if ($filterType == "music"){
@@ -75,33 +77,10 @@ if (array_key_exists("filter",$_GET)){
 <?php
 ################################################################################
 include($_SERVER['DOCUMENT_ROOT']."/header.php");
+# draw the playlists header
+# - requires $filterType to be set
+include("/usr/share/2web/templates/playlists_header.php");
 ?>
-<div class='titleCard'>
-	<h2>
-		Playlists
-	</h2>
-	<div class='listCard'>
-		<?PHP
-		if (array_key_exists("filter",$_GET)){
-			echo "<a class='button' href='/new/?filter=$filterType'>";
-		}else{
-			echo "<a class='button' href='/new/'>";
-		}
-		?>
-			📜 New
-		</a>
-		<a class='activeButton' href='/random/'>
-			🔀 Random
-		</a>
-		<?PHP
-		if(checkModStatus("nfo2web")){
-			echo "<a class='button' href='/tags/'>\n";
-			echo "	🔖 Tags\n";
-			echo "</a>\n";
-		}
-		?>
-	</div>
-</div>
 <div class='titleCard'>
 <?php
 if (array_key_exists("filter",$_GET)){
@@ -139,6 +118,7 @@ SQLdrawPlaylistButton($filterType,"episodes","🎞️ Episodes");
 SQLdrawPlaylistButton($filterType,"shows","📺 shows");
 SQLdrawPlaylistButton($filterType,"movies","🎥 Movies");
 SQLdrawPlaylistButton($filterType,"videos","📽️ Videos");
+SQLdrawPlaylistButton($filterType,"videogroups","📼 Video Groups");
 SQLdrawPlaylistButton($filterType,"comics","📚 Comics");
 SQLdrawPlaylistButton($filterType,"music","🎧 Music");
 SQLdrawPlaylistButton($filterType,"channels","📡 Channels");
