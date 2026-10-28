@@ -1760,12 +1760,20 @@ if( ! function_exists("delayedRedirect")){
 }
 ########################################################################
 if( ! function_exists("redirect")){
-	function redirect($url){
-		# redirect($url)
+	function redirect($url,$perma=false){
+		# redirect($url,$perma=false)
 		#
 		# Send the user to a temporary redirect at a given URL
-		// temporary redirect
-		header('Location: '.$url,true,302);
+		#
+		# Set perma flag to true in order to create a permanent redirect
+		#
+		if($perma){
+			// Permanent redirect
+			header('Location: '.$url,true,301);
+		}else{
+			// Temporary redirect
+			header('Location: '.$url,true,302);
+		}
 		exit();
 		die();
 	}
