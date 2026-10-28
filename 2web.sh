@@ -654,6 +654,11 @@ function update2web(){
 	createDir "$webDirectory/search/"
 	# storage location for all the thumbnails
 	createDir "$webDirectory/thumbnails/"
+	# generated directories
+	# - 404 debug reports
+	createDir "/var/cache/2web/generated/404/"
+	createDir "/var/cache/2web/generated/404/reports/"
+	createDir "/var/cache/2web/generated/404/keys/"
 
 	# create config files if they do not exist
 	if ! test -f /etc/2web/cacheNewEpisodes.cfg;then
