@@ -3457,4 +3457,110 @@ if( ! function_exists("incrementWeeklyGraphData")){
 	}
 }
 ################################################################################
+if( ! function_exists("addToWatchCount")){
+	function addToWatchCount($indexFile){
+		# add to the watch count of a index file
+		if(yesNoCfgCheck("/etc/2web/enableViewTracking.cfg","no")){
+			addToLog("DEBUG","AddToWatchCount","path='$indexFile'");
+			$webDirectory="/var/cache/2web/web";
+			# if the view count database does not exist create it
+			if (! file_exists($webDirectory."/views.db")){
+				createViewsDatabase();
+			}
+			# load the views database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(90000);
+			# load the views database
+			$databaseSearchQuery='select * from "watch_count" where path = \''.$indexFile.'\';';
+			$result = $databaseObj->query($databaseSearchQuery);
+			# search views database for this pages view count
+			$data = $result->fetchArray();
+			# close the database to process the data
+			$databaseObj->close();
+			unset($databaseObj);
+			# if the current url is in the database
+			if ( $data != false){
+				# increment the view counter
+				$updatedViewCount = $data["views"] + 1;
+			}else{
+				$updatedViewCount = 1;
+			}
+			$dbUpdateQuery  = 'REPLACE INTO "watch_count" (path, views) ';
+			$dbUpdateQuery .= "VALUES ('".$indexFile."', '".$updatedViewCount."') ";
+			$dbUpdateQuery .= ";";
+			# load the views database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(90000);
+			# update the database
+			$databaseObj->query($dbUpdateQuery);
+			# clear up memory of database file
+			$databaseObj->close();
+			unset($databaseObj);
+		}
+	}
+}
+################################################################################
+if( ! function_exists("touchWatchCount")){
+	function touchWatchCount($indexFile){
+		# set the watch count to zero for a index file if it does not exist in the database
+		if(yesNoCfgCheck("/etc/2web/enableViewTracking.cfg","no")){
+			# if the view count database does not exist create it
+			if (! file_exists($webDirectory."/views.db")){
+				createViewsDatabase();
+			}
+			# load the views database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(90000);
+			# load the views database
+			$databaseSearchQuery='select * from "watch_count" where path = \''.$indexFile.'\';';
+			$result = $databaseObj->query($databaseSearchQuery);
+			# search views database for this pages view count
+			$data = $result->fetchArray();
+			# close the database to process the data
+			$databaseObj->close();
+			unset($databaseObj);
+			# if the current url is in the database
+			if ( $data == false){
+				$updatedViewCount = 0;
+			}
+			$dbUpdateQuery  = 'REPLACE INTO "watch_count" (path, views) ';
+			$dbUpdateQuery .= "VALUES ('".$indexFile."', '".$updatedViewCount."') ";
+			$dbUpdateQuery .= ";";
+			# load the views database
+			$databaseObj = new SQLite3($_SERVER['DOCUMENT_ROOT']."/views.db");
+			# set the timeout to 1 minute since most webbrowsers timeout loading before this
+			$databaseObj->busyTimeout(90000);
+			# update the database
+			$databaseObj->query($dbUpdateQuery);
+			# clear up memory of database file
+			$databaseObj->close();
+			unset($databaseObj);
+		}
+	}
+}
+################################################################################
+if( ! function_exists("mimetype")){
+	function mimetype($filePath){
+		# mimetype($filePath)
+		#
+		# return the mimetype based on the file extension
+		#
+		# - Does not check if path exists
+		$fileExt=explode(".",$filePath);
+		$fileExt=array_pop($fileExt);
+		#if ( (array_pop(explode(".",($filePath)))) == "mp4" ){
+		if ( "$fileExt" == "mp4" ){
+			return "video/mp4";
+		}else if ( "$fileExt" == "mp3" ){
+			return "audio/mpeg";
+		}else{
+			# fall back to mime_content_type() for unknown files
+			return mime_content_type($filePath);
+		}
+	}
+}
+################################################################################
 ?>
