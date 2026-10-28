@@ -1497,13 +1497,34 @@ if( ! function_exists("checkPathServices")){
 	}
 }
 ################################################################################
-if( ! function_exists("drawPlaylistButton")){
-	function drawPlaylistButton($activeFilter,$filterName,$buttonText){
+if( ! function_exists("drawViewsFilterButton")){
+	function drawViewsFilterButton($activeFilter,$filterName,$buttonText){
+		#drawViewFilterButton($activeFilter,$filterName,$buttonText)
+
 		# check if the playlist index exists
-		if (file_exists($filterName.".index")){
+		if (requireGroup($filterName)){
+			# draw active button diffrent
+			if ($activeFilter == $filterName){
+				echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
+			}else{
+				echo "<a class='button' href='?filter=$filterName#activeButton'>$buttonText</a>\n";
+			}
+		}
+	}
+}
+################################################################################
+if( ! function_exists("drawPlaylistButton")){
+	function drawPlaylistButton($activeFilter,$filterName,$buttonText,$customPlaylistPath=""){
+		#drawPlaylistButton($activeFilter,$filterName,$buttonText,$customPlaylistPath="")
+		#
+		# - customPlaylistPath allows checking another directory for the index files
+		#
+
+		# check if the playlist index exists
+		if (file_exists($customPlaylistPath.$filterName.".index")){
 			if (checkFilePathPermissions("_".$filterName.".index")){
 				# check the file has more than 2 entries
-				if (count(file("$filterName.index")) > 0){
+				if (count(file("$customPlaylistPath$filterName.index")) > 0){
 					if ($activeFilter == $filterName){
 						#echo "<a id='activeButton' class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
 						echo "<a class='activeButton' href='?filter=$filterName'>$buttonText</a>\n";
@@ -1561,8 +1582,13 @@ if( ! function_exists("createViewsDatabase")){
 			# get the list of tables in the sql database
 			$databaseObj->query("PRAGMA journal_mode=WAL;");
 			$databaseObj->query("PRAGMA wal_autocheckpoint=20;");
+			# the view counts for every page
+			# - views are seprated by API requests as well as webpages
 			$databaseObj->query("create table view_count(url text primary key,views int);");
+			# the page 404 error counts
 			$databaseObj->query("create table error_count(url text primary key,views int);");
+			# the view counts
+			$databaseObj->query("create table watch_count(path text primary key,views int);");
 		}
 	}
 }
