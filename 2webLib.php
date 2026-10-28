@@ -1348,6 +1348,23 @@ if( ! function_exists("appendCacheFile")){
 	}
 }
 ###############################################################################
+if( ! function_exists("fileOpen")){
+	function fileOpen($filePath){
+		# opan a file like file() but using fopen() to bypass php oddities
+		$fileObject=fopen($filePath,"r");
+		$outputArray=Array();
+		# while not at the end of the file
+		while(!feof($fileObject)){
+			# read a line of the file
+			$currentLine=fread($fileObject);
+			# add it to the array
+			$outputArray=array_merge($outputArray,Array($currentLine));
+		}
+		# return the array split based on lines like file()
+		return $outputArray;
+	}
+}
+###############################################################################
 if( ! function_exists("drawServicesWidget")){
 	function drawServicesWidget(){
 		# Draw the available services widget in HTML
