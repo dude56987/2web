@@ -187,6 +187,8 @@ function playPause(videoId="video",force="off"){
 			videoNotify("▶︎","notification","notificationText",true);
 			showControls();
 			video.play();
+			// play should grab focus
+			video.focus();
 			if(window.playPauseButton){
 				window.playPauseButton.innerHTML=("⏸︎");
 			}
@@ -359,6 +361,18 @@ function toggleMute(){
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
+function togglePinControls(){
+	// lock the controls on the page
+	if(window.pinControlsButton){
+		if(window.pinControlsButton.innerHTML=="🔓︎"){
+			window.pinControlsButton.innerHTML="🔒︎";
+		}else{
+			window.pinControlsButton.innerHTML="🔓︎";
+		}
+	}
+	return false;
+}
+////////////////////////////////////////////////////////////////////////////////
 function toggleLoop(){
 	if(window.video.loop){
 		window.video.loop = false;
@@ -428,6 +442,49 @@ function flopVideo(){
 		console.log("scale is unknown '"+window.video.style.scale+"'");
 		window.video.style.scale="1 1";
 	}
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+function increaseVideoBrightness(){
+	videoNotify("++");
+	// increment or create the value
+	if(window.video.hasOwnProperty("brightness")){
+		// increment the brightness
+		window.video.brightness+=10;
+	}else{
+		// create the brightness value
+		window.video.brightness=110;
+	}
+	// set the new value
+	window.video.style.filter=("brightness("+window.video.brightness+"%)");
+
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+function decreaseVideoBrightness(){
+	videoNotify("--");
+	// decrement or create the value
+	if(window.video.hasOwnProperty("brightness")){
+		// decrement the brightness
+		window.video.brightness-=10;
+	}else{
+		// create the brightness value
+		window.video.brightness=90;
+	}
+	// set the new value
+	window.video.style.filter=("brightness("+window.video.brightness+"%)");
+
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+function resetVideoBrightness(){
+	videoNotify("++");
+	var currentValue;
+	// set the default brightness
+	currentValue=100;
+	// set the new value
+	window.video.style.filter=("brightness("+currentValue+"%)");
+
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,8 +921,11 @@ function notify(message="!",displayTime=400,textClass="notificationText",notific
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-function typeText(textInput,elementID="default",typingSpeed=50,index=0){
-	// type out a text string like a oldschool videogame
+function typeText(textInput,elementID="default",typingSpeed=50,index=0,loop=false){
+	// typeText(textInput,elementID="default",typingSpeed=50,index=0,loop=false)
+	//
+	// Type out a text string like a oldschool videogame
+	//
 	if (index < textInput.length){
 		//
 		if(elementID=="default"){
@@ -875,7 +935,20 @@ function typeText(textInput,elementID="default",typingSpeed=50,index=0){
 			document.getElementById(elementID).innerHTML += textInput.charAt(index);
 		}
 		index+=1;
-		setTimeout(typeText, typingSpeed, textInput, elementID, typingSpeed, index );
+		setTimeout(typeText, typingSpeed, textInput, elementID, typingSpeed, index, loop);
+	}else{
+		if (loop){
+			// reset on loop
+			index=0;
+			// reset the text
+			if(elementID=="default"){
+				// add text to the body if no element is selected
+				document.body.innerHTML = "&#8203;";
+			}else{
+				document.getElementById(elementID).innerHTML = "&#8203;";
+			}
+			setTimeout(typeText, typingSpeed, textInput, elementID, typingSpeed, index, loop);
+		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
