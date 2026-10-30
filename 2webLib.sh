@@ -4527,28 +4527,40 @@ function screenshotWebpage(){
 	fi
 }
 ################################################################################
-function countDown(){
-	# launch a visual countdown timer
+function countdown(){
+	# countdown "$shortMessage" "$longMessage" "$countDownTime"
+	#
+	# Launch a visual countdown timer that will fill the entire terminal screen
+	#
+	# - The countdown time is in seconds
+	# - Use smallCountDown() in order to do a one line countdown timer
+	#
+
 	moduleName=$(echo "${0##*/}" | cut -d'.' -f1)
 	#
 	countDownTime=$3
 	#
 	shortMessage=$1
 	longMessage=$2
+	# fix empty options
+	if [ "$countDownTime" == "" ];then
+		countDownTime=10
+	fi
 	# check for global control options
 	if [ "$MUTE_OPTION" == "yes" ];then
+		# sleep the countdown time without output
+		sleep "$countDownTime"
 		# skip countdowns in mute mode
 		return
 	elif [ "$TERM" == "" ] || [ "$TERM" == "ansi+tabs" ];then
+		# sleep the countdown time without output
+		sleep "$countDownTime"
+		#
 		return
 	fi
 	if [ "$FAST_OPTION" == "yes" ];then
 		# skip countdowns in fast mode
 		return
-	fi
-	# fix empty options
-	if [ "$countDownTime" == "" ];then
-		countDownTime=10
 	fi
 	if [ "$longMessage" == "" ];then
 		longMessage="Countdown Initated"
