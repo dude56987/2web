@@ -89,49 +89,6 @@ if ($writeFile){
 	# open the file for writing
 	$fileObj=fopen($cacheFile,'w') or die("Unable to write cache file!");
 	$fileData = "";
-
-	# check for section indexes to determine if buttons need drawn
-	$graphsFound=False;
-	$moviesFound=False;
-	$showsFound=False;
-	$musicFound=False;
-	$comicsFound=False;
-	$videosFound=False;
-	$channelsFound=False;
-	$reposFound=False;
-	$portalsFound=False;
-	$aiFound=False;
-
-	if (file_exists("$webDirectory/graphs/")){
-		$graphsFound=True;
-	}
-	if (file_exists("$webDirectory/movies/movies.index")){
-		$moviesFound=True;
-	}
-	if (file_exists("$webDirectory/shows/shows.index")){
-		$showsFound=True;
-	}
-	if (file_exists("$webDirectory/music/music.index")){
-		$musicFound=True;
-	}
-	if (file_exists("$webDirectory/comics/comics.index")){
-		$comicsFound=True;
-	}
-	if (file_exists("$webDirectory/videos/videos.index")){
-		$videosFound=True;
-	}
-	if (file_exists("$webDirectory/live/index.php")){
-		$channelsFound=True;
-	}
-	if (file_exists("$webDirectory/repos/repos.index")){
-		$reposFound=True;
-	}
-	if (file_exists("$webDirectory/portal/")){
-		$portalsFound=True;
-	}
-	if (file_exists("$webDirectory/ai/")){
-		$aiFound=True;
-	}
 	# build the header
 	$fileData .= formatText("<div id='header' class='header'>");
 
@@ -217,62 +174,74 @@ if (detectEnabledStatus("weather2web")){
 }
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		formatEcho("<a class='button' href='/movies'>",2);
-		formatEcho("🎥",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Movies",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/movies/movies.index")){
+			formatEcho("<a class='button' href='/movies'>",2);
+			formatEcho("🎥",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Movies",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("nfo2web")){
 	if (requireGroup("nfo2web",false)){
-		formatEcho("<a class='button' href='/shows'>",2);
-		formatEcho("📺",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Shows",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/shows/shows.index")){
+			formatEcho("<a class='button' href='/shows'>",2);
+			formatEcho("📺",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Shows",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("music2web")){
 	if (requireGroup("music2web",false)){
-		formatEcho("<a class='button' href='/music'>",2);
-		formatEcho("🎧",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Music",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/music/music.index")){
+			formatEcho("<a class='button' href='/music'>",2);
+			formatEcho("🎧",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Music",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("video2web")){
 	if (requireGroup("video2web",false)){
-		formatEcho("<a class='button' href='/videos'>",2);
-		formatEcho("📽️",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Videos",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/videos/videos.index")){
+			formatEcho("<a class='button' href='/videos'>",2);
+			formatEcho("📽️",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Videos",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("comic2web")){
 	if (requireGroup("comic2web",false)){
-		formatEcho("<a class='button' href='/comics'>",2);
-		formatEcho("📚",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Comics",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/comics/comics.index")){
+			formatEcho("<a class='button' href='/comics'>",2);
+			formatEcho("📚",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Comics",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("iptv2web")){
 	if (requireGroup("iptv2web",false)){
-		formatEcho("<a class='button' href='/live'>",2);
-		formatEcho("📡",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Live",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/live/channels.index")){
+			formatEcho("<a class='button' href='/live'>",2);
+			formatEcho("📡",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Live",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("wiki2web")){
@@ -297,43 +266,51 @@ if (detectEnabledStatus("ai2web")){
 }
 if (detectEnabledStatus("git2web")){
 	if (requireGroup("git2web",false)){
-		formatEcho("<a class='button' href='/repos/'>",2);
-		formatEcho("💾",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Repos",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/repos/repos.index")){
+			formatEcho("<a class='button' href='/repos/'>",2);
+			formatEcho("💾",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Repos",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("graph2web")){
 	if (requireGroup("graph2web",false)){
-		formatEcho("<a class='button' href='/graphs/'>",2);
-		formatEcho("📊",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Graphs",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/graphs/graphs.index")){
+			formatEcho("<a class='button' href='/graphs/'>",2);
+			formatEcho("📊",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Graphs",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 if (detectEnabledStatus("portal2web")){
 	if (requireGroup("portal2web",false)){
-		formatEcho("<a class='button' href='/portal/'>",2);
-		formatEcho("🚪",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Portal",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/portal/portal.index")){
+			formatEcho("<a class='button' href='/portal/'>",2);
+			formatEcho("🚪",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Portal",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 #
 if (detectEnabledStatus("php2web")){
 	if (requireGroup("php2web",false)){
-		formatEcho("<a class='button' href='/applications/'>",2);
-		formatEcho("🖥️",3);
-		formatEcho("<span class='headerText'>",3);
-		formatEcho("Applications",4);
-		formatEcho("</span>",3);
-		formatEcho("</a>",2);
+		if (file_exists("/var/cache/2web/web/applications/applications.index")){
+			formatEcho("<a class='button' href='/applications/'>",2);
+			formatEcho("🖥️",3);
+			formatEcho("<span class='headerText'>",3);
+			formatEcho("Applications",4);
+			formatEcho("</span>",3);
+			formatEcho("</a>",2);
+		}
 	}
 }
 # client and remote
