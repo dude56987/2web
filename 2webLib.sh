@@ -1452,6 +1452,15 @@ function ALERT(){
 	#
 	width=$(tput cols)
 	height=$(tput lines)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
+	# failsafe default terminal height
+	if [ "$height" == "" ];then
+		height="20"
+	fi
+
 	buffer=" "
 	# get the header text
 	headerText="$2"
@@ -1703,6 +1712,14 @@ function INFO(){
 	#
 	height=$(tput lines)
 	width=$(tput cols)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
+	# failsafe default terminal height
+	if [ "$height" == "" ];then
+		height="20"
+	fi
 	#
 	buffer=""
 	# make the buffer the width of the terminal
@@ -1743,6 +1760,11 @@ function ERROR(){
 	fi
 	#
 	width=$(tput cols)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
+
 	output="$1"
 	echo
 	# draw the error header
@@ -2153,7 +2175,12 @@ function drawHeader(){
 		return
 	fi
 	#
-	termWidth=$(tput cols)
+	width=$(tput cols)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
+
 	#
 	themeTitle=$( basename "$themeName" | cut -d'.' -f1 )
 	# draw the large font using figlet
@@ -2534,6 +2561,10 @@ function drawLine(){
 		tailText="$1"
 	fi
 	width=$(tput cols)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
 	buffer=""
 	# make the buffer the width of the terminal
 	#█🮮◙⭗🟕🟗═
@@ -2891,6 +2922,10 @@ function drawSmallHeader(){
 	fi
 	#
 	width=$(tput cols)
+	# failsafe default terminal width
+	if [ "$width" == "" ];then
+		width="80"
+	fi
 	buffer=""
 	# make the buffer the width of the terminal
 	#█🮮◙⭗🟕🟗═
