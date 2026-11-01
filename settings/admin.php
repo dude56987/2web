@@ -805,6 +805,55 @@ if (array_key_exists("newUserName",$_POST)){
 	}
 	backButton("/settings/cache.php#cacheUpgradeQuality","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("markMediaForRemoval",$_POST)){
+	# input is the media source file containing a list of all used sources
+	$mediaSourceFile=$_POST['markMediaForRemoval'];
+	outputLog("Marking media source for removal '".$mediaSourceFile."'");
+	$mediaName=basename(dirname($_POST['markMediaForRemoval']));
+	$pathName=basename(dirname(dirname($_POST['markMediaForRemoval'])));
+	$sourceData=file("$mediaSourceFile",FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	# create the media directory
+	outputLog("Creating Removal Directory '/var/cache/2web/generated/removal/$mediaName/'");
+	createDir("/var/cache/2web/generated/removal/$mediaName/");
+	# add the media path data for removal
+	addToIndex("$pathName","/var/cache/2web/generated/removal/$mediaName/path.cfg");
+	# add the sources to the removal list
+	foreach($sourceData as $sourceLine){
+		outputLog("Adding path for removal '".$sourceLine."'");
+		# add the source line to the removal index
+		#addToIndex("$sourceLine","/var/cache/2web/generated/removal/$mediaName/sum.cfg");
+		addToIndex("$sourceLine","/var/cache/2web/generated/removal/$mediaName/removal.cfg");
+	}
+	# no removal should be done by 2web directly this list is made available to admins in the web interface
+	# real admins can read the file directly
+	backButton("/settings/removal.php","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("markMediaAsRemoved",$_POST)){
+	# for media that has been marked for removal
+	# this will remove it from the interface
+	# the media name is the path where the removal data is stored
+	$mediaName=$_POST['markMediaAsRemoved'];
+	outputLog("Preparing to remove media from the removal list '$mediaName'");
+	#
+	$command="";
+	$command.="rm -rv \"/var/cache/2web/generated/removal/$mediaName/\"\n";
+	#
+	addToQueue("single",$command);
+	#
+	backButton("/settings/removal.php","🛠️ Return To Settings");
+	clear();
+}else if (array_key_exists("setMultiQueueSize",$_POST)){
+	$newMultiQueueSize=$_POST['setMultiQueueSize'];
+	# change the default cache quality
+	outputLog("Changing cache mode to '".$newMultiQueueSize."'");
+	# write the config file
+	if ($newMultiQueueSize == ''){
+		unlink("/etc/2web/multiQueueSize.cfg");
+	}else{
+		file_put_contents("/etc/2web/multiQueueSize.cfg",$newMultiQueueSize);
+	}
+	backButton("/settings/cache.php#setMultiQueueSize","🛠️ Return To Settings");
+	clear();
 }else if (array_key_exists("cacheFramerate",$_POST)){
 	$cacheFramerate=$_POST['cacheFramerate'];
 	# change the default cache quality
