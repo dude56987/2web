@@ -919,6 +919,51 @@ if (array_key_exists("newUserName",$_POST)){
 	yesNoCfgSet("/etc/2web/nfo/generateAudioWaveforms.cfg", $_POST['nfo_generateAudioWaveforms']);
 	backButton("/settings/nfo.php#nfo_generateAudioWaveforms","🛠️ Return To Settings");
 	clear();
+}else if (array_key_exists("forceCacheNewEpisodesForShow",$_POST)){
+	$newValue=$_POST['forceCacheNewEpisodesForShow'];
+	$showTitle=$_POST['showTitle'];
+	outputLog("Setting force cache new episodes setting for ".$showTitle." to ".$newValue);
+	yesNoCfgSet("/var/cache/2web/web/shows/$showTitle/forceCache.cfg", $newValue);
+	backButton("/shows/$showTitle/index.php","🛠️ Return To Page");
+	clear();
+}else if (array_key_exists("rescanVideos",$_POST)){
+	if(verifyChoice()){
+		$showName=$_POST["rescanVideos"];
+		#
+		if(file_exists("/var/cache/2web/web/videos/$showName/sources.cfg")){
+			outputLog("Preparing to rescan '$showName'");
+			# delete existing meta data
+			# - remove kodi path
+			# - remove web path
+			# - rescan the source  paths stored int the current metadata
+			$command="set -x\n";
+			$command.="rm -rv \"/var/cache/2web/web/videos/".$showName."/\"\n";
+			$command.="rm -rv \"/var/cache/2web/web/kodi/videos/".$showName."/\"\n";
+			# remove the weights from the search index data
+			# - this will require the index to recompile
+			$command.="rm -rv \"/var/cache/2web/generated/searchIndexData/videos/".$showName."/\"\n";
+			#
+			#$command.="TERM=\"linux\"\n";
+			#
+			$metaPaths=file("/var/cache/2web/web/videos/$showName/sources.cfg");
+			foreach($metaPaths as $metaPath){
+				$metaPath=str_replace("\n","",$metaPath);
+				# - launch a process to rescan the data
+				#$command.="video2web --process \"$metaPath\" --mute --parallel\n";
+				$command.="video2web --process \"$metaPath\" --parallel\n";
+			}
+			outputLog("Running Script <pre>$command</pre>");
+			# add rescan script to the queue
+			addToQueue("single",$command);
+			#
+			addToLog("WARNING","seasons.php processing command","<pre>".$command."</pre>");
+			echo "<hr><a class='button' href='/videos/$showName/'>🛠️ Return To Settings</a><hr>";
+		}else{
+			addToLog("ERROR","seasons.php","Could not find any sources.cfg file for show");
+		}
+	}
+
+
 }else if (array_key_exists("rescanShow",$_POST)){
 	if(verifyChoice()){
 		$showName=$_POST["rescanShow"];
