@@ -34,9 +34,10 @@
 	</style>
 	<script>
 		function comicFullscreenEnable(){
-			toggleFullscreen();
 			// remove the check dialog
 			document.getElementById("comicFullscreenCheck").remove();
+			// enable fullscreen
+			toggleFullscreen();
 		}
 		function loadKeys(){
 			// setup hotkey to enable fullscreen

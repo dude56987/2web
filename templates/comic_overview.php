@@ -253,6 +253,18 @@ function setupKeys() {
 			echo "window.location.href='../".$randomDir."';";
 			?>
 			break;
+			case 'Enter':
+			event.preventDefault();
+			<?PHP
+			echo "notify(\"📖\");\n";
+			echo "showSpinner();\n";
+			if(is_dir("0001/")){
+				echo "window.location.href='0001/';";
+			}else{
+				echo "window.location.href='0001.php';";
+			}
+			?>
+			break;
 		}
 	});
 }

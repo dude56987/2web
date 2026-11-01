@@ -28,7 +28,10 @@
 	$data=explode('/',$data);
 	$comic=array_pop($data);
 	$page=str_replace(".php","",basename($_SERVER["PHP_SELF"]));
-
+	if($page=="0001"){
+		# mark the comic as watched if the first page has been loaded
+		addToWatchCount("/var/cache/2web/web/comics/".explode("/",$_SERVER["PHP_SELF"])[2]."/comics.index");
+	}
 	function prefixNumbers($pageNumber){
 		if($pageNumber < 10){
 			return "000$pageNumber";
@@ -309,6 +312,16 @@
 					echo "					window.open('fullscreen.php?page=$page','_parent');\n";
 					?>
 					break;
+					case ' ':
+					event.preventDefault();
+					<?PHP
+					echo "notify(\"Play\");\n";
+					echo "showSpinner();\n";
+					echo "					window.open('fullscreen.php?page=$page&auto','_parent');\n";
+					?>
+					break;
+
+
 				}
 			});
 		}
