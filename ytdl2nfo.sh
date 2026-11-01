@@ -154,97 +154,92 @@ function ytdl2kodi_channel_extractor(){
 	ALERT "Reversing list because most pages list newest to oldest..."
 	linkList=$(echo "$linkList" | tac)
 
-	# set the show title based on the data from the latest video posted on the channel playlist
-	if echo "$@" | grep "\-\-username";then
-		showTitle=""
+	# create the sum
+	tempSum=$(echo -n "$channelLink" | sha256sum | cut -d' ' -f1)
 
-		#if ! validString "$showTitle";then
-		#	echo "Reading '.playlist_title' from playlist entry"
-		#	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_title" | head -1 )
-		#	echo "Show title set to '$showTitle' from .playlist_title"
-		#fi
-		if ! validString "$showTitle";then
-			echo "Reading '.playlist_uploader' from playlist entry"
-			showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
-			echo "Show title set to '$showTitle' from .playlist_uploader"
-		fi
-		if ! validString "$showTitle";then
-			echo "Show title is invalid string '$showTitle'"
-			echo "Reading '.channel' name from first playlist entry"
-			# failsafe extract channel from json data in tempLinkList
-			showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".channel" | head -1)
-		fi
-		if ! validString "$showTitle";then
-			showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".uploader" | head -1)
-		fi
-
-		if ! validString "$showTitle";then
-			# get the second video from the playlist and compare the uploader name to the first
-			# if the first is the same as the second, that means the playlist title is correct
-			# if the first and second video have diffrent uploaders go to the next failure mode
-			echo "Show title is invalid string '$showTitle'"
-			echo "Downloading json data from latest video to set the show title from '.channel' value"
-			# get the last url in the link list and set the user name based on .channel in that link
-			tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
-			tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
-			echo "tempLinkUrl= $tempLinkUrl"
-			jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
-			incrementWeeklyGraphData "yt-dlp"
-			tempJsonInfo=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl")
-			incrementWeeklyGraphData "yt-dlp"
-			tempJsonInfo2=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl2")
-
-			tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
-			tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".channel")
-
-			ALERT "[ $tempJsonData == $tempJsonData2 ]"
-			if [ "$tempJsonData" == "$tempJsonData2" ];then
-				ALERT "comparison correct"
-				showTitle=$tempJsonData
+	if test -f "/var/cache/2web/generated/ytdl2nfo/titles/$tempSum.cfg";then
+		# load the cached show title
+		showTitle="$(cat "/var/cache/2web/generated/ytdl2nfo/titles/$tempSum.cfg" | sed "s/\n//g")"
+	else
+		# cache the data from scratch
+		# set the show title based on the data from the latest video posted on the channel playlist
+		if echo "$@" | grep "\-\-username";then
+			showTitle=""
+			if ! validString "$showTitle";then
+				echo "Reading '.playlist_uploader' from playlist entry"
+				showTitle=$(echo "$tempLinkList" | jq -r ".playlist_uploader" | head -1 )
+				echo "Show title set to '$showTitle' from .playlist_uploader"
 			fi
 			if ! validString "$showTitle";then
-				tempJsonData=$(echo "$tempJsonInfo" | jq -r ".uploader")
-				tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".uploader")
+				echo "Show title is invalid string '$showTitle'"
+				echo "Reading '.channel' name from first playlist entry"
+				# failsafe extract channel from json data in tempLinkList
+				showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".channel" | head -1)
+			fi
+			if ! validString "$showTitle";then
+				showTitle=$(echo "$tempLinkList" | head -1 | jq -r ".uploader" | head -1)
+			fi
+
+			if ! validString "$showTitle";then
+				# get the second video from the playlist and compare the uploader name to the first
+				# if the first is the same as the second, that means the playlist title is correct
+				# if the first and second video have diffrent uploaders go to the next failure mode
+				echo "Show title is invalid string '$showTitle'"
+				echo "Downloading json data from latest video to set the show title from '.channel' value"
+				# get the last url in the link list and set the user name based on .channel in that link
+				tempLinkUrl="$(echo "$tempLinkList" | jq -r ".url" | head -1)"
+				tempLinkUrl2="$(echo "$tempLinkList" | jq -r ".url" | head -2)"
+				echo "tempLinkUrl= $tempLinkUrl"
+				jsRuntime=" --js-runtimes quickjs:/usr/bin/qjs"
+				incrementWeeklyGraphData "yt-dlp"
+				tempJsonInfo=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl")
+				incrementWeeklyGraphData "yt-dlp"
+				tempJsonInfo2=$(/var/cache/2web/generated/yt-dlp/yt-dlp $jsRuntime -j "$tempLinkUrl2")
+
+				tempJsonData=$(echo "$tempJsonInfo" | jq -r ".channel")
+				tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".channel")
+
 				ALERT "[ $tempJsonData == $tempJsonData2 ]"
 				if [ "$tempJsonData" == "$tempJsonData2" ];then
 					ALERT "comparison correct"
 					showTitle=$tempJsonData
 				fi
+				if ! validString "$showTitle";then
+					tempJsonData=$(echo "$tempJsonInfo" | jq -r ".uploader")
+					tempJsonData2=$(echo "$tempJsonInfo2" | jq -r ".uploader")
+					ALERT "[ $tempJsonData == $tempJsonData2 ]"
+					if [ "$tempJsonData" == "$tempJsonData2" ];then
+						ALERT "comparison correct"
+						showTitle=$tempJsonData
+					fi
+				fi
 			fi
-		fi
-		if ! validString "$showTitle";then
-			echo "Show title is invalid string '$showTitle'"
-			showTitle=$(echo "$tempLinkList" | jq -r ".playlist_title" | head -1 )
-			echo "Show title set to '$showTitle' from .playlist_title"
-		fi
-		if ! validString "$showTitle";then
-			echo "Show title is invalid string '$showTitle'"
-			showTitle=$(echo "$tempLinkList" | jq -r ".playlist" | head -1 )
-			echo "Show title set to '$showTitle' from .playlist"
-		fi
-		# get the playlist and try to mangle the domain or path into a title, this will only sometimes work correctly
-		#if ! validString "$showTitle";then
-		#	echo "Show title is invalid string '$showTitle'"
-		#	# if a hash is used in here somehow it will be basicly unreadable
-		#	echo "Getting .Playlist_id and attempting cleanup of the playlist..."
-		#	# remove punctuation from the playlist title if it is the entire url
-		#	showTitle=$(echo "$tempLinkList" | jq -r ".playlist_id" | head -1 | sed "s/\// /g" | tr -s ' ' | sed "s/[[:punct:]]//g")
-		#	# cleanup url crap
-		#	showTitle=$(echo "$showTitle" | sed "s/https\:\/\///g")
-		#	showTitle=$(echo "$showTitle" | sed "s/http\:\/\///g")
-		#fi
-		# final failsafe username generator is the domain name
-		if ! validString "$showTitle";then
-			echo "Show title is invalid string '$showTitle'"
-			echo "Using link domain name as last effort to generate a show title"
+			if ! validString "$showTitle";then
+				echo "Show title is invalid string '$showTitle'"
+				showTitle=$(echo "$tempLinkList" | jq -r ".playlist_title" | head -1 )
+				echo "Show title set to '$showTitle' from .playlist_title"
+			fi
+			if ! validString "$showTitle";then
+				echo "Show title is invalid string '$showTitle'"
+				showTitle=$(echo "$tempLinkList" | jq -r ".playlist" | head -1 )
+				echo "Show title set to '$showTitle' from .playlist"
+			fi
+			# final failsafe username generator is the domain name
+			if ! validString "$showTitle";then
+				echo "Show title is invalid string '$showTitle'"
+				echo "Using link domain name as last effort to generate a show title"
+				showTitle=$(ytdl2kodi_rip_title "$channelLink")
+			fi
+		else
+			echo "Using link domain name generate a show title for all videos from this domain"
 			showTitle=$(ytdl2kodi_rip_title "$channelLink")
 		fi
-	else
-		echo "Using link domain name generate a show title for all videos from this domain"
-		showTitle=$(ytdl2kodi_rip_title "$channelLink")
+		# cleanup the title
+		showTitle="$(cleanText "$showTitle")"
+		# cache the show title in the web directory so rescan will recache it
+		createDir "/var/cache/2web/generated/ytdl2nfo/titles/"
+		echo "$showTitle" > "/var/cache/2web/generated/ytdl2nfo/titles/$tempSum.cfg"
 	fi
-	# cleanup the title
-	showTitle="$(cleanText "$showTitle")"
 	echo "Show title set to '$showTitle'"
 	################################################################################
 	################################################################################
@@ -254,7 +249,6 @@ function ytdl2kodi_channel_extractor(){
 	# create previous downloads list if it does not already exist
 	mkdir -p /etc/2web/ytdl/previousDownloads/
 	mkdir -p "/var/cache/2web/ytdl/processedSums/"
-	tempSum=$(echo -n "$channelLink" | sha256sum | cut -d' ' -f1)
 	# make list channel specific
 	previousDownloadsPath="/etc/2web/ytdl/previousDownloads/$tempSum.cfg"
 	touch "$previousDownloadsPath"
