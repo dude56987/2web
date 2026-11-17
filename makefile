@@ -94,12 +94,10 @@ test-resolvers:
 reset-themes:
 	# remove existing theme components
 	rm -v /usr/share/2web/theme-templates/*.css || echo "No Theme components exist..."
-	# remove existing themes
-	rm -v /usr/share/2web/themes/*.css || echo "No Themes exist..."
 	# copy over theme components from source to install location
 	cp -v themes/*.css /usr/share/2web/theme-templates/
 	# force a rebuild of the themes using built in 2web command
-	2web --rebuild-themes --fast --force
+	2web --reset-themes --fast --force
 	# restart the webserver to clear out caches
 	service apache2 restart
 test-themes:
