@@ -37,6 +37,12 @@ test-effects:
 	cp -rv effects/. /usr/share/2web/effects/
 	# restart the webserver to clear out caches
 	service apache2 restart
+test-apache-configs:
+	# copy over apache configs
+	cp -v systemConf/0000-2web-website.conf /etc/apache2/sites-available/
+	cp -v systemConf/0000-2web-website-SSL.conf /etc/apache2/sites-available/
+	# restart the webserver with updated configs
+	service apache2 restart
 test-help:
 	# copy web help web docs
 	rm -rv /usr/share/2web/web_help/ || echo "No existing help documents..."
