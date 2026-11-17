@@ -362,6 +362,25 @@
 		user-select: none;
 		font-family: font2webGlyph;
 	}
+	.particle_spin_right_step{
+		scale: -1 1;
+		animation-name: particle_thrash_right;
+		animation-duration: 0.2s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
+	.particle_spin_left_step{
+		animation-name: particle_thrash_left;
+		animation-duration: 0.2s;
+		animation-fill-mode: forwards;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		user-select: none;
+		font-family: font2webGlyph;
+	}
 	/* Add variablity to animation start position */
 	.particle:nth-of-type(30n){
 		animation-delay: -30s !important;
@@ -788,7 +807,7 @@ class flyingParticle{
 				//console.log("Moving particle RIGHT");
 				tempParticle.style.left = (parseInt(tempParticle.style.left) + (this.speed)) + "px";
 			}
-			if ( (parseInt(tempParticle.style.left) > (window.innerWidth + 100)) || (parseInt(tempParticle.style.left) < -100 ) ){
+			if ( (parseInt(tempParticle.style.left) > (window.innerWidth + 300)) || (parseInt(tempParticle.style.left) < -300 ) ){
 				// randomize the size of the particle to create distance
 				this.speed=( Math.floor(Math.random() * this.maxSpeed ) + this.minSpeed );
 				this.size=( Math.floor(Math.random() * this.maxSize ) + this.minSize );
@@ -828,7 +847,7 @@ class flyingParticle{
 				// give the particle a random offscreen location based on its movement direction
 				if(this.flyDirection=="left"){
 					//console.log("flyDirection set to LEFT");
-					tempParticle.style.left = ( Math.floor( Math.random() * 100) + window.innerWidth + 100 );
+					tempParticle.style.left = ( Math.floor( Math.random() * 100) + window.innerWidth + 300 );
 					if(flipParticle == true){
 						this.particleDiv.style.scale="-1 1";
 					}else{
@@ -836,7 +855,7 @@ class flyingParticle{
 					}
 				}else{
 					//console.log("flyDirection set to RIGHT");
-					tempParticle.style.left = ( -1 * ( Math.floor( Math.random() * 100) + 100 ) );
+					tempParticle.style.left = ( -1 * ( Math.floor( Math.random() * 100) + 300 ) );
 					if(flipParticle == true){
 						this.particleDiv.style.scale="1 1";
 					}else{
